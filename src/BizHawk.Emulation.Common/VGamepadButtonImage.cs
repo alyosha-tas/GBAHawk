@@ -1,0 +1,33 @@
+namespace BizHawk.Emulation.Common
+{
+	public enum VGamepadButtonImage
+	{
+		BlueArrE,
+		BlueArrENE,
+		BlueArrESE,
+		BlueArrN,
+		BlueArrNE,
+		BlueArrNNE,
+		BlueArrNNW,
+		BlueArrNW,
+		BlueArrS,
+		BlueArrSE,
+		BlueArrSSE,
+		BlueArrSSW,
+		BlueArrSW,
+		BlueArrW,
+		BlueArrWNW,
+		BlueArrWSW,
+		Circle,
+		Cross,
+		Play,
+		SkipBack,
+		Square,
+		Stop,
+		Triangle,
+		YellowArrE,
+		YellowArrN,
+		YellowArrS,
+		YellowArrW,
+	}
+}

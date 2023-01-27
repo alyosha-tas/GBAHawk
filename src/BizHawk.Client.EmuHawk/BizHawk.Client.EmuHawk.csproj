@@ -1,0 +1,489 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<Platforms>AnyCPU;x64</Platforms>
+	</PropertyGroup>
+	<Import Project="../MainSlnExecutable.props" />
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>images/logo.ico</ApplicationIcon>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Nullable>disable</Nullable>
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<Reference Include="System.Windows.Forms" />
+		<Reference Include="System.IO.Compression" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="GongShell" HintPath="$(ProjectDir)../../References/GongShell.dll" Private="true" />
+		<Reference Include="NLua, Version=1.3.2.0, Culture=neutral, processorArchitecture=MSIL" SpecificVersion="false" HintPath="$(ProjectDir)../../Assets/dll/nlua/NLua.dll" Private="false" /><!-- don't copy, will be copied with Assets -->
+		<Reference Include="PcxFileTypePlugin.HawkQuantizer" HintPath="$(ProjectDir)../../References/PcxFileTypePlugin.HawkQuantizer.dll" Private="true" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="$(ProjectDir)../BizHawk.Bizware.DirectX/BizHawk.Bizware.DirectX.csproj" />
+		<ProjectReference Include="$(ProjectDir)../BizHawk.WinForms.Controls/BizHawk.WinForms.Controls.csproj" />
+		<Compile Remove="Properties/Settings.Designer.cs" />
+		<Content Include="images/logo.ico" />
+		<EmbeddedResource Include="images/**/*" />
+		<EmbeddedResource Include="Resources/**/*" />
+		<EmbeddedResource Remove="images/.ico" />
+		<EmbeddedResource Remove="images/corphawk.ico" />
+		<EmbeddedResource Remove="images/ForwardMore.png" />
+		<EmbeddedResource Remove="images/gba-icon.png" />
+		<EmbeddedResource Remove="images/Lua.ico" />
+		<EmbeddedResource Remove="images/pcejin1.bmp" />
+		<EmbeddedResource Remove="images/PlayButton.png" />
+		<EmbeddedResource Remove="images/sms-icon.png" />
+		<EmbeddedResource Remove="images/tastudio/ts_h_piano_*.png" />
+		<EmbeddedResource Remove="images/tastudio/ts_v_piano_*.png" />
+		<None Include="$(ProjectDir)../../Assets/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\dll\libfwunpack.dll" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\dll\libfwunpack.so" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\dll\shock.wbx.gz" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ALLEY WAY.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ASTEROIDS and MISCMD.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BA.TOSHINDEN.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BALLOON KID.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BASEBALL.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BGB %28lcd green%29.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BOY AND BLOB GB1.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BOY AND BLOB GB2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\bsnes v087.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\BT2RAGNAROKWORLD.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\default.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DEFENDER and JOUST.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DMG FOOTBALL.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DONKEY KONG.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DONKEYKONGLAND 2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DONKEYKONGLAND 3.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DONKEYKONGLAND.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DONKEYKONGLAND95.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DR.MARIO.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\DYNABLASTER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\F1RACE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GALAGA and GALAXIAN.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\Game and Watch 2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\Game and Watch GALLERY.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GAME and WATCH.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GAMEBOY GALLERY.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GAMEBOY GALLERY2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Blue.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Brown.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Dark Blue.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Dark Brown.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Dark Green.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Grayscale.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Green.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Inverted.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Orange.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Pastel Mix.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Red.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBC - Yellow.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GBWARS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\GOLF.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\HOSHINOKA-BI.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\JAMES  BOND  007.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KAERUNOTAMENI.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KEN GRIFFEY JR.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KID ICARUS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KILLERINSTINCT95.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KINGOFTHEZOO.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KIRAKIRA KIDS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KIRBY BLOCKBALL.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KIRBY DREAM LAND.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KIRBY%27S PINBALL.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\KIRBY2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\LOLO2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MAGNETIC SOCCER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MANSELL.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MARIO and YOSHI.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MARIO%27S PICROSS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MARIOLAND2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MEGA MAN 2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MEGAMAN.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MEGAMAN3.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\METROID2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MILLIPEDE and CENTIPEDE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MOGURANYA.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\MYSTIC QUEST.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\NETTOU KOF 95.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\NEW CHESSMASTER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\OTHELLO.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\PAC-IN-TIME.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\PICROSS 2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\PINOCCHIO.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\POKEBOM.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\POKEMON BLUE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\POKEMON GREEN.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\POKEMON RED.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\POKEMON YELLOW.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\QIX.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\RADARMISSION.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ROCKMAN WORLD.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ROCKMAN WORLD2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ROCKMANWORLD3.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SEIKEN DENSETSU.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SOCCER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SOLARSTRIKER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SPACE INVADERS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\STAR STACKER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\STAR WARS-NOA.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\STAR WARS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\STREET FIGHTER 2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SUPER MARIOLAND.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SUPER RC PRO-AM.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SUPERDONKEYKONG.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\SUPERMARIOLAND3.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TENNIS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS ATTACK.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS BLAST.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS FLASH.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS PLUS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TETRIS2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\THE CHESSMASTER.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TOPRANKINGTENNIS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TOPRANKTENNIS.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TOY STORY.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\TRIP WORLD.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\VEGAS STAKES.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\WARIO BLAST.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\WARIOLAND2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\WAVERACE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\WORLD CUP.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\X.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\YAKUMAN.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\YOSHI%27S COOKIE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\YOSSY NO COOKIE.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\YOSSY NO PANEPON.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\YOSSY NO TAMAGO.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ZELDA.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\Gameboy\Palettes\ZELDA2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\gamedb\gamedb_appleII.txt" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\ASQ_realityA.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\ASQ_realityB.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\BMF_final2.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\BMF_final3.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\FCEU-13-default_nitsuja.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\FCEU-15-nitsuja_new.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\FCEUX %282.2.0%29.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\QuickNes.pal" />
+		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\SONY_CXA2025AS_US.pal" />
+		<None Remove="packages.config" />
+		<None Remove="Properties/Resources.resources" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="ArchiveChooser.cs" SubType="Form" />
+		<Compile Update="ArchiveChooser.Designer.cs" DependentUpon="ArchiveChooser.cs" />
+		<EmbeddedResource Update="ArchiveChooser.resx" DependentUpon="ArchiveChooser.cs" SubType="Designer" />
+		<Compile Update="AVOut/GifWriterForm.cs" SubType="Form" />
+		<Compile Update="AVOut/GifWriterForm.Designer.cs" DependentUpon="GifWriterForm.cs" />
+		<EmbeddedResource Update="AVOut/GifWriterForm.resx" DependentUpon="GifWriterForm.cs" />
+		<Compile Update="AVOut/JMDForm.cs" SubType="Form" />
+		<Compile Update="AVOut/JMDForm.Designer.cs" DependentUpon="JMDForm.cs" />
+		<EmbeddedResource Update="AVOut/JMDForm.resx" DependentUpon="JMDForm.cs" />
+		<Compile Update="AVOut/NumericTextBox.cs" SubType="Component" />
+		<Compile Update="AVOut/SynclessRecordingTools.cs" SubType="Form" />
+		<Compile Update="AVOut/SynclessRecordingTools.Designer.cs" DependentUpon="SynclessRecordingTools.cs" />
+		<EmbeddedResource Update="AVOut/SynclessRecordingTools.resx" DependentUpon="SynclessRecordingTools.cs" />
+		<Compile Update="AVOut/VideoWriterChooserForm.cs" SubType="Form" />
+		<Compile Update="AVOut/VideoWriterChooserForm.Designer.cs" DependentUpon="VideoWriterChooserForm.cs" />
+		<EmbeddedResource Update="AVOut/VideoWriterChooserForm.resx" DependentUpon="VideoWriterChooserForm.cs" />
+		<Compile Update="BizBox.cs" SubType="Form" />
+		<Compile Update="BizBox.Designer.cs" DependentUpon="BizBox.cs" />
+		<EmbeddedResource Update="BizBox.resx" DependentUpon="BizBox.cs" />
+		<Compile Update="BizBoxInfoControl.cs" SubType="UserControl" />
+		<Compile Update="BizBoxInfoControl.Designer.cs" DependentUpon="BizBoxInfoControl.cs" />
+		<EmbeddedResource Update="BizBoxInfoControl.resx" DependentUpon="BizBoxInfoControl.cs" />
+		<Compile Update="config/AnalogRangeConfigControl.cs" SubType="UserControl" />
+		<Compile Update="config/AnalogRangeConfigControl.Designer.cs" DependentUpon="AnalogRangeConfigControl.cs" />
+		<EmbeddedResource Update="config/AnalogRangeConfigControl.resx" DependentUpon="AnalogRangeConfigControl.cs" />
+		<Compile Update="config/AnalogRangeConfig.cs" SubType="Component" />
+		<Compile Update="config/AnalogRangeConfig.Designer.cs" DependentUpon="AnalogRangeConfig.cs" />
+		<Compile Update="config/AutofireConfig.cs" SubType="Form" />
+		<Compile Update="config/AutofireConfig.Designer.cs" DependentUpon="AutofireConfig.cs" />
+		<EmbeddedResource Update="config/AutofireConfig.resx" DependentUpon="AutofireConfig.cs" />
+		<Compile Update="config/ControllerConfig/AnalogBindControl.cs" SubType="UserControl" />
+		<Compile Update="config/ControllerConfig/AnalogBindControl.Designer.cs" DependentUpon="AnalogBindControl.cs" />
+		<EmbeddedResource Update="config/ControllerConfig/AnalogBindControl.resx" DependentUpon="AnalogBindControl.cs" />
+		<Compile Update="config/ControllerConfig/AnalogBindPanel.cs" SubType="UserControl" />
+		<Compile Update="config/ControllerConfig/ControllerConfigPanel.cs" SubType="UserControl" />
+		<Compile Update="config/ControllerConfig/ControllerConfigPanel.Designer.cs" DependentUpon="ControllerConfigPanel.cs" />
+		<EmbeddedResource Update="config/ControllerConfig/ControllerConfigPanel.resx" DependentUpon="ControllerConfigPanel.cs" />
+		<Compile Update="config/ControllerConfig.cs" SubType="Form" />
+		<Compile Update="config/ControllerConfig.Designer.cs" DependentUpon="ControllerConfig.cs" />
+		<EmbeddedResource Update="config/ControllerConfig.resx" DependentUpon="ControllerConfig.cs" />
+		<Compile Update="config/DisplayConfig.cs" SubType="Form" />
+		<Compile Update="config/DisplayConfig.Designer.cs" DependentUpon="DisplayConfig.cs" />
+		<EmbeddedResource Update="config/DisplayConfig.resx" DependentUpon="DisplayConfig.cs" SubType="Designer" />
+		<Compile Update="config/EmuHawkOptions.cs" SubType="Form" />
+		<Compile Update="config/EmuHawkOptions.Designer.cs" DependentUpon="EmuHawkOptions.cs" />
+		<EmbeddedResource Update="config/EmuHawkOptions.resx" DependentUpon="EmuHawkOptions.cs" />
+		<Compile Update="config/FileExtensionPreferences.cs" SubType="Form" />
+		<Compile Update="config/FileExtensionPreferences.Designer.cs" DependentUpon="FileExtensionPreferences.cs" />
+		<EmbeddedResource Update="config/FileExtensionPreferences.resx" DependentUpon="FileExtensionPreferences.cs" />
+		<Compile Update="config/FileExtensionPreferencesPicker.cs" SubType="UserControl" />
+		<Compile Update="config/FileExtensionPreferencesPicker.Designer.cs" DependentUpon="FileExtensionPreferencesPicker.cs" />
+		<EmbeddedResource Update="config/FileExtensionPreferencesPicker.resx" DependentUpon="FileExtensionPreferencesPicker.cs" />
+		<Compile Update="config/FirmwaresConfig.cs" SubType="Form" />
+		<Compile Update="config/FirmwaresConfig.Designer.cs" DependentUpon="FirmwaresConfig.cs" />
+		<EmbeddedResource Update="config/FirmwaresConfig.resx" DependentUpon="FirmwaresConfig.cs" />
+		<Compile Update="config/FirmwaresConfigInfo.cs" SubType="Form" />
+		<Compile Update="config/FirmwaresConfigInfo.Designer.cs" DependentUpon="FirmwaresConfigInfo.cs" />
+		<EmbeddedResource Update="config/FirmwaresConfigInfo.resx" DependentUpon="FirmwaresConfigInfo.cs" />
+		<Compile Update="config/GB/BmpView.cs" SubType="Component" />
+		<Compile Update="config/GenericCoreConfig.cs" SubType="Form" />
+		<Compile Update="config/GenericCoreConfig.Designer.cs" DependentUpon="GenericCoreConfig.cs" />
+		<EmbeddedResource Update="config/GenericCoreConfig.resx" DependentUpon="GenericCoreConfig.cs" />
+		<Compile Update="config/HotkeyConfig.cs" SubType="Form" />
+		<Compile Update="config/HotkeyConfig.Designer.cs" DependentUpon="HotkeyConfig.cs" />
+		<EmbeddedResource Update="config/HotkeyConfig.resx" DependentUpon="HotkeyConfig.cs" />
+		<Compile Update="config/InputCompositeWidget.cs" SubType="UserControl" />
+		<Compile Update="config/InputCompositeWidget.Designer.cs" DependentUpon="InputCompositeWidget.cs" />
+		<EmbeddedResource Update="config/InputCompositeWidget.resx" DependentUpon="InputCompositeWidget.cs" />
+		<Compile Update="config/Messages/ColorRow.cs" SubType="UserControl" />
+		<Compile Update="config/Messages/ColorRow.Designer.cs" DependentUpon="ColorRow.cs" />
+		<EmbeddedResource Update="config/Messages/ColorRow.resx" DependentUpon="ColorRow.cs" />
+		<Compile Update="config/Messages/MessageConfig.cs" SubType="Form" />
+		<Compile Update="config/Messages/MessageConfig.Designer.cs" DependentUpon="MessageConfig.cs" />
+		<EmbeddedResource Update="config/Messages/MessageConfig.resx" DependentUpon="MessageConfig.cs" SubType="Designer" />
+		<Compile Update="config/Messages/MessageEdit.cs" SubType="UserControl" />
+		<Compile Update="config/Messages/MessageEdit.Designer.cs" DependentUpon="MessageEdit.cs" />
+		<EmbeddedResource Update="config/Messages/MessageEdit.resx" DependentUpon="MessageEdit.cs" />
+		<Compile Update="config/Messages/MessageRow.cs" SubType="UserControl" />
+		<Compile Update="config/Messages/MessageRow.Designer.cs" DependentUpon="MessageRow.cs" />
+		<EmbeddedResource Update="config/Messages/MessageRow.resx" DependentUpon="MessageRow.cs" />
+		<Compile Update="config/NDS/NDSSettings.cs" SubType="Form" />
+		<Compile Update="config/NDS/NDSSettings.Designer.cs" DependentUpon="NDSSettings.cs" />
+		<EmbeddedResource Update="config/NDS/NDSSettings.resx" DependentUpon="NDSSettings.cs" />
+		<Compile Update="config/NES/NesControllerSettings.cs" SubType="Form" />
+		<Compile Update="config/NES/NesControllerSettings.Designer.cs" DependentUpon="NesControllerSettings.cs" />
+		<EmbeddedResource Update="config/NES/NesControllerSettings.resx" DependentUpon="NesControllerSettings.cs" />
+		<Compile Update="config/NES/NESSoundConfig.cs" SubType="Form" />
+		<Compile Update="config/NES/NESSoundConfig.Designer.cs" DependentUpon="NESSoundConfig.cs" />
+		<EmbeddedResource Update="config/NES/NESSoundConfig.resx" DependentUpon="NESSoundConfig.cs" />
+		<Compile Update="config/NES/NESSyncSettingsForm.cs" SubType="Form" />
+		<Compile Update="config/NES/NESSyncSettingsForm.Designer.cs" DependentUpon="NESSyncSettingsForm.cs" />
+		<EmbeddedResource Update="config/NES/NESSyncSettingsForm.resx" DependentUpon="NESSyncSettingsForm.cs" />
+		<Compile Update="config/PathConfig.cs" SubType="Form" />
+		<Compile Update="config/PathConfig.Designer.cs" DependentUpon="PathConfig.cs" />
+		<EmbeddedResource Update="config/PathConfig.resx" DependentUpon="PathConfig.cs" />
+		<Compile Update="config/PathInfo.cs" SubType="Form" />
+		<Compile Update="config/PathInfo.Designer.cs" DependentUpon="PathInfo.cs" />
+		<EmbeddedResource Update="config/PathInfo.resx" DependentUpon="PathInfo.cs" />
+		<Compile Update="config/RewindConfig.cs" SubType="Form" />
+		<Compile Update="config/RewindConfig.Designer.cs" DependentUpon="RewindConfig.cs" />
+		<EmbeddedResource Update="config/RewindConfig.resx" DependentUpon="RewindConfig.cs" />
+		<Compile Update="config/SoundConfig.cs" SubType="Form" />
+		<Compile Update="config/SoundConfig.Designer.cs" DependentUpon="SoundConfig.cs" />
+		<EmbeddedResource Update="config/SoundConfig.resx" DependentUpon="SoundConfig.cs" SubType="Designer" />
+		<Compile Update="CustomControls/ExceptionBox.cs" SubType="Form" />
+		<Compile Update="CustomControls/ExceptionBox.designer.cs" DependentUpon="ExceptionBox.cs" />
+		<EmbeddedResource Update="CustomControls/ExceptionBox.resx" DependentUpon="ExceptionBox.cs" />
+		<Compile Update="CustomControls/FolderBrowserDialogEx.cs" SubType="Component" />
+		<Compile Update="CustomControls/HexTextBox.cs" SubType="Component" />
+		<Compile Update="CustomControls/InputRoll/InputRoll.cs" SubType="Component" />
+		<Compile Update="CustomControls/InputRoll/InputRoll.Drawing.cs" DependentUpon="InputRoll.cs" SubType="Component" />
+		<Compile Update="CustomControls/InputWidget.cs" SubType="Component" />
+		<Compile Update="CustomControls/MenuButton.cs" SubType="Component" />
+		<Compile Update="CustomControls/MiscControls.cs" SubType="Component" />
+		<Compile Update="CustomControls/MsgBox.cs" SubType="Form" />
+		<Compile Update="CustomControls/MsgBox.designer.cs" DependentUpon="MsgBox.cs" />
+		<EmbeddedResource Update="CustomControls/MsgBox.resx" DependentUpon="MsgBox.cs" />
+		<Compile Update="CustomControls/RepeatButton.cs" SubType="Component" />
+		<Compile Update="CustomControls/TransparentTrackbar.cs" SubType="Component" />
+		<Compile Update="CustomControls/ViewportPanel.cs" SubType="Component" />
+		<Compile Update="GraphicsImplementations/GLControlWrapper_GdiPlus.cs" SubType="Component" />
+		<Compile Update="GraphicsImplementations/GLControlWrapper_SlimDX9.cs" SubType="Component" />
+		<Compile Update="GraphicsImplementations/GraphicsControl.cs" SubType="UserControl" />
+		<Compile Update="GraphicsImplementations/GraphicsControl_TK.cs" SubType="UserControl" />
+		<Compile Update="GraphicsImplementations/RetainedGraphicsControl.cs" SubType="UserControl" />
+		<Compile Update="LogWindow.cs" SubType="Form" />
+		<Compile Update="LogWindow.Designer.cs" DependentUpon="LogWindow.cs" />
+		<EmbeddedResource Update="LogWindow.resx" DependentUpon="LogWindow.cs" />
+		<Compile Update="MainForm.cs" SubType="Form" />
+		<Compile Update="MainForm.Designer.cs" DependentUpon="MainForm.cs" />
+		<Compile Update="MainForm.Events.cs" DependentUpon="MainForm.cs" SubType="Form" />
+		<Compile Update="MainForm.FileLoader.cs" DependentUpon="MainForm.cs" SubType="Form" />
+		<Compile Update="MainForm.Hotkey.cs" DependentUpon="MainForm.cs" SubType="Form" />
+		<Compile Update="MainForm.Movie.cs" DependentUpon="MainForm.cs" SubType="Form" />
+		<EmbeddedResource Update="MainForm.resx" DependentUpon="MainForm.cs" SubType="Designer" />
+		<Compile Update="movie/EditCommentsForm.cs" SubType="Form" />
+		<Compile Update="movie/EditCommentsForm.Designer.cs" DependentUpon="EditCommentsForm.cs" />
+		<EmbeddedResource Update="movie/EditCommentsForm.resx" DependentUpon="EditCommentsForm.cs" />
+		<Compile Update="movie/EditSubtitlesForm.cs" SubType="Form" />
+		<Compile Update="movie/EditSubtitlesForm.Designer.cs" DependentUpon="EditSubtitlesForm.cs" />
+		<EmbeddedResource Update="movie/EditSubtitlesForm.resx" DependentUpon="EditSubtitlesForm.cs" />
+		<Compile Update="movie/PlayMovie.cs" SubType="Form" />
+		<Compile Update="movie/PlayMovie.Designer.cs" DependentUpon="PlayMovie.cs" />
+		<EmbeddedResource Update="movie/PlayMovie.resx" DependentUpon="PlayMovie.cs" />
+		<Compile Update="movie/RecordMovie.cs" SubType="Form" />
+		<Compile Update="movie/RecordMovie.Designer.cs" DependentUpon="RecordMovie.cs" />
+		<EmbeddedResource Update="movie/RecordMovie.resx" DependentUpon="RecordMovie.cs" />
+		<Compile Update="movie/SubtitleMaker.cs" SubType="Form" />
+		<Compile Update="movie/SubtitleMaker.Designer.cs" DependentUpon="SubtitleMaker.cs" />
+		<EmbeddedResource Update="movie/SubtitleMaker.resx" DependentUpon="SubtitleMaker.cs" />
+		<Compile Update="PlatformChooser.cs" SubType="Form" />
+		<Compile Update="PlatformChooser.Designer.cs" DependentUpon="PlatformChooser.cs" />
+		<EmbeddedResource Update="PlatformChooser.resx" DependentUpon="PlatformChooser.cs" />
+<!-- creates circular dependency
+		<Compile Update="Properties/Resources.cs" DependentUpon="Resources.resx" />
+-->
+		<Compile Update="RomStatusPicker.cs" SubType="Form" />
+		<Compile Update="RomStatusPicker.Designer.cs" DependentUpon="RomStatusPicker.cs" />
+		<EmbeddedResource Update="RomStatusPicker.resx" DependentUpon="RomStatusPicker.cs" />
+		<Compile Update="tools/BasicBot/BasicBot.cs" SubType="Form" />
+		<Compile Update="tools/BasicBot/BasicBot.Designer.cs" DependentUpon="BasicBot.cs" />
+		<EmbeddedResource Update="tools/BasicBot/BasicBot.resx" DependentUpon="BasicBot.cs" />
+		<Compile Update="tools/BasicBot/BotControlsRow.cs" SubType="UserControl" />
+		<Compile Update="tools/BasicBot/BotControlsRow.Designer.cs" DependentUpon="BotControlsRow.cs" />
+		<EmbeddedResource Update="tools/BasicBot/BotControlsRow.resx" DependentUpon="BotControlsRow.cs" />
+		<Compile Update="tools/GBA/GBAGPUView.cs" />
+		<Compile Update="tools/GBA/GBAGPUView.Designer.cs" DependentUpon="GBAGPUView.cs" />
+		<EmbeddedResource Update="tools/GBA/GBAGPUView.resx" DependentUpon="GBAGPUView.cs" />
+		<Compile Update="tools/GBA/MobileBmpView.cs" SubType="Form" />
+		<Compile Update="tools/GBA/MobileBmpView.Designer.cs" DependentUpon="MobileBmpView.cs" />
+		<EmbeddedResource Update="tools/GBA/MobileBmpView.resx" DependentUpon="MobileBmpView.cs" />
+		<Compile Update="tools/GBA/MobileDetailView.cs" SubType="Form" />
+		<Compile Update="tools/GBA/MobileDetailView.Designer.cs" DependentUpon="MobileDetailView.cs" />
+		<EmbeddedResource Update="tools/GBA/MobileDetailView.resx" DependentUpon="MobileDetailView.cs" />
+		<Compile Update="tools/GB/GBGPUView.cs" SubType="Form" />
+		<Compile Update="tools/GB/GBGPUView.Designer.cs" DependentUpon="GBGPUView.cs" />
+		<EmbeddedResource Update="tools/GB/GBGPUView.resx" DependentUpon="GBGPUView.cs" />
+		<Compile Update="tools/HexEditor/HexColor.cs" SubType="Form" />
+		<Compile Update="tools/HexEditor/HexColor.Designer.cs" DependentUpon="HexColor.cs" />
+		<EmbeddedResource Update="tools/HexEditor/HexColor.resx" DependentUpon="HexColor.cs" />
+		<Compile Update="tools/HexEditor/HexEditor.cs" SubType="Form" />
+		<Compile Update="tools/HexEditor/HexEditor.Designer.cs" DependentUpon="HexEditor.cs" />
+		<EmbeddedResource Update="tools/HexEditor/HexEditor.resx" DependentUpon="HexEditor.cs" />
+		<Compile Update="tools/HexEditor/HexFind.cs" SubType="Form" />
+		<Compile Update="tools/HexEditor/HexFind.Designer.cs" DependentUpon="HexFind.cs" />
+		<EmbeddedResource Update="tools/HexEditor/HexFind.resx" DependentUpon="HexFind.cs" />
+		<Compile Update="tools/InputPrompt.cs" SubType="Form" />
+		<Compile Update="tools/InputPrompt.Designer.cs" DependentUpon="InputPrompt.cs" />
+		<EmbeddedResource Update="tools/InputPrompt.resx" DependentUpon="InputPrompt.cs" SubType="Designer" />
+		<Compile Update="tools/Lua/LuaButton.cs" SubType="Component" />
+		<Compile Update="tools/Lua/LuaCanvas.cs" SubType="Form" />
+		<Compile Update="tools/Lua/LuaCheckbox.cs" SubType="Component" />
+		<Compile Update="tools/Lua/LuaConsole.cs" SubType="Form" />
+		<Compile Update="tools/Lua/LuaConsole.Designer.cs" DependentUpon="LuaConsole.cs" />
+		<EmbeddedResource Update="tools/Lua/LuaConsole.resx" DependentUpon="LuaConsole.cs" />
+		<Compile Update="tools/Lua/LuaDropDown.cs" SubType="Component" />
+		<Compile Update="tools/Lua/LuaFunctionsForm.cs" SubType="Form" />
+		<Compile Update="tools/Lua/LuaFunctionsForm.Designer.cs" DependentUpon="LuaFunctionsForm.cs" />
+		<EmbeddedResource Update="tools/Lua/LuaFunctionsForm.resx" DependentUpon="LuaFunctionsForm.cs" />
+		<Compile Update="tools/Lua/LuaPictureBox.cs" SubType="Component" />
+		<Compile Update="tools/Lua/LuaRegisteredFunctionsList.cs" SubType="Form" />
+		<Compile Update="tools/Lua/LuaRegisteredFunctionsList.Designer.cs" DependentUpon="LuaRegisteredFunctionsList.cs" />
+		<EmbeddedResource Update="tools/Lua/LuaRegisteredFunctionsList.resx" DependentUpon="LuaRegisteredFunctionsList.cs" />
+		<Compile Update="tools/Lua/LuaTextBox.cs" SubType="Component" />
+		<Compile Update="tools/Lua/LuaWinform.cs" SubType="Form" />
+		<Compile Update="tools/Lua/LuaWinform.Designer.cs" DependentUpon="LuaWinform.cs" />
+		<EmbeddedResource Update="tools/Lua/LuaWinform.resx" DependentUpon="LuaWinform.cs" />
+		<Compile Update="tools/Lua/UnixLuaLibraries.cs" DependentUpon="LuaLibraries.cs" />
+		<Compile Update="tools/Lua/Win32LuaLibraries.cs" DependentUpon="LuaLibraries.cs" />
+		<Compile Update="tools/Macros/MacroInput.ButtonSelect.cs" SubType="Form" />
+		<Compile Update="tools/Macros/MacroInput.cs" SubType="Form" />
+		<Compile Update="tools/Macros/MacroInput.Designer.cs" DependentUpon="MacroInput.cs" />
+		<EmbeddedResource Update="tools/Macros/MacroInput.resx" DependentUpon="MacroInput.cs" />
+		<Compile Update="tools/MultiDiskBundler/MultiDiskBundler.cs" SubType="Form" />
+		<Compile Update="tools/MultiDiskBundler/MultiDiskBundler.Designer.cs" DependentUpon="MultiDiskBundler.cs" />
+		<EmbeddedResource Update="tools/MultiDiskBundler/MultiDiskBundler.resx" DependentUpon="MultiDiskBundler.cs" />
+		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.cs" SubType="UserControl" />
+		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.Designer.cs" DependentUpon="MultiDiskFileSelector.cs" />
+		<EmbeddedResource Update="tools/MultiDiskBundler/MultiDiskFileSelector.resx" DependentUpon="MultiDiskFileSelector.cs" />
+		<Compile Update="tools/NES/BarcodeEntry.cs" SubType="Form" />
+		<Compile Update="tools/NES/BarcodeEntry.Designer.cs" DependentUpon="BarcodeEntry.cs" />
+		<EmbeddedResource Update="tools/NES/BarcodeEntry.resx" DependentUpon="BarcodeEntry.cs" />
+		<Compile Update="tools/NES/NameTableViewer.cs" SubType="Component" />
+		<Compile Update="tools/NES/NESMusicRipper.cs" SubType="Form" />
+		<Compile Update="tools/NES/NESMusicRipper.Designer.cs" DependentUpon="NESMusicRipper.cs" />
+		<EmbeddedResource Update="tools/NES/NESMusicRipper.resx" DependentUpon="NESMusicRipper.cs" />
+		<Compile Update="tools/NES/NESNameTableViewer.cs" SubType="Form" />
+		<Compile Update="tools/NES/NESNameTableViewer.Designer.cs" DependentUpon="NESNameTableViewer.cs" />
+		<EmbeddedResource Update="tools/NES/NESNameTableViewer.resx" DependentUpon="NESNameTableViewer.cs" />
+		<Compile Update="tools/NES/NESPPU.cs" SubType="Form" />
+		<Compile Update="tools/NES/NESPPU.Designer.cs" DependentUpon="NESPPU.cs" />
+		<EmbeddedResource Update="tools/NES/NESPPU.resx" DependentUpon="NESPPU.cs" SubType="Designer" />
+		<Compile Update="tools/NES/PaletteViewer.cs" SubType="Component" />
+		<Compile Update="tools/NES/PatternViewer.cs" SubType="Component" />
+		<EmbeddedResource Update="tools/NES/PatternViewer.resx" DependentUpon="PatternViewer.cs" />
+		<Compile Update="tools/NES/SpriteViewer.cs" SubType="Component" />
+		<Compile Update="tools/TAStudio/BookmarksBranchesBox.cs" SubType="UserControl" />
+		<Compile Update="tools/TAStudio/BookmarksBranchesBox.Designer.cs" DependentUpon="BookmarksBranchesBox.cs" />
+		<EmbeddedResource Update="tools/TAStudio/BookmarksBranchesBox.resx" DependentUpon="BookmarksBranchesBox.cs" SubType="Designer" />
+		<Compile Update="tools/TAStudio/DefaultGreenzoneSettings.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/DefaultGreenzoneSettings.Designer.cs" DependentUpon="DefaultGreenzoneSettings.cs" />
+		<EmbeddedResource Update="tools/TAStudio/DefaultGreenzoneSettings.resx" DependentUpon="DefaultGreenzoneSettings.cs" />
+		<Compile Update="tools/TAStudio/FramesPrompt.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/FramesPrompt.Designer.cs" DependentUpon="FramesPrompt.cs" />
+		<EmbeddedResource Update="tools/TAStudio/FramesPrompt.resx" DependentUpon="FramesPrompt.cs" />
+		<Compile Update="tools/TAStudio/HeaderEditor.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/HeaderEditor.Designer.cs" DependentUpon="HeaderEditor.cs" />
+		<EmbeddedResource Update="tools/TAStudio/HeaderEditor.resx" DependentUpon="HeaderEditor.cs" />
+		<Compile Update="tools/TAStudio/MarkerControl.cs" SubType="UserControl" />
+		<Compile Update="tools/TAStudio/MarkerControl.Designer.cs" DependentUpon="MarkerControl.cs" />
+		<EmbeddedResource Update="tools/TAStudio/MarkerControl.resx" DependentUpon="MarkerControl.cs" />
+		<Compile Update="tools/TAStudio/PatternsForm.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/PatternsForm.Designer.cs" DependentUpon="PatternsForm.cs" />
+		<EmbeddedResource Update="tools/TAStudio/PatternsForm.resx" DependentUpon="PatternsForm.cs" />
+		<Compile Update="tools/TAStudio/PlaybackBox.cs" SubType="UserControl" />
+		<Compile Update="tools/TAStudio/PlaybackBox.Designer.cs" DependentUpon="PlaybackBox.cs" />
+		<EmbeddedResource Update="tools/TAStudio/PlaybackBox.resx" DependentUpon="PlaybackBox.cs" />
+		<Compile Update="tools/TAStudio/ScreenshotForm.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/ScreenshotForm.Designer.cs" DependentUpon="ScreenshotForm.cs" />
+		<EmbeddedResource Update="tools/TAStudio/ScreenshotForm.resx" DependentUpon="ScreenshotForm.cs" />
+		<Compile Update="tools/TAStudio/TAStudio.Callbacks.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.Designer.cs" DependentUpon="TAStudio.cs" />
+		<Compile Update="tools/TAStudio/TAStudio.IControlMainForm.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.IToolForm.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.ListView.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.MenuItems.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/TAStudio.Navigation.cs" DependentUpon="TAStudio.cs" SubType="Form" />
+		<EmbeddedResource Update="tools/TAStudio/TAStudio.resx" DependentUpon="TAStudio.cs" />
+		<Compile Update="tools/TAStudio/UndoHistoryForm.cs" SubType="Form" />
+		<Compile Update="tools/TAStudio/UndoHistoryForm.Designer.cs" DependentUpon="UndoHistoryForm.cs" />
+		<EmbeddedResource Update="tools/TAStudio/UndoHistoryForm.resx" DependentUpon="UndoHistoryForm.cs" />
+		<Compile Update="tools/ToolFormBase.cs" SubType="Form" />
+		<Compile Update="tools/TraceLogger.cs" SubType="Form" />
+		<Compile Update="tools/TraceLogger.Designer.cs" DependentUpon="TraceLogger.cs" />
+		<EmbeddedResource Update="tools/TraceLogger.resx" DependentUpon="TraceLogger.cs" />
+		<Compile Update="tools/VirtualPads/controls/components/AnalogStickPanel.cs" SubType="Component" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadAnalogButton.cs" SubType="UserControl" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadAnalogButton.Designer.cs" DependentUpon="VirtualPadAnalogButton.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/controls/VirtualPadAnalogButton.resx" DependentUpon="VirtualPadAnalogButton.cs" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadAnalogStick.cs" SubType="UserControl" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadAnalogStick.Designer.cs" DependentUpon="VirtualPadAnalogStick.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/controls/VirtualPadAnalogStick.resx" DependentUpon="VirtualPadAnalogStick.cs" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadButton.cs" SubType="Component" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadDiscManager.cs" SubType="UserControl" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadDiscManager.Designer.cs" DependentUpon="VirtualPadDiscManager.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/controls/VirtualPadDiscManager.resx" DependentUpon="VirtualPadDiscManager.cs" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadTargetScreen.cs" SubType="UserControl" />
+		<Compile Update="tools/VirtualPads/controls/VirtualPadTargetScreen.Designer.cs" DependentUpon="VirtualPadTargetScreen.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/controls/VirtualPadTargetScreen.resx" DependentUpon="VirtualPadTargetScreen.cs" />
+		<Compile Update="tools/VirtualPads/VirtualPad.cs" SubType="UserControl" />
+		<Compile Update="tools/VirtualPads/VirtualPad.Designer.cs" DependentUpon="VirtualPad.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/VirtualPad.resx" DependentUpon="VirtualPad.cs" />
+		<Compile Update="tools/VirtualPads/VirtualpadsTool.cs" SubType="Form" />
+		<Compile Update="tools/VirtualPads/VirtualpadsTool.Designer.cs" DependentUpon="VirtualpadsTool.cs" />
+		<EmbeddedResource Update="tools/VirtualPads/VirtualpadsTool.resx" DependentUpon="VirtualpadsTool.cs" />
+		<Compile Update="tools/Watch/RamPoke.cs" SubType="Form" />
+		<Compile Update="tools/Watch/RamPoke.Designer.cs" DependentUpon="RamPoke.cs" />
+		<EmbeddedResource Update="tools/Watch/RamPoke.resx" DependentUpon="RamPoke.cs" />
+		<Compile Update="tools/Watch/RamSearch.cs" SubType="Form" />
+		<Compile Update="tools/Watch/RamSearch.Designer.cs" DependentUpon="RamSearch.cs" />
+		<EmbeddedResource Update="tools/Watch/RamSearch.resx" DependentUpon="RamSearch.cs" />
+		<Compile Update="tools/Watch/RamWatch.cs" SubType="Form" />
+		<Compile Update="tools/Watch/RamWatch.Designer.cs" DependentUpon="RamWatch.cs" />
+		<EmbeddedResource Update="tools/Watch/RamWatch.resx" DependentUpon="RamWatch.cs" />
+		<Compile Update="tools/Watch/WatchEditor.cs" SubType="Form" />
+		<Compile Update="tools/Watch/WatchEditor.Designer.cs" DependentUpon="WatchEditor.cs" />
+		<EmbeddedResource Update="tools/Watch/WatchEditor.resx" DependentUpon="WatchEditor.cs" />
+		<Compile Update="tools/Watch/WatchValueBox.cs" SubType="Component" />
+	</ItemGroup>
+</Project>

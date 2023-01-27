@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Platforms>AnyCPU;x64</Platforms>
+	</PropertyGroup>
+	<Import Project="../MainSlnCommon.props" />
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWarn>$(NoWarn);CA1806;CA1825;CA2214;SA1100;SA1120;SA1129;SA1137;SA1205;SA1208;SA1400</NoWarn>
+		<Nullable>disable</Nullable>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<Reference Include="FlatBuffers.Core" HintPath="$(ProjectDir)../../References/FlatBuffers.Core.dll" Private="true" />
+		<Reference Include="FlatBuffers.GenOutput" HintPath="$(ProjectDir)../../References/FlatBuffers.GenOutput.dll" Private="true" />
+		<ProjectReference Include="$(ProjectDir)../BizHawk.Emulation.Common/BizHawk.Emulation.Common.csproj" />
+		<EmbeddedResource Include="Resources/**/*" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="Resources\**" />
+	  <EmbeddedResource Remove="Resources\**" />
+	  <None Remove="Resources\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Computers/SinclairSpectrum/Hardware/Disk/NECUPD765.*.cs" DependentUpon="NECUPD765.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/Pentagon128K/Pentagon128.*.cs" DependentUpon="Pentagon128.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/SpectrumBase.*.cs" DependentUpon="SpectrumBase.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/ZXSpectrum128K/ZX128.*.cs" DependentUpon="ZX128.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/ZXSpectrum128KPlus2a/ZX128Plus2a.*.cs" DependentUpon="ZX128Plus2a.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/ZXSpectrum128KPlus3/ZX128Plus3.*.cs" DependentUpon="ZX128Plus3.cs" />
+		<Compile Update="Computers/SinclairSpectrum/Machine/ZXSpectrum48K/ZX48.*.cs" DependentUpon="ZX48.cs" />
+		<Compile Update="Computers/SinclairSpectrum/ZXSpectrum.*.cs" DependentUpon="ZXSpectrum.cs" />
+		<Compile Update="Consoles/MSX/MSX.*.cs" DependentUpon="MSX.cs" />
+		<Compile Update="Consoles/Nintendo/Gameboy/Gambatte.*.cs" DependentUpon="Gambatte.cs" />
+		<Compile Update="Consoles/Nintendo/Gameboy/GambatteLink.*.cs" DependentUpon="GambatteLink.cs" />
+		<Compile Update="Consoles/Nintendo/GBA/MGBAHawk.*.cs" DependentUpon="MGBAHawk.cs" />
+		<Compile Update="Consoles/Nintendo/GBHawk/GBHawk.*.cs" DependentUpon="GBHawk.cs" />
+		<Compile Update="Consoles/Nintendo/GBHawk/*_PPU.cs" DependentUpon="PPU.cs" />
+		<Compile Update="Consoles/Nintendo/GBHawkLink/GBHawkLink.*.cs" DependentUpon="GBHawkLink.cs" />
+		<Compile Update="Consoles/Nintendo/GBHawkLink3x/GBHawkLink3x.*.cs" DependentUpon="GBHawkLink3x.cs" />
+		<Compile Update="Consoles/Nintendo/GBHawkLink4x/GBHawkLink4x.*.cs" DependentUpon="GBHawkLink4x.cs" />
+		<Compile Update="Consoles/Nintendo/Ares64/Ares64.*.cs" DependentUpon="Ares64.cs" />
+		<Compile Update="Consoles/Nintendo/N64/N64.*.cs" DependentUpon="N64.cs" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/AxROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/CPROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/GxROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/IC_74x377.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/NROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/SxROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/Boards/UxROM.cs" SubType="Code" />
+		<Compile Update="Consoles/Nintendo/NES/NES.*.cs" DependentUpon="NES.cs" />
+		<Compile Update="Consoles/Nintendo/NDS/MelonDS.*.cs" DependentUpon="MelonDS.cs" />
+		<Compile Update="Consoles/Nintendo/SubNESHawk/SubNESHawk.*.cs" DependentUpon="SubNESHawk.cs" />
+		<Compile Update="Consoles/Nintendo/QuickNES/QuickNES.*.cs" DependentUpon="QuickNES.cs" />
+		<Compile Update="Consoles/Nintendo/Sameboy/SameBoy.*.cs" DependentUpon="SameBoy.cs" />
+		<Compile Update="Consoles/Nintendo/SNES/LibsnesCore.*.cs" DependentUpon="LibsnesCore.cs" />
+		<Compile Update="Consoles/Sega/GGHawkLink/GGHawkLink.*.cs" DependentUpon="GGHawkLink.cs" />
+		<Compile Update="Consoles/Sega/gpgx64/GPGX.*.cs" DependentUpon="GPGX.cs" />
+		<Compile Update="Consoles/Sega/SMS/SMS.*.cs" DependentUpon="SMS.cs" />
+		<Compile Update="Consoles/WonderSwan/WonderSwan.*.cs" DependentUpon="WonderSwan.cs" />
+	</ItemGroup>
+</Project>
