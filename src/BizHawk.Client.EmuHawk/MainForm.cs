@@ -24,7 +24,6 @@ using BizHawk.Bizware.BizwareGL;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Common.Base_Implementations;
 using BizHawk.Emulation.Cores;
-using BizHawk.Emulation.Cores.Nintendo.NES;
 using BizHawk.Client.EmuHawk.ToolExtensions;
 using BizHawk.Client.EmuHawk.CoreExtensions;
 using BizHawk.Client.EmuHawk.CustomControls;
@@ -103,10 +102,6 @@ namespace BizHawk.Client.EmuHawk
 				if(loaded == null)
 					Console.WriteLine($"requested ext. tool dll {requestedExtToolDll} could not be loaded");
 			}
-
-#if DEBUG
-			AddDebugMenu();
-#endif
 		}
 
 		static MainForm()
@@ -177,8 +172,6 @@ namespace BizHawk.Client.EmuHawk
 			VirtualPadMenuItem.Image = Properties.Resources.GameController;
 			BasicBotMenuItem.Image = Properties.Resources.BasicBotBit;
 			MultiDiskBundlerFileMenuItem.Image = Properties.Resources.SaveConfig;
-			NesControllerSettingsMenuItem.Image = Properties.Resources.GameController;
-			NESSoundChannelsMenuItem.Image = Properties.Resources.Audio;
 			KeypadMenuItem.Image = Properties.Resources.Calculator;
 			OnlineHelpMenuItem.Image = Properties.Resources.Help;
 			ForumsMenuItem.Image = Properties.Resources.TAStudio;
@@ -245,7 +238,6 @@ namespace BizHawk.Client.EmuHawk
 
 			//do this threaded stuff early so it has plenty of time to run in background
 			Database.InitializeDatabase(Path.Combine(PathUtils.ExeDirectoryPath, "gamedb", "gamedb.txt"), silent: true);
-			BootGodDb.Initialize(Path.Combine(PathUtils.ExeDirectoryPath, "gamedb"));
 
 			_argParser = cliFlags;
 			_getConfigPath = getConfigPath;
@@ -1476,27 +1468,19 @@ namespace BizHawk.Client.EmuHawk
 
 					byte[] sram;
 
-					// some cores might not know how big the saveram ought to be, so just send it the whole file
-					if ((Emulator is NES && (Emulator as NES).BoardName == "FDS"))
+					var oldRam = Emulator.AsSaveRam().CloneSaveRam();
+					if (oldRam == null)
 					{
-						sram = File.ReadAllBytes(saveRamPath);
+						// we're eating this one now. The possible negative consequence is that a user could lose
+						// their saveram and not know why
+						// ShowMessageBox(owner: null, "Error: tried to load saveram, but core would not accept it?");
+						return;
 					}
-					else
-					{
-						var oldRam = Emulator.AsSaveRam().CloneSaveRam();
-						if (oldRam == null)
-						{
-							// we're eating this one now. The possible negative consequence is that a user could lose
-							// their saveram and not know why
-							// ShowMessageBox(owner: null, "Error: tried to load saveram, but core would not accept it?");
-							return;
-						}
 
-						// why do we silently truncate\pad here instead of warning\erroring?
-						sram = new byte[oldRam.Length];
-						using var reader = new BinaryReader(new FileStream(saveRamPath, FileMode.Open, FileAccess.Read));
-						reader.Read(sram, 0, sram.Length);
-					}
+					// why do we silently truncate\pad here instead of warning\erroring?
+					sram = new byte[oldRam.Length];
+					using var reader = new BinaryReader(new FileStream(saveRamPath, FileMode.Open, FileAccess.Read));
+					reader.Read(sram, 0, sram.Length);
 
 					Emulator.AsSaveRam().StoreSaveRam(sram);
 					AutoFlushSaveRamIn = Config.FlushSaveRamFrames;
@@ -1595,16 +1579,12 @@ namespace BizHawk.Client.EmuHawk
 				if (i != -1) AvailableAccelerators.Add(GenericCoreSubMenu.Text[i + 1]);
 			}
 			GenericCoreSubMenu.Visible = false;
-			NESSubMenu.Visible = false;
 			GBSubMenu.Visible = false;
 			GBLSubMenu.Visible = false;
 
 			switch (Emulator.SystemId)
 			{
 				case VSystemID.Raw.NULL:
-					break;
-				case VSystemID.Raw.NES:
-					NESSubMenu.Visible = true;
 					break;
 				case VSystemID.Raw.GB:
 				case VSystemID.Raw.GBC:
@@ -2415,19 +2395,6 @@ namespace BizHawk.Client.EmuHawk
 		private void VsyncMessage()
 		{
 			AddOnScreenMessage($"Display Vsync set to {(Config.VSync ? "on" : "off")}");
-		}
-
-		private void FdsInsertDiskMenuAdd(string name, string button, string msg)
-		{
-			FDSControlsMenuItem.DropDownItems.Add(name, null, (sender, e) =>
-			{
-				if (Emulator.ControllerDefinition.BoolButtons.Contains(button)
-					&& !MovieSession.Movie.IsPlaying())
-				{
-					InputManager.ClickyVirtualPadController.Click(button);
-					AddOnScreenMessage(msg);
-				}
-			});
 		}
 
 		private const int WmDeviceChange = 0x0219;
@@ -3356,16 +3323,6 @@ namespace BizHawk.Client.EmuHawk
 
 						_defaultRomDetails = xSw.ToString();
 						_multiDiskMode = true;
-					}
-
-					if (loader.LoadedEmulator is NES nes)
-					{
-						if (!string.IsNullOrWhiteSpace(nes.GameName))
-						{
-							Game.Name = nes.GameName;
-						}
-
-						Game.Status = nes.RomStatus;
 					}
 
 					var romDetails = Emulator.RomDetails();

@@ -7,7 +7,6 @@ using System.Linq;
 
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.NES;
 
 namespace BizHawk.Client.Common
 {
@@ -140,34 +139,12 @@ namespace BizHawk.Client.Common
 
 		public object? GetSettings() => Emulator switch
 		{
-			NES nes => nes.GetSettings(),
 			_ => null
 		};
 
 		public PutSettingsDirtyBits PutSettings(object settings) => Emulator switch
 		{
-			NES nes => nes.PutSettings((NES.NESSettings) settings),
 			_ => PutSettingsDirtyBits.None
 		};
-
-		public void SetRenderPlanes(params bool[] args)
-		{
-			static bool GetSetting(bool[] settings, int index) => index >= settings.Length || settings[index];
-			void SetNesHawk(NES core)
-			{
-				var s = core.GetSettings();
-				// in the future, we could do something more arbitrary here, but this isn't any worse than the old system
-				s.DispSprites = GetSetting(args, 0);
-				s.DispBackground = GetSetting(args, 1);
-				core.PutSettings(s);
-			}
-
-			switch (Emulator)
-			{
-				case NES nes:
-					SetNesHawk(nes);
-					break;
-			}
-		}
 	}
 }

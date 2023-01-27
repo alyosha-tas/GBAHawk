@@ -2,6 +2,5 @@
 #include gamedb_gb.txt
 #include gamedb_gba.txt
 #include gamedb_gbc.txt
-#include gamedb_nes.txt
-#includeuser gamedb_user.txt
+
 

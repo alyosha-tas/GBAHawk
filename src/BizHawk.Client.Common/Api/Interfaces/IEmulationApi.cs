@@ -28,6 +28,5 @@ namespace BizHawk.Client.Common
 
 		object? GetSettings();
 		PutSettingsDirtyBits PutSettings(object settings);
-		void SetRenderPlanes(params bool[] args);
 	}
 }

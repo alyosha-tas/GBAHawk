@@ -200,18 +200,6 @@ namespace BizHawk.Client.EmuHawk
 			this.MultiDiskBundlerFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.ExternalToolMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.dummyExternalTool = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.NESSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.NESPPUViewerMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.NESNametableViewerMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.MusicRipperMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.toolStripSeparator17 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.NesControllerSettingsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.NESSoundChannelsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.MovieSettingsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.toolStripSeparator22 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.FDSControlsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.FdsEjectDiskMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.BarcodeReaderMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.KeypadMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.LoadTIFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator13 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
@@ -304,7 +292,6 @@ namespace BizHawk.Client.EmuHawk
 			this.ViewSubMenu,
 			this.ConfigSubMenu,
 			this.ToolsSubMenu,
-			this.NESSubMenu,
 			this.GBSubMenu,
 			this.GBLSubMenu,
 			this.GenericCoreSubMenu,
@@ -1302,69 +1289,6 @@ namespace BizHawk.Client.EmuHawk
 			// 
 			this.dummyExternalTool.Text = "None";
 			// 
-			// NESSubMenu
-			// 
-			this.NESSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.NESPPUViewerMenuItem,
-			this.NESNametableViewerMenuItem,
-			this.MusicRipperMenuItem,
-			this.toolStripSeparator17,
-			this.NesControllerSettingsMenuItem,
-			this.NESSoundChannelsMenuItem,
-			this.MovieSettingsMenuItem,
-			this.toolStripSeparator22,
-			this.FDSControlsMenuItem,
-			this.BarcodeReaderMenuItem});
-			this.NESSubMenu.Text = "&NES";
-			this.NESSubMenu.DropDownOpened += new System.EventHandler(this.NesSubMenu_DropDownOpened);
-			// 
-			// NESPPUViewerMenuItem
-			// 
-			this.NESPPUViewerMenuItem.Text = "&PPU Viewer";
-			this.NESPPUViewerMenuItem.Click += new System.EventHandler(this.NesPpuViewerMenuItem_Click);
-			// 
-			// NESNametableViewerMenuItem
-			// 
-			this.NESNametableViewerMenuItem.Text = "&Nametable Viewer";
-			this.NESNametableViewerMenuItem.Click += new System.EventHandler(this.NesNametableViewerMenuItem_Click);
-			// 
-			// MusicRipperMenuItem
-			// 
-			this.MusicRipperMenuItem.Text = "Music Ripper";
-			this.MusicRipperMenuItem.Click += new System.EventHandler(this.MusicRipperMenuItem_Click);
-			// 
-			// NesControllerSettingsMenuItem
-			// 
-			this.NesControllerSettingsMenuItem.Text = "Controller Settings...";
-			this.NesControllerSettingsMenuItem.Click += new System.EventHandler(this.NesControllerSettingsMenuItem_Click);
-			// 
-			// NESSoundChannelsMenuItem
-			// 
-			this.NESSoundChannelsMenuItem.Text = "Sound Channels...";
-			this.NESSoundChannelsMenuItem.Click += new System.EventHandler(this.NesSoundChannelsMenuItem_Click);
-			// 
-			// MovieSettingsMenuItem
-			// 
-			this.MovieSettingsMenuItem.Text = "Advanced Settings...";
-			this.MovieSettingsMenuItem.Click += new System.EventHandler(this.MovieSettingsMenuItem_Click);
-			// 
-			// FDSControlsMenuItem
-			// 
-			this.FDSControlsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.FdsEjectDiskMenuItem});
-			this.FDSControlsMenuItem.Text = "FDS Controls";
-			this.FDSControlsMenuItem.DropDownOpened += new System.EventHandler(this.FdsControlsMenuItem_DropDownOpened);
-			// 
-			// FdsEjectDiskMenuItem
-			// 
-			this.FdsEjectDiskMenuItem.Text = "&Eject Disk";
-			this.FdsEjectDiskMenuItem.Click += new System.EventHandler(this.FdsEjectDiskMenuItem_Click);
-			// 
-			// BarcodeReaderMenuItem
-			// 
-			this.BarcodeReaderMenuItem.Text = "Barcode Reader";
-			this.BarcodeReaderMenuItem.Click += new System.EventHandler(this.BarcodeReaderMenuItem_Click);
-			// 
 			// GBSubMenu
 			// 
 			this.GBSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1934,9 +1858,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator10;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveConfigMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadConfigMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NESSubMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NESPPUViewerMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NESNametableViewerMenuItem;
 		private StatusStripEx MainStatusBar;
 		private BizHawk.WinForms.Controls.StatusLabelEx EmuStatus;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MessagesMenuItem;
@@ -1954,7 +1875,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TAStudioMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripMenuItem4;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayStatusBarMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator17;
 		private System.Windows.Forms.ContextMenuStrip MainFormContextMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OpenRomContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadLastRomContextMenuItem;
@@ -2003,7 +1923,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ForumsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotClipboardMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotContextMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NESSoundChannelsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx HardResetMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx EmulatorMenuSeparator2;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadedCoreNameMenuItem;
@@ -2013,7 +1932,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotCaptureOSDMenuItem1;
 		private BizHawk.WinForms.Controls.StatusLabelEx RebootStatusBarIcon;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TraceLoggerMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FDSControlsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveMovieMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveMovieContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx VirtualPadMenuItem;
@@ -2043,7 +1961,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLsettingsToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GenericCoreSubMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MovieSettingsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx CoresSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayConfigMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx extensionsToolStripMenuItem;
@@ -2064,8 +1981,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ClientOptionsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx customizeToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBcoreSettingsToolStripMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NesControllerSettingsMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator22;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx paletteToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SynclessRecordingMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MovieEndSubMenu;
@@ -2075,12 +1990,10 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MovieEndPauseMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotClientClipboardMenuItem;
 		private BizHawk.WinForms.Controls.StatusLabelEx LinkConnectStatusBarButton;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BarcodeReaderMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveRAMSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FlushSaveRAMMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MacroToolMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MultiDiskBundlerFileMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MusicRipperMenuItem;
 		private System.Windows.Forms.Timer timerMouseIdle;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx miUnthrottled;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx toolStripMenuItem17;

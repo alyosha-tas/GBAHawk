@@ -16,7 +16,6 @@ namespace BizHawk.Emulation.Cores
 
 		Disc, //an unknown disc
 
-		INES, FDS, UNIF, NSF,
 		GB, GBC, GBA,
 	}
 
@@ -208,16 +207,12 @@ namespace BizHawk.Emulation.Cores
 		/// testers to try for each extension, along with a default for the extension
 		/// </summary>
 		private static readonly Dictionary<string, ExtensionInfo> ExtensionHandlers = new Dictionary<string, ExtensionInfo> {
-		  { "NES", new ExtensionInfo(FileIDType.INES, Test_INES ) },
-			{ "FDS", new ExtensionInfo(FileIDType.FDS, Test_FDS ) },
 			{ "GBA", new ExtensionInfo(FileIDType.GBA, (j)=>Test_Simple(j,FileIDType.GBA,SimpleMagics.GBA) ) },
-			{ "UNF", new ExtensionInfo(FileIDType.UNIF, Test_UNIF ) },
-			{ "UNIF", new ExtensionInfo(FileIDType.UNIF, Test_UNIF ) },
 			{ "GB", new ExtensionInfo(FileIDType.GB, Test_GB_GBC ) },
 			{ "GBC", new ExtensionInfo(FileIDType.GBC, Test_GB_GBC ) },
 
 			//for now
-			{ "ROM", new ExtensionInfo(FileIDType.Multiple, null ) }, //could be MSX too
+			{ "ROM", new ExtensionInfo(FileIDType.Multiple, null ) },
 		};
 
 		private delegate FileIDResult FormatTester(IdentifyJob job);
@@ -277,31 +272,6 @@ namespace BizHawk.Emulation.Cores
 			return stream.ReadByte();
 		}
 
-		private static FileIDResult Test_INES(IdentifyJob job)
-		{
-			if (!CheckMagic(job.Stream, SimpleMagics.INES))
-				return new FileIDResult();
-
-			var ret = new FileIDResult(FileIDType.INES, 100);
-
-			//an INES file should be a multiple of 8k, with the 16 byte header.
-			//if it isnt.. this is fishy.
-			if (((job.Stream.Length - 16) & (8 * 1024 - 1)) != 0)
-				ret.Confidence = 50;
-
-			return ret;
-		}
-
-		private static FileIDResult Test_FDS(IdentifyJob job)
-		{
-			if (CheckMagic(job.Stream, SimpleMagics.FDS_HEADER))
-				return new FileIDResult(FileIDType.FDS, 90); //kind of a small header..
-			if (CheckMagic(job.Stream, SimpleMagics.FDS_HEADERLESS))
-				return new FileIDResult(FileIDType.FDS, 95);
-
-			return new FileIDResult();
-		}
-
 		private static FileIDResult Test_Simple(IdentifyJob job, FileIDType type, SimpleMagicRecord magic)
 		{
 			var ret = new FileIDResult(type);
@@ -310,18 +280,6 @@ namespace BizHawk.Emulation.Cores
 				return new FileIDResult(type, 100);
 			else
 				return new FileIDResult();
-		}
-
-		private static FileIDResult Test_UNIF(IdentifyJob job)
-		{
-			if (!CheckMagic(job.Stream, SimpleMagics.UNIF))
-				return new FileIDResult();
-
-			//TODO - simple parser (for starters, check for a known chunk being next, see http://wiki.nesdev.com/w/index.php/UNIF)
-
-			var ret = new FileIDResult(FileIDType.UNIF, 100);
-
-			return ret;
 		}
 
 		private static FileIDResult Test_GB_GBC(IdentifyJob job)
@@ -337,14 +295,6 @@ namespace BizHawk.Emulation.Cores
 			//could check cart type and rom size for extra info if necessary
 
 			return ret;
-		}
-
-		private static FileIDResult Test_SMS(IdentifyJob job)
-		{
-			//http://www.smspower.org/Development/ROMHeader
-
-			//actually, not sure how to handle this yet
-			return new FileIDResult();
 		}
 	}
 }

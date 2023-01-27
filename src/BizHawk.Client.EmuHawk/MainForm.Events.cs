@@ -13,8 +13,6 @@ using BizHawk.Client.EmuHawk.CustomControls;
 using BizHawk.Client.EmuHawk.ToolExtensions;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.NES;
-using BizHawk.Emulation.Cores.Nintendo.SubNESHawk;
 using BizHawk.WinForms.Controls;
 
 namespace BizHawk.Client.EmuHawk
@@ -1148,103 +1146,6 @@ namespace BizHawk.Client.EmuHawk
 		private void MultidiskBundlerMenuItem_Click(object sender, EventArgs e)
 		{
 			Tools.Load<MultiDiskBundler>();
-		}
-
-		private void NesSubMenu_DropDownOpened(object sender, EventArgs e)
-		{
-			var boardName = Emulator.HasBoardInfo() ? Emulator.AsBoardInfo().BoardName : null;
-			FDSControlsMenuItem.Enabled = boardName == "FDS";
-
-			NESSoundChannelsMenuItem.Enabled = Tools.IsAvailable<NESSoundConfig>();
-			MovieSettingsMenuItem.Enabled = (Emulator is NES || Emulator is SubNESHawk)
-				&& !MovieSession.Movie.IsActive();
-
-			NesControllerSettingsMenuItem.Enabled = Tools.IsAvailable<NesControllerSettings>()
-				&& !MovieSession.Movie.IsActive();
-
-			BarcodeReaderMenuItem.Enabled = ServiceInjector.IsAvailable(Emulator.ServiceProvider, typeof(BarcodeEntry));
-
-			MusicRipperMenuItem.Enabled = Tools.IsAvailable<NESMusicRipper>();
-		}
-
-		private void FdsControlsMenuItem_DropDownOpened(object sender, EventArgs e)
-		{
-			var boardName = Emulator.HasBoardInfo() ? Emulator.AsBoardInfo().BoardName : null;
-			FdsEjectDiskMenuItem.Enabled = boardName == "FDS";
-
-			while (FDSControlsMenuItem.DropDownItems.Count > 1)
-			{
-				FDSControlsMenuItem.DropDownItems.RemoveAt(1);
-			}
-
-			string button;
-			for (int i = 0; Emulator.ControllerDefinition.BoolButtons.Contains(button = $"FDS Insert {i}"); i++)
-			{
-				var name = $"Disk {i / 2 + 1} Side {(char)(i % 2 + 'A')}";
-				FdsInsertDiskMenuAdd($"Insert {name}", button, $"FDS {name} inserted.");
-			}
-		}
-
-		private void NesPpuViewerMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<NesPPU>();
-		}
-
-		private void NesNametableViewerMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<NESNameTableViewer>();
-		}
-
-		private void MusicRipperMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<NESMusicRipper>();
-		}
-
-		private void NesSoundChannelsMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<NESSoundConfig>();
-		}
-
-		private void FdsEjectDiskMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!MovieSession.Movie.IsPlaying())
-			{
-				InputManager.ClickyVirtualPadController.Click("FDS Eject");
-				AddOnScreenMessage("FDS disk ejected.");
-			}
-		}
-
-		private void NesControllerSettingsMenuItem_Click(object sender, EventArgs e)
-		{
-			if (Emulator is NES nes)
-			{
-				using var form = new NesControllerSettings(this, nes.GetSyncSettings().Clone());
-				form.ShowDialog();
-			}
-			else if (Emulator is SubNESHawk sub)
-			{
-				using var form = new NesControllerSettings(this, sub.GetSyncSettings().Clone());
-				form.ShowDialog();
-			}
-		}
-
-		private void MovieSettingsMenuItem_Click(object sender, EventArgs e)
-		{
-			if (Emulator is NES nes)
-			{
-				using var dlg = new NESSyncSettingsForm(this, nes.GetSyncSettings().Clone(), nes.HasMapperProperties);
-				dlg.ShowDialog(this);
-			}
-			else if (Emulator is SubNESHawk sub)
-			{
-				using var dlg = new NESSyncSettingsForm(this, sub.GetSyncSettings().Clone(), sub.HasMapperProperties);
-				dlg.ShowDialog(this);
-			}
-		}
-
-		private void BarcodeReaderMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<BarcodeEntry>();
 		}
 
 		private void GbCoreSettingsMenuItem_Click(object sender, EventArgs e)

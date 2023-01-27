@@ -80,11 +80,6 @@ namespace BizHawk.Client.Common
 		public void MinimizeFrameskip(bool enabled)
 			=> APIs.Emulation.MinimizeFrameskip(enabled);
 
-		[LuaMethodExample("emu.setrenderplanes( true, false );")]
-		[LuaMethod("setrenderplanes", "Toggles the drawing of sprites and background planes. Set to false or nil to disable a pane, anything else will draw them")]
-		public void SetRenderPlanes(params bool[] luaParam)
-			=> APIs.Emulation.SetRenderPlanes(luaParam);
-
 		[LuaMethodExample("emu.yield( );")]
 		[LuaMethod("yield", "allows a script to run while emulation is paused and interact with the gui/main window in realtime ")]
 		public void Yield()

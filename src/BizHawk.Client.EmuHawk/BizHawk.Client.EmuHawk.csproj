@@ -259,15 +259,6 @@
 		<Compile Update="config/NDS/NDSSettings.cs" SubType="Form" />
 		<Compile Update="config/NDS/NDSSettings.Designer.cs" DependentUpon="NDSSettings.cs" />
 		<EmbeddedResource Update="config/NDS/NDSSettings.resx" DependentUpon="NDSSettings.cs" />
-		<Compile Update="config/NES/NesControllerSettings.cs" SubType="Form" />
-		<Compile Update="config/NES/NesControllerSettings.Designer.cs" DependentUpon="NesControllerSettings.cs" />
-		<EmbeddedResource Update="config/NES/NesControllerSettings.resx" DependentUpon="NesControllerSettings.cs" />
-		<Compile Update="config/NES/NESSoundConfig.cs" SubType="Form" />
-		<Compile Update="config/NES/NESSoundConfig.Designer.cs" DependentUpon="NESSoundConfig.cs" />
-		<EmbeddedResource Update="config/NES/NESSoundConfig.resx" DependentUpon="NESSoundConfig.cs" />
-		<Compile Update="config/NES/NESSyncSettingsForm.cs" SubType="Form" />
-		<Compile Update="config/NES/NESSyncSettingsForm.Designer.cs" DependentUpon="NESSyncSettingsForm.cs" />
-		<EmbeddedResource Update="config/NES/NESSyncSettingsForm.resx" DependentUpon="NESSyncSettingsForm.cs" />
 		<Compile Update="config/PathConfig.cs" SubType="Form" />
 		<Compile Update="config/PathConfig.Designer.cs" DependentUpon="PathConfig.cs" />
 		<EmbeddedResource Update="config/PathConfig.resx" DependentUpon="PathConfig.cs" />
@@ -395,23 +386,6 @@
 		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.cs" SubType="UserControl" />
 		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.Designer.cs" DependentUpon="MultiDiskFileSelector.cs" />
 		<EmbeddedResource Update="tools/MultiDiskBundler/MultiDiskFileSelector.resx" DependentUpon="MultiDiskFileSelector.cs" />
-		<Compile Update="tools/NES/BarcodeEntry.cs" SubType="Form" />
-		<Compile Update="tools/NES/BarcodeEntry.Designer.cs" DependentUpon="BarcodeEntry.cs" />
-		<EmbeddedResource Update="tools/NES/BarcodeEntry.resx" DependentUpon="BarcodeEntry.cs" />
-		<Compile Update="tools/NES/NameTableViewer.cs" SubType="Component" />
-		<Compile Update="tools/NES/NESMusicRipper.cs" SubType="Form" />
-		<Compile Update="tools/NES/NESMusicRipper.Designer.cs" DependentUpon="NESMusicRipper.cs" />
-		<EmbeddedResource Update="tools/NES/NESMusicRipper.resx" DependentUpon="NESMusicRipper.cs" />
-		<Compile Update="tools/NES/NESNameTableViewer.cs" SubType="Form" />
-		<Compile Update="tools/NES/NESNameTableViewer.Designer.cs" DependentUpon="NESNameTableViewer.cs" />
-		<EmbeddedResource Update="tools/NES/NESNameTableViewer.resx" DependentUpon="NESNameTableViewer.cs" />
-		<Compile Update="tools/NES/NESPPU.cs" SubType="Form" />
-		<Compile Update="tools/NES/NESPPU.Designer.cs" DependentUpon="NESPPU.cs" />
-		<EmbeddedResource Update="tools/NES/NESPPU.resx" DependentUpon="NESPPU.cs" SubType="Designer" />
-		<Compile Update="tools/NES/PaletteViewer.cs" SubType="Component" />
-		<Compile Update="tools/NES/PatternViewer.cs" SubType="Component" />
-		<EmbeddedResource Update="tools/NES/PatternViewer.resx" DependentUpon="PatternViewer.cs" />
-		<Compile Update="tools/NES/SpriteViewer.cs" SubType="Component" />
 		<Compile Update="tools/TAStudio/BookmarksBranchesBox.cs" SubType="UserControl" />
 		<Compile Update="tools/TAStudio/BookmarksBranchesBox.Designer.cs" DependentUpon="BookmarksBranchesBox.cs" />
 		<EmbeddedResource Update="tools/TAStudio/BookmarksBranchesBox.resx" DependentUpon="BookmarksBranchesBox.cs" SubType="Designer" />
