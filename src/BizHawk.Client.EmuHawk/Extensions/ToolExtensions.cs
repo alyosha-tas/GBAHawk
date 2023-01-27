@@ -6,8 +6,6 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 
-//todo - add some more options for libretro types
-
 namespace BizHawk.Client.EmuHawk.ToolExtensions
 {
 	public static class ToolExtensions
@@ -142,21 +140,6 @@ namespace BizHawk.Client.EmuHawk.ToolExtensions
 						recent.Remove(path);
 					};
 					tsdd.Items.Add(tsmiRemovePath);
-
-#if false //experiment of popping open a submenu. doesn't work well.
-					item.MouseDown += (o, mev) =>
-					{
-						if (mev.Button != MouseButtons.Right) return;
-						//location of the menu containing this item that was just right-clicked
-						var pos = item.Owner.Bounds.Location;
-						//the offset within that menu of this item
-						pos.Offset(item.Bounds.Location);
-						//the offset of the click
-						pos.Offset(mev.Location);
-//						tsdd.OwnerItem = item; //has interesting promise, but breaks things otherwise
-						tsdd.Show(pos);
-					};
-#endif
 
 					//just add it to the submenu for now. seems to work well enough, even though its a bit odd
 					item.MouseDown += (o, mev) =>

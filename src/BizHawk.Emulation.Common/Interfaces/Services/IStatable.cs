@@ -17,38 +17,16 @@ namespace BizHawk.Emulation.Common
 		void LoadStateBinary(BinaryReader reader);
 	}
 
-	/// <summary>
-	/// Allows a core to opt into text savestates.
-	/// If a core does not implement this interface, a default implementation
-	/// will be used that doesn't yield anything useful in the states, just binary as text
-	/// </summary>
-	public interface ITextStatable : IStatable
-	{
-		void SaveStateText(TextWriter writer);
-
-		void LoadStateText(TextReader reader);
-	}
-
 	public static class StatableExtensions
 	{
 		public static void SaveStateText(this IStatable core, TextWriter writer)
 		{
-			if (core is ITextStatable textCore)
-			{
-				textCore.SaveStateText(writer);
-			}
-
 			var temp = core.CloneSavestate();
 			temp.SaveAsHexFast(writer);
 		}
 
 		public static void LoadStateText(this IStatable core, TextReader reader)
 		{
-			if (core is ITextStatable textCore)
-			{
-				textCore.LoadStateText(reader);
-			}
-
 			string hex = reader.ReadLine();
 			if (hex != null)
 			{

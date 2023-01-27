@@ -172,6 +172,23 @@
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\FCEUX %282.2.0%29.pal" />
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\QuickNes.pal" />
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\SONY_CXA2025AS_US.pal" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-fast.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-fast.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-normal.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-normal.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\BizScanlines.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\BizScanlines.glsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\BizScanlines.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bsnes-gamma.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bsnes-gamma.glsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bsnes-gamma.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\hq2x.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\hq2x.glsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\hq2x.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\retroizer\retroizer.cgp" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\retroizer\retroizer.glsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\retroizer\retroizer.hlsl" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\shaders-readme.txt" />
 		<None Remove="packages.config" />
 		<None Remove="Properties/Resources.resources" />
 	</ItemGroup>

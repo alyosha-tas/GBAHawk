@@ -8,9 +8,8 @@ namespace BizHawk.Emulation.Common
 {
 	/// <summary>
 	/// A generic implementation of <see cref="IStatable" /> that also
-	/// implements <see cref="ITextStatable" /> using the <see cref="Serializer" /> class
 	/// </summary>
-	public class StateSerializer : ITextStatable
+	public class StateSerializer : IStatable
 	{
 		private readonly Action<Serializer> _syncState;
 
@@ -27,17 +26,6 @@ namespace BizHawk.Emulation.Common
 		/// If provided, will be called after a loadstate call
 		/// </summary>
 		public Action LoadStateCallback { get; set; }
-
-		public void SaveStateText(TextWriter writer)
-		{
-			_syncState(Serializer.CreateTextWriter(writer));
-		}
-
-		public void LoadStateText(TextReader reader)
-		{
-			_syncState(Serializer.CreateTextReader(reader));
-			LoadStateCallback?.Invoke();
-		}
 
 		public void SaveStateBinary(BinaryWriter bw)
 		{

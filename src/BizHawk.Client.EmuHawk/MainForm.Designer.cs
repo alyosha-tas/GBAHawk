@@ -1957,7 +1957,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ClearSRAMContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx ShowMenuContextMenuSeparator;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx StopAVContextMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FdsEjectDiskMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLsettingsToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GenericCoreSubMenu;
