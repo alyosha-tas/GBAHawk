@@ -69,7 +69,7 @@ namespace BizHawk.Client.EmuHawk
 		public GbGpuView()
 		{
 			InitializeComponent();
-			Icon = Properties.Resources.GambatteIcon;
+			Icon = Properties.Resources.MonitorIcon;
 			bmpViewBG.ChangeBitmapSize(256, 256);
 			bmpViewWin.ChangeBitmapSize(256, 256);
 			bmpViewTiles1.ChangeBitmapSize(128, 192);

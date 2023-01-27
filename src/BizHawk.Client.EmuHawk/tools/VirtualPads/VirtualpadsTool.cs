@@ -93,24 +93,21 @@ namespace BizHawk.Client.EmuHawk
 				.GetPadSchemas(Emulator, s => DialogController.ShowMessageBox(s))
 				.ToList();
 
-			if (VersionInfo.DeveloperBuild)
+			var buttonControls = Emulator.ControllerDefinition.BoolButtons;
+			var axisControls = Emulator.ControllerDefinition.Axes;
+			foreach (var schema in padSchemata) foreach (var controlSchema in schema.Buttons)
 			{
-				var buttonControls = Emulator.ControllerDefinition.BoolButtons;
-				var axisControls = Emulator.ControllerDefinition.Axes;
-				foreach (var schema in padSchemata) foreach (var controlSchema in schema.Buttons)
+				Predicate<string> searchSetContains = controlSchema switch
 				{
-					Predicate<string> searchSetContains = controlSchema switch
-					{
-						ButtonSchema => buttonControls.Contains,
-						DiscManagerSchema => s => buttonControls.Contains(s) || axisControls.ContainsKey(s),
-						_ => axisControls.ContainsKey
-					};
-					if (!searchSetContains(controlSchema.Name))
-					{
-						this.ModalMessageBox(
-							$"Schema warning: Schema entry '{schema.DisplayName}':'{controlSchema.Name}' will not correspond to any control in definition '{Emulator.ControllerDefinition.Name}'",
-							"Dev Warning");
-					}
+					ButtonSchema => buttonControls.Contains,
+					DiscManagerSchema => s => buttonControls.Contains(s) || axisControls.ContainsKey(s),
+					_ => axisControls.ContainsKey
+				};
+				if (!searchSetContains(controlSchema.Name))
+				{
+					this.ModalMessageBox(
+						$"Schema warning: Schema entry '{schema.DisplayName}':'{controlSchema.Name}' will not correspond to any control in definition '{Emulator.ControllerDefinition.Name}'",
+						"Dev Warning");
 				}
 			}
 

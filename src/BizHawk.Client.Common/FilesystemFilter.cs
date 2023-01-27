@@ -21,9 +21,6 @@ namespace BizHawk.Client.Common
 			Extensions = addArchiveExts ? extensions.Concat(ArchiveExtensions).ToList() : extensions;
 		}
 
-		/// <remarks>When <see cref="VersionInfo.DeveloperBuild"/> is set to <see langword="false"/> for release, this behaves identically to <see cref="FilesystemFilter(string,IReadOnlyCollection{string},bool)">the other ctor</see>.
-		/// On dev builds, <paramref name="devBuildExtraExts"/> are appended to <paramref name="extensions"/>.
-		/// </remarks>
 		public FilesystemFilter(
 			string description,
 			IReadOnlyCollection<string> extensions,
@@ -32,17 +29,10 @@ namespace BizHawk.Client.Common
 			bool devBuildAddArchiveExts = false)
 		{
 			Description = description;
-			if (!VersionInfo.DeveloperBuild)
-			{
-				// same as other ctor
-				Extensions = addArchiveExts ? extensions.Concat(ArchiveExtensions).ToList() : extensions;
-			}
-			else
-			{
-				Extensions = addArchiveExts || devBuildAddArchiveExts
-					? extensions.Concat(devBuildExtraExts).Concat(ArchiveExtensions).ToList()
-					: extensions.Concat(devBuildExtraExts).ToList();
-			}
+
+			Extensions = addArchiveExts || devBuildAddArchiveExts
+				? extensions.Concat(devBuildExtraExts).Concat(ArchiveExtensions).ToList()
+				: extensions.Concat(devBuildExtraExts).ToList();
 		}
 
 		/// <summary>delegated to <see cref="SerializeEntry"/></summary>

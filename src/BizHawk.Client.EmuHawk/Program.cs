@@ -134,7 +134,7 @@ namespace BizHawk.Client.EmuHawk
 			Config initialConfig;
 			try
 			{
-				if (!VersionInfo.DeveloperBuild && !ConfigService.IsFromSameVersion(configPath, out var msg))
+				if (!ConfigService.IsFromSameVersion(configPath, out var msg))
 				{
 					new MsgBox(msg, "Mismatched version in config file", MessageBoxIcon.Warning).ShowDialog();
 				}
@@ -246,7 +246,7 @@ namespace BizHawk.Client.EmuHawk
 				}
 				mf.LoadGlobalConfigFromFile = iniPath =>
 				{
-					if (!VersionInfo.DeveloperBuild && !ConfigService.IsFromSameVersion(iniPath, out var msg))
+					if (!ConfigService.IsFromSameVersion(iniPath, out var msg))
 					{
 						new MsgBox(msg, "Mismatched version in config file", MessageBoxIcon.Warning).ShowDialog();
 					}
@@ -263,7 +263,7 @@ namespace BizHawk.Client.EmuHawk
 					if (!mf.IsDisposed)
 						mf.Dispose();
 				}
-				catch (Exception e) when (movieSession.Movie.IsActive() && !(Debugger.IsAttached || VersionInfo.DeveloperBuild))
+				catch (Exception e) when (movieSession.Movie.IsActive() && !Debugger.IsAttached)
 				{
 					var result = MessageBox.Show(
 						"EmuHawk has thrown a fatal exception and is about to close.\nA movie has been detected. Would you like to try to save?\n(Note: Depending on what caused this error, this may or may not succeed)",

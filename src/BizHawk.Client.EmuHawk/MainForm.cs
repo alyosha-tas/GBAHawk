@@ -173,9 +173,6 @@ namespace BizHawk.Client.EmuHawk
 			BasicBotMenuItem.Image = Properties.Resources.BasicBotBit;
 			MultiDiskBundlerFileMenuItem.Image = Properties.Resources.SaveConfig;
 			KeypadMenuItem.Image = Properties.Resources.Calculator;
-			OnlineHelpMenuItem.Image = Properties.Resources.Help;
-			ForumsMenuItem.Image = Properties.Resources.TAStudio;
-			AboutMenuItem.Image = Properties.Resources.CorpHawkSmall;
 			DumpStatusButton.Image = Properties.Resources.Blank;
 			PlayRecordStatusButton.Image = Properties.Resources.Blank;
 			PauseStatusButton.Image = Properties.Resources.Blank;
@@ -1341,10 +1338,7 @@ namespace BizHawk.Client.EmuHawk
 					}
 				}
 
-				sb.Append(string.IsNullOrEmpty(VersionInfo.CustomBuildString)
-					? "BizHawk"
-					: VersionInfo.CustomBuildString);
-				if (VersionInfo.DeveloperBuild) sb.Append(" (interim)");
+				sb.Append("GBAHawk");
 
 				return sb.ToString();
 			}
@@ -1355,10 +1349,7 @@ namespace BizHawk.Client.EmuHawk
 			get
 			{
 				var sb = new StringBuilder();
-				sb.Append(string.IsNullOrEmpty(VersionInfo.CustomBuildString)
-					? "BizHawk"
-					: VersionInfo.CustomBuildString);
-				if (VersionInfo.DeveloperBuild) sb.Append(" (interim)");
+				sb.Append("GBAHawk");
 				return sb.ToString();
 			}
 		}

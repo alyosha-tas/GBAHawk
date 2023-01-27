@@ -11,35 +11,10 @@ namespace BizHawk.Common
 		/// Bump this immediately after release.
 		/// Only use '0'..'9' and '.' or it will fail to parse and the new version notification won't work.
 		/// </remarks>
-		public static readonly string MainVersion = "2.8.1";
-
-		public static readonly string ReleaseDate = "February 19, 2022";
-
-		public static readonly string HomePage = "https://tasvideos.org/BizHawk";
-
-		public static readonly bool DeveloperBuild = true;
-
-		public static readonly string? CustomBuildString;
-
-		static VersionInfo()
-		{
-			var path = Path.Combine(
-				Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location)?.RemoveSuffix(Path.DirectorySeparatorChar) ?? string.Empty,
-				"dll",
-				"custombuild.txt"
-			);
-			if (File.Exists(path))
-			{
-				var lines = File.ReadAllLines(path);
-				if (lines.Length > 0)
-				{
-					CustomBuildString = lines[0];
-				}
-			}
-		}
+		public static readonly string MainVersion = "1.0.0";
 
 		public static string GetEmuVersion()
-			=> DeveloperBuild ? $"GIT {GIT_BRANCH}#{GIT_SHORTHASH}" : $"Version {MainVersion}";
+			=> $"Version {MainVersion}";
 
 		/// <summary>"2.5.1" => 0x02050100</summary>
 		public static uint VersionStrToInt(string s)

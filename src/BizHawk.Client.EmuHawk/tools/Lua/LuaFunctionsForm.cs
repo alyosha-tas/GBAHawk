@@ -49,7 +49,7 @@ namespace BizHawk.Client.EmuHawk
 			UpdateList();
 			FilterBox.Focus();
 
-			ToWikiMarkupButton.Visible = VersionInfo.DeveloperBuild;
+			ToWikiMarkupButton.Visible = true;
 		}
 
 		private void FunctionView_QueryItemText(object sender, RetrieveVirtualItemEventArgs e)

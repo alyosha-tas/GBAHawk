@@ -209,12 +209,6 @@
 		<Compile Update="AVOut/VideoWriterChooserForm.cs" SubType="Form" />
 		<Compile Update="AVOut/VideoWriterChooserForm.Designer.cs" DependentUpon="VideoWriterChooserForm.cs" />
 		<EmbeddedResource Update="AVOut/VideoWriterChooserForm.resx" DependentUpon="VideoWriterChooserForm.cs" />
-		<Compile Update="BizBox.cs" SubType="Form" />
-		<Compile Update="BizBox.Designer.cs" DependentUpon="BizBox.cs" />
-		<EmbeddedResource Update="BizBox.resx" DependentUpon="BizBox.cs" />
-		<Compile Update="BizBoxInfoControl.cs" SubType="UserControl" />
-		<Compile Update="BizBoxInfoControl.Designer.cs" DependentUpon="BizBoxInfoControl.cs" />
-		<EmbeddedResource Update="BizBoxInfoControl.resx" DependentUpon="BizBoxInfoControl.cs" />
 		<Compile Update="config/AnalogRangeConfigControl.cs" SubType="UserControl" />
 		<Compile Update="config/AnalogRangeConfigControl.Designer.cs" DependentUpon="AnalogRangeConfigControl.cs" />
 		<EmbeddedResource Update="config/AnalogRangeConfigControl.resx" DependentUpon="AnalogRangeConfigControl.cs" />

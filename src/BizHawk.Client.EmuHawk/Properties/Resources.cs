@@ -25,7 +25,6 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Bitmap AddEdit = ReadEmbeddedBitmap("AddEdit");
 		internal static readonly Bitmap AddWatch = ReadEmbeddedIconAsBitmap("addWatch");
 		internal static readonly Bitmap ArrowBlackDown = ReadEmbeddedBitmap("arrow_black_down");
-		internal static readonly Lazy<Bitmap> AtariController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("atari_controller"));
 		internal static readonly Bitmap Audio = ReadEmbeddedBitmap("AudioHS");
 		internal static readonly Bitmap AutoSearch = ReadEmbeddedBitmap("AutoSearch");
 		internal static readonly Bitmap Avi = ReadEmbeddedBitmap("AVI");
@@ -38,8 +37,6 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Bitmap BlueDown = ReadEmbeddedBitmap("BlueDown");
 		internal static readonly Bitmap BlueUp = ReadEmbeddedBitmap("BlueUp");
 		internal static readonly Bitmap Both = ReadEmbeddedBitmap("Both");
-		internal static readonly Bitmap Bsnes = ReadEmbeddedBitmap("bsnes");
-		internal static readonly Bitmap MelonDS = ReadEmbeddedBitmap("melonDS");
 		internal static readonly Icon BugIcon = ReadEmbeddedIcon("Bug");
 		internal static readonly Bitmap Bug = ReadEmbeddedBitmap("Bug");
 		internal static readonly Bitmap Calculator = ReadEmbeddedBitmap("calculator");
@@ -71,12 +68,9 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Bitmap Freeze = ReadEmbeddedBitmap("Freeze");
 		internal static readonly Icon FreezeIcon = ReadEmbeddedIcon("Freeze");
 		internal static readonly Bitmap Fullscreen = ReadEmbeddedBitmap("Fullscreen");
-		internal static readonly Bitmap Gambatte = ReadEmbeddedBitmap("gambatte");
-		internal static readonly Icon GambatteIcon = ReadEmbeddedIcon("gambatte");
 		internal static readonly Icon GameControllerIcon = ReadEmbeddedIcon("GameController");
 		internal static readonly Bitmap GameController = ReadEmbeddedBitmap("GameController");
 		internal static readonly Lazy<Icon> GbaIcon = new Lazy<Icon>(() => ReadEmbeddedIcon("Gameboy Advance (black) icon"));
-		internal static readonly Bitmap GenPlus = ReadEmbeddedBitmap("genplus");
 		internal static readonly Bitmap GreenCheck = ReadEmbeddedBitmap("GreenCheck");
 		internal static readonly Bitmap Hack = ReadEmbeddedBitmap("Hack");
 		internal static readonly Bitmap Help = ReadEmbeddedBitmap("Help");
@@ -86,7 +80,6 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Bitmap Import = ReadEmbeddedBitmap("Import");
 		internal static readonly Bitmap InsertSeparator = ReadEmbeddedBitmap("InsertSeparator");
 		internal static readonly Bitmap JumpTo = ReadEmbeddedBitmap("JumpTo");
-		internal static readonly Bitmap KitchenSink = ReadEmbeddedBitmap("kitchensink");
 		internal static readonly Icon LightningIcon = ReadEmbeddedIcon("Lightning");
 		internal static readonly Bitmap Lightning = ReadEmbeddedBitmap("Lightning");
 		internal static readonly Bitmap LightOff = ReadEmbeddedBitmap("LightOff");
@@ -96,7 +89,6 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Bitmap LuaPictureBox = ReadEmbeddedBitmap("luaPictureBox");
 		internal static readonly Bitmap Mame = ReadEmbeddedBitmap("mame");
 		internal static readonly Bitmap MessageConfig = ReadEmbeddedBitmap("MessageConfig");
-		internal static readonly Bitmap Mgba = ReadEmbeddedBitmap("mgba-16");
 		internal static readonly Icon MonitorIcon = ReadEmbeddedIcon("monitor");
 		internal static readonly Bitmap Monitor = ReadEmbeddedBitmap("monitor");
 		internal static readonly Bitmap MoveBottom = ReadEmbeddedBitmap("MoveBottom");
@@ -144,7 +136,6 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Icon SharkIcon = ReadEmbeddedIcon("Shark");
 		internal static readonly Bitmap Shark = ReadEmbeddedBitmap("Shark");
 		internal static readonly Icon SmsIcon = ReadEmbeddedIcon("sms-icon");
-		internal static readonly Bitmap Snes9X = ReadEmbeddedBitmap("snes9x");
 		internal static readonly Bitmap Split = ReadEmbeddedBitmap("Split");
 		internal static readonly Bitmap Square = ReadEmbeddedBitmap("Square");
 		internal static readonly Bitmap SSE = ReadEmbeddedBitmap("SSE");

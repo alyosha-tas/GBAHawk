@@ -211,10 +211,6 @@ namespace BizHawk.Client.EmuHawk
 			this.GBLSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.GBLsettingsToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.GenericCoreSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.HelpSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.OnlineHelpMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.ForumsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.AboutMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.MainStatusBar = new BizHawk.WinForms.Controls.StatusStripEx();
 			this.DumpStatusButton = new System.Windows.Forms.ToolStripDropDownButton();
 			this.EmuStatus = new BizHawk.WinForms.Controls.StatusLabelEx();
@@ -294,8 +290,7 @@ namespace BizHawk.Client.EmuHawk
 			this.ToolsSubMenu,
 			this.GBSubMenu,
 			this.GBLSubMenu,
-			this.GenericCoreSubMenu,
-			this.HelpSubMenu});
+			this.GenericCoreSubMenu});
 			this.MainformMenu.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
 			this.MainformMenu.TabIndex = 0;
 			this.MainformMenu.MenuActivate += new System.EventHandler(this.MainformMenu_MenuActivate);
@@ -1322,29 +1317,6 @@ namespace BizHawk.Client.EmuHawk
 			// 
 			this.GenericCoreSubMenu.Text = "&Core";
 			// 
-			// HelpSubMenu
-			// 
-			this.HelpSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.OnlineHelpMenuItem,
-			this.ForumsMenuItem,
-			this.AboutMenuItem});
-			this.HelpSubMenu.Text = "&Help";
-			// 
-			// OnlineHelpMenuItem
-			// 
-			this.OnlineHelpMenuItem.Text = "Open TASVideos Wiki in Browser";
-			this.OnlineHelpMenuItem.Click += new System.EventHandler(this.OnlineHelpMenuItem_Click);
-			// 
-			// ForumsMenuItem
-			// 
-			this.ForumsMenuItem.Text = "Open Forums in Browser";
-			this.ForumsMenuItem.Click += new System.EventHandler(this.ForumsMenuItem_Click);
-			// 
-			// AboutMenuItem
-			// 
-			this.AboutMenuItem.Text = "&About...";
-			this.AboutMenuItem.Click += new System.EventHandler(this.AboutMenuItem_Click);
-			// 
 			// MainStatusBar
 			// 
 			this.MainStatusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1787,13 +1759,10 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ViewSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ConfigSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ToolsSubMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx HelpSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx PauseMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RebootCoreMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SoftResetMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OnlineHelpMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AboutMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ControllersMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx HotkeysMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RamWatchMenuItem;
@@ -1920,7 +1889,6 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator21;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ShowMenuContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ImportMoviesMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ForumsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotClipboardMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx HardResetMenuItem;

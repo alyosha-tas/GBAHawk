@@ -344,8 +344,7 @@ namespace BizHawk.Client.EmuHawk
 				CurrentTasMovie != null && CurrentTasMovie.TasStateManager.Count > 1;
 
 			GreenzoneICheckSeparator.Visible =
-				StateHistoryIntegrityCheckMenuItem.Visible =
-				VersionInfo.DeveloperBuild;
+				StateHistoryIntegrityCheckMenuItem.Visible = true;
 
 			UndoMenuItem.ShortcutKeyDisplayString = Config.HotkeyBindings["Undo"].Bindings;
 			RedoMenuItem.ShortcutKeyDisplayString = Config.HotkeyBindings["Redo"].Bindings;

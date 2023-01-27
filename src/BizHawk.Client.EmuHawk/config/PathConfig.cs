@@ -154,14 +154,12 @@ namespace BizHawk.Client.EmuHawk
 			widgetOffset -= hack;
 
 			// ...then continue with the others (after removing unreleased systems in Release builds)
-			if (!VersionInfo.DeveloperBuild)
-			{
-				var releasedCoreSysIDs = CoreInventory.Instance.AllCores.SelectMany(kvp => kvp.Value.Select(coreInfo => (SysID: kvp.Key, CoreInfo: coreInfo)))
-					.Where(tuple => tuple.CoreInfo.CoreAttr.Released)
-					.Select(tuple => tuple.SysID)
-					.Distinct().ToList();
-				systems.RemoveAll(tuple => !releasedCoreSysIDs.Any(sysID => PathEntryCollection.InGroup(sysID, tuple.SysGroup)));
-			}
+			var releasedCoreSysIDs = CoreInventory.Instance.AllCores.SelectMany(kvp => kvp.Value.Select(coreInfo => (SysID: kvp.Key, CoreInfo: coreInfo)))
+				.Where(tuple => tuple.CoreInfo.CoreAttr.Released)
+				.Select(tuple => tuple.SysID)
+				.Distinct().ToList();
+			systems.RemoveAll(tuple => !releasedCoreSysIDs.Any(sysID => PathEntryCollection.InGroup(sysID, tuple.SysGroup)));
+
 			foreach (var (sys, dispName) in systems) AddTabPageForSystem(sys, dispName);
 
 			if (IsTabPendingFocus(PathEntryCollection.GLOBAL))

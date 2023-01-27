@@ -1172,22 +1172,6 @@ namespace BizHawk.Client.EmuHawk
 			OpenGenericCoreConfig($"{coreName} Settings");
 		}
 
-		private void OnlineHelpMenuItem_Click(object sender, EventArgs e)
-		{
-			System.Diagnostics.Process.Start("https://tasvideos.org/BizHawk");
-		}
-
-		private void ForumsMenuItem_Click(object sender, EventArgs e)
-		{
-			System.Diagnostics.Process.Start("https://tasvideos.org/Forum/Subforum/64");
-		}
-
-		private void AboutMenuItem_Click(object sender, EventArgs e)
-		{
-			using var form = new BizBox();
-			form.ShowDialog();
-		}
-
 		private void MainFormContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			MaybePauseFromMenuOpened();
