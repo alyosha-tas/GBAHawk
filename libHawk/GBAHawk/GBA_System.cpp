@@ -1738,25 +1738,13 @@ namespace GBAHawk
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
-				// check LY = LYC
-				if (ppu_LY == ppu_LYC)
-				{
-					// trigger LYC IRQ
-					if ((ppu_STAT & 0x20) == 0x20)
-					{
-						ppu_LYC_IRQ_cd = 3;
-						ppu_Delays = true;
-						delays_to_process = true;
-					}
+				// clear the LYC flag bit
+				ppu_STAT &= 0xFB;
 
-					// set the flag bit
-					ppu_STAT |= 4;
-				}
-				else
-				{
-					// clear the flag bit
-					ppu_STAT &= 0xFB;
-				}
+				// Check LY = LYC in 2 cycles
+				ppu_LYC_Check_cd = 2;
+				ppu_Delays = true;
+				delays_to_process = true;
 
 				if (ppu_LY == 160)
 				{
@@ -1846,19 +1834,11 @@ namespace GBAHawk
 					if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
 					if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
 				}
-			}
-			else if (ppu_Cycle == 1008)
-			{
-				// Enter HBlank
-				ppu_STAT |= 2;
 
-				// trigger HBL IRQ
-				if ((ppu_STAT & 0x10) == 0x10)
-				{
-					ppu_HBL_IRQ_cd = 3;
-					ppu_Delays = true;
-					delays_to_process = true;
-				}
+				// Hblank starts on next cycle
+				ppu_HBL_Check_cd = 1;
+				ppu_Delays = true;
+				delays_to_process = true;
 			}
 
 			if (!ppu_Forced_Blank)

@@ -244,7 +244,7 @@ namespace GBAHawk
 						if (((INT_EN & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -261,7 +261,7 @@ namespace GBAHawk
 						if (((INT_EN & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -278,7 +278,59 @@ namespace GBAHawk
 						if (((INT_EN & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
+						{
+							ppu_Delays = false;
+						}
+					}
+				}
+
+				if (ppu_HBL_Check_cd > 0)
+				{
+					ppu_HBL_Check_cd -= 1;
+
+					if (ppu_HBL_Check_cd == 0)
+					{
+						// Enter HBlank
+						ppu_STAT |= 2;
+
+						// trigger HBL IRQ
+						if ((ppu_STAT & 0x10) == 0x10)
+						{
+							ppu_HBL_IRQ_cd = 3;
+							ppu_Delays = true;
+							delays_to_process = true;
+						}
+
+						// check for any additional ppu delays
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						{
+							ppu_Delays = false;
+						}
+					}
+				}
+
+				if (ppu_LYC_Check_cd > 0)
+				{
+					ppu_LYC_Check_cd -= 1;
+
+					if (ppu_LYC_Check_cd == 0)
+					{
+						if (ppu_LY == ppu_LYC)
+						{
+							if ((ppu_STAT & 0x20) == 0x20)
+							{
+								ppu_LYC_IRQ_cd = 3;
+								ppu_Delays = true;
+								delays_to_process = true;
+							}
+
+							// set the flag bit
+							ppu_STAT |= 4;
+						}
+
+						// check for any additional ppu delays
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -6735,6 +6787,8 @@ namespace GBAHawk
 
 		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
+		uint32_t ppu_HBL_Check_cd, ppu_LYC_Check_cd;
+
 		uint32_t ppu_Transparent_Color;
 
 		uint16_t ppu_BG_CTRL[4] = { };
@@ -9048,6 +9102,8 @@ namespace GBAHawk
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
+			ppu_HBL_Check_cd = ppu_LYC_Check_cd = 0;
+
 			for (int i = 0; i < 4; i++)
 			{
 				ppu_BG_CTRL[i] = 0;
@@ -9170,6 +9226,9 @@ namespace GBAHawk
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
 			saver = int_saver(ppu_LYC_IRQ_cd, saver);
 
+			saver = int_saver(ppu_HBL_Check_cd, saver);
+			saver = int_saver(ppu_LYC_Check_cd, saver);
+
 			saver = int_saver(ppu_Transparent_Color, saver);
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
@@ -9262,6 +9321,9 @@ namespace GBAHawk
 			loader = int_loader(&ppu_VBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_LYC_IRQ_cd, loader);
+
+			loader = int_loader(&ppu_HBL_Check_cd, loader);
+			loader = int_loader(&ppu_LYC_Check_cd, loader);
 
 			loader = int_loader(&ppu_Transparent_Color, loader);
 

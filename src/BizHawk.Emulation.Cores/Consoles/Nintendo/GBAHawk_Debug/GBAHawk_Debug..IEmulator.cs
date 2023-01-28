@@ -215,7 +215,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -232,7 +232,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -249,7 +249,59 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
+						{
+							ppu_Delays = false;
+						}
+					}
+				}
+
+				if (ppu_HBL_Check_cd > 0)
+				{
+					ppu_HBL_Check_cd -= 1;
+
+					if (ppu_HBL_Check_cd == 0)
+					{
+						// Enter HBlank
+						ppu_STAT |= 2;
+
+						// trigger HBL IRQ
+						if ((ppu_STAT & 0x10) == 0x10)
+						{
+							ppu_HBL_IRQ_cd = 3;
+							ppu_Delays = true;
+							delays_to_process = true;
+						}
+
+						// check for any additional ppu delays
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						{
+							ppu_Delays = false;
+						}
+					}
+				}
+
+				if (ppu_LYC_Check_cd > 0)
+				{
+					ppu_LYC_Check_cd -= 1;
+
+					if (ppu_LYC_Check_cd == 0)
+					{
+						if (ppu_LY == ppu_LYC)
+						{
+							if ((ppu_STAT & 0x20) == 0x20)
+							{
+								ppu_LYC_IRQ_cd = 3;
+								ppu_Delays = true;
+								delays_to_process = true;
+							}
+
+							// set the flag bit
+							ppu_STAT |= 4;
+						}
+
+						// check for any additional ppu delays
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}

@@ -56,6 +56,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
+		public int ppu_HBL_Check_cd, ppu_LYC_Check_cd;
+
 		public ushort ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
 		public ushort ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
 		public ushort ppu_WIN_In, ppu_WIN_Out, ppu_Mosaic, ppu_Special_FX, ppu_Alpha, ppu_Bright;
@@ -823,25 +825,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
-				// check LY = LYC
-				if (ppu_LY == ppu_LYC)
-				{
-					// trigger LYC IRQ
-					if ((ppu_STAT & 0x20) == 0x20)
-					{
-						ppu_LYC_IRQ_cd = 3;
-						ppu_Delays = true;
-						delays_to_process = true;
-					}
+				// clear the LYC flag bit
+				ppu_STAT &= 0xFB;
 
-					// set the flag bit
-					ppu_STAT |= 4;
-				}
-				else
-				{
-					// clear the flag bit
-					ppu_STAT &= 0xFB;
-				}
+				// Check LY = LYC in 2 cycles
+				ppu_LYC_Check_cd = 2;
+				ppu_Delays = true;
+				delays_to_process = true;
 
 				if (ppu_LY == 160)
 				{
@@ -930,19 +920,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
 					if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
 				}
-			}
-			else if (ppu_Cycle == 1008)
-			{
-				// Enter HBlank
-				ppu_STAT |= 2;
 
-				// trigger HBL IRQ
-				if ((ppu_STAT & 0x10) == 0x10)
-				{
-					ppu_HBL_IRQ_cd = 3;
-					ppu_Delays = true;
-					delays_to_process = true;
-				}
+				// Hblank starts on next cycle
+				ppu_HBL_Check_cd = 1;
+				ppu_Delays = true;
+				delays_to_process = true;
 			}
 
 			if (!ppu_Forced_Blank)
@@ -2567,6 +2549,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
+			ppu_HBL_Check_cd = ppu_LYC_Check_cd = 0;
+
 			for (int i = 0; i < 4; i++)
 			{
 				ppu_BG_CTRL[i] = 0;
@@ -2674,6 +2658,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_VBL_IRQ_cd), ref ppu_VBL_IRQ_cd);
 			ser.Sync(nameof(ppu_HBL_IRQ_cd), ref ppu_HBL_IRQ_cd);
 			ser.Sync(nameof(ppu_LYC_IRQ_cd), ref ppu_LYC_IRQ_cd);
+
+			ser.Sync(nameof(ppu_HBL_Check_cd), ref ppu_HBL_Check_cd);
+			ser.Sync(nameof(ppu_LYC_Check_cd), ref ppu_LYC_Check_cd);
 
 			ser.Sync(nameof(ppu_CTRL), ref ppu_CTRL);
 			ser.Sync(nameof(ppu_Green_Swap), ref ppu_Green_Swap);
