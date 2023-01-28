@@ -1,24 +1,25 @@
 ﻿using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GBA
 {
 	public partial class GBAHawk : IInputPollable
 	{
 		public int LagCount
 		{
-			get => Lag_Count;
-			set => Lag_Count = value;
+			get => _lagCount;
+			set => _lagCount = value;
 		}
 
 		public bool IsLagFrame
 		{
-			get => Is_Lag;
-			set => Is_Lag = value;
+			get => _isLag;
+			set => _isLag = value;
 		}
 
 		public IInputCallbackSystem InputCallbacks { get; } = new InputCallbackSystem();
 
-		internal bool Is_Lag = true;
-		private int Lag_Count;
+		public int _lagCount = 0;
+		public bool _lagged = true;
+		public bool _isLag = false;
 	}
 }

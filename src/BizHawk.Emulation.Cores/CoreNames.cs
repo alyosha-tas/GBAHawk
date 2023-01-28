@@ -9,8 +9,8 @@ namespace BizHawk.Emulation.Cores
 	/// </summary>
 	public static class CoreNames
 	{
+		public const string GBAHawk_Debug = "GBAHawk_Debug";
 		public const string GBAHawk = "GBAHawk";
-		public const string GBA = "GBA";
 		public const string GBHawk = "GBHawk";
 		public const string GBHawkLink = "GBHawkLink";
 		public const string GBHawkLink4x = "GBHawkLink4x";

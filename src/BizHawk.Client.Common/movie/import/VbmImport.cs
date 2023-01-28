@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores;
-using BizHawk.Emulation.Cores.Nintendo.GBAHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug;
 using BizHawk.Emulation.Cores.Nintendo.GBHawk;
 
 namespace BizHawk.Client.Common.movie.import
@@ -262,7 +262,7 @@ namespace BizHawk.Client.Common.movie.import
 			if (isGBA)
 			{
 				Result.Movie.HeaderEntries[HeaderKeys.Core] = CoreNames.GBAHawk;
-				Result.Movie.SyncSettingsJson = ConfigService.SaveWithType(new GBAHawk.GBAHawkSyncSettings { });
+				Result.Movie.SyncSettingsJson = ConfigService.SaveWithType(new GBAHawk_Debug.GBAHawk_Debug_SyncSettings { });
 			}
 			else
 			{

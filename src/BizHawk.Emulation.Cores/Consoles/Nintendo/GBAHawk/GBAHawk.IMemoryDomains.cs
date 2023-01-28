@@ -1,72 +1,62 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GBA
 {
 	public partial class GBAHawk
 	{
-		private IMemoryDomains MemoryDomains;
+		private MemoryDomainList MemoryDomains;
+		private readonly Dictionary<string, MemoryDomainByteArray> _byteArrayDomains = new Dictionary<string, MemoryDomainByteArray>();
+		private bool _memoryDomainsInit = false;
 
-		public void SetupMemoryDomains()
+		private void SetupMemoryDomains()
 		{
 			var domains = new List<MemoryDomain>
 			{
 				new MemoryDomainDelegate(
 					"WRAM",
-					WRAM.Length,
+					0x40000,
 					MemoryDomain.Endian.Little,
-					addr => PeekWRAM(addr),
-					(addr, value) => WRAM[addr] = value,
+					(addr) => LibGBAHawk.GBA_getwram(GBA_Pntr, (int)(addr & 0x3FFFF)),
+					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"IWRAM",
-					IWRAM.Length,
+					0x8000,
 					MemoryDomain.Endian.Little,
-					addr => PeekIWRAM(addr),
-					(addr, value) => IWRAM[addr] = value,
-					1),
-				new MemoryDomainDelegate(
-					"ROM",
-					ROM.Length,
-					MemoryDomain.Endian.Little,
-					addr => ROM[addr],
-					(addr, value) => ROM[addr] = value,
+					(addr) => LibGBAHawk.GBA_getiwram(GBA_Pntr, (int)(addr & 0x7FFF)),
+					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"VRAM",
-					VRAM.Length,
+					0x18000,
 					MemoryDomain.Endian.Little,
-					addr => PeekVRAM(addr),
-					(addr, value) => VRAM[addr] = value,
+					(addr) => LibGBAHawk.GBA_getvram(GBA_Pntr, (int)(addr & 0x1FFFF)),
+					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"OAM",
-					OAM.Length,
+					0x400,
 					MemoryDomain.Endian.Little,
-					addr => PeekOAM(addr),
-					(addr, value) => OAM[addr] = value,
+					addr => LibGBAHawk.GBA_getoam(GBA_Pntr, (int)(addr & 0x3FF)),
+					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PALRAM",
-					PALRAM.Length,
+					0x400,
 					MemoryDomain.Endian.Little,
-					addr => PeekPALRAM(addr),
-					(addr, value) => PALRAM[addr] = value,
-					1),
-				new MemoryDomainDelegate(
-					"Registers",
-					0x800,
-					MemoryDomain.Endian.Little,
-					addr => PeekSystemBus(addr + 0x04000000),
-					(addr, value) => PokeSystemBus(addr + 0x04000000, value),
+					addr => LibGBAHawk.GBA_getpalram(GBA_Pntr, (int)(addr & 0x3FF)),
+					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000000,
 					MemoryDomain.Endian.Little,
-					addr => PeekSystemBus(addr),
-					(addr, value) => PokeSystemBus(addr, value),
-					1),
+					(addr) => LibGBAHawk.GBA_getsysbus(GBA_Pntr, (int)(addr & 0xFFFFFFF)),
+					(addr, value) => { },
+					1)
 			};
 
 			if (cart_RAM != null)
@@ -75,100 +65,37 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk
 					"CartRAM",
 					cart_RAM.Length,
 					MemoryDomain.Endian.Little,
-					addr => PeekCART(addr),
+					addr => LibGBAHawk.GBA_getsram(GBA_Pntr, (int)(addr & (cart_RAM.Length - 1))),
 					(addr, value) => cart_RAM[addr] = value,
 					1);
 				domains.Add(CartRam);
 			}
 
-			MemoryDomains = new MemoryDomainList(domains);
+			SyncAllByteArrayDomains();
+
+			MemoryDomains = new MemoryDomainList(_byteArrayDomains.Values.Concat(domains).ToList());
 			(ServiceProvider as BasicServiceProvider).Register<IMemoryDomains>(MemoryDomains);
+
+			_memoryDomainsInit = true;
 		}
 
-		private byte PeekWRAM(long addr)
+		private void SyncAllByteArrayDomains()
 		{
-			uint addr2 = (uint)(addr & 0x3FFFF);
-			if (_settings.VBL_sync)
+			SyncByteArrayDomain("ROM", ROM);
+		}
+
+		private void SyncByteArrayDomain(string name, byte[] data)
+		{
+			if (_memoryDomainsInit)
 			{
-				return WRAM_vbls[addr2];
+				var m = _byteArrayDomains[name];
+				m.Data = data;
 			}
-			return WRAM[addr2];
-		}
-
-		private byte PeekIWRAM(long addr)
-		{
-			uint addr2 = (uint)(addr & 0x7FFF);
-			if (_settings.VBL_sync)
+			else
 			{
-				return IWRAM_vbls[addr2];
+				var m = new MemoryDomainByteArray(name, MemoryDomain.Endian.Little, data, true, 1);
+				_byteArrayDomains.Add(name, m);
 			}
-			return IWRAM[addr2];
-		}
-
-		private byte PeekVRAM(long addr)
-		{
-			uint addr2 = (uint)(addr & 0x1FFFF);
-
-			if (addr2 >= 0x100000)
-			{
-				addr2 &= 0x17FFF;
-			}
-			if (_settings.VBL_sync)
-			{
-				return VRAM_vbls[addr2];
-			}
-			return VRAM[addr2];
-		}
-
-		private byte PeekPALRAM(long addr)
-		{
-			uint addr2 = (uint)(addr & 0x3FF);
-			if (_settings.VBL_sync)
-			{
-				return PALRAM_vbls[addr2];
-			}
-			return PALRAM[addr2];
-		}
-
-		private byte PeekOAM(long addr)
-		{
-			uint addr2 = (uint)(addr & 0x3FF);
-			if (_settings.VBL_sync)
-			{
-				return OAM_vbls[addr2];
-			}
-			return OAM[addr2];
-		}
-
-		private byte PeekCART(long addr)
-		{
-			if (cart_RAM != null)
-			{
-				if (addr < cart_RAM.Length)
-				{
-					if (_settings.VBL_sync)
-					{
-						return cart_RAM_vbls[addr];
-					}
-					return cart_RAM[addr];
-				}
-
-				return 0xFF;
-			}
-
-			return 0xFF;
-		}
-
-		private byte PeekSystemBus(long addr)
-		{
-			uint addr2 = (uint)(addr & 0xFFFFFFF);
-			return Peek_Memory_8(addr2);
-		}
-
-		private void PokeSystemBus(long addr, byte value)
-		{
-			uint addr2 = (uint)(addr & 0xFFFFFFF);
-			Write_Memory_8(addr2, value);
 		}
 	}
 }

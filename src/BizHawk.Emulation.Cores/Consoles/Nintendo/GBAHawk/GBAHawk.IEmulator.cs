@@ -1,320 +1,186 @@
-﻿using BizHawk.Common.NumberExtensions;
-using BizHawk.Emulation.Common;
+﻿using BizHawk.Emulation.Common;
 using System;
-using System.Runtime.InteropServices;
+using System.Text;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GBA
 {
-	public partial class GBAHawk : IEmulator, IVideoProvider
+	public partial class GBAHawk : IEmulator, ISoundProvider, IVideoProvider
 	{
 		public IEmulatorServiceProvider ServiceProvider { get; }
 
-		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
-
-		public IController Frame_Controller;
-
-
-		public ushort Acc_X_state;
-		public ushort Acc_Y_state;
-		public bool VBlank_Rise;
-		public bool controller_was_checked;
-		public bool delays_to_process;
-		public bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
+		public ControllerDefinition ControllerDefinition => current_controller;
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
-			//Console.WriteLine("-----------------------FRAME-----------------------");
-			Frame_Controller = controller;
+			ushort cont_result = 0x3FF;
 
-			if (_tracer.IsEnabled())
+			if (controller.IsPressed("Up"))
 			{
-				TraceCallback = s => _tracer.Put(s);
+				cont_result &= 0xFFBF;
+			}
+			if (controller.IsPressed("Down"))
+			{
+				cont_result &= 0xFF7F;
+			}
+			if (controller.IsPressed("Left"))
+			{
+				cont_result &= 0xFFDF;
+			}
+			if (controller.IsPressed("Right"))
+			{
+				cont_result &= 0xFFEF;
+			}
+			if (controller.IsPressed("Start"))
+			{
+				cont_result &= 0xFFF7;
+			}
+			if (controller.IsPressed("Select"))
+			{
+				cont_result &= 0xFFFB;
+			}
+			if (controller.IsPressed("B"))
+			{
+				cont_result &= 0xFFFD;
+			}
+			if (controller.IsPressed("A"))
+			{
+				cont_result &= 0xFFFE;
+			}
+			if (controller.IsPressed("L"))
+			{
+				cont_result &= 0xFDFF;
+			}
+			if (controller.IsPressed("R"))
+			{
+				cont_result &= 0xFEFF;
+			}
+
+			if (Tracer.IsEnabled())
+			{
+				tracecb = MakeTrace;
 			}
 			else
 			{
-				TraceCallback = null;
+				tracecb = null;
 			}
+			
+			LibGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
 
-			if (controller.IsPressed("P1 Power"))
+			if (controller.IsPressed("Power"))
 			{
 				HardReset();
 			}
 
-			Is_Lag = true;
+			LibGBAHawk.GBA_frame_advance(GBA_Pntr, cont_result, true, true);
 
-			controller_was_checked = false;
+			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
-			VBlank_Rise = false;
-
-			do_frame(controller);
-
-			// if the game is halted but controller interrupts are on, check for interrupts
-			// if the game is stopped, any button press will un-stop even if interrupts are off
-			if (stopped && !controller_was_checked)
-			{
-				// update the controller state on VBlank
-				GetControllerState(controller);
-
-				do_controller_check();
-			}
-
-			if (Is_Lag)
-			{
-				Lag_Count++;
-			}
-
-			Frame_Count++;
+			_frame++;
 
 			return true;
 		}
 
-		public void do_frame(IController controller)
-		{
-			while (!VBlank_Rise)
-			{
-				if (delays_to_process) { process_delays(); }
-
-				snd_Tick();
-				ppu_Tick();
-				if (Use_MT) { mapper.Mapper_Tick(); }
-				dma_Tick();
-				pre_Tick();
-				ser_Tick();
-				tim_Tick();
-				cpu_Tick();
-
-				CycleCount++;
-			}
-		}
-
-		public void On_VBlank()
-		{
-			Is_Lag = false;
-
-			controller_was_checked = true;
-
-			// update the controller state on VBlank
-			GetControllerState(Frame_Controller);
-
-			// check if controller state caused interrupt
-			do_controller_check();
-
-			// send the image on VBlank
-			SendVideoBuffer();
-
-			if (_settings.VBL_sync)
-			{
-				for (int j = 0; j < 0x40000; j++) { WRAM_vbls[j] = WRAM[j]; }
-				for (int j = 0; j < 0x8000; j++) { IWRAM_vbls[j] = IWRAM[j]; }
-				for (int j = 0; j < 0x400; j++) { PALRAM_vbls[j] = PALRAM[j]; }
-				for (int j = 0; j < 0x18000; j++) { VRAM_vbls[j] = VRAM[j]; }
-				for (int j = 0; j < 0x400; j++) { OAM_vbls[j] = OAM[j]; }
-
-				if (cart_RAM != null)
-				{
-					for (int j = 0; j < cart_RAM.Length; j++) { cart_RAM_vbls[j] = cart_RAM[j]; }
-				}
-			}
-		}
-
-		public void do_single_step()
-		{
-			if (delays_to_process) { process_delays(); }
-
-			snd_Tick();
-			ppu_Tick();
-			if (Use_MT) { mapper.Mapper_Tick(); }
-			dma_Tick();
-			pre_Tick();
-			ser_Tick();
-			tim_Tick();
-			cpu_Tick();
-
-			CycleCount++;
-		}
-
-		public void do_controller_check()
-		{
-			if ((key_CTRL & 0x4000) == 0x4000)
-			{
-				if ((key_CTRL & 0x8000) == 0x8000)
-				{
-					if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
-					{
-						// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
-						if ((key_CTRL & 0x3FF) != 0)
-						{
-							INT_Flags |= 0x1000;
-
-							if ((INT_EN & 0x1000) == 0x1000)
-							{
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
-						}					
-					}
-				}
-				else
-				{
-					if ((key_CTRL & ~controller_state & 0x3FF) != 0)
-					{
-						// doesn't trigger an interrupt if all keys are selected. (see megaman and bass)
-						if ((key_CTRL & 0x3FF) != 0x3FF)
-						{
-							INT_Flags |= 0x1000;
-
-							if ((INT_EN & 0x1000) == 0x1000)
-							{
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
-						}
-					}
-				}
-			}
-		}
-
-		public void process_delays()
-		{
-			if (IRQ_Write_Delay)
-			{
-				cpu_IRQ_Input = cpu_Next_IRQ_Input;
-				IRQ_Write_Delay = false;
-
-				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
-				{
-					if (!ppu_Delays)
-					{
-						delays_to_process = false;
-					}			
-				}			
-			}
-
-			if (IRQ_Write_Delay_2)
-			{
-				cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
-				IRQ_Write_Delay = true;
-				IRQ_Write_Delay_2 = false;
-			}
-
-			if (IRQ_Write_Delay_3)
-			{
-				cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-				IRQ_Write_Delay_2 = true;
-				IRQ_Write_Delay_3 = false;
-			}
-
-			if (ppu_Delays)
-			{
-				if (ppu_VBL_IRQ_cd > 0)
-				{
-					ppu_VBL_IRQ_cd -= 1;
-
-					if (ppu_VBL_IRQ_cd == 0)
-					{
-						INT_Flags |= 0x1;
-						if (((INT_EN & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
-
-						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_HBL_IRQ_cd > 0)
-				{
-					ppu_HBL_IRQ_cd -= 1;
-
-					if (ppu_HBL_IRQ_cd == 0)
-					{
-						INT_Flags |= 0x2;
-						if (((INT_EN & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_LYC_IRQ_cd > 0)
-				{
-					ppu_LYC_IRQ_cd -= 1;
-
-					if (ppu_LYC_IRQ_cd == 0)
-					{
-						INT_Flags |= 0x4;
-						if (((INT_EN & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
-				{
-					if (!ppu_Delays)
-					{
-						delays_to_process = false;
-					}
-				}
-			}
-		}
-
-		public void GetControllerState(IController controller)
-		{
-			InputCallbacks.Call();
-			controller_state = _controllerDeck.ReadPort1(controller);
-			(Acc_X_state, Acc_Y_state) = _controllerDeck.ReadAcc1(controller);
-		}
-
-		public int Frame => Frame_Count;
+		public int Frame => _frame;
 
 		public string SystemId => VSystemID.Raw.GBA;
 
-		public bool DeterministicEmulation { get; set; }
+		public bool DeterministicEmulation => true;
 
 		public void ResetCounters()
 		{
-			Frame_Count = 0;
-			Lag_Count = 0;
-			Is_Lag = false;
+			_frame = 0;
+			_lagCount = 0;
+			_isLag = false;
 		}
 
 		public void Dispose()
 		{
-			Marshal.FreeHGlobal(Mem_Domains.vram);
-			Marshal.FreeHGlobal(Mem_Domains.oam);
-			Marshal.FreeHGlobal(Mem_Domains.mmio);
-			Marshal.FreeHGlobal(Mem_Domains.palram);
+			if (GBA_Pntr != IntPtr.Zero)
+			{
+				LibGBAHawk.GBA_destroy(GBA_Pntr);
+				GBA_Pntr = IntPtr.Zero;
+			}
 
 			DisposeSound();
 		}
 
-		public int[] frame_buffer;
+		public BlipBuffer blip_L = new BlipBuffer(25000);
+		public BlipBuffer blip_R = new BlipBuffer(25000);
 
+		public int[] Aud_L = new int[25000];
+		public int[] Aud_R = new int[25000];
+		public uint num_samp_L;
+		public uint num_samp_R;
 
-		public uint[] vid_buffer;
+		const int blipbuffsize = 9000;
 
+		public bool CanProvideAsync => false;
+
+		public void SetSyncMode(SyncSoundMode mode)
+		{
+			if (mode != SyncSoundMode.Sync)
+			{
+				throw new NotSupportedException("Only sync mode is supported");
+			}
+		}
+
+		public void GetSamplesAsync(short[] samples)
+		{
+			throw new NotSupportedException("Async not supported");
+		}
+
+		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
+
+		public void GetSamplesSync(out short[] samples, out int nsamp)
+		{
+			uint f_clock = LibGBAHawk.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
+
+			for (int i = 0; i < num_samp_L; i++)
+			{
+				blip_L.AddDelta((uint)Aud_L[i * 2], Aud_L[i * 2 + 1]);
+			}
+
+			for (int i = 0; i < num_samp_R; i++)
+			{
+				blip_R.AddDelta((uint)Aud_R[i * 2], Aud_R[i * 2 + 1]);
+			}
+
+			//Console.WriteLine(num_samp_L + " " + num_samp_R + " " + f_clock);
+
+			blip_L.EndFrame(f_clock);
+			blip_R.EndFrame(f_clock);
+
+			nsamp = blip_L.SamplesAvailable();
+			samples = new short[nsamp * 2];
+
+			if (nsamp != 0)
+			{
+				blip_L.ReadSamplesLeft(samples, nsamp);
+				blip_R.ReadSamplesRight(samples, nsamp);
+			}
+		}
+
+		public void DiscardSamples()
+		{
+			blip_L.Clear();
+			blip_R.Clear();
+		}
+
+		public void DisposeSound()
+		{
+			blip_L.Clear();
+			blip_R.Clear();
+			blip_L.Dispose();
+			blip_R.Dispose();
+			blip_L = null;
+			blip_R = null;
+		}
+
+		public int[] _vidbuffer = new int[240 * 160];
 
 		public int[] GetVideoBuffer()
 		{
-			return frame_buffer;
-		}
-
-		public void SendVideoBuffer()
-		{
-			for (int j = 0; j < frame_buffer.Length; j++) 
-			{ 
-				frame_buffer[j] = (int)vid_buffer[j];
-				vid_buffer[j] = 0xFFFFFFFF;
-			}
+			return _vidbuffer;
 		}
 
 		public int VirtualWidth => 240;

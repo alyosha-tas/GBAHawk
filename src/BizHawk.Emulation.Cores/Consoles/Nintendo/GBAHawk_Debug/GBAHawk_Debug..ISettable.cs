@@ -6,72 +6,55 @@ using Newtonsoft.Json;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA
+namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
-	public partial class GBAHawk : ISettable<GBAHawk.GBASettings, GBAHawk.GBASyncSettings>
+	public partial class GBAHawk_Debug : IEmulator, ISettable<GBAHawk_Debug.GBAHawk_Debug_Settings, GBAHawk_Debug.GBAHawk_Debug_SyncSettings>
 	{
-		public GBASettings GetSettings()
+		public GBAHawk_Debug_Settings GetSettings()
 		{
-			return Settings.Clone();
+			return _settings.Clone();
 		}
 
-		public GBASyncSettings GetSyncSettings()
+		public GBAHawk_Debug_SyncSettings GetSyncSettings()
 		{
-			return SyncSettings.Clone();
+			return _syncSettings.Clone();
 		}
 
-		public PutSettingsDirtyBits PutSettings(GBASettings o)
+		public PutSettingsDirtyBits PutSettings(GBAHawk_Debug_Settings o)
 		{
-			bool ret = GBASettings.RebootNeeded(Settings, o);
-			Settings = o;
+			_settings = o;
+			return PutSettingsDirtyBits.None;
+		}
+
+		public PutSettingsDirtyBits PutSyncSettings(GBAHawk_Debug_SyncSettings o)
+		{
+			bool ret = GBAHawk_Debug_SyncSettings.NeedsReboot(_syncSettings, o);
+			_syncSettings = o;
 			return ret ? PutSettingsDirtyBits.RebootCore : PutSettingsDirtyBits.None;
 		}
 
-		public PutSettingsDirtyBits PutSyncSettings(GBASyncSettings o)
+		public GBAHawk_Debug_Settings _settings = new GBAHawk_Debug_Settings();
+		public GBAHawk_Debug_SyncSettings _syncSettings = new GBAHawk_Debug_SyncSettings();
+
+		public class GBAHawk_Debug_Settings
 		{
-			bool ret = GBASyncSettings.RebootNeeded(SyncSettings, o);
-			SyncSettings = o;
-			return ret ? PutSettingsDirtyBits.RebootCore : PutSettingsDirtyBits.None;
-		}
-
-		internal GBASettings Settings { get; private set; }
-		internal GBASyncSettings SyncSettings { get; private set; }
-
-		public class GBASettings
-		{
-			// graphics settings
-			[DisplayName("Show Background")]
-			[Description("Display BG Layer")]
-			[DefaultValue(true)]
-			public bool DispBG { get; set; }
-
-			[DisplayName("Show Sprites")]
-			[Description("Display Sprites")]
-			[DefaultValue(true)]
-			public bool DispOBJ { get; set; }
-
 			[DisplayName("Read Domains on VBlank")]
 			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
 			[DefaultValue(false)]
 			public bool VBL_sync { get; set; }
 
-			public GBASettings Clone()
+			public GBAHawk_Debug_Settings Clone()
 			{
-				return (GBASettings)MemberwiseClone();
+				return (GBAHawk_Debug_Settings)MemberwiseClone();
 			}
 
-			public GBASettings()
+			public GBAHawk_Debug_Settings()
 			{
 				SettingsUtil.SetDefaultValues(this);
 			}
-
-			public static bool RebootNeeded(GBASettings x, GBASettings y)
-			{
-				return false;
-			}
 		}
 
-		public class GBASyncSettings
+		public class GBAHawk_Debug_SyncSettings
 		{
 			[DisplayName("RTC Initial Time")]
 			[Description("Set the initial RTC time in terms of elapsed seconds.")]
@@ -103,20 +86,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			[JsonIgnore]
 			public ushort _DivInitialTime = 8;
 
-
-			public GBASyncSettings Clone()
+			public GBAHawk_Debug_SyncSettings Clone()
 			{
-				return (GBASyncSettings)MemberwiseClone();
+				return (GBAHawk_Debug_SyncSettings)MemberwiseClone();
 			}
 
-			public GBASyncSettings()
+			public GBAHawk_Debug_SyncSettings()
 			{
 				SettingsUtil.SetDefaultValues(this);
 			}
 
-			public static bool RebootNeeded(GBASyncSettings x, GBASyncSettings y)
+			public static bool NeedsReboot(GBAHawk_Debug_SyncSettings x, GBAHawk_Debug_SyncSettings y)
 			{
-				return true;
+				return !DeepEquality.DeepEquals(x, y);
 			}
 		}
 	}

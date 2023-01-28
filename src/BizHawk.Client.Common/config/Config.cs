@@ -29,7 +29,7 @@ namespace BizHawk.Client.Common
 			(new[] { VSystemID.Raw.GBL },
 				new[] { CoreNames.GBHawkLink, CoreNames.GBHawkLink4x }),
 			(new[] { VSystemID.Raw.GBA },
-				new[] { CoreNames.GBAHawk, CoreNames.GBA }),
+				new[] { CoreNames.GBAHawk, CoreNames.GBAHawk_Debug }),
 		};
 
 		public Config()

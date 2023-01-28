@@ -1,10 +1,9 @@
 ﻿using System;
-
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA
+namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
-	public partial class GBAHawk : ISaveRam
+	public partial class GBAHawk_Debug : ISaveRam
 	{
 		public byte[] CloneSaveRam()
 		{
@@ -13,14 +12,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (SyncSettings.Use_SRAM)
+			if (_syncSettings.Use_SRAM)
 			{
 				Buffer.BlockCopy(data, 0, cart_RAM, 0, data.Length);
 				Console.WriteLine("loading SRAM here");
-				LibGBAHawk.GBA_load_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length);
 			}
 		}
 
-		public bool SaveRamModified => has_bat & SyncSettings.Use_SRAM;
+		public bool SaveRamModified => has_bat & _syncSettings.Use_SRAM;
 	}
 }
