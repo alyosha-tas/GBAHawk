@@ -2588,13 +2588,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_LYC = 0xFF;
 
-			// At power on, seems to start around end of vblank (ly = 225), see music4.gba which relies on the offset between VBL ad timer0 to sync
-			// Note that ly = 161 also works for that test, so could be at the start of vblank too? Need to test timer initial state more precisely. 
-			ppu_LY = 225;
+			// based on music4.gba, initial state would either be Ly = 225 or 161.
+			// based on console verification testing, it seems 161 is correct.
+			ppu_LY = 161;
 
 			ppu_Sprite_Line = 0;
 
-			ppu_Cycle = ppu_Display_Cycle = 0;
+			// 1 gives the correct value in music4.gba
+			ppu_Cycle = 1;
+
+			ppu_Display_Cycle = 0;
 
 			ppu_In_VBlank = true;
 
