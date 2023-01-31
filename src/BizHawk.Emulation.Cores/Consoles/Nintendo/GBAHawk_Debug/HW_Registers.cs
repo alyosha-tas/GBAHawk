@@ -405,6 +405,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if ((value & 0x80) == 0)
 				{
 					cpu_Halted = true;
+					cpu_Just_Halted = true;
+
 					TraceCallback?.Invoke(new(disassembly: "====Halt====", registerInfo: string.Empty));
 					cpu_HS_Ofst_ARM0 = 0x8;
 					cpu_HS_Ofst_TMB0 = 0x8;

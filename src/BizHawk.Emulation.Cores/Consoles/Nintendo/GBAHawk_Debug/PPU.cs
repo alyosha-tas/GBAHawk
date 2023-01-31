@@ -56,7 +56,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
-		public int ppu_HBL_Check_cd, ppu_LYC_Check_cd;
+		public int ppu_LYC_Check_cd;
 
 		public ushort ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
 		public ushort ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
@@ -819,6 +819,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if ((ppu_LY >= 2) && (ppu_LY < 162))
 					{
 						dma_Run[3] = true;
+						dma_External_Source[3] = true;
 					}
 				}
 
@@ -828,8 +829,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// clear the LYC flag bit
 				ppu_STAT &= 0xFB;
 
-				// Check LY = LYC in 2 cycles
-				ppu_LYC_Check_cd = 2;
+				// Check LY = LYC in 1 cycle
+				ppu_LYC_Check_cd = 1;
 				ppu_Delays = true;
 				delays_to_process = true;
 
@@ -841,18 +842,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_STAT |= 1;
 
 					// trigger VBL IRQ
-					if ((ppu_STAT & 0x8) == 0x8)
-					{
-						ppu_VBL_IRQ_cd = 3;
-						ppu_Delays = true;
-						delays_to_process = true;
-					}
-
-					// trigger any DMAs with VBlank as a start condition
-					if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; }
-					if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; }
-					if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; }
-					if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; }
+					ppu_VBL_IRQ_cd = 4;
+					ppu_Delays = true;
+					delays_to_process = true;
 
 					// do core actions that happen on VBlank
 					On_VBlank();
@@ -911,20 +903,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 			else if (ppu_Cycle == 1007)
 			{
-				// trigger any DMAs with HBlank as a start condition
-				// but not if in vblank
-				if (ppu_LY < 160)
-				{
-					if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; }
-					if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; }
-					if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
-					if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
-				}
+				// Enter HBlank
+				ppu_STAT |= 2;
 
-				// Hblank starts on next cycle
-				ppu_HBL_Check_cd = 1;
+				ppu_HBL_IRQ_cd = 4;
 				ppu_Delays = true;
-				delays_to_process = true;
+				delays_to_process = true;	
 			}
 
 			if (!ppu_Forced_Blank)
@@ -2549,7 +2533,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
-			ppu_HBL_Check_cd = ppu_LYC_Check_cd = 0;
+			ppu_LYC_Check_cd = 0;
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -2578,8 +2562,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Sprite_Line = 0;
 
-			// 1 gives the correct value in music4.gba
-			ppu_Cycle = 1;
+			// 2 gives the correct value in music4.gba
+			ppu_Cycle = 2;
 
 			ppu_Display_Cycle = 0;
 
@@ -2659,7 +2643,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_HBL_IRQ_cd), ref ppu_HBL_IRQ_cd);
 			ser.Sync(nameof(ppu_LYC_IRQ_cd), ref ppu_LYC_IRQ_cd);
 
-			ser.Sync(nameof(ppu_HBL_Check_cd), ref ppu_HBL_Check_cd);
 			ser.Sync(nameof(ppu_LYC_Check_cd), ref ppu_LYC_Check_cd);
 
 			ser.Sync(nameof(ppu_CTRL), ref ppu_CTRL);

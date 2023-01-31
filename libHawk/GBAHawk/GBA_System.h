@@ -158,8 +158,6 @@ namespace GBAHawk
 
 			INT_Master_On = false;
 
-
-
 			snd_Reset();
 			ppu_Reset();
 			dma_Reset();
@@ -211,7 +209,7 @@ namespace GBAHawk
 				// check if all delay sources are false
 				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
 				{
-					if (!ppu_Delays)
+					if (!ppu_Delays && !ser_Delay && !key_Delay)
 					{
 						delays_to_process = false;
 					}
@@ -230,6 +228,58 @@ namespace GBAHawk
 				cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
 				IRQ_Write_Delay_2 = true;
 				IRQ_Write_Delay_3 = false;
+
+				// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
+				if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+				{
+					cpu_Trigger_Unhalt = false;
+				}
+				else
+				{
+					cpu_Trigger_Unhalt = true;
+				}
+			}
+
+			if (ser_Delay)
+			{
+				ser_Delay_cd--;
+
+				if (ser_Delay_cd == 0)
+				{
+					// trigger IRQ
+					if (((INT_EN & 0x80) == 0x80) && INT_Master_On) { cpu_IRQ_Input = true; }
+
+					ser_Delay = false;
+					// check if all delay sources are false
+					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
+					{
+						if (!ppu_Delays && !key_Delay)
+						{
+							delays_to_process = false;
+						}
+					}
+				}
+			}
+
+			if (key_Delay)
+			{
+				key_Delay_cd--;
+
+				if (key_Delay_cd == 0)
+				{
+					// trigger IRQ
+					if (((INT_EN & 0x1000) == 0x1000) && INT_Master_On) { cpu_IRQ_Input = true; }
+
+					key_Delay = false;
+					// check if all delay sources are false
+					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
+					{
+						if (!ppu_Delays && !ser_Delay)
+						{
+							delays_to_process = false;
+						}
+					}
+				}
 			}
 
 			if (ppu_Delays)
@@ -238,13 +288,26 @@ namespace GBAHawk
 				{
 					ppu_VBL_IRQ_cd -= 1;
 
-					if (ppu_VBL_IRQ_cd == 0)
+					if (ppu_VBL_IRQ_cd == 2)
 					{
-						INT_Flags |= 0x1;
-						if (((INT_EN & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }
+
+						if ((INT_EN & 0x1) == 0x1) { cpu_Trigger_Unhalt = true; }
+					}
+					else if (ppu_VBL_IRQ_cd == 1)
+					{
+						// trigger any DMAs with VBlank as a start condition
+						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
+						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
+						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
+						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
+					}
+					else if (ppu_VBL_IRQ_cd == 0)
+					{
+						if (((INT_EN & INT_Flags & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -255,13 +318,31 @@ namespace GBAHawk
 				{
 					ppu_HBL_IRQ_cd -= 1;
 
-					if (ppu_HBL_IRQ_cd == 0)
+					if (ppu_HBL_IRQ_cd == 2)
 					{
-						INT_Flags |= 0x2;
-						if (((INT_EN & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
+						// trigger HBL IRQ
+						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }
+
+						if ((INT_EN & 0x2) == 0x2) { cpu_Trigger_Unhalt = true; }
+					}
+					else if (ppu_HBL_IRQ_cd == 1)
+					{
+						// trigger any DMAs with HBlank as a start condition
+						// but not if in vblank
+						if (ppu_LY < 160)
+						{
+							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
+							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
+							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
+							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
+						}
+					}
+					else if (ppu_HBL_IRQ_cd == 0)
+					{
+						if (((INT_EN & INT_Flags & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -272,38 +353,18 @@ namespace GBAHawk
 				{
 					ppu_LYC_IRQ_cd -= 1;
 
-					if (ppu_LYC_IRQ_cd == 0)
+					if (ppu_LYC_IRQ_cd == 2)
 					{
-						INT_Flags |= 0x4;
-						if (((INT_EN & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }
 
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0) && (ppu_LYC_Check_cd == 0))
-						{
-							ppu_Delays = false;
-						}
+						if ((INT_EN & 0x4) == 0x4) { cpu_Trigger_Unhalt = true; }
 					}
-				}
-
-				if (ppu_HBL_Check_cd > 0)
-				{
-					ppu_HBL_Check_cd -= 1;
-
-					if (ppu_HBL_Check_cd == 0)
+					else if (ppu_LYC_IRQ_cd == 0)
 					{
-						// Enter HBlank
-						ppu_STAT |= 2;
-
-						// trigger HBL IRQ
-						if ((ppu_STAT & 0x10) == 0x10)
-						{
-							ppu_HBL_IRQ_cd = 3;
-							ppu_Delays = true;
-							delays_to_process = true;
-						}
+						if (((INT_EN & INT_Flags & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -318,19 +379,16 @@ namespace GBAHawk
 					{
 						if (ppu_LY == ppu_LYC)
 						{
-							if ((ppu_STAT & 0x20) == 0x20)
-							{
-								ppu_LYC_IRQ_cd = 3;
-								ppu_Delays = true;
-								delays_to_process = true;
-							}
+							ppu_LYC_IRQ_cd = 4;
+							ppu_Delays = true;
+							delays_to_process = true;
 
 							// set the flag bit
 							ppu_STAT |= 4;
 						}
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_HBL_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -340,7 +398,7 @@ namespace GBAHawk
 				// check if all delay sources are false
 				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
 				{
-					if (!ppu_Delays)
+					if (!ppu_Delays && !ser_Delay && !key_Delay)
 					{
 						delays_to_process = false;
 					}
@@ -360,11 +418,11 @@ namespace GBAHawk
 						if ((key_CTRL & 0x3FF) != 0)
 						{
 							INT_Flags |= 0x1000;
+							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
-							if ((INT_EN & 0x1000) == 0x1000)
-							{
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
+							key_Delay = true;
+							key_Delay_cd = 2;
+							delays_to_process = true;
 						}
 					}
 				}
@@ -376,13 +434,29 @@ namespace GBAHawk
 						if ((key_CTRL & 0x3FF) != 0x3FF)
 						{
 							INT_Flags |= 0x1000;
+							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
-							if ((INT_EN & 0x1000) == 0x1000)
-							{
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
+							key_Delay = true;
+							key_Delay_cd = 2;
+							delays_to_process = true;
 						}
 					}
+				}
+			}
+		}
+
+		// only on writes, it is possible to trigger an interrupt with and mode and no keys selected or pressed
+		void do_controller_check_glitch()
+		{
+			if ((key_CTRL & 0xC3FF) == 0xC000)
+			{
+				if ((controller_state & 0x3FF) == 0x3FF)
+				{
+					INT_Flags |= 0x1000;
+
+					key_Delay = true;
+					key_Delay_cd = 2;
+					delays_to_process = true;
 				}
 			}
 		}
@@ -841,6 +915,7 @@ namespace GBAHawk
 				if ((value & 0x80) == 0)
 				{
 					cpu_Halted = true;
+					cpu_Just_Halted = true;
 					if (TraceCallback) TraceCallback(4);
 					cpu_HS_Ofst_ARM0 = 0x8;
 					cpu_HS_Ofst_TMB0 = 0x8;
@@ -940,6 +1015,9 @@ namespace GBAHawk
 		bool cpu_Halted;
 		bool stopped;
 		bool jammed;
+
+		bool cpu_Trigger_Unhalt;
+		bool cpu_Just_Halted;
 
 		// ARM Related Variables
 		uint16_t cpu_Exec_ARM;
@@ -1435,10 +1513,10 @@ namespace GBAHawk
 		const static uint16_t cpu_Internal_Can_Save_TMB = 44;
 		const static uint16_t cpu_Internal_Halted = 46;
 		const static uint16_t cpu_Internal_Halted_2 = 47;
-		const static uint16_t cpu_Multiply_Cycles = 48;
-		const static uint16_t cpu_Pause_For_DMA = 49;
+		const static uint16_t cpu_Internal_Halted_3 = 48;
+		const static uint16_t cpu_Multiply_Cycles = 49;
+		const static uint16_t cpu_Pause_For_DMA = 50;
 		
-
 		// Instruction Operations ARM
 		const static uint16_t cpu_ARM_AND = 10;
 		const static uint16_t cpu_ARM_EOR = 11;
@@ -1577,6 +1655,8 @@ namespace GBAHawk
 			cpu_FlagI_Old = false;
 
 			stopped = jammed = cpu_Halted = false;
+
+			cpu_Trigger_Unhalt = cpu_Just_Halted = false;
 		}
 
 		void cpu_Decode_ARM()
@@ -4994,6 +5074,8 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Halted, saver);
 			saver = bool_saver(stopped, saver);
 			saver = bool_saver(jammed, saver);
+			saver = bool_saver(cpu_Trigger_Unhalt, saver);
+			saver = bool_saver(cpu_Just_Halted, saver);
 
 			saver = short_saver(cpu_Exec_ARM, saver);
 			saver = short_saver(cpu_Exec_TMB, saver);
@@ -5118,6 +5200,8 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Halted, loader);
 			loader = bool_loader(&stopped, loader);
 			loader = bool_loader(&jammed, loader);
+			loader = bool_loader(&cpu_Trigger_Unhalt, loader);
+			loader = bool_loader(&cpu_Just_Halted, loader);
 
 			loader = short_loader(&cpu_Exec_ARM, loader);
 			loader = short_loader(&cpu_Exec_TMB, loader);
@@ -5645,6 +5729,8 @@ namespace GBAHawk
 		bool dma_Read_Cycle;
 		bool dma_Pausable;
 		bool dma_All_Off;
+		bool dma_Shutdown;
+		bool dma_Release_Bus;
 
 		uint16_t dma_TFR_HWord;
 		uint16_t dma_Held_CPU_Instr;
@@ -5663,6 +5749,7 @@ namespace GBAHawk
 		bool dma_Use_ROM_Addr_SRC[4] = { };
 		bool dma_Use_ROM_Addr_DST[4] = { };
 		bool dma_ROM_Being_Used[4] = { };
+		bool dma_External_Source[4] = { };
 
 		uint16_t dma_CNT[4] = { };
 		uint16_t dma_CTRL[4] = { };
@@ -5964,6 +6051,8 @@ namespace GBAHawk
 				dma_Go[chan] = true;
 
 				dma_All_Off = false;
+
+				dma_External_Source[chan] = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -6039,6 +6128,8 @@ namespace GBAHawk
 				dma_Use_ROM_Addr_DST[i] = false;
 
 				dma_ROM_Being_Used[i] = false;
+
+				dma_External_Source[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -6058,6 +6149,8 @@ namespace GBAHawk
 			dma_Pausable = true;
 
 			dma_All_Off = true;
+
+			dma_Shutdown = dma_Release_Bus = false;
 		}
 
 		uint8_t* dma_SaveState(uint8_t* saver)
@@ -6066,6 +6159,8 @@ namespace GBAHawk
 			saver = bool_saver(dma_Read_Cycle, saver);
 			saver = bool_saver(dma_Pausable, saver);
 			saver = bool_saver(dma_All_Off, saver);
+			saver = bool_saver(dma_Shutdown, saver);
+			saver = bool_saver(dma_Release_Bus, saver);
 
 			saver = short_saver(dma_TFR_HWord, saver);
 			saver = short_saver(dma_Held_CPU_Instr, saver);
@@ -6086,6 +6181,7 @@ namespace GBAHawk
 			saver = bool_array_saver(dma_Use_ROM_Addr_SRC, saver, 4);
 			saver = bool_array_saver(dma_Use_ROM_Addr_DST, saver, 4);
 			saver = bool_array_saver(dma_ROM_Being_Used, saver, 4);
+			saver = bool_array_saver(dma_External_Source, saver, 4);
 
 			saver = short_array_saver(dma_CNT, saver, 4);
 			saver = short_array_saver(dma_CTRL, saver, 4);
@@ -6113,6 +6209,8 @@ namespace GBAHawk
 			loader = bool_loader(&dma_Read_Cycle, loader);
 			loader = bool_loader(&dma_Pausable, loader);
 			loader = bool_loader(&dma_All_Off, loader);
+			loader = bool_loader(&dma_Shutdown, loader);
+			loader = bool_loader(&dma_Release_Bus, loader);
 
 			loader = short_loader(&dma_TFR_HWord, loader);
 			loader = short_loader(&dma_Held_CPU_Instr, loader);
@@ -6133,6 +6231,7 @@ namespace GBAHawk
 			loader = bool_array_loader(dma_Use_ROM_Addr_SRC, loader, 4);
 			loader = bool_array_loader(dma_Use_ROM_Addr_DST, loader, 4);
 			loader = bool_array_loader(dma_ROM_Being_Used, loader, 4);
+			loader = bool_array_loader(dma_External_Source, loader, 4);
 
 			loader = short_array_loader(dma_CNT, loader, 4);
 			loader = short_array_loader(dma_CTRL, loader, 4);
@@ -6159,6 +6258,7 @@ namespace GBAHawk
 	#pragma region Serial port
 
 		bool ser_Internal_Clock, ser_Start;
+		bool ser_Delay, key_Delay;
 
 		uint8_t ser_div_cnt, ser_Mask;
 		uint8_t ser_Bit_Count, ser_Bit_Total;
@@ -6168,6 +6268,7 @@ namespace GBAHawk
 		uint16_t key_CTRL;
 
 		uint32_t ser_RECV_J, ser_TRANS_J;
+		uint32_t ser_Delay_cd, key_Delay_cd;
 
 		uint8_t ser_Read_Reg_8(uint32_t addr)
 		{
@@ -6303,8 +6404,9 @@ namespace GBAHawk
 
 				case 0x130: // no effect
 				case 0x131: // no effect
-				case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(); break;
-				case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); do_controller_check(); break;
+				case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(); do_controller_check_glitch(); break;
+				// note no check here, does not seem to trigger onhardware, see joypad.gba
+				case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
 
 				case 0x134: ser_Mode = (uint16_t)((ser_Mode & 0xFF00) | value); break;
 				case 0x135: ser_Mode = (uint16_t)((ser_Mode & 0x00FF) | (value << 8)); break;
@@ -6337,7 +6439,7 @@ namespace GBAHawk
 				case 0x12A: ser_Data_M = value; break;
 
 				case 0x130: // no effect
-				case 0x132: key_CTRL = value; do_controller_check(); break;
+				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode = value; break;
 
@@ -6362,7 +6464,7 @@ namespace GBAHawk
 				case 0x128: ser_CTRL_Update((uint16_t)(value & 0xFFFF));
 					ser_Data_M = (uint16_t)((value >> 16) & 0xFFFF); break;
 
-				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(); break;
+				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode = (uint16_t)(value & 0xFFFF); break;
 
@@ -6399,6 +6501,8 @@ namespace GBAHawk
 		{
 			ser_RECV_J = ser_TRANS_J = 0;
 
+			ser_Delay_cd = key_Delay_cd = 0;
+
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
 			ser_CTRL = ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
@@ -6412,11 +6516,16 @@ namespace GBAHawk
 			ser_Bit_Count = ser_Bit_Total = 0;
 
 			ser_Internal_Clock = ser_Start = false;
+
+			ser_Delay = key_Delay = false;
 		}
 
 		uint8_t* ser_SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(ser_Internal_Clock, saver);
+			saver = bool_saver(ser_Start, saver);
+			saver = bool_saver(ser_Delay, saver);
+			saver = bool_saver(key_Delay, saver);
 
 			saver = byte_saver(ser_div_cnt, saver);
 			saver = byte_saver(ser_Mask, saver);
@@ -6443,6 +6552,9 @@ namespace GBAHawk
 		uint8_t* ser_LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&ser_Internal_Clock, loader);
+			loader = bool_loader(&ser_Start, loader);
+			loader = bool_loader(&ser_Delay, loader);
+			loader = bool_loader(&key_Delay, loader);
 
 			loader = byte_loader(&ser_div_cnt, loader);
 			loader = byte_loader(&ser_Mask, loader);
@@ -6787,7 +6899,7 @@ namespace GBAHawk
 
 		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
-		uint32_t ppu_HBL_Check_cd, ppu_LYC_Check_cd;
+		uint32_t ppu_LYC_Check_cd;
 
 		uint32_t ppu_Transparent_Color;
 
@@ -9102,7 +9214,7 @@ namespace GBAHawk
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
-			ppu_HBL_Check_cd = ppu_LYC_Check_cd = 0;
+			ppu_LYC_Check_cd = 0;
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -9131,8 +9243,8 @@ namespace GBAHawk
 
 			ppu_Sprite_Line = 0;
 
-			// 1 gives the correct value in music4.gba
-			ppu_Cycle = 1;
+			// 2 gives the correct value in music4.gba
+			ppu_Cycle = 2;
 				
 			ppu_Display_Cycle = 0;
 
@@ -9226,7 +9338,6 @@ namespace GBAHawk
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
 			saver = int_saver(ppu_LYC_IRQ_cd, saver);
 
-			saver = int_saver(ppu_HBL_Check_cd, saver);
 			saver = int_saver(ppu_LYC_Check_cd, saver);
 
 			saver = int_saver(ppu_Transparent_Color, saver);
@@ -9322,7 +9433,6 @@ namespace GBAHawk
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_LYC_IRQ_cd, loader);
 
-			loader = int_loader(&ppu_HBL_Check_cd, loader);
 			loader = int_loader(&ppu_LYC_Check_cd, loader);
 
 			loader = int_loader(&ppu_Transparent_Color, loader);

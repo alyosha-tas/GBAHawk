@@ -110,6 +110,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool stopped;
 		public bool jammed;
 
+		public bool cpu_Trigger_Unhalt;
+		public bool cpu_Just_Halted;
+
 		public void cpu_Reset()
 		{
 			for (int i = 0; i < 16; i++) { cpu_Regs_To_Access[i] = 0; }
@@ -157,6 +160,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			cpu_FlagI_Old = false;
 
 			stopped = jammed = cpu_Halted = false;
+
+			cpu_Trigger_Unhalt = cpu_Just_Halted = false;
 		}
 
 		//this only calls when the first byte of an instruction is fetched.
@@ -1863,6 +1868,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// it could be that an IRQ happens directly following a halt/stop instruction
 						// in this case, cancel the halt/stop
 						cpu_Halted = false;
+						cpu_Just_Halted = false;
 						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
 						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
@@ -2022,30 +2028,46 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					break;
 
 				case cpu_Internal_Halted:
-					if ((INT_Flags & INT_EN & 0x3FFF) != 0) 
+					// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
+					// if IME is enabled, then instead wait for an interrupt to occur
+					// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
+					// before the interrupt takes over
+					if (cpu_Just_Halted)
 					{
-						// exit halt mode
-						cpu_Halted = false;
-						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-						// if interrupts are enabled, go to interrupt vector
-						// otherwise continue on with normal execution
-						if (INT_Master_On) 
-						{ 
-							cpu_Instr_Type = cpu_Prefetch_IRQ; 
-						}
-						else
+						// must be halted for at least one cycle, even if conditions for unhalting are immediately true
+						cpu_Just_Halted = false;
+					}
+					else
+					{
+						if (cpu_Trigger_Unhalt)
 						{
-							// seems to take an extra clock cycle to exit
-							cpu_Instr_Type = cpu_Internal_Halted_2;
+							if (INT_Master_On)
+							{
+								cpu_Instr_Type = cpu_Internal_Halted_3;
+							}
+							else
+							{
+								cpu_Halted = false;
+								cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+								cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
+								if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
+								else { cpu_Decode_ARM(); }
+							}
 						}
 					}
 					break;
 
 				case cpu_Internal_Halted_2:
-					if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-					else { cpu_Decode_ARM(); }
+					cpu_Halted = false;
+					cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+					cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
+					cpu_Instr_Type = cpu_Prefetch_IRQ;
+					break;
+
+				case cpu_Internal_Halted_3:
+					cpu_Instr_Type = cpu_Internal_Halted_2;
 					break;
 
 				case cpu_Multiply_Cycles:
@@ -2166,30 +2188,46 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								break;
 
 							case cpu_Internal_Halted:
-								if ((INT_Flags & INT_EN & 0x3FFF) != 0)
+								// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
+								// if IME is enabled, then instead wait for an interrupt to occur
+								// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
+								// before the interrupt takes over
+								if (cpu_Just_Halted)
 								{
-									// exit halt mode
-									cpu_Halted = false;
-									cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-									cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+									// must be halted for at least one cycle, even if conditions for unhalting are immediately true
+									cpu_Just_Halted = false;
+								}
+								else
+								{
+									if (cpu_Trigger_Unhalt)
+									{
+										if (INT_Master_On)
+										{
+											cpu_Instr_Type = cpu_Internal_Halted_3;
+										}
+										else
+										{
+											cpu_Halted = false;
+											cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+											cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
-									// if interrupts are enabled, go to interrupt vector
-									// otherwise continue on with normal execution
-									if (INT_Master_On)
-									{
-										cpu_Instr_Type = cpu_Prefetch_IRQ;
-									}
-									else
-									{
-										// seems to take an extra clock cycle to exit
-										cpu_Instr_Type = cpu_Internal_Halted_2;
+											if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
+											else { cpu_Decode_ARM(); }
+										}
 									}
 								}
 								break;
 
 							case cpu_Internal_Halted_2:
-								if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-								else { cpu_Decode_ARM(); }
+								cpu_Halted = false;
+								cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+								cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
+								cpu_Instr_Type = cpu_Prefetch_IRQ;
+								break;
+
+							case cpu_Internal_Halted_3:
+								cpu_Instr_Type = cpu_Internal_Halted_2;
 								break;
 
 							case cpu_Multiply_Cycles:
@@ -2398,6 +2436,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Halted), ref cpu_Halted);
 			ser.Sync(nameof(stopped), ref stopped);
 			ser.Sync(nameof(jammed), ref jammed);
+
+			ser.Sync(nameof(cpu_Trigger_Unhalt), ref cpu_Trigger_Unhalt);
+			ser.Sync(nameof(cpu_Just_Halted), ref cpu_Just_Halted);
 
 			ser.EndSection();
 		}

@@ -1598,7 +1598,7 @@ namespace GBAHawk
 
 				if (snd_FIFO_A_ptr < 16)
 				{
-					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
+					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
 				}
 
 				snd_FIFO_A_Output = ((int8_t)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
@@ -1624,7 +1624,7 @@ namespace GBAHawk
 
 				if (snd_FIFO_B_ptr < 16)
 				{
-					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
+					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
 				}
 
 				snd_FIFO_B_Output = ((int8_t)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;
@@ -1732,6 +1732,7 @@ namespace GBAHawk
 					if ((ppu_LY >= 2) && (ppu_LY < 162))
 					{
 						dma_Run[3] = true;
+						dma_External_Source[3] = true;
 					}
 				}
 
@@ -1741,8 +1742,8 @@ namespace GBAHawk
 				// clear the LYC flag bit
 				ppu_STAT &= 0xFB;
 
-				// Check LY = LYC in 2 cycles
-				ppu_LYC_Check_cd = 2;
+				// Check LY = LYC in 1 cycle
+				ppu_LYC_Check_cd = 1;
 				ppu_Delays = true;
 				delays_to_process = true;
 
@@ -1754,18 +1755,9 @@ namespace GBAHawk
 					ppu_STAT |= 1;
 
 					// trigger VBL IRQ
-					if ((ppu_STAT & 0x8) == 0x8)
-					{
-						ppu_VBL_IRQ_cd = 3;
-						ppu_Delays = true;
-						delays_to_process = true;
-					}
-
-					// trigger any DMAs with VBlank as a start condition
-					if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; }
-					if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; }
-					if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; }
-					if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; }
+					ppu_VBL_IRQ_cd = 4;
+					ppu_Delays = true;
+					delays_to_process = true;
 
 					// do core actions that happen on VBlank
 					On_VBlank();
@@ -1825,18 +1817,10 @@ namespace GBAHawk
 			}
 			else if (ppu_Cycle == 1007)
 			{
-				// trigger any DMAs with HBlank as a start condition
-				// but not if in vblank
-				if (ppu_LY < 160)
-				{
-					if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; }
-					if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; }
-					if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
-					if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
-				}
+				// Enter HBlank
+				ppu_STAT |= 2;
 
-				// Hblank starts on next cycle
-				ppu_HBL_Check_cd = 1;
+				ppu_HBL_IRQ_cd = 4;
 				ppu_Delays = true;
 				delays_to_process = true;
 			}
@@ -1889,10 +1873,254 @@ namespace GBAHawk
 
 			#pragma endregion
 
+			#pragma region Serial Port
+			ser_div_cnt += 1;
+
+			if (ser_Start)
+			{
+				if (ser_Internal_Clock)
+				{
+					// transfer 1 bit
+					if ((ser_div_cnt & ser_Mask) == 0)
+					{
+						ser_Bit_Count += 1;
+
+						if (ser_Bit_Count == ser_Bit_Total)
+						{
+							// reset start bit
+							ser_Start = false;
+							ser_CTRL &= 0xFF7F;
+
+							// trigger interrupt if needed
+							if ((ser_CTRL & 0x4000) == 0x4000)
+							{
+								INT_Flags |= 0x80;
+
+								if ((INT_EN & 0x80) == 0x80) { cpu_Trigger_Unhalt = true; }
+
+								ser_Delay = true;
+								ser_Delay_cd = 2;
+								delays_to_process = true;
+							}
+						}
+					}
+				}
+			}
+			#pragma endregion
+
+			#pragma region Timer
+
+			bool tim_do_tick = false;
+
+			tim_SubCnt += 1;
+
+			if (!tim_All_Off)
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					if (tim_ST_Time[i] > 0)
+					{
+						tim_ST_Time[i] -= 1;
+
+						if (tim_ST_Time[i] == 0)
+						{
+							tim_Go[i] = true;
+						}
+					}
+
+					if (tim_IRQ_CD[i] > 0)
+					{
+						tim_IRQ_CD[i] -= 1;
+
+						// trigger IRQ
+						if (tim_IRQ_CD[i] == 2)
+						{
+							INT_Flags |= (uint16_t)(0x8 << i);
+							if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
+						}
+						else if (tim_IRQ_CD[i] == 0)
+						{
+							if (((INT_EN & (0x8 << i)) == (0x8 << i)) && INT_Master_On) { cpu_IRQ_Input = true; }
+						}
+
+						// check if all timers disabled
+						if (!tim_Go[i])
+						{
+							tim_All_Off = true;
+							for (int j = 0; j < 4; j++)
+							{
+								tim_All_Off &= !tim_Go[j];
+								tim_All_Off &= (tim_IRQ_CD[j] == 0);
+								tim_All_Off &= (tim_ST_Time[j] == 0);
+							}
+						}
+					}
+
+					if (tim_Go[i])
+					{
+						tim_do_tick = false;
+
+						if (!tim_Tick_By_Prev[i])
+						{
+							if ((tim_SubCnt & tim_PreSc[i]) == 0)
+							{
+								tim_do_tick = true;
+							}
+						}
+						else if (tim_Prev_Tick[i]) { tim_do_tick = true; }
+
+						if (tim_do_tick)
+						{
+							tim_Timer[i] += 1;
+
+							if (tim_Timer[i] == 0)
+							{
+								if ((tim_Control[i] & 0x40) == 0x40)
+								{
+									// don't re-trigger if an IRQ is already pending
+									if (tim_IRQ_CD[i] == 0)
+									{
+										tim_IRQ_CD[i] = tim_IRQ_Time[i];
+
+										if (tim_IRQ_CD[i] == 2)
+										{
+											INT_Flags |= (uint16_t)(0x8 << i);
+											if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
+										}
+									}
+								}
+
+								// reload the timer
+								tim_Timer[i] = tim_Reload[i];
+
+								// if the reload register was just written to, use the old value
+								if (tim_Just_Reloaded == i)
+								{
+									tim_Timer[i] = tim_Old_Reload;
+								}
+
+								tim_Just_Reloaded = i;
+
+								// Trigger sound FIFO updates
+								if (snd_FIFO_A_Timer == i) { snd_FIFO_A_Tick = snd_CTRL_power; }
+								if (snd_FIFO_B_Timer == i) { snd_FIFO_B_Tick = snd_CTRL_power; }
+
+								tim_Prev_Tick[i + 1] = true;
+							}
+						}
+
+						if (tim_Disable[i])
+						{
+							tim_Go[i] = false;
+
+							tim_ST_Time[i] = 0;
+
+							tim_All_Off = true;
+
+							for (int k = 0; k < 4; k++)
+							{
+								tim_All_Off &= !tim_Go[k];
+								tim_All_Off &= (tim_IRQ_CD[k] == 0);
+								tim_All_Off &= (tim_ST_Time[k] == 0);
+							}
+
+							if (tim_IRQ_CD[i] > 0) { tim_All_Off = false; }
+
+							tim_Disable[i] = false;
+						}
+					}
+
+					tim_Prev_Tick[i] = false;
+				}
+			}
+
+			tim_Just_Reloaded = 5;
+			#pragma endregion
+
+			#pragma region Prefetch
+
+			pre_Cycle_Glitch = false;
+
+			// if enabled, try to read from ROM if buffer is not full
+			// if not enabled, finish current fetch
+			if ((pre_Enable && (pre_Buffer_Cnt < 8)) || (pre_Fetch_Cnt != 0))
+			{
+				if (pre_Fetch_Cnt == 0)
+				{
+					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) {} // cannot start an access on the internal cycles of an instruction
+					else
+					{
+						pre_Fetch_Wait = 1;
+
+						if (pre_Read_Addr > 0x0C000000)
+						{
+							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+						}
+						else if (pre_Read_Addr > 0x0A000000)
+						{
+							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
+						}
+						else
+						{
+							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
+						}
+
+						// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
+						pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+
+						if (pre_Fetch_Cnt == pre_Fetch_Wait)
+						{
+							pre_Buffer_Cnt += 1;
+							pre_Fetch_Cnt = 0;
+							pre_Read_Addr += 2;
+
+							pre_Cycle_Glitch = true;
+						}
+					}
+				}
+				else
+				{
+					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
+					pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+
+					if (pre_Fetch_Cnt == pre_Fetch_Wait)
+					{
+						pre_Buffer_Cnt += 1;
+						pre_Fetch_Cnt = 0;
+						pre_Read_Addr += 2;
+
+						pre_Cycle_Glitch = true;
+					}
+				}
+			}
+
+			#pragma endregion
+
 			#pragma region DMA Tick
 			// if no channels are on, skip
 			if (!dma_All_Off)
 			{
+				if (dma_Shutdown)
+				{
+					if (dma_Release_Bus)
+					{
+						cpu_Is_Paused = false;
+
+						dma_All_Off = true;
+
+						for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+
+						dma_Shutdown = false;
+					}
+					else
+					{
+						dma_Release_Bus = true;
+					}
+				}
+
 				if (!dma_Pausable)
 				{
 					// if a channel is in the middle of read/write cycle, continue with the cycle
@@ -2095,10 +2323,22 @@ namespace GBAHawk
 
 							if (dma_CNT_intl[dma_Chan_Exec] == 0)
 							{
+								// it seems as though DMA's triggered by external sources take an extra cycle to shut down
+								if (dma_External_Source[dma_Chan_Exec])
+								{
+									dma_Release_Bus = false;
+								}
+								else
+								{
+									dma_Release_Bus = true;
+								}
+
 								// generate an IRQ if needed
 								if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 								{
 									INT_Flags |= (uint16_t)(0x1 << (8 + dma_Chan_Exec));
+									if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec))) { cpu_Trigger_Unhalt = true; }
+
 									// trigger IRQ (Bits 8 through 11)
 									if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec)))
 									{
@@ -2144,10 +2384,6 @@ namespace GBAHawk
 										dma_Run[dma_Chan_Exec] = false;
 										dma_Go[dma_Chan_Exec] = false;
 										dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
-
-										dma_All_Off = true;
-
-										for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 									}
 								}
 								else
@@ -2157,23 +2393,20 @@ namespace GBAHawk
 									dma_Run[dma_Chan_Exec] = false;
 									dma_Go[dma_Chan_Exec] = false;
 									dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
-
-									dma_All_Off = true;
-
-									for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 								}
 
 								// In any case, we start a new DMA
 								dma_Chan_Exec = 4;
-
-								// in any case, unpause the cpu
-								cpu_Is_Paused = false;
+								dma_Shutdown = true;
 							}
 							else if (!dma_Run[dma_Chan_Exec])
 							{
 								// DMA channel was turned off by the DMA itself
 								dma_Chan_Exec = 4;
-								cpu_Is_Paused = false;
+								dma_Shutdown = true;
+								dma_Release_Bus = true;
+
+								dma_All_Off = false;
 							}
 						}
 					}
@@ -2198,11 +2431,11 @@ namespace GBAHawk
 							{
 								if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
 								{
-									dma_ST_Time[i] = 4;
+									dma_ST_Time[i] = 3;
 								}
 								else
 								{
-									dma_ST_Time[i] = 2;
+									dma_ST_Time[i] = 1;
 								}
 
 								// we don't need to add extra start cycles if we are resuming a DMA paused by a higher priority one
@@ -2239,6 +2472,8 @@ namespace GBAHawk
 
 					if (dma_Chan_Exec < 4)
 					{
+						dma_Shutdown = false;
+
 						if (dma_ST_Time[dma_Chan_Exec] > 0)
 						{
 							dma_ST_Time[dma_Chan_Exec] -= 1;
@@ -2288,222 +2523,6 @@ namespace GBAHawk
 					}
 				}
 			}
-			#pragma endregion
-
-			#pragma region Prefetch
-
-			pre_Cycle_Glitch = false;
-
-			// if enabled, try to read from ROM if buffer is not full
-			// if not enabled, finish current fetch
-			if ((pre_Enable && (pre_Buffer_Cnt < 8)) || (pre_Fetch_Cnt != 0))
-			{
-				if (pre_Fetch_Cnt == 0)
-				{
-					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) {  } // cannot start an access on the internal cycles of an instruction
-					else 
-					{
-						pre_Fetch_Wait = 1;
-
-						if (pre_Read_Addr > 0x0C000000)
-						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
-						}
-						else if (pre_Read_Addr > 0x0A000000)
-						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
-						}
-						else
-						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
-						}
-
-						// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-						pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
-
-						if (pre_Fetch_Cnt == pre_Fetch_Wait)
-						{
-							pre_Buffer_Cnt += 1;
-							pre_Fetch_Cnt = 0;
-							pre_Read_Addr += 2;
-
-							pre_Cycle_Glitch = true;
-						}
-					}
-				}
-				else
-				{
-					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-					pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
-
-					if (pre_Fetch_Cnt == pre_Fetch_Wait)
-					{
-						pre_Buffer_Cnt += 1;
-						pre_Fetch_Cnt = 0;
-						pre_Read_Addr += 2;
-
-						pre_Cycle_Glitch = true;
-					}
-				}
-			}
-
-			#pragma endregion
-
-			#pragma region Serial Port
-			ser_div_cnt += 1;
-
-			if (ser_Start)
-			{
-				if (ser_Internal_Clock)
-				{
-					// transfer 1 bit
-					if ((ser_div_cnt & ser_Mask) == 0)
-					{
-						ser_Bit_Count += 1;
-
-						if (ser_Bit_Count == ser_Bit_Total)
-						{
-							// reset start bit
-							ser_Start = false;
-							ser_CTRL &= 0xFF7F;
-
-							// trigger interrupt if needed
-							if ((ser_CTRL & 0x4000) == 0x4000)
-							{
-								INT_Flags |= 0x80;
-
-								// trigger IRQ
-								if ((INT_EN & 0x80) == 0x80)
-								{
-									if (INT_Master_On) { cpu_IRQ_Input = true; }
-								}
-							}
-						}
-					}
-				}
-			}
-			#pragma endregion
-
-			#pragma region Timer
-
-			bool tim_do_tick = false;
-
-			tim_SubCnt += 1;
-
-			if (!tim_All_Off)
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					if (tim_ST_Time[i] > 0)
-					{
-						tim_ST_Time[i] -= 1;
-
-						if (tim_ST_Time[i] == 0)
-						{
-							tim_Go[i] = true;
-						}
-					}
-
-					if (tim_IRQ_CD[i] > 0)
-					{
-						tim_IRQ_CD[i] -= 1;
-
-						if (tim_IRQ_CD[i] == 0)
-						{			
-							// trigger IRQ
-							INT_Flags |= (uint16_t)(0x8 << i);
-							if (((INT_EN & (0x8 << i)) == (0x8 << i)) && INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						// check if all timers disabled
-						if (!tim_Go[i])
-						{
-							tim_All_Off = true;
-							for (int j = 0; j < 4; j++)
-							{
-								tim_All_Off &= !tim_Go[j];
-								tim_All_Off &= (tim_IRQ_CD[j] == 0);
-								tim_All_Off &= (tim_ST_Time[j] == 0);
-							}
-						}
-					}
-
-					if (tim_Go[i])
-					{
-						tim_do_tick = false;
-
-						if (!tim_Tick_By_Prev[i])
-						{
-							if ((tim_SubCnt & tim_PreSc[i]) == 0)
-							{
-								tim_do_tick = true;
-							}
-						}
-						else if (tim_Prev_Tick[i]) { tim_do_tick = true; }
-
-						if (tim_do_tick)
-						{
-							tim_Timer[i] += 1;
-
-							if (tim_Timer[i] == 0)
-							{
-								if ((tim_Control[i] & 0x40) == 0x40)
-								{
-									// don't re-trigger if an IRQ is already pending
-									if (tim_IRQ_CD[i] == 0)
-									{
-										tim_IRQ_CD[i] = tim_IRQ_Time[i];
-									}
-								}
-
-								// reload the timer
-								tim_Timer[i] = tim_Reload[i];
-
-								// if the reload register was just written to, use the old value
-								if (tim_Just_Reloaded == i)
-								{
-									tim_Timer[i] = tim_Old_Reload;
-								}
-
-								tim_Just_Reloaded = i;
-
-								// Trigger sound FIFO updates
-								if (snd_FIFO_A_Timer == i) { snd_FIFO_A_Tick = snd_CTRL_power; }
-								if (snd_FIFO_B_Timer == i) { snd_FIFO_B_Tick = snd_CTRL_power; }
-
-								tim_Prev_Tick[i + 1] = true;
-							}
-						}
-
-						if (tim_Disable[i])
-						{
-							tim_Go[i] = false;
-
-							tim_ST_Time[i] = 0;
-
-							tim_All_Off = true;
-
-							for (int k = 0; k < 4; k++)
-							{
-								tim_All_Off &= !tim_Go[k];
-								tim_All_Off &= (tim_IRQ_CD[k] == 0);
-								tim_All_Off &= (tim_ST_Time[k] == 0);
-							}
-
-							if (tim_IRQ_CD[i] > 0) { tim_All_Off = false; }
-
-							tim_Disable[i] = false;
-						}
-					}
-
-					tim_Prev_Tick[i] = false;
-				}
-			}
-
-			tim_Just_Reloaded = 5;
 			#pragma endregion
 
 			#pragma region CPU Tick
@@ -4205,6 +4224,7 @@ namespace GBAHawk
 					// it could be that an IRQ happens directly following a halt/stop instruction
 					// in this case, cancel the halt/stop
 					cpu_Halted = false;
+					cpu_Just_Halted = false;
 					cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
 					cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
@@ -4364,30 +4384,46 @@ namespace GBAHawk
 				break;
 
 			case cpu_Internal_Halted:
-				if ((INT_Flags & INT_EN & 0x3FFF) != 0)
+				// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
+				// if IME is enabled, then instead wait for an interrupt to occur
+				// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
+				// before the interrupt takes over
+				if (cpu_Just_Halted)
 				{
-					// exit halt mode
-					cpu_Halted = false;
-					cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-					cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+					// must be halted for at least one cycle, even if conditions for unhalting are immediately true
+					cpu_Just_Halted = false;
+				}
+				else
+				{
+					if (cpu_Trigger_Unhalt)
+					{
+						if (INT_Master_On)
+						{
+							cpu_Instr_Type = cpu_Internal_Halted_3;
+						}
+						else
+						{
+							cpu_Halted = false;
+							cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+							cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
-					// if interrupts are enabled, go to interrupt vector
-					// otherwise continue on with normal execution
-					if (INT_Master_On)
-					{
-						cpu_Instr_Type = cpu_Prefetch_IRQ;
-					}
-					else
-					{
-						// seems to take an extra clock cycle to exit
-						cpu_Instr_Type = cpu_Internal_Halted_2;
+							if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
+							else { cpu_Decode_ARM(); }
+						}
 					}
 				}
 				break;
 
 			case cpu_Internal_Halted_2:
-				if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-				else { cpu_Decode_ARM(); }
+				cpu_Halted = false;
+				cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+				cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
+				cpu_Instr_Type = cpu_Prefetch_IRQ;
+				break;
+
+			case cpu_Internal_Halted_3:
+				cpu_Instr_Type = cpu_Internal_Halted_2;
 				break;
 
 			case cpu_Multiply_Cycles:
@@ -4508,30 +4544,46 @@ namespace GBAHawk
 						break;
 
 					case cpu_Internal_Halted:
-						if ((INT_Flags & INT_EN & 0x3FFF) != 0)
+						// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
+						// if IME is enabled, then instead wait for an interrupt to occur
+						// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
+						// before the interrupt takes over
+						if (cpu_Just_Halted)
 						{
-							// exit halt mode
-							cpu_Halted = false;
-							cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-							cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+							// must be halted for at least one cycle, even if conditions for unhalting are immediately true
+							cpu_Just_Halted = false;
+						}
+						else
+						{
+							if (cpu_Trigger_Unhalt)
+							{
+								if (INT_Master_On)
+								{
+									cpu_Instr_Type = cpu_Internal_Halted_3;
+								}
+								else
+								{
+									cpu_Halted = false;
+									cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+									cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
-							// if interrupts are enabled, go to interrupt vector
-							// otherwise continue on with normal execution
-							if (INT_Master_On)
-							{
-								cpu_Instr_Type = cpu_Prefetch_IRQ;
-							}
-							else
-							{
-								// seems to take an extra clock cycle to exit
-								cpu_Instr_Type = cpu_Internal_Halted_2;
+									if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
+									else { cpu_Decode_ARM(); }
+								}
 							}
 						}
 						break;
 
 					case cpu_Internal_Halted_2:
-						if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-						else { cpu_Decode_ARM(); }
+						cpu_Halted = false;
+						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
+						cpu_Instr_Type = cpu_Prefetch_IRQ;
+						break;
+
+					case cpu_Internal_Halted_3:
+						cpu_Instr_Type = cpu_Internal_Halted_2;
 						break;
 
 					case cpu_Multiply_Cycles:

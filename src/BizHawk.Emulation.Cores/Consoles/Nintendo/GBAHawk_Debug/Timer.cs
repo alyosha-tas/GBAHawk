@@ -11,6 +11,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	Can the prescalar be changed while the timer is running?
 
 	How is count up timing effected by the glitch for activiating with value 0xFFFF?	
+
+	Todo: check timing of sound FIFO interrupts
 */
 
 	partial class GBAHawk_Debug
@@ -259,10 +261,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						tim_IRQ_CD[i] -= 1;
 
-						if (tim_IRQ_CD[i] == 0)
+						// trigger IRQ
+						if (tim_IRQ_CD[i] == 2)
 						{
-							// trigger IRQ
 							INT_Flags |= (ushort)(0x8 << i);
+							if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
+						}
+						else if (tim_IRQ_CD[i] == 0)
+						{
 							if (((INT_EN & (0x8 << i)) == (0x8 << i)) && INT_Master_On) { cpu_IRQ_Input = true; }
 						}
 
@@ -304,6 +310,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									if (tim_IRQ_CD[i] == 0)
 									{
 										tim_IRQ_CD[i] = tim_IRQ_Time[i];
+
+										if (tim_IRQ_CD[i] == 2)
+										{ 
+											INT_Flags |= (ushort)(0x8 << i); 
+											if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
+										}
 									}
 								}
 

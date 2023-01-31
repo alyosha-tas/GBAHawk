@@ -16,6 +16,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	public partial class GBAHawk_Debug
 	{
 		public uint ser_RECV_J, ser_TRANS_J;
+
+		public int ser_Delay_cd, key_Delay_cd;
 		
 		public ushort ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
 
@@ -27,6 +29,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte ser_Bit_Count, ser_Bit_Total;
 
 		public bool ser_Internal_Clock, ser_Start;
+
+		public bool ser_Delay, key_Delay;
 
 		public byte ser_Read_Reg_8(uint addr)
 		{
@@ -161,8 +165,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case 0x130: // no effect
 				case 0x131: // no effect
-				case 0x132: key_CTRL = (ushort)((key_CTRL & 0xFF00) | value); do_controller_check(); break;
-				case 0x133: key_CTRL = (ushort)((key_CTRL & 0x00FF) | (value << 8)); do_controller_check(); break;
+				case 0x132: key_CTRL = (ushort)((key_CTRL & 0xFF00) | value); do_controller_check(); do_controller_check_glitch(); break;
+				// note no check here, does not seem to trigger onhardware, see joypad.gba
+				case 0x133: key_CTRL = (ushort)((key_CTRL & 0x00FF) | (value << 8)); /* do_controller_check(); do_controller_check_glitch(); */ break;
 
 				case 0x134: ser_Mode = (ushort)((ser_Mode & 0xFF00) | value); break;
 				case 0x135: ser_Mode = (ushort)((ser_Mode & 0x00FF) | (value << 8)); break;
@@ -195,7 +200,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x12A: ser_Data_M = value; break;
 
 				case 0x130: // no effect
-				case 0x132: key_CTRL = value; do_controller_check(); break;
+				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode = value; break;
 
@@ -220,7 +225,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x128: ser_CTRL_Update((ushort)(value & 0xFFFF));
 							ser_Data_M = (ushort)((value >> 16) & 0xFFFF); break;
 
-				case 0x130: key_CTRL = (ushort)((value >> 16) & 0xFFFF); do_controller_check(); break;
+				case 0x130: key_CTRL = (ushort)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode = (ushort)(value & 0xFFFF); break;
 
@@ -277,11 +282,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								INT_Flags |= 0x80;
 
-								// trigger IRQ
-								if ((INT_EN & 0x80) == 0x80)
-								{
-									if (INT_Master_On) { cpu_IRQ_Input = true; }
-								}
+								if ((INT_EN & 0x80) == 0x80) { cpu_Trigger_Unhalt = true; }
+
+								ser_Delay = true;
+								ser_Delay_cd = 2;
+								delays_to_process = true;
 							}
 						}
 					}
@@ -292,7 +297,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void ser_Reset()
 		{
 			ser_RECV_J = ser_TRANS_J = 0;
-			
+
+			ser_Delay_cd = key_Delay_cd = 0;
+
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
 			ser_CTRL = ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
@@ -306,12 +313,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser_Bit_Count = ser_Bit_Total = 0;
 
 			ser_Internal_Clock = ser_Start = false;
+
+			ser_Delay = key_Delay = false;
 		}
 
 		public void ser_SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ser_RECV_J), ref ser_RECV_J);
 			ser.Sync(nameof(ser_TRANS_J), ref ser_TRANS_J);
+
+			ser.Sync(nameof(ser_Delay_cd), ref ser_Delay_cd);
+			ser.Sync(nameof(key_Delay_cd), ref key_Delay_cd);
 
 			ser.Sync(nameof(ser_Data_0), ref ser_Data_0);
 			ser.Sync(nameof(ser_Data_1), ref ser_Data_1);
@@ -333,6 +345,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ser_Internal_Clock), ref ser_Internal_Clock);
 			ser.Sync(nameof(ser_Start), ref ser_Start);
+
+			ser.Sync(nameof(ser_Delay), ref ser_Delay);
+			ser.Sync(nameof(key_Delay), ref key_Delay);
 		}
 	}
 

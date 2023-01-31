@@ -9,6 +9,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Need to implement DRQ?
 
+	Todo: fix IRQ timing like other sources
+
 	Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
 
 	Are there any extra cycles when one DMA is paused by another of higher priority (currently assumed yes)?
@@ -96,6 +98,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool[] dma_ROM_Being_Used = new bool[4];
 
+		public bool[] dma_External_Source = new bool[4];
+
 		public bool dma_Seq_Access;
 
 		public bool dma_Read_Cycle;
@@ -103,6 +107,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool dma_Pausable;
 
 		public bool dma_All_Off;
+
+		public bool dma_Shutdown;
+
+		public bool dma_Release_Bus;
 
 		public byte dma_Read_Reg_8(uint addr)
 		{
@@ -373,11 +381,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 
-				//Console.WriteLine(chan + " " + value);
+				//Console.WriteLine(chan + " " + value + " " + ((dma_CTRL[chan] & 0x200) == 0x200));
 
 				dma_Go[chan] = true;
 
 				dma_All_Off = false;
+
+				dma_External_Source[chan] = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -408,6 +418,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{		
 			// if no channels are on, skip
 			if (dma_All_Off) { return; }
+
+
+			if (dma_Shutdown)
+			{
+				if (dma_Release_Bus)
+				{
+					cpu_Is_Paused = false;
+
+					dma_All_Off = true;
+
+					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+
+					dma_Shutdown = false;
+				}
+				else
+				{
+					dma_Release_Bus = true;
+				}
+			}
 
 			if (!dma_Pausable)
 			{
@@ -611,14 +640,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (dma_CNT_intl[dma_Chan_Exec] == 0)
 						{
+							// it seems as though DMA's triggered by external sources take an extra cycle to shut down
+							if (dma_External_Source[dma_Chan_Exec])
+							{
+								dma_Release_Bus = false;
+							}
+							else
+							{
+								dma_Release_Bus = true;
+							}
+
 							//Console.WriteLine("complete " + dma_Chan_Exec);
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
 								INT_Flags |= (ushort)(0x1 << (8 + dma_Chan_Exec));
+								if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec))) { cpu_Trigger_Unhalt = true; }
+
 								// trigger IRQ (Bits 8 through 11)
 								if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec)))
-								{		
+								{
 									if (INT_Master_On) { cpu_IRQ_Input = true; }
 								}
 							}
@@ -661,10 +702,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									dma_Run[dma_Chan_Exec] = false;
 									dma_Go[dma_Chan_Exec] = false;
 									dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
-
-									dma_All_Off = true;
-
-									for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 								}
 							}
 							else
@@ -674,23 +711,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								dma_Run[dma_Chan_Exec] = false;
 								dma_Go[dma_Chan_Exec] = false;
 								dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
-
-								dma_All_Off = true;
-
-								for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 							}
 
 							// In any case, we start a new DMA
 							dma_Chan_Exec = 4;
 
-							// in any case, unpause the cpu
-							cpu_Is_Paused = false;
+							dma_Shutdown = true;
 						}
 						else if (!dma_Run[dma_Chan_Exec])
 						{
 							// DMA channel was turned off by the DMA itself
 							dma_Chan_Exec = 4;
-							cpu_Is_Paused = false;
+
+							dma_Shutdown = true;
+							dma_Release_Bus = true;
+
+							dma_All_Off = false;
 						}
 					}
 				}
@@ -707,7 +743,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						dma_Run[i] = true;
 						dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
 					}
-					
+
 					if (dma_Run[i])
 					{
 						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
@@ -715,11 +751,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
 							{
-								dma_ST_Time[i] = 4;
+								dma_ST_Time[i] = 3;
 							}
 							else
 							{
-								dma_ST_Time[i] = 2;
+								dma_ST_Time[i] = 1;
 							}
 
 							// we don't need to add extra start cycles if we are resuming a DMA paused by a higher priority one
@@ -760,6 +796,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (dma_Chan_Exec < 4)
 				{
+					dma_Shutdown = false;
+					
 					if (dma_ST_Time[dma_Chan_Exec] > 0)
 					{
 						dma_ST_Time[dma_Chan_Exec] -= 1;
@@ -798,15 +836,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								{
 									dma_ST_Time[dma_Chan_Exec] += 1;
 								}
-							}						
-						}					
+							}
+						}
 					}
 
 					if (dma_ST_Time[dma_Chan_Exec] == 0)
 					{
 						dma_Pausable = false;
 					}
-				}
+				}		
 			}
 		}
 
@@ -857,6 +895,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Use_ROM_Addr_DST[i] = false;
 
 				dma_ROM_Being_Used[i] = false;
+
+				dma_External_Source[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -876,6 +916,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Pausable = true;
 
 			dma_All_Off = true;
+
+			dma_Shutdown =  dma_Release_Bus = false;
 		}
 
 		public void dma_SyncState(Serializer ser)
@@ -916,11 +958,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Use_ROM_Addr_SRC), ref dma_Use_ROM_Addr_SRC, false);
 			ser.Sync(nameof(dma_Use_ROM_Addr_DST), ref dma_Use_ROM_Addr_DST, false);
 			ser.Sync(nameof(dma_ROM_Being_Used), ref dma_ROM_Being_Used, false);
+			ser.Sync(nameof(dma_External_Source), ref dma_External_Source, false);
 
 			ser.Sync(nameof(dma_Seq_Access), ref dma_Seq_Access);
 			ser.Sync(nameof(dma_Read_Cycle), ref dma_Read_Cycle);
 			ser.Sync(nameof(dma_Pausable), ref dma_Pausable);
 			ser.Sync(nameof(dma_All_Off), ref dma_All_Off);
+			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);
+			ser.Sync(nameof(dma_Release_Bus), ref dma_Release_Bus);
 		}
 	}
 
