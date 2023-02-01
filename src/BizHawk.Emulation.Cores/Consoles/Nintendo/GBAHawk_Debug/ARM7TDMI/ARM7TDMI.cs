@@ -8,7 +8,7 @@ using BizHawk.Common.NumberExtensions;
 	NOTES:
 	Is SRAM mirrored every 32K/64K?
 
-	Check timing of Halt / Stop (for now assume pipeline gets cleared first.)
+	Check timing of Stop
 
 	What happens with swap when using register 15 as destination? (For now assume nothing.)
 

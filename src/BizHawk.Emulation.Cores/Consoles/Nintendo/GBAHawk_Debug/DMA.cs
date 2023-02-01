@@ -9,7 +9,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Need to implement DRQ?
 
-	Todo: fix IRQ timing like other sources
+	is video capture DMA delayed by a frame?
 
 	Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
 
@@ -23,12 +23,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Look at edge cases of start / stop writes
 
-	check timing of video capture, what happens when started in the middle of a frame?
-
-	What is happening in the burst into tears test ROM? It looks like the first 2 bytes of the ROM are simply skipped, but why?
-
-	When are DMA's in the ROM region auto incremented?
-
 	Assumption: read / write cycle is atomic
 */
 
@@ -37,7 +31,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	public partial class GBAHawk_Debug
 	{
 		public readonly uint[] dma_SRC_Mask = { 0x7FFFFFF, 0xFFFFFFF, 0xFFFFFFF, 0xFFFFFFF };
-
 		public readonly uint[] dma_DST_Mask = { 0x7FFFFFF, 0x7FFFFFF, 0x7FFFFFF, 0xFFFFFFF };
 
 		public readonly int[] dma_CNT_Mask_0 = { 0x4000, 0x4000, 0x4000, 0x10000 };
@@ -47,70 +40,48 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ulong[] dma_Run_En_Time = new ulong[4];
 
 		public int[] dma_CNT_intl = new int[4];
-
 		public int[] dma_ST_Time = new int[4];
+		public int[] dma_IRQ_cd = new int[4];
 
 		public int dma_Access_Cnt, dma_Access_Wait, dma_Chan_Exec;
-
 		public int dma_ST_Time_Adjust;
 
 		public uint[] dma_SRC = new uint[4];
-
 		public uint[] dma_DST = new uint[4];
-
 		public uint[] dma_SRC_intl = new uint[4];
-
 		public uint[] dma_DST_intl = new uint[4];
-
 		public uint[] dma_SRC_INC = new uint[4];
-
 		public uint[] dma_DST_INC = new uint[4];
-
 		public uint[] dma_Last_Bus_Value = new uint[4];
-
 		public uint[] dma_ROM_Addr = new uint[4];
 
 		public uint dma_TFR_Word;
 
 		public ushort[] dma_CNT = new ushort[4];
-
 		public ushort[] dma_CTRL = new ushort[4];
 
 		public ushort dma_TFR_HWord;
-
 		public ushort dma_Held_CPU_Instr;
 
 		public bool[] dma_Go = new bool[4]; // Tell Condition checkers when the channel is on
-
 		public bool[] dma_Start_VBL = new bool[4];
-
 		public bool[] dma_Start_HBL = new bool[4];
-
 		public bool[] dma_Start_Snd_Vid = new bool[4];
-
 		public bool[] dma_Run = new bool[4]; // Actually run the DMA channel
-
 		public bool[] dma_Access_32 = new bool [4];
-
 		public bool[] dma_Use_ROM_Addr_SRC = new bool[4];
-
 		public bool[] dma_Use_ROM_Addr_DST = new bool[4];
-
 		public bool[] dma_ROM_Being_Used = new bool[4];
-
 		public bool[] dma_External_Source = new bool[4];
 
 		public bool dma_Seq_Access;
-
 		public bool dma_Read_Cycle;
-
 		public bool dma_Pausable;
-
 		public bool dma_All_Off;
-
 		public bool dma_Shutdown;
-
 		public bool dma_Release_Bus;
+		public bool dma_Delay;
+		public bool dma_Video_DMA_Start;
 
 		public byte dma_Read_Reg_8(uint addr)
 		{
@@ -378,6 +349,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else if ((value & 0x180) == 0x100) { dma_SRC_INC[chan] = 0; }
 							else { dma_SRC_INC[chan] = 4; } // Prohibited? 
 						}
+
+						if (chan == 3)
+						{
+							dma_Video_DMA_Start = false;
+						}
 					}
 				}
 
@@ -419,7 +395,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// if no channels are on, skip
 			if (dma_All_Off) { return; }
 
-
 			if (dma_Shutdown)
 			{
 				if (dma_Release_Bus)
@@ -430,12 +405,55 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
+					if (dma_Delay) { dma_All_Off = false; }
+
 					dma_Shutdown = false;
 				}
 				else
 				{
 					dma_Release_Bus = true;
 				}
+			}
+
+			if (dma_Delay)
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					if (dma_IRQ_cd[i] > 0)
+					{
+						dma_IRQ_cd[i]--;
+						if (dma_IRQ_cd[i] == 2)
+						{
+							INT_Flags |= (ushort)(0x1 << (8 + i));
+							if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i))) { cpu_Trigger_Unhalt = true; }
+
+						}
+						else if (dma_IRQ_cd[i] == 0)
+						{
+
+							// trigger IRQ (Bits 8 through 11)
+							if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i)))
+							{
+								if (INT_Master_On) { cpu_IRQ_Input = true; }
+							}
+						}
+					}			
+				}
+
+				dma_Delay = false;
+
+				for (int i = 0; i < 4; i++)
+				{
+					if (dma_IRQ_cd[i] != 0) { dma_Delay = true; }
+				}
+
+				dma_All_Off = true;
+
+				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+
+				if (dma_Delay) { dma_All_Off = false; }
+
+				if (dma_Shutdown) { dma_All_Off = false; }
 			}
 
 			if (!dma_Pausable)
@@ -654,14 +672,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
-								INT_Flags |= (ushort)(0x1 << (8 + dma_Chan_Exec));
-								if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec))) { cpu_Trigger_Unhalt = true; }
-
-								// trigger IRQ (Bits 8 through 11)
-								if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec)))
+								if (dma_IRQ_cd[dma_Chan_Exec] == 0)
 								{
-									if (INT_Master_On) { cpu_IRQ_Input = true; }
-								}
+									dma_IRQ_cd[dma_Chan_Exec] = 3;
+									dma_Delay = true;
+								}					
 							}
 
 							// Repeat if necessary, or turn the channel off
@@ -857,45 +872,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_ST_Time[i] = 0;
-
+				dma_IRQ_cd[i] = 0;
 				dma_SRC[i] = 0;
-
 				dma_DST[i] = 0;
-
 				dma_SRC_intl[i] = 0;
-
 				dma_DST_intl[i] = 0;
-
 				dma_SRC_INC[i] = 0;
-
 				dma_DST_INC[i] = 0;
-
 				dma_Last_Bus_Value[i] = 0;
 
 				dma_CNT[i] = 0;
-
 				dma_CTRL[i] = 0;
 
 				dma_ROM_Addr[i] = 0;
 
 				dma_Go[i] = false;
-
 				dma_Start_VBL[i] = false;
-
 				dma_Start_HBL[i] = false;
-
 				dma_Start_Snd_Vid[i] = false;
-
 				dma_Run[i] = false;
-
 				dma_Access_32[i] = false;
-
-				dma_Use_ROM_Addr_SRC[i] = false;
-				
+				dma_Use_ROM_Addr_SRC[i] = false;		
 				dma_Use_ROM_Addr_DST[i] = false;
-
 				dma_ROM_Being_Used[i] = false;
-
 				dma_External_Source[i] = false;
 			}
 
@@ -904,20 +903,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Chan_Exec = 4;
 
 			dma_ST_Time_Adjust = 0;
-
 			dma_TFR_Word = 0;
-
 			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
 
 			dma_Seq_Access = false;
-
 			dma_Read_Cycle = true;
-
 			dma_Pausable = true;
-
 			dma_All_Off = true;
-
 			dma_Shutdown =  dma_Release_Bus = false;
+			dma_Delay = false;
+			dma_Video_DMA_Start = false;
 		}
 
 		public void dma_SyncState(Serializer ser)
@@ -925,12 +920,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Run_En_Time), ref dma_Run_En_Time, false);
 			ser.Sync(nameof(dma_CNT_intl), ref dma_CNT_intl, false);
 			ser.Sync(nameof(dma_ST_Time), ref dma_ST_Time, false);
+			ser.Sync(nameof(dma_IRQ_cd), ref dma_IRQ_cd, false);
 
 			ser.Sync(nameof(dma_Access_Cnt), ref dma_Access_Cnt);
 			ser.Sync(nameof(dma_Access_Wait), ref dma_Access_Wait);
 			ser.Sync(nameof(dma_Chan_Exec), ref dma_Chan_Exec);
 			ser.Sync(nameof(dma_ST_Time_Adjust), ref dma_ST_Time_Adjust);
-
+			
 			ser.Sync(nameof(dma_SRC), ref dma_SRC, false);
 			ser.Sync(nameof(dma_DST), ref dma_DST, false);
 			ser.Sync(nameof(dma_SRC_intl), ref dma_SRC_intl, false);
@@ -966,6 +962,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_All_Off), ref dma_All_Off);
 			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);
 			ser.Sync(nameof(dma_Release_Bus), ref dma_Release_Bus);
+			ser.Sync(nameof(dma_Delay), ref dma_Delay);
+			ser.Sync(nameof(dma_Video_DMA_Start), ref dma_Video_DMA_Start);
 		}
 	}
 

@@ -296,7 +296,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & INT_Flags & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -331,7 +331,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & INT_Flags & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -353,18 +353,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((INT_EN & INT_Flags & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
 					}
 				}
 
-				if (ppu_LYC_Check_cd > 0)
+				if (ppu_LYC_Vid_Check_cd > 0)
 				{
-					ppu_LYC_Check_cd -= 1;
+					ppu_LYC_Vid_Check_cd -= 1;
 
-					if (ppu_LYC_Check_cd == 0)
+					if (ppu_LYC_Vid_Check_cd == 5)
 					{
 						if (ppu_LY == ppu_LYC)
 						{
@@ -374,6 +374,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 							// set the flag bit
 							ppu_STAT |= 4;
+						}
+					}
+					else if (ppu_LYC_Vid_Check_cd == 0)
+					{
+						// video capture DMA, check timing
+						if (dma_Go[3] && dma_Start_Snd_Vid[3])
+						{
+							// only starts on scanline 2
+							if (ppu_LY == 2)
+							{
+								dma_Video_DMA_Start = true;
+							}
+
+							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
+							{
+								dma_Run[3] = true;
+								dma_External_Source[3] = true;
+							}
+
+							if (ppu_LY == 162)
+							{
+								dma_Video_DMA_Start = false;
+							}
 						}
 
 						// check for any additional ppu delays

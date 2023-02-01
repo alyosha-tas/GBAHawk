@@ -13,7 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	When accessing OAM (7000000h) or OBJ VRAM (6010000h) by HBlank Timing, then the "H-Blank Interval Free" bit in DISPCNT register must be set.
 
-	TODO: odd vertical windowing, mosaic, lock VRAM when rendering
+	TODO: odd vertical windowing, lock VRAM when rendering
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -56,13 +56,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
-		public int ppu_LYC_Check_cd;
+		public int ppu_LYC_Vid_Check_cd;
 
 		public ushort ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
 		public ushort ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
 		public ushort ppu_WIN_In, ppu_WIN_Out, ppu_Mosaic, ppu_Special_FX, ppu_Alpha, ppu_Bright;
 
-		public byte ppu_STAT, ppu_LY, ppu_LYC, ppu_Sprite_Line;
+		public byte ppu_STAT, ppu_LY, ppu_LYC;
 
 		public bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		public bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN;
@@ -811,18 +811,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_ROT_REF_LY[3] = 0;
 				}
 
-				ppu_Sprite_Line= (byte)(ppu_LY + 1);
-
-				// video capture DMA, check timing
-				if (dma_Go[3] && dma_Start_Snd_Vid[3])
-				{
-					if ((ppu_LY >= 2) && (ppu_LY < 162))
-					{
-						dma_Run[3] = true;
-						dma_External_Source[3] = true;
-					}
-				}
-
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
@@ -830,7 +818,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_STAT &= 0xFB;
 
 				// Check LY = LYC in 1 cycle
-				ppu_LYC_Check_cd = 1;
+				// video capture DMA in 6 cycles
+				ppu_LYC_Vid_Check_cd = 6;
 				ppu_Delays = true;
 				delays_to_process = true;
 
@@ -853,8 +842,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					// vblank flag turns off on scanline 227
 					ppu_STAT &= 0xFE;
-
-					ppu_Sprite_Line = 0;
 
 					// calculate parameters for rotated / scaled sprites at the end of vblank
 					ppu_Calculate_Sprites_Pixels(0, true);
@@ -2533,7 +2520,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
-			ppu_LYC_Check_cd = 0;
+			ppu_LYC_Vid_Check_cd = 0;
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -2559,8 +2546,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// based on music4.gba, initial state would either be Ly = 225 or 161.
 			// based on console verification testing, it seems 161 is correct.
 			ppu_LY = 161;
-
-			ppu_Sprite_Line = 0;
 
 			// 2 gives the correct value in music4.gba
 			ppu_Cycle = 2;
@@ -2643,7 +2628,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_HBL_IRQ_cd), ref ppu_HBL_IRQ_cd);
 			ser.Sync(nameof(ppu_LYC_IRQ_cd), ref ppu_LYC_IRQ_cd);
 
-			ser.Sync(nameof(ppu_LYC_Check_cd), ref ppu_LYC_Check_cd);
+			ser.Sync(nameof(ppu_LYC_Vid_Check_cd), ref ppu_LYC_Vid_Check_cd);
 
 			ser.Sync(nameof(ppu_CTRL), ref ppu_CTRL);
 			ser.Sync(nameof(ppu_Green_Swap), ref ppu_Green_Swap);
@@ -2668,7 +2653,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_STAT), ref ppu_STAT);
 			ser.Sync(nameof(ppu_LYC), ref ppu_LYC);
 			ser.Sync(nameof(ppu_LY), ref ppu_LY);
-			ser.Sync(nameof(ppu_Sprite_Line), ref ppu_Sprite_Line);
 
 			ser.Sync(nameof(ppu_HBL_Free), ref ppu_HBL_Free);
 			ser.Sync(nameof(ppu_OBJ_Dim), ref ppu_OBJ_Dim);

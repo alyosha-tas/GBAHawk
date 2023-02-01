@@ -307,7 +307,7 @@ namespace GBAHawk
 						if (((INT_EN & INT_Flags & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -342,7 +342,7 @@ namespace GBAHawk
 						if (((INT_EN & INT_Flags & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -364,18 +364,18 @@ namespace GBAHawk
 						if (((INT_EN & INT_Flags & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
 
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
 							ppu_Delays = false;
 						}
 					}
 				}
 
-				if (ppu_LYC_Check_cd > 0)
+				if (ppu_LYC_Vid_Check_cd > 0)
 				{
-					ppu_LYC_Check_cd -= 1;
+					ppu_LYC_Vid_Check_cd -= 1;
 
-					if (ppu_LYC_Check_cd == 0)
+					if (ppu_LYC_Vid_Check_cd == 5)
 					{
 						if (ppu_LY == ppu_LYC)
 						{
@@ -385,6 +385,29 @@ namespace GBAHawk
 
 							// set the flag bit
 							ppu_STAT |= 4;
+						}
+					}
+					else if (ppu_LYC_Vid_Check_cd == 0)
+					{
+						// video capture DMA, check timing
+						if (dma_Go[3] && dma_Start_Snd_Vid[3])
+						{
+							// only starts on scanline 2
+							if (ppu_LY == 2)
+							{
+								dma_Video_DMA_Start = true;
+							}
+
+							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
+							{
+								dma_Run[3] = true;
+								dma_External_Source[3] = true;
+							}
+
+							if (ppu_LY == 162)
+							{
+								dma_Video_DMA_Start = false;
+							}
 						}
 
 						// check for any additional ppu delays
@@ -5731,6 +5754,8 @@ namespace GBAHawk
 		bool dma_All_Off;
 		bool dma_Shutdown;
 		bool dma_Release_Bus;
+		bool dma_Delay;
+		bool dma_Video_DMA_Start;
 
 		uint16_t dma_TFR_HWord;
 		uint16_t dma_Held_CPU_Instr;
@@ -5765,6 +5790,7 @@ namespace GBAHawk
 		uint32_t dma_CNT_intl[4] = { };
 		uint32_t dma_ST_Time[4] = { };
 		uint32_t dma_ROM_Addr[4] = { };
+		uint32_t dma_IRQ_cd[4] = { };
 
 		uint64_t dma_Run_En_Time[4] = { };
 		
@@ -6043,6 +6069,11 @@ namespace GBAHawk
 							else if ((value & 0x180) == 0x100) { dma_SRC_INC[chan] = 0; }
 							else { dma_SRC_INC[chan] = 4; } // Prohibited? 
 						}
+
+						if (chan == 3)
+						{
+							dma_Video_DMA_Start = false;
+						}
 					}
 				}
 
@@ -6088,47 +6119,31 @@ namespace GBAHawk
 				dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_ST_Time[i] = 0;
-
 				dma_ROM_Addr[i] = 0;
+				dma_IRQ_cd[i] = 0;
 
 				dma_SRC[i] = 0;
-
 				dma_DST[i] = 0;
-
 				dma_SRC_intl[i] = 0;
-
 				dma_DST_intl[i] = 0;
-
 				dma_SRC_INC[i] = 0;
-
 				dma_DST_INC[i] = 0;
 
 				dma_Last_Bus_Value[i] = 0;
 
 				dma_CNT[i] = 0;
-
 				dma_CTRL[i] = 0;
 
 				dma_Go[i] = false;
-
 				dma_Start_VBL[i] = false;
-
 				dma_Start_HBL[i] = false;
-
 				dma_Start_Snd_Vid[i] = false;
-
 				dma_Run[i] = false;
-
 				dma_Access_32[i] = false;
-
 				dma_Use_ROM_Addr_SRC[i] = false;
-
 				dma_Use_ROM_Addr_DST[i] = false;
-
 				dma_Use_ROM_Addr_DST[i] = false;
-
 				dma_ROM_Being_Used[i] = false;
-
 				dma_External_Source[i] = false;
 			}
 
@@ -6143,14 +6158,12 @@ namespace GBAHawk
 			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
 
 			dma_Seq_Access = false;
-
 			dma_Read_Cycle = true;
-
 			dma_Pausable = true;
-
 			dma_All_Off = true;
-
 			dma_Shutdown = dma_Release_Bus = false;
+			dma_Delay = false;
+			dma_Video_DMA_Start = false;
 		}
 
 		uint8_t* dma_SaveState(uint8_t* saver)
@@ -6161,6 +6174,8 @@ namespace GBAHawk
 			saver = bool_saver(dma_All_Off, saver);
 			saver = bool_saver(dma_Shutdown, saver);
 			saver = bool_saver(dma_Release_Bus, saver);
+			saver = bool_saver(dma_Delay, saver);
+			saver = bool_saver(dma_Video_DMA_Start, saver);
 
 			saver = short_saver(dma_TFR_HWord, saver);
 			saver = short_saver(dma_Held_CPU_Instr, saver);
@@ -6197,6 +6212,7 @@ namespace GBAHawk
 			saver = int_array_saver(dma_CNT_intl, saver, 4);
 			saver = int_array_saver(dma_ST_Time, saver, 4);
 			saver = int_array_saver(dma_ROM_Addr, saver, 4);
+			saver = int_array_saver(dma_IRQ_cd, saver, 4);
 
 			saver = long_array_saver(dma_Run_En_Time, saver, 4);
 
@@ -6211,6 +6227,8 @@ namespace GBAHawk
 			loader = bool_loader(&dma_All_Off, loader);
 			loader = bool_loader(&dma_Shutdown, loader);
 			loader = bool_loader(&dma_Release_Bus, loader);
+			loader = bool_loader(&dma_Delay, loader);
+			loader = bool_loader(&dma_Video_DMA_Start, loader);
 
 			loader = short_loader(&dma_TFR_HWord, loader);
 			loader = short_loader(&dma_Held_CPU_Instr, loader);
@@ -6247,6 +6265,7 @@ namespace GBAHawk
 			loader = int_array_loader(dma_CNT_intl, loader, 4);
 			loader = int_array_loader(dma_ST_Time, loader, 4);
 			loader = int_array_loader(dma_ROM_Addr, loader, 4);
+			loader = int_array_loader(dma_IRQ_cd, loader, 4);
 
 			loader = long_array_loader(dma_Run_En_Time, loader, 4);
 
@@ -6887,7 +6906,7 @@ namespace GBAHawk
 		bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN;
 
-		uint8_t ppu_STAT, ppu_LY, ppu_LYC, ppu_Sprite_Line;
+		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
 
 		uint16_t ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
 		uint16_t ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
@@ -6899,7 +6918,7 @@ namespace GBAHawk
 
 		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
 
-		uint32_t ppu_LYC_Check_cd;
+		uint32_t ppu_LYC_Vid_Check_cd;
 
 		uint32_t ppu_Transparent_Color;
 
@@ -9214,7 +9233,7 @@ namespace GBAHawk
 
 			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
 
-			ppu_LYC_Check_cd = 0;
+			ppu_LYC_Vid_Check_cd = 0;
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -9240,8 +9259,6 @@ namespace GBAHawk
 			// based on music4.gba, initial state would either be Ly = 225 or 161.
 			// based on console verification testing, it seems 161 is correct.
 			ppu_LY = 161;
-
-			ppu_Sprite_Line = 0;
 
 			// 2 gives the correct value in music4.gba
 			ppu_Cycle = 2;
@@ -9311,7 +9328,6 @@ namespace GBAHawk
 			saver = byte_saver(ppu_STAT, saver);
 			saver = byte_saver(ppu_LY, saver);
 			saver = byte_saver(ppu_LYC, saver);
-			saver = byte_saver(ppu_Sprite_Line, saver);
 
 			saver = short_saver(ppu_CTRL, saver);
 			saver = short_saver(ppu_Green_Swap, saver);
@@ -9338,7 +9354,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
 			saver = int_saver(ppu_LYC_IRQ_cd, saver);
 
-			saver = int_saver(ppu_LYC_Check_cd, saver);
+			saver = int_saver(ppu_LYC_Vid_Check_cd, saver);
 
 			saver = int_saver(ppu_Transparent_Color, saver);
 
@@ -9406,7 +9422,6 @@ namespace GBAHawk
 			loader = byte_loader(&ppu_STAT, loader);
 			loader = byte_loader(&ppu_LY, loader);
 			loader = byte_loader(&ppu_LYC, loader);
-			loader = byte_loader(&ppu_Sprite_Line, loader);
 
 			loader = short_loader(&ppu_CTRL, loader);
 			loader = short_loader(&ppu_Green_Swap, loader);
@@ -9433,7 +9448,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_LYC_IRQ_cd, loader);
 
-			loader = int_loader(&ppu_LYC_Check_cd, loader);
+			loader = int_loader(&ppu_LYC_Vid_Check_cd, loader);
 
 			loader = int_loader(&ppu_Transparent_Color, loader);
 

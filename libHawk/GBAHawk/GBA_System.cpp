@@ -1724,18 +1724,6 @@ namespace GBAHawk
 					ppu_ROT_REF_LY[3] = 0;
 				}
 
-				ppu_Sprite_Line = (uint8_t)(ppu_LY + 1);
-
-				// video capture DMA, check timing
-				if (dma_Go[3] && dma_Start_Snd_Vid[3])
-				{
-					if ((ppu_LY >= 2) && (ppu_LY < 162))
-					{
-						dma_Run[3] = true;
-						dma_External_Source[3] = true;
-					}
-				}
-
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
@@ -1743,7 +1731,8 @@ namespace GBAHawk
 				ppu_STAT &= 0xFB;
 
 				// Check LY = LYC in 1 cycle
-				ppu_LYC_Check_cd = 1;
+				// Check video DMA in 6 cycles
+				ppu_LYC_Vid_Check_cd = 6;
 				ppu_Delays = true;
 				delays_to_process = true;
 
@@ -1766,8 +1755,6 @@ namespace GBAHawk
 				{
 					// vblank flag turns off on scanline 227
 					ppu_STAT &= 0xFE;
-
-					ppu_Sprite_Line = 0;
 
 					// calculate parameters for rotated / scaled sprites at the end of vblank
 					ppu_Calculate_Sprites_Pixels(0, true);
@@ -2113,12 +2100,55 @@ namespace GBAHawk
 
 						for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
+						if (dma_Delay) { dma_All_Off = false; }
+
 						dma_Shutdown = false;
 					}
 					else
 					{
 						dma_Release_Bus = true;
 					}
+				}
+
+				if (dma_Delay)
+				{
+					for (int i = 0; i < 4; i++)
+					{
+						if (dma_IRQ_cd[i] > 0)
+						{
+							dma_IRQ_cd[i]--;
+							if (dma_IRQ_cd[i] == 2)
+							{
+								INT_Flags |= (uint16_t)(0x1 << (8 + i));
+								if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i))) { cpu_Trigger_Unhalt = true; }
+
+							}
+							else if (dma_IRQ_cd[i] == 0)
+							{
+
+								// trigger IRQ (Bits 8 through 11)
+								if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i)))
+								{
+									if (INT_Master_On) { cpu_IRQ_Input = true; }
+								}
+							}
+						}
+					}
+
+					dma_Delay = false;
+
+					for (int i = 0; i < 4; i++)
+					{
+						if (dma_IRQ_cd[i] != 0) { dma_Delay = true; }
+					}
+
+					dma_All_Off = true;
+
+					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+
+					if (dma_Delay) { dma_All_Off = false; }
+
+					if (dma_Shutdown) { dma_All_Off = false; }
 				}
 
 				if (!dma_Pausable)
@@ -2336,13 +2366,10 @@ namespace GBAHawk
 								// generate an IRQ if needed
 								if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 								{
-									INT_Flags |= (uint16_t)(0x1 << (8 + dma_Chan_Exec));
-									if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec))) { cpu_Trigger_Unhalt = true; }
-
-									// trigger IRQ (Bits 8 through 11)
-									if ((INT_EN & (0x1 << (8 + dma_Chan_Exec))) == (0x1 << (8 + dma_Chan_Exec)))
+									if (dma_IRQ_cd[dma_Chan_Exec] == 0)
 									{
-										if (INT_Master_On) { cpu_IRQ_Input = true; }
+										dma_IRQ_cd[dma_Chan_Exec] = 3;
+										dma_Delay = true;
 									}
 								}
 
