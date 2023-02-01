@@ -54,19 +54,6 @@ namespace BizHawk.Client.Common
 			Unknown, MissingFirmware, Xml, DiscError
 		}
 
-		// helper methods for the settings events
-		private TSetting GetCoreSettings<TCore, TSetting>()
-			where TCore : IEmulator
-		{
-			return (TSetting)GetCoreSettings(typeof(TCore), typeof(TSetting));
-		}
-
-		private TSync GetCoreSyncSettings<TCore, TSync>()
-			where TCore : IEmulator
-		{
-			return (TSync)GetCoreSyncSettings(typeof(TCore), typeof(TSync));
-		}
-
 		private object GetCoreSettings(Type t, Type settingsType)
 		{
 			var e = new SettingsLoadArgs(t, settingsType);

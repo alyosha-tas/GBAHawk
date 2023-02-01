@@ -84,45 +84,6 @@ namespace BizHawk.Client.EmuHawk
 			return Color.FromArgb(col);
 		}
 
-		/// <remarks>
-		/// Due to the way this is written, using it in a foreach (as is done in SNESGraphicsDebugger)
-		/// passes <c>Control</c> as the type parameter, meaning only properties on <see cref="Control"/> (and <see cref="Component"/>, etc.)
-		/// will be processed. Why is there even a type param at all? I certainly don't know. --yoshi
-		/// </remarks>
-		public static T Clone<T>(this T controlToClone)
-			where T : Control
-		{
-			PropertyInfo[] controlProperties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-			Type t = controlToClone.GetType();
-			var instance = (T) Activator.CreateInstance(t);
-
-			t.GetProperty("AutoSize")?.SetMethod?.Invoke(instance, new object[] {false});
-
-			for (int i = 0; i < 3; i++) // why 3 passes of this? --yoshi
-			{
-				foreach (var propInfo in controlProperties)
-				{
-					if (!propInfo.CanWrite)
-					{
-						continue;
-					}
-
-					if (propInfo.Name != "AutoSize" && propInfo.Name != "WindowTarget")
-					{
-						propInfo.SetValue(instance, propInfo.GetValue(controlToClone, null), null);
-					}
-				}
-			}
-
-			if (controlToClone is RetainedViewportPanel rvpToClone && instance is RetainedViewportPanel rvpCloned)
-			{
-				rvpCloned.SetBitmap((Bitmap) rvpToClone.GetBitmap().Clone());
-			}
-
-			return instance;
-		}
-
 		/// <summary>
 		/// Converts the outdated IEnumerable Controls property to an <see cref="IEnumerable{T}"/> like .NET should have done a long time ago
 		/// </summary>

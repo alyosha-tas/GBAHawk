@@ -39,7 +39,6 @@ namespace BizHawk.Client.Common
 			}
 
 			tas.StartsFromSavestate = old.StartsFromSavestate;
-			tas.TextSavestate = old.TextSavestate;
 			tas.BinarySavestate = old.BinarySavestate;
 			tas.SaveRam = old.SaveRam;
 
@@ -71,7 +70,6 @@ namespace BizHawk.Client.Common
 				bk2.Subtitles.Add(sub);
 			}
 
-			bk2.TextSavestate = old.TextSavestate;
 			bk2.BinarySavestate = old.BinarySavestate;
 			bk2.SaveRam = old.SaveRam;
 

@@ -58,9 +58,6 @@ namespace BizHawk.Client.EmuHawk
 
 			nudCompression.Value = _config.Savestates.CompressionLevelNormal;
 
-			rbStatesBinary.Checked = _config.Savestates.Type == SaveStateType.Binary;
-			rbStatesText.Checked = _config.Savestates.Type == SaveStateType.Text;
-
 			BackupSavestatesCheckbox.Checked = _config.Savestates.MakeBackups;
 			ScreenshotInStatesCheckbox.Checked = _config.Savestates.SaveScreenshot;
 			LowResLargeScreenshotsCheckbox.Checked = !_config.Savestates.NoLowResLargeScreenshots;
@@ -121,8 +118,6 @@ namespace BizHawk.Client.EmuHawk
 
 			// These settings are not used by DoRewindSettings
 			_config.Savestates.CompressionLevelNormal = (int)nudCompression.Value;
-			if (rbStatesBinary.Checked) _config.Savestates.Type = SaveStateType.Binary;
-			if (rbStatesText.Checked) _config.Savestates.Type = SaveStateType.Text;
 			_config.Savestates.MakeBackups = BackupSavestatesCheckbox.Checked;
 			_config.Savestates.SaveScreenshot = ScreenshotInStatesCheckbox.Checked;
 			_config.Savestates.NoLowResLargeScreenshots = !LowResLargeScreenshotsCheckbox.Checked;

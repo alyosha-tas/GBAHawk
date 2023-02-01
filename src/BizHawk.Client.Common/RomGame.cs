@@ -15,13 +15,8 @@ namespace BizHawk.Client.Common
 
 		private const int BankSize = 1024;
 
-		public RomGame(HawkFile file)
-			: this(file, null)
-		{
-		}
-
 		/// <exception cref="Exception"><paramref name="file"/> does not exist</exception>
-		public RomGame(HawkFile file, string patch)
+		public RomGame(HawkFile file)
 		{
 			if (!file.Exists)
 			{
@@ -55,40 +50,6 @@ namespace BizHawk.Client.Common
 
 			// note: this will be taking several hashes, of a potentially large amount of data.. yikes!
 			GameInfo = Database.GetGameInfo(RomData, file.Name);
-
-			CheckForPatchOptions();
-
-			if (patch != null)
-			{
-				using var patchFile = new HawkFile(patch);
-				patchFile.BindFirstOf(".ips");
-				if (patchFile.IsBound)
-				{
-					RomData = IPS.Patch(RomData, patchFile.GetStream());
-				}
-			}
-		}
-
-		private void CheckForPatchOptions()
-		{
-			try
-			{
-				if (GameInfo["PatchBytes"])
-				{
-					var args = GameInfo.OptionValue("PatchBytes");
-					foreach (var val in args.Split(','))
-					{
-						var split = val.Split(':');
-						int offset = int.Parse(split[0], NumberStyles.HexNumber);
-						byte value = byte.Parse(split[1], NumberStyles.HexNumber);
-						RomData[offset] = value;
-					}
-				}
-			}
-			catch (Exception)
-			{
-				// No need for errors in patching to propagate.
-			}
 		}
 	}
 }

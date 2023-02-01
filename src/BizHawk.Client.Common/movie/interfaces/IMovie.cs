@@ -78,7 +78,6 @@ namespace BizHawk.Client.Common
 		IList<string> Comments { get; }
 
 		// savestate anchor.
-		string TextSavestate { get; set; }
 		byte[] BinarySavestate { get; set; }
 		int[] SavestateFramebuffer { get; set; }
 
@@ -277,14 +276,7 @@ namespace BizHawk.Client.Common
 		{
 			if (emulator.HasSavestates() && movie.StartsFromSavestate)
 			{
-				if (movie.TextSavestate != null)
-				{
-					emulator.AsStatable().LoadStateText(movie.TextSavestate);
-				}
-				else
-				{
-					emulator.AsStatable().LoadStateBinary(movie.BinarySavestate);
-				}
+				emulator.AsStatable().LoadStateBinary(movie.BinarySavestate);
 
 				if (movie.SavestateFramebuffer != null && emulator.HasVideoProvider())
 				{

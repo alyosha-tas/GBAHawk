@@ -21,25 +21,4 @@ namespace BizHawk.Emulation.Common
 			SingleInstance = singleInstance;
 		}
 	}
-
-	[AttributeUsage(AttributeTargets.Class)]
-	public sealed class PortedCoreAttribute : CoreAttribute
-	{
-		public readonly string PortedUrl;
-
-		public readonly string PortedVersion;
-
-		public PortedCoreAttribute(
-			string name,
-			string author,
-			string portedVersion = "",
-			string portedUrl = "",
-			bool singleInstance = false,
-			bool isReleased = true)
-				: base(name, author, singleInstance, isReleased)
-		{
-			PortedUrl = portedUrl;
-			PortedVersion = portedVersion;
-		}
-	}
 }

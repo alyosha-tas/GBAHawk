@@ -25,7 +25,6 @@ using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Common.Base_Implementations;
 using BizHawk.Emulation.Cores;
 using BizHawk.Client.EmuHawk.ToolExtensions;
-using BizHawk.Client.EmuHawk.CoreExtensions;
 using BizHawk.Client.EmuHawk.CustomControls;
 
 namespace BizHawk.Client.EmuHawk
@@ -1331,7 +1330,7 @@ namespace BizHawk.Client.EmuHawk
 
 				if (!Emulator.IsNull())
 				{
-					sb.Append($"{Game.Name} [{Emulator.GetSystemDisplayName()}] - ");
+					sb.Append($"{Game.Name} [{GetSystemDisplayName(Emulator)}] - ");
 					if (MovieSession.Movie.IsActive())
 					{
 						sb.Append($"{Path.GetFileName(MovieSession.Movie.Filename)} - ");
@@ -1341,6 +1340,18 @@ namespace BizHawk.Client.EmuHawk
 				sb.Append("GBAHawk");
 
 				return sb.ToString();
+			}
+		}
+		
+		public static string GetSystemDisplayName(IEmulator emulator)
+		{
+			if (emulator is NullEmulator)
+			{
+				return string.Empty;
+			}
+			else
+			{
+				return EmulatorExtensions.SystemIDToDisplayName(emulator.SystemId);
 			}
 		}
 
@@ -2427,8 +2438,8 @@ namespace BizHawk.Client.EmuHawk
 			CoreNameStatusBarButton.Visible = true;
 
 			CoreNameStatusBarButton.Text = coreDispName;
-			CoreNameStatusBarButton.Image = Emulator.Icon();
-			CoreNameStatusBarButton.ToolTipText = attributes is PortedCoreAttribute ? "(ported) " : "";
+			CoreNameStatusBarButton.Image = Properties.Resources.CorpHawkSmall;
+			CoreNameStatusBarButton.ToolTipText = "";
 
 		}
 

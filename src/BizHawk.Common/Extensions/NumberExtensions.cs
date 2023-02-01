@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace BizHawk.Common.NumberExtensions
 {
@@ -38,21 +37,6 @@ namespace BizHawk.Common.NumberExtensions
 		public static bool Bit(this ushort b, int index)
 		{
 			return (b & (1 << index)) != 0;
-		}
-
-		public static bool In(this int i, params int[] options)
-		{
-			return options.Any(j => i == j);
-		}
-
-		public static byte BinToBCD(this byte v)
-		{
-			return (byte)(((v / 10) * 16) + (v % 10));
-		}
-
-		public static byte BCDtoBin(this byte v)
-		{
-			return (byte)(((v / 16) * 10) + (v % 16));
 		}
 
 		/// <summary>
@@ -96,29 +80,6 @@ namespace BizHawk.Common.NumberExtensions
 		public static int Mod(this int a, int b)
 		{
 			return a - (b * (int)Math.Floor((float)a / b));
-		}
-
-		/// <summary>
-		/// Force the value to be strictly between min and max (both excluded)
-		/// </summary>
-		/// <typeparam name="T">Anything that implements <see cref="IComparable{T}"/></typeparam>
-		/// <param name="val">Value that will be clamped</param>
-		/// <param name="min">Minimum allowed</param>
-		/// <param name="max">Maximum allowed</param>
-		/// <returns>The value if strictly between min and max; otherwise min (or max depending of what is passed)</returns>
-		public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
-		{
-			if (val.CompareTo(min) < 0)
-			{
-				return min;
-			}
-
-			if (val.CompareTo(max) > 0)
-			{
-				return max;
-			}
-
-			return val;
 		}
 
 		public static int RoundToInt(this double d) => (int) Math.Round(d);

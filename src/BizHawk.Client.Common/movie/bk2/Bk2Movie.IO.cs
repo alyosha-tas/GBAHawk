@@ -232,10 +232,6 @@ namespace BizHawk.Client.Common
 					delegate(BinaryReader br, long length)
 					{
 						BinarySavestate = br.ReadBytes((int)length);
-					},
-					delegate(TextReader tr)
-					{
-						TextSavestate = tr.ReadToEnd();
 					});
 				bl.GetLump(BinaryStateLump.Framebuffer, false,
 					delegate(BinaryReader br, long length)

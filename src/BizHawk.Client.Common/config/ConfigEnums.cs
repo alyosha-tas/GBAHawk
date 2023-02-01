@@ -22,11 +22,6 @@
 		CustomRatio
 	}
 
-	public enum SaveStateType
-	{
-		Binary, Text
-	}
-
 	public enum EHostInputMethod
 	{
 		OpenTK = 0,

@@ -54,14 +54,7 @@ namespace BizHawk.Client.Common
 
 			using (new SimpleTime("Save Core"))
 			{
-				if (config.Type == SaveStateType.Text)
-				{
-					bs.PutLump(BinaryStateLump.CorestateText, tw => _statable.SaveStateText(tw));
-				}
-				else
-				{
-					bs.PutLump(BinaryStateLump.Corestate, bw => _statable.SaveStateBinary(bw));
-				}
+				bs.PutLump(BinaryStateLump.Corestate, bw => _statable.SaveStateBinary(bw));
 			}
 
 			if (config.SaveScreenshot && _videoProvider != null)
@@ -147,7 +140,7 @@ namespace BizHawk.Client.Common
 
 					using (new SimpleTime("Load Core"))
 					{
-						bl.GetCoreState(br => _statable.LoadStateBinary(br), tr => _statable.LoadStateText(tr));
+						bl.GetCoreState(br => _statable.LoadStateBinary(br));
 					}
 
 					// We must handle movie input AFTER the core is loaded to properly handle mode changes, and input latching

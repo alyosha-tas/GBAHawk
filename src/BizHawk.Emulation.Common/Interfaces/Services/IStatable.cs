@@ -19,30 +19,6 @@ namespace BizHawk.Emulation.Common
 
 	public static class StatableExtensions
 	{
-		public static void SaveStateText(this IStatable core, TextWriter writer)
-		{
-			var temp = core.CloneSavestate();
-			temp.SaveAsHexFast(writer);
-		}
-
-		public static void LoadStateText(this IStatable core, TextReader reader)
-		{
-			string hex = reader.ReadLine();
-			if (hex != null)
-			{
-				var state = new byte[hex.Length / 2];
-				state.ReadFromHexFast(hex);
-				using var ms = new MemoryStream(state);
-				using var br = new BinaryReader(ms);
-				core.LoadStateBinary(br);
-			}
-		}
-
-		public static void LoadStateText(this IStatable core, string textState)
-		{
-			core.LoadStateText(new StringReader(textState));
-		}
-
 		/// <summary>
 		/// Loads a state directly from a byte array
 		/// </summary>
