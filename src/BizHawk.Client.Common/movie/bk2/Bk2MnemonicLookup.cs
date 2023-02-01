@@ -171,32 +171,6 @@ namespace BizHawk.Client.Common
 
 		private static readonly Dictionary<string, Dictionary<string, char>> SystemOverrides = new Dictionary<string, Dictionary<string, char>>
 		{
-			[VSystemID.Raw.NES] = new()
-			{
-				["FDS Eject"] = 'E',
-				["FDS Insert 0"] = '0',
-				["FDS Insert 1"] = '1',
-				["Insert Coin P1"] = 'c',
-				["Insert Coin P2"] = 'C',
-				["Service Switch"] = 'w',
-
-				["PP1"] = '1',
-				["PP2"] = '2',
-				["PP3"] = '3',
-				["PP4"] = '4',
-
-				["PP5"] = '5',
-				["PP6"] = '6',
-				["PP7"] = '7',
-				["PP8"] = '8',
-
-				["PP9"] = '9',
-				["PP10"] = 'A',
-				["PP11"] = 'B',
-				["PP12"] = 'C',
-				["Click"] = 'C',
-				["Touch"] = 'T',
-			},
 			[VSystemID.Raw.GBL] = new()
 			{
 				// gbhawk

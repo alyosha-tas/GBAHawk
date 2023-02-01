@@ -253,12 +253,6 @@ namespace BizHawk.Emulation.Common
 
 			switch (ext)
 			{
-				case ".NES":
-				case ".UNF":
-				case ".FDS":
-					game.System = VSystemID.Raw.NES;
-					break;
-
 				case ".GB":
 					game.System = VSystemID.Raw.GB;
 					break;

@@ -17,7 +17,6 @@ namespace BizHawk.Emulation.Common
 			public const string GBA = "GBA";
 			public const string GBC = "GBC";
 			public const string GBL = "GBL";
-			public const string NES = "NES";
 			public const string NULL = "NULL";
 		}
 

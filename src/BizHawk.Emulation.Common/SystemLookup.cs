@@ -8,7 +8,6 @@ namespace BizHawk.Emulation.Common
 	{
 		private readonly List<SystemInfo> _systems = new List<SystemInfo>
 		{
-			new(VSystemID.Raw.NES, "NES"),
 			new(VSystemID.Raw.GB, "Gameboy"),
 			new(VSystemID.Raw.GBA, "Gameboy Advance")
 		};

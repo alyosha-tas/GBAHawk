@@ -20,7 +20,6 @@ namespace BizHawk.Client.Common
 		private static readonly Dictionary<string, string> _displayNameLookup = new()
 		{
 			[GLOBAL] = "Global",
-			[VSystemID.Raw.NES] = "NES",
 			[VSystemID.Raw.GBA] = "GBA",
 			[COMBINED_SYSIDS_GB] = "Gameboy",
 			[VSystemID.Raw.GBL] = "Gameboy Link",
@@ -165,11 +164,6 @@ namespace BizHawk.Client.Common
 			},
 
 			CommonEntriesFor(VSystemID.Raw.GBA, basePath: Path.Combine(".", "GBA")),
-
-			CommonEntriesFor(VSystemID.Raw.NES, basePath: Path.Combine(".", "NES")),
-			new[] {
-				PalettesEntryFor(VSystemID.Raw.NES),
-			},
 
 		}.SelectMany(a => a).ToArray());
 	}

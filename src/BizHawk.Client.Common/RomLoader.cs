@@ -265,12 +265,6 @@ namespace BizHawk.Client.Common
 			cancel = false;
 			rom = new RomGame(file);
 
-			// hacky for now
-			if (file.Extension == ".nsf")
-			{
-				rom.GameInfo.System = VSystemID.Raw.NES;
-			}
-
 			Util.DebugWriteLine(rom.GameInfo.System);
 
 			if (string.IsNullOrEmpty(rom.GameInfo.System))

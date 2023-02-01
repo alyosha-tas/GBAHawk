@@ -164,7 +164,7 @@ namespace BizHawk.Client.EmuHawk
 
 			if (IsTabPendingFocus(PathEntryCollection.GLOBAL))
 			{
-				comboSystem.SelectedIndex = systems.FindIndex(tuple => tuple.SysGroup == VSystemID.Raw.NES); // event handler selects correct tab in inner TabControl
+				comboSystem.SelectedIndex = systems.FindIndex(tuple => tuple.SysGroup == VSystemID.Raw.GBA); // event handler selects correct tab in inner TabControl
 				// selected tab in tcMain is already 0 (Global)
 			}
 
