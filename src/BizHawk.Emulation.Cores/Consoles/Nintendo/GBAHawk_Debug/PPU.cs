@@ -1561,14 +1561,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						ppu_X_RS = ppu_ROT_BG_X[ppu_Display_Cycle];
 						ppu_Y_RS = ppu_ROT_BG_Y[ppu_Display_Cycle];
 
-						// pixel color palette direct mapped to VRAM
 						if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 						{
-							// no transparency possible
-							cur_BG_layer = 2;
-							cur_layer_priority = ppu_BG_Priority[2];
-							BG_Has_Pixel[2] = true;
-
 							Pixel_Color = VRAM[ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS];
 
 							Pixel_Color <<= 1;
@@ -1577,12 +1571,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							Pixel_Color_data <<= 8;
 							Pixel_Color_data |= PALRAM[Pixel_Color];
 
-							bg_pixel_f = (uint)(0xFF000000 |
+							bg_pixel[2] = (uint)(0xFF000000 |
 										 ((Pixel_Color_data & 0x1F) << 19) |
 										 ((Pixel_Color_data & 0x3E0) << 6) |
 										 ((Pixel_Color_data & 0x7C00) >> 7));
-						}
 
+							BG_Is_Transparent[2] = Pixel_Color == 0;
+							BG_Has_Pixel[2] = true;
+
+							if (!BG_Is_Transparent[2])
+							{
+								if (ppu_BG_Priority[2] < cur_layer_priority)
+								{
+									bg_pixel_s = bg_pixel_f;
+									second_BG_layer = cur_BG_layer;
+									second_layer_priority = cur_layer_priority;
+
+									bg_pixel_f = bg_pixel[2];
+									cur_BG_layer = 2;
+									cur_layer_priority = ppu_BG_Priority[2];
+								}
+							}
+						}
 					}
 					break;
 				case 5:
