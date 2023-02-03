@@ -13,7 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	When accessing OAM (7000000h) or OBJ VRAM (6010000h) by HBlank Timing, then the "H-Blank Interval Free" bit in DISPCNT register must be set.
 
-	TODO: odd vertical windowing, lock VRAM when rendering
+	TODO: odd vertical windowing, lock VRAM when rendering, add in palette accesses for blending
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -49,7 +49,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_BG_On = new bool[4];
 		public bool[] ppu_BG_On_New = new bool[4];
 
-		public bool[] ppu_VRAM_Access = new bool[1232];
+		public bool[] ppu_VRAM_Access = new bool[1233];
+		public bool[] ppu_PALRAM_Access = new bool[1233];
 
 		public uint ppu_Transparent_Color;
 
@@ -801,8 +802,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Display_Cycle = 0;
 				ppu_LY += 1;
 
-				ppu_Calculate_Access_Timing();
-
 				if (ppu_LY == 228)
 				{
 					// display starts occuring at scanline 0
@@ -813,6 +812,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_ROT_REF_LY[2] = 0;
 					ppu_ROT_REF_LY[3] = 0;
 				}
+
+				ppu_Calculate_Access_Timing();
 
 				// exit HBlank
 				ppu_STAT &= 0xFD;
@@ -2525,9 +2526,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			int scroll_x_2 = 4 * (ppu_BG_X[2] & 0x7);
 			int scroll_x_3 = 4 * (ppu_BG_X[3] & 0x7);
 
-			for (int i = 0; i < 1232; i++)
+			for (int i = 0; i < 1233; i++)
 			{
 				ppu_VRAM_Access[i] = false;
+				ppu_PALRAM_Access[i] = false;
 			}
 
 			// note: it appears that for tile map modes, complete accesses are used even if the accesses extend past HBLank
@@ -2535,8 +2537,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// does this effect hblank timing?
 
 			// free access in VBlank
-			if ((ppu_LY >= 0) && (ppu_LY < 160))
+			if ((ppu_LY < 160) && !ppu_Forced_Blank)
 			{
+				// VRAM
 				switch (ppu_BG_Mode)
 				{
 					case 0:
@@ -2703,9 +2706,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						break;
 				}
+
+				// PALRAM
+				// modes 3 and 5 do not make PALRAM accesses
+				switch (ppu_BG_Mode)
+				{
+					case 0:
+					case 1:
+					case 2:
+					case 4:
+
+						for (int i = 0; i < 240; i++)
+						{
+							ppu_PALRAM_Access[32 + 12 + 3 + i * 4] = true;
+						}
+
+						break;
+				}
 			}
 		}
-
 
 		public void ppu_Reset()
 		{			
@@ -2780,9 +2799,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 
-			for (int i = 0; i < 1232; i++)
+			for (int i = 0; i < 1233; i++)
 			{
 				ppu_VRAM_Access[i] = false;
+				ppu_PALRAM_Access[i] = false;
 			}
 
 			// PPU power up
@@ -2825,6 +2845,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_BG_On_New), ref ppu_BG_On_New, false);
 
 			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access, false);
+			ser.Sync(nameof(ppu_PALRAM_Access), ref ppu_PALRAM_Access, false);
 
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
 			ser.Sync(nameof(ppu_Display_Frame), ref ppu_Display_Frame);

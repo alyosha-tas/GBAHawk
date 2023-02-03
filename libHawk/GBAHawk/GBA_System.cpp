@@ -1713,8 +1713,6 @@ namespace GBAHawk
 				ppu_Display_Cycle = 0;
 				ppu_LY += 1;
 
-				ppu_Calculate_Access_Timing();
-
 				if (ppu_LY == 228)
 				{
 					// display starts occuring at scanline 0
@@ -1725,6 +1723,8 @@ namespace GBAHawk
 					ppu_ROT_REF_LY[2] = 0;
 					ppu_ROT_REF_LY[3] = 0;
 				}
+
+				ppu_Calculate_Access_Timing();
 
 				// exit HBlank
 				ppu_STAT &= 0xFD;

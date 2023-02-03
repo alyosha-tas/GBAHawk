@@ -117,7 +117,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
+					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -222,7 +228,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
+					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -305,9 +317,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{			
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
-
+					// check both edges of the access
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
 						bool VRAM_Block = true;
@@ -326,33 +336,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 						}
 					}
-
-					// check both edges of the access
-					if (ppu_Cycle < 1230)
+					else if (ppu_VRAM_Access[ppu_Cycle])
 					{
-						if (ppu_VRAM_Access[ppu_Cycle])
-						{
-							bool VRAM_Block = true;
-							int i = ppu_Cycle;
+						bool VRAM_Block = true;
+						int i = ppu_Cycle;
 
-							while (VRAM_Block)
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
 							{
-								if (ppu_VRAM_Access[i])
-								{
-									wait_ret += 1;
-									i += 1;
-								}
-								else
-								{
-									VRAM_Block = false;
-								}
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
 							}
 						}
+
+						//Console.WriteLine("32?");
 					}
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
 				}
 				else
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// check both edges of the access
+					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
+					}
+					else if (ppu_PALRAM_Access[ppu_Cycle])
+					{
+						wait_ret += 1;
+					}
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
@@ -472,7 +492,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
+					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -606,6 +632,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
 
+					// check both edges of the access
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
 						bool VRAM_Block = true;
@@ -624,33 +651,40 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 						}
 					}
-
-					// check both edges of the access
-					if (ppu_Cycle < 1230)
+					else if (ppu_VRAM_Access[ppu_Cycle])
 					{
-						if (ppu_VRAM_Access[ppu_Cycle])
-						{
-							bool VRAM_Block = true;
-							int i = ppu_Cycle;
+						bool VRAM_Block = true;
+						int i = ppu_Cycle;
 
-							while (VRAM_Block)
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
 							{
-								if (ppu_VRAM_Access[i])
-								{
-									wait_ret += 1;
-									i += 1;
-								}
-								else
-								{
-									VRAM_Block = false;
-								}
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
 							}
 						}
+
+						//Console.WriteLine("32 I?");
 					}
 				}
 				else
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// check both edges of the access
+					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
+					}
+					else if (ppu_PALRAM_Access[ppu_Cycle])
+					{
+						wait_ret += 1;
+					}
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
