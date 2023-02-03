@@ -359,8 +359,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// TODO: Implmenet other save types
 			}
 
+			// SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E
+
+
 			// hash checks for individual games / homebrew / test roms
-			if (romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") // Aging cart test
+			if ((romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") || // Aging cart test
+				(romHashSHA1 == "SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E")) // VRAM access test
 			{
 				Console.WriteLine("using SRAM mapper");
 				mppr = "SRAM";

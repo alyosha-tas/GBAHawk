@@ -408,6 +408,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (dma_Delay) { dma_All_Off = false; }
 
 					dma_Shutdown = false;
+
+					cpu_Is_Paused = false;
 				}
 				else
 				{

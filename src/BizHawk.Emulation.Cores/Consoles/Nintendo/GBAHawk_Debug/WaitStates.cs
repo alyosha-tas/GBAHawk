@@ -85,6 +85,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
+				}
+			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
@@ -153,6 +188,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
+				}
+			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -225,12 +295,68 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x07000000))
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
-				wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+				if (addr >= 0x07000000)
+				{
 
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
+				}
+				else if (addr >= 0x06000000)
+				{			
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+					}
+
+					// check both edges of the access
+					if (ppu_Cycle < 1230)
+					{
+						if (ppu_VRAM_Access[ppu_Cycle])
+						{
+							bool VRAM_Block = true;
+							int i = ppu_Cycle;
+
+							while (VRAM_Block)
+							{
+								if (ppu_VRAM_Access[i])
+								{
+									wait_ret += 1;
+									i += 1;
+								}
+								else
+								{
+									VRAM_Block = false;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
@@ -312,6 +438,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
+				}
+			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -432,12 +593,68 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x07000000))
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
-				wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+				if (addr >= 0x07000000)
+				{
 
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
+				}
+				else if (addr >= 0x06000000)
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+					}
+
+					// check both edges of the access
+					if (ppu_Cycle < 1230)
+					{
+						if (ppu_VRAM_Access[ppu_Cycle])
+						{
+							bool VRAM_Block = true;
+							int i = ppu_Cycle;
+
+							while (VRAM_Block)
+							{
+								if (ppu_VRAM_Access[i])
+								{
+									wait_ret += 1;
+									i += 1;
+								}
+								else
+								{
+									VRAM_Block = false;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{

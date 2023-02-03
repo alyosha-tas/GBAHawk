@@ -5377,6 +5377,41 @@ namespace GBAHawk
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
+				}
+			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
@@ -5445,6 +5480,41 @@ namespace GBAHawk
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
+				}
+			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -5517,12 +5587,68 @@ namespace GBAHawk
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x07000000))
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
-				wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+				if (addr >= 0x07000000)
+				{
 
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
+				}
+				else if (addr >= 0x06000000)
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+					}
+
+					// check both edges of the access
+					if (ppu_Cycle < 1230)
+					{
+						if (ppu_VRAM_Access[ppu_Cycle])
+						{
+							bool VRAM_Block = true;
+							int i = ppu_Cycle;
+
+							while (VRAM_Block)
+							{
+								if (ppu_VRAM_Access[i])
+								{
+									wait_ret += 1;
+									i += 1;
+								}
+								else
+								{
+									VRAM_Block = false;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
@@ -5604,6 +5730,41 @@ namespace GBAHawk
 
 					// possibly save 1 cycle
 					wait_ret -= cpu_Cycle_Save;
+				}
+			}
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			{
+				if (addr >= 0x07000000)
+				{
+
+				}
+				else if (addr >= 0x06000000)
+				{
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+
+						// possibly save 1 cycle
+						wait_ret -= cpu_Cycle_Save;
+					}
+				}
+				else
+				{
+
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
@@ -5724,12 +5885,68 @@ namespace GBAHawk
 					wait_ret -= cpu_Cycle_Save;
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x07000000))
+			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
-				wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+				if (addr >= 0x07000000)
+				{
 
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
+				}
+				else if (addr >= 0x06000000)
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+
+					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					{
+						bool VRAM_Block = true;
+						int i = ppu_Cycle - 1;
+
+						while (VRAM_Block)
+						{
+							if (ppu_VRAM_Access[i])
+							{
+								wait_ret += 1;
+								i += 1;
+							}
+							else
+							{
+								VRAM_Block = false;
+							}
+						}
+					}
+
+					// check both edges of the access
+					if (ppu_Cycle < 1230)
+					{
+						if (ppu_VRAM_Access[ppu_Cycle])
+						{
+							bool VRAM_Block = true;
+							int i = ppu_Cycle;
+
+							while (VRAM_Block)
+							{
+								if (ppu_VRAM_Access[i])
+								{
+									wait_ret += 1;
+									i += 1;
+								}
+								else
+								{
+									VRAM_Block = false;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
+
+					// possibly save 1 cycle
+					wait_ret -= cpu_Cycle_Save;
+				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
@@ -6940,6 +7157,8 @@ namespace GBAHawk
 
 		bool ppu_BG_On[4] = { };
 		bool ppu_BG_On_New[4] = { };
+
+		bool ppu_VRAM_Access[1232] = { };
 
 		// Sprite Evaluation
 		bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
@@ -9231,6 +9450,194 @@ namespace GBAHawk
 			}
 		}
 
+		void ppu_Calculate_Access_Timing()
+		{
+			int scroll_x_0 = 4 * (ppu_BG_X[0] & 0x7);
+			int scroll_x_1 = 4 * (ppu_BG_X[1] & 0x7);
+			int scroll_x_2 = 4 * (ppu_BG_X[2] & 0x7);
+			int scroll_x_3 = 4 * (ppu_BG_X[3] & 0x7);
+
+			for (int i = 0; i < 1232; i++)
+			{
+				ppu_VRAM_Access[i] = false;
+			}
+
+			// note: it appears that for tile map modes, complete accesses are used even if the accesses extend past HBLank
+			// this is not the case for bitmap modes, where accesses are abruptly cutoff
+			// does this effect hblank timing?
+
+			// free access in VBlank
+			if ((ppu_LY >= 0) && (ppu_LY < 160))
+			{
+				switch (ppu_BG_Mode)
+				{
+				case 0:
+					if (ppu_BG_On[0])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_0 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_0 + 4 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_0 + 20 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[0])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_0 + 12 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 28 + i * 32] = true;
+							}
+						}
+					}
+					if (ppu_BG_On[1])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_1 + 1 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_1 + 4 + 1 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_1 + 20 + 1 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[1])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_1 + 12 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 28 + 1 + i * 32] = true;
+							}
+						}
+					}
+					if (ppu_BG_On[2])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_2 + 2 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_2 + 4 + 2 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_2 + 20 + 2 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[2])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_2 + 12 + 2 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_2 + 28 + 2 + i * 32] = true;
+							}
+						}
+					}
+					if (ppu_BG_On[3])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_3 + 3 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_3 + 4 + 3 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_3 + 20 + 3 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[3])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_3 + 12 + 3 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_3 + 28 + 3 + i * 32] = true;
+							}
+						}
+					}
+					break;
+
+				case 1:
+					if (ppu_BG_On[0])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_0 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_0 + 4 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_0 + 20 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[0])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_0 + 12 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 28 + i * 32] = true;
+							}
+						}
+					}
+					if (ppu_BG_On[1])
+					{
+						for (int i = 0; i < 31; i++)
+						{
+							ppu_VRAM_Access[32 - scroll_x_1 + 1 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_1 + 4 + 1 + i * 32] = true;
+							ppu_VRAM_Access[32 - scroll_x_1 + 20 + 1 + i * 32] = true;
+						}
+						if (ppu_BG_Pal_Size[1])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_1 + 12 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 28 + 1 + i * 32] = true;
+							}
+						}
+					}
+					if (ppu_BG_On[2])
+					{
+						for (int i = 0; i < 244; i++)
+						{
+							ppu_VRAM_Access[32 + 2 + i * 4] = true;
+							ppu_VRAM_Access[32 + 3 + i * 4] = true;
+						}
+
+						// it seems last access not used
+						ppu_VRAM_Access[1007] = false;
+					}
+					break;
+
+				case 2:
+					if (ppu_BG_On[2])
+					{
+						for (int i = 0; i < 244; i++)
+						{
+							ppu_VRAM_Access[32 + 2 + i * 4] = true;
+							ppu_VRAM_Access[32 + 3 + i * 4] = true;
+						}
+					}
+					if (ppu_BG_On[3])
+					{
+						for (int i = 0; i < 244; i++)
+						{
+							ppu_VRAM_Access[32 + i * 4] = true;
+							ppu_VRAM_Access[32 + 1 + i * 4] = true;
+						}
+					}
+
+					// in all cases, the last cycle of rendering access to VRAm is 1007
+					for (int i = 1007; i < 1232; i++)
+					{
+						ppu_VRAM_Access[i] = false;
+					}
+
+					break;
+
+				case 3:
+				case 4:
+				case 5:
+					if (ppu_BG_On[2])
+					{
+						for (int i = 0; i < 243; i++)
+						{
+							ppu_VRAM_Access[32 + 3 + i * 4] = true;
+						}
+					}
+
+					// in all cases, the last cycle of rendering access to VRAm is 1007
+					for (int i = 1007; i < 1232; i++)
+					{
+						ppu_VRAM_Access[i] = false;
+					}
+
+					break;
+				}
+			}
+		}
+
 		void ppu_Reset()
 		{
 			ppu_X_RS = ppu_Y_RS = 0;
@@ -9303,6 +9710,11 @@ namespace GBAHawk
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 
+			for (int i = 0; i < 1232; i++)
+			{
+				ppu_VRAM_Access[i] = false;
+			}
+
 			// PPU power up
 			ppu_CTRL_Write(0);
 
@@ -9370,6 +9782,8 @@ namespace GBAHawk
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
 			saver = bool_array_saver(ppu_BG_On_New, saver, 4);
+
+			saver = bool_array_saver(ppu_VRAM_Access, saver, 1232);
 
 			saver = short_array_saver(ppu_BG_CTRL, saver, 4);
 			saver = short_array_saver(ppu_BG_X, saver, 4);
@@ -9464,6 +9878,8 @@ namespace GBAHawk
 
 			loader = bool_array_loader(ppu_BG_On, loader, 4);
 			loader = bool_array_loader(ppu_BG_On_New, loader, 4);
+
+			loader = bool_array_loader(ppu_VRAM_Access, loader, 1232);
 
 			loader = short_array_loader(ppu_BG_CTRL, loader, 4);
 			loader = short_array_loader(ppu_BG_X, loader, 4);

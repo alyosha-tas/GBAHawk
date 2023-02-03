@@ -49,6 +49,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_BG_On = new bool[4];
 		public bool[] ppu_BG_On_New = new bool[4];
 
+		public bool[] ppu_VRAM_Access = new bool[1232];
+
 		public uint ppu_Transparent_Color;
 
 		public int ppu_BG_Mode, ppu_Display_Frame;
@@ -490,8 +492,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_BG_CTRL_Write(2);
 			ppu_BG_CTRL_Write(3);
 
-			//Console.WriteLine("free: " + ppu_HBL_Free);
-			//Console.WriteLine("Mode: " + ppu_BG_Mode);
+			Console.WriteLine("Mode: " + ppu_BG_Mode + " free: " + ppu_HBL_Free);
 		}
 
 		public void ppu_Calc_Win0()
@@ -799,6 +800,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Cycle = 0;
 				ppu_Display_Cycle = 0;
 				ppu_LY += 1;
+
+				ppu_Calculate_Access_Timing();
 
 				if (ppu_LY == 228)
 				{
@@ -2515,6 +2518,194 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 		}
 
+		public void ppu_Calculate_Access_Timing()
+		{
+			int scroll_x_0 = 4 * (ppu_BG_X[0] & 0x7);
+			int scroll_x_1 = 4 * (ppu_BG_X[1] & 0x7);
+			int scroll_x_2 = 4 * (ppu_BG_X[2] & 0x7);
+			int scroll_x_3 = 4 * (ppu_BG_X[3] & 0x7);
+
+			for (int i = 0; i < 1232; i++)
+			{
+				ppu_VRAM_Access[i] = false;
+			}
+
+			// note: it appears that for tile map modes, complete accesses are used even if the accesses extend past HBLank
+			// this is not the case for bitmap modes, where accesses are abruptly cutoff
+			// does this effect hblank timing?
+
+			// free access in VBlank
+			if ((ppu_LY >= 0) && (ppu_LY < 160))
+			{
+				switch (ppu_BG_Mode)
+				{
+					case 0:
+						if (ppu_BG_On[0])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_0 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 4 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 20 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[0])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_0 + 12 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_0 + 28 + i * 32] = true;
+								}
+							}		
+						}
+						if (ppu_BG_On[1])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_1 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 4 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 20 + 1 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[1])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_1 + 12 + 1 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_1 + 28 + 1 + i * 32] = true;
+								}
+							}
+						}
+						if (ppu_BG_On[2])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_2 + 2 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_2 + 4 + 2 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_2 + 20 + 2 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[2])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_2 + 12 + 2 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_2 + 28 + 2 + i * 32] = true;
+								}
+							}
+						}
+						if (ppu_BG_On[3])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_3 + 3 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_3 + 4 + 3 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_3 + 20 + 3 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[3])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_3 + 12 + 3 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_3 + 28 + 3 + i * 32] = true;
+								}
+							}
+						}
+						break;
+
+					case 1:
+						if (ppu_BG_On[0])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_0 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 4 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_0 + 20 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[0])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_0 + 12 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_0 + 28 + i * 32] = true;
+								}
+							}
+						}
+						if (ppu_BG_On[1])
+						{
+							for (int i = 0; i < 31; i++)
+							{
+								ppu_VRAM_Access[32 - scroll_x_1 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 4 + 1 + i * 32] = true;
+								ppu_VRAM_Access[32 - scroll_x_1 + 20 + 1 + i * 32] = true;
+							}
+							if (ppu_BG_Pal_Size[1])
+							{
+								for (int i = 0; i < 31; i++)
+								{
+									ppu_VRAM_Access[32 - scroll_x_1 + 12 + 1 + i * 32] = true;
+									ppu_VRAM_Access[32 - scroll_x_1 + 28 + 1 + i * 32] = true;
+								}
+							}
+						}
+						if (ppu_BG_On[2])
+						{
+							for (int i = 0; i < 244; i++)
+							{
+								ppu_VRAM_Access[32 + 2 + i * 4] = true;
+								ppu_VRAM_Access[32 + 3 + i * 4] = true;
+							}
+
+							// it seems last access not used
+							ppu_VRAM_Access[1007] = false;
+						}
+						break;
+
+					case 2:
+						if (ppu_BG_On[2])	
+						{
+							for (int i = 0; i < 244; i++)
+							{
+								ppu_VRAM_Access[32 + 2 + i * 4] = true;
+								ppu_VRAM_Access[32 + 3 + i * 4] = true;
+							}
+						}
+						if (ppu_BG_On[3])
+						{
+							for (int i = 0; i < 244; i++)
+							{
+								ppu_VRAM_Access[32 + i * 4] = true;
+								ppu_VRAM_Access[32 + 1 + i * 4] = true;
+							}
+						}
+
+						// in all cases, the last cycle of rendering access to VRAm is 1007
+						for (int i = 1007; i < 1232; i++)
+						{
+							ppu_VRAM_Access[i] = false;
+						}
+
+						break;
+
+					case 3:
+					case 4:
+					case 5:
+						if (ppu_BG_On[2])
+						{
+							for (int i = 0; i < 243; i++)
+							{
+								ppu_VRAM_Access[32 + 3 + i * 4] = true;
+							}
+						}
+
+						// in all cases, the last cycle of rendering access to VRAm is 1007
+						for (int i = 1007; i < 1232; i++)
+						{
+							ppu_VRAM_Access[i] = false;
+						}
+
+						break;
+				}
+			}
+		}
+
 
 		public void ppu_Reset()
 		{			
@@ -2589,6 +2780,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 
+			for (int i = 0; i < 1232; i++)
+			{
+				ppu_VRAM_Access[i] = false;
+			}
+
 			// PPU power up
 			ppu_CTRL_Write(0);
 
@@ -2627,6 +2823,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_BG_On), ref ppu_BG_On, false);
 			ser.Sync(nameof(ppu_BG_On_New), ref ppu_BG_On_New, false);
+
+			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access, false);
 
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
 			ser.Sync(nameof(ppu_Display_Frame), ref ppu_Display_Frame);
