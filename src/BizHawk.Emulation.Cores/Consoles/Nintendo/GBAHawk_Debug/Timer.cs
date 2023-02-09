@@ -265,11 +265,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (tim_IRQ_CD[i] == 2)
 						{
 							INT_Flags |= (ushort)(0x8 << i);
-							if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
+							
 						}
 						else if (tim_IRQ_CD[i] == 0)
 						{
-							if (((INT_EN & (0x8 << i)) == (0x8 << i)) && INT_Master_On) { cpu_IRQ_Input = true; }
+							if ((INT_EN & INT_Flags & (0x8 << i)) == (0x8 << i))
+							{ 
+								cpu_Trigger_Unhalt = true;
+								if (INT_Master_On) { cpu_IRQ_Input = true; }
+							}
 						}
 
 						// check if all timers disabled

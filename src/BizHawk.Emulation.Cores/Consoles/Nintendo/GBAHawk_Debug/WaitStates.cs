@@ -353,8 +353,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								VRAM_Block = false;
 							}
 						}
-
-						//Console.WriteLine("32?");
 					}
 
 					// possibly save 1 cycle
@@ -668,8 +666,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								VRAM_Block = false;
 							}
 						}
-
-						//Console.WriteLine("32 I?");
 					}
 				}
 				else

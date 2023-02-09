@@ -493,7 +493,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_BG_CTRL_Write(2);
 			ppu_BG_CTRL_Write(3);
 
-			Console.WriteLine("Mode: " + ppu_BG_Mode + " free: " + ppu_HBL_Free);
+			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win0()
@@ -839,7 +839,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Delays = true;
 					delays_to_process = true;
 
-					// do core actions that happen on VBlank
 					On_VBlank();
 				}
 				else if (ppu_LY == 227)

@@ -19,7 +19,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public IInputCallbackSystem InputCallbacks { get; } = new InputCallbackSystem();
 
 		public int _lagCount = 0;
-		public bool _lagged = true;
 		public bool _isLag = false;
 	}
 }

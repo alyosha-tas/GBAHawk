@@ -696,6 +696,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
 							cpu_Exception_Type = cpu_SWI_Exc;
 						}
+						else if ((cpu_Instr_TMB_2 & 0xE00) == 0xE00)
+						{
+							// Undefined instruction
+							cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+							cpu_Exception_Type = cpu_Undef_Exc;
+						}
 						else
 						{
 							// Conditional Branch
@@ -759,7 +765,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				temp_calc = cpu_Regs[cpu_ALU_Reg_Dest];
 			}
-
+			
 			// all F's seems to be a special case
 			if ((temp_calc & 0xFF000000) == 0xFF000000)
 			{

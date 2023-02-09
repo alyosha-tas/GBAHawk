@@ -51,8 +51,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x12A: ret = (byte)(ser_Data_M & 0xFF); break;
 				case 0x12B: ret = (byte)((ser_Data_M & 0xFF00) >> 8); break;
 
-				case 0x130: ret = (byte)(controller_state & 0xFF); break;
-				case 0x131: ret = (byte)((controller_state & 0xFF00) >> 8); break;
+				case 0x130: ret = (byte)(controller_state & 0xFF); Is_Lag = false; break;
+				case 0x131: ret = (byte)((controller_state & 0xFF00) >> 8); Is_Lag = false; break;
 				case 0x132: ret = (byte)(key_CTRL & 0xFF); break;
 				case 0x133: ret = (byte)((key_CTRL & 0xFF00) >> 8); break;
 
@@ -98,7 +98,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x128: ret = ser_CTRL; break;
 				case 0x12A: ret = ser_Data_M; break;
 
-				case 0x130: ret = controller_state; break;
+				case 0x130: ret = controller_state; Is_Lag = false; break;
 				case 0x132: ret = key_CTRL; break;
 
 				case 0x134: ret = ser_Mode; break;
@@ -130,7 +130,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x124: ret = (uint)((ser_Data_3 << 16) | ser_Data_2); break;
 				case 0x128: ret = (uint)((ser_Data_M << 16) | ser_CTRL); break;
 
-				case 0x130: ret = (uint)((key_CTRL << 16) | controller_state); break;
+				case 0x130: ret = (uint)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
 
 				case 0x134: ret = (uint)((0x00000000) | ser_Mode); break;
 
@@ -281,8 +281,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ser_CTRL & 0x4000) == 0x4000)
 							{
 								INT_Flags |= 0x80;
-
-								if ((INT_EN & 0x80) == 0x80) { cpu_Trigger_Unhalt = true; }
 
 								ser_Delay = true;
 								ser_Delay_cd = 2;

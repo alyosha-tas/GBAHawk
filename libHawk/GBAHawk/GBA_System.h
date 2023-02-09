@@ -247,7 +247,11 @@ namespace GBAHawk
 				if (ser_Delay_cd == 0)
 				{
 					// trigger IRQ
-					if (((INT_EN & 0x80) == 0x80) && INT_Master_On) { cpu_IRQ_Input = true; }
+					if ((INT_EN & INT_Flags & 0x80) == 0x80)
+					{
+						cpu_Trigger_Unhalt = true;
+						if (INT_Master_On) { cpu_IRQ_Input = true; }
+					}
 
 					ser_Delay = false;
 					// check if all delay sources are false
@@ -268,7 +272,11 @@ namespace GBAHawk
 				if (key_Delay_cd == 0)
 				{
 					// trigger IRQ
-					if (((INT_EN & 0x1000) == 0x1000) && INT_Master_On) { cpu_IRQ_Input = true; }
+					if ((INT_EN & INT_Flags & 0x1000) == 0x1000)
+					{
+						cpu_Trigger_Unhalt = true;
+						if (INT_Master_On) { cpu_IRQ_Input = true; }
+					}
 
 					key_Delay = false;
 					// check if all delay sources are false
@@ -291,8 +299,6 @@ namespace GBAHawk
 					if (ppu_VBL_IRQ_cd == 2)
 					{
 						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }
-
-						if ((INT_EN & 0x1) == 0x1) { cpu_Trigger_Unhalt = true; }
 					}
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
@@ -304,7 +310,11 @@ namespace GBAHawk
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if ((INT_EN & INT_Flags & 0x1) == 0x1)
+						{ 
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
@@ -322,8 +332,6 @@ namespace GBAHawk
 					{
 						// trigger HBL IRQ
 						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }
-
-						if ((INT_EN & 0x2) == 0x2) { cpu_Trigger_Unhalt = true; }
 					}
 					else if (ppu_HBL_IRQ_cd == 1)
 					{
@@ -339,7 +347,11 @@ namespace GBAHawk
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if ((INT_EN & INT_Flags & 0x2) == 0x2)
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
@@ -356,12 +368,14 @@ namespace GBAHawk
 					if (ppu_LYC_IRQ_cd == 2)
 					{
 						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }
-
-						if ((INT_EN & 0x4) == 0x4) { cpu_Trigger_Unhalt = true; }
 					}
 					else if (ppu_LYC_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if ((INT_EN & INT_Flags & 0x4) == 0x4)
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
@@ -441,7 +455,6 @@ namespace GBAHawk
 						if ((key_CTRL & 0x3FF) != 0)
 						{
 							INT_Flags |= 0x1000;
-							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
 							key_Delay = true;
 							key_Delay_cd = 2;
@@ -457,7 +470,6 @@ namespace GBAHawk
 						if ((key_CTRL & 0x3FF) != 0x3FF)
 						{
 							INT_Flags |= 0x1000;
-							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
 							key_Delay = true;
 							key_Delay_cd = 2;
@@ -522,14 +534,6 @@ namespace GBAHawk
 
 		void On_VBlank()
 		{
-			Is_Lag = false;
-
-			// update the controller state on VBlank
-			controller_state = New_Controller;
-
-			// check if controller state caused interrupt
-			do_controller_check();
-
 			// send the image on VBlank
 			std::memcpy(Frame_Buffer, video_buffer, sizeof(uint32_t) * 240 * 160);
 		}
@@ -1535,10 +1539,8 @@ namespace GBAHawk
 		const static uint16_t cpu_Internal_Can_Save_ARM = 43;
 		const static uint16_t cpu_Internal_Can_Save_TMB = 44;
 		const static uint16_t cpu_Internal_Halted = 46;
-		const static uint16_t cpu_Internal_Halted_2 = 47;
-		const static uint16_t cpu_Internal_Halted_3 = 48;
-		const static uint16_t cpu_Multiply_Cycles = 49;
-		const static uint16_t cpu_Pause_For_DMA = 50;
+		const static uint16_t cpu_Multiply_Cycles = 47;
+		const static uint16_t cpu_Pause_For_DMA = 48;
 		
 		// Instruction Operations ARM
 		const static uint16_t cpu_ARM_AND = 10;
@@ -2373,6 +2375,12 @@ namespace GBAHawk
 						// Software Interrupt
 						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
 						cpu_Exception_Type = cpu_SWI_Exc;
+					}
+					else if ((cpu_Instr_TMB_2 & 0xE00) == 0xE00)
+					{
+						// Undefined instruction
+						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+						cpu_Exception_Type = cpu_Undef_Exc;
 					}
 					else
 					{
@@ -4976,6 +4984,11 @@ namespace GBAHawk
 						// Software Interrupt
 						return "SWI";
 					}
+					else if ((cpu_Instr_TMB_2 & 0xE00) == 0xE00)
+					{
+						// Undefined instruction
+						return "Undefined";
+					}
 					else
 					{
 						// Conditional Branch
@@ -6555,8 +6568,8 @@ namespace GBAHawk
 				case 0x12A: ret = (uint8_t)(ser_Data_M & 0xFF); break;
 				case 0x12B: ret = (uint8_t)((ser_Data_M & 0xFF00) >> 8); break;
 
-				case 0x130: ret = (uint8_t)(controller_state & 0xFF); break;
-				case 0x131: ret = (uint8_t)((controller_state & 0xFF00) >> 8); break;
+				case 0x130: ret = (uint8_t)(controller_state & 0xFF); Is_Lag = false; break;
+				case 0x131: ret = (uint8_t)((controller_state & 0xFF00) >> 8); Is_Lag = false; break;
 				case 0x132: ret = (uint8_t)(key_CTRL & 0xFF); break;
 				case 0x133: ret = (uint8_t)((key_CTRL & 0xFF00) >> 8); break;
 
@@ -6602,7 +6615,7 @@ namespace GBAHawk
 				case 0x128: ret = ser_CTRL; break;
 				case 0x12A: ret = ser_Data_M; break;
 
-				case 0x130: ret = controller_state; break;
+				case 0x130: ret = controller_state; Is_Lag = false; break;
 				case 0x132: ret = key_CTRL; break;
 
 				case 0x134: ret = ser_Mode; break;
@@ -6635,7 +6648,7 @@ namespace GBAHawk
 				case 0x124: ret = (uint32_t)((ser_Data_3 << 16) | ser_Data_2); break;
 				case 0x128: ret = (uint32_t)((ser_Data_M << 16) | ser_CTRL); break;
 
-				case 0x130: ret = (uint32_t)((key_CTRL << 16) | controller_state); break;
+				case 0x130: ret = (uint32_t)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
 
 				case 0x134: ret = (uint32_t)((0x00000000) | ser_Mode); break;
 

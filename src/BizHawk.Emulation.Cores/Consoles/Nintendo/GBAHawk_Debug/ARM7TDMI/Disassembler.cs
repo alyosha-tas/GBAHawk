@@ -708,6 +708,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// Software Interrupt
 							return "SWI";
 						}
+						else if ((cpu_Instr_TMB_2 & 0xE00) == 0xE00)
+						{
+							// Undefined instruction
+							return "Undefined";
+						}
 						else
 						{
 							// Conditional Branch

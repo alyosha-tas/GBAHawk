@@ -106,14 +106,24 @@ namespace GBAHawk
 
 		bool FrameAdvance(uint16_t controller_1,  bool render, bool rendersound)
 		{
-			GBA.Is_Lag = true;
-
 			GBA.New_Controller = controller_1;
+
+			// update the controller state
+			GBA.controller_state = GBA.New_Controller;
+
+			// as long as not in stop mode, vblank will occur and the controller will be checked
+			if (GBA.VBlank_Rise || GBA.stopped)
+			{
+				// check if controller state caused interrupt
+				GBA.do_controller_check();
+			}
 
 			GBA.snd_Master_Clock = 0;
 
 			GBA.num_samples_L = 0;
 			GBA.num_samples_R = 0;
+
+			GBA.Is_Lag = true;
 
 			GBA.VBlank_Rise = false;
 

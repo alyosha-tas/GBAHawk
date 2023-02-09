@@ -16,6 +16,8 @@ using BizHawk.Common.ReflectionExtensions;
 	Open bus behaviour needs to be done more carefully
 
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
+
+	Need to implement STOP mode
 */
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common

@@ -17,7 +17,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
 		public bool VBlank_Rise;
-		public bool controller_was_checked;
 		public bool delays_to_process;
 		public bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
 
@@ -40,23 +39,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				HardReset();
 			}
 
-			Is_Lag = true;
+			// update the controller state on VBlank
+			GetControllerState(Frame_Controller);
 
-			controller_was_checked = false;
+			// as long as not in stop mode, vblank will occur and the controller will be checked
+			if (VBlank_Rise || stopped)
+			{
+				// check if controller state caused interrupt
+				do_controller_check();
+			}
+
+			Is_Lag = true;
 
 			VBlank_Rise = false;
 
-			do_frame(controller);
-
-			// if the game is halted but controller interrupts are on, check for interrupts
-			// if the game is stopped, any button press will un-stop even if interrupts are off
-			if (stopped && !controller_was_checked)
-			{
-				// update the controller state on VBlank
-				GetControllerState(controller);
-
-				do_controller_check();
-			}
+			do_frame();
 
 			if (Is_Lag)
 			{
@@ -68,7 +65,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			return true;
 		}
 
-		public void do_frame(IController controller)
+		public void do_frame()
 		{
 			while (!VBlank_Rise)
 			{
@@ -89,16 +86,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void On_VBlank()
 		{
-			Is_Lag = false;
-
-			controller_was_checked = true;
-
-			// update the controller state on VBlank
-			GetControllerState(Frame_Controller);
-
-			// check if controller state caused interrupt
-			do_controller_check();
-
 			// send the image on VBlank
 			SendVideoBuffer();
 
@@ -145,7 +132,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if ((key_CTRL & 0x3FF) != 0)
 						{
 							INT_Flags |= 0x1000;
-							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
 							key_Delay = true;
 							key_Delay_cd = 2;
@@ -161,7 +147,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if ((key_CTRL & 0x3FF) != 0x3FF)
 						{
 							INT_Flags |= 0x1000;
-							if ((INT_EN & 0x1000) == 0x1000) { cpu_Trigger_Unhalt = true; }
 
 							key_Delay = true;
 							key_Delay_cd = 2;
@@ -236,7 +221,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (ser_Delay_cd == 0)
 				{
 					// trigger IRQ
-					if (((INT_EN & 0x80) == 0x80) && INT_Master_On) { cpu_IRQ_Input = true; }
+					if (((INT_EN & INT_Flags & 0x80) == 0x80))
+					{
+						cpu_Trigger_Unhalt = true;
+						if (INT_Master_On) { cpu_IRQ_Input = true; }
+					}
 
 					ser_Delay = false;
 					// check if all delay sources are false
@@ -257,7 +246,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (key_Delay_cd == 0)
 				{
 					// trigger IRQ
-					if (((INT_EN & 0x1000) == 0x1000) && INT_Master_On) { cpu_IRQ_Input = true; }
+					if (((INT_EN & INT_Flags & 0x1000) == 0x1000))
+					{
+						cpu_Trigger_Unhalt = true;
+						if (INT_Master_On) { cpu_IRQ_Input = true; }
+					}
 
 					key_Delay = false;
 					// check if all delay sources are false
@@ -279,9 +272,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (ppu_VBL_IRQ_cd == 2)
 					{
-						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }
-
-						if ((INT_EN & 0x1) == 0x1) { cpu_Trigger_Unhalt = true; }
+						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }				
 					}
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
@@ -289,11 +280,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
 						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
 						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }				
+						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }					
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x1) == 0x1) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if (((INT_EN & INT_Flags & 0x1) == 0x1)) 
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }			
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
@@ -310,9 +305,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_HBL_IRQ_cd == 2)
 					{
 						// trigger HBL IRQ
-						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }
-
-						if ((INT_EN & 0x2) == 0x2) { cpu_Trigger_Unhalt = true; }			
+						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }							
 					}	
 					else if (ppu_HBL_IRQ_cd == 1)
 					{
@@ -323,12 +316,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
 							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
 							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
+							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }						
 						}
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x2) == 0x2) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if (((INT_EN & INT_Flags & 0x2) == 0x2))
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
@@ -344,13 +341,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (ppu_LYC_IRQ_cd == 2)
 					{
-						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }
-
-						if ((INT_EN & 0x4) == 0x4) { cpu_Trigger_Unhalt = true; }
+						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }					
 					}
 					else if (ppu_LYC_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x4) == 0x4) && INT_Master_On) { cpu_IRQ_Input = true; }
+						if (((INT_EN & INT_Flags & 0x4) == 0x4))
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
 
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))

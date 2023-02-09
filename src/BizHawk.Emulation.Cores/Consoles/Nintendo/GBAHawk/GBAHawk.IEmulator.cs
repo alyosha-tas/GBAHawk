@@ -71,7 +71,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				HardReset();
 			}
 
-			LibGBAHawk.GBA_frame_advance(GBA_Pntr, cont_result, true, true);
+			_isLag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, cont_result, true, true);
 
 			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 

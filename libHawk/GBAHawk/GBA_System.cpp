@@ -1885,8 +1885,6 @@ namespace GBAHawk
 							{
 								INT_Flags |= 0x80;
 
-								if ((INT_EN & 0x80) == 0x80) { cpu_Trigger_Unhalt = true; }
-
 								ser_Delay = true;
 								ser_Delay_cd = 2;
 								delays_to_process = true;
@@ -1925,11 +1923,14 @@ namespace GBAHawk
 						if (tim_IRQ_CD[i] == 2)
 						{
 							INT_Flags |= (uint16_t)(0x8 << i);
-							if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
 						}
 						else if (tim_IRQ_CD[i] == 0)
 						{
-							if (((INT_EN & (0x8 << i)) == (0x8 << i)) && INT_Master_On) { cpu_IRQ_Input = true; }
+							if (((INT_EN & INT_Flags & (0x8 << i)) == (0x8 << i)))
+							{ 
+								cpu_Trigger_Unhalt = true;
+								if (INT_Master_On) { cpu_IRQ_Input = true; }
+							}
 						}
 
 						// check if all timers disabled
@@ -2122,15 +2123,13 @@ namespace GBAHawk
 							if (dma_IRQ_cd[i] == 2)
 							{
 								INT_Flags |= (uint16_t)(0x1 << (8 + i));
-								if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i))) { cpu_Trigger_Unhalt = true; }
-
 							}
 							else if (dma_IRQ_cd[i] == 0)
 							{
-
 								// trigger IRQ (Bits 8 through 11)
-								if ((INT_EN & (0x1 << (8 + i))) == (0x1 << (8 + i)))
+								if ((INT_EN & INT_Flags & (0x1 << (8 + i))) == (0x1 << (8 + i)))
 								{
+									cpu_Trigger_Unhalt = true;
 									if (INT_Master_On) { cpu_IRQ_Input = true; }
 								}
 							}
@@ -2612,6 +2611,9 @@ namespace GBAHawk
 					if (cpu_ARM_Cond_Passed)
 					{
 						cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+
+						// instructions with internal cycles revert to non-sequential accesses 
+						cpu_Seq_Access = false;
 					}
 					else
 					{
@@ -2621,12 +2623,12 @@ namespace GBAHawk
 
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_ARM(); }
+
+						cpu_Seq_Access = true;
 					}
 
 					cpu_Fetch_Cnt = 0;
-					cpu_Fetch_Wait = 0;
-
-					cpu_Seq_Access = true;
+					cpu_Fetch_Wait = 0;			
 				}
 				break;
 
@@ -3319,7 +3321,6 @@ namespace GBAHawk
 
 			case cpu_Multiply_ARM:
 				// Multiplication with possibly early termination
-				// for now all multiplications take 20 cycle (the max)
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
@@ -3578,7 +3579,8 @@ namespace GBAHawk
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 
-					cpu_Seq_Access = true;
+					// instructions with internal cycles revert to non-sequential accesses 
+					cpu_Seq_Access = false;
 				}
 				break;
 
@@ -4092,7 +4094,6 @@ namespace GBAHawk
 
 			case cpu_Multiply_TMB:
 				// Multiplication with possibly early termination
-				// for now all multiplications take 20 cycle (the max)
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
@@ -4356,7 +4357,8 @@ namespace GBAHawk
 					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 					else { cpu_Decode_ARM(); }
 
-					cpu_Seq_Access = true;
+					// instructions with internal cycles revert to non-sequential accesses 
+					cpu_Seq_Access = false;
 				}
 				break;
 
@@ -4413,10 +4415,6 @@ namespace GBAHawk
 				break;
 
 			case cpu_Internal_Halted:
-				// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
-				// if IME is enabled, then instead wait for an interrupt to occur
-				// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
-				// before the interrupt takes over
 				if (cpu_Just_Halted)
 				{
 					// must be halted for at least one cycle, even if conditions for unhalting are immediately true
@@ -4426,33 +4424,21 @@ namespace GBAHawk
 				{
 					if (cpu_Trigger_Unhalt)
 					{
+						cpu_Halted = false;
+						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
 						if (INT_Master_On)
 						{
-							cpu_Instr_Type = cpu_Internal_Halted_3;
+							cpu_Instr_Type = cpu_Prefetch_IRQ;
 						}
 						else
 						{
-							cpu_Halted = false;
-							cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-							cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
 							if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
 							else { cpu_Decode_ARM(); }
 						}
 					}
 				}
-				break;
-
-			case cpu_Internal_Halted_2:
-				cpu_Halted = false;
-				cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-				cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-				cpu_Instr_Type = cpu_Prefetch_IRQ;
-				break;
-
-			case cpu_Internal_Halted_3:
-				cpu_Instr_Type = cpu_Internal_Halted_2;
 				break;
 
 			case cpu_Multiply_Cycles:
@@ -4516,7 +4502,8 @@ namespace GBAHawk
 							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 							else { cpu_Decode_ARM(); }
 
-							cpu_Seq_Access = true;
+							// instructions with internal cycles revert to non-sequential accesses 
+							cpu_Seq_Access = false;
 						}
 						break;
 
@@ -4573,10 +4560,6 @@ namespace GBAHawk
 						break;
 
 					case cpu_Internal_Halted:
-						// if interrupts cannot be triggered by IME being false, then only the condition for IE & IF != 0 is checked
-						// if IME is enabled, then instead wait for an interrupt to occur
-						// IF seems to be set a few cycles before interrupts are registered, so this avoids unhalting, and executing cycles
-						// before the interrupt takes over
 						if (cpu_Just_Halted)
 						{
 							// must be halted for at least one cycle, even if conditions for unhalting are immediately true
@@ -4586,33 +4569,21 @@ namespace GBAHawk
 						{
 							if (cpu_Trigger_Unhalt)
 							{
+								cpu_Halted = false;
+								cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
+								cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
+
 								if (INT_Master_On)
 								{
-									cpu_Instr_Type = cpu_Internal_Halted_3;
+									cpu_Instr_Type = cpu_Prefetch_IRQ;
 								}
 								else
 								{
-									cpu_Halted = false;
-									cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-									cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
 									if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
 									else { cpu_Decode_ARM(); }
 								}
 							}
 						}
-						break;
-
-					case cpu_Internal_Halted_2:
-						cpu_Halted = false;
-						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-						cpu_Instr_Type = cpu_Prefetch_IRQ;
-						break;
-
-					case cpu_Internal_Halted_3:
-						cpu_Instr_Type = cpu_Internal_Halted_2;
 						break;
 
 					case cpu_Multiply_Cycles:
