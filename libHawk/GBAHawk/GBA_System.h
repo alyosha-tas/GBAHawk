@@ -9512,7 +9512,7 @@ namespace GBAHawk
 			// does this effect hblank timing?
 
 			// free access in VBlank
-			if ((ppu_LY >= 0) && (ppu_LY < 160))
+			if ((ppu_LY < 160) && !ppu_Forced_Blank)
 			{
 				// VRAM
 				switch (ppu_BG_Mode)
