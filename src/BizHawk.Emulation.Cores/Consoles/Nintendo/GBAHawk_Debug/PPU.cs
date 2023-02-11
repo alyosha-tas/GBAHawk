@@ -13,7 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	When accessing OAM (7000000h) or OBJ VRAM (6010000h) by HBlank Timing, then the "H-Blank Interval Free" bit in DISPCNT register must be set.
 
-	TODO: odd vertical windowing, lock VRAM when rendering, add in palette accesses for blending
+	TODO: odd vertical windowing, sprite VRAM / OAM accesses
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -1030,6 +1030,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			bool Brighten_Final_Pixel = false;
 			bool Blend_Final_Pixel = false;
 
+			// Palette fetches for BG's are true unless they happen from mode 3 or 5, where the color is directly encoded in VRAM
+			// When this occurs, the first BG pixel will always be from BG 2, and the second from backdrop
+			bool Fetch_BG = true;
+
+			bool Fetch_Target_1 = false;
+			bool Fetch_Target_2 = false;
+
 			for (int a = 0; a < 4; a++)
 			{
 				bg_pixel[a] = 0xFFFFFFFF;
@@ -1596,6 +1603,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										 ((Pixel_Color_data & 0x1F) << 19) | 
 										 ((Pixel_Color_data & 0x3E0) << 6) | 
 										 ((Pixel_Color_data & 0x7C00) >> 7));
+
+							Fetch_BG = false;
 						}
 					}
 					break;
@@ -1668,6 +1677,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										 ((Pixel_Color_data & 0x1F) << 19) |
 										 ((Pixel_Color_data & 0x3E0) << 6) |
 										 ((Pixel_Color_data & 0x7C00) >> 7));
+
+							Fetch_BG = false;
 						}
 					}
 					break;
@@ -1702,11 +1713,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							bld_pixel_1 = spr_pixel;
 							bld_pixel_2 = bg_pixel_f;
 
+							Fetch_Target_1 = true;
+							Fetch_Target_2 = Fetch_BG;
+
 							Blend_Final_Pixel = true;
 						}
 						else
 						{
 							final_pixel = spr_pixel;
+
+							Fetch_Target_1 = true;
 
 							if ((ppu_SFX_mode >= 2) && ppu_SFX_OBJ_Target_1 && Color_FX_Go)
 							{
@@ -1720,6 +1736,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (ppu_SFX_mode != 1)
 						{
 							final_pixel = spr_pixel;
+
+							Fetch_Target_1 = true;
 
 							if ((ppu_SFX_mode != 0) && ppu_SFX_OBJ_Target_1)
 							{
@@ -1735,17 +1753,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								bld_pixel_1 = spr_pixel;
 								bld_pixel_2 = bg_pixel_f;
 
+								Fetch_Target_1 = true;
+								Fetch_Target_2 = Fetch_BG;
+
 								Blend_Final_Pixel = true;
 							}
 							else
 							{
 								final_pixel = spr_pixel;
+
+								Fetch_Target_1 = true;
 							}
 						}
 					}
 					else
 					{
 						final_pixel = spr_pixel;
+
+						Fetch_Target_1 = true;
 					}
 				}
 				else
@@ -1756,6 +1781,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (ppu_SFX_mode != 1)
 						{
 							final_pixel = bg_pixel_f;
+
+							Fetch_Target_1 = Fetch_BG;
 
 							if ((ppu_SFX_mode != 0) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
 							{
@@ -1774,6 +1801,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									bld_pixel_1 = bg_pixel_f;
 									bld_pixel_2 = bg_pixel_s;
 
+									Fetch_Target_1 = Fetch_BG;
+									Fetch_Target_2 = true;
+
 									Blend_Final_Pixel = true;
 								}
 								else if ((ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
@@ -1782,22 +1812,31 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									bld_pixel_1 = bg_pixel_f;
 									bld_pixel_2 = spr_pixel;
 
+									Fetch_Target_1 = Fetch_BG;
+									Fetch_Target_2 = true;
+
 									Blend_Final_Pixel = true;
 								}
 								else
 								{
 									final_pixel = bg_pixel_f;
+
+									Fetch_Target_1 = Fetch_BG;
 								}
 							}
 							else
 							{
 								final_pixel = bg_pixel_f;
+
+								Fetch_Target_1 = Fetch_BG;
 							}
 						}
 					}
 					else
 					{
 						final_pixel = bg_pixel_f;
+
+						Fetch_Target_1 = Fetch_BG;
 					}
 				}
 			}
@@ -1809,6 +1848,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_SFX_mode != 1)
 					{
 						final_pixel = bg_pixel_f;
+
+						Fetch_Target_1 = Fetch_BG;
 
 						if ((ppu_SFX_mode >= 2) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
 						{
@@ -1825,17 +1866,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							bld_pixel_1 = bg_pixel_f;
 							bld_pixel_2 = bg_pixel_s;
 
+							Fetch_Target_1 = Fetch_BG;
+							Fetch_Target_2 = true;
+
 							Blend_Final_Pixel = true;
 						}
 						else
 						{
 							final_pixel = bg_pixel_f;
+
+							Fetch_Target_1 = Fetch_BG;
 						}
 					}
 				}
 				else
 				{
 					final_pixel = bg_pixel_f;
+
+					Fetch_Target_1 = Fetch_BG;
 				}
 			}
 
@@ -1889,6 +1937,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			// push pixel to display
 			vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = final_pixel;
+
+			// add palette accesses to the access array
+			if (Fetch_Target_1) { ppu_PALRAM_Access[47 + ppu_Display_Cycle * 4] = true; }
+			if (Fetch_Target_2) { ppu_PALRAM_Access[49 + ppu_Display_Cycle * 4] = true; }
 		}
 
 		public void ppu_Render_Sprites()
@@ -2745,23 +2797,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						for (int i = 1007; i < 1232; i++)
 						{
 							ppu_VRAM_Access[i] = false;
-						}
-
-						break;
-				}
-
-				// PALRAM
-				// modes 3 and 5 do not make PALRAM accesses
-				switch (ppu_BG_Mode)
-				{
-					case 0:
-					case 1:
-					case 2:
-					case 4:
-
-						for (int i = 0; i < 240; i++)
-						{
-							ppu_PALRAM_Access[32 + 12 + 3 + i * 4] = true;
 						}
 
 						break;
