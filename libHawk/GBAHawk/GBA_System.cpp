@@ -97,6 +97,9 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM[addr & 0x3FF];
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -108,10 +111,16 @@ namespace GBAHawk
 				{
 					ret = VRAM[addr & 0xFFFF];
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else
 			{
 				ret = PALRAM[addr & 0x3FF];
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -245,6 +254,9 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -256,10 +268,16 @@ namespace GBAHawk
 				{
 					ret = VRAM_16[(addr & 0xFFFE) >> 1];
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -387,6 +405,9 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_32[(addr & 0x3FC) >> 2];
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -398,10 +419,16 @@ namespace GBAHawk
 				{
 					ret = VRAM_32[(addr & 0xFFFC) >> 2];
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else
 			{
 				ret = PALRAM_32[(addr & 0x3FC) >> 2];
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -508,6 +535,9 @@ namespace GBAHawk
 											((ppu_col_dat & 0x3E0) << 6) |
 											((ppu_col_dat & 0x7C00) >> 7));
 				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -534,11 +564,18 @@ namespace GBAHawk
 					VRAM[addr & 0xFFFF] = value;
 					VRAM[(addr + 1) & 0xFFFF] = value;
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
 				// 8 bit writes to OAM ignored
 				// OAM[addr & 0x3FF] = value;
+
+				// are accesses ignored?
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -622,6 +659,9 @@ namespace GBAHawk
 											((ppu_col_dat & 0x3E0) << 6) |
 											((ppu_col_dat & 0x7C00) >> 7));
 				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -634,6 +674,9 @@ namespace GBAHawk
 				{
 					VRAM_16[(addr & 0xFFFE) >> 1] = value;
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -645,6 +688,9 @@ namespace GBAHawk
 				{
 					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
 				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -723,6 +769,9 @@ namespace GBAHawk
 											((ppu_col_dat & 0x3E0) << 6) |
 											((ppu_col_dat & 0x7C00) >> 7));
 				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -735,6 +784,9 @@ namespace GBAHawk
 				{
 					VRAM_32[(addr & 0xFFFC) >> 2] = value;
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -747,6 +799,9 @@ namespace GBAHawk
 					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
 					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
 				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -936,6 +991,9 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -947,10 +1005,16 @@ namespace GBAHawk
 				{
 					ret = VRAM_16[(addr & 0xFFFF) >> 1];
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 
 			dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
@@ -1036,6 +1100,9 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				dma_Last_Bus_Value[chan] = OAM_32[(addr & 0x3FC) >> 2];
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -1047,10 +1114,16 @@ namespace GBAHawk
 				{
 					dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0xFFFC) >> 2];
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else
 			{
 				dma_Last_Bus_Value[chan] = PALRAM_32[(addr & 0x3FC) >> 2];
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1120,6 +1193,9 @@ namespace GBAHawk
 											((ppu_col_dat & 0x3E0) << 6) |
 											((ppu_col_dat & 0x7C00) >> 7));
 				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -1131,6 +1207,9 @@ namespace GBAHawk
 				{
 					VRAM_16[(addr & 0xFFFE) >> 1] = value;
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -1141,6 +1220,9 @@ namespace GBAHawk
 				{
 					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
 				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 			{
@@ -1206,6 +1288,9 @@ namespace GBAHawk
 											((ppu_col_dat & 0x3E0) << 6) |
 											((ppu_col_dat & 0x7C00) >> 7));
 				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -1217,6 +1302,9 @@ namespace GBAHawk
 				{
 					VRAM_32[(addr & 0xFFFC) >> 2] = value;
 				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -1228,6 +1316,9 @@ namespace GBAHawk
 					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
 					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
 				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
 			}
 			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 			{
@@ -1724,8 +1815,6 @@ namespace GBAHawk
 					ppu_ROT_REF_LY[3] = 0;
 				}
 
-				ppu_Calculate_Access_Timing();
-
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
@@ -1803,6 +1892,8 @@ namespace GBAHawk
 						}
 					}
 				}
+
+				ppu_Calculate_Access_Timing();
 			}
 			else if (ppu_Cycle == 1007)
 			{
@@ -1819,13 +1910,53 @@ namespace GBAHawk
 				if (ppu_In_VBlank)
 				{
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
-					if ((ppu_LY == 227) && !ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+					if (ppu_LY == 227)
 					{
-						ppu_Render_Sprites();
+						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+						{
+							ppu_Render_Sprites();
+						}
+
+						// should be only OAM here
+						if (ppu_Memory_In_Use)
+						{
+							if (ppu_OAM_In_Use)
+							{
+								if (ppu_OAM_Access[ppu_Cycle])
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
+						}
 					}
 				}
 				else
 				{
+					if (ppu_Memory_In_Use)
+					{
+						if (ppu_VRAM_In_Use)
+						{
+							if (ppu_VRAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+						else if (ppu_PALRAM_In_Use)
+						{
+							if (ppu_PALRAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+						else
+						{
+							if (ppu_OAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+					}
+					
 					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
 					{
 						ppu_Render_Sprites();
@@ -4300,7 +4431,6 @@ namespace GBAHawk
 					// Invalidate instruction pipeline
 					cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
 
-					cpu_Cycle_Save = 0;
 					cpu_Seq_Access = false;
 
 					cpu_Fetch_Cnt = 0;
@@ -4364,7 +4494,9 @@ namespace GBAHawk
 
 			case cpu_Internal_Can_Save_ARM:
 				// Last Internal cycle of an instruction, note that the actual operation was already completed
-				// This cycle is interruptable, and if not interrupted can save a memory access cycle	
+				// This cycle is interruptable
+				// acording to ARM documentation, this cycle can be combined with the following memory access
+				// but it appears that the GBA does not do so
 				cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 				if (cpu_Invalidate_Pipeline)
@@ -4373,8 +4505,8 @@ namespace GBAHawk
 				}
 				else
 				{
-					// if he next cycle has non-zero wait states, we can save a cycle
-					if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+					// A memory access cycle could be saved here, but the GBA does not seem to implement it
+					if (cpu_Internal_Save_Access) { }
 
 					// next instruction was already prefetched, decode it here
 					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
@@ -4390,7 +4522,9 @@ namespace GBAHawk
 
 			case cpu_Internal_Can_Save_TMB:
 				// Last Internal cycle of an instruction, note that the actual operation was already completed
-				// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+				// This cycle is interruptable
+				// acording to ARM documentation, this cycle can be combined with the following memory access
+				// but it appears that the GBA does not do so				
 				cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 				if (cpu_Invalidate_Pipeline)
@@ -4399,8 +4533,8 @@ namespace GBAHawk
 				}
 				else
 				{
-					// if he next cycle has non-zero wait states, we can save a cycle
-					if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+					// A memory access cycle could be saved here, but the GBA does not seem to implement it
+					if (cpu_Internal_Save_Access) { }
 
 					// next instruction was already prefetched, decode it here
 					cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -4509,7 +4643,9 @@ namespace GBAHawk
 
 					case cpu_Internal_Can_Save_ARM:
 						// Last Internal cycle of an instruction, note that the actual operation was already completed
-						// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+						// This cycle is interruptable
+						// acording to ARM documentation, this cycle can be combined with the following memory access
+						// but it appears that the GBA does not do so			
 						cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 						if (cpu_Invalidate_Pipeline)
@@ -4518,8 +4654,8 @@ namespace GBAHawk
 						}
 						else
 						{
-							// if he next cycle has non-zero wait states, we can save a cycle
-							if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+							// A memory access cycle could be saved here, but the GBA does not seem to implement it
+							if (cpu_Internal_Save_Access) { }
 
 							// next instruction was already prefetched, decode it here
 							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
@@ -4535,7 +4671,9 @@ namespace GBAHawk
 
 					case cpu_Internal_Can_Save_TMB:
 						// Last Internal cycle of an instruction, note that the actual operation was already completed
-						// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+						// This cycle is interruptable
+						// acording to ARM documentation, this cycle can be combined with the following memory access
+						// but it appears that the GBA does not do so			
 						cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 						if (cpu_Invalidate_Pipeline)
@@ -4544,8 +4682,8 @@ namespace GBAHawk
 						}
 						else
 						{
-							// if he next cycle has non-zero wait states, we can save a cycle
-							if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+							// A memory access cycle could be saved here, but the GBA does not seem to implement it
+							if (cpu_Internal_Save_Access) { }
 
 							// next instruction was already prefetched, decode it here
 							cpu_Instr_TMB_2 = cpu_Instr_TMB_1;

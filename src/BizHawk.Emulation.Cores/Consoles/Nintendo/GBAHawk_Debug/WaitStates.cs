@@ -52,9 +52,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
 					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
-
 					if (pre_Cycle_Glitch)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
@@ -80,39 +77,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if ((cart_RAM != null) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
-
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
 				}
 			}
 			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
 				if (addr >= 0x07000000)
 				{
+					if (ppu_OAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						ppu_OAM_In_Use = true;
+						ppu_Memory_In_Use = true;
+					}
 				}
 				else if (addr >= 0x06000000)
 				{
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle - 1;
+						wait_ret += 1;
 
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
-
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_VRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -121,20 +107,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						wait_ret += 1;
 
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_PALRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
-
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
 			}
-
-			cpu_Cycle_Save = 0;
 
 			return wait_ret;
 		}
@@ -163,9 +144,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
 					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
-
 					if (pre_Cycle_Glitch)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
@@ -191,39 +169,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if ((cart_RAM != null) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
-
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
 				}
 			}
 			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
 				if (addr >= 0x07000000)
 				{
+					if (ppu_OAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						ppu_OAM_In_Use = true;
+						ppu_Memory_In_Use = true;
+					}
 				}
 				else if (addr >= 0x06000000)
 				{
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle - 1;
+						wait_ret += 1;
 
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
-
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_VRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -232,20 +199,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						wait_ret += 1;
 
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_PALRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
-
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
 			}
-
-			cpu_Cycle_Save = 0;
 
 			return wait_ret;
 		}
@@ -274,9 +236,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
 					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
-
 					if (pre_Cycle_Glitch)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
@@ -302,89 +261,51 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if ((cart_RAM != null) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
-
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
 				}
 			}
 			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
 				if (addr >= 0x07000000)
 				{
+					if (ppu_OAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						ppu_OAM_In_Use = true;
+						ppu_Memory_In_Use = true;
+					}
 				}
 				else if (addr >= 0x06000000)
 				{			
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					// check both edges of the access
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle - 1;
-
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
-					}
-					else if (ppu_VRAM_Access[ppu_Cycle])
-					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle;
-
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
+						wait_ret += 1;			
 					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
+					// set to true since we also need to check the next cycle
+					ppu_VRAM_In_Use = true;
+					ppu_Memory_In_Use = true;
 				}
 				else
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					// check both edges of the access
 					if (ppu_PALRAM_Access[ppu_Cycle - 1])
 					{
 						wait_ret += 1;
 					}
-					else if (ppu_PALRAM_Access[ppu_Cycle])
-					{
-						wait_ret += 1;
-					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
+					// set to true since we also need to check the next cycle
+					ppu_PALRAM_In_Use = true;
+					ppu_Memory_In_Use = true;
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
-
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
 			}
-
-			cpu_Cycle_Save = 0;
 
 			return wait_ret;
 		}
@@ -439,9 +360,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
 						}
 
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
-
 						//abandon the prefetcher current fetch and reset the address
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
@@ -453,39 +371,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if ((cart_RAM != null) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
-
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
 				}
 			}
 			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
 				if (addr >= 0x07000000)
 				{
+					if (ppu_OAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						ppu_OAM_In_Use = true;
+						ppu_Memory_In_Use = true;
+					}
 				}
 				else if (addr >= 0x06000000)
 				{
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle - 1;
+						wait_ret += 1;
 
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
-
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_VRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -494,20 +401,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						wait_ret += 1;
 
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
+						ppu_PALRAM_In_Use = true;
+						ppu_Memory_In_Use = true;
 					}
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
-
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
 			}
-
-			cpu_Cycle_Save = 0;
 
 			return wait_ret;
 		}
@@ -598,9 +500,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
 						}
 
-						// possibly save 1 cycle
-						wait_ret -= cpu_Cycle_Save;
-
 						//abandon the prefetcher current fetch and reset the address
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
@@ -612,61 +511,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if ((cart_RAM != null) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
-
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
 				}
 			}
 			else if ((addr >= 0x05000000) && (addr < 0x08000000))
 			{
 				if (addr >= 0x07000000)
 				{
+					if (ppu_OAM_Access[ppu_Cycle - 1])
+					{
+						wait_ret += 1;
 
+						ppu_OAM_In_Use = true;
+						ppu_Memory_In_Use = true;
+					}
 				}
 				else if (addr >= 0x06000000)
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
-
-					// check both edges of the access
 					if (ppu_VRAM_Access[ppu_Cycle - 1])
 					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle - 1;
-
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
+						wait_ret += 1;	
 					}
-					else if (ppu_VRAM_Access[ppu_Cycle])
-					{
-						bool VRAM_Block = true;
-						int i = ppu_Cycle;
 
-						while (VRAM_Block)
-						{
-							if (ppu_VRAM_Access[i])
-							{
-								wait_ret += 1;
-								i += 1;
-							}
-							else
-							{
-								VRAM_Block = false;
-							}
-						}
-					}
+					// set to true since we also need to check the next cycle
+					ppu_VRAM_In_Use = true;
+					ppu_Memory_In_Use = true;
 				}
 				else
 				{
@@ -677,24 +547,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						wait_ret += 1;
 					}
-					else if (ppu_PALRAM_Access[ppu_Cycle])
-					{
-						wait_ret += 1;
-					}
 
-					// possibly save 1 cycle
-					wait_ret -= cpu_Cycle_Save;
+					// set to true since we also need to check the next cycle
+					ppu_PALRAM_In_Use = true;
+					ppu_Memory_In_Use = true;
 				}
 			}
 			else if ((addr >= 0x02000000) && (addr < 0x03000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
-
-				// possibly save 1 cycle
-				wait_ret -= cpu_Cycle_Save;
 			}
-
-			cpu_Cycle_Save = 0;
 
 			return wait_ret;
 		}

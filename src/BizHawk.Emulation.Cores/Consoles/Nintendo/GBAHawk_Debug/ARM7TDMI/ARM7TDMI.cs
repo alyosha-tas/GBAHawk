@@ -45,7 +45,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int cpu_ALU_Reg_Dest, cpu_ALU_Reg_Src;
 
-		public int cpu_Cycle_Save, cpu_Mul_Cycles, cpu_Mul_Cycles_Cnt;
+		public int cpu_Mul_Cycles, cpu_Mul_Cycles_Cnt;
 
 		public uint cpu_Instr_ARM_0, cpu_Instr_ARM_1, cpu_Instr_ARM_2;
 		public uint cpu_HS_Ofst_ARM0, cpu_HS_Ofst_ARM1, cpu_HS_Ofst_ARM2;
@@ -123,7 +123,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_ALU_Reg_Dest = cpu_ALU_Reg_Src = 0;
 
-			cpu_Cycle_Save = cpu_Mul_Cycles = cpu_Mul_Cycles_Cnt = 0;
+			cpu_Mul_Cycles = cpu_Mul_Cycles_Cnt = 0;
 
 			cpu_HS_Ofst_ARM0 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM2 = 0;
 
@@ -1916,7 +1916,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// Invalidate instruction pipeline
 						cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
 
-						cpu_Cycle_Save = 0;
 						cpu_Seq_Access = false;
 
 						cpu_Fetch_Cnt = 0;
@@ -1980,7 +1979,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case cpu_Internal_Can_Save_ARM:
 					// Last Internal cycle of an instruction, note that the actual operation was already completed
-					// This cycle is interruptable, and if not interrupted can save a memory access cycle	
+					// This cycle is interruptable
+					// acording to ARM documentation, this cycle can be combined with the following memory access
+					// but it appears that the GBA does not do so
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 					if (cpu_Invalidate_Pipeline)
@@ -1989,8 +1990,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else
 					{
-						// if he next cycle has non-zero wait states, we can save a cycle
-						if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+						// A memory access cycle could be saved here, but the GBA does not seem to implement it
+						if (cpu_Internal_Save_Access) {  }
 
 						// next instruction was already prefetched, decode it here
 						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
@@ -2006,7 +2007,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case cpu_Internal_Can_Save_TMB:
 					// Last Internal cycle of an instruction, note that the actual operation was already completed
-					// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+					// This cycle is interruptable
+					// acording to ARM documentation, this cycle can be combined with the following memory access
+					// but it appears that the GBA does not do so			
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 					if (cpu_Invalidate_Pipeline)
@@ -2015,8 +2018,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else
 					{
-						// if he next cycle has non-zero wait states, we can save a cycle
-						if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+						// A memory access cycle could be saved here, but the GBA does not seem to implement it
+						if (cpu_Internal_Save_Access) { }
 
 						// next instruction was already prefetched, decode it here
 						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -2125,7 +2128,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 							case cpu_Internal_Can_Save_ARM:
 								// Last Internal cycle of an instruction, note that the actual operation was already completed
-								// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+								// This cycle is interruptable,
+								// acording to ARM documentation, this cycle can be combined with the following memory access
+								// but it appears that the GBA does not do so				
 								cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 								if (cpu_Invalidate_Pipeline)
@@ -2134,8 +2139,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 								else
 								{
-									// if he next cycle has non-zero wait states, we can save a cycle
-									if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+									// A memory access cycle could be saved here, but the GBA does not seem to implement it
+									if (cpu_Internal_Save_Access) { }
 
 									// next instruction was already prefetched, decode it here
 									cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
@@ -2151,7 +2156,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 							case cpu_Internal_Can_Save_TMB:
 								// Last Internal cycle of an instruction, note that the actual operation was already completed
-								// This cycle is interruptable, and if not interrupted can save a memory access cycle				
+								// This cycle is interruptable,
+								// acording to ARM documentation, this cycle can be combined with the following memory access
+								// but it appears that the GBA does not do so				
 								cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
 								if (cpu_Invalidate_Pipeline)
@@ -2160,8 +2167,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 								else
 								{
-									// if he next cycle has non-zero wait states, we can save a cycle
-									if (cpu_Internal_Save_Access) { cpu_Cycle_Save = 0; }
+									// A memory access cycle could be saved here, but the GBA does not seem to implement it
+									if (cpu_Internal_Save_Access) { }
 
 									// next instruction was already prefetched, decode it here
 									cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -2296,7 +2303,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_ALU_Reg_Dest), ref cpu_ALU_Reg_Dest);
 			ser.Sync(nameof(cpu_ALU_Reg_Src), ref cpu_ALU_Reg_Src);
 
-			ser.Sync(nameof(cpu_Cycle_Save), ref cpu_Cycle_Save);
 			ser.Sync(nameof(cpu_Mul_Cycles), ref cpu_Mul_Cycles);
 			ser.Sync(nameof(cpu_Mul_Cycles_Cnt), ref cpu_Mul_Cycles_Cnt);
 

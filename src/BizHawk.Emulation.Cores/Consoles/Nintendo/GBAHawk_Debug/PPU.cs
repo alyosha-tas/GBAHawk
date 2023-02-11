@@ -51,6 +51,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool[] ppu_VRAM_Access = new bool[1233];
 		public bool[] ppu_PALRAM_Access = new bool[1233];
+		public bool[] ppu_OAM_Access = new bool[1233];
 
 		public uint ppu_Transparent_Color;
 
@@ -72,6 +73,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool ppu_In_VBlank;
 		public bool ppu_Delays;
+
+		public bool ppu_Memory_In_Use, ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
 		// Sprite Evaluation
 		public uint[] ppu_Sprite_Pixels = new uint[240 * 2];
@@ -813,8 +816,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_ROT_REF_LY[3] = 0;
 				}
 
-				ppu_Calculate_Access_Timing();
-
 				// exit HBlank
 				ppu_STAT &= 0xFD;
 
@@ -890,6 +891,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
+
+				ppu_Calculate_Access_Timing();
 			}
 			else if (ppu_Cycle == 1007)
 			{
@@ -906,13 +909,53 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (ppu_In_VBlank)
 				{
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
-					if ((ppu_LY == 227) && !ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+					if (ppu_LY == 227)					
 					{
-						ppu_Render_Sprites();
+						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+						{
+							ppu_Render_Sprites();
+						}
+
+						// should be only OAM here
+						if (ppu_Memory_In_Use)
+						{
+							if (ppu_OAM_In_Use)
+							{
+								if (ppu_OAM_Access[ppu_Cycle])
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
+						}
 					}
 				}
 				else
 				{
+					if (ppu_Memory_In_Use)
+					{
+						if (ppu_VRAM_In_Use)
+						{
+							if (ppu_VRAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+						else if (ppu_PALRAM_In_Use)
+						{
+							if (ppu_PALRAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+						else
+						{
+							if (ppu_OAM_Access[ppu_Cycle])
+							{
+								cpu_Fetch_Wait += 1;
+							}
+						}
+					}
+					
 					if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 					{
 						ppu_Render_Sprites();
@@ -2529,6 +2572,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				ppu_VRAM_Access[i] = false;
 				ppu_PALRAM_Access[i] = false;
+				ppu_OAM_Access[i] = false;
 			}
 
 			// note: it appears that for tile map modes, complete accesses are used even if the accesses extend past HBLank
@@ -2802,7 +2846,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				ppu_VRAM_Access[i] = false;
 				ppu_PALRAM_Access[i] = false;
+				ppu_OAM_Access[i] = false;
 			}
+
+			ppu_Memory_In_Use = ppu_VRAM_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
 
 			// PPU power up
 			ppu_CTRL_Write(0);
@@ -2845,6 +2892,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access, false);
 			ser.Sync(nameof(ppu_PALRAM_Access), ref ppu_PALRAM_Access, false);
+			ser.Sync(nameof(ppu_OAM_Access), ref ppu_OAM_Access, false);
 
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
 			ser.Sync(nameof(ppu_Display_Frame), ref ppu_Display_Frame);
@@ -2893,6 +2941,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_In_VBlank), ref ppu_In_VBlank);
 			ser.Sync(nameof(ppu_Delays), ref ppu_Delays);
+
+			ser.Sync(nameof(ppu_Memory_In_Use), ref ppu_Memory_In_Use);
+			ser.Sync(nameof(ppu_VRAM_In_Use), ref ppu_VRAM_In_Use);
+			ser.Sync(nameof(ppu_PALRAM_In_Use), ref ppu_PALRAM_In_Use);
+			ser.Sync(nameof(ppu_OAM_In_Use), ref ppu_OAM_In_Use);
 
 			ser.Sync(nameof(ppu_Sprite_Pixels), ref ppu_Sprite_Pixels, false);
 			ser.Sync(nameof(ppu_Sprite_Priority), ref ppu_Sprite_Priority, false);
