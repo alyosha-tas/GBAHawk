@@ -256,7 +256,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			LibGBAHawk.GBA_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length);
 			LibGBAHawk.GBA_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length);
 
-			Tracer.Put(new(disassembly: new_d.ToString().PadRight(74), registerInfo: new_r.ToString()));
+			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}
 
 		// GBA PPU Viewer

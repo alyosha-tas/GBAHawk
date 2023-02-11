@@ -4061,15 +4061,15 @@ namespace GBAHawk
 
 		// disassemblies will also return strings of the same length
 		const char* TraceHeader = "ARM7TDMI: PC, machine code, mnemonic, operands, registers, Cy, flags (ZNHCIFE)";
-		const char* SWI_event =  "                              ====SWI====                              ";
-		const char* UDF_event =  "                              ====UDF====                              ";
-		const char* IRQ_event =  "                              ====IRQ====                              ";
-		const char* HALT_event = "                              ====HALT====                             ";
+		const char* SWI_event =  "                                 ====SWI====                                 ";
+		const char* UDF_event =  "                                 ====UDF====                                 ";
+		const char* IRQ_event =  "                                 ====IRQ====                                 ";
+		const char* HALT_event = "                                 ====HALT====                                ";
 		const char* No_Reg = 
 			"                                                                                                                                                                                                                                                                    ";
 		const char* Reg_template = 
 			"R0:XXXXXXXX R1:XXXXXXXX R2:XXXXXXXX R3:XXXXXXXX R4:XXXXXXXX R5:XXXXXXXX R6:XXXXXXXX R7:XXXXXXXX R8:XXXXXXXX R9:XXXXXXXX R10:XXXXXXXX R11:XXXXXXXX R12:XXXXXXXX R13:XXXXXXXX R14:XXXXXXXX R15:XXXXXXXX CPSR:XXXXXXXX SPSR:XXXXXXXX Cy:XXXXXXXXXXXXXXXX LY:XXX NZCVIFE";
-		const char* Disasm_template = "PCPCPCPCPC:  AABBCCDD  (fail)  Di Di Di Di Di Di Di Di                 ";
+		const char* Disasm_template = "PCPCPCPCPC:  AABBCCDD  (fail)  Di Di Di Di Di Di Di Di                       ";
 
 		char replacer[40] = {};
 		char* val_char_1 = nullptr;
@@ -4175,7 +4175,6 @@ namespace GBAHawk
 
 			reg_state.append(" Cy:");			
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", CycleCount));
-			reg_state.append(" ");
 
 			reg_state.append(" LY:");
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 4, "%3u", ppu_LY));
@@ -4220,7 +4219,7 @@ namespace GBAHawk
 				byte_code.append(cpu_Disassemble_ARM());
 			}
 
-			while (byte_code.length() < 72) 
+			while (byte_code.length() < 78) 
 			{
 				byte_code.append(" ");
 			}
@@ -4693,6 +4692,8 @@ namespace GBAHawk
 
 		string cpu_Disassemble_TMB()
 		{
+			val_char_2 = replacer;
+			
 			switch ((cpu_Instr_TMB_2 >> 13) & 7)
 			{
 			case 0:

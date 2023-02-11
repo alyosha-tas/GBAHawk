@@ -244,7 +244,7 @@ namespace GBAHawk
 
 		int GetDisasmLength()
 		{
-			return 72 + 1;
+			return 78 + 1;
 		}
 
 		int GetRegStringLength()
