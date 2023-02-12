@@ -36,6 +36,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public uint[] ppu_BG_Ref_X = new uint[4];
 		public uint[] ppu_BG_Ref_Y = new uint[4];
+		public uint[] ppu_BG_Ref_X_Latch = new uint[4];
+		public uint[] ppu_BG_Ref_Y_Latch = new uint[4];
 
 		public int[] ppu_BG_On_Update_Time = new int[4];
 
@@ -963,23 +965,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// for now only do things every 4 cycles for the BG
 					if ((ppu_Cycle & 3) == 0)
-					{
-						// calculate scanline rotation and scaling
-						if (ppu_Cycle == 40)
-						{
-							if (ppu_BG_Mode > 0)
-							{
-								ppu_Calculate_BG_Rotations(2);
-
-								if (ppu_BG_Mode == 2)
-								{
-									ppu_Calculate_BG_Rotations(3);
-								}
-							}
-						}
-						
+					{						
 						if ((ppu_Cycle >= 40) && (ppu_Cycle < 1000))
 						{
+							if (ppu_Cycle ==40)
+							{
+								if (ppu_BG_Mode > 0)
+								{
+									ppu_Calculate_BG_Rotations(2);
+
+									if (ppu_BG_Mode == 2)
+									{
+										ppu_Calculate_BG_Rotations(3);
+									}
+								}
+							}
+							
 							ppu_Render();
 
 							ppu_Display_Cycle += 1;
@@ -2167,8 +2168,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								// if sprite is in range horizontally
 								if (cur_x_pos < 240)
 								{					
-									// if the sprite's position is not occupied by a higher priority sprite
-									if (!ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] || (spr_mode == 2) || ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + cur_x_pos])
+									// if the sprite's position is not occupied by a higher priority sprite, or it is a sprite window sprite, process it
+									if (!ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] || (spr_mode == 2) ||
+										(((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos]))
 									{
 										spr_tile = ppu_Sprite_Attr_2 & spr_mod;
 
@@ -2259,18 +2261,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 																((pix_color & 0x3E0) << 6) |
 																((pix_color & 0x7C00) >> 7));
 
-													// Sprites of lower priority but can overwrite sprites of higher priority
-													if (!ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] ||
-														(((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos]))
-													{
-														ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + cur_x_pos] = pix_color;
+													ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + cur_x_pos] = pix_color;
 
-														ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos] = (ppu_Sprite_Attr_2 >> 10) & 3;
+													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos] = (ppu_Sprite_Attr_2 >> 10) & 3;
 
-														ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] = true;
+													ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] = true;
 
-														ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + cur_x_pos] = spr_mode == 1;
-													}
+													ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + cur_x_pos] = spr_mode == 1;
 												}
 												else if (spr_mode == 2)
 												{
@@ -2552,8 +2549,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			fract_part = 0.5;
 
-			Ref_X = ppu_BG_Ref_X[layer];
-			Ref_Y = ppu_BG_Ref_Y[layer];
+			Ref_X = ppu_BG_Ref_X_Latch[layer];
+			Ref_Y = ppu_BG_Ref_Y_Latch[layer];
 
 			i_ref_x = (int)((Ref_X >> 8) & 0x7FFFF);
 			i_ref_y = (int)((Ref_Y >> 8) & 0x7FFFF);
@@ -2809,8 +2806,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_X_RS = ppu_Y_RS = 0;
 			
 			ppu_BG_Ref_X[2] = ppu_BG_Ref_X[3] = 0;
+			ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X_Latch[3] = 0;
 
 			ppu_BG_Ref_Y[2] = ppu_BG_Ref_Y[3] = 0;
+			ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y_Latch[3] = 0;
 
 			ppu_ROT_REF_LY[2] = ppu_ROT_REF_LY[3] = 0;
 
@@ -2912,6 +2911,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_BG_Ref_X), ref ppu_BG_Ref_X, false);
 			ser.Sync(nameof(ppu_BG_Ref_Y), ref ppu_BG_Ref_Y, false);
+
+			ser.Sync(nameof(ppu_BG_Ref_X_Latch), ref ppu_BG_Ref_X_Latch, false);
+			ser.Sync(nameof(ppu_BG_Ref_Y_Latch), ref ppu_BG_Ref_Y_Latch, false);
 
 			ser.Sync(nameof(ppu_ROT_REF_LY), ref ppu_ROT_REF_LY, false);
 

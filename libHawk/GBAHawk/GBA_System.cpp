@@ -1965,22 +1965,21 @@ namespace GBAHawk
 					// for now only do things every 4 cycles for the BG
 					if ((ppu_Cycle & 3) == 0)
 					{
-						// calculate scanline rotation and scaling
-						if (ppu_Cycle == 40)
-						{
-							if (ppu_BG_Mode > 0)
-							{
-								ppu_Calculate_BG_Rotations(2);
-
-								if (ppu_BG_Mode == 2)
-								{
-									ppu_Calculate_BG_Rotations(3);
-								}
-							}
-						}
-
 						if ((ppu_Cycle >= 40) && (ppu_Cycle < 1000))
 						{
+							if (ppu_Cycle == 40)
+							{
+								if (ppu_BG_Mode > 0)
+								{
+									ppu_Calculate_BG_Rotations(2);
+
+									if (ppu_BG_Mode == 2)
+									{
+										ppu_Calculate_BG_Rotations(3);
+									}
+								}
+							}
+
 							ppu_Render();
 
 							ppu_Display_Cycle += 1;

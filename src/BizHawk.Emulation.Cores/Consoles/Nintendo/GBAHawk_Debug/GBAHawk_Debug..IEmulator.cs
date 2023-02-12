@@ -375,6 +375,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							ppu_STAT |= 4;
 						}
 					}
+					else if (ppu_LYC_Vid_Check_cd == 4)
+					{
+						// latch rotation and scaling XY here
+						// but not parameters A-D
+						if ((ppu_LY < 160) && !ppu_Forced_Blank)
+						{
+							if (ppu_BG_Mode > 0)
+							{
+								ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X[2];
+								ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y[2];
+
+								ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
+								ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
+							}
+						}
+					}
 					else if (ppu_LYC_Vid_Check_cd == 0)
 					{
 						// video capture DMA, check timing
