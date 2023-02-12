@@ -199,266 +199,6 @@ namespace GBAHawk
 			Memory_CTRL = value;
 		}
 
-		void process_delays()
-		{
-			if (IRQ_Write_Delay)
-			{
-				cpu_IRQ_Input = cpu_Next_IRQ_Input;
-				IRQ_Write_Delay = false;
-
-				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
-				{
-					if (!ppu_Delays && !ser_Delay && !key_Delay)
-					{
-						delays_to_process = false;
-					}
-				}
-			}
-
-			if (IRQ_Write_Delay_2)
-			{
-				cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
-				IRQ_Write_Delay = true;
-				IRQ_Write_Delay_2 = false;
-			}
-
-			if (IRQ_Write_Delay_3)
-			{
-				cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-				IRQ_Write_Delay_2 = true;
-				IRQ_Write_Delay_3 = false;
-
-				// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-				if ((INT_EN & INT_Flags & 0x3FFF) == 0)
-				{
-					cpu_Trigger_Unhalt = false;
-				}
-				else
-				{
-					cpu_Trigger_Unhalt = true;
-				}
-			}
-
-			if (ser_Delay)
-			{
-				ser_Delay_cd--;
-
-				if (ser_Delay_cd == 0)
-				{
-					// trigger IRQ
-					if ((INT_EN & INT_Flags & 0x80) == 0x80)
-					{
-						cpu_Trigger_Unhalt = true;
-						if (INT_Master_On) { cpu_IRQ_Input = true; }
-					}
-
-					ser_Delay = false;
-					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
-					{
-						if (!ppu_Delays && !key_Delay)
-						{
-							delays_to_process = false;
-						}
-					}
-				}
-			}
-
-			if (key_Delay)
-			{
-				key_Delay_cd--;
-
-				if (key_Delay_cd == 0)
-				{
-					// trigger IRQ
-					if ((INT_EN & INT_Flags & 0x1000) == 0x1000)
-					{
-						cpu_Trigger_Unhalt = true;
-						if (INT_Master_On) { cpu_IRQ_Input = true; }
-					}
-
-					key_Delay = false;
-					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
-					{
-						if (!ppu_Delays && !ser_Delay)
-						{
-							delays_to_process = false;
-						}
-					}
-				}
-			}
-
-			if (ppu_Delays)
-			{
-				if (ppu_VBL_IRQ_cd > 0)
-				{
-					ppu_VBL_IRQ_cd -= 1;
-
-					if (ppu_VBL_IRQ_cd == 2)
-					{
-						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }
-					}
-					else if (ppu_VBL_IRQ_cd == 1)
-					{
-						// trigger any DMAs with VBlank as a start condition
-						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
-					}
-					else if (ppu_VBL_IRQ_cd == 0)
-					{
-						if ((INT_EN & INT_Flags & 0x1) == 0x1)
-						{ 
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_HBL_IRQ_cd > 0)
-				{
-					ppu_HBL_IRQ_cd -= 1;
-
-					if (ppu_HBL_IRQ_cd == 2)
-					{
-						// trigger HBL IRQ
-						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }
-					}
-					else if (ppu_HBL_IRQ_cd == 1)
-					{
-						// trigger any DMAs with HBlank as a start condition
-						// but not if in vblank
-						if (ppu_LY < 160)
-						{
-							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
-						}
-					}
-					else if (ppu_HBL_IRQ_cd == 0)
-					{
-						if ((INT_EN & INT_Flags & 0x2) == 0x2)
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_LYC_IRQ_cd > 0)
-				{
-					ppu_LYC_IRQ_cd -= 1;
-
-					if (ppu_LYC_IRQ_cd == 2)
-					{
-						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }
-					}
-					else if (ppu_LYC_IRQ_cd == 0)
-					{
-						if ((INT_EN & INT_Flags & 0x4) == 0x4)
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_LYC_Vid_Check_cd > 0)
-				{
-					ppu_LYC_Vid_Check_cd -= 1;
-
-					if (ppu_LYC_Vid_Check_cd == 5)
-					{
-						if (ppu_LY == ppu_LYC)
-						{
-							ppu_LYC_IRQ_cd = 4;
-							ppu_Delays = true;
-							delays_to_process = true;
-
-							// set the flag bit
-							ppu_STAT |= 4;
-						}
-					}
-					else if (ppu_LYC_Vid_Check_cd == 4)
-					{
-						// latch rotation and scaling XY here
-						// but not parameters A-D
-						if ((ppu_LY < 160) && !ppu_Forced_Blank)
-						{
-							if (ppu_BG_Mode > 0)
-							{
-								ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X[2];
-								ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y[2];
-
-								ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
-								ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
-							}
-						}
-					}
-					else if (ppu_LYC_Vid_Check_cd == 0)
-					{
-						// video capture DMA, check timing
-						if (dma_Go[3] && dma_Start_Snd_Vid[3])
-						{
-							// only starts on scanline 2
-							if (ppu_LY == 2)
-							{
-								dma_Video_DMA_Start = true;
-							}
-
-							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
-							{
-								dma_Run[3] = true;
-								dma_External_Source[3] = true;
-							}
-
-							if (ppu_LY == 162)
-							{
-								dma_Video_DMA_Start = false;
-							}
-						}
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
-				{
-					if (!ppu_Delays && !ser_Delay && !key_Delay)
-					{
-						delays_to_process = false;
-					}
-				}
-			}
-		}
-
 		void do_controller_check()
 		{
 			if ((key_CTRL & 0x4000) == 0x4000)
@@ -7988,7 +7728,7 @@ namespace GBAHawk
 									Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
 								}
 
-								Pixel_Color = VRAM[Tile_Addr] << 1;
+								Pixel_Color = VRAM[Tile_Addr];
 
 								BG_Is_Transparent[c0] = Pixel_Color == 0;
 							}
@@ -8032,14 +7772,12 @@ namespace GBAHawk
 									}
 								}
 
-								Pixel_Color <<= 1;
+								Pixel_Color += 16 * (BG_Effect_Byte >> 4);
 
-								Pixel_Color += 32 * (BG_Effect_Byte >> 4);
-
-								BG_Is_Transparent[c0] = (Pixel_Color & 0x1F) == 0;
+								BG_Is_Transparent[c0] = (Pixel_Color & 0xF) == 0;
 							}
 
-							Pixel_Color_data = (uint16_t)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+							Pixel_Color_data = PALRAM_16[Pixel_Color];
 
 							bg_pixel[c0] = (uint32_t)(0xFF000000 |
 								((Pixel_Color_data & 0x1F) << 19) |
@@ -8159,7 +7897,7 @@ namespace GBAHawk
 									Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
 								}
 
-								Pixel_Color = VRAM[Tile_Addr] << 1;
+								Pixel_Color = VRAM[Tile_Addr];
 
 								BG_Is_Transparent[c1] = Pixel_Color == 0;
 							}
@@ -8203,14 +7941,12 @@ namespace GBAHawk
 									}
 								}
 
-								Pixel_Color <<= 1;
+								Pixel_Color += 16 * (BG_Effect_Byte >> 4);
 
-								Pixel_Color += 32 * (BG_Effect_Byte >> 4);
-
-								BG_Is_Transparent[c1] = (Pixel_Color & 0x1F) == 0;
+								BG_Is_Transparent[c1] = (Pixel_Color & 0xF) == 0;
 							}
 
-							Pixel_Color_data = (uint16_t)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+							Pixel_Color_data = PALRAM_16[Pixel_Color];
 
 							bg_pixel[c1] = (uint32_t)(0xFF000000 |
 								((Pixel_Color_data & 0x1F) << 19) |
@@ -8273,9 +8009,9 @@ namespace GBAHawk
 
 						Tile_Addr = Tile_Addr + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-						Pixel_Color = VRAM[Tile_Addr] << 1;
+						Pixel_Color = VRAM[Tile_Addr];
 
-						Pixel_Color_data = (uint16_t)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+						Pixel_Color_data = PALRAM_16[Pixel_Color];
 
 						bg_pixel[2] = (uint32_t)(0xFF000000 |
 							((Pixel_Color_data & 0x1F) << 19) |
@@ -8343,9 +8079,9 @@ namespace GBAHawk
 
 							Tile_Addr = Tile_Addr + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-							Pixel_Color = (VRAM[Tile_Addr] << 1);
+							Pixel_Color = VRAM[Tile_Addr];
 
-							Pixel_Color_data = (uint16_t)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+							Pixel_Color_data = PALRAM_16[Pixel_Color];
 
 							bg_pixel[c2] = (uint32_t)(0xFF000000 |
 								((Pixel_Color_data & 0x1F) << 19) |
@@ -8400,11 +8136,9 @@ namespace GBAHawk
 						BG_Has_Pixel[2] = true;
 
 						// pixel color comes direct from VRAM
-						int m3_ofst = ppu_X_RS * 2 + ppu_Y_RS * 240 * 2;
+						int m3_ofst = ppu_X_RS + ppu_Y_RS * 240;
 
-						Pixel_Color_data = VRAM[m3_ofst + 1];
-						Pixel_Color_data <<= 8;
-						Pixel_Color_data |= VRAM[m3_ofst];
+						Pixel_Color_data = VRAM_16[m3_ofst];
 
 						bg_pixel_f = (uint32_t)(0xFF000000 |
 									((Pixel_Color_data & 0x1F) << 19) |
@@ -8426,11 +8160,7 @@ namespace GBAHawk
 					{
 						Pixel_Color = VRAM[ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS];
 
-						Pixel_Color <<= 1;
-
-						Pixel_Color_data = PALRAM[Pixel_Color + 1];
-						Pixel_Color_data <<= 8;
-						Pixel_Color_data |= PALRAM[Pixel_Color];
+						Pixel_Color_data = PALRAM_16[Pixel_Color];
 
 						bg_pixel[2] = (uint32_t)(0xFF000000 |
 							((Pixel_Color_data & 0x1F) << 19) |
@@ -8473,11 +8203,9 @@ namespace GBAHawk
 						BG_Has_Pixel[2] = true;
 
 						// pixel color comes direct from VRAM
-						int m3_ofst = ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
+						int m3_ofst = ppu_X_RS + ppu_Y_RS * 160;
 
-						Pixel_Color_data = VRAM[ppu_Display_Frame * 0xA000 + m3_ofst + 1];
-						Pixel_Color_data <<= 8;
-						Pixel_Color_data |= VRAM[ppu_Display_Frame * 0xA000 + m3_ofst];
+						Pixel_Color_data = VRAM_16[ppu_Display_Frame * 0x5000 + m3_ofst];
 
 						bg_pixel_f = (uint32_t)(0xFF000000 |
 									((Pixel_Color_data & 0x1F) << 19) |
@@ -9064,7 +8792,8 @@ namespace GBAHawk
 											{
 												if (spr_mode < 2)
 												{
-													pix_color = (uint32_t)(PALRAM[0x200 + pix_color] + (PALRAM[0x200 + pix_color + 1] << 8));
+													// palette accesses are always 16 bit aligned
+													pix_color = (uint32_t)(PALRAM_16[(0x200 + pix_color) >> 1]);
 
 													pix_color = (uint32_t)(0xFF000000 |
 														((pix_color & 0x1F) << 19) |
