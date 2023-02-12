@@ -1949,6 +1949,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			uint cur_x_pos = 0;
 			uint cur_y_pos = 0;
 			int spr_tile = 0;
+			int spr_tile_row = 0;
 			int x_scale = 0;
 			int y_scale = 0;
 			int tile_x_offset = 0;
@@ -2189,7 +2190,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												}
 												else
 												{
-													spr_tile += (actual_x_index >> 3) + (0x20) * (int)(actual_y_index >> 3);
+													// large x values wrap around
+													spr_tile += (0x20) * (int)(actual_y_index >> 3);
+
+													spr_tile_row = (int)(spr_tile & 0xFFFFFFE0);
+
+													spr_tile += (actual_x_index >> 3);
+
+													spr_tile &= 0x1F;
+													spr_tile |= spr_tile_row;
 												}
 
 												spr_tile <<= 5;
@@ -2228,7 +2237,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												}
 												else
 												{
-													spr_tile += ((actual_x_index >> 3) << 6) + ((0x20) * (int)(actual_y_index >> 3) << 5);
+													// large x values wrap around
+													spr_tile += ((0x20) * (int)(actual_y_index >> 3) << 5);
+
+													spr_tile_row = (int)(spr_tile & 0xFFFFFC00);
+
+													spr_tile += ((actual_x_index >> 3) << 6);
+
+													spr_tile &= 0x3FF;
+													spr_tile |= spr_tile_row;
 												}
 
 												// pick out the correct pixel from the tile
