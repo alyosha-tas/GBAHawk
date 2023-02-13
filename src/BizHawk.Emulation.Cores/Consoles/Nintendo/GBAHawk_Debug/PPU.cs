@@ -1437,7 +1437,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (BG_Go[2])
 					{
-						//Console.WriteLine(layer + " " + f_A + " " + f_B + " " + f_C + " " + f_D + " " + f_ref_x + " " + f_ref_y);
 						// calculate rotation and scaling
 						if (ppu_BG_Mosaic[2])
 						{

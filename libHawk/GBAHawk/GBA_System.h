@@ -31,7 +31,7 @@ namespace GBAHawk
 
 		void (*MessageCallback)(void);
 
-	# pragma region Geneeral System and Prefetch
+	# pragma region General System and Prefetch
 
 		uint32_t video_buffer[240* 160] = { };
 		uint32_t Frame_Buffer[240 * 160] = { };

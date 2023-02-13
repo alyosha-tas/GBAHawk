@@ -274,104 +274,104 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			// DMA always force aligned
 			addr &= 0xFFFFFFFE;
-
-			if (addr >= 0x02000000)
+		
+			if (addr < 0x03000000)
 			{
-				if (addr < 0x03000000)
+				if (addr >= 0x02000000)
 				{
 					WRAM[addr & 0x3FFFF] = (byte)(value & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 1] = (byte)((value >> 8) & 0xFF);
 				}
-				else if (addr < 0x04000000)
+			}
+			else if (addr < 0x04000000)
+			{
+				IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+			}
+			else if (addr < 0x05000000)
+			{
+				if (addr < 0x04000800)
 				{
-					IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+					Write_Registers_16(addr - 0x04000000, value);
 				}
-				else if (addr < 0x05000000)
+				else if ((addr & 0x0400FFFF) == 0x04000800)
 				{
-					if (addr < 0x04000800)
+					switch (addr & 3)
 					{
-						Write_Registers_16(addr - 0x04000000, value);
-					}
-					else if ((addr & 0x0400FFFF) == 0x04000800)
-					{
-						switch (addr & 3)
-						{
-							case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF0000) | value)); break;
-							default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
-						}
+						case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF0000) | value)); break;
+						default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 					}
 				}
-				else if (addr < 0x06000000)
+			}
+			else if (addr < 0x06000000)
+			{
+				PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+
+				// calculate transparent pixel color
+				if ((addr & 0x3FF) == 0)
 				{
-					PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
 
-					// calculate transparent pixel color
-					if ((addr & 0x3FF) == 0)
-					{
-						ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-						ppu_Transparent_Color = (uint)(0xFF000000 |
-												 ((ppu_col_dat & 0x1F) << 19) |
-												 ((ppu_col_dat & 0x3E0) << 6) |
-												 ((ppu_col_dat & 0x7C00) >> 7));
-					}
-
-					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
+					ppu_Transparent_Color = (uint)(0xFF000000 |
+												((ppu_col_dat & 0x1F) << 19) |
+												((ppu_col_dat & 0x3E0) << 6) |
+												((ppu_col_dat & 0x7C00) >> 7));
 				}
-				else if (addr < 0x07000000)
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x07000000)
+			{
+				if ((addr & 0x00010000) == 0x00010000)
 				{
-					if ((addr & 0x00010000) == 0x00010000)
+					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+				}
+				else
+				{
+					VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
+				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x08000000)
+			{
+				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+
+				// if writing to OAM outside of VBlank, update rotation parameters
+				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+				{
+					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
+			{
+				if (Is_EEPROM)
+				{
+					if (EEPROM_Wiring)
 					{
-						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+						mapper.Mapper_EEPROM_Write((byte)value);
 					}
 					else
 					{
-						VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
-					}
-
-					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x08000000)
-				{
-					OAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-
-					// if writing to OAM outside of VBlank, update rotation parameters
-					if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-					{
-						ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-					}
-
-					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
-				{
-					if (Is_EEPROM)
-					{
-						if (EEPROM_Wiring)
+						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
 							mapper.Mapper_EEPROM_Write((byte)value);
 						}
-						else
-						{
-							if ((addr & 0xDFFFE00) == 0xDFFFE00)
-							{
-								mapper.Mapper_EEPROM_Write((byte)value);
-							}
-						}
 					}
 				}
-				else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-				{
-					mapper.WriteMemory16(addr - 0x0E000000, value);
-				}
+			}
+			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+			{
+				mapper.WriteMemory16(addr - 0x0E000000, value);
 			}
 		}
 
@@ -379,113 +379,113 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			// DMA always force aligned
 			addr &= 0xFFFFFFFC;
-
-			if (addr >= 0x02000000)
+			
+			if (addr < 0x03000000)
 			{
-				if (addr < 0x03000000)
+				if (addr >= 0x02000000)
 				{
 					WRAM[addr & 0x3FFFF] = (byte)(value & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 1] = (byte)((value >> 8) & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 2] = (byte)((value >> 16) & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 3] = (byte)((value >> 24) & 0xFF);
 				}
-				else if (addr < 0x04000000)
+			}
+			else if (addr < 0x04000000)
+			{
+				IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 2] = (byte)((value >> 16) & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 3] = (byte)((value >> 24) & 0xFF);
+			}
+			else if (addr < 0x05000000)
+			{
+				if (addr < 0x04000800)
 				{
-					IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 2] = (byte)((value >> 16) & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 3] = (byte)((value >> 24) & 0xFF);
+					Write_Registers_32(addr - 0x04000000, value);
 				}
-				else if (addr < 0x05000000)
+				else if ((addr & 0x0400FFFF) == 0x04000800)
 				{
-					if (addr < 0x04000800)
-					{
-						Write_Registers_32(addr - 0x04000000, value);
-					}
-					else if ((addr & 0x0400FFFF) == 0x04000800)
-					{
-						Update_Memory_CTRL(value);
-					}
+					Update_Memory_CTRL(value);
 				}
-				else if (addr < 0x06000000)
+			}
+			else if (addr < 0x06000000)
+			{
+				PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+				PALRAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
+				PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
+
+				// calculate transparent pixel color
+				if ((addr & 0x3FF) == 0)
 				{
-					PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-					PALRAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
-					PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
+					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
 
-					// calculate transparent pixel color
-					if ((addr & 0x3FF) == 0)
-					{
-						ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-						ppu_Transparent_Color = (uint)(0xFF000000 |
-												 ((ppu_col_dat & 0x1F) << 19) |
-												 ((ppu_col_dat & 0x3E0) << 6) |
-												 ((ppu_col_dat & 0x7C00) >> 7));
-					}
-
-					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
+					ppu_Transparent_Color = (uint)(0xFF000000 |
+												((ppu_col_dat & 0x1F) << 19) |
+												((ppu_col_dat & 0x3E0) << 6) |
+												((ppu_col_dat & 0x7C00) >> 7));
 				}
-				else if (addr < 0x07000000)
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x07000000)
+			{
+				if ((addr & 0x00010000) == 0x00010000)
 				{
-					if ((addr & 0x00010000) == 0x00010000)
+					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+					VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
+					VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+				}
+				else
+				{
+					VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
+					VRAM[(addr & 0xFFFF) + 2] = (byte)((value >> 16) & 0xFF);
+					VRAM[(addr & 0xFFFF) + 3] = (byte)((value >> 24) & 0xFF);
+				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x08000000)
+			{
+				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+				OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
+				OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
+
+				// if writing to OAM outside of VBlank, update rotation parameters
+				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+				{
+					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
+				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
+			{
+				if (Is_EEPROM)
+				{
+					if (EEPROM_Wiring)
 					{
-						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
-						VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
-						VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+						mapper.Mapper_EEPROM_Write((byte)value);
 					}
 					else
 					{
-						VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
-						VRAM[(addr & 0xFFFF) + 2] = (byte)((value >> 16) & 0xFF);
-						VRAM[(addr & 0xFFFF) + 3] = (byte)((value >> 24) & 0xFF);
-					}
-
-					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x08000000)
-				{
-					OAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-					OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
-					OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-					// if writing to OAM outside of VBlank, update rotation parameters
-					if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-					{
-						ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-						ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-					}
-
-					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
-				{
-					if (Is_EEPROM)
-					{
-						if (EEPROM_Wiring)
+						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
 							mapper.Mapper_EEPROM_Write((byte)value);
 						}
-						else
-						{
-							if ((addr & 0xDFFFE00) == 0xDFFFE00)
-							{
-								mapper.Mapper_EEPROM_Write((byte)value);
-							}
-						}
 					}
 				}
-				else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-				{
-					mapper.WriteMemory32(addr - 0x0E000000, value);
-				}
+			}
+			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+			{
+				mapper.WriteMemory32(addr - 0x0E000000, value);
 			}
 		}
 	}

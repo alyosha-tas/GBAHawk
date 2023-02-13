@@ -33,7 +33,6 @@ using namespace std;
 
 namespace GBAHawk
 {
-
 	#pragma region Memory Map
 
 	uint8_t GBA_System::Read_Memory_8(uint32_t addr)
@@ -491,121 +490,121 @@ namespace GBAHawk
 	{
 		cpu_Last_Bus_Value &= 0xFFFFFF00;
 		cpu_Last_Bus_Value |= value;
-
-		if (addr >= 0x02000000)
+	
+		if (addr < 0x03000000)
 		{
-			if (addr < 0x03000000)
+			if (addr >= 0x02000000)
 			{
 				WRAM[addr & 0x3FFFF] = value;
 			}
-			else if (addr < 0x04000000)
+		}
+		else if (addr < 0x04000000)
+		{
+			IWRAM[addr & 0x7FFF] = value;
+		}
+		else if (addr < 0x05000000)
+		{
+			if (addr < 0x04000800)
 			{
-				IWRAM[addr & 0x7FFF] = value;
+				Write_Registers_8(addr - 0x04000000, value);
 			}
-			else if (addr < 0x05000000)
+			else if ((addr & 0x0400FFFF) == 0x04000800)
 			{
-				if (addr < 0x04000800)
+				switch (addr & 3)
 				{
-					Write_Registers_8(addr - 0x04000000, value);
+				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFFFF00) | value)); break;
+				case 0x01: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
+				case 0x02: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
+				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+			}
+		}
+		else if (addr < 0x06000000)
+		{
+			// 8 bit writes to PALRAM stored as halfword
+			PALRAM[addr & 0x3FF] = value;
+			PALRAM[(addr + 1) & 0x3FF] = value;
+
+			// calculate transparent pixel color
+			if ((addr & 0x3FF) == 0)
+			{
+				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
+
+				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
+										((ppu_col_dat & 0x1F) << 19) |
+										((ppu_col_dat & 0x3E0) << 6) |
+										((ppu_col_dat & 0x7C00) >> 7));
+			}
+
+			ppu_PALRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x07000000)
+		{
+			if ((addr & 0x00010000) == 0x00010000)
+			{
+				// 8 bit writes ignored depending on mode
+				// Seems like it has to do with what region is also used by sprites
+				// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
+				// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
+				// This effects the Quake demo
+				if (ppu_BG_Mode >= 3)
 				{
-					switch (addr & 3)
+					if ((addr & 0x17FFF) < 0x14000)
 					{
-					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFFFF00) | value)); break;
-					case 0x01: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
-					case 0x02: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
-					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
+						// 8 bit writes stored as halfword (needs more research)
+						VRAM[addr & 0x17FFF] = value;
+						VRAM[(addr + 1) & 0x17FFF] = value;
 					}
 				}
 			}
-			else if (addr < 0x06000000)
+			else
 			{
-				// 8 bit writes to PALRAM stored as halfword
-				PALRAM[addr & 0x3FF] = value;
-				PALRAM[(addr + 1) & 0x3FF] = value;
-
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-											((ppu_col_dat & 0x1F) << 19) |
-											((ppu_col_dat & 0x3E0) << 6) |
-											((ppu_col_dat & 0x7C00) >> 7));
-				}
-
-				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
+				// 8 bit writes stored as halfword (needs more research)
+				VRAM[addr & 0xFFFF] = value;
+				VRAM[(addr + 1) & 0xFFFF] = value;
 			}
-			else if (addr < 0x07000000)
+
+			ppu_VRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x08000000)
+		{
+			// 8 bit writes to OAM ignored
+			// OAM[addr & 0x3FF] = value;
+
+			// are accesses ignored?
+			ppu_OAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x0D000000)
+		{
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if (addr < 0x0E000000)
+		{
+			if (Is_EEPROM)
 			{
-				if ((addr & 0x00010000) == 0x00010000)
+				if (EEPROM_Wiring)
 				{
-					// 8 bit writes ignored depending on mode
-					// Seems like it has to do with what region is also used by sprites
-					// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
-					// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
-					// This effects the Quake demo
-					if (ppu_BG_Mode >= 3)
-					{
-						if ((addr & 0x17FFF) < 0x14000)
-						{
-							// 8 bit writes stored as halfword (needs more research)
-							VRAM[addr & 0x17FFF] = value;
-							VRAM[(addr + 1) & 0x17FFF] = value;
-						}
-					}
+					mapper_pntr->Mapper_EEPROM_Write(value);
 				}
 				else
 				{
-					// 8 bit writes stored as halfword (needs more research)
-					VRAM[addr & 0xFFFF] = value;
-					VRAM[(addr + 1) & 0xFFFF] = value;
-				}
-
-				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x08000000)
-			{
-				// 8 bit writes to OAM ignored
-				// OAM[addr & 0x3FF] = value;
-
-				// are accesses ignored?
-				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x0D000000)
-			{
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (Is_EEPROM)
-				{
-					if (EEPROM_Wiring)
+					if ((addr & 0xDFFFE00) == 0xDFFFE00)
 					{
 						mapper_pntr->Mapper_EEPROM_Write(value);
 					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							mapper_pntr->Mapper_EEPROM_Write(value);
-						}
-					}
 				}
+			}
 
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-			{
-				mapper_pntr->Write_Memory_8(addr - 0x0E000000, value);
-			}
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+		{
+			mapper_pntr->Write_Memory_8(addr - 0x0E000000, value);
 		}
 	}
 
@@ -613,225 +612,225 @@ namespace GBAHawk
 	{
 		cpu_Last_Bus_Value &= 0xFFFF0000;
 		cpu_Last_Bus_Value |= value;
-
-		if (addr >= 0x02000000)
+		
+		if (addr < 0x03000000)
 		{
-			if (addr < 0x03000000)
+			if (addr >= 0x02000000)
 			{
 				// Forced Align
 				WRAM_16[(addr & 0x3FFFE) >> 1] = value;
 			}
-			else if (addr < 0x04000000)
+		}
+		else if (addr < 0x04000000)
+		{
+			// Forced Align
+			IWRAM_16[(addr & 0x7FFE) >> 1] = value;
+		}
+		else if (addr < 0x05000000)
+		{
+			// Forced Align
+			addr &= 0xFFFFFFFE;
+
+			if (addr < 0x04000800)
 			{
-				// Forced Align
-				IWRAM_16[(addr & 0x7FFE) >> 1] = value;
+				Write_Registers_16(addr - 0x04000000, value);
 			}
-			else if (addr < 0x05000000)
+			else if ((addr & 0x0400FFFF) == 0x04000800)
 			{
-				// Forced Align
-				addr &= 0xFFFFFFFE;
-
-				if (addr < 0x04000800)
+				switch (addr & 3)
 				{
-					Write_Registers_16(addr - 0x04000000, value);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					switch (addr & 3)
-					{
-					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
-					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
-					}
+				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
+				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 				}
 			}
-			else if (addr < 0x06000000)
+		}
+		else if (addr < 0x06000000)
+		{
+			// Forced Align
+			PALRAM_16[(addr & 0x3FE) >> 1] = value;
+
+			// calculate transparent pixel color
+			if ((addr & 0x3FF) == 0)
 			{
-				// Forced Align
-				PALRAM_16[(addr & 0x3FE) >> 1] = value;
+				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-											((ppu_col_dat & 0x1F) << 19) |
-											((ppu_col_dat & 0x3E0) << 6) |
-											((ppu_col_dat & 0x7C00) >> 7));
-				}
-
-				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
+				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
+										((ppu_col_dat & 0x1F) << 19) |
+										((ppu_col_dat & 0x3E0) << 6) |
+										((ppu_col_dat & 0x7C00) >> 7));
 			}
-			else if (addr < 0x07000000)
+
+			ppu_PALRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x07000000)
+		{
+			// Forced Align
+			if ((addr & 0x00010000) == 0x00010000)
 			{
-				// Forced Align
-				if ((addr & 0x00010000) == 0x00010000)
+				VRAM_16[(addr & 0x17FFE) >> 1] = value;
+			}
+			else
+			{
+				VRAM_16[(addr & 0xFFFE) >> 1] = value;
+			}
+
+			ppu_VRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x08000000)
+		{
+			// Forced Align
+			OAM_16[(addr & 0x3FE) >> 1] = value;
+
+			// if writing to OAM outside of VBlank, update rotation parameters
+			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+			{
+				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+			}
+
+			ppu_OAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x0D000000)
+		{
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if (addr < 0x0E000000)
+		{
+			if (Is_EEPROM)
+			{
+				if (EEPROM_Wiring)
 				{
-					VRAM_16[(addr & 0x17FFE) >> 1] = value;
+					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 				}
 				else
 				{
-					VRAM_16[(addr & 0xFFFE) >> 1] = value;
-				}
-
-				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x08000000)
-			{
-				// Forced Align
-				OAM_16[(addr & 0x3FE) >> 1] = value;
-
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-				}
-
-				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x0D000000)
-			{
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (Is_EEPROM)
-				{
-					if (EEPROM_Wiring)
+					if ((addr & 0xDFFFE00) == 0xDFFFE00)
 					{
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-						}
-					}
 				}
+			}
 
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-			{
-				mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
-			}
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+		{
+			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
 		}
 	}
 
 	void GBA_System::Write_Memory_32(uint32_t addr, uint32_t value)
 	{
 		cpu_Last_Bus_Value = value;
-
-		if (addr >= 0x02000000)
+	
+		if (addr < 0x03000000)
 		{
-			if (addr < 0x03000000)
+			if (addr >= 0x02000000)
 			{
 				// Forced Align
 				WRAM_32[(addr & 0x3FFFC) >> 2] = value;
 			}
-			else if (addr < 0x04000000)
+		}
+		else if (addr < 0x04000000)
+		{
+			// Forced Align
+			IWRAM_32[(addr & 0x7FFC) >> 2] = value;
+		}
+		else if (addr < 0x05000000)
+		{
+			// Forced Align
+			addr &= 0xFFFFFFFC;
+
+			if (addr < 0x04000800)
 			{
-				// Forced Align
-				IWRAM_32[(addr & 0x7FFC) >> 2] = value;
+				Write_Registers_32(addr - 0x04000000, value);
 			}
-			else if (addr < 0x05000000)
+			else if ((addr & 0x0400FFFF) == 0x04000800)
 			{
-				// Forced Align
-				addr &= 0xFFFFFFFC;
-
-				if (addr < 0x04000800)
-				{
-					Write_Registers_32(addr - 0x04000000, value);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					Update_Memory_CTRL(value);
-				}
+				Update_Memory_CTRL(value);
 			}
-			else if (addr < 0x06000000)
+		}
+		else if (addr < 0x06000000)
+		{
+			// Forced Align
+			PALRAM_32[(addr & 0x3FC) >> 2] = value;
+
+			// calculate transparent pixel color
+			if ((addr & 0x3FF) == 0)
 			{
-				// Forced Align
-				PALRAM_32[(addr & 0x3FC) >> 2] = value;
+				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-											((ppu_col_dat & 0x1F) << 19) |
-											((ppu_col_dat & 0x3E0) << 6) |
-											((ppu_col_dat & 0x7C00) >> 7));
-				}
-
-				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
+				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
+										((ppu_col_dat & 0x1F) << 19) |
+										((ppu_col_dat & 0x3E0) << 6) |
+										((ppu_col_dat & 0x7C00) >> 7));
 			}
-			else if (addr < 0x07000000)
+
+			ppu_PALRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x07000000)
+		{
+			// Forced Align
+			if ((addr & 0x00010000) == 0x00010000)
 			{
-				// Forced Align
-				if ((addr & 0x00010000) == 0x00010000)
+				VRAM_32[(addr & 0x17FFC) >> 2] = value;
+			}
+			else
+			{
+				VRAM_32[(addr & 0xFFFC) >> 2] = value;
+			}
+
+			ppu_VRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x08000000)
+		{
+			// Forced Align
+			OAM_32[(addr & 0x3FC) >> 2] = value;
+
+			// if writing to OAM outside of VBlank, update rotation parameters
+			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+			{
+				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+				ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
+			}
+
+			ppu_OAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x0D000000)
+		{
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if (addr < 0x0E000000)
+		{
+			if (Is_EEPROM)
+			{
+				if (EEPROM_Wiring)
 				{
-					VRAM_32[(addr & 0x17FFC) >> 2] = value;
+					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 				}
 				else
 				{
-					VRAM_32[(addr & 0xFFFC) >> 2] = value;
-				}
-
-				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x08000000)
-			{
-				// Forced Align
-				OAM_32[(addr & 0x3FC) >> 2] = value;
-
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-				}
-
-				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x0D000000)
-			{
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (Is_EEPROM)
-				{
-					if (EEPROM_Wiring)
+					if ((addr & 0xDFFFE00) == 0xDFFFE00)
 					{
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-						}
-					}
 				}
+			}
 
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-			}
-			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-			{
-				mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
-			}
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
+		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+		{
+			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
 		}
 	}
 
@@ -1153,98 +1152,98 @@ namespace GBAHawk
 	{
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
-
-		if (addr >= 0x02000000)
+		
+		if (addr < 0x03000000)
 		{
-			if (addr < 0x03000000)
+			if (addr >= 0x02000000)
 			{
 				WRAM_16[(addr & 0x3FFFE) >> 1] = value;
 			}
-			else if (addr < 0x04000000)
+		}
+		else if (addr < 0x04000000)
+		{
+			IWRAM_16[(addr & 0x7FFE) >> 1] = value;
+		}
+		else if (addr < 0x05000000)
+		{
+			if (addr < 0x04000800)
 			{
-				IWRAM_16[(addr & 0x7FFE) >> 1] = value;
+				Write_Registers_16(addr - 0x04000000, value);
 			}
-			else if (addr < 0x05000000)
+			else if ((addr & 0x0400FFFF) == 0x04000800)
 			{
-				if (addr < 0x04000800)
+				switch (addr & 3)
 				{
-					Write_Registers_16(addr - 0x04000000, value);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					switch (addr & 3)
-					{
-					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
-					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
-					}
+				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
+				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 				}
 			}
-			else if (addr < 0x06000000)
+		}
+		else if (addr < 0x06000000)
+		{
+			PALRAM_16[(addr & 0x3FE) >> 1] = value;
+
+			// calculate transparent pixel color
+			if ((addr & 0x3FF) == 0)
 			{
-				PALRAM_16[(addr & 0x3FE) >> 1] = value;
+				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-											((ppu_col_dat & 0x1F) << 19) |
-											((ppu_col_dat & 0x3E0) << 6) |
-											((ppu_col_dat & 0x7C00) >> 7));
-				}
-
-				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
+				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
+										((ppu_col_dat & 0x1F) << 19) |
+										((ppu_col_dat & 0x3E0) << 6) |
+										((ppu_col_dat & 0x7C00) >> 7));
 			}
-			else if (addr < 0x07000000)
+
+			ppu_PALRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x07000000)
+		{
+			if ((addr & 0x00010000) == 0x00010000)
 			{
-				if ((addr & 0x00010000) == 0x00010000)
+				VRAM_16[(addr & 0x17FFE) >> 1] = value;
+			}
+			else
+			{
+				VRAM_16[(addr & 0xFFFE) >> 1] = value;
+			}
+
+			ppu_VRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x08000000)
+		{
+			OAM_16[(addr & 0x3FE) >> 1] = value;
+
+			// if writing to OAM outside of VBlank, update rotation parameters
+			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+			{
+				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+			}
+
+			ppu_OAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
+		{
+			if (Is_EEPROM)
+			{
+				if (EEPROM_Wiring)
 				{
-					VRAM_16[(addr & 0x17FFE) >> 1] = value;
+					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 				}
 				else
 				{
-					VRAM_16[(addr & 0xFFFE) >> 1] = value;
-				}
-
-				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x08000000)
-			{
-				OAM_16[(addr & 0x3FE) >> 1] = value;
-
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-				}
-
-				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
-			{
-				if (Is_EEPROM)
-				{
-					if (EEPROM_Wiring)
+					if ((addr & 0xDFFFE00) == 0xDFFFE00)
 					{
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-						}
-					}
 				}
 			}
-			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-			{
-				mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
-			}
+		}
+		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+		{
+			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
 		}
 	}
 
@@ -1253,94 +1252,94 @@ namespace GBAHawk
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
 
-		if (addr >= 0x02000000)
+		if (addr < 0x03000000)
 		{
-			if (addr < 0x03000000)
+			if (addr >= 0x02000000)
 			{
 				WRAM_32[(addr & 0x3FFFC) >> 2] = value;
 			}
-			else if (addr < 0x04000000)
+		}
+		else if (addr < 0x04000000)
+		{
+			IWRAM_32[(addr & 0x7FFC) >> 2] = value;
+		}
+		else if (addr < 0x05000000)
+		{
+			if (addr < 0x04000800)
 			{
-				IWRAM_32[(addr & 0x7FFC) >> 2] = value;
+				Write_Registers_32(addr - 0x04000000, value);
 			}
-			else if (addr < 0x05000000)
+			else if ((addr & 0x0400FFFF) == 0x04000800)
 			{
-				if (addr < 0x04000800)
-				{
-					Write_Registers_32(addr - 0x04000000, value);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					Update_Memory_CTRL(value);
-				}
+				Update_Memory_CTRL(value);
 			}
-			else if (addr < 0x06000000)
+		}
+		else if (addr < 0x06000000)
+		{
+			PALRAM_32[(addr & 0x3FC) >> 2] = value;
+
+			// calculate transparent pixel color
+			if ((addr & 0x3FF) == 0)
 			{
-				PALRAM_32[(addr & 0x3FC) >> 2] = value;
+				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-											((ppu_col_dat & 0x1F) << 19) |
-											((ppu_col_dat & 0x3E0) << 6) |
-											((ppu_col_dat & 0x7C00) >> 7));
-				}
-
-				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
+				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
+										((ppu_col_dat & 0x1F) << 19) |
+										((ppu_col_dat & 0x3E0) << 6) |
+										((ppu_col_dat & 0x7C00) >> 7));
 			}
-			else if (addr < 0x07000000)
+
+			ppu_PALRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x07000000)
+		{
+			if ((addr & 0x00010000) == 0x00010000)
 			{
-				if ((addr & 0x00010000) == 0x00010000)
+				VRAM_32[(addr & 0x17FFC) >> 2] = value;
+			}
+			else
+			{
+				VRAM_32[(addr & 0xFFFC) >> 2] = value;
+			}
+
+			ppu_VRAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if (addr < 0x08000000)
+		{
+			OAM_32[(addr & 0x3FC) >> 2] = value;
+
+			// if writing to OAM outside of VBlank, update rotation parameters
+			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+			{
+				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+				ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
+			}
+
+			ppu_OAM_In_Use = false;
+			ppu_Memory_In_Use = false;
+		}
+		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
+		{
+			if (Is_EEPROM)
+			{
+				if (EEPROM_Wiring)
 				{
-					VRAM_32[(addr & 0x17FFC) >> 2] = value;
+					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 				}
 				else
 				{
-					VRAM_32[(addr & 0xFFFC) >> 2] = value;
-				}
-
-				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if (addr < 0x08000000)
-			{
-				OAM_32[(addr & 0x3FC) >> 2] = value;
-
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-				}
-
-				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
-			}
-			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
-			{
-				if (Is_EEPROM)
-				{
-					if (EEPROM_Wiring)
+					if ((addr & 0xDFFFE00) == 0xDFFFE00)
 					{
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-						}
-					}
 				}
 			}
-			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-			{
-				mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
-			}
+		}
+		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+		{
+			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
 		}
 	}
 	#pragma endregion
@@ -1348,8 +1347,7 @@ namespace GBAHawk
 	void GBA_System::Frame_Advance()
 	{
 		while (!VBlank_Rise)
-		{
-			
+		{		
 			#pragma region Delays
 			if (delays_to_process)
 			{

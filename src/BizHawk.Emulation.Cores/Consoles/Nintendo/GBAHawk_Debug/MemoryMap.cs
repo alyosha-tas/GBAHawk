@@ -506,120 +506,120 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			cpu_Last_Bus_Value &= 0xFFFFFF00;
 			cpu_Last_Bus_Value |= value;
 
-			if (addr >= 0x02000000)
+			if (addr < 0x03000000)
 			{
-				if (addr < 0x03000000)
+				if (addr >= 0x02000000)
 				{
 					WRAM[addr & 0x3FFFF] = value;
 				}
-				else if (addr < 0x04000000)
+			}
+			else if (addr < 0x04000000)
+			{
+				IWRAM[addr & 0x7FFF] = value;
+			}
+			else if (addr < 0x05000000)
+			{
+				if (addr < 0x04000800)
 				{
-					IWRAM[addr & 0x7FFF] = value;
+					Write_Registers_8(addr - 0x04000000, value);
 				}
-				else if (addr < 0x05000000)
+				else if ((addr & 0x0400FFFF) == 0x04000800)
 				{
-					if (addr < 0x04000800)
+					switch (addr & 3)
 					{
-						Write_Registers_8(addr - 0x04000000, value);
+						case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFFFF00) | value)); break;
+						case 0x01: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
+						case 0x02: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
+						default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
 					}
-					else if ((addr & 0x0400FFFF) == 0x04000800)
+				}
+			}
+			else if (addr < 0x06000000)
+			{
+				// 8 bit writes to PALRAM stored as halfword
+				PALRAM[addr & 0x3FF] = value;
+				PALRAM[(addr + 1) & 0x3FF] = value;
+
+				// calculate transparent pixel color
+				if ((addr & 0x3FF) == 0)
+				{
+					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
+
+					ppu_Transparent_Color = (uint)(0xFF000000 |
+												((ppu_col_dat & 0x1F) << 19) |
+												((ppu_col_dat & 0x3E0) << 6) |
+												((ppu_col_dat & 0x7C00) >> 7));
+				}
+
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x07000000)
+			{
+				if ((addr & 0x00010000) == 0x00010000)
+				{
+					// 8 bit writes ignored depending on mode
+					// Seems like it has to do with what region is also used by sprites
+					// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
+					// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
+					// This effects the Quake demo
+					if (ppu_BG_Mode >= 3)
 					{
-						switch (addr & 3)
+						if ((addr & 0x17FFF) < 0x14000)
 						{
-							case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFFFF00) | value)); break;
-							case 0x01: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
-							case 0x02: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
-							default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
+							// 8 bit writes stored as halfword (needs more research)
+							VRAM[addr & 0x17FFF] = value;
+							VRAM[(addr + 1) & 0x17FFF] = value;
 						}
 					}
 				}
-				else if (addr < 0x06000000)
+				else
 				{
-					// 8 bit writes to PALRAM stored as halfword
-					PALRAM[addr & 0x3FF] = value;
-					PALRAM[(addr + 1) & 0x3FF] = value;
-
-					// calculate transparent pixel color
-					if ((addr & 0x3FF) == 0)
-					{
-						ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-						ppu_Transparent_Color = (uint)(0xFF000000 |
-												 ((ppu_col_dat & 0x1F) << 19) |
-												 ((ppu_col_dat & 0x3E0) << 6) |
-												 ((ppu_col_dat & 0x7C00) >> 7));
-					}
-
-					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
+					// 8 bit writes stored as halfword (needs more research)
+					VRAM[addr & 0xFFFF] = value;
+					VRAM[(addr + 1) & 0xFFFF] = value;
 				}
-				else if (addr < 0x07000000)
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x08000000)
+			{
+				// 8 bit writes to OAM ignored
+				// OAM[addr & 0x3FF] = value;
+
+				// are accesses ignored?
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x0D000000)
+			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if (addr < 0x0E000000)
+			{
+				if (Is_EEPROM)
 				{
-					if ((addr & 0x00010000) == 0x00010000)
+					if (EEPROM_Wiring)
 					{
-						// 8 bit writes ignored depending on mode
-						// Seems like it has to do with what region is also used by sprites
-						// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
-						// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
-						// This effects the Quake demo
-						if (ppu_BG_Mode >= 3)
-						{
-							if ((addr & 0x17FFF) < 0x14000)
-							{
-								// 8 bit writes stored as halfword (needs more research)
-								VRAM[addr & 0x17FFF] = value;
-								VRAM[(addr + 1) & 0x17FFF] = value;
-							}
-						}
+						mapper.Mapper_EEPROM_Write(value);
 					}
 					else
 					{
-						// 8 bit writes stored as halfword (needs more research)
-						VRAM[addr & 0xFFFF] = value;
-						VRAM[(addr + 1) & 0xFFFF] = value;
-					}
-
-					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x08000000)
-				{
-					// 8 bit writes to OAM ignored
-					// OAM[addr & 0x3FF] = value;
-
-					// are accesses ignored?
-					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x0D000000)
-				{
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if (addr < 0x0E000000)
-				{
-					if (Is_EEPROM)
-					{
-						if (EEPROM_Wiring)
+						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
 							mapper.Mapper_EEPROM_Write(value);
 						}
-						else
-						{
-							if ((addr & 0xDFFFE00) == 0xDFFFE00)
-							{
-								mapper.Mapper_EEPROM_Write(value);
-							}
-						}
 					}
+				}
 
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-				{
-					mapper.WriteMemory8(addr - 0x0E000000, value);
-				}
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+			{
+				mapper.WriteMemory8(addr - 0x0E000000, value);
 			}
 		}
 
@@ -628,9 +628,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			cpu_Last_Bus_Value &= 0xFFFF0000;
 			cpu_Last_Bus_Value |= value;
 
-			if (addr >= 0x02000000)
+			if (addr < 0x03000000)
 			{
-				if (addr < 0x03000000)
+				if (addr >= 0x02000000)
 				{
 					// Forced Align
 					addr &= 0xFFFFFFFE;
@@ -638,129 +638,129 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					WRAM[addr & 0x3FFFF] = (byte)(value & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 1] = (byte)((value >> 8) & 0xFF);
 				}
-				else if (addr < 0x04000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
+			}
+			else if (addr < 0x04000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
 
-					IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+				IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+			}
+			else if (addr < 0x05000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
+
+				if (addr < 0x04000800)
+				{
+					Write_Registers_16(addr - 0x04000000, value);
 				}
-				else if (addr < 0x05000000)
+				else if ((addr & 0x0400FFFF) == 0x04000800)
 				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					if (addr < 0x04000800)
+					switch (addr & 3)
 					{
-						Write_Registers_16(addr - 0x04000000, value);
-					}
-					else if ((addr & 0x0400FFFF) == 0x04000800)
-					{
-						switch (addr & 3)
-						{
-							case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF0000) | value)); break;
-							default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
-						}
+						case 0x00: Update_Memory_CTRL((uint)((Memory_CTRL & 0xFFFF0000) | value)); break;
+						default: Update_Memory_CTRL((uint)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 					}
 				}
-				else if (addr < 0x06000000)
+			}
+			else if (addr < 0x06000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
+
+				PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+
+				// calculate transparent pixel color
+				if ((addr & 0x3FF) == 0)
 				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
+					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
 
-					PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-
-					// calculate transparent pixel color
-					if ((addr & 0x3FF) == 0)
-					{
-						ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-						ppu_Transparent_Color = (uint)(0xFF000000 |
-												 ((ppu_col_dat & 0x1F) << 19) |
-												 ((ppu_col_dat & 0x3E0) << 6) |
-												 ((ppu_col_dat & 0x7C00) >> 7));
-					}
-
-					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
+					ppu_Transparent_Color = (uint)(0xFF000000 |
+												((ppu_col_dat & 0x1F) << 19) |
+												((ppu_col_dat & 0x3E0) << 6) |
+												((ppu_col_dat & 0x7C00) >> 7));
 				}
-				else if (addr < 0x07000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
 
-					if ((addr & 0x00010000) == 0x00010000)
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x07000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
+
+				if ((addr & 0x00010000) == 0x00010000)
+				{
+					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+				}
+				else
+				{
+					VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
+				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x08000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
+
+				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+
+				// if writing to OAM outside of VBlank, update rotation parameters
+				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+				{
+					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x0D000000)
+			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if (addr < 0x0E000000)
+			{
+				if (Is_EEPROM)
+				{
+					if (EEPROM_Wiring)
 					{
-						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+						mapper.Mapper_EEPROM_Write((byte)value);
 					}
 					else
 					{
-						VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
-					}
-
-					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x08000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					OAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-
-					// if writing to OAM outside of VBlank, update rotation parameters
-					if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-					{
-						ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-					}
-
-					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x0D000000)
-				{
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if (addr < 0x0E000000)
-				{
-					if (Is_EEPROM)
-					{
-						if (EEPROM_Wiring)
+						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
 							mapper.Mapper_EEPROM_Write((byte)value);
 						}
-						else
-						{
-							if ((addr & 0xDFFFE00) == 0xDFFFE00)
-							{
-								mapper.Mapper_EEPROM_Write((byte)value);
-							}
-						}
 					}
+				}
 
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-				{
-					mapper.WriteMemory16(addr - 0x0E000000, value);
-				}
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+			{
+				mapper.WriteMemory16(addr - 0x0E000000, value);
 			}
 		}
 
 		public void Write_Memory_32(uint addr, uint value)
 		{
-			cpu_Last_Bus_Value = value;
+			cpu_Last_Bus_Value = value;		
 			
-			if (addr >= 0x02000000)
+			if (addr < 0x03000000)
 			{
-				if (addr < 0x03000000)
+				if (addr >= 0x02000000)
 				{
 					// Forced Align
 					addr &= 0xFFFFFFFC;
@@ -770,126 +770,126 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					WRAM[(addr & 0x3FFFF) + 2] = (byte)((value >> 16) & 0xFF);
 					WRAM[(addr & 0x3FFFF) + 3] = (byte)((value >> 24) & 0xFF);
 				}
-				else if (addr < 0x04000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
+			}
+			else if (addr < 0x04000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFC;
 
-					IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 2] = (byte)((value >> 16) & 0xFF);
-					IWRAM[(addr & 0x7FFF) + 3] = (byte)((value >> 24) & 0xFF);
+				IWRAM[addr & 0x7FFF] = (byte)(value & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 1] = (byte)((value >> 8) & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 2] = (byte)((value >> 16) & 0xFF);
+				IWRAM[(addr & 0x7FFF) + 3] = (byte)((value >> 24) & 0xFF);
+			}
+			else if (addr < 0x05000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFC;
+
+				if (addr < 0x04000800)
+				{
+					Write_Registers_32(addr - 0x04000000, value);
 				}
-				else if (addr < 0x05000000)
+				else if ((addr & 0x0400FFFF) == 0x04000800)
 				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					if (addr < 0x04000800)
-					{
-						Write_Registers_32(addr - 0x04000000, value);
-					}
-					else if ((addr & 0x0400FFFF) == 0x04000800)
-					{
-						Update_Memory_CTRL(value);
-					}
+					Update_Memory_CTRL(value);
 				}
-				else if (addr < 0x06000000)
+			}
+			else if (addr < 0x06000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFC;
+
+				PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+				PALRAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
+				PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
+
+				// calculate transparent pixel color
+				if ((addr & 0x3FF) == 0)
 				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
+					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
 
-					PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-					PALRAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
-					PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-					// calculate transparent pixel color
-					if ((addr & 0x3FF) == 0)
-					{
-						ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-						ppu_Transparent_Color = (uint)(0xFF000000 |
-												 ((ppu_col_dat & 0x1F) << 19) |
-												 ((ppu_col_dat & 0x3E0) << 6) |
-												 ((ppu_col_dat & 0x7C00) >> 7));
-					}
-
-					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
+					ppu_Transparent_Color = (uint)(0xFF000000 |
+												((ppu_col_dat & 0x1F) << 19) |
+												((ppu_col_dat & 0x3E0) << 6) |
+												((ppu_col_dat & 0x7C00) >> 7));
 				}
-				else if (addr < 0x07000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
 
-					if ((addr & 0x00010000) == 0x00010000)
+				ppu_PALRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x07000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFC;
+
+				if ((addr & 0x00010000) == 0x00010000)
+				{
+					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+					VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
+					VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+				}
+				else
+				{
+					VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
+					VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
+					VRAM[(addr & 0xFFFF) + 2] = (byte)((value >> 16) & 0xFF);
+					VRAM[(addr & 0xFFFF) + 3] = (byte)((value >> 24) & 0xFF);
+				}
+
+				ppu_VRAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x08000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFC;
+
+				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
+				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
+				OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
+				OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
+
+				// if writing to OAM outside of VBlank, update rotation parameters
+				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
+				{
+					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
+					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
+				}
+
+				ppu_OAM_In_Use = false;
+				ppu_Memory_In_Use = false;
+			}
+			else if (addr < 0x0D000000)
+			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if (addr < 0x0E000000)
+			{
+				if (Is_EEPROM)
+				{
+					if (EEPROM_Wiring)
 					{
-						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
-						VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
-						VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+						mapper.Mapper_EEPROM_Write((byte)value);
 					}
 					else
 					{
-						VRAM[addr & 0xFFFF] = (byte)(value & 0xFF);
-						VRAM[(addr & 0xFFFF) + 1] = (byte)((value >> 8) & 0xFF);
-						VRAM[(addr & 0xFFFF) + 2] = (byte)((value >> 16) & 0xFF);
-						VRAM[(addr & 0xFFFF) + 3] = (byte)((value >> 24) & 0xFF);
-					}
-
-					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x08000000)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					OAM[addr & 0x3FF] = (byte)(value & 0xFF);
-					OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-					OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
-					OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-					// if writing to OAM outside of VBlank, update rotation parameters
-					if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-					{
-						ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-						ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-					}
-
-					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
-				}
-				else if (addr < 0x0D000000)
-				{
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if (addr < 0x0E000000)
-				{
-					if (Is_EEPROM)
-					{
-						if (EEPROM_Wiring)
+						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
 							mapper.Mapper_EEPROM_Write((byte)value);
 						}
-						else
-						{
-							if ((addr & 0xDFFFE00) == 0xDFFFE00)
-							{
-								mapper.Mapper_EEPROM_Write((byte)value);
-							}
-						}
 					}
+				}
 
-					// ROM access complete, re-enable prefetcher
-					pre_Fetch_Cnt_Inc = 1;
-				}
-				else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-				{
-					mapper.WriteMemory32(addr - 0x0E000000, value);
-				}
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+			}
+			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
+			{
+				mapper.WriteMemory32(addr - 0x0E000000, value);
 			}
 		}
 
