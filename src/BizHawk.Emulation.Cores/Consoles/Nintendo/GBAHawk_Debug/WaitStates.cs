@@ -112,7 +112,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -204,7 +204,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -302,7 +302,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Memory_In_Use = true;
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
 			}
@@ -406,7 +406,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -553,7 +553,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Memory_In_Use = true;
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
 			}

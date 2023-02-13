@@ -5172,7 +5172,7 @@ namespace GBAHawk
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -5264,7 +5264,7 @@ namespace GBAHawk
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -5362,7 +5362,7 @@ namespace GBAHawk
 					ppu_Memory_In_Use = true;
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
 			}
@@ -5466,7 +5466,7 @@ namespace GBAHawk
 					}
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += WRAM_Waits; //WRAM
 			}
@@ -5613,7 +5613,7 @@ namespace GBAHawk
 					ppu_Memory_In_Use = true;
 				}
 			}
-			else if ((addr >= 0x02000000) && (addr < 0x03000000))
+			else if ((addr < 0x03000000) && (addr >= 0x02000000))
 			{
 				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
 			}
