@@ -6898,7 +6898,6 @@ namespace GBAHawk
 		uint32_t bg_pixel[4] = { };
 
 		bool BG_Go[4] = { };
-		bool BG_Has_Pixel[4] = { };
 		bool BG_Is_Transparent[4] = { };
 
 		uint16_t ppu_col_dat;
@@ -7594,13 +7593,10 @@ namespace GBAHawk
 
 			OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle] && ppu_OBJ_On;
 
-			for (int a = 0; a < 4; a++)
-			{
-				bg_pixel[a] = 0xFFFFFFFF;
-				BG_Go[a] = true;
-				BG_Has_Pixel[a] = false;
-				BG_Is_Transparent[a] = true;
-			}
+			BG_Go[0] = ppu_BG_On[0];
+			BG_Go[1] = ppu_BG_On[1];
+			BG_Go[2] = ppu_BG_On[2];
+			BG_Go[3] = ppu_BG_On[3];
 
 			// Check enabled pixels
 			if (ppu_Any_Window_On)
@@ -7610,7 +7606,7 @@ namespace GBAHawk
 				{
 					Is_Outside = false;
 
-					for (int w0 = 0; w0 < 4; w0++) { BG_Go[w0] &= ppu_WIN0_BG_En[w0] & ppu_BG_On[w0]; }
+					for (int w0 = 0; w0 < 4; w0++) { BG_Go[w0] &= ppu_WIN0_BG_En[w0]; }
 
 					OBJ_Go = ppu_WIN0_OBJ_En && OBJ_Has_Pixel;
 					Color_FX_Go = ppu_WIN0_Color_En;
@@ -7620,7 +7616,7 @@ namespace GBAHawk
 				{
 					Is_Outside = false;
 
-					for (int w1 = 0; w1 < 4; w1++) { BG_Go[w1] &= ppu_WIN1_BG_En[w1] & ppu_BG_On[w1]; }
+					for (int w1 = 0; w1 < 4; w1++) { BG_Go[w1] &= ppu_WIN1_BG_En[w1]; }
 
 					OBJ_Go = ppu_WIN1_OBJ_En && OBJ_Has_Pixel;
 					Color_FX_Go = ppu_WIN1_Color_En;
@@ -7629,7 +7625,7 @@ namespace GBAHawk
 				{
 					Is_Outside = false;
 
-					for (int ob = 0; ob < 4; ob++) { BG_Go[ob] &= ppu_OBJ_BG_En[ob] & ppu_BG_On[ob]; }
+					for (int ob = 0; ob < 4; ob++) { BG_Go[ob] &= ppu_OBJ_BG_En[ob]; }
 
 					OBJ_Go = ppu_OBJ_OBJ_En && OBJ_Has_Pixel;
 					Color_FX_Go = ppu_OBJ_Color_En;
@@ -7637,7 +7633,7 @@ namespace GBAHawk
 
 				if (Is_Outside)
 				{
-					for (int outs = 0; outs < 4; outs++) { BG_Go[outs] &= ppu_OUT_BG_En[outs] & ppu_BG_On[outs]; }
+					for (int outs = 0; outs < 4; outs++) { BG_Go[outs] &= ppu_OUT_BG_En[outs]; }
 
 					OBJ_Go = ppu_OUT_OBJ_En && OBJ_Has_Pixel;
 					Color_FX_Go = ppu_OUT_Color_En;
@@ -7645,8 +7641,6 @@ namespace GBAHawk
 			}
 			else
 			{
-				for (int n = 0; n < 4; n++) { BG_Go[n] = ppu_BG_On[n]; }
-
 				OBJ_Go = OBJ_Has_Pixel;
 				Color_FX_Go = true;
 			}
@@ -7658,6 +7652,8 @@ namespace GBAHawk
 				{
 					if (BG_Go[c0])
 					{
+						BG_Is_Transparent[c0] = true;
+						
 						// calculate scrolling
 						if (ppu_BG_Mosaic[c0])
 						{
@@ -7791,34 +7787,32 @@ namespace GBAHawk
 								((Pixel_Color_data & 0x1F) << 19) |
 								((Pixel_Color_data & 0x3E0) << 6) |
 								((Pixel_Color_data & 0x7C00) >> 7));
-
-							BG_Has_Pixel[c0] = true;
 						}
 						else
 						{
 							BG_Is_Transparent[c0] = true;
 						}
-					}
 
-					if (!BG_Is_Transparent[c0])
-					{
-						if (ppu_BG_Priority[c0] < cur_layer_priority)
+						if (!BG_Is_Transparent[c0])
 						{
-							bg_pixel_s = bg_pixel_f;
-							second_BG_layer = cur_BG_layer;
-							second_layer_priority = cur_layer_priority;
+							if (ppu_BG_Priority[c0] < cur_layer_priority)
+							{
+								bg_pixel_s = bg_pixel_f;
+								second_BG_layer = cur_BG_layer;
+								second_layer_priority = cur_layer_priority;
 
-							bg_pixel_f = bg_pixel[c0];
-							cur_BG_layer = c0;
-							cur_layer_priority = ppu_BG_Priority[c0];
+								bg_pixel_f = bg_pixel[c0];
+								cur_BG_layer = c0;
+								cur_layer_priority = ppu_BG_Priority[c0];
+							}
+							else if (ppu_BG_Priority[c0] < second_layer_priority)
+							{
+								bg_pixel_s = bg_pixel[c0];
+								second_BG_layer = c0;
+								second_layer_priority = ppu_BG_Priority[c0];
+							}
 						}
-						else if (ppu_BG_Priority[c0] < second_layer_priority)
-						{
-							bg_pixel_s = bg_pixel[c0];
-							second_BG_layer = c0;
-							second_layer_priority = ppu_BG_Priority[c0];
-						}
-					}
+					}			
 				}
 				break;
 
@@ -7827,6 +7821,8 @@ namespace GBAHawk
 				{
 					if (BG_Go[c1])
 					{
+						BG_Is_Transparent[c1] = true;
+						
 						// calculate scrolling
 						if (ppu_BG_Mosaic[c1])
 						{
@@ -7960,38 +7956,38 @@ namespace GBAHawk
 								((Pixel_Color_data & 0x1F) << 19) |
 								((Pixel_Color_data & 0x3E0) << 6) |
 								((Pixel_Color_data & 0x7C00) >> 7));
-
-							BG_Has_Pixel[c1] = true;
 						}
 						else
 						{
 							BG_Is_Transparent[c1] = true;
 						}
-					}
 
-					if (!BG_Is_Transparent[c1])
-					{
-						if (ppu_BG_Priority[c1] < cur_layer_priority)
+						if (!BG_Is_Transparent[c1])
 						{
-							bg_pixel_s = bg_pixel_f;
-							second_BG_layer = cur_BG_layer;
-							second_layer_priority = cur_layer_priority;
+							if (ppu_BG_Priority[c1] < cur_layer_priority)
+							{
+								bg_pixel_s = bg_pixel_f;
+								second_BG_layer = cur_BG_layer;
+								second_layer_priority = cur_layer_priority;
 
-							bg_pixel_f = bg_pixel[c1];
-							cur_BG_layer = c1;
-							cur_layer_priority = ppu_BG_Priority[c1];
+								bg_pixel_f = bg_pixel[c1];
+								cur_BG_layer = c1;
+								cur_layer_priority = ppu_BG_Priority[c1];
+							}
+							else if (ppu_BG_Priority[c1] < second_layer_priority)
+							{
+								bg_pixel_s = bg_pixel[c1];
+								second_BG_layer = c1;
+								second_layer_priority = ppu_BG_Priority[c1];
+							}
 						}
-						else if (ppu_BG_Priority[c1] < second_layer_priority)
-						{
-							bg_pixel_s = bg_pixel[c1];
-							second_BG_layer = c1;
-							second_layer_priority = ppu_BG_Priority[c1];
-						}
-					}
+					}				
 				}
 
 				if (BG_Go[2])
 				{
+					BG_Is_Transparent[2] = true;
+					
 					// calculate rotation and scaling
 					if (ppu_BG_Mosaic[2])
 					{
@@ -8041,8 +8037,6 @@ namespace GBAHawk
 							((Pixel_Color_data & 0x7C00) >> 7));
 
 						BG_Is_Transparent[2] = Pixel_Color == 0;
-
-						BG_Has_Pixel[2] = true;
 					}
 					else
 					{
@@ -8076,6 +8070,8 @@ namespace GBAHawk
 				{
 					if (BG_Go[c2])
 					{
+						BG_Is_Transparent[c2] = true;
+						
 						// calculate rotation and scaling
 						if (ppu_BG_Mosaic[c2])
 						{
@@ -8136,34 +8132,32 @@ namespace GBAHawk
 								((Pixel_Color_data & 0x7C00) >> 7));
 
 							BG_Is_Transparent[c2] = Pixel_Color == 0;
-
-							BG_Has_Pixel[c2] = true;
 						}
 						else
 						{
 							BG_Is_Transparent[c2] = true;
 						}
-					}
 
-					if (!BG_Is_Transparent[c2])
-					{
-						if (ppu_BG_Priority[c2] < cur_layer_priority)
+						if (!BG_Is_Transparent[c2])
 						{
-							bg_pixel_s = bg_pixel_f;
-							second_BG_layer = cur_BG_layer;
-							second_layer_priority = cur_layer_priority;
+							if (ppu_BG_Priority[c2] < cur_layer_priority)
+							{
+								bg_pixel_s = bg_pixel_f;
+								second_BG_layer = cur_BG_layer;
+								second_layer_priority = cur_layer_priority;
 
-							bg_pixel_f = bg_pixel[c2];
-							cur_BG_layer = c2;
-							cur_layer_priority = ppu_BG_Priority[c2];
+								bg_pixel_f = bg_pixel[c2];
+								cur_BG_layer = c2;
+								cur_layer_priority = ppu_BG_Priority[c2];
+							}
+							else if (ppu_BG_Priority[c2] < second_layer_priority)
+							{
+								bg_pixel_s = bg_pixel[c2];
+								second_BG_layer = c2;
+								second_layer_priority = ppu_BG_Priority[c2];
+							}
 						}
-						else if (ppu_BG_Priority[c2] < second_layer_priority)
-						{
-							bg_pixel_s = bg_pixel[c2];
-							second_BG_layer = c2;
-							second_layer_priority = ppu_BG_Priority[c2];
-						}
-					}
+					}			
 				}
 				break;
 
@@ -8194,7 +8188,6 @@ namespace GBAHawk
 						// no transparency possible
 						cur_BG_layer = 2;
 						cur_layer_priority = ppu_BG_Priority[2];
-						BG_Has_Pixel[2] = true;
 
 						// pixel color comes direct from VRAM
 						int m3_ofst = ppu_X_RS + ppu_Y_RS * 240;
@@ -8210,6 +8203,7 @@ namespace GBAHawk
 					}
 				}
 				break;
+
 			case 4:
 				if (BG_Go[2])
 				{
@@ -8243,7 +8237,6 @@ namespace GBAHawk
 							((Pixel_Color_data & 0x7C00) >> 7));
 
 						BG_Is_Transparent[2] = Pixel_Color == 0;
-						BG_Has_Pixel[2] = true;
 
 						if (!BG_Is_Transparent[2])
 						{
@@ -8261,6 +8254,7 @@ namespace GBAHawk
 					}
 				}
 				break;
+
 			case 5:
 				// bitmaps, only BG2
 				if (BG_Go[2])
@@ -8289,7 +8283,6 @@ namespace GBAHawk
 						// no transparency possible
 						cur_BG_layer = 2;
 						cur_layer_priority = ppu_BG_Priority[2];
-						BG_Has_Pixel[2] = true;
 
 						// pixel color comes direct from VRAM
 						int m3_ofst = ppu_X_RS + ppu_Y_RS * 160;
@@ -8314,7 +8307,6 @@ namespace GBAHawk
 			case 7:
 				// invalid
 				break;
-
 			}
 
 			// determine final pixel color, based on sprites and special effects
