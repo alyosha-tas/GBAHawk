@@ -1115,7 +1115,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							ppu_X_RS &= (BG_Scale_X[c0] - 1);
 							ppu_Y_RS &= (BG_Scale_Y[c0] - 1);
 
-							// determine if pixel is in valid range, and pic out color if so
+							// determine if pixel is in valid range, and pick out color if so
 							if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[c0]) && (ppu_Y_RS < BG_Scale_Y[c0]))
 							{
 								VRAM_ofst_X = ppu_X_RS >> 3;
@@ -1452,11 +1452,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
 						sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-						sol_x = Math.Floor(sol_x + ppu_F_Ref_X_2);
-						sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
-
-						ppu_X_RS = (ushort)(sol_x);
-						ppu_Y_RS = (ushort)(sol_y);
+						ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
+						ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 						// adjust if wraparound is enabled
 						if (ppu_BG_Overflow[2])
@@ -1541,20 +1538,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
 								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-								sol_x = Math.Floor(sol_x + ppu_F_Ref_X_2);
-								sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
+								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 							}
 							else
 							{
 								sol_x = ppu_F_Rot_A_3 * cur_x - ppu_F_Rot_B_3 * cur_y;
 								sol_y = -ppu_F_Rot_C_3 * cur_x + ppu_F_Rot_D_3 * cur_y;
 
-								sol_x = Math.Floor(sol_x + ppu_F_Ref_X_3);
-								sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_3));
+								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_3);
+								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_3));
 							}
-
-							ppu_X_RS = (ushort)(sol_x);
-							ppu_Y_RS = (ushort)(sol_y);
 
 							// adjust if wraparound is enabled
 							if (ppu_BG_Overflow[c2])
@@ -1637,11 +1631,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
 						sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-						sol_x = Math.Floor(sol_x + ppu_F_Ref_X_2);
-						sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
-
-						ppu_X_RS = (ushort)(sol_x);
-						ppu_Y_RS = (ushort)(sol_y);
+						ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
+						ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 						if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 						{
@@ -1685,11 +1676,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
 						sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-						sol_x = Math.Floor(sol_x + ppu_F_Ref_X_2);
-						sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
-
-						ppu_X_RS = (ushort)(sol_x);
-						ppu_Y_RS = (ushort)(sol_y);
+						ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
+						ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 						if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 						{
@@ -1744,11 +1732,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
 						sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-						sol_x = Math.Floor(sol_x + ppu_F_Ref_X_2);
-						sol_y = Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
-
-						ppu_X_RS = (ushort)(sol_x);
-						ppu_Y_RS = (ushort)(sol_y);
+						ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
+						ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 						// display split into 2 frames, outside of 160 x 128, display backdrop
 						if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))

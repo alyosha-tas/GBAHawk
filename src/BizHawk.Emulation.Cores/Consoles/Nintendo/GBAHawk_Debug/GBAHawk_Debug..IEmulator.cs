@@ -13,7 +13,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public IController Frame_Controller;
 
-
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
 		public bool VBlank_Rise;
