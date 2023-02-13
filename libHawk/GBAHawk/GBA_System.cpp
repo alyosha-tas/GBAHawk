@@ -1566,6 +1566,19 @@ namespace GBAHawk
 
 									ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
 									ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
+
+									ppu_BG_X_Latch[0] = ppu_BG_X[0];
+									ppu_BG_X_Latch[1] = ppu_BG_X[1];
+									ppu_BG_X_Latch[2] = ppu_BG_X[2];
+									ppu_BG_X_Latch[3] = ppu_BG_X[3];
+
+									ppu_BG_Y_Latch[0] = ppu_BG_Y[0];
+									ppu_BG_Y_Latch[1] = ppu_BG_Y[1];
+									ppu_BG_Y_Latch[2] = ppu_BG_Y[2];
+									ppu_BG_Y_Latch[3] = ppu_BG_Y[3];
+
+									ppu_Convert_Offset_to_float(2);
+									ppu_Convert_Offset_to_float(3);
 								}
 							}
 						}
@@ -2227,19 +2240,6 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle >= 40) && (ppu_Cycle < 1000))
 						{
-							if (ppu_Cycle == 40)
-							{
-								if (ppu_BG_Mode > 0)
-								{
-									ppu_Calculate_BG_Rotations(2);
-
-									if (ppu_BG_Mode == 2)
-									{
-										ppu_Calculate_BG_Rotations(3);
-									}
-								}
-							}
-
 							ppu_Render();
 
 							ppu_Display_Cycle += 1;
