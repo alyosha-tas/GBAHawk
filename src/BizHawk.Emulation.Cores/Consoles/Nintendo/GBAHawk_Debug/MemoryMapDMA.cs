@@ -80,7 +80,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					dma_Last_Bus_Value[chan] = (uint)((ret << 16) | ret);
 				}
 			}
-			else if (addr >= 0x05000000)
+			else if (addr >= 0x04000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -103,33 +103,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_VRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-				else
+				else if (addr >= 0x05000000)
 				{
 					ret = (ushort)((PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
+				else
+				{
+					if (addr < 0x04000800)
+					{
+						ret = Read_Registers_16(addr - 0x04000000);
+					}
+					else if ((addr & 0x0400FFFF) == 0x04000800)
+					{
+						switch (addr & 3)
+						{
+							case 0: ret = (ushort)(Memory_CTRL & 0xFFFF); break;
+							default: ret = (ushort)((Memory_CTRL >> 16) & 0xFFFF); break;
+						}
+					}
+				}
 
 				dma_Last_Bus_Value[chan] = (uint)((ret << 16) | ret);
-			}
-			else if (addr >= 0x04000000)
-			{
-				if (addr < 0x04000800)
-				{
-					ret = Read_Registers_16(addr - 0x04000000);
-					dma_Last_Bus_Value[chan] = (uint)((ret << 16) | ret);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					switch (addr & 3)
-					{
-						case 0: ret = (ushort)(Memory_CTRL & 0xFFFF); break;
-						default: ret = (ushort)((Memory_CTRL >> 16) & 0xFFFF); break;
-					}
-
-					dma_Last_Bus_Value[chan] = (uint)((ret << 16) | ret);
-				}
 			}
 			else if (addr >= 0x03000000)
 			{
@@ -198,7 +195,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					dma_Last_Bus_Value[chan] = mapper.ReadMemory32(addr - 0x0E000000);
 				}
 			}
-			else if (addr >= 0x05000000)
+			else if (addr >= 0x04000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -230,7 +227,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_VRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-				else
+				else if (addr >= 0x05000000)
 				{
 					dma_Last_Bus_Value[chan] = (uint)((PALRAM[(addr & 0x3FF) + 3] << 24) |
 													  (PALRAM[(addr & 0x3FF) + 2] << 16) |
@@ -240,16 +237,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_PALRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-			}
-			else if (addr >= 0x04000000)
-			{
-				if (addr < 0x04000800)
+				else
 				{
-					dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					dma_Last_Bus_Value[chan] = Memory_CTRL;
+					if (addr < 0x04000800)
+					{
+						dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
+					}
+					else if ((addr & 0x0400FFFF) == 0x04000800)
+					{
+						dma_Last_Bus_Value[chan] = Memory_CTRL;
+					}
 				}
 			}
 			else if (addr >= 0x03000000)

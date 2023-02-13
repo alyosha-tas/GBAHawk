@@ -91,7 +91,7 @@ namespace GBAHawk
 				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); // open bus
 			}
 		}
-		else if (addr >= 0x05000000)
+		else if (addr >= 0x04000000)
 		{
 			if (addr >= 0x07000000)
 			{
@@ -114,33 +114,33 @@ namespace GBAHawk
 				ppu_VRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-			else
+			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM[addr & 0x3FF];
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
-			{
-				ret = Read_Registers_8(addr - 0x04000000);
-			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
-			{
-				switch (addr & 3)
-				{
-				case 0: ret = (uint8_t)(Memory_CTRL & 0xFF); break;
-				case 1: ret = (uint8_t)((Memory_CTRL >> 8) & 0xFF); break;
-				case 2: ret = (uint8_t)((Memory_CTRL >> 16) & 0xFF); break;
-				default: ret = (uint8_t)((Memory_CTRL >> 24) & 0xFF); break;
-				}
-			}
 			else
 			{
-				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+				if (addr < 0x04000800)
+				{
+					ret = Read_Registers_8(addr - 0x04000000);
+				}
+				else if ((addr & 0x0400FFFF) == 0x04000800)
+				{
+					switch (addr & 3)
+					{
+					case 0: ret = (uint8_t)(Memory_CTRL & 0xFF); break;
+					case 1: ret = (uint8_t)((Memory_CTRL >> 8) & 0xFF); break;
+					case 2: ret = (uint8_t)((Memory_CTRL >> 16) & 0xFF); break;
+					default: ret = (uint8_t)((Memory_CTRL >> 24) & 0xFF); break;
+					}
+				}
+				else
+				{
+					ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+				}
 			}
 		}
 		else if (addr >= 0x03000000)
@@ -247,7 +247,7 @@ namespace GBAHawk
 				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
 			}
 		}
-		else if (addr >= 0x05000000)
+		else if (addr >= 0x04000000)
 		{
 			// Forced Align
 			if (addr >= 0x07000000)
@@ -271,37 +271,37 @@ namespace GBAHawk
 				ppu_VRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-			else
+			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
-			{
-				// Forced Align
-				addr &= 0xFFFFFFFE;
-
-				ret = Read_Registers_16(addr - 0x04000000);
-			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
-			{
-				// Forced Align
-				addr &= 0xFFFFFFFE;
-
-				switch (addr & 3)
-				{
-				case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
-				default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
-				}
-			}
 			else
 			{
-				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+				if (addr < 0x04000800)
+				{
+					// Forced Align
+					addr &= 0xFFFFFFFE;
+
+					ret = Read_Registers_16(addr - 0x04000000);
+				}
+				else if ((addr & 0x0400FFFF) == 0x04000800)
+				{
+					// Forced Align
+					addr &= 0xFFFFFFFE;
+
+					switch (addr & 3)
+					{
+					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
+					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
+					}
+				}
+				else
+				{
+					ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+				}
 			}
 		}
 		else if (addr >= 0x03000000)
@@ -398,7 +398,7 @@ namespace GBAHawk
 				ret = cpu_Last_Bus_Value; // open bus			
 			}
 		}
-		else if (addr >= 0x05000000)
+		else if (addr >= 0x04000000)
 		{
 			// Forced Align
 			if (addr >= 0x07000000)
@@ -422,33 +422,33 @@ namespace GBAHawk
 				ppu_VRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-			else
+			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
-			{
-				// Forced Align
-				addr &= 0xFFFFFFFC;
-
-				ret = Read_Registers_32(addr - 0x04000000);
-			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
-			{
-				// Forced Align
-				addr &= 0xFFFFFFFC;
-
-				ret = Memory_CTRL;
-			}
 			else
 			{
-				ret = cpu_Last_Bus_Value; // open bus
+				if (addr < 0x04000800)
+				{
+					// Forced Align
+					addr &= 0xFFFFFFFC;
+
+					ret = Read_Registers_32(addr - 0x04000000);
+				}
+				else if ((addr & 0x0400FFFF) == 0x04000800)
+				{
+					// Forced Align
+					addr &= 0xFFFFFFFC;
+
+					ret = Memory_CTRL;
+				}
+				else
+				{
+					ret = cpu_Last_Bus_Value; // open bus
+				}
 			}
 		}
 		else if (addr >= 0x03000000)
@@ -985,7 +985,7 @@ namespace GBAHawk
 				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 			}
 		}
-		else if (addr >= 0x05000000)
+		else if (addr >= 0x04000000)
 		{
 			if (addr >= 0x07000000)
 			{
@@ -1008,33 +1008,30 @@ namespace GBAHawk
 				ppu_VRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-			else
+			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
+			else
+			{
+				if (addr < 0x04000800)
+				{
+					ret = Read_Registers_16(addr - 0x04000000);
+				}
+				else if ((addr & 0x0400FFFF) == 0x04000800)
+				{
+					switch (addr & 3)
+					{
+					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
+					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
+					}
+				}
+			}
 
 			dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
-			{
-				ret = Read_Registers_16(addr - 0x04000000);
-				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
-			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
-			{
-				switch (addr & 3)
-				{
-				case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
-				default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
-				}
-
-				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
-			}
 		}
 		else if (addr >= 0x03000000)
 		{
@@ -1094,7 +1091,7 @@ namespace GBAHawk
 				dma_Last_Bus_Value[chan] = mapper_pntr->Read_Memory_32(addr - 0x0E000000);
 			}
 		}
-		else if (addr >= 0x05000000)
+		else if (addr >= 0x04000000)
 		{
 			if (addr >= 0x07000000)
 			{
@@ -1117,23 +1114,23 @@ namespace GBAHawk
 				ppu_VRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-			else
+			else if (addr >= 0x05000000)
 			{
 				dma_Last_Bus_Value[chan] = PALRAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
+			else
 			{
-				dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
-			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
-			{
-				dma_Last_Bus_Value[chan] = Memory_CTRL;
+				if (addr < 0x04000800)
+				{
+					dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
+				}
+				else if ((addr & 0x0400FFFF) == 0x04000800)
+				{
+					dma_Last_Bus_Value[chan] = Memory_CTRL;
+				}
 			}
 		}
 		else if (addr >= 0x03000000)

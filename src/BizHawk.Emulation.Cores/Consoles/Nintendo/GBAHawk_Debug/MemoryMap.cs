@@ -86,7 +86,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = (byte)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
 				}			
 			}
-			else if (addr >= 0x05000000)
+			else if (addr >= 0x04000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -109,34 +109,34 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_VRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-				else
+				else if (addr >= 0x05000000)
 				{
 					ret = PALRAM[addr & 0x3FF];
 
 					ppu_PALRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-			}
-			else if (addr >= 0x04000000)
-			{
-				if (addr < 0x04000800)
-				{
-					ret = Read_Registers_8(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					switch (addr & 3)
-					{
-						case 0: ret = (byte)(Memory_CTRL & 0xFF); break;
-						case 1: ret = (byte)((Memory_CTRL >> 8) & 0xFF); break;
-						case 2: ret = (byte)((Memory_CTRL >> 16) & 0xFF); break;
-						default: ret = (byte)((Memory_CTRL >> 24) & 0xFF); break;
-					}
-				}
 				else
 				{
-					ret = (byte)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
-				}			
+					if (addr < 0x04000800)
+					{
+						ret = Read_Registers_8(addr - 0x04000000);
+					}
+					else if ((addr & 0x0400FFFF) == 0x04000800)
+					{
+						switch (addr & 3)
+						{
+							case 0: ret = (byte)(Memory_CTRL & 0xFF); break;
+							case 1: ret = (byte)((Memory_CTRL >> 8) & 0xFF); break;
+							case 2: ret = (byte)((Memory_CTRL >> 16) & 0xFF); break;
+							default: ret = (byte)((Memory_CTRL >> 24) & 0xFF); break;
+						}
+					}
+					else
+					{
+						ret = (byte)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+					}
+				}
 			}
 			else if (addr >= 0x03000000)
 			{
@@ -244,7 +244,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = (ushort)(cpu_Last_Bus_Value & 0xFFFF); // open bus
 				}		
 			}
-			else if (addr >= 0x05000000)
+			else if (addr >= 0x04000000)
 			{
 				// Forced Align
 				addr &= 0xFFFFFFFE;
@@ -270,37 +270,37 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_VRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-				else
+				else if (addr >= 0x05000000)
 				{
 					ret = (ushort)((PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-			}
-			else if (addr >= 0x04000000)
-			{
-				if (addr < 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					ret = Read_Registers_16(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					switch (addr & 3)
-					{
-						case 0: ret = (ushort)(Memory_CTRL & 0xFFFF); break;
-						default: ret = (ushort)((Memory_CTRL >> 16) & 0xFFFF); break;
-					}
-				}
 				else
 				{
-					ret = (ushort)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+					if (addr < 0x04000800)
+					{
+						// Forced Align
+						addr &= 0xFFFFFFFE;
+
+						ret = Read_Registers_16(addr - 0x04000000);
+					}
+					else if ((addr & 0x0400FFFF) == 0x04000800)
+					{
+						// Forced Align
+						addr &= 0xFFFFFFFE;
+
+						switch (addr & 3)
+						{
+							case 0: ret = (ushort)(Memory_CTRL & 0xFFFF); break;
+							default: ret = (ushort)((Memory_CTRL >> 16) & 0xFFFF); break;
+						}
+					}
+					else
+					{
+						ret = (ushort)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+					}
 				}
 			}
 			else if (addr >= 0x03000000)
@@ -405,7 +405,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = cpu_Last_Bus_Value; // open bus			
 				}
 			}
-			else if (addr >= 0x05000000)
+			else if (addr >= 0x04000000)
 			{
 				// Forced Align
 				addr &= 0xFFFFFFFC;
@@ -431,34 +431,34 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_VRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-				else
+				else if (addr >= 0x05000000)
 				{
 					ret = (uint)((PALRAM[(addr & 0x3FF) + 3] << 24) | (PALRAM[(addr & 0x3FF) + 2] << 16) | (PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
 					ppu_Memory_In_Use = false;
 				}
-			}
-			else if (addr >= 0x04000000)
-			{
-				if (addr < 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = Read_Registers_32(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = Memory_CTRL;
-				}
 				else
 				{
-					ret = cpu_Last_Bus_Value; // open bus
-				}		
+					if (addr < 0x04000800)
+					{
+						// Forced Align
+						addr &= 0xFFFFFFFC;
+
+						ret = Read_Registers_32(addr - 0x04000000);
+					}
+					else if ((addr & 0x0400FFFF) == 0x04000800)
+					{
+						// Forced Align
+						addr &= 0xFFFFFFFC;
+
+						ret = Memory_CTRL;
+					}
+					else
+					{
+						ret = cpu_Last_Bus_Value; // open bus
+					}
+				}
 			}
 			else if (addr >= 0x03000000)
 			{

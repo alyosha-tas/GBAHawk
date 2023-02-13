@@ -5096,20 +5096,20 @@ namespace GBAHawk
 			{
 				if (addr < 0x0E000000)
 				{
-					if (addr >= 0x0C000000)
+					if (addr < 0x0A000000)
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
+						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
 					}
-					else if (addr >= 0x0A000000)
+					else if (addr < 0x0C000000)
 					{
 						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 					}
 					else
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
+						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5188,20 +5188,20 @@ namespace GBAHawk
 			{
 				if (addr < 0x0E000000)
 				{
-					if (addr >= 0x0C000000)
+					if (addr < 0x0A000000)
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
+						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0			
 					}
-					else if (addr >= 0x0A000000)
+					else if (addr < 0x0C000000)
 					{
 						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 					}
 					else
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
+						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5280,20 +5280,20 @@ namespace GBAHawk
 			{
 				if (addr < 0x0E000000)
 				{
-					if (addr >= 0x0C000000)
+					if (addr < 0x0A000000)
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
+						else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
 					}
-					else if (addr >= 0x0A000000)
+					else if (addr < 0x0C000000)
 					{
 						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
 					}
 					else
 					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
+						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
+						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5404,20 +5404,20 @@ namespace GBAHawk
 					else
 					{
 						// the address is not related to the current ones available to the prefetcher
-						if (addr >= 0x0C000000)
+						if (addr < 0x0A000000)
 						{
-							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
+							else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0				
 						}
-						else if (addr >= 0x0A000000)
+						else if (addr < 0x0C000000)
 						{
 							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 							else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 						}
 						else
 						{
-							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
+							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
+							else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 						}
 
 						//abandon the prefetcher current fetch and reset the address
@@ -5520,17 +5520,17 @@ namespace GBAHawk
 							wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
 
 							// then add the second access
-							if (addr > 0x0C000000)
+							if (addr < 0x0A000000)
 							{
-								wait_ret += ROM_Waits_2_S + 1; // ROM 2
+								wait_ret += ROM_Waits_0_S + 1; // ROM 0		
 							}
-							else if (addr > 0x0A000000)
+							else if (addr < 0x0C000000)
 							{
 								wait_ret += ROM_Waits_1_S + 1; // ROM 1
 							}
 							else
 							{
-								wait_ret += ROM_Waits_0_S + 1; // ROM 0
+								wait_ret += ROM_Waits_2_S + 1; // ROM 2
 							}
 
 							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
@@ -5544,20 +5544,20 @@ namespace GBAHawk
 					else
 					{
 						// the address is not related to the current ones available to the prefetcher
-						if (addr >= 0x0C000000)
+						if (addr < 0x0A000000)
 						{
-							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
-							else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
+							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
+							else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)		
 						}
-						else if (addr >= 0x0A000000)
+						else if (addr < 0x0C000000)
 						{
 							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
 							else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
 						}
 						else
 						{
-							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
-							else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
+							if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
+							else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
 						}
 
 						//abandon the prefetcher current fetch and reset the address
