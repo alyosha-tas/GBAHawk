@@ -79,7 +79,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			else if (addr >= 0x05000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -171,7 +171,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			else if (addr >= 0x05000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -263,7 +263,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			else if (addr >= 0x05000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -373,7 +373,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			else if (addr >= 0x05000000)
 			{
 				if (addr >= 0x07000000)
 				{
@@ -513,7 +513,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
-			else if ((addr >= 0x05000000) && (addr < 0x08000000))
+			else if (addr >= 0x05000000)
 			{
 				if (addr >= 0x07000000)
 				{
