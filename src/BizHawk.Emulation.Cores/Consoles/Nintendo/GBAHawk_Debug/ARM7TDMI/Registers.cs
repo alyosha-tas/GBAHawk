@@ -5,7 +5,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
 
-
 	public partial class GBAHawk_Debug
 	{
 		// register contents are saved and copied out during mode switches

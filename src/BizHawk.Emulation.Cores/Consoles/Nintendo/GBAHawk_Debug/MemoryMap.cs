@@ -1,5 +1,4 @@
-﻿using BizHawk.Emulation.Common;
-using System;
+﻿using System;
 
 /*
 	$10000000-$FFFFFFFF    Unmapped

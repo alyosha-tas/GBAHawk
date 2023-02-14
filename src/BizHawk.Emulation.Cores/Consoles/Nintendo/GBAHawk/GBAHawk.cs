@@ -4,7 +4,6 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
-using System.Runtime.InteropServices;
 
 /*
 	GBA Emulator
