@@ -6,7 +6,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 	{
 		private void SyncState(Serializer ser)
 		{
-			ser.BeginSection("Gameboy");
 			cpu.SyncState(ser);
 			mapper.SyncState(ser);
 			timer.SyncState(ser);
@@ -88,8 +87,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			ser.Sync(nameof(OAM_vbls), ref OAM_vbls, false);
 
 			if (cart_RAM != null) { ser.Sync(nameof(cart_RAM_vbls), ref cart_RAM_vbls, false); }
-
-			ser.EndSection();
 		}
 	}
 }

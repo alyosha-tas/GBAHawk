@@ -697,7 +697,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		// State Save/Load
 		public void SyncState(Serializer ser)
 		{
-			ser.BeginSection(nameof(LR35902));
 			ser.Sync(nameof(Regs), ref Regs, false);
 			ser.Sync(nameof(interrupts_enabled), ref interrupts_enabled);
 			ser.Sync(nameof(I_use), ref I_use);
@@ -724,8 +723,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			ser.Sync(nameof(was_FlagI), ref was_FlagI);
 
 			ser.Sync(nameof(test_cycles), ref test_cycles);
-
-			ser.EndSection();
 		}
 	}
 }

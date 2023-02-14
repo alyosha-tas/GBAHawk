@@ -79,21 +79,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 
 		public void SyncState(Serializer ser)
 		{
-			ser.BeginSection(nameof(Port1));
 			Port1.SyncState(ser);
-			ser.EndSection();
 
-			ser.BeginSection(nameof(Port2));
 			Port2.SyncState(ser);
-			ser.EndSection();
 
-			ser.BeginSection(nameof(Port3));
 			Port3.SyncState(ser);
-			ser.EndSection();
 
-			ser.BeginSection(nameof(Port4));
 			Port4.SyncState(ser);
-			ser.EndSection();
 		}
 
 		private readonly IPort Port1;

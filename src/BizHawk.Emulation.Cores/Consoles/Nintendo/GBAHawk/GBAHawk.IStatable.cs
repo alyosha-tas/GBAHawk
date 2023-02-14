@@ -6,8 +6,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 	{
 		private void SyncState(Serializer ser)
 		{
-			ser.BeginSection("GBA");
-
 			if (cart_RAM != null)
 			{
 				ser.Sync(nameof(cart_RAM), ref cart_RAM, false);
@@ -16,8 +14,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			ser.Sync("Frame", ref _frame);
 			ser.Sync("LagCount", ref _lagCount);
 			ser.Sync("IsLag", ref _isLag);
-
-			ser.EndSection();
 
 			if (ser.IsReader)
 			{

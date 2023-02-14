@@ -51,17 +51,6 @@ namespace BizHawk.Common
 			_isReader = true;
 		}
 
-		public void BeginSection(string name)
-		{
-			_sections.Push(name);
-
-		}
-
-		public void EndSection()
-		{
-			var name = _sections.Pop();
-		}
-
 		/// <exception cref="InvalidOperationException"><typeparamref name="T"/> does not inherit <see cref="Enum"/></exception>
 		public void SyncEnum<T>(string name, ref T val) where T : struct
 		{
@@ -393,19 +382,6 @@ namespace BizHawk.Common
 		private BinaryWriter _bw;
 
 		private bool _isReader;
-		private readonly Stack<string> _sections = new Stack<string>();
-		private Section _readerSection, _currSection;
-		private readonly Stack<Section> _sectionStack = new Stack<Section>();
-
-		private string Item(string key)
-		{
-			return _currSection.Items[key];
-		}
-
-		private bool Present(string key)
-		{
-			return _currSection.Items.ContainsKey(key);
-		}
 
 		private void SyncBuffer(string name, int elemsize, int len, void* ptr)
 		{
@@ -453,14 +429,6 @@ namespace BizHawk.Common
 		private void Write(ref uint val)
 		{
 			_bw.Write(val);
-		}
-
-		private void ReadText(string name, ref uint val)
-		{
-			if (Present(name))
-			{
-				val = uint.Parse(Item(name).Replace("0x", ""), NumberStyles.HexNumber);
-			}
 		}
 
 		private void Read(ref sbyte val)

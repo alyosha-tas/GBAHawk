@@ -2284,8 +2284,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		// State Save/Load
 		public void cpu_SyncState(Serializer ser)
 		{
-			ser.BeginSection("ARM7TDMI");
-
 			// General
 			ser.Sync(nameof(CycleCount), ref CycleCount);
 
@@ -2417,8 +2415,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(cpu_Trigger_Unhalt), ref cpu_Trigger_Unhalt);
 			ser.Sync(nameof(cpu_Just_Halted), ref cpu_Just_Halted);
-
-			ser.EndSection();
 		}
 	}
 }
