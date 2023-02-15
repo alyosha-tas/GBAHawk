@@ -357,7 +357,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 
-				//Console.WriteLine(chan + " " + value + " " + ((dma_CTRL[chan] & 0x200) == 0x200));
+				//Console.WriteLine(chan + " " + value + " " + CycleCount);
 
 				dma_Go[chan] = true;
 
