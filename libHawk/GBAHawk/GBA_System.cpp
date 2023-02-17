@@ -525,17 +525,6 @@ namespace GBAHawk
 			PALRAM[addr & 0x3FF] = value;
 			PALRAM[(addr + 1) & 0x3FF] = value;
 
-			// calculate transparent pixel color
-			if ((addr & 0x3FF) == 0)
-			{
-				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-										((ppu_col_dat & 0x1F) << 19) |
-										((ppu_col_dat & 0x3E0) << 6) |
-										((ppu_col_dat & 0x7C00) >> 7));
-			}
-
 			ppu_PALRAM_In_Use = false;
 			ppu_Memory_In_Use = false;
 		}
@@ -649,17 +638,6 @@ namespace GBAHawk
 			// Forced Align
 			PALRAM_16[(addr & 0x3FE) >> 1] = value;
 
-			// calculate transparent pixel color
-			if ((addr & 0x3FF) == 0)
-			{
-				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-										((ppu_col_dat & 0x1F) << 19) |
-										((ppu_col_dat & 0x3E0) << 6) |
-										((ppu_col_dat & 0x7C00) >> 7));
-			}
-
 			ppu_PALRAM_In_Use = false;
 			ppu_Memory_In_Use = false;
 		}
@@ -758,17 +736,6 @@ namespace GBAHawk
 		{
 			// Forced Align
 			PALRAM_32[(addr & 0x3FC) >> 2] = value;
-
-			// calculate transparent pixel color
-			if ((addr & 0x3FF) == 0)
-			{
-				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-										((ppu_col_dat & 0x1F) << 19) |
-										((ppu_col_dat & 0x3E0) << 6) |
-										((ppu_col_dat & 0x7C00) >> 7));
-			}
 
 			ppu_PALRAM_In_Use = false;
 			ppu_Memory_In_Use = false;
@@ -1180,17 +1147,6 @@ namespace GBAHawk
 		{
 			PALRAM_16[(addr & 0x3FE) >> 1] = value;
 
-			// calculate transparent pixel color
-			if ((addr & 0x3FF) == 0)
-			{
-				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-										((ppu_col_dat & 0x1F) << 19) |
-										((ppu_col_dat & 0x3E0) << 6) |
-										((ppu_col_dat & 0x7C00) >> 7));
-			}
-
 			ppu_PALRAM_In_Use = false;
 			ppu_Memory_In_Use = false;
 		}
@@ -1274,17 +1230,6 @@ namespace GBAHawk
 		else if (addr < 0x06000000)
 		{
 			PALRAM_32[(addr & 0x3FC) >> 2] = value;
-
-			// calculate transparent pixel color
-			if ((addr & 0x3FF) == 0)
-			{
-				ppu_col_dat = (uint16_t)(PALRAM[0] + (PALRAM[1] << 8));
-
-				ppu_Transparent_Color = (uint32_t)(0xFF000000 |
-										((ppu_col_dat & 0x1F) << 19) |
-										((ppu_col_dat & 0x3E0) << 6) |
-										((ppu_col_dat & 0x7C00) >> 7));
-			}
 
 			ppu_PALRAM_In_Use = false;
 			ppu_Memory_In_Use = false;
@@ -1551,7 +1496,7 @@ namespace GBAHawk
 						else if (ppu_LYC_Vid_Check_cd == 4)
 						{
 							// latch rotation and scaling XY here
-							// but not parameters A-D
+						// but not parameters A-D
 							if ((ppu_LY < 160) && !ppu_Forced_Blank)
 							{
 								if (ppu_BG_Mode > 0)
@@ -1562,18 +1507,66 @@ namespace GBAHawk
 									ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
 									ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
 
-									ppu_BG_X_Latch[0] = ppu_BG_X[0];
-									ppu_BG_X_Latch[1] = ppu_BG_X[1];
-									ppu_BG_X_Latch[2] = ppu_BG_X[2];
-									ppu_BG_X_Latch[3] = ppu_BG_X[3];
-
-									ppu_BG_Y_Latch[0] = ppu_BG_Y[0];
-									ppu_BG_Y_Latch[1] = ppu_BG_Y[1];
-									ppu_BG_Y_Latch[2] = ppu_BG_Y[2];
-									ppu_BG_Y_Latch[3] = ppu_BG_Y[3];
-
 									ppu_Convert_Offset_to_float(2);
 									ppu_Convert_Offset_to_float(3);
+								}
+
+								ppu_Rendering_Complete = false;
+								ppu_PAL_Rendering_Complete = false;
+
+								for (int i = 0; i < 4; i++)
+								{
+									ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
+									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
+
+									ppu_Fetch_Count[i] = 0;
+
+									ppu_Scroll_Cycle[i] = 0;
+
+									ppu_Pixel_Color[i] = 0;
+
+									ppu_BG_Has_Pixel[i] = false;
+								}
+
+								if (ppu_BG_Mode <= 1)
+								{
+									ppu_BG_Start_Time[0] = (uint16_t)(32 - 4 * (ppu_BG_X[0] & 0x7));
+									ppu_BG_Start_Time[1] = (uint16_t)(32 - 4 * (ppu_BG_X[1] & 0x7));
+
+									ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
+									ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
+
+									if (ppu_BG_Mode == 0)
+									{
+										ppu_BG_Start_Time[2] = (uint16_t)(32 - 4 * (ppu_BG_X[2] & 0x7));
+										ppu_BG_Start_Time[3] = (uint16_t)(32 - 4 * (ppu_BG_X[3] & 0x7));
+
+										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+									}
+									else
+									{
+										ppu_BG_Start_Time[2] = 32;
+
+										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+										ppu_BG_Rendering_Complete[3] = true;
+									}
+								}
+								else
+								{
+									ppu_BG_Rendering_Complete[0] = true;
+									ppu_BG_Rendering_Complete[1] = true;
+									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+									ppu_BG_Rendering_Complete[3] = true;
+
+									ppu_BG_Start_Time[2] = 32;
+
+									if (ppu_BG_Mode == 2)
+									{
+										ppu_BG_Start_Time[3] = 32;
+
+										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+									}
 								}
 							}
 						}
@@ -2161,7 +2154,12 @@ namespace GBAHawk
 					}
 				}
 
-				ppu_Calculate_Access_Timing();
+				for (int i = 0; i < 1233; i++)
+				{
+					ppu_VRAM_Access[i] = false;
+					ppu_PALRAM_Access[i] = false;
+					ppu_OAM_Access[i] = false;
+				}
 			}
 			else if (ppu_Cycle == 1007)
 			{
@@ -2199,7 +2197,17 @@ namespace GBAHawk
 					}
 				}
 				else
-				{
+				{		
+					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
+					{
+						ppu_Render_Sprites();
+					}
+
+					if (!ppu_Rendering_Complete)
+					{
+						ppu_Render();
+					}
+
 					if (ppu_Memory_In_Use)
 					{
 						if (ppu_VRAM_In_Use)
@@ -2222,22 +2230,6 @@ namespace GBAHawk
 							{
 								cpu_Fetch_Wait += 1;
 							}
-						}
-					}
-					
-					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
-					{
-						ppu_Render_Sprites();
-					}
-
-					// for now only do things every 4 cycles for the BG
-					if ((ppu_Cycle & 3) == 0)
-					{
-						if ((ppu_Cycle >= 40) && (ppu_Cycle < 1000))
-						{
-							ppu_Render();
-
-							ppu_Display_Cycle += 1;
 						}
 					}
 				}

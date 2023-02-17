@@ -186,15 +186,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool ppu_SFX_OBJ_Target_1, ppu_SFX_OBJ_Target_2;
 
 		// volatile variables used every cycle in rendering, not stated
-		public uint[] bg_pixel = new uint[4];
-
 		public bool[] BG_Go = new bool[4];
 
 		public bool[] BG_Go_Disp = new bool[4];
-
-		public bool[] BG_Is_Transparent = new bool[4];
-
-		public ushort ppu_col_dat;
 
 		public byte ppu_Read_Reg_8(uint addr)
 		{
