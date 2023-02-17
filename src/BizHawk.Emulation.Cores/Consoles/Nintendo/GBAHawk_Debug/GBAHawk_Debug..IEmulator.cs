@@ -389,63 +389,63 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								ppu_Convert_Offset_to_float(2);
 								ppu_Convert_Offset_to_float(3);
+							}
 
-								ppu_Rendering_Complete = false;
-								ppu_PAL_Rendering_Complete = false;
+							ppu_Rendering_Complete = false;
+							ppu_PAL_Rendering_Complete = false;
 
-								for (int i = 0; i < 4; i++)
+							for (int i = 0; i < 4; i++)
+							{
+								ppu_BG_X_Latch[i] = ppu_BG_X[i];
+								ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
+
+								ppu_Fetch_Count[i] = 0;
+
+								ppu_Scroll_Cycle[i] = 0;
+
+								ppu_Pixel_Color[i] = 0;
+
+								ppu_BG_Has_Pixel[i] = false;
+							}
+
+							if (ppu_BG_Mode <= 1)
+							{
+								ppu_BG_Start_Time[0] = (ushort)(32 - 4 * (ppu_BG_X[0] & 0x7));
+								ppu_BG_Start_Time[1] = (ushort)(32 - 4 * (ppu_BG_X[1] & 0x7));
+
+								ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
+								ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
+
+								if (ppu_BG_Mode == 0)
 								{
-									ppu_BG_X_Latch[i] = ppu_BG_X[i];
-									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
+									ppu_BG_Start_Time[2] = (ushort)(32 - 4 * (ppu_BG_X[2] & 0x7));
+									ppu_BG_Start_Time[3] = (ushort)(32 - 4 * (ppu_BG_X[3] & 0x7));
 
-									ppu_Fetch_Count[i] = 0;
-
-									ppu_Scroll_Cycle[i] = 0;
-
-									ppu_Pixel_Color[i] = 0;
-
-									ppu_BG_Has_Pixel[i] = false;
-								}
-
-								if (ppu_BG_Mode <= 1)
-								{
-									ppu_BG_Start_Time[0] = (ushort)(32 - 4 * (ppu_BG_X[0] & 0x7));
-									ppu_BG_Start_Time[1] = (ushort)(32 - 4 * (ppu_BG_X[1] & 0x7));
-
-									ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
-									ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
-
-									if (ppu_BG_Mode == 0)
-									{
-										ppu_BG_Start_Time[2] = (ushort)(32 - 4 * (ppu_BG_X[2] & 0x7));
-										ppu_BG_Start_Time[3] = (ushort)(32 - 4 * (ppu_BG_X[3] & 0x7));
-
-										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
-									}
-									else
-									{
-										ppu_BG_Start_Time[2] = 32;
-
-										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-										ppu_BG_Rendering_Complete[3] = true;
-									}
+									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+									ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
 								}
 								else
 								{
-									ppu_BG_Rendering_Complete[0] = true;
-									ppu_BG_Rendering_Complete[1] = true;
-									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-									ppu_BG_Rendering_Complete[3] = true;
-
 									ppu_BG_Start_Time[2] = 32;
 
-									if (ppu_BG_Mode == 2)
-									{
-										ppu_BG_Start_Time[3] = 32;
+									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+									ppu_BG_Rendering_Complete[3] = true;
+								}
+							}
+							else
+							{
+								ppu_BG_Rendering_Complete[0] = true;
+								ppu_BG_Rendering_Complete[1] = true;
+								ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+								ppu_BG_Rendering_Complete[3] = true;
 
-										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
-									}
+								ppu_BG_Start_Time[2] = 32;
+
+								if (ppu_BG_Mode == 2)
+								{
+									ppu_BG_Start_Time[3] = 32;
+
+									ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
 								}
 							}
 						}
