@@ -396,7 +396,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 							for (int i = 0; i < 4; i++)
 							{
-								ppu_BG_X_Latch[i] = ppu_BG_X[i];
+								ppu_BG_X_Latch[i] = (ushort)(ppu_BG_X[i] & 0xFFF8);
 								ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
 
 								ppu_Fetch_Count[i] = 0;
