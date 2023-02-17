@@ -399,6 +399,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								ppu_Convert_Offset_to_float(2);
 								ppu_Convert_Offset_to_float(3);
+
+								ppu_BG_Start_Time[0] = (ushort)(32 - 4 * (ppu_BG_X[0] & 0x7));
+								ppu_BG_Start_Time[1] = (ushort)(32 - 4 * (ppu_BG_X[1] & 0x7));
+								ppu_BG_Start_Time[2] = (ushort)(32 - 4 * (ppu_BG_X[2] & 0x7));
+								ppu_BG_Start_Time[3] = (ushort)(32 - 4 * (ppu_BG_X[3] & 0x7));
+
+								ppu_Rendering_Complete = false;
+								ppu_PAL_Rendering_Complete = false;
+								ppu_BG_Rendering_Complete[0] = ppu_BG_On[0];
+								ppu_BG_Rendering_Complete[1] = ppu_BG_On[1];
+								ppu_BG_Rendering_Complete[2] = ppu_BG_On[2];
+								ppu_BG_Rendering_Complete[3] = ppu_BG_On[3];
 							}
 						}
 					}

@@ -387,7 +387,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Wait_CTRL = value;
 		}
 
-
 		public void Update_Post_Boot(byte value)
 		{
 			if (Post_Boot == 0)
