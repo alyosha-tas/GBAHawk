@@ -539,17 +539,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[addr & 0x3FF] = value;
 				PALRAM[(addr + 1) & 0x3FF] = value;
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint)(0xFF000000 |
-												((ppu_col_dat & 0x1F) << 19) |
-												((ppu_col_dat & 0x3E0) << 6) |
-												((ppu_col_dat & 0x7C00) >> 7));
-				}
-
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
@@ -672,17 +661,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[addr & 0x3FF] = (byte)(value & 0xFF);
 				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint)(0xFF000000 |
-												((ppu_col_dat & 0x1F) << 19) |
-												((ppu_col_dat & 0x3E0) << 6) |
-												((ppu_col_dat & 0x7C00) >> 7));
-				}
-
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
 			}
@@ -803,17 +781,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 				PALRAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
 				PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-				// calculate transparent pixel color
-				if ((addr & 0x3FF) == 0)
-				{
-					ppu_col_dat = (ushort)(PALRAM[0] + (PALRAM[1] << 8));
-
-					ppu_Transparent_Color = (uint)(0xFF000000 |
-												((ppu_col_dat & 0x1F) << 19) |
-												((ppu_col_dat & 0x3E0) << 6) |
-												((ppu_col_dat & 0x7C00) >> 7));
-				}
 
 				ppu_PALRAM_In_Use = false;
 				ppu_Memory_In_Use = false;
