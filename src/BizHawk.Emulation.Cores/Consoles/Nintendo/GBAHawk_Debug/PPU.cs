@@ -101,15 +101,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		// BG rendering
 		public int[] ppu_Fetch_Count = new int[4];
-		public int[] ppu_Pixel_Color = new int[4];
 		public int[] ppu_Scroll_Cycle = new int[4];
+
+		public int[] ppu_Pixel_Color = new int[4];
+		public int[] ppu_Pixel_Color_2 = new int[4];
+		public int[] ppu_Pixel_Color_1 = new int[4];
+		public int[] ppu_Pixel_Color_R = new int[4];
 
 		public ushort[] ppu_BG_Start_Time = new ushort[4];
 
-		public bool[] ppu_BG_Rendering_Complete = new bool[4];
-		public bool[] ppu_BG_Has_Pixel = new bool[4];
+		public byte[] ppu_BG_Effect_Byte = new byte[4];
 
-		uint ppu_Pixel_Color_Data_m3, ppu_Pixel_Color_Data_m5;
+		public bool[] ppu_BG_Rendering_Complete = new bool[4];
+
+		public bool[] ppu_BG_Has_Pixel = new bool[4];
+		public bool[] ppu_BG_Has_Pixel_2 = new bool[4];
+		public bool[] ppu_BG_Has_Pixel_1 = new bool[4];
+		public bool[] ppu_BG_Has_Pixel_R = new bool[4];
 
 		uint ppu_BG_Pixel_F;
 		uint ppu_BG_Pixel_S;
@@ -121,8 +129,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		int ppu_Tile_Addr;
 
 		int ppu_Screen_Offset;
-
-		byte ppu_BG_Effect_Byte;
 
 		bool ppu_Brighten_Final_Pixel = false;
 		bool ppu_Blend_Final_Pixel = false;
@@ -1024,6 +1030,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			double sol_x, sol_y;
 
 			int temp_addr;
+			int temp_color;
 
 			uint R, G, B;
 			uint R2, G2, B2;
@@ -1041,12 +1048,901 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			bool OBJ_Go;
 			bool Color_FX_Go;
 
-
-
 			BG_Go[0] = ppu_BG_On[0];
 			BG_Go[1] = ppu_BG_On[1];
 			BG_Go[2] = ppu_BG_On[2];
 			BG_Go[3] = ppu_BG_On[3];
+
+			if (!ppu_PAL_Rendering_Complete)
+			{
+				// move pixel data up up the pipeline
+				if ((ppu_Cycle & 3) == 0)
+				{
+					switch (ppu_BG_Mode)
+					{
+						case 0:
+							if (ppu_Cycle >= 40)
+							{
+
+							}
+							break;
+
+						case 1:
+							if (ppu_Cycle >= 40)
+							{
+								for (int c1 = 0; c1 < 2; c1++)
+								{	
+									if (ppu_BG_On[c1])
+									{
+										temp_color = 0;
+
+										ppu_Pixel_Color_R[c1] = ppu_Pixel_Color_1[c1];
+										ppu_BG_Has_Pixel_R[c1] = ppu_BG_Has_Pixel_1[c1];
+
+										if (ppu_BG_Pal_Size[c1])
+										{
+											if ((ppu_Scroll_Cycle[c1] & 7) == 0)
+											{									
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+												else
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+											}
+											else
+											{
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+												else
+												{		
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+											}
+
+											temp_color <<= 1;
+
+											ppu_Pixel_Color_1[c1] = temp_color;
+											ppu_BG_Has_Pixel_R[c1] = temp_color == 0;
+										}
+										else
+										{
+											if ((ppu_Scroll_Cycle[c1] & 0xF) == 0)
+											{
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+												else
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+											}
+											else if ((ppu_Scroll_Cycle[c1] & 0xF) == 4)
+											{
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+												else
+												{
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+											}
+											else if ((ppu_Scroll_Cycle[c1] & 0xF) == 8)
+											{
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+												else
+												{
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+											}
+											else if ((ppu_Scroll_Cycle[c1] & 0xF) == 12)
+											{
+												if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+												{
+													temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
+												}
+												else
+												{
+													temp_color = ppu_Pixel_Color[c1] & 0xFF;
+												}
+											}
+
+											temp_color <<= 1;
+
+											ppu_Pixel_Color_1[c1] = temp_color;
+											ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0x1F) == 0);
+										}		
+									}
+								}
+							}
+							
+							if (ppu_Cycle >= 36)
+							{
+								ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+								ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+								ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+
+								ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+								ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+								ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+							}
+							break;
+
+						case 2:
+							if (ppu_Cycle >= 36)
+							{
+								ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+								ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+								ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+
+								ppu_Pixel_Color_R[3] = ppu_Pixel_Color_1[3];
+								ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
+								ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
+
+								ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+								ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+								ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+
+								ppu_BG_Has_Pixel_R[3] = ppu_BG_Has_Pixel_1[3];
+								ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
+								ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
+							}
+							break;
+
+						case 3:
+						case 4:
+						case 5:
+							if (ppu_Cycle >= 36)
+							{
+								ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+								ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+								ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+
+								ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+								ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+								ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+							}
+							break;
+					}
+				}
+
+				// render
+				if (ppu_Cycle >= 44)
+				{
+					// determine what BG pixels will actually be rendered
+					if ((ppu_Cycle & 3) == 0)
+					{
+						cur_layer_priority = 4;
+						second_layer_priority = 4;
+
+						cur_BG_layer = 5;  // convenient to set to 5 for special effects
+						second_BG_layer = 5;
+
+						Is_Outside = true;
+						OBJ_Go = false;
+						Color_FX_Go = false;
+
+						OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle] & ppu_OBJ_On;
+
+						BG_Go_Disp[0] = ppu_BG_On[0];
+						BG_Go_Disp[1] = ppu_BG_On[1];
+						BG_Go_Disp[2] = ppu_BG_On[2];
+						BG_Go_Disp[3] = ppu_BG_On[3];
+
+						// Check enabled pixels
+						if (ppu_Any_Window_On)
+						{
+							if (ppu_WIN0_On && (((ppu_Display_Cycle - ppu_WIN0_Left) & 0xFF) < ((ppu_WIN0_Right - ppu_WIN0_Left) & 0xFF)) &&
+								(((ppu_LY - ppu_WIN0_Top) & 0xFF) < ((ppu_WIN0_Bot - ppu_WIN0_Top) & 0xFF)))
+							{
+								Is_Outside = false;
+
+								for (int w0 = 0; w0 < 4; w0++) { BG_Go_Disp[w0] &= ppu_WIN0_BG_En[w0]; }
+
+								OBJ_Go = ppu_WIN0_OBJ_En & OBJ_Has_Pixel;
+								Color_FX_Go = ppu_WIN0_Color_En;
+							}
+							else if (ppu_WIN1_On && (((ppu_Display_Cycle - ppu_WIN1_Left) & 0xFF) < ((ppu_WIN1_Right - ppu_WIN1_Left) & 0xFF)) &&
+									(((ppu_LY - ppu_WIN1_Top) & 0xFF) < ((ppu_WIN1_Bot - ppu_WIN1_Top) & 0xFF)))
+							{
+								Is_Outside = false;
+
+								for (int w1 = 0; w1 < 4; w1++) { BG_Go_Disp[w1] &= ppu_WIN1_BG_En[w1]; }
+
+								OBJ_Go = ppu_WIN1_OBJ_En & OBJ_Has_Pixel;
+								Color_FX_Go = ppu_WIN1_Color_En;
+							}
+							else if (ppu_OBJ_WIN && ppu_Sprite_Object_Window[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+							{
+								Is_Outside = false;
+
+								for (int ob = 0; ob < 4; ob++) { BG_Go_Disp[ob] &= ppu_OBJ_BG_En[ob]; }
+
+								OBJ_Go = ppu_OBJ_OBJ_En & OBJ_Has_Pixel;
+								Color_FX_Go = ppu_OBJ_Color_En;
+							}
+
+							if (Is_Outside)
+							{
+								for (int outs = 0; outs < 4; outs++) { BG_Go_Disp[outs] &= ppu_OUT_BG_En[outs]; }
+
+								OBJ_Go = ppu_OUT_OBJ_En & OBJ_Has_Pixel;
+								Color_FX_Go = ppu_OUT_Color_En;
+							}
+						}
+						else
+						{
+							OBJ_Go = OBJ_Has_Pixel;
+							Color_FX_Go = true;
+						}
+
+						switch (ppu_BG_Mode)
+						{
+							case 0:
+								for (int c0 = 0; c0 < 4; c0++)
+								{
+									if (BG_Go_Disp[c0])
+									{
+										BG_Is_Transparent[c0] = true;
+
+										// calculate scrolling
+										if (ppu_BG_Mosaic[c0])
+										{
+											ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Display_Cycle] + ppu_BG_X_Latch[c0]) & 0x1FF);
+											ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[c0]) & 0x1FF);
+										}
+										else
+										{
+											ppu_X_RS = (int)((ppu_Display_Cycle + ppu_BG_X_Latch[c0]) & 0x1FF);
+											ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[c0]) & 0x1FF);
+										}
+
+										// always wrap around
+										ppu_X_RS &= (BG_Scale_X[c0] - 1);
+										ppu_Y_RS &= (BG_Scale_Y[c0] - 1);
+
+										// determine if pixel is in valid range, and pick out color if so
+										if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[c0]) && (ppu_Y_RS < BG_Scale_Y[c0]))
+										{
+											VRAM_ofst_X = ppu_X_RS >> 3;
+											VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+											Screen_Offset = 0;
+
+											if (VRAM_ofst_X > 31)
+											{
+												if (VRAM_ofst_Y > 31)
+												{
+													Screen_Offset = 6 * 1024;
+												}
+												else
+												{
+													Screen_Offset = 2 * 1024;
+												}
+											}
+											else if (VRAM_ofst_Y > 31)
+											{
+												if (ppu_BG_Screen_Size[c0] == 2)
+												{
+													Screen_Offset = 2 * 1024;
+												}
+												else
+												{
+													Screen_Offset = 4 * 1024;
+												}
+											}
+
+											VRAM_ofst_X &= 31;
+											VRAM_ofst_Y &= 31;
+
+											Tile_Addr = ppu_BG_Screen_Base[c0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[c0] * 2 + VRAM_ofst_X * 2;
+
+											BG_Effect_Byte = VRAM[Tile_Addr + 1];
+
+											Tile_Addr = VRAM[Tile_Addr] | ((VRAM[Tile_Addr + 1] & 3) << 8);
+
+											if (ppu_BG_Pal_Size[c0])
+											{
+												Tile_Addr = Tile_Addr * 64 + ppu_BG_Char_Base[c0];
+
+												if ((BG_Effect_Byte & 0x4) == 0x0)
+												{
+													Tile_Addr += (ppu_X_RS & 7);
+												}
+												else
+												{
+													Tile_Addr += 7 - (ppu_X_RS & 7);
+												}
+
+												if ((BG_Effect_Byte & 0x8) == 0x0)
+												{
+													Tile_Addr += (ppu_Y_RS & 7) * 8;
+												}
+												else
+												{
+													Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
+												}
+
+												Pixel_Color = VRAM[Tile_Addr] << 1;
+
+												BG_Is_Transparent[c0] = Pixel_Color == 0;
+											}
+											else
+											{
+												Tile_Addr = Tile_Addr * 32 + ppu_BG_Char_Base[c0];
+
+												if ((BG_Effect_Byte & 0x8) == 0x0)
+												{
+													Tile_Addr += (ppu_Y_RS & 7) * 4;
+												}
+												else
+												{
+													Tile_Addr += (7 - (ppu_Y_RS & 7)) * 4;
+												}
+
+												if ((BG_Effect_Byte & 0x4) == 0x0)
+												{
+													Tile_Addr += ((ppu_X_RS & 7) >> 1);
+
+													if ((ppu_X_RS & 1) == 0)
+													{
+														Pixel_Color = VRAM[Tile_Addr] & 0xF;
+													}
+													else
+													{
+														Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
+													}
+												}
+												else
+												{
+													Tile_Addr += ((7 - (ppu_X_RS & 7)) >> 1);
+
+													if ((ppu_X_RS & 1) == 1)
+													{
+														Pixel_Color = VRAM[Tile_Addr] & 0xF;
+													}
+													else
+													{
+														Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
+													}
+												}
+
+												Pixel_Color <<= 1;
+
+												Pixel_Color += 32 * (BG_Effect_Byte >> 4);
+
+												BG_Is_Transparent[c0] = (Pixel_Color & 0x1F) == 0;
+											}
+
+											Pixel_Color_data = (ushort)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+
+											bg_pixel[c0] = (uint)(0xFF000000 |
+														   ((Pixel_Color_data & 0x1F) << 19) |
+														   ((Pixel_Color_data & 0x3E0) << 6) |
+														   ((Pixel_Color_data & 0x7C00) >> 7));
+										}
+										else
+										{
+											BG_Is_Transparent[c0] = true;
+										}
+
+										if (!BG_Is_Transparent[c0])
+										{
+											if (ppu_BG_Priority[c0] < cur_layer_priority)
+											{
+												bg_pixel_s = bg_pixel_f;
+												second_BG_layer = cur_BG_layer;
+												second_layer_priority = cur_layer_priority;
+
+												bg_pixel_f = bg_pixel[c0];
+												cur_BG_layer = c0;
+												cur_layer_priority = ppu_BG_Priority[c0];
+											}
+											else if (ppu_BG_Priority[c0] < second_layer_priority)
+											{
+												bg_pixel_s = bg_pixel[c0];
+												second_BG_layer = c0;
+												second_layer_priority = ppu_BG_Priority[c0];
+											}
+										}
+									}
+								}
+								break;
+
+							case 1:
+								for (int c1 = 0; c1 < 2; c1++)
+								{
+									if (BG_Go_Disp[c1])
+									{
+										if (ppu_BG_Pal_Size[c1])
+										{
+											Tile_Addr = Tile_Addr * 64 + ppu_BG_Char_Base[c1];
+
+											if ((BG_Effect_Byte & 0x4) == 0x0)
+											{
+												Tile_Addr += (ppu_X_RS & 7);
+											}
+											else
+											{
+												Tile_Addr += 7 - (ppu_X_RS & 7);
+											}
+
+											if ((BG_Effect_Byte & 0x8) == 0x0)
+											{
+												Tile_Addr += (ppu_Y_RS & 7) * 8;
+											}
+											else
+											{
+												Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
+											}
+
+											Pixel_Color = VRAM[Tile_Addr] << 1;
+
+											BG_Is_Transparent[c1] = Pixel_Color == 0;
+										}
+										else
+										{
+											Tile_Addr = Tile_Addr * 32 + ppu_BG_Char_Base[c1];
+
+											if ((BG_Effect_Byte & 0x8) == 0x0)
+											{
+												Tile_Addr += (ppu_Y_RS & 7) * 4;
+											}
+											else
+											{
+												Tile_Addr += (7 - (ppu_Y_RS & 7)) * 4;
+											}
+
+											if ((BG_Effect_Byte & 0x4) == 0x0)
+											{
+												Tile_Addr += ((ppu_X_RS & 7) >> 1);
+
+												if ((ppu_X_RS & 1) == 0)
+												{
+													Pixel_Color = VRAM[Tile_Addr] & 0xF;
+												}
+												else
+												{
+													Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
+												}
+											}
+											else
+											{
+												Tile_Addr += ((7 - (ppu_X_RS & 7)) >> 1);
+
+												if ((ppu_X_RS & 1) == 1)
+												{
+													Pixel_Color = VRAM[Tile_Addr] & 0xF;
+												}
+												else
+												{
+													Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
+												}
+											}
+
+											Pixel_Color <<= 1;
+
+											Pixel_Color += 32 * (BG_Effect_Byte >> 4);
+
+											BG_Is_Transparent[c1] = (Pixel_Color & 0x1F) == 0;
+										}
+
+										Pixel_Color_data = (ushort)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
+
+										bg_pixel[c1] = (uint)(0xFF000000 |
+														((Pixel_Color_data & 0x1F) << 19) |
+														((Pixel_Color_data & 0x3E0) << 6) |
+														((Pixel_Color_data & 0x7C00) >> 7));
+
+										if (!BG_Is_Transparent[c1])
+										{
+											if (ppu_BG_Priority[c1] < cur_layer_priority)
+											{
+												bg_pixel_s = bg_pixel_f;
+												second_BG_layer = cur_BG_layer;
+												second_layer_priority = cur_layer_priority;
+
+												bg_pixel_f = bg_pixel[c1];
+												cur_BG_layer = c1;
+												cur_layer_priority = ppu_BG_Priority[c1];
+											}
+											else if (ppu_BG_Priority[c1] < second_layer_priority)
+											{
+												bg_pixel_s = bg_pixel[c1];
+												second_BG_layer = c1;
+												second_layer_priority = ppu_BG_Priority[c1];
+											}
+										}
+									}
+								}
+
+								if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
+								{
+									if (ppu_BG_Priority[2] < cur_layer_priority)
+									{
+										ppu_BG_Pixel_S = ppu_BG_Pixel_F;
+										second_BG_layer = cur_BG_layer;
+										second_layer_priority = cur_layer_priority;
+
+										ppu_BG_Pixel_F = bg_pixel[2];
+										cur_BG_layer = 2;
+										cur_layer_priority = ppu_BG_Priority[2];
+									}
+									else if (ppu_BG_Priority[2] < second_layer_priority)
+									{
+										ppu_BG_Pixel_S = bg_pixel[2];
+										second_BG_layer = 2;
+										second_layer_priority = ppu_BG_Priority[2];
+									}
+								}
+								break;
+
+							case 2:
+								for (int c2 = 2; c2 < 4; c2++)
+								{
+
+									if (BG_Go_Disp[c2] && ppu_BG_Has_Pixel[c2])
+									{
+										if (ppu_BG_Priority[c2] < cur_layer_priority)
+										{
+											ppu_BG_Pixel_S = ppu_BG_Pixel_F;
+											second_BG_layer = cur_BG_layer;
+											second_layer_priority = cur_layer_priority;
+
+											ppu_BG_Pixel_F = bg_pixel[c2];
+											cur_BG_layer = c2;
+											cur_layer_priority = ppu_BG_Priority[c2];
+										}
+										else if (ppu_BG_Priority[c2] < second_layer_priority)
+										{
+											ppu_BG_Pixel_S = bg_pixel[c2];
+											second_BG_layer = c2;
+											second_layer_priority = ppu_BG_Priority[c2];
+										}
+									}
+								}
+								break;
+
+							case 3:
+								// Direct Bitmap only, BG2
+								if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
+								{
+									// no transparency possible
+									cur_BG_layer = 2;
+									cur_layer_priority = ppu_BG_Priority[2];
+
+									ppu_BG_Pixel_F = (uint)(0xFF000000 |
+													((ppu_Pixel_Color[2] & 0x1F) << 19) |
+													((ppu_Pixel_Color[2] & 0x3E0) << 6) |
+													((ppu_Pixel_Color[2] & 0x7C00) >> 7));
+								}
+								break;
+
+							case 4:
+								// bitmaps, only BG2
+								if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
+								{
+									// no transparency possible
+									cur_BG_layer = 2;
+									cur_layer_priority = ppu_BG_Priority[2];
+								}
+								break;
+
+							case 5:
+								// bitmaps, only BG2
+								if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
+								{
+									// no transparency possible
+									cur_BG_layer = 2;
+									cur_layer_priority = ppu_BG_Priority[2];
+
+									ppu_BG_Pixel_F = (uint)(0xFF000000 |
+													((ppu_Pixel_Color[2] & 0x1F) << 19) |
+													((ppu_Pixel_Color[2] & 0x3E0) << 6) |
+													((ppu_Pixel_Color[2] & 0x7C00) >> 7));
+								}
+								break;
+
+							case 6:
+								// invalid
+								break;
+
+							case 7:
+								// invalid
+								break;
+						}
+
+						// determine final pixel color, based on sprites and special effects
+						if (OBJ_Go)
+						{
+							spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+
+							//Console.WriteLine(ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] + " " + cur_layer_priority + " " + cur_BG_layer + " " + ppu_LY);
+							// sprite pixel available, check ordering
+							if (ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= cur_layer_priority)
+							{
+								// sprite pixel has higher priority than BG pixel
+								if (ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+								{
+									// semi transparent pixels with highest priority always enable alpha blending if possible, even if otherwise disabled.
+									// alpha blend if possible
+									if ((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0)
+									{
+										// Alpha blending Sprite - BG
+										ppu_Final_Pixel = spr_pixel;
+										ppu_Blend_Pixel = ppu_BG_Pixel_F;
+
+										ppu_Fetch_Target_1 = true;
+										ppu_Fetch_Target_2 = ppu_Fetch_BG;
+
+										ppu_Blend_Final_Pixel = true;
+									}
+									else
+									{
+										ppu_Final_Pixel = spr_pixel;
+
+										ppu_Fetch_Target_1 = true;
+
+										if ((ppu_SFX_mode >= 2) && ppu_SFX_OBJ_Target_1 && Color_FX_Go)
+										{
+											ppu_Brighten_Final_Pixel = true;
+										}
+									}
+								}
+								else if (Color_FX_Go)
+								{
+									// Alpha blending as normal if enabled
+									if (ppu_SFX_mode != 1)
+									{
+										ppu_Final_Pixel = spr_pixel;
+
+										ppu_Fetch_Target_1 = true;
+
+										if ((ppu_SFX_mode != 0) && ppu_SFX_OBJ_Target_1)
+										{
+											ppu_Brighten_Final_Pixel = true;
+										}
+									}
+									else
+									{
+										// alpha blend if possible
+										if (((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0) && ppu_SFX_OBJ_Target_1)
+										{
+											// Alpha blending Sprite - BG
+											ppu_Final_Pixel = spr_pixel;
+											ppu_Blend_Pixel = ppu_BG_Pixel_F;
+
+											ppu_Fetch_Target_1 = true;
+											ppu_Fetch_Target_2 = ppu_Fetch_BG;
+
+											ppu_Blend_Final_Pixel = true;
+										}
+										else
+										{
+											ppu_Final_Pixel = spr_pixel;
+
+											ppu_Fetch_Target_1 = true;
+										}
+									}
+								}
+								else
+								{
+									ppu_Final_Pixel = spr_pixel;
+
+									ppu_Fetch_Target_1 = true;
+								}
+							}
+							else
+							{
+								if (Color_FX_Go)
+								{
+									// BG pixel has higher priority than sprite pixel
+									if (ppu_SFX_mode != 1)
+									{
+										ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+										ppu_Fetch_Target_1 = ppu_Fetch_BG;
+
+										if ((ppu_SFX_mode != 0) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
+										{
+											ppu_Brighten_Final_Pixel = true;
+										}
+									}
+									else
+									{
+										// alpha blend if possible
+										// check if another bg layer has a higher priority pixel than the sprite
+										if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
+										{
+											if ((second_layer_priority < ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle]) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
+											{
+												// Alpha blending BG - BG
+												ppu_Final_Pixel = ppu_BG_Pixel_F;
+												ppu_Blend_Pixel = ppu_BG_Pixel_S;
+
+												ppu_Fetch_Target_1 = ppu_Fetch_BG;
+												ppu_Fetch_Target_2 = true;
+
+												ppu_Blend_Final_Pixel = true;
+											}
+											else if ((ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
+											{
+												// Alpha blending BG - Sprite
+												ppu_Final_Pixel = ppu_BG_Pixel_F;
+												ppu_Blend_Pixel = spr_pixel;
+
+												ppu_Fetch_Target_1 = ppu_Fetch_BG;
+												ppu_Fetch_Target_2 = true;
+
+												ppu_Blend_Final_Pixel = true;
+											}
+											else
+											{
+												ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+												ppu_Fetch_Target_1 = ppu_Fetch_BG;
+											}
+										}
+										else
+										{
+											ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+											ppu_Fetch_Target_1 = ppu_Fetch_BG;
+										}
+									}
+								}
+								else
+								{
+									ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+									ppu_Fetch_Target_1 = ppu_Fetch_BG;
+								}
+							}
+						}
+						else
+						{
+							// only BG pixels available, check brightness and 1st target for special effects
+							if (Color_FX_Go)
+							{
+								if (ppu_SFX_mode != 1)
+								{
+									ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+									ppu_Fetch_Target_1 = ppu_Fetch_BG;
+
+									if ((ppu_SFX_mode >= 2) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
+									{
+										ppu_Brighten_Final_Pixel = true;
+									}
+								}
+								else
+								{
+									// alpha blend if possible
+									// check if the top two layers are targets for blending
+									if (((ppu_Special_FX & (1 << cur_BG_layer)) != 0) && ((ppu_Special_FX & (1 << (second_BG_layer + 8))) != 0))
+									{
+										// Alpha blending BG - BG
+										ppu_Final_Pixel = ppu_BG_Pixel_F;
+										ppu_Blend_Pixel = ppu_BG_Pixel_S;
+
+										ppu_Fetch_Target_1 = ppu_Fetch_BG;
+										ppu_Fetch_Target_2 = true;
+
+										ppu_Blend_Final_Pixel = true;
+									}
+									else
+									{
+										ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+										ppu_Fetch_Target_1 = ppu_Fetch_BG;
+									}
+								}
+							}
+							else
+							{
+								ppu_Final_Pixel = ppu_BG_Pixel_F;
+
+								ppu_Fetch_Target_1 = ppu_Fetch_BG;
+							}
+						}
+					}
+					else if ((ppu_Cycle & 3) == 1)
+					{
+						if (ppu_Fetch_Target_1)
+						{
+							ppu_PALRAM_Access[ppu_Cycle] = true;
+
+							ppu_Final_Pixel = PALRAM[ppu_Final_Pixel];
+
+							ppu_Final_Pixel = (uint)(0xFF000000 |
+													((ppu_Final_Pixel & 0x1F) << 19) |
+													((ppu_Final_Pixel & 0x3E0) << 6) |
+													((ppu_Final_Pixel & 0x7C00) >> 7));
+						}
+					}
+					else if ((ppu_Cycle & 3) == 3)
+					{
+						if (ppu_Fetch_Target_2)
+						{
+							ppu_PALRAM_Access[ppu_Cycle] = true;
+
+							ppu_Blend_Pixel = PALRAM[ppu_Blend_Pixel];
+
+							ppu_Blend_Pixel = (uint)(0xFF000000 |
+													((ppu_Blend_Pixel & 0x1F) << 19) |
+													((ppu_Blend_Pixel & 0x3E0) << 6) |
+													((ppu_Blend_Pixel & 0x7C00) >> 7));
+						}
+
+						if (ppu_Brighten_Final_Pixel)
+						{
+							R = (ppu_Final_Pixel >> 3) & 0x1F;
+							G = (ppu_Final_Pixel >> 11) & 0x1F;
+							B = (ppu_Final_Pixel >> 19) & 0x1F;
+
+							if (ppu_SFX_mode == 2)
+							{
+								R = (uint)(R + (((31 - R) * ppu_SFX_BRT_Num) >> 4));
+								G = (uint)(G + (((31 - G) * ppu_SFX_BRT_Num) >> 4));
+								B = (uint)(B + (((31 - B) * ppu_SFX_BRT_Num) >> 4));
+							}
+							else
+							{
+								R = (uint)(R - ((R * ppu_SFX_BRT_Num) >> 4));
+								G = (uint)(G - ((G * ppu_SFX_BRT_Num) >> 4));
+								B = (uint)(B - ((B * ppu_SFX_BRT_Num) >> 4));
+							}
+
+							ppu_Final_Pixel = (uint)(0xFF000000 |
+												 (R << 3) |
+												 (G << 11) |
+												 (B << 19));
+						}
+						else if (ppu_Blend_Final_Pixel)
+						{
+							R = (ppu_Final_Pixel >> 3) & 0x1F;
+							G = (ppu_Final_Pixel >> 11) & 0x1F;
+							B = (ppu_Final_Pixel >> 19) & 0x1F;
+
+							R2 = (ppu_Blend_Pixel >> 3) & 0x1F;
+							G2 = (ppu_Blend_Pixel >> 11) & 0x1F;
+							B2 = (ppu_Blend_Pixel >> 19) & 0x1F;
+
+							R = (uint)(((R * ppu_SFX_Alpha_Num_1) >> 4) + ((R2 * ppu_SFX_Alpha_Num_2) >> 4));
+							G = (uint)(((G * ppu_SFX_Alpha_Num_1) >> 4) + ((G2 * ppu_SFX_Alpha_Num_2) >> 4));
+							B = (uint)(((B * ppu_SFX_Alpha_Num_1) >> 4) + ((B2 * ppu_SFX_Alpha_Num_2) >> 4));
+
+							if (R > 31) { R = 31; }
+							if (G > 31) { G = 31; }
+							if (B > 31) { B = 31; }
+
+							ppu_Final_Pixel = (uint)(0xFF000000 |
+												 (R << 3) |
+												 (G << 11) |
+												 (B << 19));
+						}
+
+						// push pixel to display
+						vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = ppu_Final_Pixel;
+
+						ppu_Display_Cycle += 1;
+
+						if (ppu_Display_Cycle == 240)
+						{
+							ppu_PAL_Rendering_Complete = true;
+						}
+					}
+				}			
+			}
 
 			switch (ppu_BG_Mode)
 			{
@@ -1057,10 +1953,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if ((ppu_Cycle >= ppu_BG_Start_Time[c0]))
 							{
-								if ((ppu_Scroll_Cycle[c0] & 32) == c0)
+								if ((ppu_Scroll_Cycle[c0] & 31) == c0)
 								{
-									// calculate scrolling, note don't need to add scrolling parameters, they are accounted for by starting 
-									// rendering earlier
+									// calculate scrolling
 									if (ppu_BG_Mosaic[c0])
 									{
 										ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Scroll_Cycle[c0]] + ppu_BG_X_Latch[c0]) & 0x1FF);
@@ -1072,61 +1967,53 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[c0]) & 0x1FF);
 									}
 
-									// always wrap around
+									// always wrap around, this means pixels will always be in a valid range
 									ppu_X_RS &= (BG_Scale_X[c0] - 1);
 									ppu_Y_RS &= (BG_Scale_Y[c0] - 1);
 
 									// mark for VRAM access even if it is out of bounds
 									ppu_VRAM_Access[ppu_Cycle] = true;
 
-									// determine if pixel is in valid range, and pick out color if so
-									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[c0]) && (ppu_Y_RS < BG_Scale_Y[c0]))
+									ppu_VRAM_ofst_X = ppu_X_RS >> 3;
+									ppu_VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+									ppu_Screen_Offset = 0;
+
+									if (ppu_VRAM_ofst_X > 31)
 									{
-										ppu_VRAM_ofst_X = ppu_X_RS >> 3;
-										ppu_VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-										ppu_Screen_Offset = 0;
-
-										if (ppu_VRAM_ofst_X > 31)
+										if (ppu_VRAM_ofst_Y > 31)
 										{
-											if (ppu_VRAM_ofst_Y > 31)
-											{
-												ppu_Screen_Offset = 6 * 1024;
-											}
-											else
-											{
-												ppu_Screen_Offset = 2 * 1024;
-											}
+											ppu_Screen_Offset = 6 * 1024;
 										}
-										else if (ppu_VRAM_ofst_Y > 31)
+										else
 										{
-											if (ppu_BG_Screen_Size[c0] == 2)
-											{
-												ppu_Screen_Offset = 2 * 1024;
-											}
-											else
-											{
-												ppu_Screen_Offset = 4 * 1024;
-											}
+											ppu_Screen_Offset = 2 * 1024;
 										}
-
-										ppu_VRAM_ofst_X &= 31;
-										ppu_VRAM_ofst_Y &= 31;
-
-										ppu_Tile_Addr = ppu_BG_Screen_Base[c0] + ppu_Screen_Offset + ppu_VRAM_ofst_Y * BG_Num_Tiles[c0] * 2 + ppu_VRAM_ofst_X * 2;
-
-										ppu_BG_Effect_Byte = VRAM[ppu_Tile_Addr + 1];
-
-										ppu_Tile_Addr = VRAM[ppu_Tile_Addr] | ((VRAM[ppu_Tile_Addr + 1] & 3) << 8);
-
-										ppu_BG_Has_Pixel[c0] = true;
 									}
-									else
+									else if (ppu_VRAM_ofst_Y > 31)
 									{
-										ppu_BG_Has_Pixel[c0] = false;
+										if (ppu_BG_Screen_Size[c0] == 2)
+										{
+											ppu_Screen_Offset = 2 * 1024;
+										}
+										else
+										{
+											ppu_Screen_Offset = 4 * 1024;
+										}
 									}
+
+									ppu_VRAM_ofst_X &= 31;
+									ppu_VRAM_ofst_Y &= 31;
+
+									ppu_Tile_Addr = ppu_BG_Screen_Base[c0] + ppu_Screen_Offset + ppu_VRAM_ofst_Y * BG_Num_Tiles[c0] * 2 + ppu_VRAM_ofst_X * 2;
+
+									ppu_BG_Effect_Byte[c0] = VRAM[ppu_Tile_Addr + 1];
+
+									ppu_Tile_Addr = VRAM[ppu_Tile_Addr] | ((VRAM[ppu_Tile_Addr + 1] & 3) << 8);
+
+									ppu_BG_Has_Pixel[c0] = true;
 								}
-								else if (((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 20)))
+								else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 								{
 									// this access will always occur
 									ppu_VRAM_Access[ppu_Cycle] = true;
@@ -1139,9 +2026,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 											temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c0];
 
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
+											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
+												if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
 												{
 													temp_addr += 0;
 												}
@@ -1152,7 +2039,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 											}
 											else
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
+												if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
 												{
 													temp_addr += 6;
 												}
@@ -1162,7 +2049,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												}
 											}
 
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
+											if ((ppu_BG_Effect_Byte[c0] & 0x8) == 0x0)
 											{
 												temp_addr += (ppu_Y_RS & 7) * 8;
 											}
@@ -1179,7 +2066,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 											temp_addr = temp_addr * 32 + ppu_BG_Char_Base[c0];
 
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
+											if ((ppu_BG_Effect_Byte[c0] & 0x8) == 0x0)
 											{
 												temp_addr += (ppu_Y_RS & 7) * 4;
 											}
@@ -1188,9 +2075,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												temp_addr += (7 - (ppu_Y_RS & 7)) * 4;
 											}
 
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
+											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
+												if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
 												{
 													temp_addr += 0;
 												}
@@ -1201,7 +2088,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 											}
 											else
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
+												if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
 												{
 													temp_addr += 4;
 												}
@@ -1215,62 +2102,60 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										}
 									}
 								}
-								else if (((ppu_Scroll_Cycle[c0] & 32) == (c0 + 12)) || ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 28)))
+								else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 28)))
 								{
 									// this access will only occur in 256color mode
-									if (ppu_BG_Has_Pixel[c0])
+									if (ppu_BG_Pal_Size[c0])
 									{
 										ppu_VRAM_Access[ppu_Cycle] = true;
 
-										if (ppu_BG_Pal_Size[c0])
+										temp_addr = ppu_Tile_Addr;
+
+										temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c0];
+
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 										{
-											temp_addr = ppu_Tile_Addr;
-
-											temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c0];
-
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
+											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
-												{
-													temp_addr += 2;
-												}
-												else
-												{
-													temp_addr += 6;
-												}
+												temp_addr += 2;
 											}
 											else
 											{
-												if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 4))
-												{
-													temp_addr += 4;
-												}
-												else
-												{
-													temp_addr += 0;
-												}
+												temp_addr += 6;
 											}
-
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
-											{
-												temp_addr += (ppu_Y_RS & 7) * 8;
-											}
-											else
-											{
-												temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
-											}
-
-											ppu_Pixel_Color[c0] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
 										}
-									}
-								}
-								else if ((ppu_Scroll_Cycle[c0] & 32) == (c0 + 32))
-								{
-									ppu_Fetch_Count[c0] += 1;
+										else
+										{
+											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
+											{
+												temp_addr += 4;
+											}
+											else
+											{
+												temp_addr += 0;
+											}
+										}
 
-									if (ppu_Fetch_Count[2] == 31)
+										if ((ppu_BG_Effect_Byte[c0] & 0x8) == 0x0)
+										{
+											temp_addr += (ppu_Y_RS & 7) * 8;
+										}
+										else
+										{
+											temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
+										}
+
+										ppu_Pixel_Color[c0] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									}
+
+									if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 28))
 									{
-										ppu_BG_Rendering_Complete[c0] = true;
+										ppu_Fetch_Count[c0] += 1;
+
+										if (ppu_Fetch_Count[c0] == 31)
+										{
+											ppu_BG_Rendering_Complete[c0] = true;
+										}
 									}
 								}
 
@@ -1285,12 +2170,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (!ppu_BG_Rendering_Complete[c1])
 						{
-							if ((ppu_Cycle >= ppu_BG_Start_Time[c1]))
+							if (ppu_Cycle >= ppu_BG_Start_Time[c1])
 							{
-								if ((ppu_Scroll_Cycle[c1] & 32) == c1)
-								{					
-									// calculate scrolling, note don't need to add scrolling parameters, they are accounted for by starting 
-									// rendering earlier
+								if ((ppu_Scroll_Cycle[c1] & 31) == c1)
+								{
+									// calculate scrolling
 									if (ppu_BG_Mosaic[c1])
 									{
 										ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Scroll_Cycle[c1]] + ppu_BG_X_Latch[c1]) & 0x1FF);
@@ -1302,209 +2186,194 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[c1]) & 0x1FF);
 									}
 
-									// always wrap around
+									// always wrap around, so pixel is always in range
 									ppu_X_RS &= (BG_Scale_X[c1] - 1);
 									ppu_Y_RS &= (BG_Scale_Y[c1] - 1);
 
 									// mark for VRAM access even if it is out of bounds
 									ppu_VRAM_Access[ppu_Cycle] = true;
 
-									// determine if pixel is in valid range, and pick out color if so
-									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[c1]) && (ppu_Y_RS < BG_Scale_Y[c1]))
+									ppu_VRAM_ofst_X = ppu_X_RS >> 3;
+									ppu_VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+									ppu_Screen_Offset = 0;
+
+									if (ppu_VRAM_ofst_X > 31)
 									{
-										ppu_VRAM_ofst_X = ppu_X_RS >> 3;
-										ppu_VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-										ppu_Screen_Offset = 0;
-
-										if (ppu_VRAM_ofst_X > 31)
+										if (ppu_VRAM_ofst_Y > 31)
 										{
-											if (ppu_VRAM_ofst_Y > 31)
-											{
-												ppu_Screen_Offset = 6 * 1024;
-											}
-											else
-											{
-												ppu_Screen_Offset = 2 * 1024;
-											}
+											ppu_Screen_Offset = 6 * 1024;
 										}
-										else if (ppu_VRAM_ofst_Y > 31)
+										else
 										{
-											if (ppu_BG_Screen_Size[c1] == 2)
-											{
-												ppu_Screen_Offset = 2 * 1024;
-											}
-											else
-											{
-												ppu_Screen_Offset = 4 * 1024;
-											}
+											ppu_Screen_Offset = 2 * 1024;
 										}
-
-										ppu_VRAM_ofst_X &= 31;
-										ppu_VRAM_ofst_Y &= 31;
-
-										ppu_Tile_Addr = ppu_BG_Screen_Base[c1] + ppu_Screen_Offset + ppu_VRAM_ofst_Y * BG_Num_Tiles[c1] * 2 + ppu_VRAM_ofst_X * 2;
-
-										ppu_BG_Effect_Byte = VRAM[ppu_Tile_Addr + 1];
-
-										ppu_Tile_Addr = VRAM[ppu_Tile_Addr] | ((VRAM[ppu_Tile_Addr + 1] & 3) << 8);
-
-										ppu_BG_Has_Pixel[c1] = true;
 									}
-									else
+									else if (ppu_VRAM_ofst_Y > 31)
 									{
-										ppu_BG_Has_Pixel[c1] = false;
+										if (ppu_BG_Screen_Size[c1] == 2)
+										{
+											ppu_Screen_Offset = 2 * 1024;
+										}
+										else
+										{
+											ppu_Screen_Offset = 4 * 1024;
+										}
 									}
+
+									ppu_VRAM_ofst_X &= 31;
+									ppu_VRAM_ofst_Y &= 31;
+
+									ppu_Tile_Addr = ppu_BG_Screen_Base[c1] + ppu_Screen_Offset + ppu_VRAM_ofst_Y * BG_Num_Tiles[c1] * 2 + ppu_VRAM_ofst_X * 2;
+
+									ppu_BG_Effect_Byte[c1] = VRAM[ppu_Tile_Addr + 1];
+
+									ppu_Tile_Addr = VRAM[ppu_Tile_Addr] | ((VRAM[ppu_Tile_Addr + 1] & 3) << 8);
 								}
-								else if (((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 20)))
+								else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 20)))
 								{
 									// this access will always occur
 									ppu_VRAM_Access[ppu_Cycle] = true;
 
-									if (ppu_BG_Has_Pixel[c1])
+									if (ppu_BG_Pal_Size[c1])
 									{
-										if (ppu_BG_Pal_Size[c1])
+										temp_addr = ppu_Tile_Addr;
+
+										temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c1];
+
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 										{
-											temp_addr = ppu_Tile_Addr;
-
-											temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c1];
-
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
 											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 0;
-												}
-												else
-												{
-													temp_addr += 4;
-												}
+												temp_addr += 0;
 											}
 											else
 											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 6;
-												}
-												else
-												{
-													temp_addr += 2;
-												}
+												temp_addr += 4;
 											}
-
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
-											{
-												temp_addr += (ppu_Y_RS & 7) * 8;
-											}
-											else
-											{
-												temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
-											}
-
-											ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
 										}
 										else
 										{
-											temp_addr = ppu_Tile_Addr;
-
-											temp_addr = temp_addr * 32 + ppu_BG_Char_Base[c1];
-
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
 											{
-												temp_addr += (ppu_Y_RS & 7) * 4;
+												temp_addr += 6;
 											}
 											else
 											{
-												temp_addr += (7 - (ppu_Y_RS & 7)) * 4;
+												temp_addr += 2;
 											}
-
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
-											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 0;
-												}
-												else
-												{
-													temp_addr += 4;
-												}
-											}
-											else
-											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 4;
-												}
-												else
-												{
-													temp_addr += 0;
-												}
-											}
-
-											ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
 										}
+
+										if ((ppu_BG_Effect_Byte[c1] & 0x8) == 0x0)
+										{
+											temp_addr += (ppu_Y_RS & 7) * 8;
+										}
+										else
+										{
+											temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
+										}
+
+										ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									}
+									else
+									{
+										temp_addr = ppu_Tile_Addr;
+
+										temp_addr = temp_addr * 32 + ppu_BG_Char_Base[c1];
+
+										if ((ppu_BG_Effect_Byte[c1] & 0x8) == 0x0)
+										{
+											temp_addr += (ppu_Y_RS & 7) * 4;
+										}
+										else
+										{
+											temp_addr += (7 - (ppu_Y_RS & 7)) * 4;
+										}
+
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+										{
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+											{
+												temp_addr += 0;
+											}
+											else
+											{
+												temp_addr += 4;
+											}
+										}
+										else
+										{
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+											{
+												temp_addr += 4;
+											}
+											else
+											{
+												temp_addr += 0;
+											}
+										}
+
+										ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
 									}
 								}
-								else if (((ppu_Scroll_Cycle[c1] & 32) == (c1 + 12)) || ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 28)))
+								else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 28)))
 								{
 									// this access will only occur in 256color mode
-									if (ppu_BG_Has_Pixel[c1])
+									if (ppu_BG_Pal_Size[c1])
 									{
 										ppu_VRAM_Access[ppu_Cycle] = true;
 
-										if (ppu_BG_Pal_Size[c1])
+										temp_addr = ppu_Tile_Addr;
+
+										temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c1];
+
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 										{
-											temp_addr = ppu_Tile_Addr;
-
-											temp_addr = temp_addr * 64 + ppu_BG_Char_Base[c1];
-
-											if ((ppu_BG_Effect_Byte & 0x4) == 0x0)
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
 											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 2;
-												}
-												else
-												{
-													temp_addr += 6;
-												}
+												temp_addr += 2;
 											}
 											else
 											{
-												if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 4))
-												{
-													temp_addr += 4;
-												}
-												else
-												{
-													temp_addr += 0;
-												}
+												temp_addr += 6;
 											}
-
-											if ((ppu_BG_Effect_Byte & 0x8) == 0x0)
+										}
+										else
+										{
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
 											{
-												temp_addr += (ppu_Y_RS & 7) * 8;
+												temp_addr += 4;
 											}
 											else
 											{
-												temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
+												temp_addr += 0;
 											}
+										}
 
-											ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+										if ((ppu_BG_Effect_Byte[c1] & 0x8) == 0x0)
+										{
+											temp_addr += (ppu_Y_RS & 7) * 8;
+										}
+										else
+										{
+											temp_addr += (7 - (ppu_Y_RS & 7)) * 8;
+										}
+
+										ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									}
+
+									if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 28))
+									{
+										ppu_Fetch_Count[c1] += 1;
+
+										if (ppu_Fetch_Count[c1] == 31)
+										{
+											ppu_BG_Rendering_Complete[c1] = true;
 										}
 									}
 								}
-								else if ((ppu_Scroll_Cycle[c1] & 32) == (c1 + 32))
-								{
-									ppu_Fetch_Count[c1] += 1;
 
-									if (ppu_Fetch_Count[2] == 31)
-									{
-										ppu_BG_Rendering_Complete[c1] = true;
-									}
-								}
-
-								ppu_Scroll_Cycle[c1] += 1;
+								ppu_Scroll_Cycle[c1] += 1;			
 							}
 						}
 					}
@@ -1866,9 +2735,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										// pixel color comes direct from VRAM
 										int m3_ofst = (ppu_X_RS + ppu_Y_RS * 240) * 2;
 
-										ppu_Pixel_Color_Data_m3 = VRAM[m3_ofst + 1];
-										ppu_Pixel_Color_Data_m3 <<= 8;
-										ppu_Pixel_Color_Data_m3 |= VRAM[m3_ofst];
+										ppu_Pixel_Color[2] = VRAM[m3_ofst + 1];
+										ppu_Pixel_Color[2] <<= 8;
+										ppu_Pixel_Color[2] |= VRAM[m3_ofst];
 
 										ppu_Fetch_BG = false;
 										ppu_BG_Has_Pixel[2] = true;
@@ -2006,9 +2875,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										// pixel color comes direct from VRAM
 										int m5_ofst = ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
 
-										ppu_Pixel_Color_Data_m5 = VRAM[ppu_Display_Frame * 0xA000 + m5_ofst + 1];
-										ppu_Pixel_Color_Data_m5 <<= 8;
-										ppu_Pixel_Color_Data_m5 |= VRAM[ppu_Display_Frame * 0xA000 + m5_ofst];
+										ppu_Pixel_Color[2] = VRAM[ppu_Display_Frame * 0xA000 + m5_ofst + 1];
+										ppu_Pixel_Color[2] <<= 8;
+										ppu_Pixel_Color[2] |= VRAM[ppu_Display_Frame * 0xA000 + m5_ofst];
 
 										ppu_Fetch_BG = false;
 										ppu_BG_Has_Pixel[2] = true;
@@ -2045,733 +2914,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 7:
 					// invalid
 					break;
-			}
-
-			if (!ppu_PAL_Rendering_Complete && (ppu_Cycle >= 44))
-			{
-				// determine what BG pixels will actually be rendered
-				if ((ppu_Cycle & 3) == 0)
-				{
-					cur_layer_priority = 4;
-					second_layer_priority = 4;
-
-					cur_BG_layer = 5;  // convenient to set to 5 for special effects
-					second_BG_layer = 5;
-
-					Is_Outside = true;
-					OBJ_Go = false;
-					Color_FX_Go = false;
-
-					OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle] & ppu_OBJ_On;
-
-					BG_Go_Disp[0] = ppu_BG_On[0];
-					BG_Go_Disp[1] = ppu_BG_On[1];
-					BG_Go_Disp[2] = ppu_BG_On[2];
-					BG_Go_Disp[3] = ppu_BG_On[3];
-
-					// Check enabled pixels
-					if (ppu_Any_Window_On)
-					{
-						if (ppu_WIN0_On && (((ppu_Display_Cycle - ppu_WIN0_Left) & 0xFF) < ((ppu_WIN0_Right - ppu_WIN0_Left) & 0xFF)) &&
-							(((ppu_LY - ppu_WIN0_Top) & 0xFF) < ((ppu_WIN0_Bot - ppu_WIN0_Top) & 0xFF)))
-						{
-							Is_Outside = false;
-
-							for (int w0 = 0; w0 < 4; w0++) { BG_Go_Disp[w0] &= ppu_WIN0_BG_En[w0]; }
-
-							OBJ_Go = ppu_WIN0_OBJ_En & OBJ_Has_Pixel;
-							Color_FX_Go = ppu_WIN0_Color_En;
-						}
-						else if (ppu_WIN1_On && (((ppu_Display_Cycle - ppu_WIN1_Left) & 0xFF) < ((ppu_WIN1_Right - ppu_WIN1_Left) & 0xFF)) &&
-								(((ppu_LY - ppu_WIN1_Top) & 0xFF) < ((ppu_WIN1_Bot - ppu_WIN1_Top) & 0xFF)))
-						{
-							Is_Outside = false;
-
-							for (int w1 = 0; w1 < 4; w1++) { BG_Go_Disp[w1] &= ppu_WIN1_BG_En[w1]; }
-
-							OBJ_Go = ppu_WIN1_OBJ_En & OBJ_Has_Pixel;
-							Color_FX_Go = ppu_WIN1_Color_En;
-						}
-						else if (ppu_OBJ_WIN && ppu_Sprite_Object_Window[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
-						{
-							Is_Outside = false;
-
-							for (int ob = 0; ob < 4; ob++) { BG_Go_Disp[ob] &= ppu_OBJ_BG_En[ob]; }
-
-							OBJ_Go = ppu_OBJ_OBJ_En & OBJ_Has_Pixel;
-							Color_FX_Go = ppu_OBJ_Color_En;
-						}
-
-						if (Is_Outside)
-						{
-							for (int outs = 0; outs < 4; outs++) { BG_Go_Disp[outs] &= ppu_OUT_BG_En[outs]; }
-
-							OBJ_Go = ppu_OUT_OBJ_En & OBJ_Has_Pixel;
-							Color_FX_Go = ppu_OUT_Color_En;
-						}
-					}
-					else
-					{
-						OBJ_Go = OBJ_Has_Pixel;
-						Color_FX_Go = true;
-					}
-
-					switch (ppu_BG_Mode)
-					{
-						case 0:
-							for (int c0 = 0; c0 < 4; c0++)
-							{
-								if (BG_Go_Disp[c0])
-								{
-									BG_Is_Transparent[c0] = true;
-
-									// calculate scrolling
-									if (ppu_BG_Mosaic[c0])
-									{
-										ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Display_Cycle] + ppu_BG_X_Latch[c0]) & 0x1FF);
-										ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[c0]) & 0x1FF);
-									}
-									else
-									{
-										ppu_X_RS = (int)((ppu_Display_Cycle + ppu_BG_X_Latch[c0]) & 0x1FF);
-										ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[c0]) & 0x1FF);
-									}
-
-									// always wrap around
-									ppu_X_RS &= (BG_Scale_X[c0] - 1);
-									ppu_Y_RS &= (BG_Scale_Y[c0] - 1);
-
-									// determine if pixel is in valid range, and pick out color if so
-									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[c0]) && (ppu_Y_RS < BG_Scale_Y[c0]))
-									{
-										VRAM_ofst_X = ppu_X_RS >> 3;
-										VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-										Screen_Offset = 0;
-
-										if (VRAM_ofst_X > 31)
-										{
-											if (VRAM_ofst_Y > 31)
-											{
-												Screen_Offset = 6 * 1024;
-											}
-											else
-											{
-												Screen_Offset = 2 * 1024;
-											}
-										}
-										else if (VRAM_ofst_Y > 31)
-										{
-											if (ppu_BG_Screen_Size[c0] == 2)
-											{
-												Screen_Offset = 2 * 1024;
-											}
-											else
-											{
-												Screen_Offset = 4 * 1024;
-											}
-										}
-
-										VRAM_ofst_X &= 31;
-										VRAM_ofst_Y &= 31;
-
-										Tile_Addr = ppu_BG_Screen_Base[c0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[c0] * 2 + VRAM_ofst_X * 2;
-
-										BG_Effect_Byte = VRAM[Tile_Addr + 1];
-
-										Tile_Addr = VRAM[Tile_Addr] | ((VRAM[Tile_Addr + 1] & 3) << 8);
-
-										if (ppu_BG_Pal_Size[c0])
-										{
-											Tile_Addr = Tile_Addr * 64 + ppu_BG_Char_Base[c0];
-
-											if ((BG_Effect_Byte & 0x4) == 0x0)
-											{
-												Tile_Addr += (ppu_X_RS & 7);
-											}
-											else
-											{
-												Tile_Addr += 7 - (ppu_X_RS & 7);
-											}
-
-											if ((BG_Effect_Byte & 0x8) == 0x0)
-											{
-												Tile_Addr += (ppu_Y_RS & 7) * 8;
-											}
-											else
-											{
-												Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
-											}
-
-											Pixel_Color = VRAM[Tile_Addr] << 1;
-
-											BG_Is_Transparent[c0] = Pixel_Color == 0;
-										}
-										else
-										{
-											Tile_Addr = Tile_Addr * 32 + ppu_BG_Char_Base[c0];
-
-											if ((BG_Effect_Byte & 0x8) == 0x0)
-											{
-												Tile_Addr += (ppu_Y_RS & 7) * 4;
-											}
-											else
-											{
-												Tile_Addr += (7 - (ppu_Y_RS & 7)) * 4;
-											}
-
-											if ((BG_Effect_Byte & 0x4) == 0x0)
-											{
-												Tile_Addr += ((ppu_X_RS & 7) >> 1);
-
-												if ((ppu_X_RS & 1) == 0)
-												{
-													Pixel_Color = VRAM[Tile_Addr] & 0xF;
-												}
-												else
-												{
-													Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
-												}
-											}
-											else
-											{
-												Tile_Addr += ((7 - (ppu_X_RS & 7)) >> 1);
-
-												if ((ppu_X_RS & 1) == 1)
-												{
-													Pixel_Color = VRAM[Tile_Addr] & 0xF;
-												}
-												else
-												{
-													Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
-												}
-											}
-
-											Pixel_Color <<= 1;
-
-											Pixel_Color += 32 * (BG_Effect_Byte >> 4);
-
-											BG_Is_Transparent[c0] = (Pixel_Color & 0x1F) == 0;
-										}
-
-										Pixel_Color_data = (ushort)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
-
-										bg_pixel[c0] = (uint)(0xFF000000 |
-													   ((Pixel_Color_data & 0x1F) << 19) |
-													   ((Pixel_Color_data & 0x3E0) << 6) |
-													   ((Pixel_Color_data & 0x7C00) >> 7));
-									}
-									else
-									{
-										BG_Is_Transparent[c0] = true;
-									}
-
-									if (!BG_Is_Transparent[c0])
-									{
-										if (ppu_BG_Priority[c0] < cur_layer_priority)
-										{
-											bg_pixel_s = bg_pixel_f;
-											second_BG_layer = cur_BG_layer;
-											second_layer_priority = cur_layer_priority;
-
-											bg_pixel_f = bg_pixel[c0];
-											cur_BG_layer = c0;
-											cur_layer_priority = ppu_BG_Priority[c0];
-										}
-										else if (ppu_BG_Priority[c0] < second_layer_priority)
-										{
-											bg_pixel_s = bg_pixel[c0];
-											second_BG_layer = c0;
-											second_layer_priority = ppu_BG_Priority[c0];
-										}
-									}
-								}
-							}
-							break;
-
-						case 1:
-							for (int c1 = 0; c1 < 2; c1++)
-							{
-								if (BG_Go_Disp[c1])
-								{
-									if (ppu_BG_Pal_Size[c1])
-									{
-										Tile_Addr = Tile_Addr * 64 + ppu_BG_Char_Base[c1];
-
-										if ((BG_Effect_Byte & 0x4) == 0x0)
-										{
-											Tile_Addr += (ppu_X_RS & 7);
-										}
-										else
-										{
-											Tile_Addr += 7 - (ppu_X_RS & 7);
-										}
-
-										if ((BG_Effect_Byte & 0x8) == 0x0)
-										{
-											Tile_Addr += (ppu_Y_RS & 7) * 8;
-										}
-										else
-										{
-											Tile_Addr += (7 - (ppu_Y_RS & 7)) * 8;
-										}
-
-										Pixel_Color = VRAM[Tile_Addr] << 1;
-
-										BG_Is_Transparent[c1] = Pixel_Color == 0;
-									}
-									else
-									{
-										Tile_Addr = Tile_Addr * 32 + ppu_BG_Char_Base[c1];
-
-										if ((BG_Effect_Byte & 0x8) == 0x0)
-										{
-											Tile_Addr += (ppu_Y_RS & 7) * 4;
-										}
-										else
-										{
-											Tile_Addr += (7 - (ppu_Y_RS & 7)) * 4;
-										}
-
-										if ((BG_Effect_Byte & 0x4) == 0x0)
-										{
-											Tile_Addr += ((ppu_X_RS & 7) >> 1);
-
-											if ((ppu_X_RS & 1) == 0)
-											{
-												Pixel_Color = VRAM[Tile_Addr] & 0xF;
-											}
-											else
-											{
-												Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
-											}
-										}
-										else
-										{
-											Tile_Addr += ((7 - (ppu_X_RS & 7)) >> 1);
-
-											if ((ppu_X_RS & 1) == 1)
-											{
-												Pixel_Color = VRAM[Tile_Addr] & 0xF;
-											}
-											else
-											{
-												Pixel_Color = (VRAM[Tile_Addr] >> 4) & 0xF;
-											}
-										}
-
-										Pixel_Color <<= 1;
-
-										Pixel_Color += 32 * (BG_Effect_Byte >> 4);
-
-										BG_Is_Transparent[c1] = (Pixel_Color & 0x1F) == 0;
-									}
-
-									Pixel_Color_data = (ushort)(PALRAM[Pixel_Color] + (PALRAM[Pixel_Color + 1] << 8));
-
-									bg_pixel[c1] = (uint)(0xFF000000 |
-													((Pixel_Color_data & 0x1F) << 19) |
-													((Pixel_Color_data & 0x3E0) << 6) |
-													((Pixel_Color_data & 0x7C00) >> 7));
-
-									if (!BG_Is_Transparent[c1])
-									{
-										if (ppu_BG_Priority[c1] < cur_layer_priority)
-										{
-											bg_pixel_s = bg_pixel_f;
-											second_BG_layer = cur_BG_layer;
-											second_layer_priority = cur_layer_priority;
-
-											bg_pixel_f = bg_pixel[c1];
-											cur_BG_layer = c1;
-											cur_layer_priority = ppu_BG_Priority[c1];
-										}
-										else if (ppu_BG_Priority[c1] < second_layer_priority)
-										{
-											bg_pixel_s = bg_pixel[c1];
-											second_BG_layer = c1;
-											second_layer_priority = ppu_BG_Priority[c1];
-										}
-									}
-								}
-							}
-
-							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
-							{
-								if (ppu_BG_Priority[2] < cur_layer_priority)
-								{
-									ppu_BG_Pixel_S = ppu_BG_Pixel_F;
-									second_BG_layer = cur_BG_layer;
-									second_layer_priority = cur_layer_priority;
-
-									ppu_BG_Pixel_F = bg_pixel[2];
-									cur_BG_layer = 2;
-									cur_layer_priority = ppu_BG_Priority[2];
-								}
-								else if (ppu_BG_Priority[2] < second_layer_priority)
-								{
-									ppu_BG_Pixel_S = bg_pixel[2];
-									second_BG_layer = 2;
-									second_layer_priority = ppu_BG_Priority[2];
-								}
-							}
-							break;
-
-						case 2:
-							for (int c2 = 2; c2 < 4; c2++)
-							{
-
-								if (BG_Go_Disp[c2] && ppu_BG_Has_Pixel[c2])
-								{
-									if (ppu_BG_Priority[c2] < cur_layer_priority)
-									{
-										ppu_BG_Pixel_S = ppu_BG_Pixel_F;
-										second_BG_layer = cur_BG_layer;
-										second_layer_priority = cur_layer_priority;
-
-										ppu_BG_Pixel_F = bg_pixel[c2];
-										cur_BG_layer = c2;
-										cur_layer_priority = ppu_BG_Priority[c2];
-									}
-									else if (ppu_BG_Priority[c2] < second_layer_priority)
-									{
-										ppu_BG_Pixel_S = bg_pixel[c2];
-										second_BG_layer = c2;
-										second_layer_priority = ppu_BG_Priority[c2];
-									}
-								}
-							}
-							break;
-
-						case 3:
-							// Direct Bitmap only, BG2
-							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
-							{
-								// no transparency possible
-								cur_BG_layer = 2;
-								cur_layer_priority = ppu_BG_Priority[2];
-
-								ppu_BG_Pixel_F = (uint)(0xFF000000 |
-												((ppu_Pixel_Color_Data_m3 & 0x1F) << 19) |
-												((ppu_Pixel_Color_Data_m3 & 0x3E0) << 6) |
-												((ppu_Pixel_Color_Data_m3 & 0x7C00) >> 7));
-							}
-							break;
-
-						case 4:
-							// bitmaps, only BG2
-							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
-							{
-								// no transparency possible
-								cur_BG_layer = 2;
-								cur_layer_priority = ppu_BG_Priority[2];
-							}
-							break;
-
-						case 5:
-							// bitmaps, only BG2
-							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel[2])
-							{
-								// no transparency possible
-								cur_BG_layer = 2;
-								cur_layer_priority = ppu_BG_Priority[2];
-
-								ppu_BG_Pixel_F = (uint)(0xFF000000 |
-												((ppu_Pixel_Color_Data_m5 & 0x1F) << 19) |
-												((ppu_Pixel_Color_Data_m5 & 0x3E0) << 6) |
-												((ppu_Pixel_Color_Data_m5 & 0x7C00) >> 7));
-							}
-							break;
-
-						case 6:
-							// invalid
-							break;
-
-						case 7:
-							// invalid
-							break;
-					}
-
-					// determine final pixel color, based on sprites and special effects
-					if (OBJ_Go)
-					{
-						spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
-
-						//Console.WriteLine(ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] + " " + cur_layer_priority + " " + cur_BG_layer + " " + ppu_LY);
-						// sprite pixel available, check ordering
-						if (ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= cur_layer_priority)
-						{
-							// sprite pixel has higher priority than BG pixel
-							if (ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
-							{
-								// semi transparent pixels with highest priority always enable alpha blending if possible, even if otherwise disabled.
-								// alpha blend if possible
-								if ((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0)
-								{
-									// Alpha blending Sprite - BG
-									ppu_Final_Pixel = spr_pixel;
-									ppu_Blend_Pixel = ppu_BG_Pixel_F;
-
-									ppu_Fetch_Target_1 = true;
-									ppu_Fetch_Target_2 = ppu_Fetch_BG;
-
-									ppu_Blend_Final_Pixel = true;
-								}
-								else
-								{
-									ppu_Final_Pixel = spr_pixel;
-
-									ppu_Fetch_Target_1 = true;
-
-									if ((ppu_SFX_mode >= 2) && ppu_SFX_OBJ_Target_1 && Color_FX_Go)
-									{
-										ppu_Brighten_Final_Pixel = true;
-									}
-								}
-							}
-							else if (Color_FX_Go)
-							{
-								// Alpha blending as normal if enabled
-								if (ppu_SFX_mode != 1)
-								{
-									ppu_Final_Pixel = spr_pixel;
-
-									ppu_Fetch_Target_1 = true;
-
-									if ((ppu_SFX_mode != 0) && ppu_SFX_OBJ_Target_1)
-									{
-										ppu_Brighten_Final_Pixel = true;
-									}
-								}
-								else
-								{
-									// alpha blend if possible
-									if (((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0) && ppu_SFX_OBJ_Target_1)
-									{
-										// Alpha blending Sprite - BG
-										ppu_Final_Pixel = spr_pixel;
-										ppu_Blend_Pixel = ppu_BG_Pixel_F;
-
-										ppu_Fetch_Target_1 = true;
-										ppu_Fetch_Target_2 = ppu_Fetch_BG;
-
-										ppu_Blend_Final_Pixel = true;
-									}
-									else
-									{
-										ppu_Final_Pixel = spr_pixel;
-
-										ppu_Fetch_Target_1 = true;
-									}
-								}
-							}
-							else
-							{
-								ppu_Final_Pixel = spr_pixel;
-
-								ppu_Fetch_Target_1 = true;
-							}
-						}
-						else
-						{
-							if (Color_FX_Go)
-							{
-								// BG pixel has higher priority than sprite pixel
-								if (ppu_SFX_mode != 1)
-								{
-									ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-									ppu_Fetch_Target_1 = ppu_Fetch_BG;
-
-									if ((ppu_SFX_mode != 0) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
-									{
-										ppu_Brighten_Final_Pixel = true;
-									}
-								}
-								else
-								{
-									// alpha blend if possible
-									// check if another bg layer has a higher priority pixel than the sprite
-									if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
-									{
-										if ((second_layer_priority < ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle]) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
-										{
-											// Alpha blending BG - BG
-											ppu_Final_Pixel = ppu_BG_Pixel_F;
-											ppu_Blend_Pixel = ppu_BG_Pixel_S;
-
-											ppu_Fetch_Target_1 = ppu_Fetch_BG;
-											ppu_Fetch_Target_2 = true;
-
-											ppu_Blend_Final_Pixel = true;
-										}
-										else if ((ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
-										{
-											// Alpha blending BG - Sprite
-											ppu_Final_Pixel = ppu_BG_Pixel_F;
-											ppu_Blend_Pixel = spr_pixel;
-
-											ppu_Fetch_Target_1 = ppu_Fetch_BG;
-											ppu_Fetch_Target_2 = true;
-
-											ppu_Blend_Final_Pixel = true;
-										}
-										else
-										{
-											ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-											ppu_Fetch_Target_1 = ppu_Fetch_BG;
-										}
-									}
-									else
-									{
-										ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-										ppu_Fetch_Target_1 = ppu_Fetch_BG;
-									}
-								}
-							}
-							else
-							{
-								ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-								ppu_Fetch_Target_1 = ppu_Fetch_BG;
-							}
-						}
-					}
-					else
-					{
-						// only BG pixels available, check brightness and 1st target for special effects
-						if (Color_FX_Go)
-						{
-							if (ppu_SFX_mode != 1)
-							{
-								ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-								ppu_Fetch_Target_1 = ppu_Fetch_BG;
-
-								if ((ppu_SFX_mode >= 2) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
-								{
-									ppu_Brighten_Final_Pixel = true;
-								}
-							}
-							else
-							{
-								// alpha blend if possible
-								// check if the top two layers are targets for blending
-								if (((ppu_Special_FX & (1 << cur_BG_layer)) != 0) && ((ppu_Special_FX & (1 << (second_BG_layer + 8))) != 0))
-								{
-									// Alpha blending BG - BG
-									ppu_Final_Pixel = ppu_BG_Pixel_F;
-									ppu_Blend_Pixel = ppu_BG_Pixel_S;
-
-									ppu_Fetch_Target_1 = ppu_Fetch_BG;
-									ppu_Fetch_Target_2 = true;
-
-									ppu_Blend_Final_Pixel = true;
-								}
-								else
-								{
-									ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-									ppu_Fetch_Target_1 = ppu_Fetch_BG;
-								}
-							}
-						}
-						else
-						{
-							ppu_Final_Pixel = ppu_BG_Pixel_F;
-
-							ppu_Fetch_Target_1 = ppu_Fetch_BG;
-						}
-					}
-				}
-				else if ((ppu_Cycle & 3) == 1)
-				{
-					if (ppu_Fetch_Target_1)
-					{
-						ppu_PALRAM_Access[ppu_Cycle] = true;
-
-						ppu_Final_Pixel = PALRAM[ppu_Final_Pixel];
-
-						ppu_Final_Pixel = (uint)(0xFF000000 |
-												((ppu_Final_Pixel & 0x1F) << 19) |
-												((ppu_Final_Pixel & 0x3E0) << 6) |
-												((ppu_Final_Pixel & 0x7C00) >> 7));
-					}
-				}
-				else if ((ppu_Cycle & 3) == 3)
-				{
-					if (ppu_Fetch_Target_2)
-					{
-						ppu_PALRAM_Access[ppu_Cycle] = true;
-
-						ppu_Blend_Pixel = PALRAM[ppu_Blend_Pixel];
-
-						ppu_Blend_Pixel = (uint)(0xFF000000 |
-												((ppu_Blend_Pixel & 0x1F) << 19) |
-												((ppu_Blend_Pixel & 0x3E0) << 6) |
-												((ppu_Blend_Pixel & 0x7C00) >> 7));
-					}
-
-					if (ppu_Brighten_Final_Pixel)
-					{
-						R = (ppu_Final_Pixel >> 3) & 0x1F;
-						G = (ppu_Final_Pixel >> 11) & 0x1F;
-						B = (ppu_Final_Pixel >> 19) & 0x1F;
-
-						if (ppu_SFX_mode == 2)
-						{
-							R = (uint)(R + (((31 - R) * ppu_SFX_BRT_Num) >> 4));
-							G = (uint)(G + (((31 - G) * ppu_SFX_BRT_Num) >> 4));
-							B = (uint)(B + (((31 - B) * ppu_SFX_BRT_Num) >> 4));
-						}
-						else
-						{
-							R = (uint)(R - ((R * ppu_SFX_BRT_Num) >> 4));
-							G = (uint)(G - ((G * ppu_SFX_BRT_Num) >> 4));
-							B = (uint)(B - ((B * ppu_SFX_BRT_Num) >> 4));
-						}
-
-						ppu_Final_Pixel = (uint)(0xFF000000 |
-											 (R << 3) |
-											 (G << 11) |
-											 (B << 19));
-					}
-					else if (ppu_Blend_Final_Pixel)
-					{
-						R = (ppu_Final_Pixel >> 3) & 0x1F;
-						G = (ppu_Final_Pixel >> 11) & 0x1F;
-						B = (ppu_Final_Pixel >> 19) & 0x1F;
-
-						R2 = (ppu_Blend_Pixel >> 3) & 0x1F;
-						G2 = (ppu_Blend_Pixel >> 11) & 0x1F;
-						B2 = (ppu_Blend_Pixel >> 19) & 0x1F;
-
-						R = (uint)(((R * ppu_SFX_Alpha_Num_1) >> 4) + ((R2 * ppu_SFX_Alpha_Num_2) >> 4));
-						G = (uint)(((G * ppu_SFX_Alpha_Num_1) >> 4) + ((G2 * ppu_SFX_Alpha_Num_2) >> 4));
-						B = (uint)(((B * ppu_SFX_Alpha_Num_1) >> 4) + ((B2 * ppu_SFX_Alpha_Num_2) >> 4));
-
-						if (R > 31) { R = 31; }
-						if (G > 31) { G = 31; }
-						if (B > 31) { B = 31; }
-
-						ppu_Final_Pixel = (uint)(0xFF000000 |
-											 (R << 3) |
-											 (G << 11) |
-											 (B << 19));
-					}
-
-					// push pixel to display
-					vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = ppu_Final_Pixel;
-
-					ppu_Display_Cycle += 1;
-
-					if (ppu_Display_Cycle == 240)
-					{
-						ppu_PAL_Rendering_Complete = true;
-					}
-				}			
 			}
 		}
 
