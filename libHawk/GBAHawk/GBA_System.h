@@ -8005,10 +8005,10 @@ namespace GBAHawk
 				}
 
 				// render
-				if (ppu_Cycle >= 44)
+				if (ppu_Cycle >= 46)
 				{
 					// determine what BG pixels will actually be rendered
-					if ((ppu_Cycle & 3) == 0)
+					if (((ppu_Cycle - 2) & 3) == 0)
 					{
 						cur_layer_priority = 4;
 						second_layer_priority = 4;
@@ -8430,7 +8430,7 @@ namespace GBAHawk
 							}
 						}
 					}
-					else if ((ppu_Cycle & 3) == 1)
+					else if (((ppu_Cycle - 2) & 3) == 1)
 					{
 						if (ppu_Fetch_Target_1)
 						{
@@ -8452,7 +8452,7 @@ namespace GBAHawk
 							((ppu_Final_Pixel & 0x3E0) << 6) |
 							((ppu_Final_Pixel & 0x7C00) >> 7));
 					}
-					else if ((ppu_Cycle & 3) == 3)
+					else if (((ppu_Cycle - 2) & 3) == 3)
 					{
 						if (ppu_Fetch_Target_2)
 						{
