@@ -7575,7 +7575,6 @@ namespace GBAHawk
 			}
 		}
 
-
 		inline void ppu_Render()
 		{
 			double cur_x, cur_y;
@@ -8299,7 +8298,7 @@ namespace GBAHawk
 						{
 							ppu_PALRAM_Access[ppu_Cycle] = true;
 
-							ppu_Final_Pixel = (uint32_t)(PALRAM[ppu_Final_Pixel] | (PALRAM[ppu_Final_Pixel + 1] << 8));
+							ppu_Final_Pixel = (uint32_t)(PALRAM_16[ppu_Final_Pixel >> 1]);
 						}
 
 						ppu_Final_Pixel = (uint32_t)(0xFF000000 |
@@ -8313,7 +8312,7 @@ namespace GBAHawk
 						{
 							ppu_PALRAM_Access[ppu_Cycle] = true;
 
-							ppu_Blend_Pixel = (uint32_t)(PALRAM[ppu_Blend_Pixel] | (PALRAM[ppu_Blend_Pixel + 1] << 8));
+							ppu_Blend_Pixel = (uint32_t)(PALRAM_16[ppu_Blend_Pixel >> 1]);
 						}
 
 						if (ppu_Brighten_Final_Pixel)
@@ -8456,7 +8455,7 @@ namespace GBAHawk
 
 								ppu_BG_Effect_Byte_New[c0] = VRAM[ppu_Tile_Addr[c0] + 1];
 
-								ppu_Tile_Addr[c0] = VRAM[ppu_Tile_Addr[c0]] | ((VRAM[ppu_Tile_Addr[c0] + 1] & 3) << 8);
+								ppu_Tile_Addr[c0] = VRAM_16[ppu_Tile_Addr[c0] >> 1] & 0x3FF;
 							}
 							else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 							{
@@ -8504,7 +8503,7 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[c0]) * 8;
 									}
 
-									ppu_Pixel_Color[c0] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c0] = VRAM_16[temp_addr >> 1];
 								}
 								else
 								{
@@ -8544,7 +8543,7 @@ namespace GBAHawk
 										}
 									}
 
-									ppu_Pixel_Color[c0] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c0] = VRAM_16[temp_addr >> 1];
 								}
 							}
 							else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 28)))
@@ -8590,7 +8589,7 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[c0]) * 8;
 									}
 
-									ppu_Pixel_Color[c0] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c0] = VRAM_16[temp_addr >> 1];
 								}
 
 								if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 28))
@@ -8683,7 +8682,7 @@ namespace GBAHawk
 
 								ppu_BG_Effect_Byte_New[c1] = VRAM[ppu_Tile_Addr[c1] + 1];
 
-								ppu_Tile_Addr[c1] = VRAM[ppu_Tile_Addr[c1]] | ((VRAM[ppu_Tile_Addr[c1] + 1] & 3) << 8);
+								ppu_Tile_Addr[c1] = VRAM_16[ppu_Tile_Addr[c1] >> 1] & 0x3FF;
 							}
 							else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 20)))
 							{
@@ -8731,7 +8730,7 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[c1]) * 8;
 									}
 
-									ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c1] = VRAM_16[temp_addr >> 1];;
 								}
 								else
 								{
@@ -8771,7 +8770,7 @@ namespace GBAHawk
 										}
 									}
 
-									ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c1] = VRAM_16[temp_addr >> 1];
 								}
 							}
 							else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 28)))
@@ -8817,7 +8816,7 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[c1]) * 8;
 									}
 
-									ppu_Pixel_Color[c1] = (VRAM[temp_addr] | (VRAM[temp_addr + 1] << 8));
+									ppu_Pixel_Color[c1] = VRAM_16[temp_addr >> 1];
 								}
 
 								if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 28))
@@ -9223,11 +9222,9 @@ namespace GBAHawk
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
 									// pixel color comes direct from VRAM
-									int m3_ofst = (ppu_X_RS + ppu_Y_RS * 240) * 2;
+									int m3_ofst = ppu_X_RS + ppu_Y_RS * 240;
 
-									ppu_Pixel_Color[2] = VRAM[m3_ofst + 1];
-									ppu_Pixel_Color[2] <<= 8;
-									ppu_Pixel_Color[2] |= VRAM[m3_ofst];
+									ppu_Pixel_Color[2] = VRAM_16[m3_ofst];
 
 									ppu_BG_Has_Pixel[2] = true;
 								}
@@ -9378,11 +9375,10 @@ namespace GBAHawk
 								if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
 									// pixel color comes direct from VRAM
-									int m5_ofst = ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
+									int m5_ofst = ppu_X_RS + ppu_Y_RS * 160;
 
-									ppu_Pixel_Color[2] = VRAM[ppu_Display_Frame * 0xA000 + m5_ofst + 1];
-									ppu_Pixel_Color[2] <<= 8;
-									ppu_Pixel_Color[2] |= VRAM[ppu_Display_Frame * 0xA000 + m5_ofst];
+									// Note 0x5000 not 0xA000 since shifting right 1
+									ppu_Pixel_Color[2] = VRAM_16[ppu_Display_Frame * 0x5000 + m5_ofst];
 
 									ppu_BG_Has_Pixel[2] = true;
 								}
