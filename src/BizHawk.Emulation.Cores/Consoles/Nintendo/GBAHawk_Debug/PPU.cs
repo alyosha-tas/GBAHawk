@@ -53,10 +53,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_BG_On = new bool[4];
 		public bool[] ppu_BG_On_New = new bool[4];
 
-		public bool[] ppu_VRAM_Access = new bool[1233];
-		public bool[] ppu_PALRAM_Access = new bool[1233];
-		public bool[] ppu_OAM_Access = new bool[1233];
-
 		public int ppu_BG_Mode, ppu_Display_Frame;
 		public int ppu_X_RS, ppu_Y_RS;
 
@@ -77,6 +73,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool ppu_Delays;
 
 		public bool ppu_Memory_In_Use, ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
+
+		public bool ppu_VRAM_Access;
+		public bool ppu_PALRAM_Access;
+		public bool ppu_OAM_Access;
 
 		// Sprite Evaluation
 		public uint[] ppu_Sprite_Pixels = new uint[240 * 2];
@@ -538,7 +538,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_BG_CTRL_Write(2);
 			ppu_BG_CTRL_Write(3);
 
-			Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
+			if (ppu_Forced_Blank)
+			{
+				ppu_VRAM_Access = false;
+				ppu_PALRAM_Access = false;
+				ppu_OAM_Access = false;
+			}
+
+			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win0()
@@ -933,13 +940,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
-
-				for (int i = 0; i < 1233; i++)
-				{
-					ppu_VRAM_Access[i] = false;
-					ppu_PALRAM_Access[i] = false;
-					ppu_OAM_Access[i] = false;
-				}
 			}
 			else if (ppu_Cycle == 1007)
 			{
@@ -958,6 +958,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
 					if (ppu_LY == 227)					
 					{
+						ppu_OAM_Access = false;
+
 						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 						{
 							ppu_Render_Sprites();
@@ -968,7 +970,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (ppu_OAM_In_Use)
 							{
-								if (ppu_OAM_Access[ppu_Cycle])
+								if (ppu_OAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
 								}
@@ -977,7 +979,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 				else
-				{					
+				{
+					ppu_VRAM_Access = false;
+					ppu_PALRAM_Access = false;
+					ppu_OAM_Access = false;
+
 					if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 					{
 						ppu_Render_Sprites();
@@ -992,21 +998,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (ppu_VRAM_In_Use)
 						{
-							if (ppu_VRAM_Access[ppu_Cycle])
+							if (ppu_VRAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}
 						}
 						else if (ppu_PALRAM_In_Use)
 						{
-							if (ppu_PALRAM_Access[ppu_Cycle])
+							if (ppu_PALRAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}
 						}
 						else
 						{
-							if (ppu_OAM_Access[ppu_Cycle])
+							if (ppu_OAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}
@@ -1739,7 +1745,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (ppu_Fetch_Target_1)
 						{
-							ppu_PALRAM_Access[ppu_Cycle] = true;
+							ppu_PALRAM_Access = true;
 
 							ppu_Final_Pixel = (uint)(PALRAM[ppu_Final_Pixel] | (PALRAM[ppu_Final_Pixel + 1] << 8));
 						}
@@ -1753,7 +1759,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (ppu_Fetch_Target_2)
 						{
-							ppu_PALRAM_Access[ppu_Cycle] = true;
+							ppu_PALRAM_Access = true;
 
 							ppu_Blend_Pixel = (uint)(PALRAM[ppu_Blend_Pixel] | (PALRAM[ppu_Blend_Pixel + 1] << 8));
 						}
@@ -1861,7 +1867,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_Y_Flip_Ofst[c0] = ppu_Y_RS & 7;
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									VRAM_ofst_X = ppu_X_RS >> 3;
 									VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -1899,13 +1905,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_BG_Effect_Byte_New[c0] = VRAM[ppu_Tile_Addr[c0] + 1];
 
 									ppu_Tile_Addr[c0] = VRAM[ppu_Tile_Addr[c0]] | ((VRAM[ppu_Tile_Addr[c0] + 1] & 3) << 8);
-
-									Console.WriteLine(c0 + " " + ppu_BG_Pal_Size[c0]);
 								}
 								else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 								{
 									// this access will always occur
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// this update happens here so that rendering isn't effected further up
 									ppu_BG_Effect_Byte[c0] = ppu_BG_Effect_Byte_New[c0];
@@ -1996,7 +2000,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									// this access will only occur in 256color mode
 									if (ppu_BG_Pal_Size[c0])
 									{
-										ppu_VRAM_Access[ppu_Cycle] = true;
+										ppu_VRAM_Access = true;
 
 										temp_addr = ppu_Tile_Addr[c0];
 
@@ -2090,7 +2094,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_Y_Flip_Ofst[c1] = ppu_Y_RS & 7;
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									VRAM_ofst_X = ppu_X_RS >> 3;
 									VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -2132,7 +2136,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 20)))
 								{
 									// this access will always occur
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// this update happens here so that rendering isn't effected further up
 									ppu_BG_Effect_Byte[c1] = ppu_BG_Effect_Byte_New[c1];
@@ -2223,7 +2227,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									// this access will only occur in 256color mode
 									if (ppu_BG_Pal_Size[c1])
 									{
-										ppu_VRAM_Access[ppu_Cycle] = true;
+										ppu_VRAM_Access = true;
 
 										temp_addr = ppu_Tile_Addr[c1];
 
@@ -2322,7 +2326,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									}
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// determine if pixel is in valid range, and pick out color if so
 									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -2344,7 +2348,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2367,7 +2371,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (ppu_Fetch_Count[2] < 240)
 								{
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									if (ppu_BG_Has_Pixel[2])
 									{
@@ -2392,7 +2396,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2438,7 +2442,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									}
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// determine if pixel is in valid range, and pick out color if so
 									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -2460,7 +2464,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2483,7 +2487,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (ppu_Fetch_Count[2] < 240)
 								{
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									if (ppu_BG_Has_Pixel[2])
 									{
@@ -2508,7 +2512,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2552,7 +2556,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									}
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// determine if pixel is in valid range, and pick out color if so
 									if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[3]) && (ppu_Y_RS < BG_Scale_Y[3]))
@@ -2574,7 +2578,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[3] = false;
 
@@ -2597,7 +2601,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (ppu_Fetch_Count[3] < 240)
 								{
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									if (ppu_BG_Has_Pixel[3])
 									{								
@@ -2622,7 +2626,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[3] = false;
 
@@ -2662,7 +2666,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 									{
@@ -2685,7 +2689,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2737,7 +2741,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 									{
@@ -2764,7 +2768,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -2816,7 +2820,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
 
 									// mark for VRAM access even if it is out of bounds
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									// display split into 2 frames, outside of 160 x 128, display backdrop
 									if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
@@ -2840,7 +2844,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// mark for VRAM access even though we don't need this data
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									ppu_BG_Has_Pixel[2] = false;
 
@@ -3635,12 +3639,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 
-			for (int i = 0; i < 1233; i++)
-			{
-				ppu_VRAM_Access[i] = false;
-				ppu_PALRAM_Access[i] = false;
-				ppu_OAM_Access[i] = false;
-			}
+			ppu_VRAM_Access = false;
+			ppu_PALRAM_Access = false;
+			ppu_OAM_Access = false;
 
 			ppu_Memory_In_Use = ppu_VRAM_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
 
@@ -3734,10 +3735,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_BG_On), ref ppu_BG_On, false);
 			ser.Sync(nameof(ppu_BG_On_New), ref ppu_BG_On_New, false);
 
-			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access, false);
-			ser.Sync(nameof(ppu_PALRAM_Access), ref ppu_PALRAM_Access, false);
-			ser.Sync(nameof(ppu_OAM_Access), ref ppu_OAM_Access, false);
-
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
 			ser.Sync(nameof(ppu_Display_Frame), ref ppu_Display_Frame);
 
@@ -3788,6 +3785,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_VRAM_In_Use), ref ppu_VRAM_In_Use);
 			ser.Sync(nameof(ppu_PALRAM_In_Use), ref ppu_PALRAM_In_Use);
 			ser.Sync(nameof(ppu_OAM_In_Use), ref ppu_OAM_In_Use);
+
+			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access);
+			ser.Sync(nameof(ppu_PALRAM_Access), ref ppu_PALRAM_Access);
+			ser.Sync(nameof(ppu_OAM_Access), ref ppu_OAM_Access);
 
 			ser.Sync(nameof(ppu_Sprite_Pixels), ref ppu_Sprite_Pixels, false);
 			ser.Sync(nameof(ppu_Sprite_Priority), ref ppu_Sprite_Priority, false);

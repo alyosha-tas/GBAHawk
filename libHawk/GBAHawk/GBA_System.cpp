@@ -2153,13 +2153,6 @@ namespace GBAHawk
 						}
 					}
 				}
-
-				for (int i = 0; i < 1233; i++)
-				{
-					ppu_VRAM_Access[i] = false;
-					ppu_PALRAM_Access[i] = false;
-					ppu_OAM_Access[i] = false;
-				}
 			}
 			else if (ppu_Cycle == 1007)
 			{
@@ -2178,6 +2171,8 @@ namespace GBAHawk
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
 					if (ppu_LY == 227)
 					{
+						ppu_OAM_Access = false;
+						
 						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 						{
 							ppu_Render_Sprites();
@@ -2188,7 +2183,7 @@ namespace GBAHawk
 						{
 							if (ppu_OAM_In_Use)
 							{
-								if (ppu_OAM_Access[ppu_Cycle])
+								if (ppu_OAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
 								}
@@ -2198,6 +2193,10 @@ namespace GBAHawk
 				}
 				else
 				{		
+					ppu_VRAM_Access = false;
+					ppu_PALRAM_Access = false;
+					ppu_OAM_Access = false;
+					
 					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
 					{
 						ppu_Render_Sprites();
@@ -2212,21 +2211,21 @@ namespace GBAHawk
 					{
 						if (ppu_VRAM_In_Use)
 						{
-							if (ppu_VRAM_Access[ppu_Cycle])
+							if (ppu_VRAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}
 						}
 						else if (ppu_PALRAM_In_Use)
 						{
-							if (ppu_PALRAM_Access[ppu_Cycle])
+							if (ppu_PALRAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}
 						}
 						else
 						{
-							if (ppu_OAM_Access[ppu_Cycle])
+							if (ppu_OAM_Access)
 							{
 								cpu_Fetch_Wait += 1;
 							}

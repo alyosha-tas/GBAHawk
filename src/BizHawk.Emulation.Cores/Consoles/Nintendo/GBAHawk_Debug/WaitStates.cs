@@ -82,7 +82,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -92,7 +92,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -102,7 +102,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -174,7 +174,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -184,7 +184,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -194,7 +194,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -266,7 +266,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -278,7 +278,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{			
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;			
 					}
@@ -291,7 +291,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 					}
@@ -376,7 +376,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -386,7 +386,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -396,7 +396,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -516,7 +516,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -528,7 +528,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;	
 					}
@@ -542,7 +542,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
 					// check both edges of the access
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 					}

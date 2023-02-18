@@ -5143,7 +5143,7 @@ namespace GBAHawk
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5153,7 +5153,7 @@ namespace GBAHawk
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5163,7 +5163,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5235,7 +5235,7 @@ namespace GBAHawk
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5245,7 +5245,7 @@ namespace GBAHawk
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5255,7 +5255,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5327,7 +5327,7 @@ namespace GBAHawk
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5339,7 +5339,7 @@ namespace GBAHawk
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 					}
@@ -5352,7 +5352,7 @@ namespace GBAHawk
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 					}
@@ -5437,7 +5437,7 @@ namespace GBAHawk
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5447,7 +5447,7 @@ namespace GBAHawk
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5457,7 +5457,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5577,7 +5577,7 @@ namespace GBAHawk
 			{
 				if (addr >= 0x07000000)
 				{
-					if (ppu_OAM_Access[ppu_Cycle - 1])
+					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
 
@@ -5589,7 +5589,7 @@ namespace GBAHawk
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access[ppu_Cycle - 1])
+					if (ppu_VRAM_Access)
 					{
 						wait_ret += 1;
 					}
@@ -5603,7 +5603,7 @@ namespace GBAHawk
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
 					// check both edges of the access
-					if (ppu_PALRAM_Access[ppu_Cycle - 1])
+					if (ppu_PALRAM_Access)
 					{
 						wait_ret += 1;
 					}
@@ -6782,6 +6782,10 @@ namespace GBAHawk
 
 		bool ppu_Memory_In_Use, ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
+		bool ppu_VRAM_Access;
+		bool ppu_PALRAM_Access;
+		bool ppu_OAM_Access;
+
 		bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN;
 
@@ -6821,10 +6825,6 @@ namespace GBAHawk
 
 		bool ppu_BG_On[4] = { };
 		bool ppu_BG_On_New[4] = { };
-
-		bool ppu_VRAM_Access[1233] = { };
-		bool ppu_PALRAM_Access[1233] = { };
-		bool ppu_OAM_Access[1233] = { };
 
 		// Sprite Evaluation
 		bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
@@ -7285,6 +7285,13 @@ namespace GBAHawk
 			ppu_BG_CTRL_Write(1);
 			ppu_BG_CTRL_Write(2);
 			ppu_BG_CTRL_Write(3);
+
+			if (ppu_Forced_Blank)
+			{
+				ppu_VRAM_Access = false;
+				ppu_PALRAM_Access = false;
+				ppu_OAM_Access = false;
+			}
 		}
 
 		void ppu_Calc_Win0()
@@ -8296,7 +8303,7 @@ namespace GBAHawk
 					{
 						if (ppu_Fetch_Target_1)
 						{
-							ppu_PALRAM_Access[ppu_Cycle] = true;
+							ppu_PALRAM_Access = true;
 
 							ppu_Final_Pixel = (uint32_t)(PALRAM_16[ppu_Final_Pixel >> 1]);
 						}
@@ -8310,7 +8317,7 @@ namespace GBAHawk
 					{
 						if (ppu_Fetch_Target_2)
 						{
-							ppu_PALRAM_Access[ppu_Cycle] = true;
+							ppu_PALRAM_Access = true;
 
 							ppu_Blend_Pixel = (uint32_t)(PALRAM_16[ppu_Blend_Pixel >> 1]);
 						}
@@ -8418,7 +8425,7 @@ namespace GBAHawk
 								ppu_Y_Flip_Ofst[c0] = ppu_Y_RS & 7;
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								VRAM_ofst_X = ppu_X_RS >> 3;
 								VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -8460,7 +8467,7 @@ namespace GBAHawk
 							else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 							{
 								// this access will always occur
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// this update happens here so that rendering isn't effected further up
 								ppu_BG_Effect_Byte[c0] = ppu_BG_Effect_Byte_New[c0];
@@ -8551,7 +8558,7 @@ namespace GBAHawk
 								// this access will only occur in 256color mode
 								if (ppu_BG_Pal_Size[c0])
 								{
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									temp_addr = ppu_Tile_Addr[c0];
 
@@ -8645,7 +8652,7 @@ namespace GBAHawk
 								ppu_Y_Flip_Ofst[c1] = ppu_Y_RS & 7;
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								VRAM_ofst_X = ppu_X_RS >> 3;
 								VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -8687,7 +8694,7 @@ namespace GBAHawk
 							else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 20)))
 							{
 								// this access will always occur
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// this update happens here so that rendering isn't effected further up
 								ppu_BG_Effect_Byte[c1] = ppu_BG_Effect_Byte_New[c1];
@@ -8778,7 +8785,7 @@ namespace GBAHawk
 								// this access will only occur in 256color mode
 								if (ppu_BG_Pal_Size[c1])
 								{
-									ppu_VRAM_Access[ppu_Cycle] = true;
+									ppu_VRAM_Access = true;
 
 									temp_addr = ppu_Tile_Addr[c1];
 
@@ -8877,7 +8884,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -8899,7 +8906,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -8922,7 +8929,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[2] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								if (ppu_BG_Has_Pixel[2])
 								{
@@ -8947,7 +8954,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -8993,7 +9000,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -9015,7 +9022,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9038,7 +9045,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[2] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								if (ppu_BG_Has_Pixel[2])
 								{
@@ -9063,7 +9070,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9107,7 +9114,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[3]) && (ppu_Y_RS < BG_Scale_Y[3]))
@@ -9129,7 +9136,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[3] = false;
 
@@ -9152,7 +9159,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[3] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								if (ppu_BG_Has_Pixel[3])
 								{
@@ -9177,7 +9184,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[3] = false;
 
@@ -9217,7 +9224,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
@@ -9238,7 +9245,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9290,7 +9297,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
@@ -9317,7 +9324,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9369,7 +9376,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								// display split into 2 frames, outside of 160 x 128, display backdrop
 								if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
@@ -9392,7 +9399,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access[ppu_Cycle] = true;
+								ppu_VRAM_Access = true;
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -10193,12 +10200,9 @@ namespace GBAHawk
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 
-			for (int i = 0; i < 1233; i++)
-			{
-				ppu_VRAM_Access[i] = false;
-				ppu_PALRAM_Access[i] = false;
-				ppu_OAM_Access[i] = false;
-			}
+			ppu_VRAM_Access = false;
+			ppu_PALRAM_Access = false;
+			ppu_OAM_Access = false;
 
 			ppu_Memory_In_Use = ppu_VRAM_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
 
@@ -10276,6 +10280,10 @@ namespace GBAHawk
 			saver = bool_saver(ppu_PALRAM_In_Use, saver);
 			saver = bool_saver(ppu_OAM_In_Use, saver);
 
+			saver = bool_saver(ppu_VRAM_Access, saver);
+			saver = bool_saver(ppu_PALRAM_Access, saver);
+			saver = bool_saver(ppu_OAM_Access, saver);
+
 			saver = bool_saver(ppu_HBL_Free, saver);
 			saver = bool_saver(ppu_OBJ_Dim, saver);
 			saver = bool_saver(ppu_Forced_Blank, saver);
@@ -10318,10 +10326,6 @@ namespace GBAHawk
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
 			saver = bool_array_saver(ppu_BG_On_New, saver, 4);
-
-			saver = bool_array_saver(ppu_VRAM_Access, saver, 1233);
-			saver = bool_array_saver(ppu_PALRAM_Access, saver, 1233);
-			saver = bool_array_saver(ppu_OAM_Access, saver, 1233);
 
 			saver = short_array_saver(ppu_BG_CTRL, saver, 4);
 			saver = short_array_saver(ppu_BG_X, saver, 4);
@@ -10417,6 +10421,10 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_PALRAM_In_Use, loader);
 			loader = bool_loader(&ppu_OAM_In_Use, loader);
 
+			loader = bool_loader(&ppu_VRAM_Access, loader);
+			loader = bool_loader(&ppu_PALRAM_Access, loader);
+			loader = bool_loader(&ppu_OAM_Access, loader);
+
 			loader = bool_loader(&ppu_HBL_Free, loader);
 			loader = bool_loader(&ppu_OBJ_Dim, loader);
 			loader = bool_loader(&ppu_Forced_Blank, loader);
@@ -10459,10 +10467,6 @@ namespace GBAHawk
 
 			loader = bool_array_loader(ppu_BG_On, loader, 4);
 			loader = bool_array_loader(ppu_BG_On_New, loader, 4);
-
-			loader = bool_array_loader(ppu_VRAM_Access, loader, 1233);
-			loader = bool_array_loader(ppu_PALRAM_Access, loader, 1233);
-			loader = bool_array_loader(ppu_OAM_Access, loader, 1233);
 
 			loader = short_array_loader(ppu_BG_CTRL, loader, 4);
 			loader = short_array_loader(ppu_BG_X, loader, 4);
