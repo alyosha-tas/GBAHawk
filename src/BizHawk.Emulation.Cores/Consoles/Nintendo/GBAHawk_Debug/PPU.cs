@@ -538,7 +538,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_BG_CTRL_Write(2);
 			ppu_BG_CTRL_Write(3);
 
-			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
+			Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win0()
@@ -1899,6 +1899,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									ppu_BG_Effect_Byte_New[c0] = VRAM[ppu_Tile_Addr[c0] + 1];
 
 									ppu_Tile_Addr[c0] = VRAM[ppu_Tile_Addr[c0]] | ((VRAM[ppu_Tile_Addr[c0] + 1] & 3) << 8);
+
+									Console.WriteLine(c0 + " " + ppu_BG_Pal_Size[c0]);
 								}
 								else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 								{
@@ -2002,7 +2004,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 										{
-											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
+											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12))
 											{
 												temp_addr += 2;
 											}
@@ -2013,7 +2015,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										}
 										else
 										{
-											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
+											if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12))
 											{
 												temp_addr += 4;
 											}
@@ -2229,7 +2231,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 										{
-											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12))
 											{
 												temp_addr += 2;
 											}
@@ -2240,7 +2242,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										}
 										else
 										{
-											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+											if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12))
 											{
 												temp_addr += 4;
 											}

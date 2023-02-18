@@ -7576,7 +7576,7 @@ namespace GBAHawk
 		}
 
 
-		void ppu_Render()
+		inline void ppu_Render()
 		{
 			double cur_x, cur_y;
 			double sol_x, sol_y;
@@ -8560,7 +8560,7 @@ namespace GBAHawk
 
 									if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 									{
-										if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
+										if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12))
 										{
 											temp_addr += 2;
 										}
@@ -8571,7 +8571,7 @@ namespace GBAHawk
 									}
 									else
 									{
-										if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4))
+										if ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 12))
 										{
 											temp_addr += 4;
 										}
@@ -8787,7 +8787,7 @@ namespace GBAHawk
 
 									if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 									{
-										if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+										if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12))
 										{
 											temp_addr += 2;
 										}
@@ -8798,7 +8798,7 @@ namespace GBAHawk
 									}
 									else
 									{
-										if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4))
+										if ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 12))
 										{
 											temp_addr += 4;
 										}
