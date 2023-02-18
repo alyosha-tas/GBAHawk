@@ -5148,7 +5148,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_OAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5158,7 +5157,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_VRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -5168,7 +5166,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_PALRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 			}
@@ -5240,7 +5237,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_OAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5250,7 +5246,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_VRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -5260,7 +5255,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_PALRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 			}
@@ -5332,7 +5326,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_OAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5346,7 +5339,6 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
-					ppu_Memory_In_Use = true;
 				}
 				else
 				{
@@ -5359,7 +5351,6 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
-					ppu_Memory_In_Use = true;
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))
@@ -5442,7 +5433,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_OAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5452,7 +5442,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_VRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else
@@ -5462,7 +5451,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_PALRAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 			}
@@ -5582,7 +5570,6 @@ namespace GBAHawk
 						wait_ret += 1;
 
 						ppu_OAM_In_Use = true;
-						ppu_Memory_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5596,7 +5583,6 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
-					ppu_Memory_In_Use = true;
 				}
 				else
 				{
@@ -5610,7 +5596,6 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
-					ppu_Memory_In_Use = true;
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))
@@ -6780,7 +6765,7 @@ namespace GBAHawk
 		bool ppu_In_VBlank;
 		bool ppu_Delays;
 
-		bool ppu_Memory_In_Use, ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
+		bool ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
 		bool ppu_VRAM_Access;
 		bool ppu_PALRAM_Access;
@@ -7618,257 +7603,242 @@ namespace GBAHawk
 			if (!ppu_PAL_Rendering_Complete)
 			{
 				// move pixel data up up the pipeline
-				if ((ppu_Cycle & 3) == 0)
+				if (((ppu_Cycle & 3) == 0) && (ppu_Cycle >= 36))
 				{
 					switch (ppu_BG_Mode)
 					{
 					case 0:
-						if (ppu_Cycle >= 40)
+						for (int c0 = 0; c0 < 4; c0++)
 						{
-							for (int c0 = 0; c0 < 4; c0++)
+							if (ppu_BG_On[c0])
 							{
-								if (ppu_BG_On[c0])
+								temp_color = 0;
+
+								ppu_Pixel_Color_R[c0] = ppu_Pixel_Color_1[c0];
+								ppu_BG_Has_Pixel_R[c0] = ppu_BG_Has_Pixel_1[c0];
+
+								if (ppu_BG_Pal_Size[c0])
 								{
-									temp_color = 0;
-
-									ppu_Pixel_Color_R[c0] = ppu_Pixel_Color_1[c0];
-									ppu_BG_Has_Pixel_R[c0] = ppu_BG_Has_Pixel_1[c0];
-
-									if (ppu_BG_Pal_Size[c0])
+									if ((ppu_Scroll_Cycle[c0] & 7) == 0)
 									{
-										if ((ppu_Scroll_Cycle[c0] & 7) == 0)
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = ppu_Pixel_Color[c0] & 0xFF;
-											}
-											else
-											{
-												temp_color = (ppu_Pixel_Color[c0] >> 8) & 0xFF;
-											}
+											temp_color = ppu_Pixel_Color[c0] & 0xFF;
 										}
 										else
 										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = (ppu_Pixel_Color[c0] >> 8) & 0xFF;
-											}
-											else
-											{
-												temp_color = ppu_Pixel_Color[c0] & 0xFF;
-											}
+											temp_color = (ppu_Pixel_Color[c0] >> 8) & 0xFF;
 										}
-
-										temp_color <<= 1;
-
-										ppu_Pixel_Color_1[c0] = temp_color;
-										ppu_BG_Has_Pixel_1[c0] = temp_color != 0;
 									}
 									else
 									{
-										if ((ppu_Scroll_Cycle[c0] & 0xF) == 0)
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
 										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 8) & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 4) & 0xF);
-											}
+											temp_color = (ppu_Pixel_Color[c0] >> 8) & 0xFF;
 										}
-										else if ((ppu_Scroll_Cycle[c0] & 0xF) == 4)
+										else
 										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 12) & 0xF);
-											}
-											else
-											{
-												temp_color = (ppu_Pixel_Color[c0] & 0xF);
-											}
+											temp_color = ppu_Pixel_Color[c0] & 0xFF;
 										}
-										else if ((ppu_Scroll_Cycle[c0] & 0xF) == 8)
-										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = (ppu_Pixel_Color[c0] & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 12) & 0xF);
-											}
-										}
-										else if ((ppu_Scroll_Cycle[c0] & 0xF) == 12)
-										{
-											if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 4) & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c0] >> 8) & 0xF);
-											}
-										}
-
-										temp_color |= (ppu_BG_Effect_Byte[c0] & 0xF0);
-
-										temp_color <<= 1;
-
-										ppu_Pixel_Color_1[c0] = temp_color;
-										ppu_BG_Has_Pixel_1[c0] = ((temp_color & 0x1F) != 0);
 									}
+
+									temp_color <<= 1;
+
+									ppu_Pixel_Color_1[c0] = temp_color;
+									ppu_BG_Has_Pixel_1[c0] = temp_color != 0;
+								}
+								else
+								{
+									if ((ppu_Scroll_Cycle[c0] & 0xF) == 0)
+									{
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 8) & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 4) & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c0] & 0xF) == 4)
+									{
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 12) & 0xF);
+										}
+										else
+										{
+											temp_color = (ppu_Pixel_Color[c0] & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c0] & 0xF) == 8)
+									{
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
+										{
+											temp_color = (ppu_Pixel_Color[c0] & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 12) & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c0] & 0xF) == 12)
+									{
+										if ((ppu_BG_Effect_Byte[c0] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 4) & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c0] >> 8) & 0xF);
+										}
+									}
+
+									temp_color |= (ppu_BG_Effect_Byte[c0] & 0xF0);
+
+									temp_color <<= 1;
+
+									ppu_Pixel_Color_1[c0] = temp_color;
+									ppu_BG_Has_Pixel_1[c0] = ((temp_color & 0x1F) != 0);
 								}
 							}
 						}
 						break;
 
 					case 1:
-						if (ppu_Cycle >= 40)
+						for (int c1 = 0; c1 < 2; c1++)
 						{
-							for (int c1 = 0; c1 < 2; c1++)
+							if (ppu_BG_On[c1])
 							{
-								if (ppu_BG_On[c1])
+								temp_color = 0;
+
+								ppu_Pixel_Color_R[c1] = ppu_Pixel_Color_1[c1];
+								ppu_BG_Has_Pixel_R[c1] = ppu_BG_Has_Pixel_1[c1];
+
+								if (ppu_BG_Pal_Size[c1])
 								{
-									temp_color = 0;
-
-									ppu_Pixel_Color_R[c1] = ppu_Pixel_Color_1[c1];
-									ppu_BG_Has_Pixel_R[c1] = ppu_BG_Has_Pixel_1[c1];
-
-									if (ppu_BG_Pal_Size[c1])
+									if ((ppu_Scroll_Cycle[c1] & 7) == 0)
 									{
-										if ((ppu_Scroll_Cycle[c1] & 7) == 0)
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = ppu_Pixel_Color[c1] & 0xFF;
-											}
-											else
-											{
-												temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
-											}
+											temp_color = ppu_Pixel_Color[c1] & 0xFF;
 										}
 										else
 										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
-											}
-											else
-											{
-												temp_color = ppu_Pixel_Color[c1] & 0xFF;
-											}
+											temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
 										}
-
-										temp_color <<= 1;
-
-										ppu_Pixel_Color_1[c1] = temp_color;
-										ppu_BG_Has_Pixel_1[c1] = temp_color != 0;
 									}
 									else
 									{
-										if ((ppu_Scroll_Cycle[c1] & 0xF) == 0)
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
 										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 8) & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 4) & 0xF);
-											}
+											temp_color = (ppu_Pixel_Color[c1] >> 8) & 0xFF;
 										}
-										else if ((ppu_Scroll_Cycle[c1] & 0xF) == 4)
+										else
 										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 12) & 0xF);
-											}
-											else
-											{
-												temp_color = (ppu_Pixel_Color[c1] & 0xF);
-											}
+											temp_color = ppu_Pixel_Color[c1] & 0xFF;
 										}
-										else if ((ppu_Scroll_Cycle[c1] & 0xF) == 8)
-										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = (ppu_Pixel_Color[c1] & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 12) & 0xF);
-											}
-										}
-										else if ((ppu_Scroll_Cycle[c1] & 0xF) == 12)
-										{
-											if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 4) & 0xF);
-											}
-											else
-											{
-												temp_color = ((ppu_Pixel_Color[c1] >> 8) & 0xF);
-											}
-										}
-
-										temp_color |= (ppu_BG_Effect_Byte[c1] & 0xF0);
-
-										temp_color <<= 1;
-
-										ppu_Pixel_Color_1[c1] = temp_color;
-										ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0x1F) != 0);
 									}
+
+									temp_color <<= 1;
+
+									ppu_Pixel_Color_1[c1] = temp_color;
+									ppu_BG_Has_Pixel_1[c1] = temp_color != 0;
+								}
+								else
+								{
+									if ((ppu_Scroll_Cycle[c1] & 0xF) == 0)
+									{
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 8) & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 4) & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c1] & 0xF) == 4)
+									{
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 12) & 0xF);
+										}
+										else
+										{
+											temp_color = (ppu_Pixel_Color[c1] & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c1] & 0xF) == 8)
+									{
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+										{
+											temp_color = (ppu_Pixel_Color[c1] & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 12) & 0xF);
+										}
+									}
+									else if ((ppu_Scroll_Cycle[c1] & 0xF) == 12)
+									{
+										if ((ppu_BG_Effect_Byte[c1] & 0x4) == 0x0)
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 4) & 0xF);
+										}
+										else
+										{
+											temp_color = ((ppu_Pixel_Color[c1] >> 8) & 0xF);
+										}
+									}
+
+									temp_color |= (ppu_BG_Effect_Byte[c1] & 0xF0);
+
+									temp_color <<= 1;
+
+									ppu_Pixel_Color_1[c1] = temp_color;
+									ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0x1F) != 0);
 								}
 							}
 						}
 
-						if (ppu_Cycle >= 36)
-						{
-							ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
-							ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-							ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-							ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
-							ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-							ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
-						}
+						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 						break;
 
 					case 2:
-						if (ppu_Cycle >= 36)
-						{
-							ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
-							ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-							ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-							ppu_Pixel_Color_R[3] = ppu_Pixel_Color_1[3];
-							ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
-							ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
+						ppu_Pixel_Color_R[3] = ppu_Pixel_Color_1[3];
+						ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
+						ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
 
-							ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
-							ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-							ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 
-							ppu_BG_Has_Pixel_R[3] = ppu_BG_Has_Pixel_1[3];
-							ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
-							ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
-						}
+						ppu_BG_Has_Pixel_R[3] = ppu_BG_Has_Pixel_1[3];
+						ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
+						ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
 						break;
 
 					case 3:
 					case 4:
 					case 5:
-						if (ppu_Cycle >= 36)
-						{
-							ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
-							ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-							ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-							ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
-							ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-							ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
-						}
+						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 						break;
 					}
 				}
@@ -8306,6 +8276,14 @@ namespace GBAHawk
 							ppu_PALRAM_Access = true;
 
 							ppu_Final_Pixel = (uint32_t)(PALRAM_16[ppu_Final_Pixel >> 1]);
+
+							if (ppu_PALRAM_In_Use)
+							{
+								if (ppu_PALRAM_Access)
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
 						}
 
 						ppu_Final_Pixel = (uint32_t)(0xFF000000 |
@@ -8320,6 +8298,14 @@ namespace GBAHawk
 							ppu_PALRAM_Access = true;
 
 							ppu_Blend_Pixel = (uint32_t)(PALRAM_16[ppu_Blend_Pixel >> 1]);
+
+							if (ppu_PALRAM_In_Use)
+							{
+								if (ppu_PALRAM_Access)
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
 						}
 
 						if (ppu_Brighten_Final_Pixel)
@@ -8425,7 +8411,7 @@ namespace GBAHawk
 								ppu_Y_Flip_Ofst[c0] = ppu_Y_RS & 7;
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								VRAM_ofst_X = ppu_X_RS >> 3;
 								VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -8467,7 +8453,7 @@ namespace GBAHawk
 							else if (((ppu_Scroll_Cycle[c0] & 31) == (c0 + 4)) || ((ppu_Scroll_Cycle[c0] & 31) == (c0 + 20)))
 							{
 								// this access will always occur
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// this update happens here so that rendering isn't effected further up
 								ppu_BG_Effect_Byte[c0] = ppu_BG_Effect_Byte_New[c0];
@@ -8558,7 +8544,7 @@ namespace GBAHawk
 								// this access will only occur in 256color mode
 								if (ppu_BG_Pal_Size[c0])
 								{
-									ppu_VRAM_Access = true;
+									ppu_Set_VRAM_Access_True();
 
 									temp_addr = ppu_Tile_Addr[c0];
 
@@ -8652,7 +8638,7 @@ namespace GBAHawk
 								ppu_Y_Flip_Ofst[c1] = ppu_Y_RS & 7;
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								VRAM_ofst_X = ppu_X_RS >> 3;
 								VRAM_ofst_Y = ppu_Y_RS >> 3;
@@ -8694,7 +8680,7 @@ namespace GBAHawk
 							else if (((ppu_Scroll_Cycle[c1] & 31) == (c1 + 4)) || ((ppu_Scroll_Cycle[c1] & 31) == (c1 + 20)))
 							{
 								// this access will always occur
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// this update happens here so that rendering isn't effected further up
 								ppu_BG_Effect_Byte[c1] = ppu_BG_Effect_Byte_New[c1];
@@ -8785,7 +8771,7 @@ namespace GBAHawk
 								// this access will only occur in 256color mode
 								if (ppu_BG_Pal_Size[c1])
 								{
-									ppu_VRAM_Access = true;
+									ppu_Set_VRAM_Access_True();
 
 									temp_addr = ppu_Tile_Addr[c1];
 
@@ -8884,7 +8870,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -8906,7 +8892,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -8929,7 +8915,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[2] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								if (ppu_BG_Has_Pixel[2])
 								{
@@ -8954,7 +8940,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9000,7 +8986,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
@@ -9022,7 +9008,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9045,7 +9031,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[2] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								if (ppu_BG_Has_Pixel[2])
 								{
@@ -9070,7 +9056,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9114,7 +9100,7 @@ namespace GBAHawk
 								}
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// determine if pixel is in valid range, and pick out color if so
 								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[3]) && (ppu_Y_RS < BG_Scale_Y[3]))
@@ -9136,7 +9122,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[3] = false;
 
@@ -9159,7 +9145,7 @@ namespace GBAHawk
 							if (ppu_Fetch_Count[3] < 240)
 							{
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								if (ppu_BG_Has_Pixel[3])
 								{
@@ -9184,7 +9170,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[3] = false;
 
@@ -9224,7 +9210,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
@@ -9245,7 +9231,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9297,7 +9283,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
@@ -9324,7 +9310,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9376,7 +9362,7 @@ namespace GBAHawk
 								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
 								// mark for VRAM access even if it is out of bounds
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								// display split into 2 frames, outside of 160 x 128, display backdrop
 								if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
@@ -9399,7 +9385,7 @@ namespace GBAHawk
 							else
 							{
 								// mark for VRAM access even though we don't need this data
-								ppu_VRAM_Access = true;
+								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[2] = false;
 
@@ -9429,6 +9415,19 @@ namespace GBAHawk
 			case 7:
 				// invalid
 				break;
+			}
+		}
+
+		inline void ppu_Set_VRAM_Access_True()
+		{
+			ppu_VRAM_Access = true;
+
+			if (ppu_VRAM_In_Use)
+			{
+				if (ppu_VRAM_Access)
+				{
+					cpu_Fetch_Wait += 1;
+				}
 			}
 		}
 
@@ -10204,7 +10203,7 @@ namespace GBAHawk
 			ppu_PALRAM_Access = false;
 			ppu_OAM_Access = false;
 
-			ppu_Memory_In_Use = ppu_VRAM_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
+			ppu_VRAM_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
 
 			// BG rendering
 			for (int i = 0; i < 4; i++)
@@ -10275,7 +10274,6 @@ namespace GBAHawk
 			saver = bool_saver(ppu_In_VBlank, saver);
 			saver = bool_saver(ppu_Delays, saver);
 
-			saver = bool_saver(ppu_Memory_In_Use, saver);
 			saver = bool_saver(ppu_VRAM_In_Use, saver);
 			saver = bool_saver(ppu_PALRAM_In_Use, saver);
 			saver = bool_saver(ppu_OAM_In_Use, saver);
@@ -10416,7 +10414,6 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_In_VBlank, loader);
 			loader = bool_loader(&ppu_Delays, loader);
 
-			loader = bool_loader(&ppu_Memory_In_Use, loader);
 			loader = bool_loader(&ppu_VRAM_In_Use, loader);
 			loader = bool_loader(&ppu_PALRAM_In_Use, loader);
 			loader = bool_loader(&ppu_OAM_In_Use, loader);

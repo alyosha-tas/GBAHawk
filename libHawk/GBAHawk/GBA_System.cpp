@@ -98,7 +98,6 @@ namespace GBAHawk
 				ret = OAM[addr & 0x3FF];
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -112,14 +111,12 @@ namespace GBAHawk
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM[addr & 0x3FF];
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else
 			{
@@ -255,7 +252,6 @@ namespace GBAHawk
 				ret = OAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -269,14 +265,12 @@ namespace GBAHawk
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else
 			{
@@ -406,7 +400,6 @@ namespace GBAHawk
 				ret = OAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -420,14 +413,12 @@ namespace GBAHawk
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else
 			{
@@ -526,7 +517,6 @@ namespace GBAHawk
 			PALRAM[(addr + 1) & 0x3FF] = value;
 
 			ppu_PALRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x07000000)
 		{
@@ -555,7 +545,6 @@ namespace GBAHawk
 			}
 
 			ppu_VRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x08000000)
 		{
@@ -564,7 +553,6 @@ namespace GBAHawk
 
 			// are accesses ignored?
 			ppu_OAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -639,7 +627,6 @@ namespace GBAHawk
 			PALRAM_16[(addr & 0x3FE) >> 1] = value;
 
 			ppu_PALRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x07000000)
 		{
@@ -654,7 +641,6 @@ namespace GBAHawk
 			}
 
 			ppu_VRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x08000000)
 		{
@@ -668,7 +654,6 @@ namespace GBAHawk
 			}
 
 			ppu_OAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -738,7 +723,6 @@ namespace GBAHawk
 			PALRAM_32[(addr & 0x3FC) >> 2] = value;
 
 			ppu_PALRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x07000000)
 		{
@@ -753,7 +737,6 @@ namespace GBAHawk
 			}
 
 			ppu_VRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x08000000)
 		{
@@ -768,7 +751,6 @@ namespace GBAHawk
 			}
 
 			ppu_OAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -959,7 +941,6 @@ namespace GBAHawk
 				ret = OAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -973,14 +954,12 @@ namespace GBAHawk
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else
 			{
@@ -1065,7 +1044,6 @@ namespace GBAHawk
 				dma_Last_Bus_Value[chan] = OAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -1079,14 +1057,12 @@ namespace GBAHawk
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
 			{
 				dma_Last_Bus_Value[chan] = PALRAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else
 			{
@@ -1148,7 +1124,6 @@ namespace GBAHawk
 			PALRAM_16[(addr & 0x3FE) >> 1] = value;
 
 			ppu_PALRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x07000000)
 		{
@@ -1162,7 +1137,6 @@ namespace GBAHawk
 			}
 
 			ppu_VRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x08000000)
 		{
@@ -1175,7 +1149,6 @@ namespace GBAHawk
 			}
 
 			ppu_OAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -1232,7 +1205,6 @@ namespace GBAHawk
 			PALRAM_32[(addr & 0x3FC) >> 2] = value;
 
 			ppu_PALRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x07000000)
 		{
@@ -1246,7 +1218,6 @@ namespace GBAHawk
 			}
 
 			ppu_VRAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if (addr < 0x08000000)
 		{
@@ -1260,7 +1231,6 @@ namespace GBAHawk
 			}
 
 			ppu_OAM_In_Use = false;
-			ppu_Memory_In_Use = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -2178,9 +2148,15 @@ namespace GBAHawk
 							ppu_Render_Sprites();
 						}
 
-						// should be only OAM here
-						if (ppu_Memory_In_Use)
-						{
+						// TODO
+							/*
+							if (ppu_VRAM_In_Use)
+							{
+								if (ppu_VRAM_Access)
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
 							if (ppu_OAM_In_Use)
 							{
 								if (ppu_OAM_Access)
@@ -2188,7 +2164,7 @@ namespace GBAHawk
 									cpu_Fetch_Wait += 1;
 								}
 							}
-						}
+							*/
 					}
 				}
 				else
@@ -2200,36 +2176,29 @@ namespace GBAHawk
 					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
 					{
 						ppu_Render_Sprites();
+
+						// TODO
+							/*
+							if (ppu_VRAM_In_Use)
+							{
+								if (ppu_VRAM_Access)
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
+							if (ppu_OAM_In_Use)
+							{
+								if (ppu_OAM_Access)
+								{
+									cpu_Fetch_Wait += 1;
+								}
+							}
+							*/
 					}
 
 					if (!ppu_Rendering_Complete)
 					{
 						ppu_Render();
-					}
-
-					if (ppu_Memory_In_Use)
-					{
-						if (ppu_VRAM_In_Use)
-						{
-							if (ppu_VRAM_Access)
-							{
-								cpu_Fetch_Wait += 1;
-							}
-						}
-						else if (ppu_PALRAM_In_Use)
-						{
-							if (ppu_PALRAM_Access)
-							{
-								cpu_Fetch_Wait += 1;
-							}
-						}
-						else
-						{
-							if (ppu_OAM_Access)
-							{
-								cpu_Fetch_Wait += 1;
-							}
-						}
 					}
 				}
 			}

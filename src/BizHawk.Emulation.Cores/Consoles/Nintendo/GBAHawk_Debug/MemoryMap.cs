@@ -92,7 +92,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = OAM[addr & 0x3FF];
 
 					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -106,14 +105,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 
 					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x05000000)
 				{
 					ret = PALRAM[addr & 0x3FF];
 
 					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else
 				{
@@ -253,7 +250,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = (ushort)((OAM[(addr & 0x3FF) + 1] << 8) | OAM[addr & 0x3FF]);
 
 					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -267,14 +263,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 
 					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x05000000)
 				{
 					ret = (ushort)((PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else
 				{
@@ -414,7 +408,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ret = (uint)((OAM[(addr & 0x3FF) + 3] << 24) | (OAM[(addr & 0x3FF) + 2] << 16) | (OAM[(addr & 0x3FF) + 1] << 8) | OAM[addr & 0x3FF]);
 
 					ppu_OAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -428,14 +421,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 
 					ppu_VRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else if (addr >= 0x05000000)
 				{
 					ret = (uint)((PALRAM[(addr & 0x3FF) + 3] << 24) | (PALRAM[(addr & 0x3FF) + 2] << 16) | (PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
-					ppu_Memory_In_Use = false;
 				}
 				else
 				{
@@ -540,7 +531,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[(addr + 1) & 0x3FF] = value;
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -569,7 +559,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -578,7 +567,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				// are accesses ignored?
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -662,7 +650,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -681,7 +668,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -698,7 +684,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -783,7 +768,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
 
 				ppu_PALRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -806,7 +790,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_VRAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x08000000)
 			{
@@ -826,7 +809,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_OAM_In_Use = false;
-				ppu_Memory_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
