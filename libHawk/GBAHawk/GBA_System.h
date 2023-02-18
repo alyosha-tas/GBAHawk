@@ -9176,7 +9176,7 @@ namespace GBAHawk
 
 								ppu_BG_Has_Pixel[2] = false;
 
-								if (ppu_Fetch_Count[2] == 244)
+								if (ppu_Fetch_Count[2] == 243)
 								{
 									ppu_BG_Rendering_Complete[2] = true;
 
@@ -9289,19 +9289,6 @@ namespace GBAHawk
 								ppu_Set_VRAM_Access_True();
 
 								ppu_BG_Has_Pixel[3] = false;
-
-								if (ppu_Fetch_Count[3] == 244)
-								{
-									ppu_BG_Rendering_Complete[3] = true;
-
-									ppu_Rendering_Complete = true;
-
-									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
-								}
 							}
 						}
 						else if ((ppu_Cycle & 3) == 1)
@@ -9339,6 +9326,19 @@ namespace GBAHawk
 								ppu_BG_Has_Pixel[3] = false;
 
 								ppu_Fetch_Count[3] += 1;
+
+								if (ppu_Fetch_Count[3] == 244)
+								{
+									ppu_BG_Rendering_Complete[3] = true;
+
+									ppu_Rendering_Complete = true;
+
+									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
+								}
 							}
 						}
 					}
