@@ -237,7 +237,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			IRQ_Write_Delay = IRQ_Write_Delay_2 = IRQ_Write_Delay_3 = false;
 
-			controller_state  = 0x3FF;
+			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
+
+			VRAM_32_Check = PALRAM_32_Check = false;
+
+			controller_state = 0x3FF;
 
 			Memory_CTRL = 0;
 

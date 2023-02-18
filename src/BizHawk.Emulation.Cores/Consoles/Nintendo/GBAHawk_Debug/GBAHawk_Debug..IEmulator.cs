@@ -12,11 +12,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public IController Frame_Controller;
 
+		public uint PALRAM_32W_Addr, VRAM_32W_Addr;
+		public ushort PALRAM_32W_Value, VRAM_32W_Value;
+
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
 		public bool VBlank_Rise;
 		public bool delays_to_process;
 		public bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
+
+		public bool VRAM_32_Check, PALRAM_32_Check;
+		public bool VRAM_32_Delay, PALRAM_32_Delay;
+
+		public bool IRQ_Delays, Misc_Delays;
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
@@ -132,6 +140,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							INT_Flags |= 0x1000;
 
 							key_Delay = true;
+							Misc_Delays = true;
 							key_Delay_cd = 2;
 							delays_to_process = true;
 						}					
@@ -147,6 +156,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							INT_Flags |= 0x1000;
 
 							key_Delay = true;
+							Misc_Delays = true;
 							key_Delay_cd = 2;
 							delays_to_process = true;
 						}
@@ -165,6 +175,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					INT_Flags |= 0x1000;
 
 					key_Delay = true;
+					Misc_Delays = true;
 					key_Delay_cd = 2;
 					delays_to_process = true;
 				}
@@ -173,90 +184,174 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void process_delays()
 		{
-			if (IRQ_Write_Delay)
+			if (IRQ_Delays)
 			{
-				cpu_IRQ_Input = cpu_Next_IRQ_Input;
-				IRQ_Write_Delay = false;
-
-				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
+				if (IRQ_Write_Delay)
 				{
-					if (!ppu_Delays && !ser_Delay && !key_Delay)
-					{
-						delays_to_process = false;
-					}			
-				}			
-			}
+					cpu_IRQ_Input = cpu_Next_IRQ_Input;
+					IRQ_Write_Delay = false;
 
-			if (IRQ_Write_Delay_2)
-			{
-				cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
-				IRQ_Write_Delay = true;
-				IRQ_Write_Delay_2 = false;
-			}
-
-			if (IRQ_Write_Delay_3)
-			{
-				cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-				IRQ_Write_Delay_2 = true;
-				IRQ_Write_Delay_3 = false;
-
-				// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-				if ((INT_EN & INT_Flags & 0x3FFF) == 0)
-				{
-					cpu_Trigger_Unhalt = false;
-				}
-				else
-				{
-					cpu_Trigger_Unhalt = true;
-				}
-			}
-
-			if (ser_Delay)
-			{
-				ser_Delay_cd--;
-				
-				if (ser_Delay_cd == 0)
-				{
-					// trigger IRQ
-					if (((INT_EN & INT_Flags & 0x80) == 0x80))
-					{
-						cpu_Trigger_Unhalt = true;
-						if (INT_Master_On) { cpu_IRQ_Input = true; }
-					}
-
-					ser_Delay = false;
 					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
+					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
 					{
-						if (!ppu_Delays && !key_Delay)
+						IRQ_Delays = false;
+						
+						if (!ppu_Delays && !Misc_Delays)
 						{
 							delays_to_process = false;
 						}
 					}
 				}
-			}
 
-			if (key_Delay)
-			{
-				key_Delay_cd--;
-
-				if (key_Delay_cd == 0)
+				if (IRQ_Write_Delay_2)
 				{
-					// trigger IRQ
-					if (((INT_EN & INT_Flags & 0x1000) == 0x1000))
+					cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
+					IRQ_Write_Delay = true;
+					IRQ_Write_Delay_2 = false;
+				}
+
+				if (IRQ_Write_Delay_3)
+				{
+					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+					IRQ_Write_Delay_2 = true;
+					IRQ_Write_Delay_3 = false;
+
+					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
+					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+					{
+						cpu_Trigger_Unhalt = false;
+					}
+					else
 					{
 						cpu_Trigger_Unhalt = true;
-						if (INT_Master_On) { cpu_IRQ_Input = true; }
 					}
+				}
+			}
 
-					key_Delay = false;
-					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
+			if (Misc_Delays)
+			{
+				if (VRAM_32_Delay)
+				{
+					if (!VRAM_32_Check)
 					{
-						if (!ppu_Delays && !ser_Delay)
+						// always write first 16 bits when not blocked
+						if (!ppu_VRAM_Access)
 						{
-							delays_to_process = false;
+							// Forced Align
+							VRAM_32W_Addr &= 0xFFFFFFFC;
+
+							if ((VRAM_32W_Addr & 0x00010000) == 0x00010000)
+							{
+								VRAM[VRAM_32W_Addr & 0x17FFF] = (byte)(VRAM_32W_Value & 0xFF);
+								VRAM[(VRAM_32W_Addr & 0x17FFF) + 1] = (byte)((VRAM_32W_Value >> 8) & 0xFF);
+							}
+							else
+							{
+								VRAM[VRAM_32W_Addr & 0xFFFF] = (byte)(VRAM_32W_Value & 0xFF);
+								VRAM[(VRAM_32W_Addr & 0xFFFF) + 1] = (byte)((VRAM_32W_Value >> 8) & 0xFF);
+							}
+						}
+					}
+					else
+					{
+						VRAM_32_Delay = false;
+
+						// check if all delay sources are false
+						if (!key_Delay && !ser_Delay && !PALRAM_32_Delay)
+						{
+							Misc_Delays = false;
+
+							if (!ppu_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
+							}
+						}
+					}
+				}
+
+				if (PALRAM_32_Delay)
+				{
+					if (PALRAM_32_Check)
+					{
+						// always write first 16 bits when not blocked
+						if (!ppu_PALRAM_Access)
+						{
+							// Forced Align
+							PALRAM_32W_Addr &= 0xFFFFFFFC;
+
+							PALRAM[PALRAM_32W_Addr & 0x3FF] = (byte)(PALRAM_32W_Value & 0xFF);
+							PALRAM[(PALRAM_32W_Addr & 0x3FF) + 1] = (byte)((PALRAM_32W_Value >> 8) & 0xFF);
+						}
+					}
+					else
+					{
+						PALRAM_32_Delay = false;
+
+						// check if all delay sources are false
+						if (!key_Delay && !ser_Delay && !VRAM_32_Delay)
+						{
+							Misc_Delays = false;
+
+							if (!ppu_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
+							}
+						}
+					}
+				}
+
+				if (ser_Delay)
+				{
+					ser_Delay_cd--;
+
+					if (ser_Delay_cd == 0)
+					{
+						// trigger IRQ
+						if (((INT_EN & INT_Flags & 0x80) == 0x80))
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
+
+						ser_Delay = false;
+
+						// check if all delay sources are false
+						if (!key_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
+						{
+							Misc_Delays = false;
+
+							if (!ppu_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
+							}
+						}
+					}
+				}
+
+				if (key_Delay)
+				{
+					key_Delay_cd--;
+
+					if (key_Delay_cd == 0)
+					{
+						// trigger IRQ
+						if (((INT_EN & INT_Flags & 0x1000) == 0x1000))
+						{
+							cpu_Trigger_Unhalt = true;
+							if (INT_Master_On) { cpu_IRQ_Input = true; }
+						}
+
+						key_Delay = false;
+
+						// check if all delay sources are false
+						if (!ser_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
+						{
+							Misc_Delays = false;
+
+							if (!ppu_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
+							}
 						}
 					}
 				}
@@ -482,9 +577,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				// check if all delay sources are false
-				if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay)
+				if (!ppu_Delays)
 				{
-					if (!ppu_Delays && !ser_Delay && !key_Delay)
+					if (!Misc_Delays && !IRQ_Delays)
 					{
 						delays_to_process = false;
 					}

@@ -393,6 +393,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				PALRAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
 
 				ppu_PALRAM_In_Use = false;
+				PALRAM_32_Check = false;
 			}
 			else if (addr < 0x07000000)
 			{
@@ -412,6 +413,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				ppu_VRAM_In_Use = false;
+				VRAM_32_Check = false;
 			}
 			else if (addr < 0x08000000)
 			{

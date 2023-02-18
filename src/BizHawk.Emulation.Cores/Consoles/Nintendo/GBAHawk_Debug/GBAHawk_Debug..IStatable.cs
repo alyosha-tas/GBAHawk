@@ -53,6 +53,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(IRQ_Write_Delay), ref IRQ_Write_Delay);
 			ser.Sync(nameof(IRQ_Write_Delay_2), ref IRQ_Write_Delay_2);
 			ser.Sync(nameof(IRQ_Write_Delay_3), ref IRQ_Write_Delay_3);
+
+			ser.Sync(nameof(PALRAM_32W_Addr), ref PALRAM_32W_Addr);
+			ser.Sync(nameof(VRAM_32W_Addr), ref VRAM_32W_Addr);
+			ser.Sync(nameof(PALRAM_32W_Value), ref PALRAM_32W_Value);
+			ser.Sync(nameof(VRAM_32W_Value), ref VRAM_32W_Value);
+
+			ser.Sync(nameof(VRAM_32_Check), ref VRAM_32_Check);
+			ser.Sync(nameof(PALRAM_32_Check), ref PALRAM_32_Check);
+			ser.Sync(nameof(VRAM_32_Delay), ref VRAM_32_Delay);
+			ser.Sync(nameof(PALRAM_32_Delay), ref PALRAM_32_Delay);
+
+			ser.Sync(nameof(IRQ_Delays), ref IRQ_Delays);
+			ser.Sync(nameof(Misc_Delays), ref Misc_Delays);
+
 			ser.Sync(nameof(CycleCount), ref CycleCount);
 
 			// memory domains

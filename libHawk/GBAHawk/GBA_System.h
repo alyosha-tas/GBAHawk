@@ -67,16 +67,19 @@ namespace GBAHawk
 		bool delays_to_process;
 		bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
 
+		bool VRAM_32_Check, PALRAM_32_Check;
+		bool VRAM_32_Delay, PALRAM_32_Delay;
+		bool IRQ_Delays, Misc_Delays;
+
 		uint8_t Post_Boot, Halt_CTRL;
 
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
-
 		uint16_t controller_state;
+		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
 
+		uint32_t PALRAM_32W_Addr, VRAM_32W_Addr;
 		uint32_t Memory_CTRL, ROM_Length;
-
 		uint32_t Last_BIOS_Read;
-
 		uint32_t WRAM_Waits, SRAM_Waits;
 
 		uint32_t ROM_Waits_0_N, ROM_Waits_1_N, ROM_Waits_2_N, ROM_Waits_0_S, ROM_Waits_1_S, ROM_Waits_2_S;
@@ -139,6 +142,10 @@ namespace GBAHawk
 			delays_to_process = false;
 
 			IRQ_Write_Delay = IRQ_Write_Delay_2 = IRQ_Write_Delay_3 = false;
+
+			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
+
+			VRAM_32_Check = PALRAM_32_Check = false;
 
 			controller_state = 0x3FF;
 
@@ -213,6 +220,7 @@ namespace GBAHawk
 							INT_Flags |= 0x1000;
 
 							key_Delay = true;
+							Misc_Delays = true;
 							key_Delay_cd = 2;
 							delays_to_process = true;
 						}
@@ -228,6 +236,7 @@ namespace GBAHawk
 							INT_Flags |= 0x1000;
 
 							key_Delay = true;
+							Misc_Delays = true;
 							key_Delay_cd = 2;
 							delays_to_process = true;
 						}
@@ -246,6 +255,7 @@ namespace GBAHawk
 					INT_Flags |= 0x1000;
 
 					key_Delay = true;
+					Misc_Delays = true;
 					key_Delay_cd = 2;
 					delays_to_process = true;
 				}
@@ -565,6 +575,7 @@ namespace GBAHawk
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 
 			INT_EN = value;
 		}
@@ -599,6 +610,7 @@ namespace GBAHawk
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 		}
 
 		void Update_INT_Master(uint16_t value)
@@ -620,6 +632,7 @@ namespace GBAHawk
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 
 			INT_Master = value;
 		}
@@ -5090,7 +5103,7 @@ namespace GBAHawk
 	#pragma region Wait States
 		// NOTE: For 32 bit accesses, PALRAM and VRAM take 2 accesses, but could be interrupted by rendering. So the 32 bit wait state processors need to know about
 		// the destination and value in this case.
-		// For the CPU, the value will be in cpu_Temp_Reg_Ptr, for DMA it is in dma_TFR_Word. 
+		// For the CPU, the value will be in cpu_Regs[cpu_Temp_Reg_Ptr], for DMA it is in dma_TFR_Word. 
 		// For the CPU, whether it is a write or not is in cpu_LS_Is_Load, for DMA it is in dma_Read_Cycle	
 
 		uint32_t Wait_State_Access_8(uint32_t addr, bool Seq_Access)
@@ -5344,6 +5357,18 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
+
+					if (!cpu_LS_Is_Load)
+					{
+						VRAM_32_Check = true;
+						VRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						VRAM_32W_Addr = addr;
+						VRAM_32W_Value = (uint16_t)cpu_Regs[cpu_Temp_Reg_Ptr];
+					}
 				}
 				else
 				{
@@ -5356,6 +5381,18 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
+
+					if (!cpu_LS_Is_Load)
+					{
+						PALRAM_32_Check = true;
+						PALRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						PALRAM_32W_Addr = addr;
+						PALRAM_32W_Value = (uint16_t)cpu_Regs[cpu_Temp_Reg_Ptr];
+					}
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))
@@ -5439,6 +5476,18 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
+
+					if (!dma_Read_Cycle)
+					{
+						VRAM_32_Check = true;
+						VRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						VRAM_32W_Addr = addr;
+						VRAM_32W_Value = (uint16_t)dma_TFR_Word;
+					}
 				}
 				else
 				{
@@ -5451,6 +5500,18 @@ namespace GBAHawk
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
+
+					if (!dma_Read_Cycle)
+					{
+						PALRAM_32_Check = true;
+						PALRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						PALRAM_32W_Addr = addr;
+						PALRAM_32W_Value = (uint16_t)dma_TFR_Word;
+					}
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))
@@ -11985,6 +12046,13 @@ namespace GBAHawk
 			saver = bool_saver(IRQ_Write_Delay_2, saver);
 			saver = bool_saver(IRQ_Write_Delay_3, saver);
 
+			saver = bool_saver(VRAM_32_Check, saver);
+			saver = bool_saver(PALRAM_32_Check, saver);
+			saver = bool_saver(VRAM_32_Delay, saver);
+			saver = bool_saver(PALRAM_32_Delay, saver);
+			saver = bool_saver(IRQ_Delays, saver);
+			saver = bool_saver(Misc_Delays, saver);
+
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
 
@@ -11993,7 +12061,11 @@ namespace GBAHawk
 			saver = short_saver(INT_Master, saver);
 			saver = short_saver(Wait_CTRL, saver);
 			saver = short_saver(controller_state, saver);
+			saver = short_saver(PALRAM_32W_Value, saver);
+			saver = short_saver(VRAM_32W_Value, saver);
 
+			saver = int_saver(PALRAM_32W_Addr, saver);
+			saver = int_saver(VRAM_32W_Addr, saver);
 			saver = int_saver(Memory_CTRL, saver);
 			saver = int_saver(ROM_Length, saver);
 
@@ -12008,8 +12080,6 @@ namespace GBAHawk
 			saver = int_saver(ROM_Waits_0_S, saver);
 			saver = int_saver(ROM_Waits_1_S, saver);
 			saver = int_saver(ROM_Waits_2_S, saver);
-
-
 			
 			saver = byte_array_saver(WRAM, saver, 0x40000);
 			saver = byte_array_saver(IWRAM, saver, 0x8000);
@@ -12062,6 +12132,13 @@ namespace GBAHawk
 			loader = bool_loader(&IRQ_Write_Delay_2, loader);
 			loader = bool_loader(&IRQ_Write_Delay_3, loader);
 
+			loader = bool_loader(&VRAM_32_Check, loader);
+			loader = bool_loader(&PALRAM_32_Check, loader);
+			loader = bool_loader(&VRAM_32_Delay, loader);
+			loader = bool_loader(&PALRAM_32_Delay, loader);
+			loader = bool_loader(&IRQ_Delays, loader);
+			loader = bool_loader(&Misc_Delays, loader);
+
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);
 
@@ -12070,7 +12147,11 @@ namespace GBAHawk
 			loader = short_loader(&INT_Master, loader);
 			loader = short_loader(&Wait_CTRL, loader);
 			loader = short_loader(&controller_state, loader);
+			loader = short_loader(&PALRAM_32W_Value, loader);
+			loader = short_loader(&VRAM_32W_Value, loader);
 
+			loader = int_loader(&PALRAM_32W_Addr, loader);
+			loader = int_loader(&VRAM_32W_Addr, loader);
 			loader = int_loader(&Memory_CTRL, loader);
 			loader = int_loader(&ROM_Length, loader);
 

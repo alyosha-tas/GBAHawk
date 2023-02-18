@@ -25,7 +25,7 @@
 
 // NOTE: For 32 bit accesses, PALRAM and VRAM take 2 accesses, but could be interrupted by rendering. So the 32 bit wait state processors need to know about
 // the destination and value in this case.
-// For the CPU, the value will be in cpu_Temp_Reg_Ptr, for DMA it is in dma_TFR_Word. 
+// For the CPU, the value will be in cpu_Regs[cpu_Temp_Reg_Ptr], for DMA it is in dma_TFR_Word. 
 // For the CPU, whether it is a write or not is in cpu_LS_Is_Load, for DMA it is in dma_Read_Cycle
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
@@ -283,6 +283,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
+
+					if (!cpu_LS_Is_Load)
+					{
+						VRAM_32_Check = true;
+						VRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						VRAM_32W_Addr = addr;
+						VRAM_32W_Value = (ushort)cpu_Regs[cpu_Temp_Reg_Ptr];
+					}
 				}
 				else
 				{
@@ -295,6 +307,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
+
+					if (!cpu_LS_Is_Load)
+					{
+						PALRAM_32_Check = true;
+						PALRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;		
+
+						PALRAM_32W_Addr = addr;
+						PALRAM_32W_Value = (ushort)cpu_Regs[cpu_Temp_Reg_Ptr];
+					}
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))
@@ -378,6 +402,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// set to true since we also need to check the next cycle
 					ppu_VRAM_In_Use = true;
+
+					if (!dma_Read_Cycle)
+					{ 
+						VRAM_32_Check = true;
+						VRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						VRAM_32W_Addr = addr;
+						VRAM_32W_Value = (ushort)dma_TFR_Word;
+					}
 				}
 				else
 				{
@@ -390,6 +426,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
+
+					if (!dma_Read_Cycle)
+					{ 
+						PALRAM_32_Check = true;
+						PALRAM_32_Delay = true;
+
+						Misc_Delays = true;
+						delays_to_process = true;
+
+						PALRAM_32W_Addr = addr;
+						PALRAM_32W_Value = (ushort)dma_TFR_Word;
+					}
 				}
 			}
 			else if ((addr < 0x03000000) && (addr >= 0x02000000))

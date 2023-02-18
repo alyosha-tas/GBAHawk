@@ -283,6 +283,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								INT_Flags |= 0x80;
 
 								ser_Delay = true;
+								Misc_Delays = true;
 								ser_Delay_cd = 2;
 								delays_to_process = true;
 							}

@@ -271,6 +271,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 
 			INT_EN = value;
 		}
@@ -305,6 +306,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 		}
 
 		public void Update_INT_Master(ushort value)
@@ -326,6 +328,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// changes to IRQ that happen due to writes should take place next cycle
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 
 			INT_Master = value;
 		}
