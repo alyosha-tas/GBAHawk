@@ -467,7 +467,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
-								dma_Access_Wait = Wait_State_Access_32(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
+								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
@@ -484,7 +484,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
-								dma_Access_Wait = Wait_State_Access_32(dma_SRC_intl[dma_Chan_Exec], dma_Seq_Access);
+								dma_Access_Wait = Wait_State_Access_32_DMA(dma_SRC_intl[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
@@ -576,7 +576,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
-								dma_Access_Wait = Wait_State_Access_32(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
+								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
@@ -587,7 +587,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
-								dma_Access_Wait = Wait_State_Access_32(dma_DST_intl[dma_Chan_Exec], dma_Seq_Access);
+								dma_Access_Wait = Wait_State_Access_32_DMA(dma_DST_intl[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{

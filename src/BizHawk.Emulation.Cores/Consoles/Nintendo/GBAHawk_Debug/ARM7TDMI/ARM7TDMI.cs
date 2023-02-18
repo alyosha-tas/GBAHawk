@@ -807,6 +807,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// Can be interrupted by an abort, but those don't occur in GBA
 					if (cpu_Fetch_Cnt == 0)
 					{
+						// update this here so the wait state processor knows about it for 32 bit accesses to VRAM and PALRAM
+						cpu_Temp_Reg_Ptr = cpu_Regs_To_Access[cpu_Multi_List_Ptr];
+
 						// 32 bit fetch regardless of mode
 						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
 
@@ -824,8 +827,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 					{
-						cpu_Temp_Reg_Ptr = cpu_Regs_To_Access[cpu_Multi_List_Ptr];
-
 						if (cpu_LS_Is_Load)
 						{
 							cpu_Regs[cpu_Temp_Reg_Ptr] = Read_Memory_32(cpu_Temp_Addr);
@@ -1017,6 +1018,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// note that interrupts are checked on the last instruction cycle, handled in cpu_Internal_Can_Save
 					if (cpu_Fetch_Cnt == 0)
 					{
+						// need this here for the 32 bit wait state processor in case VRAM and PALRAM accesses are interrupted
+						cpu_LS_Is_Load = !cpu_Swap_Store;
+
 						if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 						{
 							cpu_Fetch_Wait = Wait_State_Access_32(cpu_Regs[cpu_Base_Reg], cpu_Seq_Access);
@@ -1035,14 +1039,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 							{
-								Write_Memory_8(cpu_Regs[cpu_Base_Reg], (byte)cpu_Regs[cpu_Base_Reg_2]);
+								Write_Memory_8(cpu_Regs[cpu_Base_Reg], (byte)cpu_Regs[cpu_Temp_Reg_Ptr]);
 							}
 							else
 							{
-								Write_Memory_32(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Base_Reg_2]);
+								Write_Memory_32(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Temp_Reg_Ptr]);
 							}
 
-							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_Temp_Data;
+							cpu_Regs[cpu_Base_Reg_2] = cpu_Temp_Data;
 
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 							cpu_Invalidate_Pipeline = false;
@@ -1593,6 +1597,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// Can be interrupted by an abort, but those don't occur in GBA
 					if (cpu_Fetch_Cnt == 0)
 					{
+						// update this here so the wait state processor knows about it for 32 bit accesses to VRAM and PALRAM
+						cpu_Temp_Reg_Ptr = cpu_Regs_To_Access[cpu_Multi_List_Ptr];
+
 						// 32 bit fetch regardless of mode
 						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
 
@@ -1610,8 +1617,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 					{
-						cpu_Temp_Reg_Ptr = cpu_Regs_To_Access[cpu_Multi_List_Ptr];
-
 						if (cpu_LS_Is_Load)
 						{
 							cpu_Regs[cpu_Temp_Reg_Ptr] = Read_Memory_32(cpu_Temp_Addr);

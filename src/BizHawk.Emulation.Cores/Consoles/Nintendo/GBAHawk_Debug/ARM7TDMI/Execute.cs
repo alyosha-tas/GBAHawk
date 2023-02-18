@@ -424,9 +424,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						break;
 
 					case cpu_ARM_Swap:
-						cpu_Temp_Reg_Ptr = (int)((cpu_Instr_ARM_2 >> 12) & 0xF);
+						cpu_Base_Reg_2 = (int)((cpu_Instr_ARM_2 >> 12) & 0xF);
 						cpu_Base_Reg = (int)((cpu_Instr_ARM_2 >> 16) & 0xF);
-						cpu_Base_Reg_2 = (int)(cpu_Instr_ARM_2 & 0xF);
+						cpu_Temp_Reg_Ptr = (int)(cpu_Instr_ARM_2 & 0xF);
 						break;
 
 					case cpu_ARM_Imm_LS:
