@@ -120,6 +120,7 @@ namespace GBAHawk
 		uint8_t PPU_IO[0x60] = { };
 
 		uint16_t New_Controller;
+		uint16_t New_Acc_X, New_Acc_Y;
 
 		// Prefetcher
 		bool pre_Cycle_Glitch;

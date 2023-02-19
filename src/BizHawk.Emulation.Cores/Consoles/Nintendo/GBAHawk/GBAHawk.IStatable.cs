@@ -11,6 +11,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				ser.Sync(nameof(cart_RAM), ref cart_RAM, false);
 			}
 
+			// since we need rate of change of angle, need to savestate them
+			ser.Sync(nameof(theta), ref theta);
+			ser.Sync(nameof(phi), ref phi);
+			ser.Sync(nameof(phi_prev), ref phi_prev);
+
 			ser.Sync("Frame", ref _frame);
 			ser.Sync("LagCount", ref _lagCount);
 			ser.Sync("IsLag", ref _isLag);

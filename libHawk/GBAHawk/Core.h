@@ -60,6 +60,20 @@ namespace GBAHawk
 					GBA.EEPROM_Wiring = false;
 				}
 			}
+			else if (mapper == 3)
+			{
+				GBA.Cart_RAM_Present = true;
+				GBA.Is_EEPROM = true;
+
+				if (ext_rom_size < 0x1000000)
+				{
+					GBA.EEPROM_Wiring = true;
+				}
+				else
+				{
+					GBA.EEPROM_Wiring = false;
+				}
+			}
 
 			if (mapper == 0)
 			{
@@ -73,10 +87,18 @@ namespace GBAHawk
 			{
 				Mapper = new Mapper_EEPROM();
 			}
+			else if (mapper == 3)
+			{
+				Mapper = new Mapper_EEPROM_Tilt();
+			}
 
 			GBA.mapper_pntr = &Mapper[0];
 
 			Mapper->Core_Cycle_Count = &GBA.CycleCount;
+
+			Mapper->Core_Acc_X = &GBA.New_Acc_X;
+
+			Mapper->Core_Acc_Y = &GBA.New_Acc_Y;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -104,9 +126,11 @@ namespace GBAHawk
 			GBA.System_Reset();
 		}
 
-		bool FrameAdvance(uint16_t controller_1,  bool render, bool rendersound)
+		bool FrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, bool render, bool rendersound)
 		{
 			GBA.New_Controller = controller_1;
+			GBA.New_Acc_X = accx;
+			GBA.New_Acc_Y = accy;
 
 			// update the controller state
 			GBA.controller_state = GBA.New_Controller;

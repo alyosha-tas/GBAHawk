@@ -29,8 +29,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public uint ROM_Length;
 
+		public float theta, phi, theta_prev, phi_prev, phi_prev_2;
+
+		ushort accX, accY;
+
 		public byte[] cart_RAM;
 		public bool has_bat;
+		int mapper;
 
 		[CoreConstructor(VSystemID.Raw.GBA)]
 		public GBAHawk(CoreComm comm, GameInfo game, byte[] rom, GBAHawk.GBASettings settings, GBAHawk.GBASyncSettings syncSettings)
@@ -94,12 +99,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			Buffer.BlockCopy(ROM, 0x100, header, 0, 0x50);
 
-			int mppr = Setup_Mapper(romHashMD5, romHashSHA1);
+			mapper = Setup_Mapper(romHashMD5, romHashSHA1);
 
 			if (cart_RAM != null)
 			{
 				// initialize SRAM to 0xFF;
-				if (mppr == 1)
+				if (mapper == 1)
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -107,7 +112,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					}
 				}
 				// initialize EEPROM to 0xFF;
-				if (mppr == 2)
+				if ((mapper == 2) || (mapper == 3))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -123,8 +128,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			LibGBAHawk.GBA_load_bios(GBA_Pntr, BIOS);
 
-			Console.WriteLine("Mapper: " + mppr);
-			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mppr);
+			Console.WriteLine("Mapper: " + mapper);
+			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			blip_L.SetRates(4194304 * 4, 44100);
@@ -150,6 +155,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
 			current_controller = GBAController;
+
+			if (mapper == 3)
+			{
+				current_controller.AddXYPair($"P1 Tilt {{0}}", AxisPairOrientation.RightAndUp, (-90).RangeTo(90), 0);
+
+				theta = phi = theta_prev = phi_prev = phi_prev_2 = 0;
+
+				accX = accY = 0;
+			}
 
 			Mem_Domains.vram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
 			Mem_Domains.oam = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
@@ -211,9 +225,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			}
 			else if (mppr == 2)
 			{
-				// assume 8 KB saves, use hash check to pick out 512 bytes versions
 				has_bat = true;
-				cart_RAM = new byte[0x2000];
+
+				// assume 8 KB saves, use hash check to pick out 512 bytes versions
+				if ((romHashSHA1 == "SHA1:947498CB1DB918D305500257E8223DEEADDF561D") || // Yoshi USA
+					(romHashSHA1 == "SHA1:A3F2035CA2BDC2BC59E9E46EFBB6187705EBE3D1") || // Yoshi Japan
+					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1")) // Yoshi EU
+				{
+					Console.WriteLine("Using Tilt Controls");
+
+					cart_RAM = new byte[0x200];
+					mppr = 3;
+				}
+				else
+				{
+					cart_RAM = new byte[0x2000];
+				}
 			}
 
 			return mppr;

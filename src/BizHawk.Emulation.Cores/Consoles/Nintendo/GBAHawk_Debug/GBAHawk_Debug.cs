@@ -95,7 +95,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool Is_EEPROM;
 		public bool EEPROM_Wiring; // when true, can access anywhere in 0xDxxxxxx range, otheriwse only 0xDFFFFE0
 
-		private int Frame_Count = 0;
+		public int Frame_Count = 0;
 
 		public bool Use_MT;
 		public ushort addr_access;
@@ -199,7 +199,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			mapper.Core =this;
 
-			_controllerDeck = new(mppr is "MBC7"
+			_controllerDeck = new(mapper is MapperEEPROM_Tilt
 				? typeof(StandardTilt).DisplayName()
 				: GBAHawk_Debug_ControllerDeck.DefaultControllerName, subframe);
 
@@ -402,8 +402,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					EEPROM_Wiring = false;
 				}
 
-				cart_RAM = new byte[0x2000];
-				mapper = new MapperEEPROM();
+				if ((romHashSHA1 == "SHA1:947498CB1DB918D305500257E8223DEEADDF561D") || // Yoshi USA
+					(romHashSHA1 == "SHA1:A3F2035CA2BDC2BC59E9E46EFBB6187705EBE3D1") || // Yoshi Japan
+					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1")) // Yoshi EU
+				{
+					Console.WriteLine("Using Tilt Controls");
+
+					cart_RAM = new byte[0x200];
+					mapper = new MapperEEPROM_Tilt();
+				}
+				else
+				{
+					cart_RAM = new byte[0x2000];
+					mapper = new MapperEEPROM();
+				}			
 			}
 
 			return mppr;

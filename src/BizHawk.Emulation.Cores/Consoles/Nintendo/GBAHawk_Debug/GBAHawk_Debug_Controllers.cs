@@ -112,7 +112,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Definition = new ControllerDefinition("Gameboy Advance Controller + Tilt")
 			{
 				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
-			}.AddXYPair($"P{PortNum} Tilt {{0}}", AxisPairOrientation.RightAndUp, (-90).RangeTo(90), 0); //TODO verify direction against hardware
+			}.AddXYPair($"P{PortNum} Tilt {{0}}", AxisPairOrientation.RightAndUp, (-90).RangeTo(90), 0);
 		}
 
 		public int PortNum { get; }
@@ -123,7 +123,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort Read(IController c)
 		{
-			ushort result = 0xFF;
+			ushort result = 0x3FF;
 
 			if (c.IsPressed(Definition.BoolButtons[0]))
 			{
@@ -184,7 +184,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// additional acceleration components are dominated by axial components due to off axis rotation.
 			// They vary widely based on physical hand movements, but this roughly matches what I observe in a real GBP
 			var temp2 = (float) ((phi - 2 * phi_prev + phi_prev_2) * 59.7275 * 59.7275 * 0.1);
-			var accX = (ushort) (0x8370 - Math.Floor(temp * 216) - temp2);
+			var accX = (ushort) (0x3A0 - Math.Floor(temp * 256) - temp2);
 
 			// acc y is just the sine of the angle
 			var temp3 = (float) Math.Sin(theta);
@@ -192,7 +192,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// this term dominates other facators due to the cartridge being far from the players hands in whatever system is being used.
 			// It roughly matches what I observe in a real GBP
 			var temp4 = (float) (Math.Pow((theta - theta_prev) * 59.7275, 2) * 0.15);
-			var accY = (ushort) (0x8370 - Math.Floor(temp3 * 216) + temp4);
+			var accY = (ushort) (0x3A0 - Math.Floor(temp3 * 256) + temp4);
 
 			return (accX, accY);
 		}
