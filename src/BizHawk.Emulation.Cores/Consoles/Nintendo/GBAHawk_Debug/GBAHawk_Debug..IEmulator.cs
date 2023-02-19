@@ -486,6 +486,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								ppu_Convert_Offset_to_float(3);
 							}
 
+							ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
+
 							ppu_Rendering_Complete = false;
 							ppu_PAL_Rendering_Complete = false;
 

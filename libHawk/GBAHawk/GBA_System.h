@@ -6997,6 +6997,7 @@ namespace GBAHawk
 		uint32_t ppu_Pixel_Color[4] = { };
 		uint32_t ppu_Pixel_Color_2[4] = { };
 		uint32_t ppu_Pixel_Color_1[4] = { };
+		uint32_t ppu_Pixel_Color_M[4] = { };
 		uint32_t ppu_Pixel_Color_R[4] = { };
 		uint32_t ppu_Tile_Addr[4] = { };
 		uint32_t ppu_Y_Flip_Ofst[4] = { };
@@ -7010,12 +7011,15 @@ namespace GBAHawk
 		bool ppu_BG_Has_Pixel[4] = { };
 		bool ppu_BG_Has_Pixel_2[4] = { };
 		bool ppu_BG_Has_Pixel_1[4] = { };
+		bool ppu_BG_Has_Pixel_M[4] = { };
 		bool ppu_BG_Has_Pixel_R[4] = { };
 
 		uint32_t ppu_BG_Pixel_F;
 		uint32_t ppu_BG_Pixel_S;
 		uint32_t ppu_Final_Pixel;
 		uint32_t ppu_Blend_Pixel;
+
+		uint16_t ppu_BG_Mosaic_X_Mod;
 
 		bool ppu_Brighten_Final_Pixel;
 		bool ppu_Blend_Final_Pixel;
@@ -7043,7 +7047,6 @@ namespace GBAHawk
 		uint16_t ppu_MOS_OBJ_X[0x200] = { };
 		uint16_t ppu_MOS_OBJ_Y[0x100] = { };
 
-		uint16_t ppu_MOS_BG_X[0x200] = { };
 		uint16_t ppu_MOS_BG_Y[0x200] = { };
 
 		uint8_t ppu_BG_Priority[4] = { };
@@ -7572,22 +7575,6 @@ namespace GBAHawk
 			ppu_OBJ_Mosaic_X = (uint16_t)(((ppu_Mosaic >> 8) & 0xF) + 1);
 			ppu_OBJ_Mosaic_Y = (uint16_t)(((ppu_Mosaic >> 12) & 0xF) + 1);
 
-			mosaic_x = 0;
-			j = 0;
-
-			for (int i = 0; i < 0x200; i++)
-			{
-				ppu_MOS_BG_X[i] = mosaic_x;
-
-				j++;
-
-				if (j == ppu_BG_Mosaic_X)
-				{
-					mosaic_x += ppu_BG_Mosaic_X;
-					j = 0;
-				}
-			}
-
 			mosaic_y = 0;
 			j = 0;
 
@@ -7775,8 +7762,8 @@ namespace GBAHawk
 							{
 								temp_color = 0;
 
-								ppu_Pixel_Color_R[c0] = ppu_Pixel_Color_1[c0];
-								ppu_BG_Has_Pixel_R[c0] = ppu_BG_Has_Pixel_1[c0];
+								ppu_Pixel_Color_M[c0] = ppu_Pixel_Color_1[c0];
+								ppu_BG_Has_Pixel_M[c0] = ppu_BG_Has_Pixel_1[c0];
 
 								if (ppu_BG_Pal_Size[c0])
 								{
@@ -7873,8 +7860,8 @@ namespace GBAHawk
 							{
 								temp_color = 0;
 
-								ppu_Pixel_Color_R[c1] = ppu_Pixel_Color_1[c1];
-								ppu_BG_Has_Pixel_R[c1] = ppu_BG_Has_Pixel_1[c1];
+								ppu_Pixel_Color_M[c1] = ppu_Pixel_Color_1[c1];
+								ppu_BG_Has_Pixel_M[c1] = ppu_BG_Has_Pixel_1[c1];
 
 								if (ppu_BG_Pal_Size[c1])
 								{
@@ -7963,29 +7950,29 @@ namespace GBAHawk
 							}
 						}
 
-						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
 						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
 						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
 						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
 						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 						break;
 
 					case 2:
-						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
 						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
 						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-						ppu_Pixel_Color_R[3] = ppu_Pixel_Color_1[3];
+						ppu_Pixel_Color_M[3] = ppu_Pixel_Color_1[3];
 						ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
 						ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
 
-						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
 						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
 						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 
-						ppu_BG_Has_Pixel_R[3] = ppu_BG_Has_Pixel_1[3];
+						ppu_BG_Has_Pixel_M[3] = ppu_BG_Has_Pixel_1[3];
 						ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
 						ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
 						break;
@@ -7993,11 +7980,11 @@ namespace GBAHawk
 					case 3:
 					case 4:
 					case 5:
-						ppu_Pixel_Color_R[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
 						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
 						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-						ppu_BG_Has_Pixel_R[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
 						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
 						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 						break;
@@ -8037,6 +8024,27 @@ namespace GBAHawk
 
 						ppu_Fetch_Target_1 = false;
 						ppu_Fetch_Target_2 = false;
+
+						// latch final color from BG's according to mosaic
+						for (int i = 0; i < 4; i++)
+						{
+							if (ppu_BG_On[i])
+							{
+								if (ppu_BG_Mosaic[i])
+								{
+									if ((ppu_Display_Cycle % ppu_BG_Mosaic_X_Mod) == 0)
+									{
+										ppu_Pixel_Color_R[i] = ppu_Pixel_Color_M[i];
+										ppu_BG_Has_Pixel_R[i] = ppu_BG_Has_Pixel_M[i];
+									}
+								}
+								else
+								{
+									ppu_Pixel_Color_R[i] = ppu_Pixel_Color_M[i];
+									ppu_BG_Has_Pixel_R[i] = ppu_BG_Has_Pixel_M[i];
+								}
+							}
+						}
 
 						// Check enabled pixels
 						if (ppu_Any_Window_On)
@@ -8558,7 +8566,7 @@ namespace GBAHawk
 							// calculate scrolling
 							if (ppu_BG_Mosaic[a0])
 							{
-								ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Fetch_Count[a0] << 3] + ppu_BG_X_Latch[a0]) & 0x1FF);
+								ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
 								ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[a0]) & 0x1FF);
 							}
 							else
@@ -8786,7 +8794,7 @@ namespace GBAHawk
 								// calculate scrolling
 								if (ppu_BG_Mosaic[a1])
 								{
-									ppu_X_RS = (int)((ppu_MOS_BG_X[ppu_Fetch_Count[a1] << 3] + ppu_BG_X_Latch[a1]) & 0x1FF);
+									ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
 									ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[a1]) & 0x1FF);
 								}
 								else
@@ -9012,7 +9020,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[2])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[2]];
+									cur_x = ppu_Fetch_Count[2];
 								}
 								else
 								{
@@ -9128,7 +9136,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[2])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[2]];
+									cur_x = ppu_Fetch_Count[2];
 								}
 								else
 								{
@@ -9242,7 +9250,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[3])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[3]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[3]];
+									cur_x = ppu_Fetch_Count[3];
 								}
 								else
 								{
@@ -9359,7 +9367,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[2])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[2]];
+									cur_x = ppu_Fetch_Count[2];
 								}
 								else
 								{
@@ -9432,7 +9440,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[2])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[2]];
+									cur_x = ppu_Fetch_Count[2];
 								}
 								else
 								{
@@ -9511,7 +9519,7 @@ namespace GBAHawk
 								if (ppu_BG_Mosaic[2])
 								{
 									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_MOS_BG_X[ppu_Fetch_Count[2]];
+									cur_x = ppu_Fetch_Count[2];
 								}
 								else
 								{
@@ -10377,6 +10385,7 @@ namespace GBAHawk
 				ppu_Pixel_Color[i] = 0;
 				ppu_Pixel_Color_2[i] = 0;
 				ppu_Pixel_Color_1[i] = 0;
+				ppu_Pixel_Color_M[i] = 0;
 				ppu_Pixel_Color_R[i] = 0;
 				ppu_BG_Start_Time[i] = 0;
 				ppu_BG_Effect_Byte[i] = 0;
@@ -10388,6 +10397,7 @@ namespace GBAHawk
 				ppu_BG_Has_Pixel[i] = false;
 				ppu_BG_Has_Pixel_2[i] = false;
 				ppu_BG_Has_Pixel_1[i] = false;
+				ppu_BG_Has_Pixel_M[i] = false;
 				ppu_BG_Has_Pixel_R[i] = false;
 
 			}
@@ -10396,6 +10406,8 @@ namespace GBAHawk
 			ppu_BG_Pixel_S = 0;
 			ppu_Final_Pixel = 0;
 			ppu_Blend_Pixel = 0;
+
+			ppu_BG_Mosaic_X_Mod = 1;
 
 			ppu_Brighten_Final_Pixel = false;
 			ppu_Blend_Final_Pixel = false;
@@ -10539,6 +10551,7 @@ namespace GBAHawk
 			saver = int_array_saver(ppu_Pixel_Color, saver, 4);
 			saver = int_array_saver(ppu_Pixel_Color_2, saver, 4);
 			saver = int_array_saver(ppu_Pixel_Color_1, saver, 4);
+			saver = int_array_saver(ppu_Pixel_Color_M, saver, 4);
 			saver = int_array_saver(ppu_Pixel_Color_R, saver, 4);
 			saver = int_array_saver(ppu_Tile_Addr, saver, 4);
 			saver = int_array_saver(ppu_Y_Flip_Ofst, saver, 4);
@@ -10552,12 +10565,15 @@ namespace GBAHawk
 			saver = bool_array_saver(ppu_BG_Has_Pixel, saver, 4);
 			saver = bool_array_saver(ppu_BG_Has_Pixel_2, saver, 4);
 			saver = bool_array_saver(ppu_BG_Has_Pixel_1, saver, 4);
+			saver = bool_array_saver(ppu_BG_Has_Pixel_M, saver, 4);
 			saver = bool_array_saver(ppu_BG_Has_Pixel_R, saver, 4);
 
 			saver = int_saver(ppu_BG_Pixel_F, saver);
 			saver = int_saver(ppu_BG_Pixel_S, saver);
 			saver = int_saver(ppu_Final_Pixel, saver);
 			saver = int_saver(ppu_Blend_Pixel, saver);
+
+			saver = short_saver(ppu_BG_Mosaic_X_Mod, saver);
 
 			saver = bool_saver(ppu_Brighten_Final_Pixel, saver);
 			saver = bool_saver(ppu_Blend_Final_Pixel, saver);
@@ -10680,6 +10696,7 @@ namespace GBAHawk
 			loader = int_array_loader(ppu_Pixel_Color, loader, 4);
 			loader = int_array_loader(ppu_Pixel_Color_2, loader, 4);
 			loader = int_array_loader(ppu_Pixel_Color_1, loader, 4);
+			loader = int_array_loader(ppu_Pixel_Color_M, loader, 4);
 			loader = int_array_loader(ppu_Pixel_Color_R, loader, 4);
 			loader = int_array_loader(ppu_Tile_Addr, loader, 4);
 			loader = int_array_loader(ppu_Y_Flip_Ofst, loader, 4);
@@ -10693,12 +10710,15 @@ namespace GBAHawk
 			loader = bool_array_loader(ppu_BG_Has_Pixel, loader, 4);
 			loader = bool_array_loader(ppu_BG_Has_Pixel_2, loader, 4);
 			loader = bool_array_loader(ppu_BG_Has_Pixel_1, loader, 4);
+			loader = bool_array_loader(ppu_BG_Has_Pixel_M, loader, 4);
 			loader = bool_array_loader(ppu_BG_Has_Pixel_R, loader, 4);
 
 			loader = int_loader(&ppu_BG_Pixel_F, loader);
 			loader = int_loader(&ppu_BG_Pixel_S, loader);
 			loader = int_loader(&ppu_Final_Pixel, loader);
 			loader = int_loader(&ppu_Blend_Pixel, loader);
+
+			loader = short_loader(&ppu_BG_Mosaic_X_Mod, loader);
 
 			loader = bool_loader(&ppu_Brighten_Final_Pixel, loader);
 			loader = bool_loader(&ppu_Blend_Final_Pixel, loader);
