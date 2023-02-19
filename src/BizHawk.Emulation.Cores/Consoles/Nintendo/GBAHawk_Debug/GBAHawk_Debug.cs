@@ -404,7 +404,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if ((romHashSHA1 == "SHA1:947498CB1DB918D305500257E8223DEEADDF561D") || // Yoshi USA
 					(romHashSHA1 == "SHA1:A3F2035CA2BDC2BC59E9E46EFBB6187705EBE3D1") || // Yoshi Japan
-					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1")) // Yoshi EU
+					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1") || // Yoshi EU
+					(romHashSHA1 == "SHA1:40CB751D119A49BE0CD44CF0491C93EBC8795EF0"))   // koro koro puzzle
 				{
 					Console.WriteLine("Using Tilt Controls");
 
