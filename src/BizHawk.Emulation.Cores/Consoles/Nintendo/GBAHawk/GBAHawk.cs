@@ -4,6 +4,7 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
+using BizHawk.Common.ReflectionExtensions;
 
 /*
 	GBA Emulator
@@ -29,16 +30,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public uint ROM_Length;
 
-		public float theta, phi, theta_prev, phi_prev, phi_prev_2;
-
-		ushort accX, accY;
+		public ushort controller_state;
+		public ushort Acc_X_state;
+		public ushort Acc_Y_state;
 
 		public byte[] cart_RAM;
 		public bool has_bat;
 		int mapper;
 
 		[CoreConstructor(VSystemID.Raw.GBA)]
-		public GBAHawk(CoreComm comm, GameInfo game, byte[] rom, GBAHawk.GBASettings settings, GBAHawk.GBASyncSettings syncSettings)
+		public GBAHawk(CoreComm comm, GameInfo game, byte[] rom, GBAHawk.GBASettings settings, GBAHawk.GBASyncSettings syncSettings, bool subframe = false)
 		{
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBASettings)settings ?? new GBASettings();
@@ -154,16 +155,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			current_controller = GBAController;
+			_controllerDeck = new((mapper == 3)
+				? typeof(StandardTilt).DisplayName()
+				: GBAHawk_ControllerDeck.DefaultControllerName, subframe);
 
-			if (mapper == 3)
-			{
-				current_controller.AddXYPair($"P1 Tilt {{0}}", AxisPairOrientation.RightAndUp, (-90).RangeTo(90), 0);
-
-				theta = phi = theta_prev = phi_prev = phi_prev_2 = 0;
-
-				accX = accY = 0;
-			}
 
 			Mem_Domains.vram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
 			Mem_Domains.oam = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
@@ -256,10 +251,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GBA_core = new byte[0x70000];
 
-		// Machine resources
-		private IController _controller = NullController.Instance;
-
-		private readonly ControllerDefinition current_controller = null;
+		private readonly GBAHawk_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 

@@ -10,8 +10,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
 
-		public IController Frame_Controller;
-
 		public uint PALRAM_32W_Addr, VRAM_32W_Addr;
 		public ushort PALRAM_32W_Value, VRAM_32W_Value;
 
@@ -29,8 +27,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
 			//Console.WriteLine("-----------------------FRAME-----------------------");
-			Frame_Controller = controller;
-
 			if (_tracer.IsEnabled())
 			{
 				TraceCallback = s => _tracer.Put(s);
@@ -46,7 +42,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 
 			// update the controller state on VBlank
-			GetControllerState(Frame_Controller);
+			GetControllerState(controller);
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (VBlank_Rise || stopped)
