@@ -1734,9 +1734,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 					else if (((ppu_Cycle - 2) & 3) == 1)
-					{
-						
-						
+					{					
 						if (ppu_Fetch_Target_1)
 						{
 							ppu_PALRAM_Access = true;
@@ -1751,11 +1749,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 							}
 						}
-
-						ppu_Final_Pixel = (uint)(0xFF000000 |
-												((ppu_Final_Pixel & 0x1F) << 19) |
-												((ppu_Final_Pixel & 0x3E0) << 6) |
-												((ppu_Final_Pixel & 0x7C00) >> 7));
 					}
 					else if (((ppu_Cycle - 2) & 3) == 3)
 					{
@@ -1776,9 +1769,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (ppu_Brighten_Final_Pixel)
 						{
-							R = (ppu_Final_Pixel >> 3) & 0x1F;
-							G = (ppu_Final_Pixel >> 11) & 0x1F;
-							B = (ppu_Final_Pixel >> 19) & 0x1F;
+							R = (ppu_Final_Pixel >> 10) & 0x1F;
+							G = (ppu_Final_Pixel >> 5) & 0x1F;
+							B = ppu_Final_Pixel & 0x1F;
 
 							if (ppu_SFX_mode == 2)
 							{
@@ -1800,18 +1793,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 						else if (ppu_Blend_Final_Pixel)
 						{
-							ppu_Blend_Pixel = (uint)(0xFF000000 |
-													((ppu_Blend_Pixel & 0x1F) << 19) |
-													((ppu_Blend_Pixel & 0x3E0) << 6) |
-													((ppu_Blend_Pixel & 0x7C00) >> 7));
+							R = (ppu_Final_Pixel >> 10) & 0x1F;
+							G = (ppu_Final_Pixel >> 5) & 0x1F;
+							B = ppu_Final_Pixel & 0x1F;
 
-							R = (ppu_Final_Pixel >> 3) & 0x1F;
-							G = (ppu_Final_Pixel >> 11) & 0x1F;
-							B = (ppu_Final_Pixel >> 19) & 0x1F;
-
-							R2 = (ppu_Blend_Pixel >> 3) & 0x1F;
-							G2 = (ppu_Blend_Pixel >> 11) & 0x1F;
-							B2 = (ppu_Blend_Pixel >> 19) & 0x1F;
+							R2 = (ppu_Blend_Pixel >> 10) & 0x1F;
+							G2 = (ppu_Blend_Pixel >> 5) & 0x1F;
+							B2 = ppu_Blend_Pixel & 0x1F;
 
 							R = (uint)(((R * ppu_SFX_Alpha_Num_1) >> 4) + ((R2 * ppu_SFX_Alpha_Num_2) >> 4));
 							G = (uint)(((G * ppu_SFX_Alpha_Num_1) >> 4) + ((G2 * ppu_SFX_Alpha_Num_2) >> 4));
@@ -1825,6 +1813,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												 (R << 3) |
 												 (G << 11) |
 												 (B << 19));
+						}
+						else
+						{
+							ppu_Final_Pixel = (uint)(0xFF000000 |
+													((ppu_Final_Pixel & 0x1F) << 19) |
+													((ppu_Final_Pixel & 0x3E0) << 6) |
+													((ppu_Final_Pixel & 0x7C00) >> 7));
 						}
 
 						// push pixel to display
@@ -2349,7 +2344,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 										ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-										ppu_Tile_Addr[2] = VRAM[ppu_Tile_Addr[2]];
+										ppu_Tile_Addr[2] = (VRAM[ppu_Tile_Addr[2]] << 6);
 
 										ppu_BG_Has_Pixel[2] = true;
 									}
@@ -2388,11 +2383,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 									if (ppu_BG_Has_Pixel[2])
 									{
-										ppu_Tile_Addr[2] = ppu_Tile_Addr[2] * 64 + ppu_BG_Char_Base[2];
+										ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-										ppu_Tile_Addr[2] = ppu_Tile_Addr[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
-
-										ppu_Pixel_Color[2] = (VRAM[ppu_Tile_Addr[2]] << 1);
+										ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]] << 1;
 
 										if (ppu_Pixel_Color[2] != 0)
 										{
@@ -2465,7 +2458,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 										ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-										ppu_Tile_Addr[2] = VRAM[ppu_Tile_Addr[2]];
+										ppu_Tile_Addr[2] = VRAM[ppu_Tile_Addr[2]] << 6;
 
 										ppu_BG_Has_Pixel[2] = true;
 									}
@@ -2504,9 +2497,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 									if (ppu_BG_Has_Pixel[2])
 									{
-										ppu_Tile_Addr[2] = ppu_Tile_Addr[2] * 64 + ppu_BG_Char_Base[2];
-
-										ppu_Tile_Addr[2] = ppu_Tile_Addr[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+										ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
 										ppu_Pixel_Color[2] = (VRAM[ppu_Tile_Addr[2]] << 1);
 
@@ -2579,7 +2570,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 										ppu_Tile_Addr[3] = ppu_BG_Screen_Base[3] + VRAM_ofst_Y * BG_Num_Tiles[3] + VRAM_ofst_X;
 
-										ppu_Tile_Addr[3] = VRAM[ppu_Tile_Addr[3]];
+										ppu_Tile_Addr[3] = VRAM[ppu_Tile_Addr[3]] << 6;
 
 										ppu_BG_Has_Pixel[3] = true;
 									}
@@ -2605,11 +2596,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 									if (ppu_BG_Has_Pixel[3])
 									{								
-										ppu_Tile_Addr[3] = ppu_Tile_Addr[3] * 64 + ppu_BG_Char_Base[3];
+										ppu_Tile_Addr[3] += ppu_BG_Char_Base[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-										ppu_Tile_Addr[3] = ppu_Tile_Addr[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
-
-										ppu_Pixel_Color[3] = (VRAM[ppu_Tile_Addr[3]] << 1);
+										ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]] << 1;
 
 										if (ppu_Pixel_Color[3] != 0)
 										{

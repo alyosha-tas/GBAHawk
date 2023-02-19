@@ -33,8 +33,7 @@ namespace GBAHawk
 
 	# pragma region General System and Prefetch
 
-		uint32_t video_buffer[240* 160] = { };
-		uint32_t Frame_Buffer[240 * 160] = { };
+		uint32_t video_buffer[240 * 160] = { };
 
 		void Frame_Advance();
 
@@ -181,7 +180,6 @@ namespace GBAHawk
 			for (int i = 0; i < 240*160; i++)
 			{
 				video_buffer[i] = startup_color;
-				Frame_Buffer[i] = startup_color;
 			}
 
 			for (int i = 0; i < 0x8000; i++)
@@ -300,8 +298,7 @@ namespace GBAHawk
 
 		void On_VBlank()
 		{
-			// send the image on VBlank
-			std::memcpy(Frame_Buffer, video_buffer, sizeof(uint32_t) * 240 * 160);
+			// things to do on vblank
 		}
 
 	#pragma endregion
@@ -7790,8 +7787,6 @@ namespace GBAHawk
 										}
 									}
 
-									temp_color <<= 1;
-
 									ppu_Pixel_Color_1[c0] = temp_color;
 									ppu_BG_Has_Pixel_1[c0] = temp_color != 0;
 								}
@@ -7844,10 +7839,8 @@ namespace GBAHawk
 
 									temp_color |= (ppu_BG_Effect_Byte[c0] & 0xF0);
 
-									temp_color <<= 1;
-
 									ppu_Pixel_Color_1[c0] = temp_color;
-									ppu_BG_Has_Pixel_1[c0] = ((temp_color & 0x1F) != 0);
+									ppu_BG_Has_Pixel_1[c0] = ((temp_color & 0xF) != 0);
 								}
 							}
 						}
@@ -7887,8 +7880,6 @@ namespace GBAHawk
 											temp_color = ppu_Pixel_Color[c1] & 0xFF;
 										}
 									}
-
-									temp_color <<= 1;
 
 									ppu_Pixel_Color_1[c1] = temp_color;
 									ppu_BG_Has_Pixel_1[c1] = temp_color != 0;
@@ -7942,10 +7933,8 @@ namespace GBAHawk
 
 									temp_color |= (ppu_BG_Effect_Byte[c1] & 0xF0);
 
-									temp_color <<= 1;
-
 									ppu_Pixel_Color_1[c1] = temp_color;
-									ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0x1F) != 0);
+									ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0xF) != 0);
 								}
 							}
 						}
@@ -8444,7 +8433,7 @@ namespace GBAHawk
 						{
 							ppu_PALRAM_Access = true;
 
-							ppu_Final_Pixel = (uint32_t)(PALRAM_16[ppu_Final_Pixel >> 1]);
+							ppu_Final_Pixel = (uint32_t)(PALRAM_16[ppu_Final_Pixel]);
 
 							if (ppu_PALRAM_In_Use)
 							{
@@ -8454,11 +8443,6 @@ namespace GBAHawk
 								}
 							}
 						}
-
-						ppu_Final_Pixel = (uint32_t)(0xFF000000 |
-							((ppu_Final_Pixel & 0x1F) << 19) |
-							((ppu_Final_Pixel & 0x3E0) << 6) |
-							((ppu_Final_Pixel & 0x7C00) >> 7));
 					}
 					else if (((ppu_Cycle - 2) & 3) == 3)
 					{
@@ -8466,7 +8450,7 @@ namespace GBAHawk
 						{
 							ppu_PALRAM_Access = true;
 
-							ppu_Blend_Pixel = (uint32_t)(PALRAM_16[ppu_Blend_Pixel >> 1]);
+							ppu_Blend_Pixel = (uint32_t)(PALRAM_16[ppu_Blend_Pixel]);
 
 							if (ppu_PALRAM_In_Use)
 							{
@@ -8479,9 +8463,9 @@ namespace GBAHawk
 
 						if (ppu_Brighten_Final_Pixel)
 						{
-							R = (ppu_Final_Pixel >> 3) & 0x1F;
-							G = (ppu_Final_Pixel >> 11) & 0x1F;
-							B = (ppu_Final_Pixel >> 19) & 0x1F;
+							R = (ppu_Final_Pixel >> 10) & 0x1F;
+							G = (ppu_Final_Pixel >> 5) & 0x1F;
+							B = ppu_Final_Pixel & 0x1F;
 
 							if (ppu_SFX_mode == 2)
 							{
@@ -8497,24 +8481,19 @@ namespace GBAHawk
 							}
 
 							ppu_Final_Pixel = (uint32_t)(0xFF000000 |
-								(R << 3) |
-								(G << 11) |
-								(B << 19));
+														(R << 3) |
+														(G << 11) |
+														(B << 19));
 						}
 						else if (ppu_Blend_Final_Pixel)
 						{
-							ppu_Blend_Pixel = (uint32_t)(0xFF000000 |
-								((ppu_Blend_Pixel & 0x1F) << 19) |
-								((ppu_Blend_Pixel & 0x3E0) << 6) |
-								((ppu_Blend_Pixel & 0x7C00) >> 7));
+							R = (ppu_Final_Pixel >> 10) & 0x1F;
+							G = (ppu_Final_Pixel >> 5) & 0x1F;
+							B = ppu_Final_Pixel & 0x1F;
 
-							R = (ppu_Final_Pixel >> 3) & 0x1F;
-							G = (ppu_Final_Pixel >> 11) & 0x1F;
-							B = (ppu_Final_Pixel >> 19) & 0x1F;
-
-							R2 = (ppu_Blend_Pixel >> 3) & 0x1F;
-							G2 = (ppu_Blend_Pixel >> 11) & 0x1F;
-							B2 = (ppu_Blend_Pixel >> 19) & 0x1F;
+							R2 = (ppu_Blend_Pixel >> 10) & 0x1F;
+							G2 = (ppu_Blend_Pixel >> 5) & 0x1F;
+							B2 = ppu_Blend_Pixel & 0x1F;
 
 							R = (uint32_t)(((R * ppu_SFX_Alpha_Num_1) >> 4) + ((R2 * ppu_SFX_Alpha_Num_2) >> 4));
 							G = (uint32_t)(((G * ppu_SFX_Alpha_Num_1) >> 4) + ((G2 * ppu_SFX_Alpha_Num_2) >> 4));
@@ -8525,9 +8504,16 @@ namespace GBAHawk
 							if (B > 31) { B = 31; }
 
 							ppu_Final_Pixel = (uint32_t)(0xFF000000 |
-								(R << 3) |
-								(G << 11) |
-								(B << 19));
+														(R << 3) |
+														(G << 11) |
+														(B << 19));
+						}
+						else
+						{
+							ppu_Final_Pixel = (uint32_t)(0xFF000000 |
+													((ppu_Final_Pixel & 0x1F) << 19) |
+													((ppu_Final_Pixel & 0x3E0) << 6) |
+													((ppu_Final_Pixel & 0x7C00) >> 7));
 						}
 
 						// push pixel to display
@@ -9052,7 +9038,7 @@ namespace GBAHawk
 
 									ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-									ppu_Tile_Addr[2] = VRAM[ppu_Tile_Addr[2]];
+									ppu_Tile_Addr[2] = ((uint32_t)VRAM[ppu_Tile_Addr[2]] << 6);
 
 									ppu_BG_Has_Pixel[2] = true;
 								}
@@ -9091,11 +9077,9 @@ namespace GBAHawk
 
 								if (ppu_BG_Has_Pixel[2])
 								{
-									ppu_Tile_Addr[2] = ppu_Tile_Addr[2] * 64 + ppu_BG_Char_Base[2];
+									ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-									ppu_Tile_Addr[2] = ppu_Tile_Addr[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
-
-									ppu_Pixel_Color[2] = (VRAM[ppu_Tile_Addr[2]] << 1);
+									ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
 
 									if (ppu_Pixel_Color[2] != 0)
 									{
@@ -9168,7 +9152,7 @@ namespace GBAHawk
 
 									ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-									ppu_Tile_Addr[2] = VRAM[ppu_Tile_Addr[2]];
+									ppu_Tile_Addr[2] = ((uint32_t)VRAM[ppu_Tile_Addr[2]] << 6);
 
 									ppu_BG_Has_Pixel[2] = true;
 								}
@@ -9207,11 +9191,9 @@ namespace GBAHawk
 
 								if (ppu_BG_Has_Pixel[2])
 								{
-									ppu_Tile_Addr[2] = ppu_Tile_Addr[2] * 64 + ppu_BG_Char_Base[2];
+									ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;;
 
-									ppu_Tile_Addr[2] = ppu_Tile_Addr[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
-
-									ppu_Pixel_Color[2] = (VRAM[ppu_Tile_Addr[2]] << 1);
+									ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
 
 									if (ppu_Pixel_Color[2] != 0)
 									{
@@ -9282,7 +9264,7 @@ namespace GBAHawk
 
 									ppu_Tile_Addr[3] = ppu_BG_Screen_Base[3] + VRAM_ofst_Y * BG_Num_Tiles[3] + VRAM_ofst_X;
 
-									ppu_Tile_Addr[3] = VRAM[ppu_Tile_Addr[3]];
+									ppu_Tile_Addr[3] = ((uint32_t)VRAM[ppu_Tile_Addr[3]] << 6);
 
 									ppu_BG_Has_Pixel[3] = true;
 								}
@@ -9308,11 +9290,9 @@ namespace GBAHawk
 
 								if (ppu_BG_Has_Pixel[3])
 								{
-									ppu_Tile_Addr[3] = ppu_Tile_Addr[3] * 64 + ppu_BG_Char_Base[3];
+									ppu_Tile_Addr[3] += ppu_BG_Char_Base[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-									ppu_Tile_Addr[3] = ppu_Tile_Addr[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
-
-									ppu_Pixel_Color[3] = (VRAM[ppu_Tile_Addr[3]] << 1);
+									ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
 
 									if (ppu_Pixel_Color[3] != 0)
 									{
@@ -9460,8 +9440,6 @@ namespace GBAHawk
 								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
 								{
 									ppu_Pixel_Color[2] = VRAM[ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS];
-
-									ppu_Pixel_Color[2] <<= 1;
 
 									if (ppu_Pixel_Color[2] != 0)
 									{
@@ -9885,10 +9863,9 @@ namespace GBAHawk
 													pix_color = (pix_color >> 4) & 0xF;
 												}
 
-												pix_color *= 2;
-												pix_color += (uint32_t)(32 * (ppu_Sprite_Attr_2 >> 12));
+												pix_color += (uint32_t)(16 * (ppu_Sprite_Attr_2 >> 12));
 
-												pal_scale = 0x1E;
+												pal_scale = 0xF;
 											}
 											else
 											{
@@ -9919,9 +9896,9 @@ namespace GBAHawk
 
 												spr_tile &= 0x7FFF;
 
-												pix_color = (uint32_t)(VRAM[0x10000 + spr_tile] << 1);
+												pix_color = VRAM[0x10000 + spr_tile];
 
-												pal_scale = 0x1FE;
+												pal_scale = 0xFF;
 											}
 
 											// only allow upper half of vram sprite tiles to be used in modes 3-5
@@ -9934,7 +9911,7 @@ namespace GBAHawk
 											{
 												if (spr_mode < 2)
 												{
-													ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + cur_x_pos] = pix_color + 0x200;
+													ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + cur_x_pos] = pix_color + 0x100;
 
 													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos] = (ppu_Sprite_Attr_2 >> 10) & 3;
 
