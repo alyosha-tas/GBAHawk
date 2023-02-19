@@ -88,20 +88,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		private byte PeekWRAM(long addr)
 		{
 			uint addr2 = (uint)(addr & 0x3FFFF);
-			if (_settings.VBL_sync)
-			{
-				return WRAM_vbls[addr2];
-			}
+
 			return WRAM[addr2];
 		}
 
 		private byte PeekIWRAM(long addr)
 		{
 			uint addr2 = (uint)(addr & 0x7FFF);
-			if (_settings.VBL_sync)
-			{
-				return IWRAM_vbls[addr2];
-			}
+
 			return IWRAM[addr2];
 		}
 
@@ -113,30 +107,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				addr2 &= 0x17FFF;
 			}
-			if (_settings.VBL_sync)
-			{
-				return VRAM_vbls[addr2];
-			}
+
 			return VRAM[addr2];
 		}
 
 		private byte PeekPALRAM(long addr)
 		{
 			uint addr2 = (uint)(addr & 0x3FF);
-			if (_settings.VBL_sync)
-			{
-				return PALRAM_vbls[addr2];
-			}
+
 			return PALRAM[addr2];
 		}
 
 		private byte PeekOAM(long addr)
 		{
 			uint addr2 = (uint)(addr & 0x3FF);
-			if (_settings.VBL_sync)
-			{
-				return OAM_vbls[addr2];
-			}
+
 			return OAM[addr2];
 		}
 
@@ -146,10 +131,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (addr < cart_RAM.Length)
 				{
-					if (_settings.VBL_sync)
-					{
-						return cart_RAM_vbls[addr];
-					}
 					return cart_RAM[addr];
 				}
 

@@ -78,13 +78,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte[] VRAM = new byte[0x18000];
 		public byte[] OAM = new byte[0x400];
 
-		// vblank memory domains
-		public byte[] WRAM_vbls = new byte[0x40000];
-		public byte[] IWRAM_vbls = new byte[0x8000];
-		public byte[] PALRAM_vbls = new byte[0x400];
-		public byte[] VRAM_vbls = new byte[0x18000];
-		public byte[] OAM_vbls = new byte[0x400];
-
 		public byte[] BIOS;
 		public readonly byte[] ROM = new byte[0x6000000];
 		public readonly byte[] header = new byte[0x50];
@@ -268,14 +261,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			pre_Reset();
 			mapper.Reset();
 
-			vid_buffer = new uint[VirtualWidth * VirtualHeight];
-			frame_buffer = new int[VirtualWidth * VirtualHeight];
+			vid_buffer = new int[VirtualWidth * VirtualHeight];
 
-			uint startup_color = 0xFFFFFFFF;
 			for (int i = 0; i < vid_buffer.Length; i++)
 			{
-				vid_buffer[i] = startup_color;
-				frame_buffer[i] = (int)vid_buffer[i];
+				vid_buffer[i] = unchecked((int)0xFFFFFFFF);
 			}
 
 			for (int i = 0; i < IWRAM.Length; i++)

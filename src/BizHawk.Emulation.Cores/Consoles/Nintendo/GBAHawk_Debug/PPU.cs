@@ -1823,7 +1823,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 
 						// push pixel to display
-						vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = ppu_Final_Pixel;
+						vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = unchecked((int)ppu_Final_Pixel);
 
 						ppu_Display_Cycle += 1;
 

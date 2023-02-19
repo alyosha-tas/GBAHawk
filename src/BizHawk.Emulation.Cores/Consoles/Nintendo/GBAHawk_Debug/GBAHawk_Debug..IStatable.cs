@@ -79,19 +79,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Use_MT), ref Use_MT);
 			ser.Sync(nameof(addr_access), ref addr_access);
 
-			ser.Sync(nameof(frame_buffer), ref frame_buffer, false);
-			ser.Sync(nameof(vid_buffer), ref vid_buffer, false);
-
-			// probably a better way to do this
 			if (cart_RAM != null) { ser.Sync(nameof(cart_RAM), ref cart_RAM, false); }
-
-			ser.Sync(nameof(WRAM_vbls), ref WRAM_vbls, false);
-			ser.Sync(nameof(IWRAM_vbls), ref IWRAM_vbls, false);
-			ser.Sync(nameof(PALRAM_vbls), ref PALRAM_vbls, false);
-			ser.Sync(nameof(VRAM_vbls), ref VRAM_vbls, false);
-			ser.Sync(nameof(OAM_vbls), ref OAM_vbls, false);
-
-			if (cart_RAM != null) { ser.Sync(nameof(cart_RAM_vbls), ref cart_RAM_vbls, false); }
 		}
 	}
 }

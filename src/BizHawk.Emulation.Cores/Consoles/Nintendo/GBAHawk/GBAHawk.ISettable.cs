@@ -39,22 +39,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public class GBASettings
 		{
-			// graphics settings
-			[DisplayName("Show Background")]
-			[Description("Display BG Layer")]
-			[DefaultValue(true)]
-			public bool DispBG { get; set; }
-
-			[DisplayName("Show Sprites")]
-			[Description("Display Sprites")]
-			[DefaultValue(true)]
-			public bool DispOBJ { get; set; }
-
-			[DisplayName("Read Domains on VBlank")]
-			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
-			[DefaultValue(false)]
-			public bool VBL_sync { get; set; }
-
 			public GBASettings Clone()
 			{
 				return (GBASettings)MemberwiseClone();
@@ -92,7 +76,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			}
 
 			[DisplayName("Use Existing SaveRAM")]
-			[Description("(Intended for development, for regular use leave as true.) When true, existing SaveRAM will be loaded at boot up.")]
+			[Description("When true, existing SaveRAM will be loaded at boot up.")]
 			[DefaultValue(false)]
 			public bool Use_SRAM { get; set; }
 

@@ -27,6 +27,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
 			//Console.WriteLine("-----------------------FRAME-----------------------");
+			for (int j = 0; j < vid_buffer.Length; j++)
+			{
+				vid_buffer[j] = unchecked((int)0xFFFFFFFF);
+			}
+
 			if (_tracer.IsEnabled())
 			{
 				TraceCallback = s => _tracer.Put(s);
@@ -89,21 +94,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void On_VBlank()
 		{
 			// send the image on VBlank
-			SendVideoBuffer();
-
-			if (_settings.VBL_sync)
-			{
-				for (int j = 0; j < 0x40000; j++) { WRAM_vbls[j] = WRAM[j]; }
-				for (int j = 0; j < 0x8000; j++) { IWRAM_vbls[j] = IWRAM[j]; }
-				for (int j = 0; j < 0x400; j++) { PALRAM_vbls[j] = PALRAM[j]; }
-				for (int j = 0; j < 0x18000; j++) { VRAM_vbls[j] = VRAM[j]; }
-				for (int j = 0; j < 0x400; j++) { OAM_vbls[j] = OAM[j]; }
-
-				if (cart_RAM != null)
-				{
-					for (int j = 0; j < cart_RAM.Length; j++) { cart_RAM_vbls[j] = cart_RAM[j]; }
-				}
-			}
 		}
 
 		public void do_single_step()
@@ -615,24 +605,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			DisposeSound();
 		}
 
-		public int[] frame_buffer;
-
-
-		public uint[] vid_buffer;
-
+		public int[] vid_buffer;
 
 		public int[] GetVideoBuffer()
-		{
-			return frame_buffer;
-		}
-
-		public void SendVideoBuffer()
-		{
-			for (int j = 0; j < frame_buffer.Length; j++) 
-			{ 
-				frame_buffer[j] = (int)vid_buffer[j];
-				vid_buffer[j] = 0xFFFFFFFF;
-			}
+		{			
+			return vid_buffer;
 		}
 
 		public int VirtualWidth => 240;

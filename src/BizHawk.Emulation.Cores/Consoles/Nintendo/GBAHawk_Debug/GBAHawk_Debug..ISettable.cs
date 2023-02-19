@@ -38,11 +38,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public class GBAHawk_Debug_Settings
 		{
-			[DisplayName("Read Domains on VBlank")]
-			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
-			[DefaultValue(false)]
-			public bool VBL_sync { get; set; }
-
 			public GBAHawk_Debug_Settings Clone()
 			{
 				return (GBAHawk_Debug_Settings)MemberwiseClone();
@@ -75,7 +70,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 
 			[DisplayName("Use Existing SaveRAM")]
-			[Description("(Intended for development, for regular use leave as true.) When true, existing SaveRAM will be loaded at boot up.")]
+			[Description("When true, existing SaveRAM will be loaded at boot up.")]
 			[DefaultValue(false)]
 			public bool Use_SRAM { get; set; }
 
