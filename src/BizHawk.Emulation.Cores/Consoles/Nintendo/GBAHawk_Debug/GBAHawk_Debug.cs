@@ -18,6 +18,8 @@ using BizHawk.Common.ReflectionExtensions;
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
 
 	Need to implement STOP mode
+
+	What is a good way to handle different FLASH types?
 */
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
@@ -83,7 +85,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public readonly byte[] header = new byte[0x50];
 
 		public byte[] cart_RAM;
-		public byte[] cart_RAM_vbls;
 		public bool has_bat;
 		public bool Is_EEPROM;
 		public bool EEPROM_Wiring; // when true, can access anywhere in 0xDxxxxxx range, otheriwse only 0xDFFFFE0
@@ -167,15 +168,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			if (cart_RAM != null) 
 			{ 
-				cart_RAM_vbls = new byte[cart_RAM.Length]; 
-
 				// initialize SRAM to 0xFF;
 				if (mppr == "SRAM")
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
 						cart_RAM[i] = 0xFF;
-						cart_RAM_vbls[i] = 0xFF;
 					}
 				}
 
@@ -185,7 +183,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
 						cart_RAM[i] = 0xFF;
-						cart_RAM_vbls[i] = 0xFF;
+					}
+				}
+
+				// initialize Flash to 0;
+				if (mppr == "FLASH")
+				{
+					for (int i = 0; i < cart_RAM.Length; i++)
+					{
+						cart_RAM[i] = 0;
 					}
 				}
 			}
@@ -323,6 +329,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			has_bat = false;
 			Is_EEPROM = false;
 			EEPROM_Wiring = false;
+			int size_f = 0;
 
 			// check for SRAM
 			for (int i = 0; i < ROM.Length; i += 4)
@@ -352,7 +359,40 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
-				// TODO: Implmenet other save types
+
+				if (ROM[i] == 0x46)
+				{
+					if ((ROM[i + 1] == 0x4C) && (ROM[i + 2] == 0x41))
+					{
+						if ((ROM[i + 3] == 0x53) && (ROM[i + 4] == 0x48))
+						{
+							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = "FLASH";
+								size_f = 64;
+
+								break;
+							}
+							if ((ROM[i + 6] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = "FLASH";
+								size_f = 64;
+
+								break;
+							}
+							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = "FLASH";
+								size_f = 128;
+
+								break;
+							}
+						}
+					}
+				}
 			}
 
 			// SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E
@@ -407,6 +447,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cart_RAM = new byte[0x2000];
 					mapper = new MapperEEPROM();
 				}			
+			}
+			else if (mppr == "FLASH")
+			{
+				has_bat = true;
+
+				if (size_f == 64)
+				{
+					cart_RAM = new byte[0x10000];
+				}
+				else
+				{
+					cart_RAM = new byte[0x20000];
+				}
+
+				mapper = new MapperFLASH();
 			}
 
 			return mppr;

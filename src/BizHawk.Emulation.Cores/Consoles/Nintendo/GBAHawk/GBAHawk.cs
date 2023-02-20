@@ -120,6 +120,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						cart_RAM[i] = 0xFF;
 					}
 				}
+				// initialize Flash to 0;
+				if (mapper == 4)
+				{
+					for (int i = 0; i < cart_RAM.Length; i++)
+					{
+						cart_RAM[i] = 0;
+					}
+				}
 			}
 
 			// Load up a BIOS and initialize the correct PPU
@@ -131,6 +139,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			Console.WriteLine("Mapper: " + mapper);
 			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
+
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			blip_L.SetRates(4194304 * 4, 44100);
@@ -172,6 +181,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1)
 		{
+			int size_f = 0;
+			
 			int mppr = 0;
 			has_bat = false;
 
@@ -202,7 +213,39 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						}
 					}
 				}
-				// TODO: Implmenet other save types
+				if (ROM[i] == 0x46)
+				{
+					if ((ROM[i + 1] == 0x4C) && (ROM[i + 2] == 0x41))
+					{
+						if ((ROM[i + 3] == 0x53) && (ROM[i + 4] == 0x48))
+						{
+							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = 4;
+								size_f = 64;
+
+								break;
+							}
+							if ((ROM[i + 6] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = 4;
+								size_f = 64;
+
+								break;
+							}
+							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
+							{
+								Console.WriteLine("using FLASH mapper");
+								mppr = 4;
+								size_f = 128;
+
+								break;
+							}
+						}
+					}
+				}
 			}
 
 			// hash checks for individual games / homebrew / test roms
@@ -238,6 +281,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					cart_RAM = new byte[0x2000];
 				}
 			}
+			else if (mppr == 4)
+			{
+				has_bat = true;
+
+				if (size_f == 64)
+				{
+					cart_RAM = new byte[0x10000];
+				}
+				else
+				{
+					cart_RAM = new byte[0x20000];
+				}
+			}
 
 			return mppr;
 		}
@@ -250,7 +306,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0x70000];
+		private byte[] GBA_core = new byte[0x80000];
 
 		private readonly GBAHawk_ControllerDeck _controllerDeck;
 

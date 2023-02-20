@@ -12186,7 +12186,7 @@ namespace GBAHawk
 			loader = int_loader(&pre_Fetch_Cnt_Inc, loader);
 
 			if (Cart_RAM_Length != 0)
-			{
+			{	
 				loader = byte_array_loader(Cart_RAM, loader, Cart_RAM_Length);
 			}
 

@@ -58,7 +58,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					(addr, value) => { },
 					1)
 			};
-
+			
 			if (cart_RAM != null)
 			{
 				var CartRam = new MemoryDomainDelegate(
@@ -70,7 +70,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					1);
 				domains.Add(CartRam);
 			}
-
+			
 			SyncAllByteArrayDomains();
 
 			MemoryDomains = new MemoryDomainList(_byteArrayDomains.Values.Concat(domains).ToList());

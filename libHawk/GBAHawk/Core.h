@@ -46,7 +46,7 @@ namespace GBAHawk
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
 			}
-			else if (mapper ==2)
+			else if (mapper == 2)
 			{
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = true;
@@ -73,6 +73,11 @@ namespace GBAHawk
 				{
 					GBA.EEPROM_Wiring = false;
 				}
+			}
+			else if (mapper == 4)
+			{
+				GBA.Cart_RAM_Present = true;
+				GBA.Is_EEPROM = false;
 			}
 
 			if (mapper == 0)
@@ -91,6 +96,10 @@ namespace GBAHawk
 			{
 				Mapper = new Mapper_EEPROM_Tilt();
 			}
+			else if (mapper == 4)
+			{
+				Mapper = new Mapper_FLASH();
+			}
 
 			GBA.mapper_pntr = &Mapper[0];
 
@@ -99,6 +108,8 @@ namespace GBAHawk
 			Mapper->Core_Acc_X = &GBA.New_Acc_X;
 
 			Mapper->Core_Acc_Y = &GBA.New_Acc_Y;
+
+			Mapper->Reset();
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -192,7 +203,7 @@ namespace GBAHawk
 		#pragma region State Save / Load
 
 		void SaveState(uint8_t* saver)
-		{
+		{	
 			saver = GBA.SaveState(saver);
 			saver = Mapper->SaveState(saver);
 		}

@@ -55,10 +55,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 		}
 
-		public virtual void Mapper_Tick()
-		{
-		}
-
 		public virtual byte Mapper_EEPROM_Read()
 		{
 			return 0xFF;
@@ -67,10 +63,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public virtual void Mapper_EEPROM_Write(byte value)
 		{
 
-		}
-
-		public virtual void RTC_Get(int value, int index)
-		{
 		}
 	}
 }

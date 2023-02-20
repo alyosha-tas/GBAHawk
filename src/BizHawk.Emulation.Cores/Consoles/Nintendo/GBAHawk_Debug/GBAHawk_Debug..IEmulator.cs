@@ -80,7 +80,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				snd_Tick();
 				ppu_Tick();
-				if (Use_MT) { mapper.Mapper_Tick(); }
 				ser_Tick();
 				tim_Tick();
 				pre_Tick();
@@ -102,7 +101,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			snd_Tick();
 			ppu_Tick();
-			if (Use_MT) { mapper.Mapper_Tick(); }
 			ser_Tick();
 			tim_Tick();
 			pre_Tick();
