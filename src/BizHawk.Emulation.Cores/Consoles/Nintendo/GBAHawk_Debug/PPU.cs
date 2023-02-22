@@ -1746,6 +1746,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (ppu_PALRAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
+									dma_Access_Wait += 1;
 								}
 							}
 						}
@@ -1763,6 +1764,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (ppu_PALRAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
+									dma_Access_Wait += 1;
 								}
 							}
 						}
@@ -2888,6 +2890,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (ppu_VRAM_Access)
 				{
 					cpu_Fetch_Wait += 1;
+					dma_Access_Wait += 1;
 				}
 			}
 		}

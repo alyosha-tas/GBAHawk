@@ -8441,6 +8441,7 @@ namespace GBAHawk
 								if (ppu_PALRAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
+									dma_Access_Wait += 1;
 								}
 							}
 						}
@@ -8458,6 +8459,7 @@ namespace GBAHawk
 								if (ppu_PALRAM_Access)
 								{
 									cpu_Fetch_Wait += 1;
+									dma_Access_Wait += 1;
 								}
 							}
 						}
@@ -9578,6 +9580,7 @@ namespace GBAHawk
 				if (ppu_VRAM_Access)
 				{
 					cpu_Fetch_Wait += 1;
+					dma_Access_Wait += 1;
 				}
 			}
 		}
