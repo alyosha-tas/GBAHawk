@@ -180,7 +180,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						IRQ_Delays = false;
 						
-						if (!ppu_Delays && !Misc_Delays)
+						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
 						{
 							delays_to_process = false;
 						}
@@ -244,11 +244,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!key_Delay && !ser_Delay && !PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
-
-							if (!ppu_Delays && !IRQ_Delays)
-							{
-								delays_to_process = false;
-							}
 						}
 					}
 				}
@@ -275,11 +270,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!key_Delay && !ser_Delay && !VRAM_32_Delay)
 						{
 							Misc_Delays = false;
-
-							if (!ppu_Delays && !IRQ_Delays)
-							{
-								delays_to_process = false;
-							}
 						}
 					}
 				}
@@ -303,11 +293,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!key_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
 						{
 							Misc_Delays = false;
-
-							if (!ppu_Delays && !IRQ_Delays)
-							{
-								delays_to_process = false;
-							}
 						}
 					}
 				}
@@ -331,13 +316,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!ser_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
 						{
 							Misc_Delays = false;
-
-							if (!ppu_Delays && !IRQ_Delays)
-							{
-								delays_to_process = false;
-							}
 						}
 					}
+				}
+
+				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+				{
+					delays_to_process = false;
 				}
 			}
 
@@ -565,7 +550,56 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// check if all delay sources are false
 				if (!ppu_Delays)
 				{
-					if (!Misc_Delays && !IRQ_Delays)
+					if (!Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+					{
+						delays_to_process = false;
+					}
+				}
+			}
+
+			if (ppu_Sprite_Delays)
+			{
+				ppu_Sprite_cd -= 1;
+
+				if (ppu_Sprite_cd == 0)
+				{
+					ppu_Current_Sprite = 0;
+					ppu_New_Sprite = true;
+					ppu_Sprite_proc_time = 6;
+
+					if (ppu_Sprite_ofst_eval == 0)
+					{
+						ppu_Sprite_ofst_eval = 240;
+						ppu_Sprite_ofst_draw = 0;
+					}
+					else
+					{
+						ppu_Sprite_ofst_eval = 0;
+						ppu_Sprite_ofst_draw = 240;
+					}
+
+					ppu_Sprite_Eval_Finished = true;
+
+					if ((ppu_LY < 159) || (ppu_LY == 227))
+					{
+						ppu_Sprite_Eval_Finished = false;
+					}
+					
+					// reset obj window detection for the scanline
+					for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
+					{
+						ppu_Sprite_Pixels[i] = 0;
+						ppu_Sprite_Priority[i] = 0;
+						ppu_Sprite_Pixel_Occupied[i] = false;
+						ppu_Sprite_Semi_Transparent[i] = false;
+						ppu_Sprite_Object_Window[i] = false;
+					}
+
+					ppu_Sprite_Render_Cycle = 0;
+
+					ppu_Sprite_Delays = false;
+
+					if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
 					{
 						delays_to_process = false;
 					}

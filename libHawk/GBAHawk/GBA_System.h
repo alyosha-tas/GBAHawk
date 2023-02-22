@@ -6923,6 +6923,7 @@ namespace GBAHawk
 
 		bool ppu_In_VBlank;
 		bool ppu_Delays;
+		bool ppu_Sprite_Delays;
 
 		bool ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
@@ -6943,7 +6944,7 @@ namespace GBAHawk
 		
 		uint32_t ppu_X_RS, ppu_Y_RS;
 
-		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
+		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_cd;
 
 		uint32_t ppu_LYC_Vid_Check_cd;
 
@@ -6981,6 +6982,7 @@ namespace GBAHawk
 		uint32_t ppu_Sprite_proc_time;
 		uint32_t ppu_Sprite_X_Pos, ppu_Sprite_Y_Pos;
 		uint32_t ppu_Sprite_X_Size, ppu_Sprite_Y_Size;
+		uint32_t ppu_Sprite_Render_Cycle;
 
 		bool ppu_Sprite_Pixel_Occupied[240 * 2] = { };
 		bool ppu_Sprite_Semi_Transparent[240 * 2] = { };
@@ -7420,8 +7422,8 @@ namespace GBAHawk
 				}
 			}
 
-			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 960; }
-			else { ppu_Sprite_Eval_Time = 1216; }
+			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 966; }
+			else { ppu_Sprite_Eval_Time = 1232; }
 
 			ppu_Any_Window_On = ppu_WIN0_On || ppu_WIN1_On || ppu_OBJ_WIN;
 
@@ -10281,7 +10283,7 @@ namespace GBAHawk
 
 			ppu_CTRL = ppu_Green_Swap = 0;
 
-			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
+			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = ppu_Sprite_cd = 0;
 
 			ppu_LYC_Vid_Check_cd = 0;
 
@@ -10318,6 +10320,7 @@ namespace GBAHawk
 			ppu_In_VBlank = true;
 
 			ppu_Delays = false;
+			ppu_Sprite_Delays = false;
 
 			// reset sprite evaluation variables
 			ppu_Current_Sprite = 0;
@@ -10342,6 +10345,8 @@ namespace GBAHawk
 			ppu_Sprite_proc_time = 6;
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
+
+			ppu_Sprite_Render_Cycle = 0;
 
 			ppu_VRAM_Access = false;
 			ppu_PALRAM_Access = false;
@@ -10421,6 +10426,7 @@ namespace GBAHawk
 		{
 			saver = bool_saver(ppu_In_VBlank, saver);
 			saver = bool_saver(ppu_Delays, saver);
+			saver = bool_saver(ppu_Sprite_Delays, saver);
 
 			saver = bool_saver(ppu_VRAM_In_Use, saver);
 			saver = bool_saver(ppu_PALRAM_In_Use, saver);
@@ -10467,6 +10473,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_VBL_IRQ_cd, saver);
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
 			saver = int_saver(ppu_LYC_IRQ_cd, saver);
+			saver = int_saver(ppu_Sprite_cd, saver);
 
 			saver = int_saver(ppu_LYC_Vid_Check_cd, saver);
 
@@ -10509,6 +10516,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_Sprite_Y_Pos, saver);
 			saver = int_saver(ppu_Sprite_X_Size, saver);
 			saver = int_saver(ppu_Sprite_Y_Size, saver);
+			saver = int_saver(ppu_Sprite_Render_Cycle, saver);
 
 			saver = bool_array_saver(ppu_Sprite_Pixel_Occupied, saver, 240 * 2);
 			saver = bool_array_saver(ppu_Sprite_Semi_Transparent, saver, 240 * 2);
@@ -10565,6 +10573,7 @@ namespace GBAHawk
 		{
 			loader = bool_loader(&ppu_In_VBlank, loader);
 			loader = bool_loader(&ppu_Delays, loader);
+			loader = bool_loader(&ppu_Sprite_Delays, loader);
 
 			loader = bool_loader(&ppu_VRAM_In_Use, loader);
 			loader = bool_loader(&ppu_PALRAM_In_Use, loader);
@@ -10611,6 +10620,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_VBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_LYC_IRQ_cd, loader);
+			loader = int_loader(&ppu_Sprite_cd, loader);
 
 			loader = int_loader(&ppu_LYC_Vid_Check_cd, loader);
 
@@ -10654,6 +10664,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Sprite_Y_Pos, loader);
 			loader = int_loader(&ppu_Sprite_X_Size, loader);
 			loader = int_loader(&ppu_Sprite_Y_Size, loader);
+			loader = int_loader(&ppu_Sprite_Render_Cycle, loader);
 
 			loader = bool_array_loader(ppu_Sprite_Pixel_Occupied, loader, 240 * 2);
 			loader = bool_array_loader(ppu_Sprite_Semi_Transparent, loader, 240 * 2);

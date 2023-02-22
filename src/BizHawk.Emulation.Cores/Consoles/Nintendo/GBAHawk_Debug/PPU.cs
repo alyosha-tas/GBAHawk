@@ -56,7 +56,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_BG_Mode, ppu_Display_Frame;
 		public int ppu_X_RS, ppu_Y_RS;
 
-		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd;
+		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_cd;
 
 		public int ppu_LYC_Vid_Check_cd;
 
@@ -71,6 +71,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool ppu_In_VBlank;
 		public bool ppu_Delays;
+		public bool ppu_Sprite_Delays;
 
 		public bool ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
@@ -92,6 +93,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_Sprite_proc_time;
 		public int ppu_Sprite_X_Pos, ppu_Sprite_Y_Pos;
 		public int ppu_Sprite_X_Size, ppu_Sprite_Y_Size;
+		public int ppu_Sprite_Render_Cycle;
 
 		public ushort ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
 
@@ -530,8 +532,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			ppu_CTRL = value;
 
-			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 960; }
-			else { ppu_Sprite_Eval_Time = 1216; }
+			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 966; }
+			else { ppu_Sprite_Eval_Time = 1232; }
 
 			ppu_Any_Window_On = ppu_WIN0_On | ppu_WIN1_On | ppu_OBJ_WIN;
 
@@ -887,31 +889,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Calculate_Sprites_Pixels(0, true);
 				}
 
-				// reset sprite evaluation variables
-				ppu_Current_Sprite = 0;
-				ppu_New_Sprite = true;
-				ppu_Sprite_Eval_Finished = false;
-				ppu_Sprite_proc_time = 6;
-
-				if (ppu_Sprite_ofst_eval == 0)
+				// reset sprite evaluation  in 40 cycles
+				if ((ppu_LY == 227) || (ppu_LY <= 159))
 				{
-					ppu_Sprite_ofst_eval = 240;
-					ppu_Sprite_ofst_draw = 0;
-				}
-				else
-				{
-					ppu_Sprite_ofst_eval = 0;
-					ppu_Sprite_ofst_draw = 240;
-				}
-
-				// reset obj window detection for the scanline
-				for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
-				{
-					ppu_Sprite_Pixels[i] = 0;
-					ppu_Sprite_Priority[i] = 0;
-					ppu_Sprite_Pixel_Occupied[i] = false;
-					ppu_Sprite_Semi_Transparent[i] = false;
-					ppu_Sprite_Object_Window[i] = false;
+					ppu_Sprite_Delays = true;
+					delays_to_process = true;
+					ppu_Sprite_cd = 40;
 				}
 
 				// update BG toggles
@@ -947,27 +930,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ppu_OAM_Access = false;
 
-						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 						{
-							if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
-
-							// TODO
-							/*
-							if (ppu_VRAM_In_Use)
-							{
-								if (ppu_VRAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							if (ppu_OAM_In_Use)
-							{
-								if (ppu_OAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							*/
+							// TODO: OAM accesses
+							if (((ppu_Cycle & 1) == 0) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
 						}
 					}
 				}
@@ -977,27 +943,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_PALRAM_Access = false;
 					ppu_OAM_Access = false;
 
-					if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
+					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
+						// TODO: OAM accesses
 						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
-
-						// TODO
-						/*
-						if (ppu_VRAM_In_Use)
-						{
-							if (ppu_VRAM_Access)
-							{
-								cpu_Fetch_Wait += 1;
-							}
-						}
-						if (ppu_OAM_In_Use)
-						{
-							if (ppu_OAM_Access)
-							{
-								cpu_Fetch_Wait += 1;
-							}
-						}
-						*/
 					}
 
 					if (!ppu_Rendering_Complete)
@@ -3584,7 +3533,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_CTRL = ppu_Green_Swap = 0;
 
-			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = 0;
+			ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = ppu_Sprite_cd = 0;
 
 			ppu_LYC_Vid_Check_cd = 0;
 
@@ -3625,6 +3574,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Delays = false;
 
+			ppu_Sprite_Delays = false;
+
 			// reset sprite evaluation variables
 			ppu_Current_Sprite = 0;
 			ppu_New_Sprite = true;
@@ -3647,6 +3598,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_proc_time = 6;
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
+
+			ppu_Sprite_Render_Cycle = 0;
 
 			ppu_VRAM_Access = false;
 			ppu_PALRAM_Access = false;
@@ -3757,6 +3710,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_VBL_IRQ_cd), ref ppu_VBL_IRQ_cd);
 			ser.Sync(nameof(ppu_HBL_IRQ_cd), ref ppu_HBL_IRQ_cd);
 			ser.Sync(nameof(ppu_LYC_IRQ_cd), ref ppu_LYC_IRQ_cd);
+			ser.Sync(nameof(ppu_Sprite_cd), ref ppu_Sprite_cd);
 
 			ser.Sync(nameof(ppu_LYC_Vid_Check_cd), ref ppu_LYC_Vid_Check_cd);
 
@@ -3793,6 +3747,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_In_VBlank), ref ppu_In_VBlank);
 			ser.Sync(nameof(ppu_Delays), ref ppu_Delays);
+			ser.Sync(nameof(ppu_Sprite_Delays), ref ppu_Sprite_Delays);
 
 			ser.Sync(nameof(ppu_VRAM_In_Use), ref ppu_VRAM_In_Use);
 			ser.Sync(nameof(ppu_PALRAM_In_Use), ref ppu_PALRAM_In_Use);
@@ -3817,6 +3772,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_Y_Pos), ref ppu_Sprite_Y_Pos);
 			ser.Sync(nameof(ppu_Sprite_X_Size), ref ppu_Sprite_X_Size);
 			ser.Sync(nameof(ppu_Sprite_Y_Size), ref ppu_Sprite_Y_Size);
+			ser.Sync(nameof(ppu_Sprite_Render_Cycle), ref ppu_Sprite_Render_Cycle);
 
 			ser.Sync(nameof(ppu_Sprite_Attr_0), ref ppu_Sprite_Attr_0);
 			ser.Sync(nameof(ppu_Sprite_Attr_1), ref ppu_Sprite_Attr_1);

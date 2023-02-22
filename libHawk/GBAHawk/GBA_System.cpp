@@ -1279,7 +1279,7 @@ namespace GBAHawk
 						{
 							IRQ_Delays = false;
 
-							if (!ppu_Delays && !Misc_Delays)
+							if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
 							{
 								delays_to_process = false;
 							}
@@ -1325,11 +1325,11 @@ namespace GBAHawk
 
 								if ((VRAM_32W_Addr & 0x00010000) == 0x00010000)
 								{
-									VRAM_16[(VRAM_32W_Addr & 0x17FFF) >> 1] = VRAM_32W_Value & 0xFF;
+									VRAM_16[(VRAM_32W_Addr & 0x17FFF) >> 1] = (uint16_t)(VRAM_32W_Value & 0xFFFF);
 								}
 								else
 								{
-									VRAM_16[(VRAM_32W_Addr & 0xFFFF) >> 1] = VRAM_32W_Value;
+									VRAM_16[(VRAM_32W_Addr & 0xFFFF) >> 1] = (uint16_t)(VRAM_32W_Value & 0xFFFF);
 								}
 							}
 						}
@@ -1341,11 +1341,6 @@ namespace GBAHawk
 							if (!key_Delay && !ser_Delay && !PALRAM_32_Delay)
 							{
 								Misc_Delays = false;
-
-								if (!ppu_Delays && !IRQ_Delays)
-								{
-									delays_to_process = false;
-								}
 							}
 						}
 					}
@@ -1360,7 +1355,7 @@ namespace GBAHawk
 								// Forced Align
 								PALRAM_32W_Addr &= 0xFFFFFFFC;
 
-								PALRAM_16[(PALRAM_32W_Addr & 0x3FF) >> 1] = PALRAM_32W_Value;
+								PALRAM_16[(PALRAM_32W_Addr & 0x3FF) >> 1] = (uint16_t)(PALRAM_32W_Value & 0xFFFF);
 							}
 						}
 						else
@@ -1371,11 +1366,6 @@ namespace GBAHawk
 							if (!key_Delay && !ser_Delay && !VRAM_32_Delay)
 							{
 								Misc_Delays = false;
-
-								if (!ppu_Delays && !IRQ_Delays)
-								{
-									delays_to_process = false;
-								}
 							}
 						}
 					}
@@ -1399,11 +1389,6 @@ namespace GBAHawk
 							if (!key_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
 							{
 								Misc_Delays = false;
-
-								if (!ppu_Delays && !IRQ_Delays)
-								{
-									delays_to_process = false;
-								}
 							}
 						}
 					}
@@ -1427,13 +1412,13 @@ namespace GBAHawk
 							if (!ser_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
 							{
 								Misc_Delays = false;
-
-								if (!ppu_Delays && !IRQ_Delays)
-								{
-									delays_to_process = false;
-								}
 							}
 						}
+					}
+
+					if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+					{
+						delays_to_process = false;
 					}
 				}
 
@@ -1661,7 +1646,56 @@ namespace GBAHawk
 					// check if all delay sources are false
 					if (!ppu_Delays)
 					{
-						if (!Misc_Delays && !IRQ_Delays)
+						if (!Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+						{
+							delays_to_process = false;
+						}
+					}
+				}
+
+				if (ppu_Sprite_Delays)
+				{
+					ppu_Sprite_cd -= 1;
+
+					if (ppu_Sprite_cd == 0)
+					{
+						ppu_Current_Sprite = 0;
+						ppu_New_Sprite = true;
+						ppu_Sprite_proc_time = 6;
+
+						if (ppu_Sprite_ofst_eval == 0)
+						{
+							ppu_Sprite_ofst_eval = 240;
+							ppu_Sprite_ofst_draw = 0;
+						}
+						else
+						{
+							ppu_Sprite_ofst_eval = 0;
+							ppu_Sprite_ofst_draw = 240;
+						}
+
+						ppu_Sprite_Eval_Finished = true;
+
+						if ((ppu_LY < 159) || (ppu_LY == 227))
+						{
+							ppu_Sprite_Eval_Finished = false;
+						}
+
+						// reset obj window detection for the scanline
+						for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
+						{
+							ppu_Sprite_Pixels[i] = 0;
+							ppu_Sprite_Priority[i] = 0;
+							ppu_Sprite_Pixel_Occupied[i] = false;
+							ppu_Sprite_Semi_Transparent[i] = false;
+							ppu_Sprite_Object_Window[i] = false;
+						}
+
+						ppu_Sprite_Render_Cycle = 0;
+
+						ppu_Sprite_Delays = false;
+
+						if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
 						{
 							delays_to_process = false;
 						}
@@ -2169,32 +2203,12 @@ namespace GBAHawk
 					ppu_Calculate_Sprites_Pixels(0, true);
 				}
 
-				// reset sprite evaluation variables
-				ppu_Current_Sprite = 0;
-				ppu_New_Sprite = true;
-				ppu_Sprite_Eval_Finished = false;
-				ppu_Sprite_proc_time = 6;
-
-				if (ppu_Sprite_ofst_eval == 0)
+				// reset sprite evaluation  in 40 cycles
+				if ((ppu_LY == 227) || (ppu_LY <= 159))
 				{
-					ppu_Sprite_ofst_eval = 240;
-					ppu_Sprite_ofst_draw = 0;
-				}
-				else
-				{
-					ppu_Sprite_ofst_eval = 0;
-					ppu_Sprite_ofst_draw = 240;
-				}
-
-				// reset obj window detection for 
-				for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
-				{
-					ppu_Sprite_Pixels[i] = 0;
-					ppu_Sprite_Priority[i] = 0;
-					
-					ppu_Sprite_Pixel_Occupied[i] = false;
-					ppu_Sprite_Semi_Transparent[i] = false;
-					ppu_Sprite_Object_Window[i] = false;
+					ppu_Sprite_Delays = true;
+					delays_to_process = true;
+					ppu_Sprite_cd = 40;
 				}
 
 				// update BG toggles
@@ -2229,59 +2243,24 @@ namespace GBAHawk
 					if (ppu_LY == 227)
 					{
 						ppu_OAM_Access = false;
-						
-						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
-						{
-							if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
-							
-						}
 
-						// TODO
-							/*
-							if (ppu_VRAM_In_Use)
-							{
-								if (ppu_VRAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							if (ppu_OAM_In_Use)
-							{
-								if (ppu_OAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							*/
+						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
+						{
+							// TODO: OAM accesses
+							if (((ppu_Cycle & 1) == 0) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
+						}
 					}
 				}
 				else
-				{		
+				{
 					ppu_VRAM_Access = false;
 					ppu_PALRAM_Access = false;
 					ppu_OAM_Access = false;
-					
-					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
-					{
-						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
 
-						// TODO
-							/*
-							if (ppu_VRAM_In_Use)
-							{
-								if (ppu_VRAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							if (ppu_OAM_In_Use)
-							{
-								if (ppu_OAM_Access)
-								{
-									cpu_Fetch_Wait += 1;
-								}
-							}
-							*/
+					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
+					{
+						// TODO: OAM accesses
+						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
 					}
 
 					if (!ppu_Rendering_Complete)
