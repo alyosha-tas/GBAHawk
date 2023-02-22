@@ -2232,7 +2232,8 @@ namespace GBAHawk
 						
 						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 						{
-							ppu_Render_Sprites();
+							if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
+							
 						}
 
 						// TODO
@@ -2262,7 +2263,7 @@ namespace GBAHawk
 					
 					if (!ppu_Sprite_Eval_Finished && ppu_Cycle < ppu_Sprite_Eval_Time)
 					{
-						ppu_Render_Sprites();
+						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
 
 						// TODO
 							/*

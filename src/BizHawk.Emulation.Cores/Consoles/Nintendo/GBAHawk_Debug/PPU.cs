@@ -949,8 +949,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 						{
-							ppu_Render_Sprites();
-							
+							if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
+
 							// TODO
 							/*
 							if (ppu_VRAM_In_Use)
@@ -979,7 +979,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (!ppu_Sprite_Eval_Finished && (ppu_Cycle < ppu_Sprite_Eval_Time))
 					{
-						ppu_Render_Sprites();
+						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
 
 						// TODO
 						/*
@@ -2921,7 +2921,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// when does reading from VRAM / OAM actually happen?
 			if (ppu_Sprite_proc_time > 0)
 			{
-				ppu_Sprite_proc_time -= 1;
+				ppu_Sprite_proc_time -= 2;
 				if (ppu_Sprite_proc_time == 0)
 				{
 					if (ppu_New_Sprite)
@@ -2955,7 +2955,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (double_size && !rot_scale)
 						{
 							// sprite not displayed
-							ppu_Sprite_proc_time = 1;
+							ppu_Sprite_proc_time = 2;
 							ppu_Current_Sprite += 1;
 							ppu_New_Sprite = true;
 
@@ -2973,7 +2973,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -2988,7 +2988,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (((ppu_LY + 1) < ppu_Sprite_Y_Pos) || ((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -3010,7 +3010,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -3025,7 +3025,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								if ((0 < ppu_Sprite_Y_Pos) || (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -3235,7 +3235,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					else
 					{
 						// finished processing the sprite, go to the next one
-						ppu_Sprite_proc_time = 1;
+						ppu_Sprite_proc_time = 2;
 						ppu_Current_Sprite += 1;
 						ppu_New_Sprite = true;
 

@@ -9615,7 +9615,7 @@ namespace GBAHawk
 			// when does reading from VRAM / OAM actually happen?
 			if (ppu_Sprite_proc_time > 0)
 			{
-				ppu_Sprite_proc_time -= 1;
+				ppu_Sprite_proc_time -= 2;
 				if (ppu_Sprite_proc_time == 0)
 				{
 					if (ppu_New_Sprite)
@@ -9649,7 +9649,7 @@ namespace GBAHawk
 						if (double_size && !rot_scale)
 						{
 							// sprite not displayed
-							ppu_Sprite_proc_time = 1;
+							ppu_Sprite_proc_time = 2;
 							ppu_Current_Sprite += 1;
 							ppu_New_Sprite = true;
 
@@ -9667,7 +9667,7 @@ namespace GBAHawk
 								if (((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -9682,7 +9682,7 @@ namespace GBAHawk
 								if (((ppu_LY + 1) < ppu_Sprite_Y_Pos) || ((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -9704,7 +9704,7 @@ namespace GBAHawk
 								if (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -9719,7 +9719,7 @@ namespace GBAHawk
 								if ((0 < ppu_Sprite_Y_Pos) || (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
 								{
 									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 1;
+									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
 									ppu_Current_Sprite += 1;
 									ppu_New_Sprite = true;
 
@@ -9928,7 +9928,7 @@ namespace GBAHawk
 					else
 					{
 						// finished processing the sprite, go to the next one
-						ppu_Sprite_proc_time = 1;
+						ppu_Sprite_proc_time = 2;
 						ppu_Current_Sprite += 1;
 						ppu_New_Sprite = true;
 
