@@ -563,9 +563,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (ppu_Sprite_cd == 0)
 				{
+					ppu_Fetch_OAM_0 = true;
+					ppu_Fetch_OAM_2 = false;
+					ppu_Fetch_OAM_A_D = false;
+					ppu_Fetch_Sprite_VRAM = false;
+
 					ppu_Current_Sprite = 0;
 					ppu_New_Sprite = true;
-					ppu_Sprite_proc_time = 6;
 
 					if (ppu_Sprite_ofst_eval == 0)
 					{

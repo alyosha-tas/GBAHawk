@@ -75,7 +75,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool ppu_VRAM_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
 
-		public bool ppu_VRAM_Access;
+		public bool ppu_VRAM_Access, ppu_VRAM_High_Access;
 		public bool ppu_PALRAM_Access;
 		public bool ppu_OAM_Access;
 
@@ -87,17 +87,33 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_Sprite_Semi_Transparent = new bool[240 * 2];
 		public bool[] ppu_Sprite_Object_Window = new bool[240 * 2];
 
+		public uint ppu_Cur_Sprite_X;
+		public uint ppu_Cur_Sprite_Y;
+
 		public int ppu_Current_Sprite;
+		public int ppu_Process_Sprite;
 		public int ppu_Sprite_ofst_eval;
 		public int ppu_Sprite_ofst_draw;
-		public int ppu_Sprite_proc_time;
 		public int ppu_Sprite_X_Pos, ppu_Sprite_Y_Pos;
 		public int ppu_Sprite_X_Size, ppu_Sprite_Y_Size;
 		public int ppu_Sprite_Render_Cycle;
+		public int ppu_Fetch_OAM_A_D_Cnt;
+		public int ppu_Fetch_Sprite_VRAM_Cnt;
+		public int ppu_Sprite_Mod;
+		public int ppu_Sprite_Base_Ofst;
+		public int ppu_Sprite_X_Scale;
+		public int ppu_Sprite_Size_X_Ofst;
+		public int ppu_Sprite_Size_Y_Ofst;
+		public int ppu_Sprite_Mode;
+		public int ppu_Sprite_Next_Fetch;
 
 		public ushort ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
 
+		public bool ppu_Rot_Scale;
+		public bool ppu_Fetch_OAM_0, ppu_Fetch_OAM_2, ppu_Fetch_OAM_A_D;
+		public bool ppu_Fetch_Sprite_VRAM, ppu_Sprite_VRAM_First;
 		public bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
+		public bool ppu_Sprite_Mosaic;
 
 		// BG rendering
 		public int[] ppu_Fetch_Count = new int[4];
@@ -928,6 +944,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
 					if (ppu_LY == 227)					
 					{
+						ppu_VRAM_High_Access = false;
 						ppu_OAM_Access = false;
 
 						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
@@ -939,6 +956,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
+					ppu_VRAM_High_Access = false;
 					ppu_VRAM_Access = false;
 					ppu_PALRAM_Access = false;
 					ppu_OAM_Access = false;
@@ -2837,362 +2855,392 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ppu_Render_Sprites()
 		{
-			uint cur_x_pos = 0;
-			uint cur_y_pos = 0;
-			int spr_tile = 0;
-			int spr_tile_row = 0;
-			int x_scale = 0;
-			int y_scale = 0;
-			int tile_x_offset = 0;
-			int tile_y_offset = 0;
+			uint pix_color;
+			uint pal_scale;
 
-			uint pix_color = 0;
-
-			bool double_size = false;
-			bool rot_scale = false;
-			bool mosaic = false;
-
-			int size_x_offset = 0;
-			int size_y_offset = 0;
-
-			int spr_mode = 0;
+			int spr_tile;
+			int spr_tile_row;
+			int tile_x_offset;
+			int tile_y_offset;
 
 			int actual_x_index, actual_y_index;
-
-			int base_offset = 0;
-
 			int rel_x_offset, rel_y_offset;
 
-			uint pal_scale = 0;
-			int spr_mod;
+			bool double_size;
 
-			// account for processing time of rotated sprites, also the first 6 cycles are not used (probably pipeline reset)
-			// when does reading from VRAM / OAM actually happen?
-			if (ppu_Sprite_proc_time > 0)
+			if (ppu_Fetch_Sprite_VRAM)
 			{
-				ppu_Sprite_proc_time -= 2;
-				if (ppu_Sprite_proc_time == 0)
+				ppu_VRAM_High_Access = true;
+				
+				if (ppu_Fetch_Sprite_VRAM_Cnt == 0)
 				{
-					if (ppu_New_Sprite)
+					ppu_Sprite_X_Scale = ppu_Sprite_X_Size >> 3;
+
+					ppu_Sprite_Base_Ofst = ppu_Process_Sprite * 16384;
+
+					ppu_Sprite_Mode = (ppu_Sprite_Attr_0 >> 10) & 3;
+
+					// GBA tek says lower bit of tile number should be ignored in some cases, but it ppears this is not the case?
+					// more testing needed
+					if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
 					{
-						// advance sprite variables if necessary
-						ppu_New_Sprite = false;
-
-						ppu_Sprite_Attr_0 = (ushort)(OAM[ppu_Current_Sprite * 8] | (OAM[ppu_Current_Sprite * 8 + 1] << 8));
-						ppu_Sprite_Attr_1 = (ushort)(OAM[ppu_Current_Sprite * 8 + 2] | (OAM[ppu_Current_Sprite * 8 + 3] << 8));
-						ppu_Sprite_Attr_2 = (ushort)(OAM[ppu_Current_Sprite * 8 + 4] | (OAM[ppu_Current_Sprite * 8 + 5] << 8));
-
-						ppu_Sprite_X_Pos = ppu_Sprite_Attr_1 & 0x1FF;
-						ppu_Sprite_Y_Pos = ppu_Sprite_Attr_0 & 0xFF;
-
-						ppu_Sprite_X_Size = ppu_OBJ_Sizes_X[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
-						ppu_Sprite_Y_Size = ppu_OBJ_Sizes_Y[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
-
-						// check if the sprite is in range (in the Y direction)
-
-						// check scaling, only in rotation and scaling mode
-						double_size = (ppu_Sprite_Attr_0 & 0x200) == 0x200;
-						rot_scale = (ppu_Sprite_Attr_0 & 0x100) == 0x100;
-
-						if (double_size && rot_scale)
-						{
-							size_y_offset = ppu_Sprite_Y_Size;
-							size_x_offset = ppu_Sprite_X_Size;
-						}
-
-						// NOTE: double_size means disable in the context of not being in rot_scale mode
-						if (double_size && !rot_scale)
-						{
-							// sprite not displayed
-							ppu_Sprite_proc_time = 2;
-							ppu_Current_Sprite += 1;
-							ppu_New_Sprite = true;
-
-							if (ppu_Current_Sprite == 128)
-							{
-								ppu_Sprite_Eval_Finished = true;
-							}
-						}
-						else if (ppu_LY != 227)
-						{
-							// account for screen wrapping
-							// if the object would appear at the top of the screen, that is the only part that is drawn
-							if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset > 0xFF)
-							{
-								if (((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
-								{
-									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
-									ppu_Current_Sprite += 1;
-									ppu_New_Sprite = true;
-
-									if (ppu_Current_Sprite == 128)
-									{
-										ppu_Sprite_Eval_Finished = true;
-									}
-								}
-							}
-							else
-							{
-								if (((ppu_LY + 1) < ppu_Sprite_Y_Pos) || ((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
-								{
-									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
-									ppu_Current_Sprite += 1;
-									ppu_New_Sprite = true;
-
-									if (ppu_Current_Sprite == 128)
-									{
-										ppu_Sprite_Eval_Finished = true;
-									}
-								}
-							}
-
-							cur_y_pos = (uint)((ppu_LY + 1 - ppu_Sprite_Y_Pos) & 0xFF);
-						}
-						else
-						{
-							// account for screen wrapping
-							// if the object would appear at the top of the screen, that is the only part that is drawn
-							if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset > 0xFF)
-							{
-								if (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF))
-								{
-									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
-									ppu_Current_Sprite += 1;
-									ppu_New_Sprite = true;
-
-									if (ppu_Current_Sprite == 128)
-									{
-										ppu_Sprite_Eval_Finished = true;
-									}
-								}
-							}
-							else
-							{
-								if ((0 < ppu_Sprite_Y_Pos) || (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + size_y_offset) & 0xFF)))
-								{
-									// sprite vertically out of range
-									ppu_Sprite_proc_time = rot_scale ? 10 : 2;
-									ppu_Current_Sprite += 1;
-									ppu_New_Sprite = true;
-
-									if (ppu_Current_Sprite == 128)
-									{
-										ppu_Sprite_Eval_Finished = true;
-									}
-								}
-							}
-
-							cur_y_pos = (uint)((0 - ppu_Sprite_Y_Pos) & 0xFF);
-						}
-
-						// if the sprite is in range, add it's data to the sprite buffer
-						if (!ppu_New_Sprite)
-						{
-							x_scale = ppu_Sprite_X_Size >> 3;
-							y_scale = ppu_Sprite_Y_Size >> 3;
-
-							if ((ppu_Sprite_Attr_0 & 0x100) == 0)
-							{
-								ppu_Sprite_proc_time = ppu_Sprite_X_Size;
-							}
-							else
-							{
-								ppu_Sprite_proc_time = 10 + ((ppu_Sprite_X_Size + size_x_offset) << 1);
-							}
-
-							base_offset = ppu_Current_Sprite * 16384;
-
-							rel_y_offset = (int)cur_y_pos;
-
-							spr_mode = (ppu_Sprite_Attr_0 >> 10) & 3;
-
-							// GBA tek says lower bit of tile number should be ignored in some cases, but it ppears this is not the case?
-							// more testing needed
-							if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
-							{
-								spr_mod = 0x3FF;
-							}
-							else
-							{
-								spr_mod = 0x3FF;
-							}
-
-							mosaic = (ppu_Sprite_Attr_0 & 0x1000) == 0x1000;
-
-							for (int i = 0; i < ppu_Sprite_X_Size + size_x_offset; i++)
-							{
-								cur_x_pos = (uint)((ppu_Sprite_X_Pos + i) & 0x1FF);
-
-								if (mosaic)
-								{
-									if (ppu_MOS_OBJ_X[cur_x_pos] < ppu_Sprite_X_Pos)
-									{
-										// lower pixels of sprite not aligned with mosaic grid, nothing to display (in x direction)
-										rel_x_offset = 0;
-										cur_x_pos = 255;
-									}
-									else
-									{
-										// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-										rel_x_offset = (ppu_MOS_OBJ_X[cur_x_pos] - ppu_Sprite_X_Pos) & 0x1FF;
-									}
-
-									if (ppu_MOS_OBJ_Y[ppu_LY] < ppu_Sprite_Y_Pos)
-									{
-										// lower pixels of sprite not aligned with mosaic grid, nothing to display (in y direction)
-										rel_y_offset = 0;
-										cur_x_pos = 255;
-									}
-									else
-									{
-										// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-										rel_y_offset = (ppu_MOS_OBJ_Y[ppu_LY] - ppu_Sprite_Y_Pos) & 0xFF;
-									}
-								}
-								else
-								{
-									rel_x_offset = i;
-								}
-
-								// if sprite is in range horizontally
-								if (cur_x_pos < 240)
-								{					
-									// if the sprite's position is not occupied by a higher priority sprite, or it is a sprite window sprite, process it
-									if (!ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] || (spr_mode == 2) ||
-										(((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos]))
-									{
-										spr_tile = ppu_Sprite_Attr_2 & spr_mod;
-
-										// look up the actual pixel to be used in the sprite rotation tables
-										actual_x_index = ppu_ROT_OBJ_X[base_offset + rel_x_offset + rel_y_offset * 128];
-										actual_y_index = ppu_ROT_OBJ_Y[base_offset + rel_x_offset + rel_y_offset * 128];
-
-										if ((actual_x_index < ppu_Sprite_X_Size) && (actual_y_index < ppu_Sprite_Y_Size))
-										{
-											// pick out the tile to use
-											if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
-											{
-												if (ppu_OBJ_Dim)
-												{
-													spr_tile += (actual_x_index >> 3) + (x_scale) * (int)(actual_y_index >> 3);
-												}
-												else
-												{
-													// large x values wrap around
-													spr_tile += (0x20) * (int)(actual_y_index >> 3);
-
-													spr_tile_row = (int)(spr_tile & 0xFFFFFFE0);
-
-													spr_tile += (actual_x_index >> 3);
-
-													spr_tile &= 0x1F;
-													spr_tile |= spr_tile_row;
-												}
-
-												spr_tile <<= 5;
-
-												// pick out the correct pixel from the tile
-												tile_x_offset = actual_x_index & 7;
-												tile_y_offset = (int)(actual_y_index & 7);
-
-												spr_tile += (tile_x_offset >> 1) + tile_y_offset * 4;
-
-												spr_tile &= 0x7FFF;
-
-												pix_color = (uint)VRAM[0x10000 + spr_tile];
-
-												if ((tile_x_offset & 1) == 0)
-												{
-													pix_color &= 0xF;
-												}
-												else
-												{
-													pix_color = (pix_color >> 4) & 0xF;
-												}
-
-												pix_color *= 2;
-												pix_color += (uint)(32 * (ppu_Sprite_Attr_2 >> 12));
-
-												pal_scale = 0x1E;
-											}
-											else
-											{
-												spr_tile <<= 5;
-
-												if (ppu_OBJ_Dim)
-												{
-													spr_tile += ((actual_x_index >> 3) + (x_scale) * (int)(actual_y_index >> 3)) << 6;
-												}
-												else
-												{
-													// large x values wrap around
-													spr_tile += ((0x20) * (int)(actual_y_index >> 3) << 5);
-
-													spr_tile_row = (int)(spr_tile & 0xFFFFFC00);
-
-													spr_tile += ((actual_x_index >> 3) << 6);
-
-													spr_tile &= 0x3FF;
-													spr_tile |= spr_tile_row;
-												}
-
-												// pick out the correct pixel from the tile
-												tile_x_offset = (actual_x_index & 7);
-												tile_y_offset = (int)(actual_y_index & 7);
-
-												spr_tile += tile_x_offset + tile_y_offset * 8;
-
-												spr_tile &= 0x7FFF;
-
-												pix_color = (uint)(VRAM[0x10000 + spr_tile] << 1);
-
-												pal_scale = 0x1FE;
-											}
-
-											// only allow upper half of vram sprite tiles to be used in modes 3-5
-											if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
-											{
-												pix_color = 0;
-											}
-
-											if ((pix_color & pal_scale) != 0)
-											{
-												if (spr_mode < 2)
-												{
-													ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + cur_x_pos] = pix_color + 0x200;
-
-													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + cur_x_pos] = (ppu_Sprite_Attr_2 >> 10) & 3;
-
-													ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + cur_x_pos] = true;
-
-													ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + cur_x_pos] = spr_mode == 1;
-												}
-												else if (spr_mode == 2)
-												{
-													ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + cur_x_pos] = true;
-												}
-											}
-										}
-									}
-								}
-							}
-						}				
+						ppu_Sprite_Mod = 0x3FF;
 					}
 					else
 					{
-						// finished processing the sprite, go to the next one
-						ppu_Sprite_proc_time = 2;
-						ppu_Current_Sprite += 1;
-						ppu_New_Sprite = true;
+						ppu_Sprite_Mod = 0x3FF;
+					}
 
-						if (ppu_Current_Sprite == 128)
+					ppu_Sprite_Mosaic = (ppu_Sprite_Attr_0 & 0x1000) == 0x1000;
+				}
+				else
+				{
+					ppu_Sprite_VRAM_First = false;
+				}
+
+				ppu_Cur_Sprite_X = (uint)((ppu_Sprite_X_Pos + ppu_Fetch_Sprite_VRAM_Cnt) & 0x1FF);
+
+				if (ppu_Sprite_Mosaic)
+				{
+					if (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] < ppu_Sprite_X_Pos)
+					{
+						// lower pixels of sprite not aligned with mosaic grid, nothing to display (in x direction)
+						rel_x_offset = 0;
+						ppu_Cur_Sprite_X = 255;
+					}
+					else
+					{
+						// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
+						rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
+					}
+
+					if (ppu_MOS_OBJ_Y[ppu_LY] < ppu_Sprite_Y_Pos)
+					{
+						// lower pixels of sprite not aligned with mosaic grid, nothing to display (in y direction)
+						rel_y_offset = 0;
+						ppu_Cur_Sprite_X = 255;
+					}
+					else
+					{
+						// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
+						rel_y_offset = (ppu_MOS_OBJ_Y[ppu_LY] - ppu_Sprite_Y_Pos) & 0xFF;
+					}
+				}
+				else
+				{
+					rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
+					rel_y_offset = (int)ppu_Cur_Sprite_Y;
+				}
+
+				// if sprite is in range horizontally
+				if (ppu_Cur_Sprite_X < 240)
+				{
+					// if the sprite's position is not occupied by a higher priority sprite, or it is a sprite window sprite, process it
+					if (!ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] || (ppu_Sprite_Mode == 2) ||
+						(((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X]))
+					{
+						spr_tile = ppu_Sprite_Attr_2 & ppu_Sprite_Mod;
+
+						// look up the actual pixel to be used in the sprite rotation tables
+						actual_x_index = ppu_ROT_OBJ_X[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
+						actual_y_index = ppu_ROT_OBJ_Y[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
+
+						if ((actual_x_index < ppu_Sprite_X_Size) && (actual_y_index < ppu_Sprite_Y_Size))
 						{
-							ppu_Sprite_Eval_Finished = true;
+							// pick out the tile to use
+							if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
+							{
+								if (ppu_OBJ_Dim)
+								{
+									spr_tile += (actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3);
+								}
+								else
+								{
+									// large x values wrap around
+									spr_tile += (0x20) * (int)(actual_y_index >> 3);
+
+									spr_tile_row = (int)(spr_tile & 0xFFFFFFE0);
+
+									spr_tile += (actual_x_index >> 3);
+
+									spr_tile &= 0x1F;
+									spr_tile |= spr_tile_row;
+								}
+
+								spr_tile <<= 5;
+
+								// pick out the correct pixel from the tile
+								tile_x_offset = actual_x_index & 7;
+								tile_y_offset = (int)(actual_y_index & 7);
+
+								spr_tile += (tile_x_offset >> 1) + tile_y_offset * 4;
+
+								spr_tile &= 0x7FFF;
+
+								pix_color = (uint)VRAM[0x10000 + spr_tile];
+
+								if ((tile_x_offset & 1) == 0)
+								{
+									pix_color &= 0xF;
+								}
+								else
+								{
+									pix_color = (pix_color >> 4) & 0xF;
+								}
+
+								pix_color *= 2;
+								pix_color += (uint)(32 * (ppu_Sprite_Attr_2 >> 12));
+
+								pal_scale = 0x1E;
+							}
+							else
+							{
+								spr_tile <<= 5;
+
+								if (ppu_OBJ_Dim)
+								{
+									spr_tile += ((actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3)) << 6;
+								}
+								else
+								{
+									// large x values wrap around
+									spr_tile += ((0x20) * (int)(actual_y_index >> 3) << 5);
+
+									spr_tile_row = (int)(spr_tile & 0xFFFFFC00);
+
+									spr_tile += ((actual_x_index >> 3) << 6);
+
+									spr_tile &= 0x3FF;
+									spr_tile |= spr_tile_row;
+								}
+
+								// pick out the correct pixel from the tile
+								tile_x_offset = (actual_x_index & 7);
+								tile_y_offset = (int)(actual_y_index & 7);
+
+								spr_tile += tile_x_offset + tile_y_offset * 8;
+
+								spr_tile &= 0x7FFF;
+
+								pix_color = (uint)(VRAM[0x10000 + spr_tile] << 1);
+
+								pal_scale = 0x1FE;
+							}
+
+							// only allow upper half of vram sprite tiles to be used in modes 3-5
+							if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
+							{
+								pix_color = 0;
+							}
+
+							if ((pix_color & pal_scale) != 0)
+							{
+								if (ppu_Sprite_Mode < 2)
+								{
+									ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x200;
+
+									ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+
+									ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+
+									ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
+								}
+								else if (ppu_Sprite_Mode == 2)
+								{
+									ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+								}
+							}
 						}
 					}
+				}
+
+				ppu_Fetch_Sprite_VRAM_Cnt += 1;
+
+				if (ppu_Fetch_Sprite_VRAM_Cnt == (ppu_Sprite_X_Size + ppu_Sprite_Size_X_Ofst))
+				{
+					if (ppu_Current_Sprite == 128)
+					{
+						ppu_Sprite_Eval_Finished = true;
+					}
+					else if (ppu_Sprite_Next_Fetch == 0)
+					{
+						ppu_Fetch_OAM_0 = true;
+					}
+					else
+					{
+						ppu_Fetch_OAM_2 = true;
+					}
+
+					ppu_Sprite_Next_Fetch = 3;
+				}
+			}
+
+			if (ppu_Fetch_OAM_0)
+			{
+				ppu_OAM_Access = true;
+				ppu_New_Sprite = false;
+
+				ppu_Sprite_Attr_0 = (ushort)(OAM[ppu_Current_Sprite * 8] | (OAM[ppu_Current_Sprite * 8 + 1] << 8));
+				ppu_Sprite_Attr_1 = (ushort)(OAM[ppu_Current_Sprite * 8 + 2] | (OAM[ppu_Current_Sprite * 8 + 3] << 8));
+
+				ppu_Sprite_X_Pos = ppu_Sprite_Attr_1 & 0x1FF;
+				ppu_Sprite_Y_Pos = ppu_Sprite_Attr_0 & 0xFF;
+
+				ppu_Sprite_X_Size = ppu_OBJ_Sizes_X[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
+				ppu_Sprite_Y_Size = ppu_OBJ_Sizes_Y[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
+
+				// check if the sprite is in range (in the Y direction)
+
+				// check scaling, only in rotation and scaling mode
+				double_size = (ppu_Sprite_Attr_0 & 0x200) == 0x200;
+				ppu_Rot_Scale = (ppu_Sprite_Attr_0 & 0x100) == 0x100;
+
+				if (double_size && ppu_Rot_Scale)
+				{
+					ppu_Sprite_Size_Y_Ofst = ppu_Sprite_Y_Size;
+					ppu_Sprite_Size_X_Ofst = ppu_Sprite_X_Size;
+				}
+
+				// NOTE: double_size means disable in the context of not being in rot_scale mode
+				if (double_size && !ppu_Rot_Scale)
+				{
+					// sprite not displayed
+					ppu_New_Sprite = true;
+				}
+				else if (ppu_LY != 227)
+				{
+					// account for screen wrapping
+					// if the object would appear at the top of the screen, that is the only part that is drawn
+					if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst > 0xFF)
+					{
+						if (((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						{
+							// sprite vertically out of range
+							ppu_New_Sprite = true;
+						}
+					}
+					else
+					{
+						if (((ppu_LY + 1) < ppu_Sprite_Y_Pos) || ((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						{
+							// sprite vertically out of range
+							ppu_New_Sprite = true;
+						}
+					}
+
+					ppu_Cur_Sprite_Y = (uint)((ppu_LY + 1 - ppu_Sprite_Y_Pos) & 0xFF);
+				}
+				else
+				{
+					// account for screen wrapping
+					// if the object would appear at the top of the screen, that is the only part that is drawn
+					if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst > 0xFF)
+					{
+						if (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF))
+						{
+							// sprite vertically out of range
+							ppu_New_Sprite = true;
+						}
+					}
+					else
+					{
+						if ((0 < ppu_Sprite_Y_Pos) || (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						{
+							// sprite vertically out of range
+							ppu_New_Sprite = true;
+						}
+					}
+
+					ppu_Cur_Sprite_Y = (uint)((0 - ppu_Sprite_Y_Pos) & 0xFF);
+				}
+
+				if (ppu_New_Sprite)
+				{
+					ppu_Current_Sprite += 1;
+
+					if ((ppu_Current_Sprite == 128) && !ppu_Fetch_Sprite_VRAM)
+					{
+						ppu_Sprite_Eval_Finished = true;
+					}
+
+					// repeat if not processing another sprite
+					if (ppu_Fetch_Sprite_VRAM && !ppu_Sprite_VRAM_First)
+					{
+						ppu_Fetch_OAM_0 = false;
+						ppu_Sprite_Next_Fetch = 0;
+					}
+				}
+				else
+				{
+					// found a sprite, process it if not accessing VRAM
+					ppu_Fetch_OAM_0 = false;
+
+					ppu_Process_Sprite = ppu_Current_Sprite;
+
+					ppu_Current_Sprite += 1;
+
+					if (ppu_Fetch_Sprite_VRAM && !ppu_Sprite_VRAM_First)
+					{
+						ppu_Fetch_OAM_2 = true;
+					}
+					else
+					{
+						ppu_Sprite_Next_Fetch = 2;
+					}
+				}
+			}
+			else if (ppu_Fetch_OAM_2)
+			{
+				ppu_OAM_Access = true;
+				ppu_Fetch_OAM_2 = false;
+
+				ppu_Sprite_Attr_2 = (ushort)(OAM[ppu_Process_Sprite * 8 + 4] | (OAM[ppu_Process_Sprite * 8 + 5] << 8));
+
+				if (ppu_Rot_Scale)
+				{
+					ppu_Fetch_OAM_A_D = true;
+					ppu_Fetch_OAM_A_D_Cnt = 0;
+				}
+				else
+				{
+					ppu_Fetch_Sprite_VRAM = true;
+					ppu_Sprite_VRAM_First = true;
+					ppu_Fetch_Sprite_VRAM_Cnt = 0;
+				}
+			}
+			else if (ppu_Fetch_OAM_A_D)
+			{
+				// TODO: access A-D here
+				if (ppu_Fetch_OAM_A_D_Cnt == 0)
+				{
+
+				}
+				else if (ppu_Fetch_OAM_A_D_Cnt == 1)
+				{
+
+				}
+				else if (ppu_Fetch_OAM_A_D_Cnt == 2)
+				{
+
+				}
+				else if (ppu_Fetch_OAM_A_D_Cnt == 3)
+				{
+					// next cycle will start evaluation of next sprite
+					if (ppu_Current_Sprite < 128)
+					{
+						ppu_Fetch_OAM_0 = true;
+					}
+				}
+
+				ppu_Fetch_OAM_A_D_Cnt += 1;
+				
+				// 5 here, extra cycle for processing
+				if (ppu_Fetch_OAM_A_D_Cnt == 5)
+				{
+					ppu_Fetch_OAM_A_D = false;
+
+					ppu_Fetch_Sprite_VRAM = true;
+					ppu_Fetch_Sprite_VRAM_Cnt = 0;
 				}
 			}
 		}
@@ -3590,17 +3638,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Sprite_Object_Window[i] = false;
 			}
 
-			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
+			ppu_Cur_Sprite_X = ppu_Cur_Sprite_Y = 0;
 
-			ppu_Current_Sprite = ppu_Sprite_ofst_eval = 0;
+			ppu_Current_Sprite = ppu_Process_Sprite = 0;
+
+			ppu_Sprite_ofst_eval = 0;
 			ppu_Sprite_ofst_draw = 240;
 
-			ppu_Sprite_proc_time = 6;
-
-			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
-
+			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = 0;
+			ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
 			ppu_Sprite_Render_Cycle = 0;
+			ppu_Fetch_OAM_A_D_Cnt = ppu_Fetch_Sprite_VRAM_Cnt = ppu_Sprite_Mod = 0;
+			ppu_Sprite_Base_Ofst = ppu_Sprite_X_Scale = 0;ppu_Sprite_Size_X_Ofst = 0;
+			ppu_Sprite_Size_Y_Ofst = ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
 
+			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
+
+			ppu_Rot_Scale = ppu_Fetch_OAM_0 = ppu_Fetch_OAM_2 = ppu_Fetch_OAM_A_D = false;
+			ppu_Fetch_Sprite_VRAM = ppu_Sprite_VRAM_First = ppu_New_Sprite = ppu_Sprite_Eval_Finished = false;
+			ppu_Sprite_Mosaic = false;
+
+			ppu_VRAM_High_Access = false;
 			ppu_VRAM_Access = false;
 			ppu_PALRAM_Access = false;
 			ppu_OAM_Access = false;
@@ -3753,33 +3811,53 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_PALRAM_In_Use), ref ppu_PALRAM_In_Use);
 			ser.Sync(nameof(ppu_OAM_In_Use), ref ppu_OAM_In_Use);
 
+			ser.Sync(nameof(ppu_VRAM_High_Access), ref ppu_VRAM_High_Access);
 			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access);
 			ser.Sync(nameof(ppu_PALRAM_Access), ref ppu_PALRAM_Access);
 			ser.Sync(nameof(ppu_OAM_Access), ref ppu_OAM_Access);
 
+			// Sprite Evaluation
 			ser.Sync(nameof(ppu_Sprite_Pixels), ref ppu_Sprite_Pixels, false);
 			ser.Sync(nameof(ppu_Sprite_Priority), ref ppu_Sprite_Priority, false);
 			ser.Sync(nameof(ppu_Sprite_Pixel_Occupied), ref ppu_Sprite_Pixel_Occupied, false);
 			ser.Sync(nameof(ppu_Sprite_Semi_Transparent), ref ppu_Sprite_Semi_Transparent, false);
 			ser.Sync(nameof(ppu_Sprite_Object_Window), ref ppu_Sprite_Object_Window, false);
 
+			ser.Sync(nameof(ppu_Cur_Sprite_X), ref ppu_Cur_Sprite_X);
+			ser.Sync(nameof(ppu_Cur_Sprite_Y), ref ppu_Cur_Sprite_Y);
+
 			ser.Sync(nameof(ppu_Current_Sprite), ref ppu_Current_Sprite);
+			ser.Sync(nameof(ppu_Process_Sprite), ref ppu_Process_Sprite);
 			ser.Sync(nameof(ppu_Sprite_ofst_eval), ref ppu_Sprite_ofst_eval);
 			ser.Sync(nameof(ppu_Sprite_ofst_draw), ref ppu_Sprite_ofst_draw);
-			ser.Sync(nameof(ppu_Sprite_proc_time), ref ppu_Sprite_proc_time);
-
 			ser.Sync(nameof(ppu_Sprite_X_Pos), ref ppu_Sprite_X_Pos);
 			ser.Sync(nameof(ppu_Sprite_Y_Pos), ref ppu_Sprite_Y_Pos);
 			ser.Sync(nameof(ppu_Sprite_X_Size), ref ppu_Sprite_X_Size);
 			ser.Sync(nameof(ppu_Sprite_Y_Size), ref ppu_Sprite_Y_Size);
 			ser.Sync(nameof(ppu_Sprite_Render_Cycle), ref ppu_Sprite_Render_Cycle);
+			ser.Sync(nameof(ppu_Fetch_OAM_A_D_Cnt), ref ppu_Fetch_OAM_A_D_Cnt);
+			ser.Sync(nameof(ppu_Fetch_Sprite_VRAM_Cnt), ref ppu_Fetch_Sprite_VRAM_Cnt);
+			ser.Sync(nameof(ppu_Sprite_Mod), ref ppu_Sprite_Mod);
+			ser.Sync(nameof(ppu_Sprite_Base_Ofst), ref ppu_Sprite_Base_Ofst);
+			ser.Sync(nameof(ppu_Sprite_X_Scale), ref ppu_Sprite_X_Scale);
+			ser.Sync(nameof(ppu_Sprite_Size_X_Ofst), ref ppu_Sprite_Size_X_Ofst);
+			ser.Sync(nameof(ppu_Sprite_Size_Y_Ofst), ref ppu_Sprite_Size_Y_Ofst);
+			ser.Sync(nameof(ppu_Sprite_Mode), ref ppu_Sprite_Mode);
+			ser.Sync(nameof(ppu_Sprite_Next_Fetch), ref ppu_Sprite_Next_Fetch);
 
 			ser.Sync(nameof(ppu_Sprite_Attr_0), ref ppu_Sprite_Attr_0);
 			ser.Sync(nameof(ppu_Sprite_Attr_1), ref ppu_Sprite_Attr_1);
 			ser.Sync(nameof(ppu_Sprite_Attr_2), ref ppu_Sprite_Attr_2);
 
+			ser.Sync(nameof(ppu_Rot_Scale), ref ppu_Rot_Scale);
+			ser.Sync(nameof(ppu_Fetch_OAM_0), ref ppu_Fetch_OAM_0);
+			ser.Sync(nameof(ppu_Fetch_OAM_2), ref ppu_Fetch_OAM_2);
+			ser.Sync(nameof(ppu_Fetch_OAM_A_D), ref ppu_Fetch_OAM_A_D);
+			ser.Sync(nameof(ppu_Fetch_Sprite_VRAM), ref ppu_Fetch_Sprite_VRAM);
+			ser.Sync(nameof(ppu_Sprite_VRAM_First), ref ppu_Sprite_VRAM_First);
 			ser.Sync(nameof(ppu_New_Sprite), ref ppu_New_Sprite);
 			ser.Sync(nameof(ppu_Sprite_Eval_Finished), ref ppu_Sprite_Eval_Finished);
+			ser.Sync(nameof(ppu_Sprite_Mosaic), ref ppu_Sprite_Mosaic);
 
 			// BG rendering
 			ser.Sync(nameof(ppu_Fetch_Count), ref ppu_Fetch_Count, false);
