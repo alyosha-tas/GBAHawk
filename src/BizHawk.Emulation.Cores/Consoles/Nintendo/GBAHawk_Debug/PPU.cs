@@ -556,7 +556,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			ppu_CTRL = value;
 
-			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 966; }
+			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 964; }
 			else { ppu_Sprite_Eval_Time = 1232; }
 
 			ppu_Any_Window_On = ppu_WIN0_On | ppu_WIN1_On | ppu_OBJ_WIN;
@@ -958,7 +958,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 						{
 							// TODO: OAM accesses
-							if (((ppu_Cycle & 1) == 0) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
+							if (((ppu_Cycle & 1) == 1) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
 						}
 					}
 				}
@@ -972,7 +972,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
 						// TODO: OAM accesses
-						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
+						if ((ppu_Cycle & 1) == 1) { ppu_Render_Sprites(); }
 					}
 
 					if (!ppu_Rendering_Complete)
@@ -3097,6 +3097,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					ppu_Sprite_Next_Fetch = 3;
 				}
+
+				ppu_Sprite_Render_Cycle += 2;
 			}
 
 			if (ppu_Fetch_OAM_0 && !ppu_Sprite_Eval_Finished)
@@ -3286,18 +3288,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 1)
 				{
-
+					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 2)
 				{
-
+					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 3)
 				{
-
+					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 4)
 				{
+					ppu_OAM_Access = true;
+
 					// next cycle will start evaluation of next sprite
 					if (ppu_Current_Sprite < 128)
 					{

@@ -1659,9 +1659,15 @@ namespace GBAHawk
 
 					if (ppu_Sprite_cd == 0)
 					{
+						ppu_Fetch_OAM_0 = true;
+						ppu_Fetch_OAM_2 = false;
+						ppu_Fetch_OAM_A_D = false;
+						ppu_Fetch_Sprite_VRAM = false;
+
+						ppu_Sprite_Next_Fetch = 3;
+
 						ppu_Current_Sprite = 0;
 						ppu_New_Sprite = true;
-						ppu_Sprite_proc_time = 6;
 
 						if (ppu_Sprite_ofst_eval == 0)
 						{
@@ -2247,7 +2253,7 @@ namespace GBAHawk
 						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 						{
 							// TODO: OAM accesses
-							if (((ppu_Cycle & 1) == 0) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
+							if (((ppu_Cycle & 1) == 1) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
 						}
 					}
 				}
@@ -2260,7 +2266,7 @@ namespace GBAHawk
 					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
 						// TODO: OAM accesses
-						if ((ppu_Cycle & 1) == 0) { ppu_Render_Sprites(); }
+						if ((ppu_Cycle & 1) == 1) { ppu_Render_Sprites(); }
 					}
 
 					if (!ppu_Rendering_Complete)
