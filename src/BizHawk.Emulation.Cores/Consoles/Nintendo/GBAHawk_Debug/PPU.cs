@@ -89,13 +89,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public uint ppu_Cur_Sprite_X;
 		public uint ppu_Cur_Sprite_Y;
+		public uint ppu_Cur_Sprite_Y_Temp;
 
 		public int ppu_Current_Sprite;
 		public int ppu_Process_Sprite;
 		public int ppu_Sprite_ofst_eval;
 		public int ppu_Sprite_ofst_draw;
 		public int ppu_Sprite_X_Pos, ppu_Sprite_Y_Pos;
+		public int ppu_Sprite_X_Pos_Temp, ppu_Sprite_Y_Pos_Temp;
 		public int ppu_Sprite_X_Size, ppu_Sprite_Y_Size;
+		public int ppu_Sprite_X_Size_Temp, ppu_Sprite_Y_Size_Temp;
 		public int ppu_Sprite_Render_Cycle;
 		public int ppu_Fetch_OAM_A_D_Cnt;
 		public int ppu_Fetch_Sprite_VRAM_Cnt;
@@ -104,12 +107,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_Sprite_X_Scale;
 		public int ppu_Sprite_Size_X_Ofst;
 		public int ppu_Sprite_Size_Y_Ofst;
+		public int ppu_Sprite_Size_X_Ofst_Temp;
+		public int ppu_Sprite_Size_Y_Ofst_Temp;
 		public int ppu_Sprite_Mode;
 		public int ppu_Sprite_Next_Fetch;
 
 		public ushort ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
+		public ushort ppu_Sprite_Attr_0_Temp, ppu_Sprite_Attr_1_Temp;
 
 		public bool ppu_Rot_Scale;
+		public bool ppu_Rot_Scale_Temp;
 		public bool ppu_Fetch_OAM_0, ppu_Fetch_OAM_2, ppu_Fetch_OAM_A_D;
 		public bool ppu_Fetch_Sprite_VRAM, ppu_Sprite_VRAM_First;
 		public bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
@@ -2868,6 +2875,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			bool double_size;
 
+			// local version of other variables used for evaluation
+			uint cur_spr_y = 0;
+
+			int spr_size_x_ofst = 0;
+			int spr_size_y_ofst = 0;
+			int spr_x_pos = 0;
+			int spr_y_pos = 0;
+			int spr_x_size = 0;
+			int spr_y_size = 0;
+
+			ushort spr_attr_0 = 0;
+			ushort spr_attr_1 = 0;
+
+			bool rot_scale = false;
+
 			if (ppu_Fetch_Sprite_VRAM)
 			{
 				ppu_VRAM_High_Access = true;
@@ -3080,29 +3102,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_OAM_Access = true;
 				ppu_New_Sprite = false;
 
-				ppu_Sprite_Attr_0 = (ushort)(OAM[ppu_Current_Sprite * 8] | (OAM[ppu_Current_Sprite * 8 + 1] << 8));
-				ppu_Sprite_Attr_1 = (ushort)(OAM[ppu_Current_Sprite * 8 + 2] | (OAM[ppu_Current_Sprite * 8 + 3] << 8));
+				spr_attr_0 = (ushort)(OAM[ppu_Current_Sprite * 8] | (OAM[ppu_Current_Sprite * 8 + 1] << 8));
+				spr_attr_1 = (ushort)(OAM[ppu_Current_Sprite * 8 + 2] | (OAM[ppu_Current_Sprite * 8 + 3] << 8));
 
-				ppu_Sprite_X_Pos = ppu_Sprite_Attr_1 & 0x1FF;
-				ppu_Sprite_Y_Pos = ppu_Sprite_Attr_0 & 0xFF;
+				spr_x_pos = spr_attr_1 & 0x1FF;
+				spr_y_pos = spr_attr_0 & 0xFF;
 
-				ppu_Sprite_X_Size = ppu_OBJ_Sizes_X[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
-				ppu_Sprite_Y_Size = ppu_OBJ_Sizes_Y[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
+				spr_x_size = ppu_OBJ_Sizes_X[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
+				spr_y_size = ppu_OBJ_Sizes_Y[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
 
 				// check if the sprite is in range (in the Y direction)
 
 				// check scaling, only in rotation and scaling mode
-				double_size = (ppu_Sprite_Attr_0 & 0x200) == 0x200;
-				ppu_Rot_Scale = (ppu_Sprite_Attr_0 & 0x100) == 0x100;
+				double_size = (spr_attr_0 & 0x200) == 0x200;
+				rot_scale = (spr_attr_0 & 0x100) == 0x100;
 
-				if (double_size && ppu_Rot_Scale)
+				spr_size_y_ofst = 0;
+				spr_size_x_ofst = 0;
+
+				if (double_size && rot_scale)
 				{
-					ppu_Sprite_Size_Y_Ofst = ppu_Sprite_Y_Size;
-					ppu_Sprite_Size_X_Ofst = ppu_Sprite_X_Size;
+					spr_size_y_ofst = spr_y_size;
+					spr_size_x_ofst = spr_x_size;
 				}
 
 				// NOTE: double_size means disable in the context of not being in rot_scale mode
-				if (double_size && !ppu_Rot_Scale)
+				if (double_size && !rot_scale)
 				{
 					// sprite not displayed
 					ppu_New_Sprite = true;
@@ -3111,9 +3136,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					// account for screen wrapping
 					// if the object would appear at the top of the screen, that is the only part that is drawn
-					if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst > 0xFF)
+					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
 					{
-						if (((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						if (((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
@@ -3121,22 +3146,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else
 					{
-						if (((ppu_LY + 1) < ppu_Sprite_Y_Pos) || ((ppu_LY + 1) >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						if (((ppu_LY + 1) < spr_y_pos) || ((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
 						}
 					}
 
-					ppu_Cur_Sprite_Y = (uint)((ppu_LY + 1 - ppu_Sprite_Y_Pos) & 0xFF);
+					cur_spr_y = (uint)((ppu_LY + 1 - spr_y_pos) & 0xFF);
 				}
 				else
 				{
 					// account for screen wrapping
 					// if the object would appear at the top of the screen, that is the only part that is drawn
-					if (ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst > 0xFF)
+					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
 					{
-						if (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF))
+						if (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
@@ -3144,14 +3169,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else
 					{
-						if ((0 < ppu_Sprite_Y_Pos) || (0 >= ((ppu_Sprite_Y_Pos + ppu_Sprite_Y_Size + ppu_Sprite_Size_Y_Ofst) & 0xFF)))
+						if ((0 < spr_y_pos) || (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
 						}
 					}
 
-					ppu_Cur_Sprite_Y = (uint)((0 - ppu_Sprite_Y_Pos) & 0xFF);
+					cur_spr_y = (uint)((0 - spr_y_pos) & 0xFF);
 				}
 
 				if (ppu_New_Sprite)
@@ -3177,6 +3202,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					ppu_Process_Sprite = ppu_Current_Sprite;
 
+					// send local variables to temp variables, to be loaded with the second access
+					ppu_Cur_Sprite_Y_Temp = cur_spr_y;
+
+					ppu_Sprite_Size_X_Ofst_Temp = spr_size_x_ofst;
+					ppu_Sprite_Size_Y_Ofst_Temp = spr_size_y_ofst;
+					ppu_Sprite_X_Pos_Temp = spr_x_pos;
+					ppu_Sprite_Y_Pos_Temp = spr_y_pos;
+					ppu_Sprite_X_Size_Temp = spr_x_size;
+					ppu_Sprite_Y_Size_Temp = spr_y_size;
+
+					ppu_Sprite_Attr_0_Temp = spr_attr_0;
+					ppu_Sprite_Attr_1_Temp = spr_attr_1;
+
+					ppu_Rot_Scale_Temp = rot_scale;
+
 					ppu_Current_Sprite += 1;
 
 					if (ppu_Fetch_Sprite_VRAM && !ppu_Sprite_VRAM_First)
@@ -3195,6 +3235,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Fetch_OAM_2 = false;
 
 				ppu_Sprite_Attr_2 = (ushort)(OAM[ppu_Process_Sprite * 8 + 4] | (OAM[ppu_Process_Sprite * 8 + 5] << 8));
+
+				// send temp variables to rendering variables
+				ppu_Cur_Sprite_Y = ppu_Cur_Sprite_Y_Temp;
+
+				ppu_Sprite_Size_X_Ofst = ppu_Sprite_Size_X_Ofst_Temp;
+				ppu_Sprite_Size_Y_Ofst = ppu_Sprite_Size_Y_Ofst_Temp;
+				ppu_Sprite_X_Pos = ppu_Sprite_X_Pos_Temp;
+				ppu_Sprite_Y_Pos = ppu_Sprite_Y_Pos_Temp;
+				ppu_Sprite_X_Size = ppu_Sprite_X_Size_Temp;
+				ppu_Sprite_Y_Size = ppu_Sprite_Y_Size_Temp;
+
+				ppu_Sprite_Attr_0 = ppu_Sprite_Attr_0_Temp;
+				ppu_Sprite_Attr_1 = ppu_Sprite_Attr_1_Temp;
+
+				ppu_Rot_Scale = ppu_Rot_Scale_Temp;
 
 				if (ppu_Rot_Scale)
 				{
@@ -3638,7 +3693,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Sprite_Object_Window[i] = false;
 			}
 
-			ppu_Cur_Sprite_X = ppu_Cur_Sprite_Y = 0;
+			ppu_Cur_Sprite_X = ppu_Cur_Sprite_Y = ppu_Cur_Sprite_Y_Temp = 0;
 
 			ppu_Current_Sprite = ppu_Process_Sprite = 0;
 
@@ -3646,15 +3701,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_ofst_draw = 240;
 
 			ppu_Sprite_X_Pos = ppu_Sprite_Y_Pos = 0;
+			ppu_Sprite_X_Pos_Temp = ppu_Sprite_Y_Pos_Temp = 0;
 			ppu_Sprite_X_Size = ppu_Sprite_Y_Size = 0;
+			ppu_Sprite_X_Size_Temp = ppu_Sprite_Y_Size_Temp = 0;
 			ppu_Sprite_Render_Cycle = 0;
 			ppu_Fetch_OAM_A_D_Cnt = ppu_Fetch_Sprite_VRAM_Cnt = ppu_Sprite_Mod = 0;
-			ppu_Sprite_Base_Ofst = ppu_Sprite_X_Scale = 0;ppu_Sprite_Size_X_Ofst = 0;
-			ppu_Sprite_Size_Y_Ofst = ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
+			ppu_Sprite_Base_Ofst = ppu_Sprite_X_Scale = 0;
+			ppu_Sprite_Size_X_Ofst = ppu_Sprite_Size_Y_Ofst = 0;
+			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
+			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
 
 			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
+			ppu_Sprite_Attr_0_Temp = ppu_Sprite_Attr_1_Temp = 0;
 
-			ppu_Rot_Scale = ppu_Fetch_OAM_0 = ppu_Fetch_OAM_2 = ppu_Fetch_OAM_A_D = false;
+			ppu_Rot_Scale = ppu_Rot_Scale_Temp = false;
+			ppu_Fetch_OAM_0 = ppu_Fetch_OAM_2 = ppu_Fetch_OAM_A_D = false;
 			ppu_Fetch_Sprite_VRAM = ppu_Sprite_VRAM_First = ppu_New_Sprite = ppu_Sprite_Eval_Finished = false;
 			ppu_Sprite_Mosaic = false;
 
@@ -3825,6 +3886,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_Cur_Sprite_X), ref ppu_Cur_Sprite_X);
 			ser.Sync(nameof(ppu_Cur_Sprite_Y), ref ppu_Cur_Sprite_Y);
+			ser.Sync(nameof(ppu_Cur_Sprite_Y_Temp), ref ppu_Cur_Sprite_Y_Temp);
 
 			ser.Sync(nameof(ppu_Current_Sprite), ref ppu_Current_Sprite);
 			ser.Sync(nameof(ppu_Process_Sprite), ref ppu_Process_Sprite);
@@ -3832,8 +3894,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_ofst_draw), ref ppu_Sprite_ofst_draw);
 			ser.Sync(nameof(ppu_Sprite_X_Pos), ref ppu_Sprite_X_Pos);
 			ser.Sync(nameof(ppu_Sprite_Y_Pos), ref ppu_Sprite_Y_Pos);
+			ser.Sync(nameof(ppu_Sprite_X_Pos_Temp), ref ppu_Sprite_X_Pos_Temp);
+			ser.Sync(nameof(ppu_Sprite_Y_Pos_Temp), ref ppu_Sprite_Y_Pos_Temp);
 			ser.Sync(nameof(ppu_Sprite_X_Size), ref ppu_Sprite_X_Size);
 			ser.Sync(nameof(ppu_Sprite_Y_Size), ref ppu_Sprite_Y_Size);
+			ser.Sync(nameof(ppu_Sprite_X_Size_Temp), ref ppu_Sprite_X_Size_Temp);
+			ser.Sync(nameof(ppu_Sprite_Y_Size_Temp), ref ppu_Sprite_Y_Size_Temp);
 			ser.Sync(nameof(ppu_Sprite_Render_Cycle), ref ppu_Sprite_Render_Cycle);
 			ser.Sync(nameof(ppu_Fetch_OAM_A_D_Cnt), ref ppu_Fetch_OAM_A_D_Cnt);
 			ser.Sync(nameof(ppu_Fetch_Sprite_VRAM_Cnt), ref ppu_Fetch_Sprite_VRAM_Cnt);
@@ -3842,14 +3908,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_X_Scale), ref ppu_Sprite_X_Scale);
 			ser.Sync(nameof(ppu_Sprite_Size_X_Ofst), ref ppu_Sprite_Size_X_Ofst);
 			ser.Sync(nameof(ppu_Sprite_Size_Y_Ofst), ref ppu_Sprite_Size_Y_Ofst);
+			ser.Sync(nameof(ppu_Sprite_Size_X_Ofst_Temp), ref ppu_Sprite_Size_X_Ofst_Temp);
+			ser.Sync(nameof(ppu_Sprite_Size_Y_Ofst_Temp), ref ppu_Sprite_Size_Y_Ofst_Temp);
 			ser.Sync(nameof(ppu_Sprite_Mode), ref ppu_Sprite_Mode);
 			ser.Sync(nameof(ppu_Sprite_Next_Fetch), ref ppu_Sprite_Next_Fetch);
 
 			ser.Sync(nameof(ppu_Sprite_Attr_0), ref ppu_Sprite_Attr_0);
 			ser.Sync(nameof(ppu_Sprite_Attr_1), ref ppu_Sprite_Attr_1);
 			ser.Sync(nameof(ppu_Sprite_Attr_2), ref ppu_Sprite_Attr_2);
+			ser.Sync(nameof(ppu_Sprite_Attr_0_Temp), ref ppu_Sprite_Attr_0_Temp);
+			ser.Sync(nameof(ppu_Sprite_Attr_1_Temp), ref ppu_Sprite_Attr_1_Temp);
 
 			ser.Sync(nameof(ppu_Rot_Scale), ref ppu_Rot_Scale);
+			ser.Sync(nameof(ppu_Rot_Scale_Temp), ref ppu_Rot_Scale_Temp);
 			ser.Sync(nameof(ppu_Fetch_OAM_0), ref ppu_Fetch_OAM_0);
 			ser.Sync(nameof(ppu_Fetch_OAM_2), ref ppu_Fetch_OAM_2);
 			ser.Sync(nameof(ppu_Fetch_OAM_A_D), ref ppu_Fetch_OAM_A_D);
