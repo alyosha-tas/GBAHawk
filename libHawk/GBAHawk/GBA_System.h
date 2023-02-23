@@ -10107,6 +10107,10 @@ namespace GBAHawk
 		{
 			bool h_flip, v_flip;
 
+			uint16_t spr_attr_0, spr_attr_1;
+
+			uint32_t spr_size_x_int, spr_size_y_int;
+
 			uint32_t base_ofst = 0;
 
 			uint32_t A, B, C, D;
@@ -10124,14 +10128,14 @@ namespace GBAHawk
 
 			base_ofst = i * 16384;
 
-			ppu_Sprite_Attr_0 = OAM_16[i * 4];
-			ppu_Sprite_Attr_1 = OAM_16[i * 4 + 1];
+			spr_attr_0 = OAM_16[i * 4];
+			spr_attr_1 = OAM_16[i * 4 + 1];
 
-			ppu_Sprite_X_Size = ppu_OBJ_Sizes_X[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
-			ppu_Sprite_Y_Size = ppu_OBJ_Sizes_Y[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
+			spr_size_x_int = ppu_OBJ_Sizes_X[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
+			spr_size_y_int = ppu_OBJ_Sizes_Y[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
 
-			double spr_size_x = ppu_Sprite_X_Size;
-			double spr_size_y = ppu_Sprite_Y_Size;
+			double spr_size_x = spr_size_x_int;
+			double spr_size_y = spr_size_y_int;
 
 			double spr_half_x = spr_size_x * 0.5;
 			double spr_half_y = spr_size_y * 0.5;
@@ -10142,7 +10146,7 @@ namespace GBAHawk
 
 				// rotation and scaling enabled
 				// pick out parameters
-				param_pick = (ppu_Sprite_Attr_1 >> 9) & 0x1F;
+				param_pick = (spr_attr_1 >> 9) & 0x1F;
 
 				A = OAM_16[(0x06 + 0x20 * param_pick) >> 1];
 				B = OAM_16[(0x0E + 0x20 * param_pick) >> 1];
@@ -10175,13 +10179,13 @@ namespace GBAHawk
 					fract_part *= 0.5;
 				}
 
-				if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
+				if (((spr_attr_0 >> 9) & 0x1) == 1)
 				{
-					for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
+					for (int j = 0; j < 2 * spr_size_x_int; j++)
 					{
 						cur_x = j - spr_size_x;
 
-						for (int k = 0; k < 2 * ppu_Sprite_Y_Size; k++)
+						for (int k = 0; k < 2 * spr_size_y_int; k++)
 						{
 							cur_y = -k + spr_size_y;
 
@@ -10203,11 +10207,11 @@ namespace GBAHawk
 				}
 				else
 				{
-					for (int j = 0; j < ppu_Sprite_X_Size; j++)
+					for (int j = 0; j < spr_size_x_int; j++)
 					{
 						cur_x = j - spr_half_x;
 
-						for (int k = 0; k < ppu_Sprite_Y_Size; k++)
+						for (int k = 0; k < spr_size_y_int; k++)
 						{
 							cur_y = -k + spr_half_y;
 
@@ -10230,17 +10234,17 @@ namespace GBAHawk
 			}
 			else if ((OAM[i * 8 + 1] & 0x2) == 0)
 			{
-				h_flip = ((ppu_Sprite_Attr_1 & 0x1000) == 0x1000);
-				v_flip = ((ppu_Sprite_Attr_1 & 0x2000) == 0x2000);
+				h_flip = ((spr_attr_1 & 0x1000) == 0x1000);
+				v_flip = ((spr_attr_1 & 0x2000) == 0x2000);
 
-				for (int j = 0; j < ppu_Sprite_X_Size; j++)
+				for (int j = 0; j < spr_size_x_int; j++)
 				{
-					for (int k = 0; k < ppu_Sprite_Y_Size; k++)
+					for (int k = 0; k < spr_size_y_int; k++)
 					{
 						// horizontal flip
 						if (h_flip)
 						{
-							sol_x = ppu_Sprite_X_Size - 1 - j;
+							sol_x = spr_size_x_int - 1 - j;
 						}
 						else
 						{
@@ -10250,7 +10254,7 @@ namespace GBAHawk
 						// vertical flip
 						if (v_flip)
 						{
-							sol_y = ppu_Sprite_Y_Size - 1 - k;
+							sol_y = spr_size_y_int - 1 - k;
 						}
 						else
 						{

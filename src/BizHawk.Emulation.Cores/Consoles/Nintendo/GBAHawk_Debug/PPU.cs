@@ -3365,12 +3365,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void ppu_Do_Sprite_Calculation(int i)
 		{
 			bool h_flip, v_flip;
+
+			ushort spr_attr_0, spr_attr_1;
 			
 			int base_ofst = 0;
 
-			uint A, B, C, D;
+			int spr_size_x, spr_size_y;
 
 			int i_A, i_B, i_C, i_D;
+
+			uint A, B, C, D;
 
 			double f_A, f_B, f_C, f_D;
 
@@ -3383,11 +3387,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			base_ofst = i * 16384;
 
-			ppu_Sprite_Attr_0 = (ushort)(OAM[i * 8] | (OAM[i * 8 + 1] << 8));
-			ppu_Sprite_Attr_1 = (ushort)(OAM[i * 8 + 2] | (OAM[i * 8 + 3] << 8));
+			spr_attr_0 = (ushort)(OAM[i * 8] | (OAM[i * 8 + 1] << 8));
+			spr_attr_1 = (ushort)(OAM[i * 8 + 2] | (OAM[i * 8 + 3] << 8));
 
-			ppu_Sprite_X_Size = ppu_OBJ_Sizes_X[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
-			ppu_Sprite_Y_Size = ppu_OBJ_Sizes_Y[((ppu_Sprite_Attr_1 >> 14) & 3) * 4 + ((ppu_Sprite_Attr_0 >> 14) & 3)];
+			spr_size_x = ppu_OBJ_Sizes_X[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
+			spr_size_y = ppu_OBJ_Sizes_Y[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
 
 			if ((OAM[i * 8 + 1] & 0x1) == 1)
 			{
@@ -3395,7 +3399,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				// rotation and scaling enabled
 				// pick out parameters
-				param_pick = (ppu_Sprite_Attr_1 >> 9) & 0x1F;
+				param_pick = (spr_attr_1 >> 9) & 0x1F;
 
 				A = (uint)(OAM[0x06 + 0x20 * param_pick] + (OAM[0x06 + 0x20 * param_pick + 1] << 8));
 				B = (uint)(OAM[0x0E + 0x20 * param_pick] + (OAM[0x0E + 0x20 * param_pick + 1] << 8));
@@ -3428,21 +3432,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					fract_part *= 0.5;
 				}
 
-				if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
+				if (((spr_attr_0 >> 9) & 0x1) == 1)
 				{
-					for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
+					for (int j = 0; j < 2 * spr_size_x; j++)
 					{
-						cur_x = j - ppu_Sprite_X_Size;
+						cur_x = j - spr_size_x;
 
-						for (int k = 0; k < 2 * ppu_Sprite_Y_Size; k++)
+						for (int k = 0; k < 2 * spr_size_y; k++)
 						{
-							cur_y = -k + ppu_Sprite_Y_Size;
+							cur_y = -k + spr_size_y;
 
 							sol_x = f_A * cur_x - f_B * cur_y;
 							sol_y = -f_C * cur_x + f_D * cur_y;
 
-							sol_x += ppu_Sprite_X_Size >> 1;
-							sol_y -= ppu_Sprite_Y_Size >> 1;
+							sol_x += spr_size_x >> 1;
+							sol_y -= spr_size_y >> 1;
 
 							sol_y = -sol_y;
 
@@ -3456,19 +3460,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					for (int j = 0; j < ppu_Sprite_X_Size; j++)
+					for (int j = 0; j < spr_size_x; j++)
 					{
-						cur_x = j - (ppu_Sprite_X_Size >> 1);
+						cur_x = j - (spr_size_x >> 1);
 
-						for (int k = 0; k < ppu_Sprite_Y_Size; k++)
+						for (int k = 0; k < spr_size_y; k++)
 						{
-							cur_y = -k + (ppu_Sprite_Y_Size >> 1);
+							cur_y = -k + (spr_size_y >> 1);
 
 							sol_x = f_A * cur_x - f_B * cur_y;
 							sol_y = -f_C * cur_x + f_D * cur_y;
 
-							sol_x += ppu_Sprite_X_Size >> 1;
-							sol_y -= ppu_Sprite_Y_Size >> 1;
+							sol_x += spr_size_x >> 1;
+							sol_y -= spr_size_y >> 1;
 
 							sol_y = -sol_y;
 
@@ -3483,17 +3487,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 			else if ((OAM[i * 8 + 1] & 0x2) == 0)
 			{
-				h_flip = ((ppu_Sprite_Attr_1 & 0x1000) == 0x1000);
-				v_flip = ((ppu_Sprite_Attr_1 & 0x2000) == 0x2000);
+				h_flip = ((spr_attr_1 & 0x1000) == 0x1000);
+				v_flip = ((spr_attr_1 & 0x2000) == 0x2000);
 
-				for (int j = 0; j < ppu_Sprite_X_Size; j++)
+				for (int j = 0; j < spr_size_x; j++)
 				{
-					for (int k = 0; k < ppu_Sprite_Y_Size; k++)
+					for (int k = 0; k < spr_size_y; k++)
 					{
 						// horizontal flip
 						if (h_flip)
 						{
-							sol_x = ppu_Sprite_X_Size - 1 - j;
+							sol_x = spr_size_x - 1 - j;
 						}
 						else
 						{
@@ -3503,7 +3507,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// vertical flip
 						if (v_flip)
 						{
-							sol_y = ppu_Sprite_Y_Size - 1 - k;
+							sol_y = spr_size_y - 1 - k;
 						}
 						else
 						{
