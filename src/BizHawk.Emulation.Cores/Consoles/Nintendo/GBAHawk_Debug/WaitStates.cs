@@ -96,12 +96,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
 
-						ppu_VRAM_In_Use = true;
+							ppu_VRAM_High_In_Use = true;
+						}
 					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+
+							ppu_VRAM_In_Use = true;
+						}
+					}	
 				}
 				else
 				{
@@ -185,11 +197,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
 
-						ppu_VRAM_In_Use = true;
+							ppu_VRAM_High_In_Use = true;
+						}
+					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+
+							ppu_VRAM_In_Use = true;
+						}
 					}
 				}
 				else
@@ -276,13 +300,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{			
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;			
-					}
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
+						}
 
-					// set to true since we also need to check the next cycle
-					ppu_VRAM_In_Use = true;
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_High_In_Use = true;
+					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+						}
+
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_In_Use = true;
+					}
 
 					if (!cpu_LS_Is_Load)
 					{
@@ -395,13 +432,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;
-					}
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
+						}
 
-					// set to true since we also need to check the next cycle
-					ppu_VRAM_In_Use = true;
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_High_In_Use = true;
+					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+						}
+
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_In_Use = true;
+					}
 
 					if (!dma_Read_Cycle)
 					{ 
@@ -524,11 +574,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else if (addr >= 0x06000000)
 				{
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
 
-						ppu_VRAM_In_Use = true;
+							ppu_VRAM_High_In_Use = true;
+						}
+					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+
+							ppu_VRAM_In_Use = true;
+						}
 					}
 				}
 				else
@@ -663,13 +725,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
 
-					if (ppu_VRAM_Access)
+					if ((addr & 0x00010000) == 0x00010000)
 					{
-						wait_ret += 1;	
-					}
+						if (ppu_VRAM_High_Access)
+						{
+							wait_ret += 1;
+						}
 
-					// set to true since we also need to check the next cycle
-					ppu_VRAM_In_Use = true;
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_High_In_Use = true;
+					}
+					else
+					{
+						if (ppu_VRAM_Access)
+						{
+							wait_ret += 1;
+						}
+
+						// set to true since we also need to check the next cycle
+						ppu_VRAM_In_Use = true;
+					}
 				}
 				else
 				{

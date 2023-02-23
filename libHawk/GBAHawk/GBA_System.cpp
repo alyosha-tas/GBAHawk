@@ -110,6 +110,7 @@ namespace GBAHawk
 					ret = VRAM[addr & 0xFFFF];
 				}
 
+				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
@@ -264,6 +265,7 @@ namespace GBAHawk
 					ret = VRAM_16[(addr & 0xFFFE) >> 1];
 				}
 
+				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
@@ -412,6 +414,7 @@ namespace GBAHawk
 					ret = VRAM_32[(addr & 0xFFFC) >> 2];
 				}
 
+				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
@@ -544,6 +547,7 @@ namespace GBAHawk
 				VRAM[(addr + 1) & 0xFFFF] = value;
 			}
 
+			ppu_VRAM_High_In_Use = false;
 			ppu_VRAM_In_Use = false;
 		}
 		else if (addr < 0x08000000)
@@ -640,6 +644,7 @@ namespace GBAHawk
 				VRAM_16[(addr & 0xFFFE) >> 1] = value;
 			}
 
+			ppu_VRAM_High_In_Use = false;
 			ppu_VRAM_In_Use = false;
 		}
 		else if (addr < 0x08000000)
@@ -737,6 +742,7 @@ namespace GBAHawk
 				VRAM_32[(addr & 0xFFFC) >> 2] = value;
 			}
 
+			ppu_VRAM_High_In_Use = false;
 			ppu_VRAM_In_Use = false;
 			VRAM_32_Check = false;
 		}
@@ -955,6 +961,7 @@ namespace GBAHawk
 					ret = VRAM_16[(addr & 0xFFFF) >> 1];
 				}
 
+				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
@@ -1058,6 +1065,7 @@ namespace GBAHawk
 					dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0xFFFC) >> 2];
 				}
 
+				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
 			}
 			else if (addr >= 0x05000000)
@@ -1138,6 +1146,7 @@ namespace GBAHawk
 				VRAM_16[(addr & 0xFFFE) >> 1] = value;
 			}
 
+			ppu_VRAM_High_In_Use = false;
 			ppu_VRAM_In_Use = false;
 		}
 		else if (addr < 0x08000000)
@@ -1220,6 +1229,7 @@ namespace GBAHawk
 				VRAM_32[(addr & 0xFFFC) >> 2] = value;
 			}
 
+			ppu_VRAM_High_In_Use = false;
 			ppu_VRAM_In_Use = false;
 			VRAM_32_Check = false;
 		}
@@ -2248,6 +2258,7 @@ namespace GBAHawk
 					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
 					if (ppu_LY == 227)
 					{
+						ppu_VRAM_High_Access = false;
 						ppu_OAM_Access = false;
 
 						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
@@ -2259,6 +2270,7 @@ namespace GBAHawk
 				}
 				else
 				{
+					ppu_VRAM_High_Access = false;
 					ppu_VRAM_Access = false;
 					ppu_PALRAM_Access = false;
 					ppu_OAM_Access = false;
