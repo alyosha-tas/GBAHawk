@@ -339,10 +339,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
 						// trigger any DMAs with VBlank as a start condition
-						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }					
+						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; }
+						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; }
+						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; }
+						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; }					
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
@@ -375,10 +375,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// but not if in vblank
 						if (ppu_LY < 160)
 						{
-							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }						
+							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; }
+							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; }
+							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
+							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }						
 						}
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
@@ -530,7 +530,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
 							{
 								dma_Run[3] = true;
-								dma_External_Source[3] = true;
 							}
 
 							if (ppu_LY == 162)
@@ -588,7 +587,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if ((ppu_LY < 159) || (ppu_LY == 227))
 					{
-						ppu_Sprite_Eval_Finished = false;
+						ppu_Sprite_Eval_Finished = !ppu_OBJ_On;
 
 						ppu_Sprite_LY_Check = (byte)(ppu_LY + 1);
 

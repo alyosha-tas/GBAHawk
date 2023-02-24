@@ -72,14 +72,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] dma_Use_ROM_Addr_SRC = new bool[4];
 		public bool[] dma_Use_ROM_Addr_DST = new bool[4];
 		public bool[] dma_ROM_Being_Used = new bool[4];
-		public bool[] dma_External_Source = new bool[4];
 
 		public bool dma_Seq_Access;
 		public bool dma_Read_Cycle;
 		public bool dma_Pausable;
 		public bool dma_All_Off;
 		public bool dma_Shutdown;
-		public bool dma_Release_Bus;
 		public bool dma_Delay;
 		public bool dma_Video_DMA_Start;
 
@@ -362,8 +360,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Go[chan] = true;
 
 				dma_All_Off = false;
-
-				dma_External_Source[chan] = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -397,24 +393,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			if (dma_Shutdown)
 			{
-				if (dma_Release_Bus)
-				{
-					cpu_Is_Paused = false;
+				cpu_Is_Paused = false;
 
-					dma_All_Off = true;
+				dma_All_Off = true;
 
-					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
-					if (dma_Delay) { dma_All_Off = false; }
+				if (dma_Delay) { dma_All_Off = false; }
 
-					dma_Shutdown = false;
-
-					cpu_Is_Paused = false;
-				}
-				else
-				{
-					dma_Release_Bus = true;
-				}
+				dma_Shutdown = false;
 			}
 
 			if (dma_Delay)
@@ -658,16 +645,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (dma_CNT_intl[dma_Chan_Exec] == 0)
 						{
-							// it seems as though DMA's triggered by external sources take an extra cycle to shut down
-							if (dma_External_Source[dma_Chan_Exec])
-							{
-								dma_Release_Bus = false;
-							}
-							else
-							{
-								dma_Release_Bus = true;
-							}
-
 							//Console.WriteLine("complete " + dma_Chan_Exec);
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
@@ -739,7 +716,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							dma_Chan_Exec = 4;
 
 							dma_Shutdown = true;
-							dma_Release_Bus = true;
 
 							dma_All_Off = false;
 						}
@@ -803,6 +779,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
 							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
 							//Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
+							//Console.WriteLine(ppu_LY + " " + ppu_Cycle);
 						}
 					}
 				}
@@ -846,6 +823,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 									dma_Access_Cnt = 0;
 									dma_Access_Wait = 0;
+
+									cpu_Seq_Access = false;
 								}
 								else
 								{
@@ -895,7 +874,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Use_ROM_Addr_SRC[i] = false;		
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_ROM_Being_Used[i] = false;
-				dma_External_Source[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -910,7 +888,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Read_Cycle = true;
 			dma_Pausable = true;
 			dma_All_Off = true;
-			dma_Shutdown =  dma_Release_Bus = false;
+			dma_Shutdown =  false;
 			dma_Delay = false;
 			dma_Video_DMA_Start = false;
 		}
@@ -954,14 +932,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Use_ROM_Addr_SRC), ref dma_Use_ROM_Addr_SRC, false);
 			ser.Sync(nameof(dma_Use_ROM_Addr_DST), ref dma_Use_ROM_Addr_DST, false);
 			ser.Sync(nameof(dma_ROM_Being_Used), ref dma_ROM_Being_Used, false);
-			ser.Sync(nameof(dma_External_Source), ref dma_External_Source, false);
 
 			ser.Sync(nameof(dma_Seq_Access), ref dma_Seq_Access);
 			ser.Sync(nameof(dma_Read_Cycle), ref dma_Read_Cycle);
 			ser.Sync(nameof(dma_Pausable), ref dma_Pausable);
 			ser.Sync(nameof(dma_All_Off), ref dma_All_Off);
 			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);
-			ser.Sync(nameof(dma_Release_Bus), ref dma_Release_Bus);
 			ser.Sync(nameof(dma_Delay), ref dma_Delay);
 			ser.Sync(nameof(dma_Video_DMA_Start), ref dma_Video_DMA_Start);
 		}

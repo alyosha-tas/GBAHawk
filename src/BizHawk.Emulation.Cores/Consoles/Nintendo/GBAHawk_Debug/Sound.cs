@@ -1250,7 +1250,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (snd_FIFO_A_ptr < 16)
 				{
-					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
+					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
 				}
 
 				snd_FIFO_A_Output = ((sbyte)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
@@ -1277,7 +1277,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (snd_FIFO_B_ptr < 16)
 				{
-					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
+					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
 				}
 
 				snd_FIFO_B_Output = ((sbyte)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;

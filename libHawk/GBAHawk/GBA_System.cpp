@@ -1419,10 +1419,10 @@ namespace GBAHawk
 						else if (ppu_VBL_IRQ_cd == 1)
 						{
 							// trigger any DMAs with VBlank as a start condition
-							if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-							if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-							if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-							if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
+							if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; }
+							if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; }
+							if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; }
+							if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; }
 						}
 						else if (ppu_VBL_IRQ_cd == 0)
 						{
@@ -1455,10 +1455,10 @@ namespace GBAHawk
 							// but not if in vblank
 							if (ppu_LY < 160)
 							{
-								if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_External_Source[0] = true; }
-								if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
-								if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
-								if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_External_Source[3] = true; }
+								if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; }
+								if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; }
+								if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
+								if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
 							}
 						}
 						else if (ppu_HBL_IRQ_cd == 0)
@@ -1610,7 +1610,6 @@ namespace GBAHawk
 								if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
 								{
 									dma_Run[3] = true;
-									dma_External_Source[3] = true;
 								}
 
 								if (ppu_LY == 162)
@@ -1668,7 +1667,7 @@ namespace GBAHawk
 
 						if ((ppu_LY < 159) || (ppu_LY == 227))
 						{
-							ppu_Sprite_Eval_Finished = false;
+							ppu_Sprite_Eval_Finished = !ppu_OBJ_On;
 
 							ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
 
@@ -2035,7 +2034,7 @@ namespace GBAHawk
 
 				if (snd_FIFO_A_ptr < 16)
 				{
-					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; dma_External_Source[1] = true; }
+					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
 				}
 
 				snd_FIFO_A_Output = ((int8_t)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
@@ -2061,7 +2060,7 @@ namespace GBAHawk
 
 				if (snd_FIFO_B_ptr < 16)
 				{
-					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; dma_External_Source[2] = true; }
+					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
 				}
 
 				snd_FIFO_B_Output = ((int8_t)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;
@@ -2501,22 +2500,15 @@ namespace GBAHawk
 			{
 				if (dma_Shutdown)
 				{
-					if (dma_Release_Bus)
-					{
-						cpu_Is_Paused = false;
+					cpu_Is_Paused = false;
 
-						dma_All_Off = true;
+					dma_All_Off = true;
 
-						for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
-						if (dma_Delay) { dma_All_Off = false; }
+					if (dma_Delay) { dma_All_Off = false; }
 
-						dma_Shutdown = false;
-					}
-					else
-					{
-						dma_Release_Bus = true;
-					}
+					dma_Shutdown = false;
 				}
 
 				if (dma_Delay)
@@ -2760,16 +2752,6 @@ namespace GBAHawk
 
 							if (dma_CNT_intl[dma_Chan_Exec] == 0)
 							{
-								// it seems as though DMA's triggered by external sources take an extra cycle to shut down
-								if (dma_External_Source[dma_Chan_Exec])
-								{
-									dma_Release_Bus = false;
-								}
-								else
-								{
-									dma_Release_Bus = true;
-								}
-
 								// generate an IRQ if needed
 								if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 								{
@@ -2838,7 +2820,6 @@ namespace GBAHawk
 								// DMA channel was turned off by the DMA itself
 								dma_Chan_Exec = 4;
 								dma_Shutdown = true;
-								dma_Release_Bus = true;
 
 								dma_All_Off = false;
 							}
@@ -2941,6 +2922,8 @@ namespace GBAHawk
 
 										dma_Access_Cnt = 0;
 										dma_Access_Wait = 0;
+
+										cpu_Seq_Access = false;
 									}
 									else
 									{

@@ -5849,7 +5849,6 @@ namespace GBAHawk
 		bool dma_Pausable;
 		bool dma_All_Off;
 		bool dma_Shutdown;
-		bool dma_Release_Bus;
 		bool dma_Delay;
 		bool dma_Video_DMA_Start;
 
@@ -5870,7 +5869,6 @@ namespace GBAHawk
 		bool dma_Use_ROM_Addr_SRC[4] = { };
 		bool dma_Use_ROM_Addr_DST[4] = { };
 		bool dma_ROM_Being_Used[4] = { };
-		bool dma_External_Source[4] = { };
 
 		uint16_t dma_CNT[4] = { };
 		uint16_t dma_CTRL[4] = { };
@@ -6178,8 +6176,6 @@ namespace GBAHawk
 				dma_Go[chan] = true;
 
 				dma_All_Off = false;
-
-				dma_External_Source[chan] = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -6240,7 +6236,6 @@ namespace GBAHawk
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_ROM_Being_Used[i] = false;
-				dma_External_Source[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -6257,7 +6252,7 @@ namespace GBAHawk
 			dma_Read_Cycle = true;
 			dma_Pausable = true;
 			dma_All_Off = true;
-			dma_Shutdown = dma_Release_Bus = false;
+			dma_Shutdown = false;
 			dma_Delay = false;
 			dma_Video_DMA_Start = false;
 		}
@@ -6269,7 +6264,6 @@ namespace GBAHawk
 			saver = bool_saver(dma_Pausable, saver);
 			saver = bool_saver(dma_All_Off, saver);
 			saver = bool_saver(dma_Shutdown, saver);
-			saver = bool_saver(dma_Release_Bus, saver);
 			saver = bool_saver(dma_Delay, saver);
 			saver = bool_saver(dma_Video_DMA_Start, saver);
 
@@ -6292,7 +6286,6 @@ namespace GBAHawk
 			saver = bool_array_saver(dma_Use_ROM_Addr_SRC, saver, 4);
 			saver = bool_array_saver(dma_Use_ROM_Addr_DST, saver, 4);
 			saver = bool_array_saver(dma_ROM_Being_Used, saver, 4);
-			saver = bool_array_saver(dma_External_Source, saver, 4);
 
 			saver = short_array_saver(dma_CNT, saver, 4);
 			saver = short_array_saver(dma_CTRL, saver, 4);
@@ -6322,7 +6315,6 @@ namespace GBAHawk
 			loader = bool_loader(&dma_Pausable, loader);
 			loader = bool_loader(&dma_All_Off, loader);
 			loader = bool_loader(&dma_Shutdown, loader);
-			loader = bool_loader(&dma_Release_Bus, loader);
 			loader = bool_loader(&dma_Delay, loader);
 			loader = bool_loader(&dma_Video_DMA_Start, loader);
 
@@ -6345,7 +6337,6 @@ namespace GBAHawk
 			loader = bool_array_loader(dma_Use_ROM_Addr_SRC, loader, 4);
 			loader = bool_array_loader(dma_Use_ROM_Addr_DST, loader, 4);
 			loader = bool_array_loader(dma_ROM_Being_Used, loader, 4);
-			loader = bool_array_loader(dma_External_Source, loader, 4);
 
 			loader = short_array_loader(dma_CNT, loader, 4);
 			loader = short_array_loader(dma_CTRL, loader, 4);
