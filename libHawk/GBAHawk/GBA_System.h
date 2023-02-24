@@ -10006,21 +10006,28 @@ namespace GBAHawk
 				{
 					ppu_Current_Sprite += 1;
 
-					if ((ppu_Current_Sprite == 128) && !ppu_Fetch_Sprite_VRAM && !ppu_Fetch_OAM_A_D)
+					if (ppu_Current_Sprite == 128)
 					{
-						ppu_Sprite_Eval_Finished = true;
-					}
+						ppu_Fetch_OAM_0 = false;
 
-					// repeat if not processing another sprite
-					if (ppu_Fetch_Sprite_VRAM)
-					{
-						ppu_Fetch_OAM_0 = false;
-						ppu_Sprite_Next_Fetch = 0;
+						if (!ppu_Fetch_Sprite_VRAM && !ppu_Fetch_OAM_A_D)
+						{
+							ppu_Sprite_Eval_Finished = true;
+						}
 					}
-					else if (ppu_Fetch_OAM_A_D)
+					else
 					{
-						ppu_Fetch_OAM_0 = false;
-						ppu_Sprite_Next_Fetch = 0;
+						// repeat if not processing another sprite
+						if (ppu_Fetch_Sprite_VRAM)
+						{
+							ppu_Fetch_OAM_0 = false;
+							ppu_Sprite_Next_Fetch = 0;
+						}
+						else if (ppu_Fetch_OAM_A_D)
+						{
+							ppu_Fetch_OAM_0 = false;
+							ppu_Sprite_Next_Fetch = 0;
+						}
 					}
 				}
 				else
