@@ -7055,8 +7055,12 @@ namespace GBAHawk
 		bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
 		bool ppu_Sprite_Mosaic;
 
+		uint8_t ppu_Sprite_LY_Check;
+
 		uint16_t ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
 		uint16_t ppu_Sprite_Attr_0_Temp, ppu_Sprite_Attr_1_Temp;
+
+		uint16_t ppu_Sprite_A_Latch, ppu_Sprite_B_Latch, ppu_Sprite_C_Latch, ppu_Sprite_D_Latch;
 
 		uint32_t ppu_Cur_Sprite_X;
 		uint32_t ppu_Cur_Sprite_Y;
@@ -7075,7 +7079,6 @@ namespace GBAHawk
 		uint32_t ppu_Fetch_OAM_A_D_Cnt;
 		uint32_t ppu_Fetch_Sprite_VRAM_Cnt;
 		uint32_t ppu_Sprite_VRAM_Mod;
-		uint32_t ppu_Sprite_Base_Ofst;
 		uint32_t ppu_Sprite_X_Scale;
 		uint32_t ppu_Sprite_Size_X_Ofst;
 		uint32_t ppu_Sprite_Size_Y_Ofst;
@@ -7083,6 +7086,7 @@ namespace GBAHawk
 		uint32_t ppu_Sprite_Size_Y_Ofst_Temp;
 		uint32_t ppu_Sprite_Mode;
 		uint32_t ppu_Sprite_Next_Fetch;
+		uint32_t ppu_Param_Pick;
 
 		bool ppu_Sprite_Pixel_Occupied[240 * 2] = { };
 		bool ppu_Sprite_Semi_Transparent[240 * 2] = { };
@@ -7141,8 +7145,8 @@ namespace GBAHawk
 		uint32_t ppu_BG_Char_Base[4] = { };
 		uint32_t ppu_BG_Screen_Base[4] = { };
 
-		uint16_t ppu_ROT_OBJ_X[128 * 128 * 128] = { };
-		uint16_t ppu_ROT_OBJ_Y[128 * 128 * 128] = { };
+		uint16_t ppu_ROT_OBJ_X[128] = { };
+		uint16_t ppu_ROT_OBJ_Y[128] = { };
 
 		uint16_t ppu_MOS_OBJ_X[0x200] = { };
 		uint16_t ppu_MOS_OBJ_Y[0x100] = { };
@@ -9706,6 +9710,8 @@ namespace GBAHawk
 			uint16_t spr_attr_0 = 0;
 			uint16_t spr_attr_1 = 0;
 
+			uint8_t ly_check = 0;
+
 			bool rot_scale = false;
 
 			if (ppu_Fetch_Sprite_VRAM)
@@ -9724,8 +9730,6 @@ namespace GBAHawk
 					if (ppu_Fetch_Sprite_VRAM_Cnt == 0)
 					{
 						ppu_Sprite_X_Scale = ppu_Sprite_X_Size >> 3;
-
-						ppu_Sprite_Base_Ofst = ppu_Process_Sprite * 16384;
 
 						ppu_Sprite_Mode = (ppu_Sprite_Attr_0 >> 10) & 3;
 
@@ -9760,23 +9764,10 @@ namespace GBAHawk
 								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
 								rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
 							}
-
-							if (ppu_MOS_OBJ_Y[ppu_LY] < ppu_Sprite_Y_Pos)
-							{
-								// lower pixels of sprite not aligned with mosaic grid, nothing to display (in y direction)
-								rel_y_offset = 0;
-								ppu_Cur_Sprite_X = 255;
-							}
-							else
-							{
-								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-								rel_y_offset = (ppu_MOS_OBJ_Y[ppu_LY] - ppu_Sprite_Y_Pos) & 0xFF;
-							}
 						}
 						else
 						{
 							rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
-							rel_y_offset = (uint32_t)ppu_Cur_Sprite_Y;
 						}
 
 						// if sprite is in range horizontally
@@ -9789,8 +9780,8 @@ namespace GBAHawk
 								spr_tile = ppu_Sprite_Attr_2 & ppu_Sprite_VRAM_Mod;
 
 								// look up the actual pixel to be used in the sprite rotation tables
-								actual_x_index = ppu_ROT_OBJ_X[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
-								actual_y_index = ppu_ROT_OBJ_Y[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
+								actual_x_index = ppu_ROT_OBJ_X[rel_x_offset];
+								actual_y_index = ppu_ROT_OBJ_Y[rel_x_offset];
 
 								if ((actual_x_index < ppu_Sprite_X_Size) && (actual_y_index < ppu_Sprite_Y_Size))
 								{
@@ -9799,14 +9790,14 @@ namespace GBAHawk
 									{
 										if (ppu_OBJ_Dim)
 										{
-											spr_tile += (actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (uint32_t)(actual_y_index >> 3);
+											spr_tile += (actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3);
 										}
 										else
 										{
 											// large x values wrap around
-											spr_tile += (0x20) * (uint32_t)(actual_y_index >> 3);
+											spr_tile += (0x20) * (int)(actual_y_index >> 3);
 
-											spr_tile_row = (uint32_t)(spr_tile & 0xFFFFFFE0);
+											spr_tile_row = (int)(spr_tile & 0xFFFFFFE0);
 
 											spr_tile += (actual_x_index >> 3);
 
@@ -9818,7 +9809,7 @@ namespace GBAHawk
 
 										// pick out the correct pixel from the tile
 										tile_x_offset = actual_x_index & 7;
-										tile_y_offset = (uint32_t)(actual_y_index & 7);
+										tile_y_offset = (int)(actual_y_index & 7);
 
 										spr_tile += (tile_x_offset >> 1) + tile_y_offset * 4;
 
@@ -9845,14 +9836,14 @@ namespace GBAHawk
 
 										if (ppu_OBJ_Dim)
 										{
-											spr_tile += ((actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (uint32_t)(actual_y_index >> 3)) << 6;
+											spr_tile += ((actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3)) << 6;
 										}
 										else
 										{
 											// large x values wrap around
-											spr_tile += ((0x20) * (uint32_t)(actual_y_index >> 3) << 5);
+											spr_tile += ((0x20) * (int)(actual_y_index >> 3) << 5);
 
-											spr_tile_row = (uint32_t)(spr_tile & 0xFFFFFC00);
+											spr_tile_row = (int)(spr_tile & 0xFFFFFC00);
 
 											spr_tile += ((actual_x_index >> 3) << 6);
 
@@ -9862,7 +9853,7 @@ namespace GBAHawk
 
 										// pick out the correct pixel from the tile
 										tile_x_offset = (actual_x_index & 7);
-										tile_y_offset = (uint32_t)(actual_y_index & 7);
+										tile_y_offset = (int)(actual_y_index & 7);
 
 										spr_tile += tile_x_offset + tile_y_offset * 8;
 
@@ -9937,8 +9928,8 @@ namespace GBAHawk
 				ppu_OAM_Access = true;
 				ppu_New_Sprite = false;
 
-				spr_attr_0 = (uint16_t)(OAM[ppu_Current_Sprite * 8] | (OAM[ppu_Current_Sprite * 8 + 1] << 8));
-				spr_attr_1 = (uint16_t)(OAM[ppu_Current_Sprite * 8 + 2] | (OAM[ppu_Current_Sprite * 8 + 3] << 8));
+				spr_attr_0 = OAM_16[ppu_Current_Sprite * 4];
+				spr_attr_1 = OAM_16[ppu_Current_Sprite * 4 + 1];
 
 				spr_x_pos = spr_attr_1 & 0x1FF;
 				spr_y_pos = spr_attr_0 & 0xFF;
@@ -9967,36 +9958,15 @@ namespace GBAHawk
 					// sprite not displayed
 					ppu_New_Sprite = true;
 				}
-				else if (ppu_LY != 227)
-				{
-					// account for screen wrapping
-					// if the object would appear at the top of the screen, that is the only part that is drawn
-					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
-					{
-						if (((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
-						{
-							// sprite vertically out of range
-							ppu_New_Sprite = true;
-						}
-					}
-					else
-					{
-						if (((ppu_LY + 1) < spr_y_pos) || ((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
-						{
-							// sprite vertically out of range
-							ppu_New_Sprite = true;
-						}
-					}
-
-					cur_spr_y = (uint32_t)((ppu_LY + 1 - spr_y_pos) & 0xFF);
-				}
 				else
 				{
+					ly_check = ppu_Sprite_LY_Check;
+
 					// account for screen wrapping
 					// if the object would appear at the top of the screen, that is the only part that is drawn
 					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
 					{
-						if (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF))
+						if ((ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
@@ -10004,14 +9974,41 @@ namespace GBAHawk
 					}
 					else
 					{
-						if ((0 < spr_y_pos) || (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+						if ((ly_check < spr_y_pos) || (ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
 						}
 					}
 
-					cur_spr_y = (uint32_t)((0 - spr_y_pos) & 0xFF);
+					cur_spr_y = (uint32_t)((ly_check - spr_y_pos) & 0xFF);
+
+					// account for Mosaic
+					if (((spr_attr_0 & 0x1000) == 0x1000) && !ppu_New_Sprite)
+					{
+						ly_check = (uint8_t)ppu_MOS_OBJ_Y[ppu_Sprite_LY_Check];
+
+						// account for screen wrapping
+						// if the object would appear at the top of the screen, that is the only part that is drawn
+						if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
+						{
+							if ((ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+							{
+								// sprite vertically out of range
+								ppu_New_Sprite = true;
+							}
+						}
+						else
+						{
+							if ((ly_check < spr_y_pos) || (ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+							{
+								// sprite vertically out of range
+								ppu_New_Sprite = true;
+							}
+						}
+
+						cur_spr_y = (uint32_t)((ly_check - spr_y_pos) & 0xFF);
+					}
 				}
 
 				if (ppu_New_Sprite)
@@ -10080,7 +10077,7 @@ namespace GBAHawk
 
 				ppu_Process_Sprite = ppu_Process_Sprite_Temp;
 
-				ppu_Sprite_Attr_2 = (uint16_t)(OAM[ppu_Process_Sprite * 8 + 4] | (OAM[ppu_Process_Sprite * 8 + 5] << 8));
+				ppu_Sprite_Attr_2 = OAM_16[ppu_Process_Sprite * 4 + 2];
 
 				// send temp variables to rendering variables
 				ppu_Cur_Sprite_Y = ppu_Cur_Sprite_Y_Temp;
@@ -10105,39 +10102,51 @@ namespace GBAHawk
 				else
 				{
 					ppu_Fetch_Sprite_VRAM = true;
-					ppu_Fetch_OAM_0 = true;
+
+					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
 					ppu_Fetch_Sprite_VRAM_Cnt = 0;
+
+					// scan through the properties of this sprite on this scanline
+					ppu_Do_Sprite_Calculation(ppu_Process_Sprite);
 				}
 			}
 
 			if (ppu_Fetch_OAM_A_D)
-			{				
+			{
 				// TODO: access A-D here, note that we skip the first one since it immediately runs from the above line
 				if (ppu_Fetch_OAM_A_D_Cnt == 0)
 				{
-
+					ppu_Param_Pick = (ppu_Sprite_Attr_1 >> 9) & 0x1F;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 1)
 				{
+					ppu_Sprite_A_Latch = OAM_16[0x03 + 0x10 * ppu_Param_Pick];
+
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 2)
 				{
+					ppu_Sprite_B_Latch = OAM_16[0x07 + 0x10 * ppu_Param_Pick];
+
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 3)
 				{
+					ppu_Sprite_C_Latch = OAM_16[0x0B + 0x10 * ppu_Param_Pick];
+
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 4)
 				{
+					ppu_Sprite_D_Latch = OAM_16[0xF + 0x10 * ppu_Param_Pick];
+
 					ppu_OAM_Access = true;
-					
+
 					// next cycle will start evaluation of next sprite
-					if (ppu_Current_Sprite < 128)
-					{
-						ppu_Fetch_OAM_0 = true;
-					}
+					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
+
+					// scan through the properties of this sprite on this scanline
+					ppu_Do_Sprite_Calculation_Rot(ppu_Process_Sprite);
 				}
 
 				ppu_Fetch_OAM_A_D_Cnt += 1;
@@ -10155,55 +10164,9 @@ namespace GBAHawk
 			ppu_Sprite_Render_Cycle += 2;
 		}
 
-		// all sprites are centered located started in the upper left corner of a 128 x 128 pixel region
-		void ppu_Calculate_Sprites_Pixels(uint32_t addr, bool do_all)
+		void ppu_Do_Sprite_Calculation_Rot(int i)
 		{
-			int set_changed;
-
-			if (do_all)
-			{
-				for (int i = 0; i < 128; i++)
-				{
-					ppu_Do_Sprite_Calculation(i);
-				}
-			}
-			else
-			{
-				// if the effected address is a sprite attribute, only update that one sprite
-				// if it is a rotation parameter, update all sprites using that parameter
-				if (((addr & 0xF) == 0x6) || ((addr & 0xF) == 0xE))
-				{
-					set_changed = (int)((addr >> 4) & 0x1F);
-
-					for (int i = 0; i < 128; i++)
-					{
-						// update the sprite rotation / scaling if it is enabled
-						if ((OAM[i * 8 + 1] & 0x1) == 1)
-						{
-							if (((OAM[i * 8 + 3] >> 1) & 0x1F) == set_changed)
-							{
-								ppu_Do_Sprite_Calculation(i);
-							}
-						}
-					}
-				}
-				else
-				{
-					// update only one sprite
-					ppu_Do_Sprite_Calculation((int)((addr >> 3) & 0x7F));
-				}
-			}
-		}
-
-		void ppu_Do_Sprite_Calculation(int i)
-		{
-			bool h_flip, v_flip;
-
-			uint16_t spr_attr_0, spr_attr_1;
-
 			uint32_t spr_size_x_int, spr_size_y_int;
-
-			uint32_t base_ofst = 0;
 
 			uint32_t A, B, C, D;
 
@@ -10216,15 +10179,8 @@ namespace GBAHawk
 			double cur_x, cur_y;
 			double sol_x, sol_y;
 
-			int param_pick;
-
-			base_ofst = i * 16384;
-
-			spr_attr_0 = OAM_16[i * 4];
-			spr_attr_1 = OAM_16[i * 4 + 1];
-
-			spr_size_x_int = ppu_OBJ_Sizes_X[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
-			spr_size_y_int = ppu_OBJ_Sizes_Y[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
+			spr_size_x_int = ppu_Sprite_X_Size;
+			spr_size_y_int = ppu_Sprite_Y_Size;
 
 			double spr_size_x = spr_size_x_int;
 			double spr_size_y = spr_size_y_int;
@@ -10232,131 +10188,118 @@ namespace GBAHawk
 			double spr_half_x = spr_size_x * 0.5;
 			double spr_half_y = spr_size_y * 0.5;
 
-			if ((OAM[i * 8 + 1] & 0x1) == 1)
+			A = ppu_Sprite_A_Latch;
+			B = ppu_Sprite_B_Latch;
+			C = ppu_Sprite_C_Latch;
+			D = ppu_Sprite_D_Latch;
+
+			i_A = (int32_t)((A >> 8) & 0x7F);
+			i_B = (int32_t)((B >> 8) & 0x7F);
+			i_C = (int32_t)((C >> 8) & 0x7F);
+			i_D = (int32_t)((D >> 8) & 0x7F);
+
+			if ((A & 0x8000) == 0x8000) { i_A |= (int32_t)0xFFFFFF80; }
+			if ((B & 0x8000) == 0x8000) { i_B |= (int32_t)0xFFFFFF80; }
+			if ((C & 0x8000) == 0x8000) { i_C |= (int32_t)0xFFFFFF80; }
+			if ((D & 0x8000) == 0x8000) { i_D |= (int32_t)0xFFFFFF80; }
+
+			// convert to floats
+			f_A = i_A;
+			f_B = i_B;
+			f_C = i_C;
+			f_D = i_D;
+
+			for (int j = 7; j >= 0; j--)
 			{
-				fract_part = 0.5;
+				if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
+				if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
+				if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
+				if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
 
-				// rotation and scaling enabled
-				// pick out parameters
-				param_pick = (spr_attr_1 >> 9) & 0x1F;
+				fract_part *= 0.5;
+			}
 
-				A = OAM_16[(0x06 + 0x20 * param_pick) >> 1];
-				B = OAM_16[(0x0E + 0x20 * param_pick) >> 1];
-				C = OAM_16[(0x16 + 0x20 * param_pick) >> 1];
-				D = OAM_16[(0x1E + 0x20 * param_pick) >> 1];
-
-				i_A = (int32_t)((A >> 8) & 0x7F);
-				i_B = (int32_t)((B >> 8) & 0x7F);
-				i_C = (int32_t)((C >> 8) & 0x7F);
-				i_D = (int32_t)((D >> 8) & 0x7F);
-
-				if ((A & 0x8000) == 0x8000) { i_A |= (int32_t)0xFFFFFF80; }
-				if ((B & 0x8000) == 0x8000) { i_B |= (int32_t)0xFFFFFF80; }
-				if ((C & 0x8000) == 0x8000) { i_C |= (int32_t)0xFFFFFF80; }
-				if ((D & 0x8000) == 0x8000) { i_D |= (int32_t)0xFFFFFF80; }
-
-				// convert to floats
-				f_A = i_A;
-				f_B = i_B;
-				f_C = i_C;
-				f_D = i_D;
-
-				for (int j = 7; j >= 0; j--)
+			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
+			{
+				for (int j = 0; j < 2 * spr_size_x_int; j++)
 				{
-					if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
-					if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
-					if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
-					if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
+					cur_x = j - spr_size_x;
 
-					fract_part *= 0.5;
+					cur_y = spr_size_y - ppu_Cur_Sprite_Y;
+
+					sol_x = f_A * cur_x - f_B * cur_y;
+					sol_y = -f_C * cur_x + f_D * cur_y;
+
+					sol_x += spr_half_x;
+					sol_y -= spr_half_y;
+
+					sol_y = -sol_y;
+
+					sol_x = floor(sol_x);
+					sol_y = floor(sol_y);
+
+					ppu_ROT_OBJ_X[j] = (uint16_t)(sol_x);
+					ppu_ROT_OBJ_Y[j] = (uint16_t)(sol_y);
 				}
-
-				if (((spr_attr_0 >> 9) & 0x1) == 1)
+			}
+			else
+			{
+				for (int j = 0; j < spr_size_x_int; j++)
 				{
-					for (int j = 0; j < 2 * spr_size_x_int; j++)
-					{
-						cur_x = j - spr_size_x;
+					cur_x = j - spr_half_x;
 
-						for (int k = 0; k < 2 * spr_size_y_int; k++)
-						{
-							cur_y = -k + spr_size_y;
+					cur_y = spr_half_y - ppu_Cur_Sprite_Y;
 
-							sol_x = f_A * cur_x - f_B * cur_y;
-							sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x - f_B * cur_y;
+					sol_y = -f_C * cur_x + f_D * cur_y;
 
-							sol_x += spr_half_x;
-							sol_y -= spr_half_y;
+					sol_x += spr_half_x;
+					sol_y -= spr_half_y;
 
-							sol_y = -sol_y;
+					sol_y = -sol_y;
 
-							sol_x = floor(sol_x);
-							sol_y = floor(sol_y);
+					sol_x = floor(sol_x);
+					sol_y = floor(sol_y);
 
-							ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (uint16_t)(sol_x);
-							ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (uint16_t)(sol_y);
-						}
-					}
+					ppu_ROT_OBJ_X[j] = (uint16_t)(sol_x);
+					ppu_ROT_OBJ_Y[j] = (uint16_t)(sol_y);
+				}
+			}
+		}
+
+		void ppu_Do_Sprite_Calculation(int i)
+		{
+			bool h_flip, v_flip;
+
+			uint32_t sol_x, sol_y;
+
+			h_flip = ((ppu_Sprite_Attr_1 & 0x1000) == 0x1000);
+			v_flip = ((ppu_Sprite_Attr_1 & 0x2000) == 0x2000);
+
+			for (int j = 0; j < ppu_Sprite_X_Size; j++)
+			{
+				// horizontal flip
+				if (h_flip)
+				{
+					sol_x = ppu_Sprite_X_Size - 1 - j;
 				}
 				else
 				{
-					for (int j = 0; j < spr_size_x_int; j++)
-					{
-						cur_x = j - spr_half_x;
-
-						for (int k = 0; k < spr_size_y_int; k++)
-						{
-							cur_y = -k + spr_half_y;
-
-							sol_x = f_A * cur_x - f_B * cur_y;
-							sol_y = -f_C * cur_x + f_D * cur_y;
-
-							sol_x += spr_half_x;
-							sol_y -= spr_half_y;
-
-							sol_y = -sol_y;
-
-							sol_x = floor(sol_x);
-							sol_y = floor(sol_y);
-
-							ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (uint16_t)(sol_x);
-							ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (uint16_t)(sol_y);
-						}
-					}
+					sol_x = j;
 				}
-			}
-			else if ((OAM[i * 8 + 1] & 0x2) == 0)
-			{
-				h_flip = ((spr_attr_1 & 0x1000) == 0x1000);
-				v_flip = ((spr_attr_1 & 0x2000) == 0x2000);
 
-				for (int j = 0; j < spr_size_x_int; j++)
+				// vertical flip
+				if (v_flip)
 				{
-					for (int k = 0; k < spr_size_y_int; k++)
-					{
-						// horizontal flip
-						if (h_flip)
-						{
-							sol_x = spr_size_x_int - 1 - j;
-						}
-						else
-						{
-							sol_x = j;
-						}
-
-						// vertical flip
-						if (v_flip)
-						{
-							sol_y = spr_size_y_int - 1 - k;
-						}
-						else
-						{
-							sol_y = k;
-						}
-
-						ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (uint16_t)sol_x;
-						ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (uint16_t)sol_y;
-					}
+					sol_y = ppu_Sprite_Y_Size - 1 - ppu_Cur_Sprite_Y;
 				}
+				else
+				{
+					sol_y = ppu_Cur_Sprite_Y;
+				}
+
+				ppu_ROT_OBJ_X[j] = (uint16_t)sol_x;
+				ppu_ROT_OBJ_Y[j] = (uint16_t)sol_y;
 			}
 		}
 
@@ -10566,10 +10509,13 @@ namespace GBAHawk
 			ppu_Sprite_X_Size_Temp = ppu_Sprite_Y_Size_Temp = 0;
 			ppu_Sprite_Render_Cycle = 0;
 			ppu_Fetch_OAM_A_D_Cnt = ppu_Fetch_Sprite_VRAM_Cnt = ppu_Sprite_VRAM_Mod = 0;
-			ppu_Sprite_Base_Ofst = ppu_Sprite_X_Scale = 0;
+			ppu_Sprite_X_Scale = 0;
 			ppu_Sprite_Size_X_Ofst = ppu_Sprite_Size_Y_Ofst = 0;
 			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
 			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
+			ppu_Param_Pick = 0;
+
+			ppu_Sprite_LY_Check = 0;
 
 			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
 			ppu_Sprite_Attr_0_Temp = ppu_Sprite_Attr_1_Temp = 0;
@@ -10744,11 +10690,18 @@ namespace GBAHawk
 			saver = bool_saver(ppu_Sprite_Eval_Finished, saver);
 			saver = bool_saver(ppu_Sprite_Mosaic, saver);
 
+			saver = byte_saver(ppu_Sprite_LY_Check, saver);
+
 			saver = short_saver(ppu_Sprite_Attr_0, saver);
 			saver = short_saver(ppu_Sprite_Attr_1, saver);
 			saver = short_saver(ppu_Sprite_Attr_2, saver);
 			saver = short_saver(ppu_Sprite_Attr_0_Temp, saver);
 			saver = short_saver(ppu_Sprite_Attr_1_Temp, saver);
+
+			saver = short_saver(ppu_Sprite_A_Latch, saver);
+			saver = short_saver(ppu_Sprite_B_Latch, saver);
+			saver = short_saver(ppu_Sprite_C_Latch, saver);
+			saver = short_saver(ppu_Sprite_D_Latch, saver);
 
 			saver = int_saver(ppu_Cur_Sprite_X, saver);
 			saver = int_saver(ppu_Cur_Sprite_Y, saver);
@@ -10771,7 +10724,6 @@ namespace GBAHawk
 			saver = int_saver(ppu_Fetch_OAM_A_D_Cnt, saver);
 			saver = int_saver(ppu_Fetch_Sprite_VRAM_Cnt, saver);
 			saver = int_saver(ppu_Sprite_VRAM_Mod, saver);
-			saver = int_saver(ppu_Sprite_Base_Ofst, saver);
 			saver = int_saver(ppu_Sprite_X_Scale, saver);
 			saver = int_saver(ppu_Sprite_Size_X_Ofst, saver);
 			saver = int_saver(ppu_Sprite_Size_Y_Ofst, saver);
@@ -10779,6 +10731,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_Sprite_Size_Y_Ofst_Temp, saver);
 			saver = int_saver(ppu_Sprite_Mode, saver);
 			saver = int_saver(ppu_Sprite_Next_Fetch, saver);
+			saver = int_saver(ppu_Param_Pick, saver);
 
 			saver = bool_array_saver(ppu_Sprite_Pixel_Occupied, saver, 240 * 2);
 			saver = bool_array_saver(ppu_Sprite_Semi_Transparent, saver, 240 * 2);
@@ -10921,11 +10874,18 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_Sprite_Eval_Finished, loader);
 			loader = bool_loader(&ppu_Sprite_Mosaic, loader);
 
+			loader = byte_loader(&ppu_Sprite_LY_Check, loader);
+
 			loader = short_loader(&ppu_Sprite_Attr_0, loader);
 			loader = short_loader(&ppu_Sprite_Attr_1, loader);
 			loader = short_loader(&ppu_Sprite_Attr_2, loader);
 			loader = short_loader(&ppu_Sprite_Attr_0_Temp, loader);
 			loader = short_loader(&ppu_Sprite_Attr_1_Temp, loader);
+
+			loader = short_loader(&ppu_Sprite_A_Latch, loader);
+			loader = short_loader(&ppu_Sprite_B_Latch, loader);
+			loader = short_loader(&ppu_Sprite_C_Latch, loader);
+			loader = short_loader(&ppu_Sprite_D_Latch, loader);
 
 			loader = int_loader(&ppu_Cur_Sprite_X, loader);
 			loader = int_loader(&ppu_Cur_Sprite_Y, loader);
@@ -10948,7 +10908,6 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Fetch_OAM_A_D_Cnt, loader);
 			loader = int_loader(&ppu_Fetch_Sprite_VRAM_Cnt, loader);
 			loader = int_loader(&ppu_Sprite_VRAM_Mod, loader);
-			loader = int_loader(&ppu_Sprite_Base_Ofst, loader);
 			loader = int_loader(&ppu_Sprite_X_Scale, loader);
 			loader = int_loader(&ppu_Sprite_Size_X_Ofst, loader);
 			loader = int_loader(&ppu_Sprite_Size_Y_Ofst, loader);
@@ -10956,6 +10915,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Sprite_Size_Y_Ofst_Temp, loader);
 			loader = int_loader(&ppu_Sprite_Mode, loader);
 			loader = int_loader(&ppu_Sprite_Next_Fetch, loader);
+			loader = int_loader(&ppu_Param_Pick, loader);
 
 			loader = bool_array_loader(ppu_Sprite_Pixel_Occupied, loader, 240 * 2);
 			loader = bool_array_loader(ppu_Sprite_Semi_Transparent, loader, 240 * 2);

@@ -104,7 +104,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_Fetch_OAM_A_D_Cnt;
 		public int ppu_Fetch_Sprite_VRAM_Cnt;
 		public int ppu_Sprite_VRAM_Mod;
-		public int ppu_Sprite_Base_Ofst;
 		public int ppu_Sprite_X_Scale;
 		public int ppu_Sprite_Size_X_Ofst;
 		public int ppu_Sprite_Size_Y_Ofst;
@@ -174,8 +173,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool ppu_PAL_Rendering_Complete;
 
 		// Derived values, not stated, reloaded with savestate
-		public ushort[] ppu_ROT_OBJ_X = new ushort[128 * 128 * 128];
-		public ushort[] ppu_ROT_OBJ_Y = new ushort[128 * 128 * 128];
+		public ushort[] ppu_ROT_OBJ_X = new ushort[128];
+		public ushort[] ppu_ROT_OBJ_Y = new ushort[128];
 
 		public ushort[] ppu_MOS_OBJ_X = new ushort[0x200];
 		public ushort[] ppu_MOS_OBJ_Y = new ushort[0x100];
@@ -2874,7 +2873,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			int tile_y_offset;
 
 			int actual_x_index, actual_y_index;
-			int rel_x_offset, rel_y_offset;
+			int rel_x_offset;
 
 			bool double_size;
 
@@ -2912,8 +2911,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ppu_Sprite_X_Scale = ppu_Sprite_X_Size >> 3;
 
-						ppu_Sprite_Base_Ofst = ppu_Process_Sprite * 16384;
-
 						ppu_Sprite_Mode = (ppu_Sprite_Attr_0 >> 10) & 3;
 
 						// GBA tek says lower bit of tile number should be ignored in some cases, but it appears this is not the case?
@@ -2947,13 +2944,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
 								rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
 							}
-
-							rel_y_offset = (int)ppu_Cur_Sprite_Y;
 						}
 						else
 						{
 							rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
-							rel_y_offset = (int)ppu_Cur_Sprite_Y;
 						}
 
 						// if sprite is in range horizontally
@@ -2966,8 +2960,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								spr_tile = ppu_Sprite_Attr_2 & ppu_Sprite_VRAM_Mod;
 
 								// look up the actual pixel to be used in the sprite rotation tables
-								actual_x_index = ppu_ROT_OBJ_X[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
-								actual_y_index = ppu_ROT_OBJ_Y[ppu_Sprite_Base_Ofst + rel_x_offset + rel_y_offset * 128];
+								actual_x_index = ppu_ROT_OBJ_X[rel_x_offset];
+								actual_y_index = ppu_ROT_OBJ_Y[rel_x_offset];
 
 								if ((actual_x_index < ppu_Sprite_X_Size) && (actual_y_index < ppu_Sprite_Y_Size))
 								{
@@ -3171,7 +3165,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cur_spr_y = (uint)((ly_check - spr_y_pos) & 0xFF);
 
 					// account for Mosaic
-					if ((spr_attr_0 & 0x1000) == 0x1000)
+					if (((spr_attr_0 & 0x1000) == 0x1000) && !ppu_New_Sprite)
 					{
 						ly_check = (byte)ppu_MOS_OBJ_Y[ppu_Sprite_LY_Check];
 
@@ -3289,7 +3283,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else
 				{
 					ppu_Fetch_Sprite_VRAM = true;
-					ppu_Fetch_OAM_0 = true;
+					
+					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
 					ppu_Fetch_Sprite_VRAM_Cnt = 0;
 
 					// scan through the properties of this sprite on this scanline
@@ -3329,10 +3324,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_OAM_Access = true;
 
 					// next cycle will start evaluation of next sprite
-					if (ppu_Current_Sprite < 128)
-					{
-						ppu_Fetch_OAM_0 = true;
-					}
+					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
 
 					// scan through the properties of this sprite on this scanline
 					ppu_Do_Sprite_Calculation_Rot(ppu_Process_Sprite);
@@ -3355,8 +3347,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ppu_Do_Sprite_Calculation_Rot(int i)
 		{
-			int base_ofst = i * 16384;
-
 			int i_A, i_B, i_C, i_D;
 
 			uint A, B, C, D;
@@ -3418,8 +3408,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					sol_x = Math.Floor(sol_x);
 					sol_y = Math.Floor(sol_y);
 
-					ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_x);
-					ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_y);
+					ppu_ROT_OBJ_X[j] = (ushort)(sol_x);
+					ppu_ROT_OBJ_Y[j] = (ushort)(sol_y);
 				}
 			}
 			else
@@ -3441,8 +3431,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					sol_x = Math.Floor(sol_x);
 					sol_y = Math.Floor(sol_y);
 
-					ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_x);
-					ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_y);
+					ppu_ROT_OBJ_X[j] = (ushort)(sol_x);
+					ppu_ROT_OBJ_Y[j] = (ushort)(sol_y);
 				}
 			}
 		}
@@ -3450,8 +3440,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void ppu_Do_Sprite_Calculation(int i)
 		{
 			bool h_flip, v_flip;
-
-			int base_ofst = i * 16384;
 
 			double sol_x, sol_y;
 
@@ -3480,8 +3468,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					sol_y = ppu_Cur_Sprite_Y;
 				}
 
-				ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)sol_x;
-				ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)sol_y;
+				ppu_ROT_OBJ_X[j] = (ushort)sol_x;
+				ppu_ROT_OBJ_Y[j] = (ushort)sol_y;
 			}
 		}
 
@@ -3696,7 +3684,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_X_Size_Temp = ppu_Sprite_Y_Size_Temp = 0;
 			ppu_Sprite_Render_Cycle = 0;
 			ppu_Fetch_OAM_A_D_Cnt = ppu_Fetch_Sprite_VRAM_Cnt = ppu_Sprite_VRAM_Mod = 0;
-			ppu_Sprite_Base_Ofst = ppu_Sprite_X_Scale = 0;
+			ppu_Sprite_X_Scale = 0;
 			ppu_Sprite_Size_X_Ofst = ppu_Sprite_Size_Y_Ofst = 0;
 			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
 			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
@@ -3901,7 +3889,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Fetch_OAM_A_D_Cnt), ref ppu_Fetch_OAM_A_D_Cnt);
 			ser.Sync(nameof(ppu_Fetch_Sprite_VRAM_Cnt), ref ppu_Fetch_Sprite_VRAM_Cnt);
 			ser.Sync(nameof(ppu_Sprite_VRAM_Mod), ref ppu_Sprite_VRAM_Mod);
-			ser.Sync(nameof(ppu_Sprite_Base_Ofst), ref ppu_Sprite_Base_Ofst);
 			ser.Sync(nameof(ppu_Sprite_X_Scale), ref ppu_Sprite_X_Scale);
 			ser.Sync(nameof(ppu_Sprite_Size_X_Ofst), ref ppu_Sprite_Size_X_Ofst);
 			ser.Sync(nameof(ppu_Sprite_Size_Y_Ofst), ref ppu_Sprite_Size_Y_Ofst);

@@ -652,12 +652,6 @@ namespace GBAHawk
 			// Forced Align
 			OAM_16[(addr & 0x3FE) >> 1] = value;
 
-			// if writing to OAM outside of VBlank, update rotation parameters
-			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-			{
-				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-			}
-
 			ppu_OAM_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
@@ -750,13 +744,6 @@ namespace GBAHawk
 		{
 			// Forced Align
 			OAM_32[(addr & 0x3FC) >> 2] = value;
-
-			// if writing to OAM outside of VBlank, update rotation parameters
-			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-			{
-				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-				ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-			}
 
 			ppu_OAM_In_Use = false;
 		}
@@ -1153,12 +1140,6 @@ namespace GBAHawk
 		{
 			OAM_16[(addr & 0x3FE) >> 1] = value;
 
-			// if writing to OAM outside of VBlank, update rotation parameters
-			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-			{
-				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-			}
-
 			ppu_OAM_In_Use = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
@@ -1236,13 +1217,6 @@ namespace GBAHawk
 		else if (addr < 0x08000000)
 		{
 			OAM_32[(addr & 0x3FC) >> 2] = value;
-
-			// if writing to OAM outside of VBlank, update rotation parameters
-			if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-			{
-				ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-				ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-			}
 
 			ppu_OAM_In_Use = false;
 		}
@@ -1695,6 +1669,10 @@ namespace GBAHawk
 						if ((ppu_LY < 159) || (ppu_LY == 227))
 						{
 							ppu_Sprite_Eval_Finished = false;
+
+							ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
+
+							if (ppu_LY == 227) { ppu_Sprite_LY_Check = 0; }
 						}
 
 						// reset obj window detection for the scanline
@@ -2214,9 +2192,6 @@ namespace GBAHawk
 				{
 					// vblank flag turns off on scanline 227
 					ppu_STAT &= 0xFE;
-
-					// calculate parameters for rotated / scaled sprites at the end of vblank
-					ppu_Calculate_Sprites_Pixels(0, true);
 				}
 
 				// reset sprite evaluation  in 40 cycles
