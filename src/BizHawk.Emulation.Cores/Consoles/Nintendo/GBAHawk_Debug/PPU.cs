@@ -3085,7 +3085,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (ppu_Fetch_Sprite_VRAM_Cnt == (ppu_Sprite_X_Size + ppu_Sprite_Size_X_Ofst))
 				{
-					if (ppu_Current_Sprite == 128)
+					if (ppu_Process_Sprite == 127)
 					{
 						ppu_Sprite_Eval_Finished = true;
 					}
@@ -3288,7 +3288,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Fetch_Sprite_VRAM_Cnt = 0;
 
 					// scan through the properties of this sprite on this scanline
-					ppu_Do_Sprite_Calculation(ppu_Process_Sprite);
+					ppu_Do_Sprite_Calculation();
 				}
 			}
 
@@ -3327,7 +3327,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
 
 					// scan through the properties of this sprite on this scanline
-					ppu_Do_Sprite_Calculation_Rot(ppu_Process_Sprite);
+					ppu_Do_Sprite_Calculation_Rot();
 				}
 
 				ppu_Fetch_OAM_A_D_Cnt += 1;
@@ -3345,7 +3345,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_Render_Cycle += 2;
 		}
 
-		public void ppu_Do_Sprite_Calculation_Rot(int i)
+		public void ppu_Do_Sprite_Calculation_Rot()
 		{
 			int i_A, i_B, i_C, i_D;
 
@@ -3437,7 +3437,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 		}
 
-		public void ppu_Do_Sprite_Calculation(int i)
+		public void ppu_Do_Sprite_Calculation()
 		{
 			bool h_flip, v_flip;
 
