@@ -324,12 +324,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
 				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-				}
-
 				ppu_OAM_In_Use = false;
 			}
 			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
@@ -425,13 +419,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 				OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
 				OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-				// if writing to OAM outside of VBlank, update rotation parameters
-				if (((ppu_STAT & 0x1) == 0) && !ppu_Forced_Blank)
-				{
-					ppu_Calculate_Sprites_Pixels(addr & 0x3FF, false);
-					ppu_Calculate_Sprites_Pixels((addr + 2) & 0x3FF, false);
-				}
 
 				ppu_OAM_In_Use = false;
 			}

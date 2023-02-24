@@ -589,8 +589,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if ((ppu_LY < 159) || (ppu_LY == 227))
 					{
 						ppu_Sprite_Eval_Finished = false;
+
+						ppu_Sprite_LY_Check = (byte)(ppu_LY + 1);
+
+						if (ppu_LY == 227) { ppu_Sprite_LY_Check = 0; }
 					}
-					
+
 					// reset obj window detection for the scanline
 					for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
 					{

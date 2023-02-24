@@ -112,9 +112,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_Sprite_Size_Y_Ofst_Temp;
 		public int ppu_Sprite_Mode;
 		public int ppu_Sprite_Next_Fetch;
+		public int ppu_Param_Pick;
 
 		public ushort ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
 		public ushort ppu_Sprite_Attr_0_Temp, ppu_Sprite_Attr_1_Temp;
+
+		public ushort ppu_Sprite_A_Latch, ppu_Sprite_B_Latch, ppu_Sprite_C_Latch, ppu_Sprite_D_Latch;
+
+		public byte ppu_Sprite_LY_Check;
 
 		public bool ppu_Rot_Scale;
 		public bool ppu_Rot_Scale_Temp;
@@ -908,9 +913,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					// vblank flag turns off on scanline 227
 					ppu_STAT &= 0xFE;
-
-					// calculate parameters for rotated / scaled sprites at the end of vblank
-					ppu_Calculate_Sprites_Pixels(0, true);
 				}
 
 				// reset sprite evaluation  in 40 cycles
@@ -2889,6 +2891,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ushort spr_attr_0 = 0;
 			ushort spr_attr_1 = 0;
 
+			byte ly_check = 0;
+
 			bool rot_scale = false;
 
 			if (ppu_Fetch_Sprite_VRAM)
@@ -2944,17 +2948,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
 							}
 
-							if (ppu_MOS_OBJ_Y[ppu_LY] < ppu_Sprite_Y_Pos)
-							{
-								// lower pixels of sprite not aligned with mosaic grid, nothing to display (in y direction)
-								rel_y_offset = 0;
-								ppu_Cur_Sprite_X = 255;
-							}
-							else
-							{
-								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-								rel_y_offset = (ppu_MOS_OBJ_Y[ppu_LY] - ppu_Sprite_Y_Pos) & 0xFF;
-							}
+							rel_y_offset = (int)ppu_Cur_Sprite_Y;
 						}
 						else
 						{
@@ -3151,36 +3145,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// sprite not displayed
 					ppu_New_Sprite = true;
 				}
-				else if (ppu_LY != 227)
-				{
-					// account for screen wrapping
-					// if the object would appear at the top of the screen, that is the only part that is drawn
-					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
-					{
-						if (((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
-						{
-							// sprite vertically out of range
-							ppu_New_Sprite = true;
-						}
-					}
-					else
-					{
-						if (((ppu_LY + 1) < spr_y_pos) || ((ppu_LY + 1) >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
-						{
-							// sprite vertically out of range
-							ppu_New_Sprite = true;
-						}
-					}
-
-					cur_spr_y = (uint)((ppu_LY + 1 - spr_y_pos) & 0xFF);
-				}
 				else
 				{
+					ly_check = ppu_Sprite_LY_Check;
+
 					// account for screen wrapping
 					// if the object would appear at the top of the screen, that is the only part that is drawn
 					if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
 					{
-						if (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF))
+						if ((ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
@@ -3188,14 +3161,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else
 					{
-						if ((0 < spr_y_pos) || (0 >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+						if ((ly_check < spr_y_pos) || (ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
 						{
 							// sprite vertically out of range
 							ppu_New_Sprite = true;
 						}
 					}
 
-					cur_spr_y = (uint)((0 - spr_y_pos) & 0xFF);
+					cur_spr_y = (uint)((ly_check - spr_y_pos) & 0xFF);
+
+					// account for Mosaic
+					if ((spr_attr_0 & 0x1000) == 0x1000)
+					{
+						ly_check = (byte)ppu_MOS_OBJ_Y[ppu_Sprite_LY_Check];
+
+						// account for screen wrapping
+						// if the object would appear at the top of the screen, that is the only part that is drawn
+						if (spr_y_pos + spr_y_size + spr_size_y_ofst > 0xFF)
+						{
+							if ((ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+							{
+								// sprite vertically out of range
+								ppu_New_Sprite = true;
+							}
+						}
+						else
+						{
+							if ((ly_check < spr_y_pos) || (ly_check >= ((spr_y_pos + spr_y_size + spr_size_y_ofst) & 0xFF)))
+							{
+								// sprite vertically out of range
+								ppu_New_Sprite = true;
+							}
+						}
+
+						cur_spr_y = (uint)((ly_check - spr_y_pos) & 0xFF);
+					}
 				}
 
 				if (ppu_New_Sprite)
@@ -3291,6 +3291,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Fetch_Sprite_VRAM = true;
 					ppu_Fetch_OAM_0 = true;
 					ppu_Fetch_Sprite_VRAM_Cnt = 0;
+
+					// scan through the properties of this sprite on this scanline
+					ppu_Do_Sprite_Calculation(ppu_Process_Sprite);
 				}
 			}
 
@@ -3299,22 +3302,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// TODO: access A-D here, note that we skip the first one since it immediately runs from the above line
 				if (ppu_Fetch_OAM_A_D_Cnt == 0)
 				{
-
+					ppu_Param_Pick = (ppu_Sprite_Attr_1 >> 9) & 0x1F;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 1)
 				{
+					ppu_Sprite_A_Latch = (ushort)(OAM[0x06 + 0x20 * ppu_Param_Pick] + (OAM[0x06 + 0x20 * ppu_Param_Pick + 1] << 8));
+
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 2)
 				{
+					ppu_Sprite_B_Latch = (ushort)(OAM[0x0E + 0x20 * ppu_Param_Pick] + (OAM[0x0E + 0x20 * ppu_Param_Pick + 1] << 8));
+					
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 3)
 				{
+					ppu_Sprite_C_Latch = (ushort)(OAM[0x16 + 0x20 * ppu_Param_Pick] + (OAM[0x16 + 0x20 * ppu_Param_Pick + 1] << 8));
+
 					ppu_OAM_Access = true;
 				}
 				else if (ppu_Fetch_OAM_A_D_Cnt == 4)
 				{
+					ppu_Sprite_D_Latch = (ushort)(OAM[0x1E + 0x20 * ppu_Param_Pick] + (OAM[0x1E + 0x20 * ppu_Param_Pick + 1] << 8));
+
 					ppu_OAM_Access = true;
 
 					// next cycle will start evaluation of next sprite
@@ -3322,6 +3333,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ppu_Fetch_OAM_0 = true;
 					}
+
+					// scan through the properties of this sprite on this scanline
+					ppu_Do_Sprite_Calculation_Rot(ppu_Process_Sprite);
 				}
 
 				ppu_Fetch_OAM_A_D_Cnt += 1;
@@ -3339,55 +3353,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_Render_Cycle += 2;
 		}
 
-		// all sprites are located in the upper left corner of a 128 x 128 pixel region
-		public void ppu_Calculate_Sprites_Pixels(uint addr, bool do_all)
+		public void ppu_Do_Sprite_Calculation_Rot(int i)
 		{
-			int set_changed;
-			
-			if (do_all)
-			{
-				for (int i = 0; i < 128; i ++)
-				{
-					ppu_Do_Sprite_Calculation(i);
-				}
-			}
-			else
-			{
-				// if the effected address is a sprite attribute, only update that one sprite
-				// if it is a rotation parameter, update all sprites using that parameter
-				if (((addr & 0xF) == 0x6) || ((addr & 0xF) == 0xE))
-				{
-					set_changed = (int)((addr >> 4) & 0x1F);
-					
-					for (int i = 0; i < 128; i++)
-					{
-						// update the sprite rotation / scaling if it is enabled
-						if ((OAM[i * 8 + 1] & 0x1) == 1)
-						{
-							if (((OAM[i * 8 + 3] >> 1) & 0x1F) == set_changed)
-							{
-								ppu_Do_Sprite_Calculation(i);
-							}				
-						}
-					}
-				}
-				else
-				{
-					// update only one sprite
-					ppu_Do_Sprite_Calculation((int)((addr >> 3) & 0x7F));
-				}
-			}
-		}
-
-		public void ppu_Do_Sprite_Calculation(int i)
-		{
-			bool h_flip, v_flip;
-
-			ushort spr_attr_0, spr_attr_1;
-			
-			int base_ofst = 0;
-
-			int spr_size_x, spr_size_y;
+			int base_ofst = i * 16384;
 
 			int i_A, i_B, i_C, i_D;
 
@@ -3400,141 +3368,120 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			double cur_x, cur_y;
 			double sol_x, sol_y;
 
-			int param_pick;
+			A = ppu_Sprite_A_Latch;
+			B = ppu_Sprite_B_Latch;
+			C = ppu_Sprite_C_Latch;
+			D = ppu_Sprite_D_Latch;
 
-			base_ofst = i * 16384;
+			i_A = (int)((A >> 8) & 0x7F);
+			i_B = (int)((B >> 8) & 0x7F);
+			i_C = (int)((C >> 8) & 0x7F);
+			i_D = (int)((D >> 8) & 0x7F);
 
-			spr_attr_0 = (ushort)(OAM[i * 8] | (OAM[i * 8 + 1] << 8));
-			spr_attr_1 = (ushort)(OAM[i * 8 + 2] | (OAM[i * 8 + 3] << 8));
+			if ((A & 0x8000) == 0x8000) { i_A |= unchecked((int)0xFFFFFF80); }
+			if ((B & 0x8000) == 0x8000) { i_B |= unchecked((int)0xFFFFFF80); }
+			if ((C & 0x8000) == 0x8000) { i_C |= unchecked((int)0xFFFFFF80); }
+			if ((D & 0x8000) == 0x8000) { i_D |= unchecked((int)0xFFFFFF80); }
 
-			spr_size_x = ppu_OBJ_Sizes_X[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
-			spr_size_y = ppu_OBJ_Sizes_Y[((spr_attr_1 >> 14) & 3) * 4 + ((spr_attr_0 >> 14) & 3)];
+			// convert to floats
+			f_A = i_A;
+			f_B = i_B;
+			f_C = i_C;
+			f_D = i_D;
 
-			if ((OAM[i * 8 + 1] & 0x1) == 1)
+			for (int j = 7; j >= 0; j--)
 			{
-				fract_part = 0.5;
+				if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
+				if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
+				if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
+				if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
 
-				// rotation and scaling enabled
-				// pick out parameters
-				param_pick = (spr_attr_1 >> 9) & 0x1F;
+				fract_part *= 0.5;
+			}
 
-				A = (uint)(OAM[0x06 + 0x20 * param_pick] + (OAM[0x06 + 0x20 * param_pick + 1] << 8));
-				B = (uint)(OAM[0x0E + 0x20 * param_pick] + (OAM[0x0E + 0x20 * param_pick + 1] << 8));
-				C = (uint)(OAM[0x16 + 0x20 * param_pick] + (OAM[0x16 + 0x20 * param_pick + 1] << 8));
-				D = (uint)(OAM[0x1E + 0x20 * param_pick] + (OAM[0x1E + 0x20 * param_pick + 1] << 8));
-
-				i_A = (int)((A >> 8) & 0x7F);
-				i_B = (int)((B >> 8) & 0x7F);
-				i_C = (int)((C >> 8) & 0x7F);
-				i_D = (int)((D >> 8) & 0x7F);
-
-				if ((A & 0x8000) == 0x8000) { i_A |= unchecked((int)0xFFFFFF80); }
-				if ((B & 0x8000) == 0x8000) { i_B |= unchecked((int)0xFFFFFF80); }
-				if ((C & 0x8000) == 0x8000) { i_C |= unchecked((int)0xFFFFFF80); }
-				if ((D & 0x8000) == 0x8000) { i_D |= unchecked((int)0xFFFFFF80); }
-
-				// convert to floats
-				f_A = i_A;
-				f_B = i_B;
-				f_C = i_C;
-				f_D = i_D;
-
-				for (int j = 7; j >= 0; j--)
+			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
+			{
+				for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
 				{
-					if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
-					if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
-					if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
-					if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
+					cur_x = j - ppu_Sprite_X_Size;
 
-					fract_part *= 0.5;
+					cur_y = -ppu_Cur_Sprite_Y + ppu_Sprite_Y_Size;
+
+					sol_x = f_A * cur_x - f_B * cur_y;
+					sol_y = -f_C * cur_x + f_D * cur_y;
+
+					sol_x += ppu_Sprite_X_Size >> 1;
+					sol_y -= ppu_Sprite_Y_Size >> 1;
+
+					sol_y = -sol_y;
+
+					sol_x = Math.Floor(sol_x);
+					sol_y = Math.Floor(sol_y);
+
+					ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_x);
+					ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_y);
 				}
-
-				if (((spr_attr_0 >> 9) & 0x1) == 1)
+			}
+			else
+			{
+				for (int j = 0; j < ppu_Sprite_X_Size; j++)
 				{
-					for (int j = 0; j < 2 * spr_size_x; j++)
-					{
-						cur_x = j - spr_size_x;
+					cur_x = j - (ppu_Sprite_X_Size >> 1);
 
-						for (int k = 0; k < 2 * spr_size_y; k++)
-						{
-							cur_y = -k + spr_size_y;
+					cur_y = -ppu_Cur_Sprite_Y + (ppu_Sprite_Y_Size >> 1);
 
-							sol_x = f_A * cur_x - f_B * cur_y;
-							sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x - f_B * cur_y;
+					sol_y = -f_C * cur_x + f_D * cur_y;
 
-							sol_x += spr_size_x >> 1;
-							sol_y -= spr_size_y >> 1;
+					sol_x += ppu_Sprite_X_Size >> 1;
+					sol_y -= ppu_Sprite_Y_Size >> 1;
 
-							sol_y = -sol_y;
+					sol_y = -sol_y;
 
-							sol_x = Math.Floor(sol_x);
-							sol_y = Math.Floor(sol_y);
+					sol_x = Math.Floor(sol_x);
+					sol_y = Math.Floor(sol_y);
 
-							ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (ushort)(sol_x);
-							ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (ushort)(sol_y);
-						}
-					}
+					ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_x);
+					ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)(sol_y);
+				}
+			}
+		}
+
+		public void ppu_Do_Sprite_Calculation(int i)
+		{
+			bool h_flip, v_flip;
+
+			int base_ofst = i * 16384;
+
+			double sol_x, sol_y;
+
+			h_flip = ((ppu_Sprite_Attr_1 & 0x1000) == 0x1000);
+			v_flip = ((ppu_Sprite_Attr_1 & 0x2000) == 0x2000);
+
+			for (int j = 0; j < ppu_Sprite_X_Size; j++)
+			{
+				// horizontal flip
+				if (h_flip)
+				{
+					sol_x = ppu_Sprite_X_Size - 1 - j;
 				}
 				else
 				{
-					for (int j = 0; j < spr_size_x; j++)
-					{
-						cur_x = j - (spr_size_x >> 1);
-
-						for (int k = 0; k < spr_size_y; k++)
-						{
-							cur_y = -k + (spr_size_y >> 1);
-
-							sol_x = f_A * cur_x - f_B * cur_y;
-							sol_y = -f_C * cur_x + f_D * cur_y;
-
-							sol_x += spr_size_x >> 1;
-							sol_y -= spr_size_y >> 1;
-
-							sol_y = -sol_y;
-
-							sol_x = Math.Floor(sol_x);
-							sol_y = Math.Floor(sol_y);
-
-							ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (ushort)(sol_x);
-							ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (ushort)(sol_y);
-						}
-					}
+					sol_x = j;
 				}
-			}
-			else if ((OAM[i * 8 + 1] & 0x2) == 0)
-			{
-				h_flip = ((spr_attr_1 & 0x1000) == 0x1000);
-				v_flip = ((spr_attr_1 & 0x2000) == 0x2000);
 
-				for (int j = 0; j < spr_size_x; j++)
+				// vertical flip
+				if (v_flip)
 				{
-					for (int k = 0; k < spr_size_y; k++)
-					{
-						// horizontal flip
-						if (h_flip)
-						{
-							sol_x = spr_size_x - 1 - j;
-						}
-						else
-						{
-							sol_x = j;
-						}
-
-						// vertical flip
-						if (v_flip)
-						{
-							sol_y = spr_size_y - 1 - k;
-						}
-						else
-						{
-							sol_y = k;
-						}
-
-						ppu_ROT_OBJ_X[base_ofst + j + k * 128] = (ushort)sol_x;
-						ppu_ROT_OBJ_Y[base_ofst + j + k * 128] = (ushort)sol_y;
-					}
+					sol_y = ppu_Sprite_Y_Size - 1 - ppu_Cur_Sprite_Y;
 				}
+				else
+				{
+					sol_y = ppu_Cur_Sprite_Y;
+				}
+
+				ppu_ROT_OBJ_X[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)sol_x;
+				ppu_ROT_OBJ_Y[base_ofst + j + ppu_Cur_Sprite_Y * 128] = (ushort)sol_y;
 			}
 		}
 
@@ -3753,9 +3700,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_Size_X_Ofst = ppu_Sprite_Size_Y_Ofst = 0;
 			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
 			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
+			ppu_Param_Pick = 0;
 
 			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
 			ppu_Sprite_Attr_0_Temp = ppu_Sprite_Attr_1_Temp = 0;
+
+			ppu_Sprite_LY_Check = 0;
 
 			ppu_Rot_Scale = ppu_Rot_Scale_Temp = false;
 			ppu_Fetch_OAM_0 = ppu_Fetch_OAM_2 = ppu_Fetch_OAM_A_D = false;
@@ -3768,6 +3718,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_OAM_Access = false;
 
 			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
+
+			ppu_Sprite_A_Latch = ppu_Sprite_B_Latch = ppu_Sprite_C_Latch= ppu_Sprite_D_Latch = 0;
 
 			// BG rendering
 			for (int i = 0; i < 4; i++)
@@ -3957,12 +3909,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_Size_Y_Ofst_Temp), ref ppu_Sprite_Size_Y_Ofst_Temp);
 			ser.Sync(nameof(ppu_Sprite_Mode), ref ppu_Sprite_Mode);
 			ser.Sync(nameof(ppu_Sprite_Next_Fetch), ref ppu_Sprite_Next_Fetch);
+			ser.Sync(nameof(ppu_Param_Pick), ref ppu_Param_Pick);
 
 			ser.Sync(nameof(ppu_Sprite_Attr_0), ref ppu_Sprite_Attr_0);
 			ser.Sync(nameof(ppu_Sprite_Attr_1), ref ppu_Sprite_Attr_1);
 			ser.Sync(nameof(ppu_Sprite_Attr_2), ref ppu_Sprite_Attr_2);
 			ser.Sync(nameof(ppu_Sprite_Attr_0_Temp), ref ppu_Sprite_Attr_0_Temp);
 			ser.Sync(nameof(ppu_Sprite_Attr_1_Temp), ref ppu_Sprite_Attr_1_Temp);
+
+			ser.Sync(nameof(ppu_Sprite_LY_Check), ref ppu_Sprite_LY_Check);
+
+			ser.Sync(nameof(ppu_Sprite_A_Latch), ref ppu_Sprite_A_Latch);
+			ser.Sync(nameof(ppu_Sprite_B_Latch), ref ppu_Sprite_B_Latch);
+			ser.Sync(nameof(ppu_Sprite_C_Latch), ref ppu_Sprite_C_Latch);
+			ser.Sync(nameof(ppu_Sprite_D_Latch), ref ppu_Sprite_D_Latch);
 
 			ser.Sync(nameof(ppu_Rot_Scale), ref ppu_Rot_Scale);
 			ser.Sync(nameof(ppu_Rot_Scale_Temp), ref ppu_Rot_Scale_Temp);
