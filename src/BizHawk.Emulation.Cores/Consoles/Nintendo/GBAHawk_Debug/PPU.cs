@@ -9,11 +9,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Does turning on interrupts in the STAT register trigger interrupts if conditions are met? For now assume no.
 
-	For mosaic sprites, does the check for Y range take into account mosaic effects? (for now assue no)
-
-	When accessing OAM (7000000h) or OBJ VRAM (6010000h) by HBlank Timing, then the "H-Blank Interval Free" bit in DISPCNT register must be set.
-
-	TODO: odd vertical windowing, sprite VRAM / OAM accesses
+	TODO: odd vertical windowing
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand

@@ -27,8 +27,6 @@ using BizHawk.Common.NumberExtensions;
 	If the pipline is invalidated by a write to Reg 15, can interrupts occur during refilling? (For now assume not.)
 
 	Instruction decoding happens after the pipeline is incremented, so is always done on cpu_Instr_ARM_2 or cpu_Instr_TMB_2
-
-	does it take an extra cycle to exit halt mode if interrupts aren't enabled?
 */
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {

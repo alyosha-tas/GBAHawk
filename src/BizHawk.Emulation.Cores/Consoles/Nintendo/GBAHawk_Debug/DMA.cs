@@ -13,8 +13,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
 
-	Are there any extra cycles when one DMA is paused by another of higher priority (currently assumed yes)?
-
 	What happens when src address control mode 3 is set?
 
 	What happens when channel 0 start condition is set to 3?

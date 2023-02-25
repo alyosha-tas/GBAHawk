@@ -20,6 +20,8 @@ using BizHawk.Common.ReflectionExtensions;
 	Need to implement STOP mode
 
 	What is a good way to handle different FLASH types?
+
+	TODO: Investigate interaction between halt and DMA
 */
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
