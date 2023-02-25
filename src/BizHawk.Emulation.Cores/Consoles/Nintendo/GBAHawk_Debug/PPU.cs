@@ -55,6 +55,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int ppu_BG_Mode, ppu_Display_Frame;
 		public int ppu_X_RS, ppu_Y_RS;
+		public int ppu_Forced_Blank_Time;
 
 		public int ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_cd;
 
@@ -528,7 +529,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_HBL_Free = (value & 0x20) == 0x20;
 			ppu_OBJ_Dim = (value & 0x40) == 0x40;
-			ppu_Forced_Blank = (value & 0x80) == 0x80;
 
 			ppu_OBJ_On = (value & 0x1000) == 0x1000;
 			ppu_WIN0_On = (value & 0x2000) == 0x2000;
@@ -557,7 +557,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 			}
-			
+
+			// forced blank timing is the same as BG enable
+			if ((value & 0x80) == 0x80)
+			{
+				ppu_Forced_Blank = true;
+				ppu_Forced_Blank_Time = 0;
+			}
+			else
+			{
+				if (ppu_Cycle < 40)
+				{
+					ppu_Forced_Blank_Time = 2;
+				}
+				else
+				{
+					ppu_Forced_Blank_Time = 3;
+				}
+			}
+
 			ppu_CTRL = value;
 
 			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 964; }
@@ -933,6 +951,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							ppu_BG_On[i] = true;
 						}
+					}
+				}
+
+				if (ppu_Forced_Blank_Time > 0)
+				{
+					ppu_Forced_Blank_Time--;
+
+					if (ppu_Forced_Blank_Time == 0)
+					{
+						ppu_Forced_Blank = false;
 					}
 				}
 			}
@@ -3637,6 +3665,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_BG_On_Update_Time[i] = 0;
 			}
 
+			ppu_Forced_Blank_Time = 0;
+
 			ppu_BG_Rot_A[2] = ppu_BG_Rot_B[2] = ppu_BG_Rot_C[2] = ppu_BG_Rot_D[2] = 0;
 
 			ppu_BG_Rot_A[3] = ppu_BG_Rot_B[3] = ppu_BG_Rot_C[3] = ppu_BG_Rot_D[3] = 0;
@@ -3816,6 +3846,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_X_RS), ref ppu_X_RS);
 			ser.Sync(nameof(ppu_Y_RS), ref ppu_Y_RS);
 
+			ser.Sync(nameof(ppu_Forced_Blank_Time), ref ppu_Forced_Blank_Time);
+			
 			ser.Sync(nameof(ppu_VBL_IRQ_cd), ref ppu_VBL_IRQ_cd);
 			ser.Sync(nameof(ppu_HBL_IRQ_cd), ref ppu_HBL_IRQ_cd);
 			ser.Sync(nameof(ppu_LYC_IRQ_cd), ref ppu_LYC_IRQ_cd);

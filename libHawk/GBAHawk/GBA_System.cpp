@@ -2214,6 +2214,16 @@ namespace GBAHawk
 						}
 					}
 				}
+
+				if (ppu_Forced_Blank_Time > 0)
+				{
+					ppu_Forced_Blank_Time--;
+
+					if (ppu_Forced_Blank_Time == 0)
+					{
+						ppu_Forced_Blank = false;
+					}
+				}
 			}
 			else if (ppu_Cycle == 1007)
 			{

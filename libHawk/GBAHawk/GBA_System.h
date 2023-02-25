@@ -7015,6 +7015,8 @@ namespace GBAHawk
 
 		uint32_t ppu_LYC_Vid_Check_cd;
 
+		uint32_t ppu_Forced_Blank_Time;
+
 		uint16_t ppu_BG_CTRL[4] = { };
 		uint16_t ppu_BG_X[4] = { };
 		uint16_t ppu_BG_Y[4] = { };
@@ -7487,7 +7489,6 @@ namespace GBAHawk
 
 			ppu_HBL_Free = (value & 0x20) == 0x20;
 			ppu_OBJ_Dim = (value & 0x40) == 0x40;
-			ppu_Forced_Blank = (value & 0x80) == 0x80;
 
 			ppu_OBJ_On = (value & 0x1000) == 0x1000;
 			ppu_WIN0_On = (value & 0x2000) == 0x2000;
@@ -7514,6 +7515,24 @@ namespace GBAHawk
 					{
 						ppu_BG_On_Update_Time[i] = 3;
 					}
+				}
+			}
+
+			// forced blank timing is the same as BG enable
+			if ((value & 0x80) == 0x80)
+			{
+				ppu_Forced_Blank = true;
+				ppu_Forced_Blank_Time = 0;
+			}
+			else
+			{
+				if (ppu_Cycle < 40)
+				{
+					ppu_Forced_Blank_Time = 2;
+				}
+				else
+				{
+					ppu_Forced_Blank_Time = 3;
 				}
 			}
 
@@ -10453,6 +10472,8 @@ namespace GBAHawk
 				ppu_BG_On_Update_Time[i] = 0;
 			}
 
+			ppu_Forced_Blank_Time = 0;
+
 			ppu_BG_Rot_A[2] = ppu_BG_Rot_B[2] = ppu_BG_Rot_C[2] = ppu_BG_Rot_D[2] = 0;
 
 			ppu_BG_Rot_A[3] = ppu_BG_Rot_B[3] = ppu_BG_Rot_C[3] = ppu_BG_Rot_D[3] = 0;
@@ -10646,6 +10667,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_Display_Frame, saver);
 			saver = int_saver(ppu_X_RS, saver);
 			saver = int_saver(ppu_Y_RS, saver);
+			saver = int_saver(ppu_Forced_Blank_Time, saver);
 
 			saver = int_saver(ppu_VBL_IRQ_cd, saver);
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
@@ -10830,6 +10852,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Display_Frame, loader);
 			loader = int_loader(&ppu_X_RS, loader);
 			loader = int_loader(&ppu_Y_RS, loader);
+			loader = int_loader(&ppu_Forced_Blank_Time, loader);
 
 			loader = int_loader(&ppu_VBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
