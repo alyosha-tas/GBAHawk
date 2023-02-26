@@ -5168,11 +5168,35 @@ namespace GBAHawk
 				{
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
 
-							ppu_VRAM_High_In_Use = true;
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_In_Use = true;
+								}
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_High_In_Use = true;
+								}
+							}
 						}
 					}
 					else
@@ -5267,11 +5291,35 @@ namespace GBAHawk
 				{
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
 
-							ppu_VRAM_High_In_Use = true;
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_In_Use = true;
+								}
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_High_In_Use = true;
+								}
+							}
 						}
 					}
 					else
@@ -5368,13 +5416,39 @@ namespace GBAHawk
 
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
-						}
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
+							}
 
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_High_In_Use = true;
+							// set to true since we also need to check the next cycle
+							ppu_VRAM_High_In_Use = true;
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_In_Use = true;
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
 					}
 					else
 					{
@@ -5498,13 +5572,39 @@ namespace GBAHawk
 
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
-						}
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
+							}
 
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_High_In_Use = true;
+							// set to true since we also need to check the next cycle
+							ppu_VRAM_High_In_Use = true;
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_In_Use = true;
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
 					}
 					else
 					{
@@ -5638,11 +5738,35 @@ namespace GBAHawk
 				{
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
 
-							ppu_VRAM_High_In_Use = true;
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_In_Use = true;
+								}
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+
+									ppu_VRAM_High_In_Use = true;
+								}
+							}
 						}
 					}
 					else
@@ -5787,13 +5911,39 @@ namespace GBAHawk
 
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						if (ppu_VRAM_High_Access)
+						if ((addr & 0x00004000) == 0x00004000)
 						{
-							wait_ret += 1;
-						}
+							if (ppu_VRAM_High_Access)
+							{
+								wait_ret += 1;
+							}
 
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_High_In_Use = true;
+							// set to true since we also need to check the next cycle
+							ppu_VRAM_High_In_Use = true;
+						}
+						else
+						{
+							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
+							{
+								if (ppu_VRAM_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_In_Use = true;
+							}
+							else
+							{
+								if (ppu_VRAM_High_Access)
+								{
+									wait_ret += 1;
+								}
+
+								// set to true since we also need to check the next cycle
+								ppu_VRAM_High_In_Use = true;
+							}
+						}
 					}
 					else
 					{

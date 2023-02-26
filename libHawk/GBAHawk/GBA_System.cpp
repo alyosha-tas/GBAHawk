@@ -2218,7 +2218,6 @@ namespace GBAHawk
 			{
 				if (ppu_In_VBlank)
 				{
-					// Any glitchy stuff happens in VBlank? Maybe prefetch on scanline 227?
 					if (ppu_LY == 227)
 					{
 						ppu_VRAM_High_Access = false;
@@ -2226,7 +2225,6 @@ namespace GBAHawk
 
 						if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 						{
-							// TODO: OAM accesses
 							if (((ppu_Cycle & 1) == 1) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
 						}
 					}
@@ -2240,7 +2238,6 @@ namespace GBAHawk
 
 					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
-						// TODO: OAM accesses
 						if ((ppu_Cycle & 1) == 1) { ppu_Render_Sprites(); }
 					}
 
