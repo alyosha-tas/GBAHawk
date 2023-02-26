@@ -96,8 +96,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM[addr & 0x3FF];
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -251,8 +249,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -400,8 +396,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_32[(addr & 0x3FC) >> 2];
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -554,9 +548,6 @@ namespace GBAHawk
 		{
 			// 8 bit writes to OAM ignored
 			// OAM[addr & 0x3FF] = value;
-
-			// are accesses ignored?
-			ppu_OAM_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -651,8 +642,6 @@ namespace GBAHawk
 		{
 			// Forced Align
 			OAM_16[(addr & 0x3FE) >> 1] = value;
-
-			ppu_OAM_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -744,8 +733,6 @@ namespace GBAHawk
 		{
 			// Forced Align
 			OAM_32[(addr & 0x3FC) >> 2] = value;
-
-			ppu_OAM_In_Use = false;
 		}
 		else if (addr < 0x0D000000)
 		{
@@ -934,8 +921,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -1038,8 +1023,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				dma_Last_Bus_Value[chan] = OAM_32[(addr & 0x3FC) >> 2];
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -1139,8 +1122,6 @@ namespace GBAHawk
 		else if (addr < 0x08000000)
 		{
 			OAM_16[(addr & 0x3FE) >> 1] = value;
-
-			ppu_OAM_In_Use = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -1217,8 +1198,6 @@ namespace GBAHawk
 		else if (addr < 0x08000000)
 		{
 			OAM_32[(addr & 0x3FC) >> 2] = value;
-
-			ppu_OAM_In_Use = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -2229,7 +2208,7 @@ namespace GBAHawk
 			{
 				// Enter HBlank
 				ppu_STAT |= 2;
-
+					
 				ppu_HBL_IRQ_cd = 4;
 				ppu_Delays = true;
 				delays_to_process = true;

@@ -69,8 +69,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool ppu_In_VBlank;
 		public bool ppu_Delays;
 		public bool ppu_Sprite_Delays;
+		public bool ppu_Do_Green_Swap;
 
-		public bool ppu_VRAM_In_Use, ppu_VRAM_High_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
+		public bool ppu_VRAM_In_Use, ppu_VRAM_High_In_Use, ppu_PALRAM_In_Use;
 
 		public bool ppu_VRAM_Access, ppu_VRAM_High_Access;
 		public bool ppu_PALRAM_Access;
@@ -316,7 +317,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				case 0x00: ppu_CTRL_Write((ushort)((ppu_CTRL & 0xFF00) | value)); break;
 				case 0x01: ppu_CTRL_Write((ushort)((ppu_CTRL & 0x00FF) | (value << 8))); break;
-				case 0x02: ppu_Green_Swap = (ushort)((ppu_Green_Swap & 0xFF00) | value); break;
+				case 0x02: ppu_Green_Swap = (ushort)((ppu_Green_Swap & 0xFF00) | value); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x03: ppu_Green_Swap = (ushort)((ppu_Green_Swap & 0x00FF) | (value << 8)); break;
 				case 0x04: ppu_STAT_Write(value); break;
 				case 0x05: ppu_LYC = value; break;
@@ -411,7 +412,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write(value); break;
-				case 0x02: ppu_Green_Swap = value; break;
+				case 0x02: ppu_Green_Swap = value; ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x04: ppu_STAT_Write((byte)value); ppu_LYC = (byte)(value >> 8); break;
 				case 0x06: // No Effect on LY
 				case 0x08: ppu_BG_CTRL[0] = (ushort)(value & 0xDFFF); ppu_BG_CTRL_Write(0); break;
@@ -465,7 +466,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write((ushort)(value & 0xFFFF));
-						   ppu_Green_Swap = (ushort)((value >> 16) & 0xFFFF); break;
+						   ppu_Green_Swap = (ushort)((value >> 16) & 0xFFFF); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x04: ppu_STAT_Write((byte)value); ppu_LYC = (byte)(value >> 8); break;
 						   /* no effect on LY*/
 				case 0x08: ppu_BG_CTRL[0] = (ushort)(value & 0xDFFF); ppu_BG_CTRL_Write(0);
@@ -1820,6 +1821,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						// push pixel to display
 						vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = unchecked((int)ppu_Final_Pixel);
+
+						if (ppu_Do_Green_Swap)
+						{
+							if ((ppu_Display_Cycle & 1) == 1)
+							{
+								int temp_pixel = vid_buffer[ppu_Display_Cycle - 1 + ppu_LY * 240];
+
+								int temp_pixel_2 = temp_pixel;
+
+								temp_pixel &= unchecked((int)0xFFFF00FF);
+
+								temp_pixel |= (int)(ppu_Final_Pixel & 0x0000FF00);
+
+								ppu_Final_Pixel &= 0xFFFF00FF;
+								ppu_Final_Pixel |= (uint)(temp_pixel_2 & 0x0000FF00);
+
+								vid_buffer[ppu_Display_Cycle + ppu_LY * 240] = unchecked((int)ppu_Final_Pixel);
+								vid_buffer[ppu_Display_Cycle - 1 + ppu_LY * 240] = unchecked((int)temp_pixel);
+							}
+						}
 
 						ppu_Display_Cycle += 1;
 
@@ -3685,10 +3706,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Display_Cycle = 0;
 
 			ppu_In_VBlank = true;
-
 			ppu_Delays = false;
-
 			ppu_Sprite_Delays = false;
+			ppu_Do_Green_Swap = false;
 
 			// reset sprite evaluation variables
 			ppu_Current_Sprite = 0;
@@ -3738,7 +3758,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_PALRAM_Access = false;
 			ppu_OAM_Access = false;
 
-			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
+			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = false;
 
 			ppu_Sprite_A_Latch = ppu_Sprite_B_Latch = ppu_Sprite_C_Latch= ppu_Sprite_D_Latch = 0;
 
@@ -3885,11 +3905,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_In_VBlank), ref ppu_In_VBlank);
 			ser.Sync(nameof(ppu_Delays), ref ppu_Delays);
 			ser.Sync(nameof(ppu_Sprite_Delays), ref ppu_Sprite_Delays);
+			ser.Sync(nameof(ppu_Do_Green_Swap), ref ppu_Do_Green_Swap);
 
 			ser.Sync(nameof(ppu_VRAM_In_Use), ref ppu_VRAM_In_Use);
 			ser.Sync(nameof(ppu_VRAM_High_In_Use), ref ppu_VRAM_High_In_Use);
 			ser.Sync(nameof(ppu_PALRAM_In_Use), ref ppu_PALRAM_In_Use);
-			ser.Sync(nameof(ppu_OAM_In_Use), ref ppu_OAM_In_Use);
 
 			ser.Sync(nameof(ppu_VRAM_High_Access), ref ppu_VRAM_High_Access);
 			ser.Sync(nameof(ppu_VRAM_Access), ref ppu_VRAM_Access);

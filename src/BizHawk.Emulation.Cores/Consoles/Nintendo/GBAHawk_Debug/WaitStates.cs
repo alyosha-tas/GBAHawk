@@ -90,8 +90,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -191,8 +189,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -292,8 +288,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -424,8 +418,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -568,8 +560,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -717,8 +707,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)

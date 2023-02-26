@@ -90,8 +90,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (addr >= 0x07000000)
 				{
 					ret = OAM[addr & 0x3FF];
-
-					ppu_OAM_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -249,8 +247,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (addr >= 0x07000000)
 				{
 					ret = (ushort)((OAM[(addr & 0x3FF) + 1] << 8) | OAM[addr & 0x3FF]);
-
-					ppu_OAM_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -408,8 +404,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (addr >= 0x07000000)
 				{
 					ret = (uint)((OAM[(addr & 0x3FF) + 3] << 24) | (OAM[(addr & 0x3FF) + 2] << 16) | (OAM[(addr & 0x3FF) + 1] << 8) | OAM[addr & 0x3FF]);
-
-					ppu_OAM_In_Use = false;
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -568,9 +562,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				// 8 bit writes to OAM ignored
 				// OAM[addr & 0x3FF] = value;
-
-				// are accesses ignored?
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -681,8 +672,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
 				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{
@@ -802,8 +791,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 				OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
 				OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
-
-				ppu_OAM_In_Use = false;
 			}
 			else if (addr < 0x0D000000)
 			{

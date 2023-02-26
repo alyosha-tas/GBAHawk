@@ -5162,8 +5162,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5263,8 +5261,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5364,8 +5360,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5496,8 +5490,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5640,8 +5632,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5789,8 +5779,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						ppu_OAM_In_Use = true;
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -6990,8 +6978,9 @@ namespace GBAHawk
 		bool ppu_In_VBlank;
 		bool ppu_Delays;
 		bool ppu_Sprite_Delays;
+		bool ppu_Do_Green_Swap;
 
-		bool ppu_VRAM_In_Use, ppu_VRAM_High_In_Use, ppu_PALRAM_In_Use, ppu_OAM_In_Use;
+		bool ppu_VRAM_In_Use, ppu_VRAM_High_In_Use, ppu_PALRAM_In_Use;
 
 		bool ppu_VRAM_High_Access;
 		bool ppu_VRAM_Access;
@@ -7280,7 +7269,7 @@ namespace GBAHawk
 			{
 				case 0x00: ppu_CTRL_Write((uint16_t)((ppu_CTRL & 0xFF00) | value)); break;
 				case 0x01: ppu_CTRL_Write((uint16_t)((ppu_CTRL & 0x00FF) | (value << 8))); break;
-				case 0x02: ppu_Green_Swap = (uint16_t)((ppu_Green_Swap & 0xFF00) | value); break;
+				case 0x02: ppu_Green_Swap = (uint16_t)((ppu_Green_Swap & 0xFF00) | value); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x03: ppu_Green_Swap = (uint16_t)((ppu_Green_Swap & 0x00FF) | (value << 8)); break;
 				case 0x04: ppu_STAT_Write(value); break;
 				case 0x05: ppu_LYC = value; break;
@@ -7375,7 +7364,7 @@ namespace GBAHawk
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write(value); break;
-				case 0x02: ppu_Green_Swap = value; break;
+				case 0x02: ppu_Green_Swap = value; ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x04: ppu_STAT_Write((uint8_t)value); ppu_LYC = (uint8_t)(value >> 8); break;
 				case 0x06: // No Effect on LY
 				case 0x08: ppu_BG_CTRL[0] = (uint16_t)(value & 0xDFFF); ppu_BG_CTRL_Write(0); break;
@@ -7429,7 +7418,7 @@ namespace GBAHawk
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write((uint16_t)(value & 0xFFFF));
-						   ppu_Green_Swap = (uint16_t)((value >> 16) & 0xFFFF); break;
+						   ppu_Green_Swap = (uint16_t)((value >> 16) & 0xFFFF); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x04: ppu_STAT_Write((uint8_t)value); ppu_LYC = (uint8_t)(value >> 8); break;
 						   /* no effect on LY*/
 				case 0x08: ppu_BG_CTRL[0] = (uint16_t)(value & 0xDFFF); ppu_BG_CTRL_Write(0);
@@ -8631,6 +8620,26 @@ namespace GBAHawk
 
 						// push pixel to display
 						video_buffer[ppu_Display_Cycle + ppu_LY * 240] = ppu_Final_Pixel;
+
+						if (ppu_Do_Green_Swap)
+						{
+							if ((ppu_Display_Cycle & 1) == 1)
+							{
+								uint32_t temp_pixel = video_buffer[ppu_Display_Cycle - 1 + ppu_LY * 240];
+
+								uint32_t temp_pixel_2 = temp_pixel;
+
+								temp_pixel &= 0xFFFF00FF;
+
+								temp_pixel |= ppu_Final_Pixel & 0x0000FF00;
+
+								ppu_Final_Pixel &= 0xFFFF00FF;
+								ppu_Final_Pixel |= temp_pixel_2 & 0x0000FF00;
+
+								video_buffer[ppu_Display_Cycle + ppu_LY * 240] = ppu_Final_Pixel;
+								video_buffer[ppu_Display_Cycle - 1 + ppu_LY * 240] = temp_pixel;
+							}
+						}
 
 						ppu_Display_Cycle += 1;
 
@@ -10504,6 +10513,7 @@ namespace GBAHawk
 			ppu_Current_Sprite = 0;
 			ppu_New_Sprite = true;
 			ppu_Sprite_Eval_Finished = false;
+			ppu_Do_Green_Swap = false;
 
 			for (int i = 0; i < 240 * 2; i++)
 			{
@@ -10549,7 +10559,7 @@ namespace GBAHawk
 			ppu_PALRAM_Access = false;
 			ppu_OAM_Access = false;
 
-			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = ppu_OAM_In_Use = false;
+			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = false;
 
 			// BG rendering
 			for (int i = 0; i < 4; i++)
@@ -10624,11 +10634,11 @@ namespace GBAHawk
 			saver = bool_saver(ppu_In_VBlank, saver);
 			saver = bool_saver(ppu_Delays, saver);
 			saver = bool_saver(ppu_Sprite_Delays, saver);
+			saver = bool_saver(ppu_Do_Green_Swap, saver);
 
 			saver = bool_saver(ppu_VRAM_In_Use, saver);
 			saver = bool_saver(ppu_VRAM_High_In_Use, saver);
 			saver = bool_saver(ppu_PALRAM_In_Use, saver);
-			saver = bool_saver(ppu_OAM_In_Use, saver);
 
 			saver = bool_saver(ppu_VRAM_Access, saver);
 			saver = bool_saver(ppu_PALRAM_Access, saver);
@@ -10809,11 +10819,11 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_In_VBlank, loader);
 			loader = bool_loader(&ppu_Delays, loader);
 			loader = bool_loader(&ppu_Sprite_Delays, loader);
+			loader = bool_loader(&ppu_Do_Green_Swap, loader);
 
 			loader = bool_loader(&ppu_VRAM_In_Use, loader);
 			loader = bool_loader(&ppu_VRAM_High_In_Use, loader);
 			loader = bool_loader(&ppu_PALRAM_In_Use, loader);
-			loader = bool_loader(&ppu_OAM_In_Use, loader);
 
 			loader = bool_loader(&ppu_VRAM_Access, loader);
 			loader = bool_loader(&ppu_PALRAM_Access, loader);
