@@ -26,6 +26,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 														32, 16, 32, 8,
 														64, 32, 64, 8};
 
+		public double[] ppu_Fract_Parts = new double[256];
+
 		public ushort[] ppu_BG_CTRL = new ushort[4];
 		public ushort[] ppu_BG_X = new ushort[4];
 		public ushort[] ppu_BG_Y = new ushort[4];
@@ -320,7 +322,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x02: ppu_Green_Swap = (ushort)((ppu_Green_Swap & 0xFF00) | value); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
 				case 0x03: ppu_Green_Swap = (ushort)((ppu_Green_Swap & 0x00FF) | (value << 8)); break;
 				case 0x04: ppu_STAT_Write(value); break;
-				case 0x05: ppu_LYC = value; break;
+				case 0x05: ppu_Update_LYC(value); break;
 				case 0x06: // No Effect on LY
 				case 0x07: // No Effect on LY
 				case 0x08: ppu_BG_CTRL[0] = (ushort)((ppu_BG_CTRL[0] & 0xDF00) | value); ppu_BG_CTRL_Write(0); break;
@@ -413,7 +415,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				case 0x00: ppu_CTRL_Write(value); break;
 				case 0x02: ppu_Green_Swap = value; ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
-				case 0x04: ppu_STAT_Write((byte)value); ppu_LYC = (byte)(value >> 8); break;
+				case 0x04: ppu_STAT_Write((byte)value); ppu_Update_LYC((byte)(value >> 8)); break;
 				case 0x06: // No Effect on LY
 				case 0x08: ppu_BG_CTRL[0] = (ushort)(value & 0xDFFF); ppu_BG_CTRL_Write(0); break;
 				case 0x0A: ppu_BG_CTRL[1] = (ushort)(value & 0xDFFF); ppu_BG_CTRL_Write(1); break;
@@ -467,7 +469,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				case 0x00: ppu_CTRL_Write((ushort)(value & 0xFFFF));
 						   ppu_Green_Swap = (ushort)((value >> 16) & 0xFFFF); ppu_Do_Green_Swap = (ppu_Green_Swap & 1) == 1; break;
-				case 0x04: ppu_STAT_Write((byte)value); ppu_LYC = (byte)(value >> 8); break;
+				case 0x04: ppu_STAT_Write((byte)value); ppu_Update_LYC((byte)(value >> 8)); break;
 						   /* no effect on LY*/
 				case 0x08: ppu_BG_CTRL[0] = (ushort)(value & 0xDFFF); ppu_BG_CTRL_Write(0);
 						   ppu_BG_CTRL[1] = (ushort)((value >> 16) & 0xDFFF); ppu_BG_CTRL_Write(1); break;
@@ -517,6 +519,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			ppu_STAT &= 0xC7;
 			ppu_STAT |= (byte)(value & 0x38);
+		}
+
+		public void ppu_Update_LYC(byte value)
+		{
+			byte old_LYC = ppu_LYC;
+
+			ppu_LYC = value;
+
+			// check if writing a matching LYC value will trigger an interrupt
+			if ((old_LYC != ppu_LY) && (ppu_LY == ppu_LYC))
+			{
+				ppu_STAT |= 0x04;
+				if (ppu_LYC_IRQ_cd == 0)
+				{
+					ppu_LYC_IRQ_cd = 4;
+					ppu_Delays = true;
+					delays_to_process = true;
+				}
+			}
+
+			// does changing to non-matching value clear the flag? for now assume yes
+			// also assume it doesn't disable any pending interrupts
+			if ((old_LYC == ppu_LY) && (ppu_LY != ppu_LYC))
+			{
+				ppu_STAT &= 0xFB;
+			}
 		}
 
 		public void ppu_CTRL_Write(ushort value)
@@ -3402,8 +3430,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			double f_A, f_B, f_C, f_D;
 
-			double fract_part = 0.5;
-
 			double cur_x, cur_y;
 			double sol_x, sol_y;
 
@@ -3428,15 +3454,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			f_C = i_C;
 			f_D = i_D;
 
-			for (int j = 7; j >= 0; j--)
-			{
-				if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
-				if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
-				if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
-				if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
-
-				fract_part *= 0.5;
-			}
+			f_A += ppu_Fract_Parts[A & 0xFF];
+			f_B += ppu_Fract_Parts[B & 0xFF];
+			f_C += ppu_Fract_Parts[C & 0xFF];
+			f_D += ppu_Fract_Parts[D & 0xFF];
 
 			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
 			{
@@ -3530,8 +3551,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			double f_A, f_B;
 
-			double fract_part = 0.5;
-
 			A = ppu_BG_Rot_A[layer];
 			B = ppu_BG_Rot_B[layer];
 
@@ -3545,13 +3564,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			f_A = i_A;
 			f_B = i_B;
 
-			for (int j = 7; j >= 0; j--)
-			{
-				if ((A & (1 << j)) == (1 << j)) { f_A += fract_part; }
-				if ((B & (1 << j)) == (1 << j)) { f_B += fract_part; }
-
-				fract_part *= 0.5;
-			}
+			f_A += ppu_Fract_Parts[A & 0xFF];
+			f_B += ppu_Fract_Parts[B & 0xFF];
 
 			if (layer == 2)
 			{
@@ -3573,8 +3587,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			double f_C, f_D;
 
-			double fract_part = 0.5;
-
 			C = ppu_BG_Rot_C[layer];
 			D = ppu_BG_Rot_D[layer];
 
@@ -3588,13 +3600,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			f_C = i_C;
 			f_D = i_D;
 
-			for (int j = 7; j >= 0; j--)
-			{
-				if ((C & (1 << j)) == (1 << j)) { f_C += fract_part; }
-				if ((D & (1 << j)) == (1 << j)) { f_D += fract_part; }
-
-				fract_part *= 0.5;
-			}
+			f_C += ppu_Fract_Parts[C & 0xFF];
+			f_D += ppu_Fract_Parts[D & 0xFF];
 
 			if (layer == 2)
 			{
@@ -3610,8 +3617,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ppu_Convert_Offset_to_float(int layer)
 		{
-			double fract_part = 0.5;
-
 			uint Ref_X = ppu_BG_Ref_X_Latch[layer];
 			uint Ref_Y = ppu_BG_Ref_Y_Latch[layer];
 
@@ -3626,26 +3631,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_F_Ref_X_2 = i_ref_x;
 				ppu_F_Ref_Y_2 = i_ref_y;
 
-				for (int j = 7; j >= 0; j--)
-				{
-					if ((Ref_X & (1 << j)) == (1 << j)) { ppu_F_Ref_X_2 += fract_part; }
-					if ((Ref_Y & (1 << j)) == (1 << j)) { ppu_F_Ref_Y_2 += fract_part; }
-
-					fract_part *= 0.5;
-				}
+				ppu_F_Ref_X_2 += ppu_Fract_Parts[Ref_X & 0xFF];
+				ppu_F_Ref_Y_2 += ppu_Fract_Parts[Ref_Y & 0xFF];
 			}
 			else
 			{
 				ppu_F_Ref_X_3 = i_ref_x;
 				ppu_F_Ref_Y_3 = i_ref_y;
 
-				for (int j = 7; j >= 0; j--)
-				{
-					if ((Ref_X & (1 << j)) == (1 << j)) { ppu_F_Ref_X_3 += fract_part; }
-					if ((Ref_Y & (1 << j)) == (1 << j)) { ppu_F_Ref_Y_3 += fract_part; }
-
-					fract_part *= 0.5;
-				}
+				ppu_F_Ref_X_3 += ppu_Fract_Parts[Ref_X & 0xFF];
+				ppu_F_Ref_Y_3 += ppu_Fract_Parts[Ref_Y & 0xFF];
 			}		
 		}
 
@@ -3825,6 +3820,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Convert_Rotation_to_float_CD(2);
 			ppu_Convert_Rotation_to_float_AB(3);
 			ppu_Convert_Rotation_to_float_CD(3);
+
+			double fract = 0.5;
+			double f_v = 0;
+
+			// compile fractional parts matrix
+			for (int i = 0; i < 256; i++)
+			{
+				f_v = 0;
+				fract = 0.5;
+
+				for (int j = 7; j >= 0; j--)
+				{
+					if ((i & (1 << j)) == (1 << j)) { f_v += fract; }
+
+					fract *= 0.5;
+				}
+
+				ppu_Fract_Parts[i] = f_v;
+			}
 		}
 
 		public void ppu_SyncState(Serializer ser)
