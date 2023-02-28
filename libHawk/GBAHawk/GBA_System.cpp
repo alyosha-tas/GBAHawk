@@ -1499,7 +1499,6 @@ namespace GBAHawk
 						else if (ppu_LYC_Vid_Check_cd == 4)
 						{
 							// latch rotation and scaling XY here
-							// but not parameters A-D
 							if ((ppu_LY < 160) && !ppu_Forced_Blank)
 							{
 								if (ppu_BG_Mode > 0)
@@ -1577,6 +1576,22 @@ namespace GBAHawk
 						}
 						else if (ppu_LYC_Vid_Check_cd == 0)
 						{
+							// Latch C-D rotation scaling parameters here.
+							// Seems like X - parameters are not latched but Y - parameters are not?
+							ppu_BG_Rot_C_Latch[2] = ppu_BG_Rot_C[2];
+							ppu_BG_Rot_C_Latch[3] = ppu_BG_Rot_C[3];
+							ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D[2];
+							ppu_BG_Rot_D_Latch[3] = ppu_BG_Rot_D[3];
+
+							if ((ppu_LY < 160) && !ppu_Forced_Blank)
+							{
+								if (ppu_BG_Mode > 0)
+								{
+									ppu_Convert_Rotation_to_float_CD(2);
+									ppu_Convert_Rotation_to_float_CD(3);
+								}
+							}
+							
 							// video capture DMA, check timing
 							if (dma_Go[3] && dma_Start_Snd_Vid[3])
 							{
