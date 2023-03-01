@@ -7,7 +7,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	Timer Emulation
 	NOTES: 
 
-	Can the prescalar be changed while the timer is running?
+	Can tick-by-previous be changed while channel is running?
+
+	Need to test more edge cases of changing prescaler exactly when a tick would happen
 
 	How is count up timing effected by the glitch for activiating with value 0xFFFF?	
 
@@ -25,6 +27,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort[] tim_Control = new ushort[4];
 
 		public ushort[] tim_PreSc = new ushort[4];
+
+		public ushort[] tim_PreSc_En = new ushort[4];
 
 		public ushort[] tim_ST_Time = new ushort[4];
 
@@ -205,7 +209,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				
 				tim_ST_Time[nbr] = 3;
 
-				tim_PreSc[nbr] = PreScales[value & 3];
+				tim_PreSc_En[nbr] = PreScales[value & 3];
 
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
@@ -220,6 +224,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					tim_ST_Time[nbr] = 4;
 					tim_IRQ_Time[nbr] = 2;
 				}
+			}
+			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
+			{
+				// some settings can be updated even while the timer is running (which ones?)
+				// what happens if these changes happen very close together? (The cpu could change them within 2 clocks, but takes 3 to start channel)
+				// for now use the new value		
+				tim_PreSc_En[nbr] = PreScales[value & 3];
+
+				if (tim_ST_Time[nbr] == 0)
+				{
+					tim_ST_Time[nbr] = 2;
+				}			
 			}
 
 			if ((value & 0x80) == 0)
@@ -253,6 +269,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (tim_ST_Time[i] == 0)
 						{
 							tim_Go[i] = true;
+
+							tim_PreSc[i] = tim_PreSc_En[i];
 						}
 					}
 
@@ -378,6 +396,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_Reload[i] = 0;
 				tim_Control[i] = 0;
 				tim_PreSc[i] = 0;
+				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
 				tim_IRQ_CD[i] = 0;
 				tim_IRQ_Time[i] = 0;
@@ -403,6 +422,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_Reload), ref tim_Reload, false);
 			ser.Sync(nameof(tim_Control), ref tim_Control, false);
 			ser.Sync(nameof(tim_PreSc), ref tim_PreSc, false);
+			ser.Sync(nameof(tim_PreSc_En), ref tim_PreSc_En, false);
 			ser.Sync(nameof(tim_ST_Time), ref tim_ST_Time, false);
 			ser.Sync(nameof(tim_IRQ_CD), ref tim_IRQ_CD, false);
 			ser.Sync(nameof(tim_IRQ_Time), ref tim_IRQ_Time, false);

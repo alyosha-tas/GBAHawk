@@ -2318,6 +2318,8 @@ namespace GBAHawk
 						if (tim_ST_Time[i] == 0)
 						{
 							tim_Go[i] = true;
+
+							tim_PreSc[i] = tim_PreSc_En[i];
 						}
 					}
 

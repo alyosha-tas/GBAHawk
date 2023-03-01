@@ -6843,6 +6843,7 @@ namespace GBAHawk
 		uint16_t tim_Reload[4] = { };
 		uint16_t tim_Control[4] = { };
 		uint16_t tim_PreSc[4] = { };
+		uint16_t tim_PreSc_En[4] = { };
 		uint16_t tim_ST_Time[4] = { };
 		uint16_t tim_IRQ_CD[4] = { };
 		uint16_t tim_IRQ_Time[4] = { };
@@ -7005,7 +7006,7 @@ namespace GBAHawk
 
 				tim_ST_Time[nbr] = 3;
 
-				tim_PreSc[nbr] = PreScales[value & 3];
+				tim_PreSc_En[nbr] = PreScales[value & 3];
 
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
@@ -7019,6 +7020,18 @@ namespace GBAHawk
 				{
 					tim_ST_Time[nbr] = 4;
 					tim_IRQ_Time[nbr] = 2;
+				}
+			}
+			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
+			{		
+				// some settings can be updated even while the timer is running (which ones?)
+				// what happens if these changes happen very close together? (The cpu could change them within 2 clocks, but takes 3 to start channel)
+				// for now use the new value
+				tim_PreSc_En[nbr] = PreScales[value & 3];
+
+				if (tim_ST_Time[nbr] == 0)
+				{
+					tim_ST_Time[nbr] = 2;
 				}
 			}
 
@@ -7042,6 +7055,7 @@ namespace GBAHawk
 				tim_Reload[i] = 0;
 				tim_Control[i] = 0;
 				tim_PreSc[i] = 0;
+				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
 				tim_IRQ_CD[i] = 0;
 				tim_IRQ_Time[i] = 0;
@@ -7079,6 +7093,7 @@ namespace GBAHawk
 			saver = short_array_saver(tim_Reload, saver, 4);
 			saver = short_array_saver(tim_Control, saver, 4);
 			saver = short_array_saver(tim_PreSc, saver, 4);
+			saver = short_array_saver(tim_PreSc_En, saver, 4);
 			saver = short_array_saver(tim_ST_Time, saver, 4);
 			saver = short_array_saver(tim_IRQ_CD, saver, 4);
 			saver = short_array_saver(tim_IRQ_Time, saver, 4);
@@ -7104,6 +7119,7 @@ namespace GBAHawk
 			loader = short_array_loader(tim_Reload, loader, 4);
 			loader = short_array_loader(tim_Control, loader, 4);
 			loader = short_array_loader(tim_PreSc, loader, 4);
+			loader = short_array_loader(tim_PreSc_En, loader, 4);
 			loader = short_array_loader(tim_ST_Time, loader, 4);
 			loader = short_array_loader(tim_IRQ_CD, loader, 4);
 			loader = short_array_loader(tim_IRQ_Time, loader, 4);
