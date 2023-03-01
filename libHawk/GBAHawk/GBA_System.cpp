@@ -2450,20 +2450,20 @@ namespace GBAHawk
 					{
 						pre_Fetch_Wait = 1;
 
-						if (pre_Read_Addr > 0x0C000000)
+						if (pre_Read_Addr < 0x0A000000)
 						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0					
 						}
-						else if (pre_Read_Addr > 0x0A000000)
+						else if (pre_Read_Addr < 0x0C000000)
 						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
+							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 						}
 						else
 						{
-							if ((pre_Read_Addr & 0x1FFFF) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
+							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 						}
 
 						// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
