@@ -122,6 +122,8 @@ namespace GBAHawk
 		uint16_t New_Controller;
 		uint16_t New_Acc_X, New_Acc_Y;
 
+		uint8_t New_Solar;
+
 		// Prefetcher
 		bool pre_Cycle_Glitch;
 

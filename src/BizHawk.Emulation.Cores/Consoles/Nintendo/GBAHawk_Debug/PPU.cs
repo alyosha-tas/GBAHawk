@@ -623,7 +623,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_OAM_Access = false;
 			}
 
-			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " o: " + ppu_OBJ_On + " ow: " + ppu_OBJ_WIN + " " + ppu_LY + " " + CycleCount);
+			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " w0: " + ppu_WIN0_On + " w1: " + ppu_WIN0_On + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win0()
@@ -633,6 +633,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_WIN0_Bot = (byte)(ppu_WIN_Vert_0 & 0xFF);
 			ppu_WIN0_Top = (byte)((ppu_WIN_Vert_0 >> 8) & 0xFF);
+
+			//Console.WriteLine("W0: " + ppu_WIN0_Top + " " + ppu_WIN0_Bot + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win1()
@@ -642,6 +644,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_WIN1_Bot = (byte)(ppu_WIN_Vert_1 & 0xFF);
 			ppu_WIN1_Top = (byte)((ppu_WIN_Vert_1 >> 8) & 0xFF);
+
+			//Console.WriteLine("W1: " + ppu_WIN1_Top + " " + ppu_WIN1_Bot + " " + ppu_LY + " " + CycleCount);
 		}
 
 		public void ppu_Update_Win_In(ushort value)

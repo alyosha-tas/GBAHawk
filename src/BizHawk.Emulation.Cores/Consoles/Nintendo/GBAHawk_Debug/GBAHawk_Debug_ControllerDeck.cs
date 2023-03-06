@@ -40,6 +40,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public (ushort X, ushort Y) ReadAcc1(IController c)
 			=> Port1.ReadAcc(c);
 
+		public byte ReadSolar1(IController c)
+		{
+			return Port1.SolarSense(c);
+		}
+
 		public ControllerDefinition Definition { get; }
 
 		public void SyncState(Serializer ser)

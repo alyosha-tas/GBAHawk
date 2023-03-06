@@ -33,6 +33,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public ushort controller_state;
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
+		public byte Solar_state;
 
 		public byte[] cart_RAM;
 		public bool has_bat;

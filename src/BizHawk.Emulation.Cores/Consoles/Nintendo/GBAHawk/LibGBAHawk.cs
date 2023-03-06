@@ -75,11 +75,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="ctrl1">controller data for player 1</param>
 		/// <param name="accx">x acceleration</param>
 		/// <param name="accy">y acceleration</param>
+		/// <param name="solar">solar state/param>
 		/// <param name="render">length of romdata in bytes</param>
 		/// <param name="sound">Mapper number to load core with</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern bool GBA_frame_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, bool render, bool sound);
+		public static extern bool GBA_frame_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, byte solar, bool render, bool sound);
 
 		/// <summary>
 		/// Get Video data

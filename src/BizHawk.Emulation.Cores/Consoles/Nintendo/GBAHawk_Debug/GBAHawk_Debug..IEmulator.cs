@@ -15,6 +15,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
+		public byte Solar_state;
 		public bool VBlank_Rise;
 		public bool delays_to_process;
 		public bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
@@ -636,6 +637,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			InputCallbacks.Call();
 			controller_state = _controllerDeck.ReadPort1(controller);
 			(Acc_X_state, Acc_Y_state) = _controllerDeck.ReadAcc1(controller);
+			Solar_state = _controllerDeck.ReadSolar1(controller);
 		}
 
 		public int Frame => Frame_Count;

@@ -31,7 +31,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				HardReset();
 			}
 
-			_isLag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, true, true);
+			_isLag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
 
 			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
@@ -45,6 +45,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			InputCallbacks.Call();
 			controller_state = _controllerDeck.ReadPort1(controller);
 			(Acc_X_state, Acc_Y_state) = _controllerDeck.ReadAcc1(controller);
+			Solar_state = _controllerDeck.ReadSolar1(controller);
 		}
 
 		public int Frame => _frame;

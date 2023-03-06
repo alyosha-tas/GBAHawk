@@ -109,6 +109,8 @@ namespace GBAHawk
 
 			Mapper->Core_Acc_Y = &GBA.New_Acc_Y;
 
+			Mapper->Core_Solar = &GBA.New_Solar;
+
 			Mapper->Reset();
 		}
 
@@ -137,11 +139,12 @@ namespace GBAHawk
 			GBA.System_Reset();
 		}
 
-		bool FrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, bool render, bool rendersound)
+		bool FrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool rendersound)
 		{
 			GBA.New_Controller = controller_1;
 			GBA.New_Acc_X = accx;
 			GBA.New_Acc_Y = accy;
+			GBA.New_Solar = solar;
 
 			// update the controller state
 			GBA.controller_state = GBA.New_Controller;

@@ -50,6 +50,8 @@ namespace GBAHawk
 		uint16_t* Core_Acc_X = nullptr;
 
 		uint16_t* Core_Acc_Y = nullptr;
+
+		uint8_t* Core_Solar = nullptr;
 		
 		Mappers()
 		{
