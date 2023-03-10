@@ -39,6 +39,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 		}
 
+		public virtual void WriteROM8(uint addr, byte value)
+		{
+		}
+
+		public virtual void WriteROM16(uint addr, ushort value)
+		{
+		}
+
+		public virtual void WriteROM32(uint addr, uint value)
+		{
+		}
+
 		public virtual void PokeMemory(uint addr, byte value)
 		{
 		}

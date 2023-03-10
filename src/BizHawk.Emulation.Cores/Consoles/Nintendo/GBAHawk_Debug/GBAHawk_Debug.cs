@@ -21,6 +21,8 @@ using BizHawk.Common.ReflectionExtensions;
 
 	What is a good way to handle different FLASH types?
 
+	TODO: Check timing of 32 bit reads / writes to GPIO
+
 	TODO: Investigate interaction between halt and DMA
 */
 
@@ -200,10 +202,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			mapper.Core =this;
 
-			_controllerDeck = new(mapper is MapperEEPROM_Tilt
-				? typeof(StandardTilt).DisplayName()
-				: GBAHawk_Debug_ControllerDeck.DefaultControllerName, subframe);
-
+			if (mapper is MapperEEPROM_Tilt)
+			{
+				_controllerDeck = new(typeof(StandardTilt).DisplayName(), subframe);
+			}
+			else if (mapper is MapperEEPROM_Solar)
+			{
+				_controllerDeck = new(typeof(StandardSolar).DisplayName(), subframe);
+			}
+			else
+			{
+				_controllerDeck = new(GBAHawk_Debug_ControllerDeck.DefaultControllerName, subframe);
+			}
+			
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(this);
 			ServiceProvider = ser;
@@ -445,11 +456,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cart_RAM = new byte[0x200];
 					mapper = new MapperEEPROM_Tilt();
 				}
+				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
+						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
+						 (romHashSHA1 == "SHA1:7164326283DF46A3941EC7B6CECA889CBC40E660") || // Boktai USA
+						 (romHashSHA1 == "SHA1:CD10D8ED82F4DAF4072774F70D015E39A5D32D0B") || // Boktai 2 USA
+						 (romHashSHA1 == "SHA1:EEACDF5A9D3D2173A4A96689B72DC6B7AD92153C") || // Boktai 2 EU
+						 (romHashSHA1 == "SHA1:54A4DCDECA2EE9A22559EB104B88586386639097") || // Boktai 2 JPN
+						 (romHashSHA1 == "SHA1:1A81843C3070DECEA4CBCA20C4563541400B2437") || // Boktai 2 JPN Rev 1
+						 (romHashSHA1 == "SHA1:2651C5E6875AC60ABFF734510D152166D211C87C"))   // Boktai 3
+				{
+					Console.WriteLine("Using Solar Sensor");
+
+					cart_RAM = new byte[0x2000];
+					mapper = new MapperEEPROM_Solar();
+				}
 				else
 				{
 					cart_RAM = new byte[0x2000];
 					mapper = new MapperEEPROM();
-				}			
+				}
 			}
 			else if (mppr == "FLASH")
 			{

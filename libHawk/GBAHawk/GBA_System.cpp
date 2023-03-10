@@ -551,6 +551,8 @@ namespace GBAHawk
 		}
 		else if (addr < 0x0D000000)
 		{
+			mapper_pntr->Write_ROM_8(addr, value);
+			
 			// ROM access complete, re-enable prefetcher
 			pre_Fetch_Cnt_Inc = 1;
 		}
@@ -645,6 +647,8 @@ namespace GBAHawk
 		}
 		else if (addr < 0x0D000000)
 		{
+			mapper_pntr->Write_ROM_16(addr, value);
+			
 			// ROM access complete, re-enable prefetcher
 			pre_Fetch_Cnt_Inc = 1;
 		}
@@ -736,6 +740,8 @@ namespace GBAHawk
 		}
 		else if (addr < 0x0D000000)
 		{
+			mapper_pntr->Write_ROM_32(addr, value);
+			
 			// ROM access complete, re-enable prefetcher
 			pre_Fetch_Cnt_Inc = 1;
 		}
@@ -875,6 +881,9 @@ namespace GBAHawk
 
 		if (addr >= 0x08000000)
 		{
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+			
 			if (addr < 0x0D000000)
 			{
 				addr -= 0x08000000;
@@ -981,6 +990,9 @@ namespace GBAHawk
 
 		if (addr >= 0x08000000)
 		{
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+			
 			if (addr < 0x0D000000)
 			{
 				addr -= 0x08000000;
@@ -1123,6 +1135,13 @@ namespace GBAHawk
 		{
 			OAM_16[(addr & 0x3FE) >> 1] = value;
 		}
+		else if (addr < 0x0D000000)
+		{
+			mapper_pntr->Write_ROM_16(addr, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
 			if (Is_EEPROM)
@@ -1139,6 +1158,9 @@ namespace GBAHawk
 					}
 				}
 			}
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
@@ -1199,6 +1221,13 @@ namespace GBAHawk
 		{
 			OAM_32[(addr & 0x3FC) >> 2] = value;
 		}
+		else if (addr < 0x0D000000)
+		{
+			mapper_pntr->Write_ROM_32(addr, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
+		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
 			if (Is_EEPROM)
@@ -1215,6 +1244,9 @@ namespace GBAHawk
 					}
 				}
 			}
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{

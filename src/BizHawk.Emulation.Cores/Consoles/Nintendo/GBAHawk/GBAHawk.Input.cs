@@ -61,7 +61,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			??= new Dictionary<string, Func<int, IPort>>
 			{
 				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
-				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum)
+				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum),
+				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum)
 			};
 
 		public static string DefaultControllerName => typeof(StandardControls).DisplayName();
@@ -287,10 +288,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public StandardSolar(int portNum)
 		{
 			PortNum = portNum;
-			Definition = new ControllerDefinition("Gameboy Advance Controller + Tilt")
+			Definition = new ControllerDefinition("Gameboy Advance Controller + Solar")
 			{
 				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
-			}.AddAxis($"P{PortNum} Solar", (0xFF).RangeTo(0), 0x80);
+			}.AddAxis($"P{PortNum} Solar", (0).RangeTo(0xFF), 0x80);
 		}
 
 		public int PortNum { get; }

@@ -225,10 +225,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public StandardSolar(int portNum)
 		{
 			PortNum = portNum;
-			Definition = new ControllerDefinition("Gameboy Advance Controller + Tilt")
+			Definition = new ControllerDefinition("Gameboy Advance Controller + Solar")
 			{
 				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
-			}.AddAxis($"P{PortNum} Solar", (0xFF).RangeTo(0), 0x80);
+			}.AddAxis($"P{PortNum} Solar", (0).RangeTo(0xFF), 0x80);
 		}
 
 		public int PortNum { get; }

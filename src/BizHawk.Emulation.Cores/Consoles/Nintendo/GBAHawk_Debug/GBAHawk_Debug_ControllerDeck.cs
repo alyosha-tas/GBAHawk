@@ -21,7 +21,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				BoolButtons = Port1.Definition.BoolButtons
 					.ToList()
 			};
-
+			
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
 
 			if (subframe)
@@ -60,7 +60,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			??= new Dictionary<string, Func<int, IPort>>
 			{
 				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
-				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum)
+				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum),
+				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum)
 			};
 
 		public static string DefaultControllerName => typeof(StandardControls).DisplayName();

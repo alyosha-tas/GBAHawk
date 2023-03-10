@@ -39,6 +39,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			if (addr >= 0x08000000)
 			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+
 				if (addr < 0x0D000000)
 				{
 					addr -= 0x08000000;
@@ -145,6 +148,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			if (addr >= 0x08000000)
 			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+
 				if (addr < 0x0D000000)
 				{
 					addr -= 0x08000000;
@@ -320,6 +326,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				OAM[addr & 0x3FF] = (byte)(value & 0xFF);
 				OAM[(addr & 0x3FF) + 1] = (byte)((value >> 8) & 0xFF);
 			}
+			else if (addr < 0x0D000000)
+			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+
+				mapper.WriteROM16(addr, value);
+			}
 			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 			{
 				if (Is_EEPROM)
@@ -336,6 +349,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
+
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 			{
@@ -414,6 +430,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				OAM[(addr & 0x3FF) + 2] = (byte)((value >> 16) & 0xFF);
 				OAM[(addr & 0x3FF) + 3] = (byte)((value >> 24) & 0xFF);
 			}
+			else if (addr < 0x0D000000)
+			{
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
+
+				mapper.WriteROM32(addr, value);
+			}
 			else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 			{
 				if (Is_EEPROM)
@@ -430,6 +453,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
+
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 			{

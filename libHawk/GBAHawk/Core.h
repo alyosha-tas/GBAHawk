@@ -77,6 +77,20 @@ namespace GBAHawk
 			else if (mapper == 4)
 			{
 				GBA.Cart_RAM_Present = true;
+				GBA.Is_EEPROM = true;
+
+				if (ext_rom_size < 0x1000000)
+				{
+					GBA.EEPROM_Wiring = true;
+				}
+				else
+				{
+					GBA.EEPROM_Wiring = false;
+				}
+			}
+			else if (mapper == 5)
+			{
+				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
 			}
 
@@ -97,6 +111,10 @@ namespace GBAHawk
 				Mapper = new Mapper_EEPROM_Tilt();
 			}
 			else if (mapper == 4)
+			{
+				Mapper = new Mapper_EEPROM_Solar();
+			}
+			else if (mapper == 5)
 			{
 				Mapper = new Mapper_FLASH();
 			}
