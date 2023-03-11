@@ -85,8 +85,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte[] OAM = new byte[0x400];
 
 		public byte[] BIOS;
-		public readonly byte[] ROM = new byte[0x6000000];
-		public readonly byte[] header = new byte[0x50];
+		public byte[] ROM = new byte[0x6000000];
 
 		public byte[] cart_RAM;
 		public bool has_bat;
@@ -96,7 +95,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int Frame_Count = 0;
 
 		public bool Use_MT;
-		public ushort addr_access;
 
 		public MapperBase mapper;
 
@@ -166,8 +164,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}			
 			}
 
-			Buffer.BlockCopy(ROM, 0x100, header, 0, 0x50);
-
 			var mppr = Setup_Mapper(romHashMD5, romHashSHA1);
 			
 			if (cart_RAM != null) 
@@ -201,6 +197,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 
 			mapper.Core =this;
+
+			mapper.ROM_C4 = ROM[0xC4];
+			mapper.ROM_C6 = ROM[0xC6];
+			mapper.ROM_C8 = ROM[0xC8];
 
 			if (mapper is MapperEEPROM_Tilt)
 			{

@@ -129,6 +129,16 @@ namespace GBAHawk
 
 			Mapper->Core_Solar = &GBA.New_Solar;
 
+			Mapper->Core_ROM = &GBA.ROM[0];
+
+			Mapper->ROM_C4 = GBA.ROM[0xC4];
+			Mapper->ROM_C6 = GBA.ROM[0xC6];
+			Mapper->ROM_C8 = GBA.ROM[0xC8];
+
+			Mapper->Current_C4 = GBA.ROM[0xC4];
+			Mapper->Current_C6 = GBA.ROM[0xC6];
+			Mapper->Current_C8 = GBA.ROM[0xC8];
+
 			Mapper->Reset();
 		}
 

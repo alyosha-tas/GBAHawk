@@ -15,11 +15,20 @@ namespace GBAHawk
 	public:
 	#pragma region mapper base
 
+		// not stated
+		uint8_t ROM_C4, ROM_C6, ROM_C8;
+		
 		bool Ready_Flag;
 		bool ADC_Ready_X, ADC_Ready_Y;
 		bool Swapped_Out;
 		bool Erase_Command;
 		bool Erase_4k;
+
+		uint8_t Port_State;
+		uint8_t Port_Dir;
+		uint8_t Ports_RW;
+
+		uint8_t Current_C4, Current_C6, Current_C8;
 
 		uint32_t Size_Mask;
 		uint32_t Bit_Offset, Bit_Read;
@@ -52,13 +61,15 @@ namespace GBAHawk
 		uint16_t* Core_Acc_Y = nullptr;
 
 		uint8_t* Core_Solar = nullptr;
+
+		uint8_t* Cart_RAM = nullptr;
+
+		uint8_t* Core_ROM = nullptr;
 		
 		Mappers()
 		{
 			Reset();
 		}
-
-		uint8_t* Cart_RAM = nullptr;
 
 		virtual uint8_t Read_Memory_8(uint32_t addr)
 		{
@@ -143,6 +154,14 @@ namespace GBAHawk
 			saver = bool_saver(Erase_Command, saver);
 			saver = bool_saver(Erase_4k, saver);
 
+			saver = byte_saver(Port_State, saver);
+			saver = byte_saver(Port_Dir, saver);
+			saver = byte_saver(Ports_RW, saver);
+
+			saver = byte_saver(Current_C4, saver);
+			saver = byte_saver(Current_C6, saver);
+			saver = byte_saver(Current_C8, saver);
+
 			saver = int_saver(Size_Mask, saver);
 			saver = int_saver(Bit_Offset, saver);
 			saver = int_saver(Bit_Read, saver);
@@ -168,6 +187,14 @@ namespace GBAHawk
 			loader = bool_loader(&Erase_Command, loader);
 			loader = bool_loader(&Erase_4k, loader);
 
+			loader = byte_loader(&Port_State, loader);
+			loader = byte_loader(&Port_Dir, loader);
+			loader = byte_loader(&Ports_RW, loader);
+
+			loader = byte_loader(&Current_C4, loader);
+			loader = byte_loader(&Current_C6, loader);
+			loader = byte_loader(&Current_C8, loader);
+
 			loader = int_loader(&Size_Mask, loader);
 			loader = int_loader(&Bit_Offset, loader);
 			loader = int_loader(&Bit_Read, loader);
@@ -180,6 +207,10 @@ namespace GBAHawk
 			loader = int_loader(&Erase_4k_Addr, loader);
 
 			loader = long_loader(&Next_Ready_Cycle, loader);
+
+			Core_ROM[0xC4] = Current_C4;
+			Core_ROM[0xC6] = Current_C6;
+			Core_ROM[0xC8] = Current_C8;
 
 			return loader;
 		}
@@ -692,6 +723,18 @@ namespace GBAHawk
 			// set up initial variables
 			Ready_Flag = true;
 
+			Port_State = 0;
+			Port_Dir = 0;
+			Ports_RW = 0;
+
+			Current_C4 = ROM_C4;
+			Current_C6 = ROM_C6;
+			Current_C8 = ROM_C8;
+
+			Core_ROM[0xC4] = Current_C4;
+			Core_ROM[0xC6] = Current_C6;
+			Core_ROM[0xC8] = Current_C8;
+
 			Bit_Offset = Bit_Read = 0;
 
 			Access_Address = 0;
@@ -721,6 +764,59 @@ namespace GBAHawk
 		uint8_t PeekMemory(uint32_t addr)
 		{
 			return Read_Memory_8(addr);
+		}
+
+		void Write_ROM_8(uint32_t addr, uint8_t value)
+		{
+			if ((addr & 1) == 0) { Write_ROM_16(addr, (uint16_t)value); }
+		}
+
+		void Write_ROM_16(uint32_t addr, uint16_t value)
+		{
+			if (addr == 0x080000C4)
+			{
+
+			}
+			else if (addr == 0x080000C6)
+			{
+				Port_Dir = (uint8_t)(value & 0xF);
+
+				if (Ports_RW == 1)
+				{
+					Core_ROM[0xC6] = Port_Dir;
+
+					Port_State &= (uint8_t)((~Port_Dir) & 0xF);
+
+					Core_ROM[0xC4] = Port_State;
+				}
+			}
+			else if (addr == 0x080000C8)
+			{
+				Ports_RW = (uint8_t)(value & 1);
+
+				if ((value & 1) == 1)
+				{
+					Core_ROM[0xC4] = Port_State;
+					Core_ROM[0xC6] = Port_Dir;
+					Core_ROM[0xC8] = Ports_RW;
+				}
+				else
+				{
+					Core_ROM[0xC4] = ROM_C4;
+					Core_ROM[0xC6] = ROM_C6;
+					Core_ROM[0xC8] = ROM_C8;
+				}
+			}
+
+			Current_C4 = Core_ROM[0xC4];
+			Current_C6 = Core_ROM[0xC6];
+			Current_C8 = Core_ROM[0xC8];
+		}
+
+		void Write_ROM_32(uint32_t addr, uint32_t value)
+		{
+			Write_ROM_16(addr, (uint16_t)value);
+			Write_ROM_16((addr + 2), (uint16_t)(value >> 8));
 		}
 
 		uint8_t Mapper_EEPROM_Read()

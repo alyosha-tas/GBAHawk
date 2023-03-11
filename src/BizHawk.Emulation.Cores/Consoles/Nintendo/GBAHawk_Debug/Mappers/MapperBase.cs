@@ -7,6 +7,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	{
 		public GBAHawk_Debug Core { get; set; }
 
+		public byte ROM_C4, ROM_C6, ROM_C8;
+
 		public virtual byte ReadMemory8(uint addr)
 		{
 			return 0;

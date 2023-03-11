@@ -6,12 +6,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	// Cart with EEEPROM and solar sensor with RTC, used in Boktai games
 	public class MapperEEPROM_Solar : MapperBase
 	{
-		public int Size_Mask = 0;
-
 		public bool Ready_Flag;
 
-		public int Bit_Offset, Bit_Read;
+		public byte Port_State;
+		public byte Port_Dir;
+		public byte Ports_RW;
+		
+		public byte Current_C4, Current_C6, Current_C8;
 
+		public int Size_Mask = 0;
+		public int Bit_Offset, Bit_Read;
 		public int Access_Address;
 
 		// 0 = ready for command
@@ -20,17 +24,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		// 5 = get address for write
 		// 6 = get address for read
 		public int Current_State;
+		public int Next_State;
 
 		public ulong Next_Ready_Cycle;
 
-		public int Next_State;
-		
 		public override void Reset()
 		{
+			Ready_Flag = true;
+
+			Port_State = 0;
+			Port_Dir = 0;
+			Ports_RW = 0;
+
+			Current_C4 = ROM_C4;
+			Current_C6 = ROM_C6;
+			Current_C8 = ROM_C8;
+
+			Core.ROM[0xC4] = Current_C4;
+			Core.ROM[0xC6] = Current_C6;
+			Core.ROM[0xC8] = Current_C8;
+
 			// set up initial variables
 			Size_Mask = Core.cart_RAM.Length - 1;
-
-			Ready_Flag = true;
 
 			Bit_Offset = Bit_Read = 0;
 
@@ -82,6 +97,59 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public override void PokeMemory(uint addr, byte value)
 		{
 			WriteMemory8(addr, value);
+		}
+
+		public override void WriteROM8(uint addr, byte value)
+		{
+			if ((addr & 1) == 0) { WriteROM16(addr, (ushort)value); }
+		}
+
+		public override void WriteROM16(uint addr, ushort value)
+		{
+			if (addr == 0x080000C4)
+			{
+
+			}
+			else if (addr == 0x080000C6)
+			{
+				Port_Dir = (byte)(value & 0xF);
+
+				if (Ports_RW == 1)
+				{ 
+					Core.ROM[0xC6] = Port_Dir;
+
+					Port_State &= (byte)((~Port_Dir) & 0xF);
+
+					Core.ROM[0xC4] = Port_State;
+				}
+			}
+			else if (addr == 0x080000C8)
+			{
+				Ports_RW = (byte)(value & 1);
+
+				if ((value & 1) == 1)
+				{
+					Core.ROM[0xC4] = Port_State;
+					Core.ROM[0xC6] = Port_Dir;
+					Core.ROM[0xC8] = Ports_RW;
+				}
+				else
+				{
+					Core.ROM[0xC4] = ROM_C4;
+					Core.ROM[0xC6] = ROM_C6;
+					Core.ROM[0xC8] = ROM_C8;
+				}
+			}
+
+			Current_C4 = Core.ROM[0xC4];
+			Current_C6 = Core.ROM[0xC6];
+			Current_C8 = Core.ROM[0xC8];
+		}
+
+		public override void WriteROM32(uint addr, uint value)
+		{
+			WriteROM16(addr, (ushort)value);
+			WriteROM16((addr + 2), (ushort)(value >> 8));
 		}
 
 		public override byte Mapper_EEPROM_Read()
@@ -349,6 +417,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public override void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(Ready_Flag), ref Ready_Flag);
+
+			ser.Sync(nameof(Port_State), ref Port_State);
+			ser.Sync(nameof(Port_Dir), ref Port_Dir);
+			ser.Sync(nameof(Ports_RW), ref Ports_RW);
+
+			ser.Sync(nameof(Current_C4), ref Current_C4);
+			ser.Sync(nameof(Current_C6), ref Current_C6);
+			ser.Sync(nameof(Current_C8), ref Current_C8);
+
+			Core.ROM[0xC4] = Current_C4;
+			Core.ROM[0xC6] = Current_C6;
+			Core.ROM[0xC8] = Current_C8;
 
 			ser.Sync(nameof(Bit_Offset), ref Bit_Offset);
 			ser.Sync(nameof(Bit_Read), ref Bit_Read);
