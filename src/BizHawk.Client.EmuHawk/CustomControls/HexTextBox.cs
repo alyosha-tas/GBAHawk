@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using BizHawk.Common.StringExtensions;
 using BizHawk.Common.NumberExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// TODO: add a MaxValue property, nullable int, that will show up in Designer, change events will check that value and fix entries that exceed that value
 	public interface INumberBox

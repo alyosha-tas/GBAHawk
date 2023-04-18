@@ -5,7 +5,7 @@ using System.Windows.Forms;
 // todo - display details on the current resolution status
 // todo - check(mark) the one that's selected
 // todo - turn top info into textboxes i guess, labels suck
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class FirmwaresConfigInfo : Form
 	{

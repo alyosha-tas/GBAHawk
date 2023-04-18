@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class ArchiveChooser : Form
 	{

@@ -24,10 +24,10 @@ using BizHawk.Bizware.BizwareGL;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Common.Base_Implementations;
 using BizHawk.Emulation.Cores;
-using BizHawk.Client.EmuHawk.ToolExtensions;
-using BizHawk.Client.EmuHawk.CustomControls;
+using BizHawk.Client.GBAHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.CustomControls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class MainForm : FormBase, IDialogParent, IMainFormForApi, IMainFormForConfig, IMainFormForTools
 	{
@@ -4232,6 +4232,6 @@ namespace BizHawk.Client.EmuHawk
 			LoadRom(args[0]);
 		}
 
-		public IQuickBmpFile QuickBmpFile { get; } = EmuHawk.QuickBmpFile.INSTANCE;
+		public IQuickBmpFile QuickBmpFile { get; } = GBAHawk.QuickBmpFile.INSTANCE;
 	}
 }

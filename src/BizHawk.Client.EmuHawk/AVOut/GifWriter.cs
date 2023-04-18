@@ -7,7 +7,7 @@ using BizHawk.Emulation.Common;
 
 using PcxFileTypePlugin.Quantize;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[VideoWriter("gif", "GIF writer", "Creates an animated .gif")]
 	public class GifWriter : IVideoWriter

@@ -11,7 +11,7 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public class Win32LuaLibraries : IPlatformLuaLibEnv
 	{
@@ -56,7 +56,7 @@ namespace BizHawk.Client.EmuHawk
 			_apiContainer = ApiManager.RestartLua(serviceProvider, LogToLuaConsole, _mainForm, _displayManager, _inputManager, _mainForm.MovieSession, _mainForm.Tools, config, emulator, game);
 
 			// Register lua libraries
-			foreach (var lib in Client.Common.ReflectionCache.Types.Concat(EmuHawk.ReflectionCache.Types)
+			foreach (var lib in Client.Common.ReflectionCache.Types.Concat(GBAHawk.ReflectionCache.Types)
 				.Where(t => typeof(LuaLibraryBase).IsAssignableFrom(t) && t.IsSealed && ServiceInjector.IsAvailable(serviceProvider, t)))
 			{
 				bool addLibrary = true;

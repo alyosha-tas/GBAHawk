@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using BizHawk.Client.Common;
 using BizHawk.Common.NumberExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public class WatchValueBox : TextBox, INumberBox
 	{

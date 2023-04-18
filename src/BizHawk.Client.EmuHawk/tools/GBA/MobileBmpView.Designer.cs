@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class MobileBmpView
 	{
@@ -28,7 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.bmpView1 = new BizHawk.Client.EmuHawk.BmpView();
+            this.bmpView1 = new BizHawk.Client.GBAHawk.BmpView();
             this.SuspendLayout();
             // 
             // bmpView1

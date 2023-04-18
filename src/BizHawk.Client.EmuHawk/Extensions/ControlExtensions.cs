@@ -15,7 +15,7 @@ using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class ControlExtensions
 	{

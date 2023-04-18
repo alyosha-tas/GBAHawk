@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class AnalogRangeConfigControl
 	{
@@ -33,7 +33,7 @@
 			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.YNumeric = new System.Windows.Forms.NumericUpDown();
 			this.RadialCheckbox = new System.Windows.Forms.CheckBox();
-			this.AnalogRange = new BizHawk.Client.EmuHawk.AnalogRangeConfig();
+			this.AnalogRange = new BizHawk.Client.GBAHawk.AnalogRangeConfig();
 			((System.ComponentModel.ISupportInitialize)(this.XNumeric)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.YNumeric)).BeginInit();
 			this.SuspendLayout();

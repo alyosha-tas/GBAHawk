@@ -14,10 +14,10 @@ using BizHawk.Common.StringExtensions;
 using BizHawk.Common.IOExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.Properties;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.Properties;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// int to long TODO: 32 bit domains have more digits than the hex editor can account for and the address covers up the 0 column
 	public partial class HexEditor : ToolFormBase, IToolFormAutoConfig

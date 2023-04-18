@@ -1,6 +1,6 @@
 ﻿using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	partial class RamSearch
 	{
@@ -97,11 +97,11 @@ namespace BizHawk.Client.EmuHawk
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.AutoSearchCheckBox = new System.Windows.Forms.CheckBox();
 			this.CompareToBox = new System.Windows.Forms.GroupBox();
-			this.DifferenceBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.DifferenceBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.DifferenceRadio = new System.Windows.Forms.RadioButton();
-			this.NumberOfChangesBox = new BizHawk.Client.EmuHawk.UnsignedIntegerBox();
-			this.SpecificAddressBox = new BizHawk.Client.EmuHawk.HexTextBox();
-			this.SpecificValueBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.NumberOfChangesBox = new BizHawk.Client.GBAHawk.UnsignedIntegerBox();
+			this.SpecificAddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
+			this.SpecificValueBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.NumberOfChangesRadio = new System.Windows.Forms.RadioButton();
 			this.SpecificAddressRadio = new System.Windows.Forms.RadioButton();
 			this.SpecificValueRadio = new System.Windows.Forms.RadioButton();
@@ -123,7 +123,7 @@ namespace BizHawk.Client.EmuHawk
 			this.RebootToolbarButton = new System.Windows.Forms.ToolStripButton();
 			this.ErrorIconButton = new System.Windows.Forms.ToolStripButton();
 			this.ComparisonBox = new System.Windows.Forms.GroupBox();
-			this.DifferentByBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.DifferentByBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.DifferentByRadio = new System.Windows.Forms.RadioButton();
 			this.NotEqualToRadio = new System.Windows.Forms.RadioButton();
 			this.EqualToRadio = new System.Windows.Forms.RadioButton();
@@ -173,7 +173,7 @@ namespace BizHawk.Client.EmuHawk
 			this.WatchListView.Size = new System.Drawing.Size(230, 366);
 			this.WatchListView.TabIndex = 1;
 			this.WatchListView.MultiSelect = true;
-			this.WatchListView.ColumnClick += new BizHawk.Client.EmuHawk.InputRoll.ColumnClickEventHandler(this.WatchListView_ColumnClick);
+			this.WatchListView.ColumnClick += new BizHawk.Client.GBAHawk.InputRoll.ColumnClickEventHandler(this.WatchListView_ColumnClick);
 			this.WatchListView.SelectedIndexChanged += new System.EventHandler(this.WatchListView_SelectedIndexChanged);
 			this.WatchListView.DragDrop += new System.Windows.Forms.DragEventHandler(this.NewRamSearch_DragDrop);
 			this.WatchListView.DragEnter += new System.Windows.Forms.DragEventHandler(this.DragEnterWrapper);

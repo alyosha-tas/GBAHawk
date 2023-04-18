@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 using BizHawk.Client.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// this is a little messy right now because of remnants of the old config system
 	public partial class ControllerConfigPanel : UserControl

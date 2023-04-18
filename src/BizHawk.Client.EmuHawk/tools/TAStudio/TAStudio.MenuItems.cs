@@ -5,11 +5,11 @@ using System.Text;
 using System.Windows.Forms;
 
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class TAStudio
 	{

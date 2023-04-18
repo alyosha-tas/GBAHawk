@@ -11,12 +11,12 @@ using System.Windows.Forms;
 
 using BizHawk.Client.Common;
 using BizHawk.Client.Common.RamSearchEngine;
-using BizHawk.Client.EmuHawk.Properties;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.Properties;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 using BizHawk.Common.NumberExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// A form designed to search through ram values

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
-using BizHawk.Client.EmuHawk.Properties;
+using BizHawk.Client.GBAHawk.Properties;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class RomStatusPicker : Form
 	{

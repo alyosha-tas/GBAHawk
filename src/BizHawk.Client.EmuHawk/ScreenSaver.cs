@@ -1,6 +1,6 @@
 ﻿using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <remarks>Derived from http://www.codeproject.com/KB/cs/ScreenSaverControl.aspx</remarks>
 	public static class ScreenSaver

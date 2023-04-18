@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class MobileDetailView
 	{
@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.bmpView1 = new BizHawk.Client.EmuHawk.BmpView();
+            this.bmpView1 = new BizHawk.Client.GBAHawk.BmpView();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));

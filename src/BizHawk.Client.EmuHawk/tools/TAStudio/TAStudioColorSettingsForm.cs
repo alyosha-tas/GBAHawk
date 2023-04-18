@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public sealed class TAStudioColorSettingsForm : Form
 	{

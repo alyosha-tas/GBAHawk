@@ -12,11 +12,11 @@ using BizHawk.Bizware.OpenTK3;
 using BizHawk.Common;
 using BizHawk.Common.PathExtensions;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.CustomControls;
+using BizHawk.Client.GBAHawk.CustomControls;
 
 using OSTC = EXE_PROJECT.OSTailoredCode;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	internal static class Program
 	{
@@ -94,7 +94,7 @@ namespace BizHawk.Client.EmuHawk
 		{
 			// this check has to be done VERY early.  i stepped through a debug build with wrong .dll versions purposely used,
 			// and there was a TypeLoadException before the first line of SubMain was reached (some static ColorType init?)
-			var thisAsmVer = EmuHawk.ReflectionCache.AsmVersion;
+			var thisAsmVer = GBAHawk.ReflectionCache.AsmVersion;
 			foreach (var asmVer in new[]
 			{
 				BizInvoke.ReflectionCache.AsmVersion,

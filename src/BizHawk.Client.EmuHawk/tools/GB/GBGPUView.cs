@@ -9,7 +9,7 @@ using BizHawk.Common.NumberExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class GbGpuView : ToolFormBase, IToolFormAutoConfig
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace BizHawk.Client.EmuHawk.CustomControls
+namespace BizHawk.Client.GBAHawk.CustomControls
 {
 	public interface IControlRenderer : IDisposable
 	{

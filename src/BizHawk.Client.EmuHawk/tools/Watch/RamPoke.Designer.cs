@@ -1,4 +1,4 @@
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
     partial class RamPoke
     {
@@ -33,12 +33,12 @@ namespace BizHawk.Client.EmuHawk
 			this.Cancel = new System.Windows.Forms.Button();
 			this.OutputLabel = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.ValeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.ValueBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.ValueBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.ValueHexLabel = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.DisplayTypeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.SizeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.BigEndianLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.AddressBox = new BizHawk.Client.EmuHawk.HexTextBox();
+			this.AddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();

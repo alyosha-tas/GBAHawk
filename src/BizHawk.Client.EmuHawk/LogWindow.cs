@@ -10,7 +10,7 @@ using BizHawk.Client.Common;
 
 // todo - perks - pause, copy to clipboard, backlog length limiting
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class LogWindow : ToolFormBase, IToolFormAutoConfig
 	{

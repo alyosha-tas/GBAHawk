@@ -7,7 +7,7 @@ using BizHawk.Client.Common;
 // and avoid stealing focus, while still being topmost
 // http://stackoverflow.com/a/25219399/2792852
 // This is not an actual tooltip, because they can't reliably fade in and out with transparency
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class ScreenshotForm : Form
 	{

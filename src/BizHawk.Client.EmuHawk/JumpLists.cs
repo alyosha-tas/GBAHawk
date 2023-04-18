@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class JumpLists
 	{

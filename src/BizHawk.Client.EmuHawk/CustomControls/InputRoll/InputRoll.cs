@@ -6,13 +6,13 @@ using System.Linq;
 using System.Windows.Forms;
 
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.CustomControls;
+using BizHawk.Client.GBAHawk.CustomControls;
 using BizHawk.Common;
 
 // TODO: There are some bad interactions between ScrollToIndex and MakeIndexVisible that are preventing things from working as intended.
 //       But, the current behaviour is ok for now for what it is used for.
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// Row width depends on font size and padding
 	// Column width is specified in column headers

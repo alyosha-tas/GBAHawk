@@ -10,7 +10,7 @@ using BizHawk.Common.PathExtensions;
 using NLua;
 
 // ReSharper disable UnusedMember.Global
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[Description("Represents a canvas object returned by the gui.createcanvas() method")]
 	public sealed class LuaCanvas : Form

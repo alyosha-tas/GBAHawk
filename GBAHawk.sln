@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BizHawk.Client.Common", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BizHawk.Common", "src\BizHawk.Common\BizHawk.Common.csproj", "{866F8D13-0678-4FF9-80A4-A3993FD4D8A3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BizHawk.Client.EmuHawk", "src\BizHawk.Client.EmuHawk\BizHawk.Client.EmuHawk.csproj", "{DD448B37-BA3F-4544-9754-5406E8094723}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BizHawk.Client.GBAHawk", "src\BizHawk.Client.EmuHawk\BizHawk.Client.GBAHawk.csproj", "{DD448B37-BA3F-4544-9754-5406E8094723}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BizHawk.Emulation.Common", "src\BizHawk.Emulation.Common\BizHawk.Emulation.Common.csproj", "{E1A23168-B571-411C-B360-2229E7225E0E}"
 EndProject

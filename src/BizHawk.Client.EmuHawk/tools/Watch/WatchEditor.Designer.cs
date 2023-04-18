@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
     partial class WatchEditor
     {
@@ -30,7 +30,7 @@
         {
             this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.AddressBox = new BizHawk.Client.EmuHawk.HexTextBox();
+            this.AddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
             this.NotesBox = new System.Windows.Forms.TextBox();
             this.OK = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Component wrapping access to the Browse For Folder common dialog box.

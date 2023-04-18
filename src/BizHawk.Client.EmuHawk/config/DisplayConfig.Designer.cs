@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class DisplayConfig
 	{
@@ -37,7 +37,7 @@
 			this.lblUserFilterName = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.btnSelectUserFilter = new System.Windows.Forms.Button();
 			this.rbUser = new System.Windows.Forms.RadioButton();
-			this.tbScanlineIntensity = new BizHawk.Client.EmuHawk.TransparentTrackBar();
+			this.tbScanlineIntensity = new BizHawk.Client.GBAHawk.TransparentTrackBar();
 			this.rbNone = new System.Windows.Forms.RadioButton();
 			this.rbScanlines = new System.Windows.Forms.RadioButton();
 			this.rbHq2x = new System.Windows.Forms.RadioButton();
@@ -100,7 +100,7 @@
 			this.cbStatusBarWindowed = new System.Windows.Forms.CheckBox();
 			this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.cbMenuWindowed = new System.Windows.Forms.CheckBox();
-			this.trackbarFrameSizeWindowed = new BizHawk.Client.EmuHawk.TransparentTrackBar();
+			this.trackbarFrameSizeWindowed = new BizHawk.Client.GBAHawk.TransparentTrackBar();
 			this.cbCaptionWindowed = new System.Windows.Forms.CheckBox();
 			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -913,7 +913,7 @@
 		private System.Windows.Forms.RadioButton rbNone;
 		private System.Windows.Forms.RadioButton rbScanlines;
 		private System.Windows.Forms.RadioButton rbHq2x;
-		private BizHawk.Client.EmuHawk.TransparentTrackBar tbScanlineIntensity;
+		private BizHawk.Client.GBAHawk.TransparentTrackBar tbScanlineIntensity;
 		private System.Windows.Forms.CheckBox checkLetterbox;
 		private System.Windows.Forms.CheckBox checkPadInteger;
 		private System.Windows.Forms.GroupBox grpFinalFilter;
@@ -947,7 +947,7 @@
 		private System.Windows.Forms.TabPage tabPage1;
 		private System.Windows.Forms.CheckBox cbStatusBarWindowed;
 		private BizHawk.WinForms.Controls.LocLabelEx label9;
-		private BizHawk.Client.EmuHawk.TransparentTrackBar trackbarFrameSizeWindowed;
+		private BizHawk.Client.GBAHawk.TransparentTrackBar trackbarFrameSizeWindowed;
 		private System.Windows.Forms.CheckBox cbMenuWindowed;
 		private System.Windows.Forms.CheckBox cbCaptionWindowed;
 		private System.Windows.Forms.GroupBox groupBox2;

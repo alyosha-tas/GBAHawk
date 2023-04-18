@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 using BizHawk.Common.StringExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	internal enum BoxType
 	{

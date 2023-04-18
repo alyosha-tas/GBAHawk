@@ -4,7 +4,7 @@ using System.Security.Principal;
 using System.Text;
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class EmuHawkUtil
 	{

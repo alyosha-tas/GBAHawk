@@ -10,7 +10,7 @@ using BizHawk.Common;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable StringLiteralTypo
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[Description("A library for manipulating the Tastudio dialog of the EmuHawk client")]
 	[LuaLibrary(released: true)]

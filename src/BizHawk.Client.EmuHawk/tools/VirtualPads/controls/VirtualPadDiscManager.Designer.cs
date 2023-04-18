@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class VirtualPadDiscManager
 	{
@@ -33,8 +33,8 @@
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.btnClose = new BizHawk.Client.EmuHawk.VirtualPadButton();
-			this.btnOpen = new BizHawk.Client.EmuHawk.VirtualPadButton();
+			this.btnClose = new BizHawk.Client.GBAHawk.VirtualPadButton();
+			this.btnOpen = new BizHawk.Client.GBAHawk.VirtualPadButton();
 			this.lblTimeZero = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();

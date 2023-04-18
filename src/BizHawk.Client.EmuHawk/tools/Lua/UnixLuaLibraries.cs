@@ -4,7 +4,7 @@ using BizHawk.Client.Common;
 
 using NLua;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Methods intentionally blank.

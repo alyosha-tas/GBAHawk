@@ -8,7 +8,7 @@ using System.Reflection;
 using BizHawk.Client.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class ApiManager
 	{

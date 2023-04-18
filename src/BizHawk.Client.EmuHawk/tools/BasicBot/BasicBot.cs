@@ -6,14 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.Properties;
+using BizHawk.Client.GBAHawk.Properties;
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public sealed partial class BasicBot : ToolFormBase, IToolFormAutoConfig
 	{

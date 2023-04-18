@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class MessageConfig
 	{
@@ -34,7 +34,7 @@
             this.Cancel = new System.Windows.Forms.Button();
             this.ResetDefaultsButton = new System.Windows.Forms.Button();
             this.StackMessagesCheckbox = new System.Windows.Forms.CheckBox();
-            this.MessageEditor = new BizHawk.Client.EmuHawk.MessageEdit();
+            this.MessageEditor = new BizHawk.Client.GBAHawk.MessageEdit();
             this.SuspendLayout();
             // 
             // OK

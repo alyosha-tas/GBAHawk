@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class HexFind : Form
 	{

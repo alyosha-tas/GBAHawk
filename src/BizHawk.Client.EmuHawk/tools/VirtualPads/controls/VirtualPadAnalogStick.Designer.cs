@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class VirtualPadAnalogStick
 	{
@@ -39,7 +39,7 @@
 			this.manualR = new System.Windows.Forms.NumericUpDown();
 			this.manualTheta = new System.Windows.Forms.NumericUpDown();
 			this.thetaLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.AnalogStick = new BizHawk.Client.EmuHawk.AnalogStickPanel();
+			this.AnalogStick = new BizHawk.Client.GBAHawk.AnalogStickPanel();
 			((System.ComponentModel.ISupportInitialize)(this.ManualX)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ManualY)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxXNumeric)).BeginInit();

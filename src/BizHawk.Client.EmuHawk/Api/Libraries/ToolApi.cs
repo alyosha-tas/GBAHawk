@@ -5,7 +5,7 @@ using System.Linq;
 using BizHawk.Client.Common;
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public sealed class ToolApi : IToolApi
 	{

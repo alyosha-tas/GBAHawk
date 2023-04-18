@@ -6,7 +6,7 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 
-namespace BizHawk.Client.EmuHawk.ToolExtensions
+namespace BizHawk.Client.GBAHawk.ToolExtensions
 {
 	public static class ToolExtensions
 	{

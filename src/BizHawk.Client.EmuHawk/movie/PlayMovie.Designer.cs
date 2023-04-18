@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class PlayMovie
 	{
@@ -51,7 +51,7 @@
 			this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.LastFrameCheckbox = new System.Windows.Forms.CheckBox();
 			this.TurboCheckbox = new System.Windows.Forms.CheckBox();
-			this.StopOnFrameTextBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.StopOnFrameTextBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.MovieCount = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.editToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.groupBox1.SuspendLayout();

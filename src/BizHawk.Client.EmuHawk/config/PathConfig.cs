@@ -9,7 +9,7 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class PathConfig : Form
 	{

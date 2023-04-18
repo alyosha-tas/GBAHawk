@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using BizHawk.Client.Common;
 using NLua;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[Description("A library for creating and managing custom dialogs")]
 	public sealed class FormsLuaLibrary : LuaLibraryBase

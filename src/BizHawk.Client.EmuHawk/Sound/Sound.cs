@@ -7,7 +7,7 @@ using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <remarks>TODO rename to <c>HostAudioManager</c></remarks>
 	public class Sound : IHostAudioManager, IDisposable

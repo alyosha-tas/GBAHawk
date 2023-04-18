@@ -8,7 +8,7 @@ using BizHawk.Client.Common;
 using BizHawk.Common;
 using BizHawk.Common.CollectionExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class LuaFunctionsForm : Form
 	{

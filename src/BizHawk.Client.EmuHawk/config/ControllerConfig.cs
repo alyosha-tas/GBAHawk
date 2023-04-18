@@ -10,7 +10,7 @@ using BizHawk.Client.Common;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class ControllerConfig : Form, IDialogParent
 	{
@@ -22,8 +22,6 @@ namespace BizHawk.Client.EmuHawk
 
 		static ControllerConfig()
 		{
-			ControllerImages.Add("NES Controller", Properties.Resources.NesController);
-			ControllerImages.Add("SNES Controller", Properties.Resources.SnesController);
 			ControllerImages.Add("Gameboy Controller", Properties.Resources.GbController);
 			ControllerImages.Add("Gameboy Controller H", Properties.Resources.GbController);
 			ControllerImages.Add("Gameboy Controller + Tilt", Properties.Resources.GbController);

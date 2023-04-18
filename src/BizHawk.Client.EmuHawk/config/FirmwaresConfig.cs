@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 using BizHawk.Common;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.Properties;
+using BizHawk.Client.GBAHawk.Properties;
 using BizHawk.Common.CollectionExtensions;
 using BizHawk.Emulation.Common;
 
@@ -24,7 +24,7 @@ using BizHawk.Emulation.Common;
 
 // IDEA: show current path in tooltip (esp. for custom resolved)
 // IDEA: prepop set customization to dir of current custom
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class FirmwaresConfig : Form, IDialogParent
 	{

@@ -1,6 +1,6 @@
 ﻿using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	partial class TAStudio
 	{
@@ -152,14 +152,14 @@ namespace BizHawk.Client.EmuHawk
 			this.aboutToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator10 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.EnableTooltipsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.TasView = new BizHawk.Client.EmuHawk.InputRoll();
+			this.TasView = new BizHawk.Client.GBAHawk.InputRoll();
 			this.TasStatusStrip = new StatusStripEx();
 			this.MessageStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this.ProgressBar = new System.Windows.Forms.ToolStripProgressBar();
 			this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
 			this.SplicerStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-			this.TasPlaybackBox = new BizHawk.Client.EmuHawk.PlaybackBox();
-			this.MarkerControl = new BizHawk.Client.EmuHawk.MarkerControl();
+			this.TasPlaybackBox = new BizHawk.Client.GBAHawk.PlaybackBox();
+			this.MarkerControl = new BizHawk.Client.GBAHawk.MarkerControl();
 			this.RightClickMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.SetMarkersContextMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.SetMarkerWithTextContextMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -188,7 +188,7 @@ namespace BizHawk.Client.EmuHawk
 			this.StartFromNowSeparator = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.StartNewProjectFromNowMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.StartANewProjectFromSaveRamMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.BookMarkControl = new BizHawk.Client.EmuHawk.BookmarksBranchesBox();
+			this.BookMarkControl = new BizHawk.Client.GBAHawk.BookmarksBranchesBox();
 			this.BranchesMarkersSplit = new System.Windows.Forms.SplitContainer();
 			this.MainVertialSplit = new System.Windows.Forms.SplitContainer();
 			this.SetFontMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -915,12 +915,12 @@ namespace BizHawk.Client.EmuHawk
 			this.TasView.SeekingCutoffInterval = 0;
 			this.TasView.Size = new System.Drawing.Size(289, 528);
 			this.TasView.TabIndex = 1;
-			this.TasView.ColumnClick += new BizHawk.Client.EmuHawk.InputRoll.ColumnClickEventHandler(this.TasView_ColumnClick);
-			this.TasView.ColumnRightClick += new BizHawk.Client.EmuHawk.InputRoll.ColumnClickEventHandler(this.TasView_ColumnRightClick);
+			this.TasView.ColumnClick += new BizHawk.Client.GBAHawk.InputRoll.ColumnClickEventHandler(this.TasView_ColumnClick);
+			this.TasView.ColumnRightClick += new BizHawk.Client.GBAHawk.InputRoll.ColumnClickEventHandler(this.TasView_ColumnRightClick);
 			this.TasView.SelectedIndexChanged += new System.EventHandler(this.TasView_SelectedIndexChanged);
-			this.TasView.RightMouseScrolled += new BizHawk.Client.EmuHawk.InputRoll.RightMouseScrollEventHandler(this.TasView_MouseWheel);
-			this.TasView.ColumnReordered += new BizHawk.Client.EmuHawk.InputRoll.ColumnReorderedEventHandler(this.TasView_ColumnReordered);
-			this.TasView.CellDropped += new BizHawk.Client.EmuHawk.InputRoll.CellDroppedEvent(this.TasView_CellDropped);
+			this.TasView.RightMouseScrolled += new BizHawk.Client.GBAHawk.InputRoll.RightMouseScrollEventHandler(this.TasView_MouseWheel);
+			this.TasView.ColumnReordered += new BizHawk.Client.GBAHawk.InputRoll.ColumnReorderedEventHandler(this.TasView_ColumnReordered);
+			this.TasView.CellDropped += new BizHawk.Client.GBAHawk.InputRoll.CellDroppedEvent(this.TasView_CellDropped);
 			this.TasView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TasView_KeyDown);
 			this.TasView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.TasView_MouseDoubleClick);
 			this.TasView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TasView_MouseDown);

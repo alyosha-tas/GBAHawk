@@ -14,7 +14,7 @@ using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public class ToolManager
 	{
@@ -500,7 +500,7 @@ namespace BizHawk.Client.EmuHawk
 			return Load<T>(false);
 		}
 
-		public IEnumerable<Type> AvailableTools => EmuHawk.ReflectionCache.Types
+		public IEnumerable<Type> AvailableTools => GBAHawk.ReflectionCache.Types
 			.Where(t => typeof(IToolForm).IsAssignableFrom(t))
 			.Where(t => !t.IsInterface)
 			.Where(IsAvailable);
@@ -727,7 +727,7 @@ namespace BizHawk.Client.EmuHawk
 			}
 		}
 
-		private static readonly IList<string> PossibleToolTypeNames = EmuHawk.ReflectionCache.Types.Select(t => t.AssemblyQualifiedName).ToList();
+		private static readonly IList<string> PossibleToolTypeNames = GBAHawk.ReflectionCache.Types.Select(t => t.AssemblyQualifiedName).ToList();
 
 		public bool IsAvailable(Type tool)
 		{

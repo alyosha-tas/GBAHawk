@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// http://www.codeproject.com/Articles/2130/NET-port-of-Joe-s-AutoRepeat-Button-class
 	public class RepeatButton : Button

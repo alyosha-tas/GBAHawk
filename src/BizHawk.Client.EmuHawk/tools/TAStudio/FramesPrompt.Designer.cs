@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class FramesPrompt
 	{
@@ -31,7 +31,7 @@
 			this.OkBtn = new System.Windows.Forms.Button();
 			this.CancelBtn = new System.Windows.Forms.Button();
 			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.NumFramesBox = new BizHawk.Client.EmuHawk.WatchValueBox();
+			this.NumFramesBox = new BizHawk.Client.GBAHawk.WatchValueBox();
 			this.SuspendLayout();
 			// 
 			// OkBtn

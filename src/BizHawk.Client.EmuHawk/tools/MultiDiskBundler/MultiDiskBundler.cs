@@ -12,7 +12,7 @@ using BizHawk.Client.Common;
 using BizHawk.Common;
 using BizHawk.Common.PathExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class MultiDiskBundler : ToolFormBase, IToolFormAutoConfig
 	{

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// an IVideoProvider wrapping a Bitmap

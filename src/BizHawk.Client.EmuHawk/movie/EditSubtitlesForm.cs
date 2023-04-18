@@ -7,7 +7,7 @@ using System.Globalization;
 using BizHawk.Client.Common;
 using BizHawk.Common.NumberExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class EditSubtitlesForm : Form, IDialogParent
 	{

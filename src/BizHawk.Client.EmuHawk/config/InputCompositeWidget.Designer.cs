@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class InputCompositeWidget
 	{
@@ -32,7 +32,7 @@
 		{
 			this.btnSpecial = new System.Windows.Forms.Button();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.widget = new BizHawk.Client.EmuHawk.InputWidget();
+			this.widget = new BizHawk.Client.GBAHawk.InputWidget();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.SuspendLayout();
 			// 

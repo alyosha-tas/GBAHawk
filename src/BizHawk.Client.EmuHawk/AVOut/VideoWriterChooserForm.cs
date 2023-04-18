@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using BizHawk.Client.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// implements a simple dialog which chooses an IVideoWriter to record with

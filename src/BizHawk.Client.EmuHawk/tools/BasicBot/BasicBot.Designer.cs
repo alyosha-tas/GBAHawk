@@ -1,6 +1,6 @@
 ﻿using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	partial class BasicBot
 	{
@@ -85,7 +85,7 @@ namespace BizHawk.Client.EmuHawk
 			this.MainBestRadio = new System.Windows.Forms.RadioButton();
 			this.MainOperator = new System.Windows.Forms.ComboBox();
 			this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.MaximizeAddressBox = new BizHawk.Client.EmuHawk.HexTextBox();
+			this.MaximizeAddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.maximizeLabeltext = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.panel4 = new System.Windows.Forms.Panel();
 			this.TieBreak1Numeric = new System.Windows.Forms.NumericUpDown();
@@ -93,7 +93,7 @@ namespace BizHawk.Client.EmuHawk
 			this.Tiebreak1Operator = new System.Windows.Forms.ComboBox();
 			this.TieBreak1BestRadio = new System.Windows.Forms.RadioButton();
 			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.TieBreaker1Box = new BizHawk.Client.EmuHawk.HexTextBox();
+			this.TieBreaker1Box = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.label10 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.panel5 = new System.Windows.Forms.Panel();
 			this.TieBreak2Numeric = new System.Windows.Forms.NumericUpDown();
@@ -102,11 +102,11 @@ namespace BizHawk.Client.EmuHawk
 			this.TieBreak2BestRadio = new System.Windows.Forms.RadioButton();
 			this.label11 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.TieBreaker2Box = new BizHawk.Client.EmuHawk.HexTextBox();
+			this.TieBreaker2Box = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.panel6 = new System.Windows.Forms.Panel();
 			this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.TieBreaker3Box = new BizHawk.Client.EmuHawk.HexTextBox();
+			this.TieBreaker3Box = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.TieBreak3Numeric = new System.Windows.Forms.NumericUpDown();
 			this.TieBreak3ValueRadio = new System.Windows.Forms.RadioButton();
 			this.TieBreak3BestRadio = new System.Windows.Forms.RadioButton();

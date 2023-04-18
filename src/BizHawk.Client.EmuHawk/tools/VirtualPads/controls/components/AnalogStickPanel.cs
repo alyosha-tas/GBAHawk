@@ -7,7 +7,7 @@ using BizHawk.Common;
 using BizHawk.Common.NumberExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public sealed class AnalogStickPanel : Panel
 	{

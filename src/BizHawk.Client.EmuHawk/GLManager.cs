@@ -3,7 +3,7 @@ using BizHawk.Bizware.BizwareGL;
 using BizHawk.Bizware.DirectX;
 using BizHawk.Bizware.OpenTK3;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// This singleton class manages OpenGL contexts, in an effort to minimize context changes.

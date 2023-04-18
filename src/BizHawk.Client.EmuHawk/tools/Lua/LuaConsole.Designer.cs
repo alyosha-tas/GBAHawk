@@ -1,6 +1,6 @@
 ﻿using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	partial class LuaConsole
 	{
@@ -106,7 +106,7 @@ namespace BizHawk.Client.EmuHawk
 			this.InsertSeparatorToolbarItem = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator10 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.EraseToolbarItem = new System.Windows.Forms.ToolStripButton();
-			this.LuaListView = new BizHawk.Client.EmuHawk.InputRoll();
+			this.LuaListView = new BizHawk.Client.GBAHawk.InputRoll();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.ScriptListContextMenu.SuspendLayout();
 			this.menuStrip1.SuspendLayout();
@@ -641,7 +641,7 @@ namespace BizHawk.Client.EmuHawk
 			this.LuaListView.SeekingCutoffInterval = 0;
 			this.LuaListView.Size = new System.Drawing.Size(273, 271);
 			this.LuaListView.TabIndex = 0;
-			this.LuaListView.ColumnClick += new BizHawk.Client.EmuHawk.InputRoll.ColumnClickEventHandler(this.LuaListView_ColumnClick);
+			this.LuaListView.ColumnClick += new BizHawk.Client.GBAHawk.InputRoll.ColumnClickEventHandler(this.LuaListView_ColumnClick);
 			this.LuaListView.DoubleClick += new System.EventHandler(this.LuaListView_DoubleClick);
 			this.LuaListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LuaListView_KeyDown);
 			this.LuaListView.MultiSelect = true;

@@ -5,7 +5,7 @@ using System.Linq;
 
 using BizHawk.Common.StringExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// A simple form that prompts the user for a single line of input.

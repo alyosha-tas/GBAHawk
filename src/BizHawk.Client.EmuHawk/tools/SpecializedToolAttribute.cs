@@ -1,7 +1,7 @@
 ﻿using System;
 using BizHawk.Client.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Defines a <see cref="IToolForm"/> as a specialized tool that is for a specific system or core

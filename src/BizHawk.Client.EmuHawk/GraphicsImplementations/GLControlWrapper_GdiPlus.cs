@@ -2,7 +2,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using BizHawk.Bizware.BizwareGL;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public class GLControlWrapper_GdiPlus : Control, IGraphicsControl
 	{

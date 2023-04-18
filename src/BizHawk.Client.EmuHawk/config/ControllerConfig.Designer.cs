@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class ControllerConfig
 	{
@@ -47,7 +47,7 @@
 			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label38 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.btnMisc = new BizHawk.Client.EmuHawk.MenuButton();
+			this.btnMisc = new BizHawk.Client.GBAHawk.MenuButton();
 			this.AllowUdCheckbox = new System.Windows.Forms.CheckBox();
 			this.tabControl1.SuspendLayout();
 			this.tableLayoutPanel1.SuspendLayout();

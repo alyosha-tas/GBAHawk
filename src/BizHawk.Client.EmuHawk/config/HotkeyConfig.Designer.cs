@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class HotkeyConfig
 	{
@@ -40,7 +40,7 @@
 			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.MiscButton = new BizHawk.Client.EmuHawk.MenuButton();
+			this.MiscButton = new BizHawk.Client.GBAHawk.MenuButton();
 			this.clearBtnContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.clearAllToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.clearCurrentTabToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();

@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using BizHawk.Client.Common;
 using BizHawk.Bizware.BizwareGL;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Thinly wraps a BizwareGL.GraphicsControl for EmuHawk's needs

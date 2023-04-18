@@ -8,7 +8,7 @@ using BizHawk.Emulation.Common;
 using BizHawk.Bizware.BizwareGL;
 using BizHawk.Client.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[VideoWriter("syncless", "Syncless Recording", "Writes each frame to a directory as a PNG and WAV pair, identified by frame number. The results can be exported into one video file.")]
 	public class SynclessRecorder : IVideoWriter

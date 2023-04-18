@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class VideoWriterChooserForm
 	{
@@ -41,8 +41,8 @@
 			this.buttonAuto = new System.Windows.Forms.Button();
 			this.panelSizeSelect = new System.Windows.Forms.Panel();
 			this.lblSize = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.numericTextBoxW = new BizHawk.Client.EmuHawk.NumericTextBox();
-			this.numericTextBoxH = new BizHawk.Client.EmuHawk.NumericTextBox();
+			this.numericTextBoxW = new BizHawk.Client.GBAHawk.NumericTextBox();
+			this.numericTextBoxH = new BizHawk.Client.GBAHawk.NumericTextBox();
 			this.checkBoxPad = new System.Windows.Forms.CheckBox();
 			this.checkBoxASync = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();

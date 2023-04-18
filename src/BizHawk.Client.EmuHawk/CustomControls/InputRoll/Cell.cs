@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Represents a single cell of the <see cref="InputRoll"/>

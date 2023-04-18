@@ -7,7 +7,7 @@ using BizHawk.Client.Common;
 using BizHawk.Common.IOExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// writes MS standard riff files containing uncompressed PCM wav data

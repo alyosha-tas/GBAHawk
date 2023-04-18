@@ -11,7 +11,7 @@ using BizHawk.Emulation.Common;
 // ReSharper disable StyleCop.SA1304
 // ReSharper disable StyleCop.SA1307
 // ReSharper disable StyleCop.SA1401
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public readonly struct QuickBmpFile : IQuickBmpFile
 	{

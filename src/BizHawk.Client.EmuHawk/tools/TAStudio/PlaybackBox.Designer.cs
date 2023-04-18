@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class PlaybackBox
 	{
@@ -35,9 +35,9 @@
 			this.TurboSeekCheckbox = new System.Windows.Forms.CheckBox();
 			this.FollowCursorCheckbox = new System.Windows.Forms.CheckBox();
 			this.NextMarkerButton = new System.Windows.Forms.Button();
-			this.FrameAdvanceButton = new BizHawk.Client.EmuHawk.RepeatButton();
+			this.FrameAdvanceButton = new BizHawk.Client.GBAHawk.RepeatButton();
 			this.PauseButton = new System.Windows.Forms.Button();
-			this.RewindButton = new BizHawk.Client.EmuHawk.RepeatButton();
+			this.RewindButton = new BizHawk.Client.GBAHawk.RepeatButton();
 			this.PreviousMarkerButton = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.PlaybackGroupBox.SuspendLayout();

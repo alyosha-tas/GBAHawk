@@ -9,14 +9,14 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.Properties;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.Properties;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 using BizHawk.Common;
 using BizHawk.Common.CollectionExtensions;
 using BizHawk.Common.PathExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class LuaConsole : ToolFormBase, IToolFormAutoConfig
 	{

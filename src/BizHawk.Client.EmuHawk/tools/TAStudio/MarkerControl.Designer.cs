@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class MarkerControl
 	{
@@ -43,7 +43,7 @@
 			this.RemoveMarkerButton = new System.Windows.Forms.Button();
 			this.ScrollToMarkerButton = new System.Windows.Forms.Button();
 			this.AddMarkerWithTextButton = new System.Windows.Forms.Button();
-			this.MarkerView = new BizHawk.Client.EmuHawk.InputRoll();
+			this.MarkerView = new BizHawk.Client.GBAHawk.InputRoll();
 			this.MarkersGroupBox = new System.Windows.Forms.GroupBox();
 			this.MarkerContextMenu.SuspendLayout();
 			this.MarkersGroupBox.SuspendLayout();

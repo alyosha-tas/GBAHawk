@@ -2,7 +2,7 @@ using System.Windows.Forms;
 using BizHawk.Bizware.BizwareGL;
 using BizHawk.Bizware.OpenTK3;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Adapts a GraphicsControl to gain the power of remembering what was drawn to it, and keeping it presented in response to Paint events

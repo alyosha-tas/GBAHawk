@@ -6,12 +6,12 @@ using System.Linq;
 using System.Windows.Forms;
 using System.ComponentModel;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.ToolExtensions;
-using BizHawk.Client.EmuHawk.Properties;
+using BizHawk.Client.GBAHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.Properties;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class TAStudio : ToolFormBase, IToolFormAutoConfig, IControlMainform
 	{

@@ -9,13 +9,13 @@ using System.Windows.Forms;
 using BizHawk.Bizware.DirectX;
 using BizHawk.Bizware.OpenTK3;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.CustomControls;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.CustomControls;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.WinForms.Controls;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public partial class MainForm
 	{

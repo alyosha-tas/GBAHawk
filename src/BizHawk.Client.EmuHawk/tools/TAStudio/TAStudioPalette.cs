@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <remarks>
 	/// TODO these colours are obviously related in some way, calculate the lighter/darker shades from a base colour

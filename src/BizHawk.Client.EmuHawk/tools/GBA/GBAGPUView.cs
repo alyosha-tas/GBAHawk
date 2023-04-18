@@ -235,7 +235,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.Gameboy
 	}
 }
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[SpecializedTool("GPU Viewer")]
 	public partial class GbaGpuView : ToolFormBase, IToolFormAutoConfig

@@ -2,24 +2,21 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace BizHawk.Client.EmuHawk.Properties
+namespace BizHawk.Client.GBAHawk.Properties
 {
 	internal static class Resources
 	{
 		/// <param name="filename">Dir separator is '<c>.</c>'. Filename is relative to <c>&lt;NS>/images</c> and omits <c>.png</c> extension.</param>
-		private static Bitmap ReadEmbeddedBitmap(string filename) => new Bitmap(EmuHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.png"));
+		private static Bitmap ReadEmbeddedBitmap(string filename) => new Bitmap(GBAHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.png"));
 
 		/// <param name="filename">Dir separator is '<c>.</c>'. Filename is relative to <c>&lt;NS>/images</c> and omits <c>.ico</c> extension.</param>
-		private static Icon ReadEmbeddedIcon(string filename) => new Icon(EmuHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.ico"));
+		private static Icon ReadEmbeddedIcon(string filename) => new Icon(GBAHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.ico"));
 
 		/// <param name="filename">Dir separator is '<c>.</c>'. Filename is relative to <c>&lt;NS>/images</c> and omits <c>.ico</c> extension.</param>
-		private static Bitmap ReadEmbeddedIconAsBitmap(string filename) => new Bitmap(EmuHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.ico"));
+		private static Bitmap ReadEmbeddedIconAsBitmap(string filename) => new Bitmap(GBAHawk.ReflectionCache.EmbeddedResourceStream($"images.{filename}.ico"));
 
 		internal static readonly Lazy<Bitmap> GbaController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.GBA_Controller"));
 		internal static readonly Lazy<Bitmap> GbController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.GBController"));
-		internal static readonly Lazy<Bitmap> NesController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.NES_Controller"));
-		internal static readonly Lazy<Bitmap> SmsController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.SMSController"));
-		internal static readonly Lazy<Bitmap> SnesController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.SNES_Controller"));
 
 		internal static readonly Bitmap Add = ReadEmbeddedBitmap("add");
 		internal static readonly Bitmap AddEdit = ReadEmbeddedBitmap("AddEdit");
@@ -33,7 +30,7 @@ namespace BizHawk.Client.EmuHawk.Properties
 		internal static readonly Icon BasicBot = ReadEmbeddedIcon("basicbot");
 		internal static readonly Bitmap BasicBotBit = ReadEmbeddedBitmap("basicbotbit");
 		internal static readonly Bitmap Blank = ReadEmbeddedBitmap("Blank");
-		internal static readonly Cursor BlankCursor = new Cursor(EmuHawk.ReflectionCache.EmbeddedResourceStream("images.BlankCursor.cur"));
+		internal static readonly Cursor BlankCursor = new Cursor(GBAHawk.ReflectionCache.EmbeddedResourceStream("images.BlankCursor.cur"));
 		internal static readonly Bitmap BlueDown = ReadEmbeddedBitmap("BlueDown");
 		internal static readonly Bitmap BlueUp = ReadEmbeddedBitmap("BlueUp");
 		internal static readonly Bitmap Both = ReadEmbeddedBitmap("Both");

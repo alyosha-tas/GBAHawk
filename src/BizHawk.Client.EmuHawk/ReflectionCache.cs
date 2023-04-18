@@ -9,15 +9,15 @@ using System.Reflection;
 using BizHawk.Common;
 using BizHawk.Common.StringExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class ReflectionCache
 	{
-		private const string EMBED_PREFIX = "BizHawk.Client.EmuHawk.";
+		private const string EMBED_PREFIX = "BizHawk.Client.GBAHawk.";
 
 		private static Type[]? _types = null;
 
-		private static readonly Assembly Asm = typeof(BizHawk.Client.EmuHawk.ReflectionCache).Assembly;
+		private static readonly Assembly Asm = typeof(BizHawk.Client.GBAHawk.ReflectionCache).Assembly;
 
 		public static readonly Version AsmVersion = Asm.GetName().Version!;
 

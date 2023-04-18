@@ -1,7 +1,7 @@
 using System.Windows.Forms;
 using BizHawk.Bizware.BizwareGL;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// a base class for deriving/wrapping from a IGraphicsControl.

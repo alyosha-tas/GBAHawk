@@ -8,7 +8,7 @@ using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 using BizHawk.Common;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	// TODO - Allow relative paths in record TextBox
 	public partial class RecordMovie : Form, IDialogParent

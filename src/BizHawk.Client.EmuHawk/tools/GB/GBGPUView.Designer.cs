@@ -1,4 +1,4 @@
-﻿namespace BizHawk.Client.EmuHawk
+﻿namespace BizHawk.Client.GBAHawk
 {
 	partial class GbGpuView
 	{
@@ -59,16 +59,16 @@
 			this.buttonChangeColor = new System.Windows.Forms.Button();
 			this.panelSpriteBackColor = new System.Windows.Forms.Panel();
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-			this.bmpViewMemory = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewDetails = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewOAM = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewOBJ = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewBGPal = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewSPPal = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewTiles1 = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewTiles2 = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewBG = new BizHawk.Client.EmuHawk.BmpView();
-			this.bmpViewWin = new BizHawk.Client.EmuHawk.BmpView();
+			this.bmpViewMemory = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewDetails = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewOAM = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewOBJ = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewBGPal = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewSPPal = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewTiles1 = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewTiles2 = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewBG = new BizHawk.Client.GBAHawk.BmpView();
+			this.bmpViewWin = new BizHawk.Client.GBAHawk.BmpView();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.groupBox3.SuspendLayout();

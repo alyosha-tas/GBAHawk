@@ -1,7 +1,7 @@
 using BizHawk.Bizware.BizwareGL;
 using BizHawk.Bizware.OpenTK3;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public static class IGLExtensions
 	{

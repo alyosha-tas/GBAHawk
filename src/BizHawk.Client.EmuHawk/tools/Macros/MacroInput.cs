@@ -5,9 +5,9 @@ using System.IO;
 
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
-using BizHawk.Client.EmuHawk.ToolExtensions;
+using BizHawk.Client.GBAHawk.ToolExtensions;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	[Tool(false, null)]
 	public partial class MacroInputTool : ToolFormBase, IToolFormAutoConfig

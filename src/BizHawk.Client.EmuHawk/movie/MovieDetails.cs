@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	/// <summary>
 	/// Used for the sorting of the movie details in PlayMovie.cs

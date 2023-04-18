@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using System.ComponentModel;
 
-namespace BizHawk.Client.EmuHawk
+namespace BizHawk.Client.GBAHawk
 {
 	public class MenuButton : Button
 	{
