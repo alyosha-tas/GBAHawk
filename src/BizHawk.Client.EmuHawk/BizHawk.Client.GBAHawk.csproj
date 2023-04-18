@@ -6,7 +6,7 @@
 	<Import Project="../MainSlnExecutable.props" />
 	<PropertyGroup>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<ApplicationIcon>images/logo.ico</ApplicationIcon>
+		<ApplicationIcon>images\GBAHawk_img.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<Nullable>disable</Nullable>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
@@ -26,7 +26,7 @@
 		<ProjectReference Include="$(ProjectDir)../BizHawk.Bizware.DirectX/BizHawk.Bizware.DirectX.csproj" />
 		<ProjectReference Include="$(ProjectDir)../BizHawk.WinForms.Controls/BizHawk.WinForms.Controls.csproj" />
 		<Compile Remove="Properties/Settings.Designer.cs" />
-		<Content Include="images/logo.ico" />
+		<Content Include="images\GBAHawk_img.ico" />
 		<EmbeddedResource Include="images/**/*" />
 		<EmbeddedResource Include="Resources/**/*" />
 		<EmbeddedResource Remove="images/.ico" />

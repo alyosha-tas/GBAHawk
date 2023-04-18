@@ -179,7 +179,7 @@ namespace BizHawk.Client.GBAHawk
 			AVIStatusLabel.Image = Properties.Resources.Blank;
 			LedLightStatusLabel.Image = Properties.Resources.LightOff;
 			KeyPriorityStatusLabel.Image = Properties.Resources.Both;
-			CoreNameStatusBarButton.Image = Properties.Resources.CorpHawkSmall;
+			CoreNameStatusBarButton.Image = Properties.Resources.GBAHawkSmall;
 			LinkConnectStatusBarButton.Image = Properties.Resources.Connect16X16;
 			OpenRomContextMenuItem.Image = Properties.Resources.OpenFile;
 			LoadLastRomContextMenuItem.Image = Properties.Resources.Recent;
@@ -2438,7 +2438,7 @@ namespace BizHawk.Client.GBAHawk
 			CoreNameStatusBarButton.Visible = true;
 
 			CoreNameStatusBarButton.Text = coreDispName;
-			CoreNameStatusBarButton.Image = Properties.Resources.CorpHawkSmall;
+			CoreNameStatusBarButton.Image = Properties.Resources.GBAHawkSmall;
 			CoreNameStatusBarButton.ToolTipText = "";
 
 		}

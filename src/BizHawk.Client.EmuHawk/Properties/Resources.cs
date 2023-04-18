@@ -44,11 +44,10 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap Checkbox = ReadEmbeddedBitmap("checkbox");
 		internal static readonly Bitmap Circle = ReadEmbeddedBitmap("Circle");
 		internal static readonly Bitmap Close = ReadEmbeddedBitmap("Close");
-		internal static readonly Icon CommandWindow = ReadEmbeddedIcon("commandWindow");
+		internal static readonly Icon CommandWindow = ReadEmbeddedIcon("GBAHawk_img");
 		internal static readonly Bitmap Connect16X16 = ReadEmbeddedBitmap("connect_16x16");
 		internal static readonly Bitmap CopyFolder = ReadEmbeddedBitmap("CopyFolderHS");
-		internal static readonly Bitmap CorpHawk = ReadEmbeddedBitmap("corphawk");
-		internal static readonly Bitmap CorpHawkSmall = ReadEmbeddedBitmap("CorpHawkSmall");
+		internal static readonly Bitmap GBAHawkSmall = ReadEmbeddedBitmap("GBAHawk_img");
 		internal static readonly Bitmap Cross = ReadEmbeddedBitmap("Cross");
 		internal static readonly Bitmap Cut = ReadEmbeddedBitmap("CutHS");
 		internal static readonly Bitmap Debugger = ReadEmbeddedBitmap("Debugger");
@@ -82,9 +81,8 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap LightOff = ReadEmbeddedBitmap("LightOff");
 		internal static readonly Bitmap LightOn = ReadEmbeddedBitmap("LightOn");
 		internal static readonly Bitmap LoadConfig = ReadEmbeddedBitmap("LoadConfig");
-		internal static readonly Icon Logo = ReadEmbeddedIcon("logo");
+		internal static readonly Icon Logo = ReadEmbeddedIcon("GBAHawk_img");
 		internal static readonly Bitmap LuaPictureBox = ReadEmbeddedBitmap("luaPictureBox");
-		internal static readonly Bitmap Mame = ReadEmbeddedBitmap("mame");
 		internal static readonly Bitmap MessageConfig = ReadEmbeddedBitmap("MessageConfig");
 		internal static readonly Icon MonitorIcon = ReadEmbeddedIcon("monitor");
 		internal static readonly Bitmap Monitor = ReadEmbeddedBitmap("monitor");
@@ -106,7 +104,6 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap Paste = ReadEmbeddedBitmap("Paste");
 		internal static readonly Bitmap Pause = ReadEmbeddedBitmap("Pause");
 		internal static readonly Bitmap Pcb = ReadEmbeddedBitmap("pcb");
-		internal static readonly Icon PceIcon = ReadEmbeddedIcon("pce");
 		internal static readonly Bitmap Pencil = ReadEmbeddedBitmap("pencil");
 		internal static readonly Icon PencilIcon = ReadEmbeddedIcon("pencil");
 		internal static readonly Bitmap Play = ReadEmbeddedBitmap("Play");
