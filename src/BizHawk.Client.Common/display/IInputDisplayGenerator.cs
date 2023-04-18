@@ -9,7 +9,7 @@ namespace BizHawk.Client.Common
 {
 	/// <summary>
 	/// An implementation of <see cref="IInputDisplayGenerator"/> that
-	/// uses .bk2 mnemonics as the basis for display
+	/// uses .gbmv mnemonics as the basis for display
 	/// </summary>
 	public class Bk2InputDisplayGenerator : IInputDisplayGenerator
 	{

@@ -187,7 +187,7 @@ namespace BizHawk.Client.EmuHawk
 				else throw;
 			}
 			
-			var preferredExt = _movieSession.Movie?.PreferredExtension ?? "bk2";
+			var preferredExt = _movieSession.Movie?.PreferredExtension ?? "gbmv";
 			using var sfd = new SaveFileDialog
 			{
 				InitialDirectory = movieFolderPath,

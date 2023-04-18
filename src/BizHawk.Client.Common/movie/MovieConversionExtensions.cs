@@ -22,7 +22,7 @@ namespace BizHawk.Client.Common
 			foreach (var (k, v) in old.HeaderEntries) tas.HeaderEntries[k] = v;
 
 			// TODO: we have this version number string generated in multiple places
-			tas.HeaderEntries[HeaderKeys.MovieVersion] = $"BizHawk v2.0 Tasproj v{TasMovie.CurrentVersion}";
+			tas.HeaderEntries[HeaderKeys.MovieVersion] = $"GBAHawk v1.0 Tasproj v{TasMovie.CurrentVersion}";
 
 			tas.SyncSettingsJson = old.SyncSettingsJson;
 
@@ -45,35 +45,35 @@ namespace BizHawk.Client.Common
 			return tas;
 		}
 
-		public static IMovie ToBk2(this IMovie old)
+		public static IMovie Togbmv(this IMovie old)
 		{
-			var bk2 = old.Session.Get(old.Filename.Replace(old.PreferredExtension, gbmvMovie.Extension));
-			bk2.CopyLog(old.GetLogEntries());
+			var gbmv = old.Session.Get(old.Filename.Replace(old.PreferredExtension, gbmvMovie.Extension));
+			gbmv.CopyLog(old.GetLogEntries());
 
-			bk2.HeaderEntries.Clear();
-			foreach (var (k, v) in old.HeaderEntries) bk2.HeaderEntries[k] = v;
+			gbmv.HeaderEntries.Clear();
+			foreach (var (k, v) in old.HeaderEntries) gbmv.HeaderEntries[k] = v;
 
 			// TODO: we have this version number string generated in multiple places
-			bk2.HeaderEntries[HeaderKeys.MovieVersion] = "BizHawk v2.0";
+			gbmv.HeaderEntries[HeaderKeys.MovieVersion] = "GBAHawk v1.0";
 
-			bk2.SyncSettingsJson = old.SyncSettingsJson;
+			gbmv.SyncSettingsJson = old.SyncSettingsJson;
 
-			bk2.Comments.Clear();
+			gbmv.Comments.Clear();
 			foreach (var comment in old.Comments)
 			{
-				bk2.Comments.Add(comment);
+				gbmv.Comments.Add(comment);
 			}
 
-			bk2.Subtitles.Clear();
+			gbmv.Subtitles.Clear();
 			foreach (var sub in old.Subtitles)
 			{
-				bk2.Subtitles.Add(sub);
+				gbmv.Subtitles.Add(sub);
 			}
 
-			bk2.BinarySavestate = old.BinarySavestate;
-			bk2.SaveRam = old.SaveRam;
+			gbmv.BinarySavestate = old.BinarySavestate;
+			gbmv.SaveRam = old.SaveRam;
 
-			return bk2;
+			return gbmv;
 		}
 
 		public static ITasMovie ConvertToSavestateAnchoredMovie(this ITasMovie old, int frame, byte[] savestate)

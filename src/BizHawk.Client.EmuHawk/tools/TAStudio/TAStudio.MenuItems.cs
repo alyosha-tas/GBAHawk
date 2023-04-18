@@ -200,20 +200,20 @@ namespace BizHawk.Client.EmuHawk
 			}
 		}
 
-		private void SaveBk2BackupMenuItem_Click(object sender, EventArgs e)
+		private void SavegbmvBackupMenuItem_Click(object sender, EventArgs e)
 		{
 			_autosaveTimer.Stop();
-			var bk2 = CurrentTasMovie.ToBk2();
-			MessageStatusLabel.Text = "Exporting to .bk2...";
+			var gbmv = CurrentTasMovie.Togbmv();
+			MessageStatusLabel.Text = "Exporting to .gbmv...";
 			Cursor = Cursors.WaitCursor;
 			Update();
-			bk2.SaveBackup();
+			gbmv.SaveBackup();
 			if (Settings.AutosaveInterval > 0)
 			{
 				_autosaveTimer.Start();
 			}
 
-			MessageStatusLabel.Text = "Backup .bk2 saved to \"Movie backups\" path.";
+			MessageStatusLabel.Text = "Backup .gbmv saved to \"Movie backups\" path.";
 			Cursor = Cursors.Default;
 		}
 
@@ -285,12 +285,12 @@ namespace BizHawk.Client.EmuHawk
 				DialogController.ShowMessageBox("This core requires emulation to be on the last frame when writing the movie, otherwise movie length will appear incorrect.\nTAStudio can't handle this, so Export BK2, play it to the end, and then Save Movie.", "Warning", EMsgBoxIcon.Warning);
 			}
 
-			var bk2 = CurrentTasMovie.ToBk2();
-			MessageStatusLabel.Text = "Exporting to .bk2...";
+			var gbmv = CurrentTasMovie.Togbmv();
+			MessageStatusLabel.Text = "Exporting to .gbmv...";
 			Cursor = Cursors.WaitCursor;
 			Update();
 			string exportResult = " not exported.";
-			var file = new FileInfo(bk2.Filename);
+			var file = new FileInfo(gbmv.Filename);
 			if (file.Exists)
 			{
 				var result = MainForm.DoWithTempMute(() => MessageBox.Show(
@@ -301,13 +301,13 @@ namespace BizHawk.Client.EmuHawk
 					MessageBoxDefaultButton.Button3));
 				if (result == DialogResult.Yes)
 				{
-					bk2.Save();
+					gbmv.Save();
 					exportResult = " exported.";
 				}
 			}
 			else
 			{
-				bk2.Save();
+				gbmv.Save();
 				exportResult = " exported.";
 			}
 
@@ -316,7 +316,7 @@ namespace BizHawk.Client.EmuHawk
 				_autosaveTimer.Start();
 			}
 
-			MessageStatusLabel.Text = bk2.Name + exportResult;
+			MessageStatusLabel.Text = gbmv.Name + exportResult;
 			Cursor = Cursors.Default;
 		}
 
@@ -818,7 +818,7 @@ namespace BizHawk.Client.EmuHawk
 		{
 			AutopauseAtEndOfMovieMenuItem.Checked = Settings.AutoPause;
 			EmptyNewMarkerNotesMenuItem.Checked = Settings.EmptyMarkers;
-			AutosaveAsBk2MenuItem.Checked = Settings.AutosaveAsBk2;
+			AutosaveAsgbmvMenuItem.Checked = Settings.AutosaveAsgbmv;
 			AutosaveAsBackupFileMenuItem.Checked = Settings.AutosaveAsBackupFile;
 			BackupPerFileSaveMenuItem.Checked = Settings.BackupPerFileSave;
 			SingleClickAxisEditMenuItem.Checked = Settings.SingleClickAxisEdit;
@@ -926,9 +926,9 @@ namespace BizHawk.Client.EmuHawk
 			}
 		}
 
-		private void AutosaveAsBk2MenuItem_Click(object sender, EventArgs e)
+		private void AutosaveAsgbmvMenuItem_Click(object sender, EventArgs e)
 		{
-			Settings.AutosaveAsBk2 ^= true;
+			Settings.AutosaveAsgbmv ^= true;
 		}
 
 		private void AutosaveAsBackupFileMenuItem_Click(object sender, EventArgs e)

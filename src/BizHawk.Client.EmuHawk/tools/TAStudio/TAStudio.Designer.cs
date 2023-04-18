@@ -41,7 +41,7 @@ namespace BizHawk.Client.EmuHawk
 			this.SaveTASMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.SaveAsTASMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.SaveBackupMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.SaveBk2BackupMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
+			this.SavegbmvBackupMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.RecentSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator3 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.toolStripSeparator1 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
@@ -86,7 +86,7 @@ namespace BizHawk.Client.EmuHawk
 			this.toolStripSeparator26 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.autosaveToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.SetAutosaveIntervalMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.AutosaveAsBk2MenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
+			this.AutosaveAsgbmvMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.AutosaveAsBackupFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.BackupPerFileSaveMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator9 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
@@ -229,7 +229,7 @@ namespace BizHawk.Client.EmuHawk
             this.SaveTASMenuItem,
             this.SaveAsTASMenuItem,
             this.SaveBackupMenuItem,
-            this.SaveBk2BackupMenuItem,
+            this.SavegbmvBackupMenuItem,
             this.RecentSubMenu,
             this.toolStripSeparator1,
             this.saveSelectionToMacroToolStripMenuItem,
@@ -288,11 +288,11 @@ namespace BizHawk.Client.EmuHawk
 			this.SaveBackupMenuItem.Text = "Save Backup";
 			this.SaveBackupMenuItem.Click += new System.EventHandler(this.SaveBackupMenuItem_Click);
 			// 
-			// SaveBk2BackupMenuItem
+			// SavegbmvBackupMenuItem
 			// 
-			this.SaveBk2BackupMenuItem.Text = "Save Bk2 Backup";
-			this.SaveBk2BackupMenuItem.Visible = false;
-			this.SaveBk2BackupMenuItem.Click += new System.EventHandler(this.SaveBk2BackupMenuItem_Click);
+			this.SavegbmvBackupMenuItem.Text = "Save gbmv Backup";
+			this.SavegbmvBackupMenuItem.Visible = false;
+			this.SavegbmvBackupMenuItem.Click += new System.EventHandler(this.SavegbmvBackupMenuItem_Click);
 			// 
 			// RecentSubMenu
 			// 
@@ -527,7 +527,7 @@ namespace BizHawk.Client.EmuHawk
 			// 
 			this.autosaveToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.SetAutosaveIntervalMenuItem,
-            this.AutosaveAsBk2MenuItem,
+            this.AutosaveAsgbmvMenuItem,
             this.AutosaveAsBackupFileMenuItem});
 			this.autosaveToolStripMenuItem.Text = "Autosave";
 			// 
@@ -536,10 +536,10 @@ namespace BizHawk.Client.EmuHawk
 			this.SetAutosaveIntervalMenuItem.Text = "Set Autosave Interval";
 			this.SetAutosaveIntervalMenuItem.Click += new System.EventHandler(this.SetAutosaveIntervalMenuItem_Click);
 			// 
-			// AutosaveAsBk2MenuItem
+			// AutosaveAsgbmvMenuItem
 			// 
-			this.AutosaveAsBk2MenuItem.Text = "Autosave As Bk2";
-			this.AutosaveAsBk2MenuItem.Click += new System.EventHandler(this.AutosaveAsBk2MenuItem_Click);
+			this.AutosaveAsgbmvMenuItem.Text = "Autosave As gbmv";
+			this.AutosaveAsgbmvMenuItem.Click += new System.EventHandler(this.AutosaveAsgbmvMenuItem_Click);
 			// 
 			// AutosaveAsBackupFileMenuItem
 			// 
@@ -1381,11 +1381,11 @@ namespace BizHawk.Client.EmuHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ForumThreadMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx autosaveToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetAutosaveIntervalMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AutosaveAsBk2MenuItem;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AutosaveAsgbmvMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AutosaveAsBackupFileMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BackupPerFileSaveMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveBackupMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveBk2BackupMenuItem;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SavegbmvBackupMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SingleClickAxisEditMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadBranchOnDoubleclickMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetFontMenuItem;

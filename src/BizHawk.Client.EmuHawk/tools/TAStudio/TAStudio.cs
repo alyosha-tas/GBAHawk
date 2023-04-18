@@ -70,7 +70,7 @@ namespace BizHawk.Client.EmuHawk
 				BranchCellHoverInterval = 1;
 				SeekingCutoffInterval = 2;
 				AutosaveInterval = 120000;
-				AutosaveAsBk2 = false;
+				AutosaveAsgbmv = false;
 				AutosaveAsBackupFile = false;
 				BackupPerFileSave = false;
 				SingleClickAxisEdit = false;
@@ -98,7 +98,7 @@ namespace BizHawk.Client.EmuHawk
 			public int BranchCellHoverInterval { get; set; }
 			public int SeekingCutoffInterval { get; set; } // unused, relying on VisibleRows is smarter
 			public uint AutosaveInterval { get; set; }
-			public bool AutosaveAsBk2 { get; set; }
+			public bool AutosaveAsgbmv { get; set; }
 			public bool AutosaveAsBackupFile { get; set; }
 			public bool BackupPerFileSave { get; set; }
 			public bool SingleClickAxisEdit { get; set; }
@@ -300,9 +300,9 @@ namespace BizHawk.Client.EmuHawk
 
 			if (Settings.AutosaveAsBackupFile)
 			{
-				if (Settings.AutosaveAsBk2)
+				if (Settings.AutosaveAsgbmv)
 				{
-					SaveBk2BackupMenuItem_Click(sender, e);
+					SavegbmvBackupMenuItem_Click(sender, e);
 				}
 				else
 				{
@@ -311,7 +311,7 @@ namespace BizHawk.Client.EmuHawk
 			}
 			else
 			{
-				if (Settings.AutosaveAsBk2)
+				if (Settings.AutosaveAsgbmv)
 				{
 					ToBk2MenuItem_Click(sender, e);
 				}
