@@ -5,7 +5,7 @@ using BizHawk.Common;
 
 namespace BizHawk.Client.Common
 {
-	public partial class Bk2Movie
+	public partial class gbmvMovie
 	{
 		protected IStringLog Log { get; set; } = StringLogUtil.MakeStringLog();
 		protected string LogKey { get; set; } = "";

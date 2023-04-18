@@ -5,7 +5,7 @@ using BizHawk.Emulation.Common;
 // ReSharper disable StyleCop.SA1509
 namespace BizHawk.Client.Common
 {
-	internal static class Bk2MnemonicLookup
+	internal static class gbmvMnemonicLookup
 	{
 		public static char Lookup(string button, string systemId)
 		{

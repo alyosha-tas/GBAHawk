@@ -5,7 +5,7 @@ using BizHawk.Common;
 
 namespace BizHawk.Client.Common
 {
-	public class Bk2Header : Dictionary<string, string>
+	public class gbmvHeader : Dictionary<string, string>
 	{
 		public new string this[string key]
 		{

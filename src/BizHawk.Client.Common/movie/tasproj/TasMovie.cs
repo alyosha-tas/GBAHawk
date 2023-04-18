@@ -8,7 +8,7 @@ using BizHawk.Emulation.Common;
 
 namespace BizHawk.Client.Common
 {
-	internal sealed partial class TasMovie : Bk2Movie, ITasMovie
+	internal sealed partial class TasMovie : gbmvMovie, ITasMovie
 	{
 		public new const string Extension = "tasproj";
 		private IInputPollable _inputPollable;
@@ -63,7 +63,7 @@ namespace BizHawk.Client.Common
 
 			foreach (var button in emulator.ControllerDefinition.BoolButtons)
 			{
-				_mnemonicCache[button] = Bk2MnemonicLookup.Lookup(button, emulator.SystemId);
+				_mnemonicCache[button] = gbmvMnemonicLookup.Lookup(button, emulator.SystemId);
 			}
 		}
 
@@ -148,7 +148,7 @@ namespace BizHawk.Client.Common
 		}
 
 
-		private (int Frame, IMovieController Controller) _displayCache = (-1, new Bk2Controller("", NullController.Instance.Definition));
+		private (int Frame, IMovieController Controller) _displayCache = (-1, new gbmvController("", NullController.Instance.Definition));
 
 		/// <summary>
 		/// Returns the mnemonic value for boolean buttons, and actual value for axes,

@@ -3,9 +3,9 @@ using System.Text;
 
 namespace BizHawk.Client.Common
 {
-	public partial class Bk2Movie
+	public partial class gbmvMovie
 	{
-		protected readonly Bk2Header Header = new Bk2Header();
+		protected readonly gbmvHeader Header = new gbmvHeader();
 		private string _syncSettingsJson = "";
 
 		public IDictionary<string, string> HeaderEntries => Header;

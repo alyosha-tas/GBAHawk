@@ -6,11 +6,11 @@ using BizHawk.Emulation.Cores;
 
 namespace BizHawk.Client.Common
 {
-	public partial class Bk2Movie : IMovie
+	public partial class gbmvMovie : IMovie
 	{
-		private Bk2Controller _adapter;
+		private gbmvController _adapter;
 
-		public Bk2Movie(IMovieSession session, string filename)
+		public gbmvMovie(IMovieSession session, string filename)
 		{
 			if (string.IsNullOrWhiteSpace(filename))
 			{
@@ -19,7 +19,7 @@ namespace BizHawk.Client.Common
 
 			Session = session;
 			Filename = filename;
-			Header[HeaderKeys.MovieVersion] = "BizHawk v2.0.0";
+			Header[HeaderKeys.MovieVersion] = "GBAHawk v1.0.0";
 		}
 
 		public virtual void Attach(IEmulator emulator)
@@ -50,14 +50,14 @@ namespace BizHawk.Client.Common
 
 		public virtual string PreferredExtension => Extension;
 
-		public const string Extension = "bk2";
+		public const string Extension = "gbmv";
 
 		public virtual bool Changes { get; protected set; }
 		public bool IsCountingRerecords { get; set; } = true;
 
 		public ILogEntryGenerator LogGeneratorInstance(IController source)
 		{
-			return new Bk2LogEntryGenerator(Emulator?.SystemId ?? SystemID, source);
+			return new gbmvLogEntryGenerator(Emulator?.SystemId ?? SystemID, source);
 		}
 
 		public int FrameCount => Log.Count;
@@ -139,7 +139,7 @@ namespace BizHawk.Client.Common
 		{
 			if (frame < FrameCount && frame >= 0)
 			{
-				_adapter ??= new Bk2Controller(LogKey, Session.MovieController.Definition);
+				_adapter ??= new gbmvController(LogKey, Session.MovieController.Definition);
 				_adapter.SetFromMnemonic(Log[frame]);
 				return _adapter;
 			}

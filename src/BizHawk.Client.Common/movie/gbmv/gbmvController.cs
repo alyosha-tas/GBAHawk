@@ -7,12 +7,12 @@ using BizHawk.Emulation.Common;
 
 namespace BizHawk.Client.Common
 {
-	internal class Bk2Controller : IMovieController
+	internal class gbmvController : IMovieController
 	{
 		private readonly WorkingDictionary<string, bool> _myBoolButtons = new WorkingDictionary<string, bool>();
 		private readonly WorkingDictionary<string, int> _myAxisControls = new WorkingDictionary<string, int>();
 
-		private readonly Bk2ControllerDefinition _type;
+		private readonly gbmvControllerDefinition _type;
 
 		private IList<ControlMap> _controlsOrdered;
 
@@ -27,7 +27,7 @@ namespace BizHawk.Client.Common
 
 		public IInputDisplayGenerator InputDisplayGenerator { get; set; } = null;
 
-		public Bk2Controller(string key, ControllerDefinition definition) : this(definition)
+		public gbmvController(string key, ControllerDefinition definition) : this(definition)
 		{
 			if (!string.IsNullOrEmpty(key))
 			{
@@ -39,9 +39,9 @@ namespace BizHawk.Client.Common
 			}
 		}
 
-		public Bk2Controller(ControllerDefinition definition)
+		public gbmvController(ControllerDefinition definition)
 		{
-			_type = new Bk2ControllerDefinition(definition);
+			_type = new gbmvControllerDefinition(definition);
 		}
 
 		public ControllerDefinition Definition => _type;
@@ -121,11 +121,11 @@ namespace BizHawk.Client.Common
 			public bool IsAxis { get; set; }
 		}
 
-		private class Bk2ControllerDefinition : ControllerDefinition
+		private class gbmvControllerDefinition : ControllerDefinition
 		{
 			public IReadOnlyList<IReadOnlyList<string>> ControlsFromLog = null;
 
-			public Bk2ControllerDefinition(ControllerDefinition source)
+			public gbmvControllerDefinition(ControllerDefinition source)
 				: base(source)
 			{
 			}

@@ -54,12 +54,12 @@ namespace BizHawk.Client.Common
 		public IInputAdapter MovieOut { get; } = new CopyControllerAdapter();
 		public IStickyAdapter StickySource { get; set; }
 
-		public IMovieController MovieController { get; private set; } = new Bk2Controller("", NullController.Instance.Definition);
+		public IMovieController MovieController { get; private set; } = new gbmvController("", NullController.Instance.Definition);
 
 		public IMovieController GenerateMovieController(ControllerDefinition definition = null)
 		{
 			// TODO: expose Movie.LogKey and pass in here
-			return new Bk2Controller("", definition ?? MovieController.Definition);
+			return new gbmvController("", definition ?? MovieController.Definition);
 		}
 
 		public void HandleFrameBefore()
@@ -239,7 +239,7 @@ namespace BizHawk.Client.Common
 
 		public void RunQueuedMovie(bool recordMode, IEmulator emulator)
 		{
-			MovieController = new Bk2Controller(emulator.ControllerDefinition);
+			MovieController = new gbmvController(emulator.ControllerDefinition);
 
 			Movie = _queuedMovie;
 			Movie.Attach(emulator);
@@ -313,7 +313,7 @@ namespace BizHawk.Client.Common
 				return new TasMovie(this, path, _quickBmpFile);
 			}
 
-			return new Bk2Movie(this, path);
+			return new gbmvMovie(this, path);
 		}
 
 		public void PopupMessage(string message) => _dialogParent.ModalMessageBox(message, "Warning", EMsgBoxIcon.Warning);

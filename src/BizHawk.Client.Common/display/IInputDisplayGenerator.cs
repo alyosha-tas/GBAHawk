@@ -23,7 +23,7 @@ namespace BizHawk.Client.Common
 			_cachedInputSpecs = source.Definition.OrderedControlsFlat.Select(button =>
 			{
 				if (source.Definition.Axes.TryGetValue(button, out var range)) return (button, range, null);
-				if (source.Definition.BoolButtons.Contains(button)) return (button, (AxisSpec?) null, (char?) Bk2MnemonicLookup.Lookup(button, systemId));
+				if (source.Definition.BoolButtons.Contains(button)) return (button, (AxisSpec?) null, (char?) gbmvMnemonicLookup.Lookup(button, systemId));
 				throw new Exception(ERR_MSG);
 			}).ToList();
 			_source = source;

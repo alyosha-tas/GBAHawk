@@ -7,7 +7,7 @@ using BizHawk.Emulation.Common;
 
 namespace BizHawk.Client.Common
 {
-	public partial class Bk2Movie
+	public partial class gbmvMovie
 	{
 		public void Save()
 		{

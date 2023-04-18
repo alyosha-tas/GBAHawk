@@ -6,12 +6,12 @@ using BizHawk.Emulation.Common;
 
 namespace BizHawk.Client.Common
 {
-	internal class Bk2LogEntryGenerator : ILogEntryGenerator
+	internal class gbmvLogEntryGenerator : ILogEntryGenerator
 	{
 		private readonly string _systemId;
 		private readonly IController _source;
 
-		public Bk2LogEntryGenerator(string systemId, IController source)
+		public gbmvLogEntryGenerator(string systemId, IController source)
 		{
 			_systemId = systemId;
 			_source = source;
@@ -47,11 +47,11 @@ namespace BizHawk.Client.Common
 			{
 				if (_source.Definition.BoolButtons.Contains(button))
 				{
-					dict.Add(button, Bk2MnemonicLookup.Lookup(button, _systemId).ToString());
+					dict.Add(button, gbmvMnemonicLookup.Lookup(button, _systemId).ToString());
 				}
 				else if (_source.Definition.Axes.ContainsKey(button))
 				{
-					dict.Add(button, Bk2MnemonicLookup.LookupAxis(button, _systemId));
+					dict.Add(button, gbmvMnemonicLookup.LookupAxis(button, _systemId));
 				}
 			}
 
@@ -76,7 +76,7 @@ namespace BizHawk.Client.Common
 					else if (_source.Definition.BoolButtons.Contains(button))
 					{
 						sb.Append(!createEmpty && _source.IsPressed(button)
-							? Bk2MnemonicLookup.Lookup(button, _systemId)
+							? gbmvMnemonicLookup.Lookup(button, _systemId)
 							: '.');
 					}
 				}

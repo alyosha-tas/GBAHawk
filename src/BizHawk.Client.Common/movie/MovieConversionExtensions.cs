@@ -47,7 +47,7 @@ namespace BizHawk.Client.Common
 
 		public static IMovie ToBk2(this IMovie old)
 		{
-			var bk2 = old.Session.Get(old.Filename.Replace(old.PreferredExtension, Bk2Movie.Extension));
+			var bk2 = old.Session.Get(old.Filename.Replace(old.PreferredExtension, gbmvMovie.Extension));
 			bk2.CopyLog(old.GetLogEntries());
 
 			bk2.HeaderEntries.Clear();
