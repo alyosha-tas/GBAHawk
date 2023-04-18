@@ -19,7 +19,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<!-- target in Version project generates VersionInfo.gen.cs; note that the Version project MUST BE FIRST in solution file -->
-		<ProjectReference Include="$(ProjectDir)../BizHawk.Version/BizHawk.Version.csproj" ReferenceOutputAssembly="false" />
 		<Compile Update="VersionInfo.gen.cs" DependentUpon="VersionInfo.cs" />
 	</ItemGroup>
 </Project>
