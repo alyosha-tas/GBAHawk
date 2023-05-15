@@ -40,23 +40,14 @@ namespace BizHawk.Client.GBAHawk
 			_outputProvider = new SoundOutputProvider(_getCoreVsyncRateCallback);
 			Config = config;
 
-			if (OSTailoredCode.IsUnixHost)
+			_outputDevice = config.SoundOutputMethod switch
 			{
-				// if DirectSound or XAudio is chosen, use OpenAL, otherwise comply with the user's choice
-				_outputDevice = config.SoundOutputMethod == ESoundOutputMethod.Dummy
-					? (ISoundOutput) new DummySoundOutput(this)
-					: new OpenALSoundOutput(this, config.SoundDevice);
-			}
-			else
-			{
-				_outputDevice = config.SoundOutputMethod switch
-				{
-					ESoundOutputMethod.DirectSound => IndirectX.CreateDSSoundOutput(this, mainWindowHandle, config.SoundDevice),
-					ESoundOutputMethod.XAudio2 => IndirectX.CreateXAudio2SoundOutput(this, config.SoundDevice),
-					ESoundOutputMethod.OpenAL => new OpenALSoundOutput(this, config.SoundDevice),
-					_ => new DummySoundOutput(this)
-				};
-			}
+				ESoundOutputMethod.DirectSound => IndirectX.CreateDSSoundOutput(this, mainWindowHandle, config.SoundDevice),
+				ESoundOutputMethod.XAudio2 => IndirectX.CreateXAudio2SoundOutput(this, config.SoundDevice),
+				ESoundOutputMethod.OpenAL => new OpenALSoundOutput(this, config.SoundDevice),
+				_ => new DummySoundOutput(this)
+			};
+
 		}
 
 		/// <summary>

@@ -449,7 +449,6 @@ namespace BizHawk.Client.GBAHawk
 
 		private void ConfigAndRecordAVMenuItem_Click(object sender, EventArgs e)
 		{
-			if (OSTailoredCode.IsUnixHost) new MsgBox("Most of these options will cause crashes on Linux.", "A/V instability warning", MessageBoxIcon.Warning).ShowDialog();
 			RecordAv();
 		}
 

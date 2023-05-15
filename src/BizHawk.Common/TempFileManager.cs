@@ -89,14 +89,7 @@ namespace BizHawk.Common
 					{
 						try
 						{
-							if (OSTailoredCode.IsUnixHost)
-							{
-								fi.Delete(); // naive deletion, Mono doesn't care
-							}
-							else
-							{
-								Win32Imports.DeleteFileW(fi.FullName); // SHUT. UP. THE. EXCEPTIONS.
-							}
+							Win32Imports.DeleteFileW(fi.FullName); // SHUT. UP. THE. EXCEPTIONS.
 						}
 						catch
 						{

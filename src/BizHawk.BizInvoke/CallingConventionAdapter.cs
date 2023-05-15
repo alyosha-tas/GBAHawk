@@ -165,9 +165,7 @@ namespace BizHawk.BizInvoke
 			internal static readonly ICallingConventionAdapter WaterboxWrapper;
 			static WaterboxAdapter()
 			{
-				WaterboxWrapper = OSTailoredCode.IsUnixHost
-					? new NativeConvention()
-					: (ICallingConventionAdapter)new MsHostSysVGuest();
+				WaterboxWrapper = (ICallingConventionAdapter)new MsHostSysVGuest();
 			}
 
 			private readonly Dictionary<Delegate, int>? _slots;
@@ -241,7 +239,7 @@ namespace BizHawk.BizInvoke
 			static MsHostSysVGuest()
 			{
 				// If needed, these can be split out from waterboxhost.dll; they're not directly related to anything waterbox does.
-				ThunkDll = new DynamicLibraryImportResolver(OSTailoredCode.IsUnixHost ? "libwaterboxhost.so" : "waterboxhost.dll", hasLimitedLifetime: false);
+				ThunkDll = new DynamicLibraryImportResolver("waterboxhost.dll", hasLimitedLifetime: false);
 			}
 
 			private readonly MemoryBlock _memory;

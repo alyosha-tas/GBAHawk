@@ -65,7 +65,6 @@ namespace BizHawk.Client.GBAHawk
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
-			if (OSTailoredCode.IsUnixHost) FixBackColorOnControls(this);
 			UpdateWindowTitle();
 		}
 

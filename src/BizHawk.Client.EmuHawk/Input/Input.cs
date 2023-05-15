@@ -50,7 +50,6 @@ namespace BizHawk.Client.GBAHawk
 			Adapter = _currentConfig.HostInputMethod switch
 			{
 				EHostInputMethod.OpenTK => new OpenTKInputAdapter(),
-				_ when OSTailoredCode.IsUnixHost => new OpenTKInputAdapter(),
 				EHostInputMethod.DirectInput => new DirectInputAdapter(),
 				_ => throw new Exception()
 			};

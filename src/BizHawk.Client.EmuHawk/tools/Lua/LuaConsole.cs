@@ -178,8 +178,6 @@ namespace BizHawk.Client.GBAHawk
 				}
 			}
 
-			if (OSTailoredCode.IsUnixHost) WriteToOutputWindow("Lua in Mono is currently experimental. Please report bugs here: https://github.com/TASEmulators/BizHawk/issues/2951\n");
-
 			LuaListView.AllColumns.Clear();
 			SetColumns();
 

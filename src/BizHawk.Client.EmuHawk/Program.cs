@@ -26,13 +26,6 @@ namespace BizHawk.Client.GBAHawk
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			if (OSTC.IsUnixHost)
-			{
-				// for Unix, skip everything else and just wire up the event handler
-				AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-				return;
-			}
-
 			static void CheckLib(string dllToLoad, string desc)
 			{
 				var p = OSTC.LinkedLibManager.LoadOrZero(dllToLoad);
@@ -80,11 +73,7 @@ namespace BizHawk.Client.GBAHawk
 		private static int Main(string[] args)
 		{
 			var exitCode = SubMain(args);
-			if (OSTC.IsUnixHost)
-			{
-				Console.WriteLine("BizHawk has completed its shutdown routines, killing process...");
-				Process.GetCurrentProcess().Kill();
-			}
+
 			return exitCode;
 		}
 
@@ -173,11 +162,6 @@ namespace BizHawk.Client.GBAHawk
 				switch (dispMethod)
 				{
 					case EDispMethod.SlimDX9:
-						if (OSTC.CurrentOS != OSTC.DistinctOS.Windows)
-						{
-							// possibly sharing config w/ Windows, assume the user wants the not-slow method (but don't change the config)
-							return TryInitIGL(EDispMethod.OpenGL);
-						}
 						try
 						{
 							return CheckRenderer(IndirectX.CreateD3DGLImpl());
@@ -213,16 +197,13 @@ namespace BizHawk.Client.GBAHawk
 
 			Sound globalSound = null;
 
-			if (!OSTC.IsUnixHost)
-			{
-				//WHY do we have to do this? some intel graphics drivers (ig7icd64.dll 10.18.10.3304 on an unknown chip on win8.1) are calling SetDllDirectory() for the process, which ruins stuff.
-				//The relevant initialization happened just before in "create IGL context".
-				//It isn't clear whether we need the earlier SetDllDirectory(), but I think we do.
-				//note: this is pasted instead of being put in a static method due to this initialization code being sensitive to things like that, and not wanting to cause it to break
-				//pasting should be safe (not affecting the jit order of things)
-				var dllDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "dll");
-				_ = SetDllDirectory(dllDir);
-			}
+			//WHY do we have to do this? some intel graphics drivers (ig7icd64.dll 10.18.10.3304 on an unknown chip on win8.1) are calling SetDllDirectory() for the process, which ruins stuff.
+			//The relevant initialization happened just before in "create IGL context".
+			//It isn't clear whether we need the earlier SetDllDirectory(), but I think we do.
+			//note: this is pasted instead of being put in a static method due to this initialization code being sensitive to things like that, and not wanting to cause it to break
+			//pasting should be safe (not affecting the jit order of things)
+			var dllDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "dll");
+			_ = SetDllDirectory(dllDir);
 
 			Util.DebugWriteLine(EmuHawkUtil.CLRHostHasElevatedPrivileges ? "running as Superuser/Administrator" : "running as unprivileged user");
 

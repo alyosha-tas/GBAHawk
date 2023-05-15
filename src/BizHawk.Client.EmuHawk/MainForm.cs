@@ -557,7 +557,7 @@ namespace BizHawk.Client.GBAHawk
 				// I would like to trigger a repaint here, but this isn't done yet
 			};
 
-			if (!OSTailoredCode.IsUnixHost && !Config.SkipOutdatedOsCheck)
+			if (!Config.SkipOutdatedOsCheck)
 			{
 				var (winVersion, win10Release) = OSTailoredCode.HostWindowsVersion.Value;
 				var message = winVersion switch
@@ -1920,22 +1920,13 @@ namespace BizHawk.Client.GBAHawk
 		// sends an alt+mnemonic combination
 		private void SendAltKeyChar(char c)
 		{
-			switch (OSTailoredCode.CurrentOS)
-			{
-				case OSTailoredCode.DistinctOS.Linux:
-				case OSTailoredCode.DistinctOS.macOS:
-					// no mnemonics for you
-					break;
-				case OSTailoredCode.DistinctOS.Windows:
-					//HACK
-					var _ = typeof(ToolStrip).InvokeMember(
-						"ProcessMnemonicInternal",
-						BindingFlags.NonPublic | BindingFlags.InvokeMethod | BindingFlags.Instance,
-						null,
-						MainformMenu,
-						new object[] { c });
-					break;
-			}
+			//HACK
+			var _ = typeof(ToolStrip).InvokeMember(
+				"ProcessMnemonicInternal",
+				BindingFlags.NonPublic | BindingFlags.InvokeMethod | BindingFlags.Instance,
+				null,
+				MainformMenu,
+				new object[] { c });
 		}
 
 		public static readonly string ConfigFileFSFilterString = new FilesystemFilter("Config File", new[] { "ini" }).ToString();

@@ -13,11 +13,6 @@ namespace BizHawk.Common
 {
 	public static class OSTailoredCode
 	{
-		/// <remarks>macOS doesn't use <see cref="PlatformID.MacOSX">PlatformID.MacOSX</see></remarks>
-		public static readonly DistinctOS CurrentOS = Environment.OSVersion.Platform == PlatformID.Unix
-			? SimpleSubshell("uname", "-s", "Can't determine OS") == "Darwin" ? DistinctOS.macOS : DistinctOS.Linux
-			: DistinctOS.Windows;
-
 		private static readonly Lazy<(WindowsVersion, int?)?> _HostWindowsVersion = new Lazy<(WindowsVersion, int?)?>(() =>
 		{
 			static string GetRegValue(string key)
@@ -26,7 +21,7 @@ namespace BizHawk.Common
 				proc.Start();
 				return proc.StandardOutput.ReadToEnd().Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(new[] { "\t", "    " }, StringSplitOptions.RemoveEmptyEntries)[2];
 			}
-			if (CurrentOS != DistinctOS.Windows) return null;
+
 			var rawWinVer = float.Parse(GetRegValue("CurrentVersion"), NumberFormatInfo.InvariantInfo); // contains '.' even when system-wide decimal separator is ','
 			WindowsVersion winVer; // sorry if this elif chain is confusing, I couldn't be bothered writing and testing float equality --yoshi
 			if (rawWinVer < 6.0f) winVer = WindowsVersion.XP;
@@ -46,21 +41,11 @@ namespace BizHawk.Common
 			return (winVer, null);
 		});
 
-		private static readonly Lazy<bool> _isWSL = new(() => IsUnixHost && SimpleSubshell("uname", "-r", "missing uname?").Contains("microsoft", StringComparison.InvariantCultureIgnoreCase));
+		private static readonly Lazy<bool> _isWSL = new(() => false && SimpleSubshell("uname", "-r", "missing uname?").Contains("microsoft", StringComparison.InvariantCultureIgnoreCase));
 
 		public static (WindowsVersion Version, int? Win10Release)? HostWindowsVersion => _HostWindowsVersion.Value;
 
-		public static readonly bool IsUnixHost = CurrentOS != DistinctOS.Windows;
-
-		public static bool IsWSL => _isWSL.Value;
-
-		private static readonly Lazy<ILinkedLibManager> _LinkedLibManager = new Lazy<ILinkedLibManager>(() => CurrentOS switch
-		{
-			DistinctOS.Linux => new UnixMonoLLManager(),
-			DistinctOS.macOS => new UnixMonoLLManager(),
-			DistinctOS.Windows => new WindowsLLManager(),
-			_ => throw new ArgumentOutOfRangeException()
-		});
+		private static readonly Lazy<ILinkedLibManager> _LinkedLibManager = new Lazy<ILinkedLibManager>(() => new WindowsLLManager());
 
 		public static ILinkedLibManager LinkedLibManager => _LinkedLibManager.Value;
 
@@ -78,44 +63,6 @@ namespace BizHawk.Common
 
 			/// <exception cref="InvalidOperationException">could not find library</exception>
 			IntPtr LoadOrThrow(string dllToLoad);
-		}
-
-		private class UnixMonoLLManager : ILinkedLibManager
-		{
-			[DllImport("libdl.so.2")]
-			private static extern int dlclose(IntPtr handle);
-
-			[DllImport("libdl.so.2")]
-			private static extern IntPtr dlerror();
-
-			[DllImport("libdl.so.2")]
-			private static extern IntPtr dlopen(string fileName, int flags);
-
-			[DllImport("libdl.so.2")]
-			private static extern IntPtr dlsym(IntPtr handle, string symbol);
-
-			public int FreeByPtr(IntPtr hModule) => dlclose(hModule);
-
-			public IntPtr GetProcAddrOrZero(IntPtr hModule, string procName) => dlsym(hModule, procName);
-
-			public IntPtr GetProcAddrOrThrow(IntPtr hModule, string procName)
-			{
-				_ = dlerror(); // the Internet said to do this
-				var p = GetProcAddrOrZero(hModule, procName);
-				if (p != IntPtr.Zero) return p;
-				var errCharPtr = dlerror();
-				throw new InvalidOperationException($"error in {nameof(dlsym)}{(errCharPtr == IntPtr.Zero ? string.Empty : $": {Marshal.PtrToStringAnsi(errCharPtr)}")}");
-			}
-
-			public IntPtr LoadOrZero(string dllToLoad) => dlopen(dllToLoad, RTLD_NOW);
-
-			public IntPtr LoadOrThrow(string dllToLoad)
-			{
-				var ret = LoadOrZero(dllToLoad);
-				return ret != IntPtr.Zero ? ret : throw new InvalidOperationException($"got null pointer from {nameof(dlopen)}, error: {Marshal.PtrToStringAnsi(dlerror())}");
-			}
-
-			private const int RTLD_NOW = 2;
 		}
 
 		private class WindowsLLManager : ILinkedLibManager
@@ -151,13 +98,6 @@ namespace BizHawk.Common
 				var ret = LoadOrZero(dllToLoad);
 				return ret != IntPtr.Zero ? ret : throw new InvalidOperationException($"got null pointer from {nameof(LoadLibrary)}, error code: {GetLastError()}");
 			}
-		}
-
-		public enum DistinctOS : byte
-		{
-			Linux,
-			macOS,
-			Windows
 		}
 
 		public enum WindowsVersion

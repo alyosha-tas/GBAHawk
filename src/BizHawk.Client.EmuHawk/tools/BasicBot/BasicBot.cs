@@ -101,11 +101,6 @@ namespace BizHawk.Client.GBAHawk
 			PlayBestButton.Image = Resources.Play;
 			ClearBestButton.Image = Resources.Close;
 			StopBtn.Image = Resources.Stop;
-			if (OSTailoredCode.IsUnixHost)
-			{
-				AutoSize = false;
-				Margin = new(0, 0, 0, 8);
-			}
 
 			Settings = new BasicBotSettings();
 
@@ -139,8 +134,6 @@ namespace BizHawk.Client.GBAHawk
 				DialogResult = DialogResult.Cancel;
 				return;
 			}
-
-			if (OSTailoredCode.IsUnixHost) ClientSize = new(707, 587);
 
 			_previousInvisibleEmulation = InvisibleEmulationCheckBox.Checked = Settings.InvisibleEmulation;
 			_previousDisplayMessage = Config.DisplayMessages;

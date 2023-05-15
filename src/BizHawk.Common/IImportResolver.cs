@@ -51,7 +51,7 @@ namespace BizHawk.Common
 		/// <param name="hasLimitedLifetime">will never be unloaded iff false (like <see cref="DllImportAttribute">[DllImport]</see>)</param>
 		public DynamicLibraryImportResolver(string dllName, bool hasLimitedLifetime = true)
 		{
-			_p = OSTailoredCode.LinkedLibManager.LoadOrThrow(OSTailoredCode.IsUnixHost ? UnixResolveFilePath(dllName) : dllName); // on Windows, EmuHawk modifies its process' search path
+			_p = OSTailoredCode.LinkedLibManager.LoadOrThrow(dllName); // on Windows, EmuHawk modifies its process' search path
 			HasLimitedLifetime = hasLimitedLifetime;
 			if (!hasLimitedLifetime) GC.SuppressFinalize(this);
 		}

@@ -182,27 +182,15 @@ namespace BizHawk.Client.GBAHawk
 
 			DialogResult result;
 			string selectedPath;
-			if (OSTailoredCode.IsUnixHost)
+
+			using var f = new FolderBrowserEx
 			{
-				// FolderBrowserEx doesn't work in Mono for obvious reasons
-				using var f = new FolderBrowserDialog
-				{
-					Description = $"Set the directory for {name}",
-					SelectedPath = _pathEntries.AbsolutePathFor(box.Text, system)
-				};
-				result = f.ShowDialog();
-				selectedPath = f.SelectedPath;
-			}
-			else
-			{
-				using var f = new FolderBrowserEx
-				{
-					Description = $"Set the directory for {name}",
-					SelectedPath = _pathEntries.AbsolutePathFor(box.Text, system)
-				};
-				result = f.ShowDialog();
-				selectedPath = f.SelectedPath;
-			}
+				Description = $"Set the directory for {name}",
+				SelectedPath = _pathEntries.AbsolutePathFor(box.Text, system)
+			};
+			result = f.ShowDialog();
+			selectedPath = f.SelectedPath;
+
 			if (result.IsOk())
 			{
 				box.Text = _pathEntries.TryMakeRelative(selectedPath, system);

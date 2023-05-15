@@ -19,15 +19,6 @@ namespace BizHawk.Client.GBAHawk
 {
 	public static class ControlExtensions
 	{
-		/// <exception cref="ArgumentException"><typeparamref name="T"/> does not inherit <see cref="Enum"/></exception>
-		public static void PopulateFromEnum<T>(this ComboBox box, T enumVal)
-			where T : Enum
-		{
-			box.Items.Clear();
-			box.Items.AddRange(typeof(T).GetEnumDescriptions().Cast<object>().ToArray());
-			box.SelectedItem = enumVal.GetDescription();
-		}
-
 		/// <summary>extension method to make <see cref="Control.Invoke(Delegate)"/> easier to use</summary>
 		public static void Invoke(this Control control, Action action)
 			=> control.Invoke(action);
@@ -138,8 +129,6 @@ namespace BizHawk.Client.GBAHawk
 		/// <exception cref="Win32Exception">unmanaged call failed</exception>
 		public static void SetSortIcon(this ListView listViewControl, int columnIndex, SortOrder order)
 		{
-			if (OSTailoredCode.IsUnixHost) return;
-
 			const int LVM_GETHEADER = 4127;
 			const int HDM_GETITEM = 4619;
 			const int HDM_SETITEM = 4620;

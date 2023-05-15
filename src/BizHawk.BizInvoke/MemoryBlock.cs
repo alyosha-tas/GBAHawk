@@ -18,9 +18,7 @@ namespace BizHawk.BizInvoke
 				throw new ArgumentOutOfRangeException(nameof(size), size, "cannot create 0-length block");
 			Size = WaterboxUtils.AlignUp(size);
 
-			_pal = OSTailoredCode.IsUnixHost
-				? (IMemoryBlockPal)new MemoryBlockLinuxPal(Size)
-				: new MemoryBlockWindowsPal(Size);
+			_pal = new MemoryBlockWindowsPal(Size);
 			Start = _pal!.Start;
 			EndExclusive = Start + Size;
 		}

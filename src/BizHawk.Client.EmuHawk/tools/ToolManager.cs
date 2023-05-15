@@ -244,16 +244,8 @@ namespace BizHawk.Client.GBAHawk
 			((ToolStripMenuItem)menu[idx + 0]).Checked = settings.SaveWindowPosition;
 			var stayOnTopItem = (ToolStripMenuItem)menu[idx + 1];
 			stayOnTopItem.Checked = settings.TopMost;
-			if (OSTailoredCode.IsUnixHost)
-			{
-				// This is the job of the WM, and is usually exposed in window decorations or a context menu on them
-				stayOnTopItem.Enabled = false;
-				stayOnTopItem.Visible = false;
-			}
-			else
-			{
-				form.TopMost = settings.TopMost;
-			}
+			form.TopMost = settings.TopMost;
+
 			((ToolStripMenuItem)menu[idx + 2]).Checked = settings.FloatingWindow;
 			((ToolStripMenuItem)menu[idx + 3]).Checked = settings.AutoLoad;
 

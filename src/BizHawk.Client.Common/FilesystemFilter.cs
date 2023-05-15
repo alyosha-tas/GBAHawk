@@ -63,9 +63,7 @@ namespace BizHawk.Client.Common
 		public static string SerializeEntry(string desc, IReadOnlyCollection<string> exts)
 		{
 			var joinedLower = string.Join(";", exts.Select(static ext => $"*.{ext}"));
-			return OSTailoredCode.IsUnixHost
-				? $"{desc} ({joinedLower})|{string.Join(";", exts.Select(static ext => $"*.{ext};*.{ext.ToUpperInvariant()}"))}"
-				: $"{desc} ({joinedLower})|{joinedLower}";
+			return $"{desc} ({joinedLower})|{joinedLower}";
 		}
 	}
 }

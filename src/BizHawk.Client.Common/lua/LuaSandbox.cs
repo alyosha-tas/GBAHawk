@@ -33,13 +33,10 @@ namespace BizHawk.Client.Common
 			// first we'll bypass it with a general hack: don't do any setting if the value's already there (even at the OS level, setting the directory can be slow)
 			// yeah I know, not the smoothest move to compare strings here, in case path normalization is happening at some point
 			// but you got any better ideas?
-			currDirSpeedHack ??= OSTailoredCode.IsUnixHost ? Environment.CurrentDirectory : CWDHacks.Get();
+			currDirSpeedHack ??= CWDHacks.Get();
 			if (currDirSpeedHack == path) return true;
 
-			if (!OSTailoredCode.IsUnixHost) return CWDHacks.Set(target);
-			if (!System.IO.Directory.Exists(path)) return false; //TODO is this necessary with Mono? Linux is fine with the CWD being nonexistent. also, is this necessary with .NET Core on Windows? --yoshi
-			Environment.CurrentDirectory = path;
-			return true;
+			return CWDHacks.Set(target);
 		}
 
 		private void Sandbox(Action callback, Action exceptionCallback)

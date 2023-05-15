@@ -73,7 +73,7 @@ namespace BizHawk.Client.GBAHawk
 			var item = new ToolStripMenuItem(Path.GetFileName(fileName)) { Enabled = false };
 			try
 			{
-				if (!OSTailoredCode.IsUnixHost) MotWHack.RemoveMOTW(fileName);
+				MotWHack.RemoveMOTW(fileName);
 				var externalToolFile = Assembly.LoadFrom(fileName);
 				var entryPoint = externalToolFile.GetTypes()
 					.SingleOrDefault(t => typeof(IExternalToolForm).IsAssignableFrom(t) && t.GetCustomAttributes().OfType<ExternalToolAttribute>().Any());

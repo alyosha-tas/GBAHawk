@@ -39,9 +39,7 @@ namespace BizHawk.Client.GBAHawk
 			public int Duration { get; set; } = 0; //TODO implementation
 		}
 
-		private static readonly IScreenBlankTimer _screenBlankTimer = OSTailoredCode.IsUnixHost
-			? (IScreenBlankTimer) new UnixScreenBlankTimer()
-			: new Win32ScreenBlankTimer();
+		private static readonly IScreenBlankTimer _screenBlankTimer = new Win32ScreenBlankTimer();
 
 		private static int ctr;
 

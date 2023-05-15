@@ -73,7 +73,7 @@ namespace BizHawk.Client.GBAHawk
 					_nudDuration,
 					new LabelEx { Text = "seconds" },
 				},
-				Location = OSTailoredCode.IsUnixHost ? new(224, 380) : new(192, 360), // ¯\_(ツ)_/¯
+				Location = new(192, 360),
 				Size = new(300, 24),
 			});
 			ResumeLayout();

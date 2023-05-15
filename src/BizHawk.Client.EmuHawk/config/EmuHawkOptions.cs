@@ -70,7 +70,7 @@ namespace BizHawk.Client.GBAHawk
 			HandleAlternateKeyboardLayoutsCheckBox.Checked = _config.HandleAlternateKeyboardLayouts;
 			NeverAskSaveCheckbox.Checked = _config.SuppressAskSave;
 			SingleInstanceModeCheckbox.Checked = _config.SingleInstanceMode;
-			SingleInstanceModeCheckbox.Enabled = !OSTailoredCode.IsUnixHost;
+			SingleInstanceModeCheckbox.Enabled = true;
 
 			BackupSRamCheckbox.Checked = _config.BackupSaveram;
 			AutosaveSRAMCheckbox.Checked = _config.AutosaveSaveRAM;

@@ -53,11 +53,8 @@ namespace BizHawk.Client.GBAHawk
 
 		private ESoundOutputMethod GetSelectedOutputMethod()
 		{
-			if (!OSTailoredCode.IsUnixHost)
-			{
-				if (rbOutputMethodDirectSound.Checked) return ESoundOutputMethod.DirectSound;
-				if (rbOutputMethodXAudio2.Checked) return ESoundOutputMethod.XAudio2;
-			}
+			if (rbOutputMethodDirectSound.Checked) return ESoundOutputMethod.DirectSound;
+			if (rbOutputMethodXAudio2.Checked) return ESoundOutputMethod.XAudio2;
 			if (rbOutputMethodOpenAL.Checked) return ESoundOutputMethod.OpenAL;
 			return ESoundOutputMethod.Dummy;
 		}

@@ -63,7 +63,7 @@ namespace BizHawk.Client.GBAHawk
 
 		protected override void OnMouseClick(MouseEventArgs e)
 		{
-			if (!OSTailoredCode.IsUnixHost) Win32Imports.HideCaret(Handle);
+			Win32Imports.HideCaret(Handle);
 			base.OnMouseClick(e);
 		}
 
@@ -255,7 +255,7 @@ namespace BizHawk.Client.GBAHawk
 
 		protected override void OnGotFocus(EventArgs e)
 		{
-			if (!OSTailoredCode.IsUnixHost) Win32Imports.HideCaret(Handle);
+			Win32Imports.HideCaret(Handle);
 		}
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
