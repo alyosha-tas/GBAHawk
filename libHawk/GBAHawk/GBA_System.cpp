@@ -46,9 +46,6 @@ namespace GBAHawk
 				addr -= 0x08000000;
 
 				ret = ROM[addr];
-
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if (addr < 0x0E000000)
 			{
@@ -78,9 +75,6 @@ namespace GBAHawk
 						}
 					}
 				}
-
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if (addr < 0x10000000)
 			{
@@ -90,6 +84,9 @@ namespace GBAHawk
 			{
 				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); // open bus
 			}
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -189,9 +186,6 @@ namespace GBAHawk
 				// Forced Align
 				ret = ROM_16[addr >> 1];
 
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-
 				// in ROM area, upper bits also used if bit 1 in he address is set
 				if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint32_t)(ret << 16); }
 			}
@@ -228,9 +222,6 @@ namespace GBAHawk
 					}
 				}
 
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
-
 				// in ROM area, upper bits also used if bit 1 in the address is set
 				if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint32_t)(ret << 16); }
 			}
@@ -242,6 +233,9 @@ namespace GBAHawk
 			{
 				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
 			}
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -341,9 +335,6 @@ namespace GBAHawk
 				addr -= 0x08000000;
 				// Forced Align
 				ret = ROM_32[addr >> 2];
-
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if (addr < 0x0E000000)
 			{
@@ -377,9 +368,6 @@ namespace GBAHawk
 						}
 					}
 				}
-
-				// ROM access complete, re-enable prefetcher
-				pre_Fetch_Cnt_Inc = 1;
 			}
 			else if (addr < 0x10000000)
 			{
@@ -389,6 +377,9 @@ namespace GBAHawk
 			{
 				ret = cpu_Last_Bus_Value; // open bus			
 			}
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -579,6 +570,9 @@ namespace GBAHawk
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_8(addr - 0x0E000000, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 	}
 
@@ -675,6 +669,9 @@ namespace GBAHawk
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 	}
 
@@ -768,6 +765,9 @@ namespace GBAHawk
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 	}
 
@@ -1165,6 +1165,9 @@ namespace GBAHawk
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 	}
 
@@ -1251,6 +1254,9 @@ namespace GBAHawk
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
+
+			// ROM access complete, re-enable prefetcher
+			pre_Fetch_Cnt_Inc = 1;
 		}
 	}
 	#pragma endregion

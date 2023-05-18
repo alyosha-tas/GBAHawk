@@ -356,6 +356,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 			{
 				mapper.WriteMemory16(addr - 0x0E000000, value);
+
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
 			}
 		}
 
@@ -460,6 +463,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 			{
 				mapper.WriteMemory32(addr - 0x0E000000, value);
+
+				// ROM access complete, re-enable prefetcher
+				pre_Fetch_Cnt_Inc = 1;
 			}
 		}
 	}

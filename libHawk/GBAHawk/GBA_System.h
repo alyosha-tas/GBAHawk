@@ -5112,7 +5112,7 @@ namespace GBAHawk
 
 			if (addr >= 0x08000000)
 			{
-				if (addr < 0x0E000000)
+				if (addr < 0x10000000)
 				{
 					if (addr < 0x0A000000)
 					{
@@ -5124,10 +5124,14 @@ namespace GBAHawk
 						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 					}
-					else
+					else if (addr < 0x0E000000)
 					{
 						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+					}
+					else
+					{
+						wait_ret += SRAM_Waits; // SRAM
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5151,10 +5155,6 @@ namespace GBAHawk
 						pre_Buffer_Cnt -= 1;
 						pre_Read_Addr -= 2;
 					}
-				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
-				{
-					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5235,7 +5235,7 @@ namespace GBAHawk
 
 			if (addr >= 0x08000000)
 			{
-				if (addr < 0x0E000000)
+				if (addr < 0x10000000)
 				{
 					if (addr < 0x0A000000)
 					{
@@ -5247,10 +5247,14 @@ namespace GBAHawk
 						if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
 					}
-					else
+					else if (addr < 0x0E000000)
 					{
 						if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
 						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+					}
+					else
+					{
+						wait_ret += SRAM_Waits; // SRAM
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5274,10 +5278,6 @@ namespace GBAHawk
 						pre_Buffer_Cnt -= 1;
 						pre_Read_Addr -= 2;
 					}
-				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
-				{
-					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5358,7 +5358,7 @@ namespace GBAHawk
 
 			if (addr >= 0x08000000)
 			{
-				if (addr < 0x0E000000)
+				if (addr < 0x10000000)
 				{
 					if (addr < 0x0A000000)
 					{
@@ -5370,10 +5370,14 @@ namespace GBAHawk
 						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
 					}
-					else
+					else if (addr < 0x0E000000)
 					{
 						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
 						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
+					}
+					else
+					{
+						wait_ret += SRAM_Waits; // SRAM
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5397,10 +5401,6 @@ namespace GBAHawk
 						pre_Buffer_Cnt -= 1;
 						pre_Read_Addr -= 2;
 					}
-				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
-				{
-					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5514,7 +5514,7 @@ namespace GBAHawk
 
 			if (addr >= 0x08000000)
 			{
-				if (addr < 0x0E000000)
+				if (addr < 0x10000000)
 				{
 					if (addr < 0x0A000000)
 					{
@@ -5526,10 +5526,14 @@ namespace GBAHawk
 						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
 						else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
 					}
-					else
+					else if (addr < 0x0E000000)
 					{
 						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
 						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
+					}
+					else
+					{
+						wait_ret += SRAM_Waits; // SRAM
 					}
 
 					if (pre_Cycle_Glitch)
@@ -5553,10 +5557,6 @@ namespace GBAHawk
 						pre_Buffer_Cnt -= 1;
 						pre_Read_Addr -= 2;
 					}
-				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
-				{
-					wait_ret += SRAM_Waits; // SRAM
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5714,6 +5714,16 @@ namespace GBAHawk
 							else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 						}
 
+						if (pre_Cycle_Glitch)
+						{
+							// lose 1 cycle if prefetcher is holding the bus
+							wait_ret += 1;
+
+							// additionally, the prefetch value is not added to the buffer
+							pre_Buffer_Cnt -= 1;
+							pre_Read_Addr -= 2;
+						}
+
 						//abandon the prefetcher current fetch and reset the address
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
@@ -5725,6 +5735,28 @@ namespace GBAHawk
 				else if ((Cart_RAM_Present) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
+
+					if (pre_Cycle_Glitch)
+					{
+						// lose 1 cycle if prefetcher is holding the bus
+						wait_ret += 1;
+
+						// additionally, the prefetch value is not added to the buffer
+						pre_Buffer_Cnt -= 1;
+						pre_Read_Addr -= 2;
+					}
+
+					//abandon the prefetcher current fetch
+					pre_Fetch_Cnt = 0;
+					pre_Seq_Access = false;
+					pre_Fetch_Cnt_Inc = 0;
+
+					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
+					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
+					{
+						pre_Buffer_Cnt -= 1;
+						pre_Read_Addr -= 2;
+					}
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5885,6 +5917,16 @@ namespace GBAHawk
 							else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
 						}
 
+						if (pre_Cycle_Glitch)
+						{
+							// lose 1 cycle if prefetcher is holding the bus
+							wait_ret += 1;
+
+							// additionally, the prefetch value is not added to the buffer
+							pre_Buffer_Cnt -= 1;
+							pre_Read_Addr -= 2;
+						}
+
 						//abandon the prefetcher current fetch and reset the address
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
@@ -5896,6 +5938,28 @@ namespace GBAHawk
 				else if ((Cart_RAM_Present) && (addr < 0x10000000))
 				{
 					wait_ret += SRAM_Waits; // SRAM
+
+					if (pre_Cycle_Glitch)
+					{
+						// lose 1 cycle if prefetcher is holding the bus
+						wait_ret += 1;
+
+						// additionally, the prefetch value is not added to the buffer
+						pre_Buffer_Cnt -= 1;
+						pre_Read_Addr -= 2;
+					}
+
+					//abandon the prefetcher current fetch
+					pre_Fetch_Cnt = 0;
+					pre_Seq_Access = false;
+					pre_Fetch_Cnt_Inc = 0;
+
+					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
+					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
+					{
+						pre_Buffer_Cnt -= 1;
+						pre_Read_Addr -= 2;
+					}
 				}
 			}
 			else if (addr >= 0x05000000)
