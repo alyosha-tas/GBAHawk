@@ -21,6 +21,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Look at edge cases of start / stop writes
 
+	It seems as though DMA started immediately while the cpu is in the BIOS region is able to start 2 cycles sooner
+	see the new versions of haltcnt.gba. Is this really the case?
+
 	Assumption: read / write cycle is atomic
 */
 
@@ -316,7 +319,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Run_En_Time[chan] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_Start_Snd_Vid[chan] = false;
-				if ((value & 0x3000) == 0x0000) { dma_Run_En_Time[chan] = CycleCount + 3; }
+				if ((value & 0x3000) == 0x0000)
+				{ 
+					dma_Run_En_Time[chan] = CycleCount + 3;
+
+					if (cpu_Regs[15] <= 0x3FFF)
+					{
+						dma_Run_En_Time[chan] = CycleCount + 1;
+					}
+				}
 				else if ((value & 0x3000) == 0x1000) { dma_Start_VBL[chan] = true; }
 				else if ((value & 0x3000) == 0x2000) { dma_Start_HBL[chan] = true; }
 				else 
