@@ -7299,7 +7299,7 @@ namespace GBAHawk
 		uint16_t ppu_BG_Rot_B[4] = { };
 		uint16_t ppu_BG_Rot_C[4] = { };
 		uint16_t ppu_BG_Rot_D[4] = { };
-		uint16_t ppu_BG_Rot_C_Latch[4] = { };
+		uint16_t ppu_BG_Rot_B_Latch[4] = { };
 		uint16_t ppu_BG_Rot_D_Latch[4] = { };
 
 		uint16_t ppu_ROT_REF_LY[4] = { };
@@ -7586,12 +7586,12 @@ namespace GBAHawk
 				case 0x1E: ppu_BG_Y[3] = (uint16_t)((ppu_BG_Y[3] & 0xFF00) | value); break;
 				case 0x1F: ppu_BG_Y[3] = (uint16_t)((ppu_BG_Y[3] & 0x00FF) | (value << 8)); break;
 
-				case 0x20: ppu_BG_Rot_A[2] = (uint16_t)((ppu_BG_Rot_A[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x21: ppu_BG_Rot_A[2] = (uint16_t)((ppu_BG_Rot_A[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x22: ppu_BG_Rot_B[2] = (uint16_t)((ppu_BG_Rot_B[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x23: ppu_BG_Rot_B[2] = (uint16_t)((ppu_BG_Rot_B[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x24: ppu_BG_Rot_C[2] = (uint16_t)((ppu_BG_Rot_C[2] & 0xFF00) | value); break;
-				case 0x25: ppu_BG_Rot_C[2] = (uint16_t)((ppu_BG_Rot_C[2] & 0x00FF) | (value << 8)); break;
+				case 0x20: ppu_BG_Rot_A[2] = (uint16_t)((ppu_BG_Rot_A[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x21: ppu_BG_Rot_A[2] = (uint16_t)((ppu_BG_Rot_A[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x22: ppu_BG_Rot_B[2] = (uint16_t)((ppu_BG_Rot_B[2] & 0xFF00) | value); break;
+				case 0x23: ppu_BG_Rot_B[2] = (uint16_t)((ppu_BG_Rot_B[2] & 0x00FF) | (value << 8)); break;
+				case 0x24: ppu_BG_Rot_C[2] = (uint16_t)((ppu_BG_Rot_C[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x25: ppu_BG_Rot_C[2] = (uint16_t)((ppu_BG_Rot_C[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(2); break;
 				case 0x26: ppu_BG_Rot_D[2] = (uint16_t)((ppu_BG_Rot_D[2] & 0xFF00) | value); break;
 				case 0x27: ppu_BG_Rot_D[2] = (uint16_t)((ppu_BG_Rot_D[2] & 0x00FF) | (value << 8)); break;
 				case 0x28: ppu_BG_Ref_X[2] = (uint32_t)((ppu_BG_Ref_X[2] & 0xFFFFFF00) | value); break;
@@ -7603,12 +7603,12 @@ namespace GBAHawk
 				case 0x2E: ppu_BG_Ref_Y[2] = (uint32_t)((ppu_BG_Ref_Y[2] & 0xFF00FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(2); break;
 				case 0x2F: ppu_BG_Ref_Y[2] = (uint32_t)((ppu_BG_Ref_Y[2] & 0x00FFFFFF) | (value << 24)); ppu_ROT_REF_LY_Update(2); break;
 
-				case 0x30: ppu_BG_Rot_A[3] = (uint16_t)((ppu_BG_Rot_A[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x31: ppu_BG_Rot_A[3] = (uint16_t)((ppu_BG_Rot_A[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x32: ppu_BG_Rot_B[3] = (uint16_t)((ppu_BG_Rot_B[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x33: ppu_BG_Rot_B[3] = (uint16_t)((ppu_BG_Rot_B[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x34: ppu_BG_Rot_C[3] = (uint16_t)((ppu_BG_Rot_C[3] & 0xFF00) | value); break;
-				case 0x35: ppu_BG_Rot_C[3] = (uint16_t)((ppu_BG_Rot_C[3] & 0x00FF) | (value << 8)); break;
+				case 0x30: ppu_BG_Rot_A[3] = (uint16_t)((ppu_BG_Rot_A[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x31: ppu_BG_Rot_A[3] = (uint16_t)((ppu_BG_Rot_A[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x32: ppu_BG_Rot_B[3] = (uint16_t)((ppu_BG_Rot_B[3] & 0xFF00) | value); break;
+				case 0x33: ppu_BG_Rot_B[3] = (uint16_t)((ppu_BG_Rot_B[3] & 0x00FF) | (value << 8)); break;
+				case 0x34: ppu_BG_Rot_C[3] = (uint16_t)((ppu_BG_Rot_C[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x35: ppu_BG_Rot_C[3] = (uint16_t)((ppu_BG_Rot_C[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(3); break;
 				case 0x36: ppu_BG_Rot_D[3] = (uint16_t)((ppu_BG_Rot_D[3] & 0xFF00) | value); break;
 				case 0x37: ppu_BG_Rot_D[3] = (uint16_t)((ppu_BG_Rot_D[3] & 0x00FF) | (value << 8)); break;
 				case 0x38: ppu_BG_Ref_X[3] = (uint32_t)((ppu_BG_Ref_X[3] & 0xFFFFFF00) | value); break;
@@ -7666,18 +7666,18 @@ namespace GBAHawk
 				case 0x1C: ppu_BG_X[3] = value; break;
 				case 0x1E: ppu_BG_Y[3] = value; break;
 
-				case 0x20: ppu_BG_Rot_A[2] = value; ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x22: ppu_BG_Rot_B[2] = value; ppu_Convert_Rotation_to_float_AB(2); break;
-				case 0x24: ppu_BG_Rot_C[2] = value; break;
+				case 0x20: ppu_BG_Rot_A[2] = value; ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x22: ppu_BG_Rot_B[2] = value; break;
+				case 0x24: ppu_BG_Rot_C[2] = value; ppu_Convert_Rotation_to_float_AC(2); break;
 				case 0x26: ppu_BG_Rot_D[2] = value; break;
 				case 0x28: ppu_BG_Ref_X[2] = (uint32_t)((ppu_BG_Ref_X[2] & 0xFFFF0000) | value); break;
 				case 0x2A: ppu_BG_Ref_X[2] = (uint32_t)((ppu_BG_Ref_X[2] & 0x0000FFFF) | (value << 16)); break;
 				case 0x2C: ppu_BG_Ref_Y[2] = (uint32_t)((ppu_BG_Ref_Y[2] & 0xFFFF0000) | value); ppu_ROT_REF_LY_Update(2); break;
 				case 0x2E: ppu_BG_Ref_Y[2] = (uint32_t)((ppu_BG_Ref_Y[2] & 0x0000FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(2); break;
 
-				case 0x30: ppu_BG_Rot_A[3] = value; ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x32: ppu_BG_Rot_B[3] = value; ppu_Convert_Rotation_to_float_AB(3); break;
-				case 0x34: ppu_BG_Rot_C[3] = value; break;
+				case 0x30: ppu_BG_Rot_A[3] = value; ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x32: ppu_BG_Rot_B[3] = value; break;
+				case 0x34: ppu_BG_Rot_C[3] = value; ppu_Convert_Rotation_to_float_AC(3); break;
 				case 0x36: ppu_BG_Rot_D[3] = value; break;
 				case 0x38: ppu_BG_Ref_X[3] = (uint32_t)((ppu_BG_Ref_X[3] & 0xFFFF0000) | value); break;
 				case 0x3A: ppu_BG_Ref_X[3] = (uint32_t)((ppu_BG_Ref_X[3] & 0x0000FFFF) | (value << 16)); break;
@@ -7721,16 +7721,16 @@ namespace GBAHawk
 						   ppu_BG_Y[3] = (uint16_t)((value >> 16) & 0xFFFF); break;
 
 				case 0x20: ppu_BG_Rot_A[2] = (uint16_t)(value & 0xFFFF);
-						   ppu_BG_Rot_B[2] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AB(2); break;
+						   ppu_BG_Rot_B[2] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(2); break;
 				case 0x24: ppu_BG_Rot_C[2] = (uint16_t)(value & 0xFFFF);
-						   ppu_BG_Rot_D[2] = (uint16_t)((value >> 16) & 0xFFFF); break;
+						   ppu_BG_Rot_D[2] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(2); break;
 				case 0x28: ppu_BG_Ref_X[2] = value; break;
 				case 0x2C: ppu_BG_Ref_Y[2] = value; ppu_ROT_REF_LY_Update(2); break;
 
 				case 0x30: ppu_BG_Rot_A[3] = (uint16_t)(value & 0xFFFF);
-						   ppu_BG_Rot_B[3] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AB(3); break;
+						   ppu_BG_Rot_B[3] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(3); break;
 				case 0x34: ppu_BG_Rot_C[3] = (uint16_t)(value & 0xFFFF);
-						   ppu_BG_Rot_D[3] = (uint16_t)((value >> 16) & 0xFFFF); break;
+						   ppu_BG_Rot_D[3] = (uint16_t)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(3); break;
 				case 0x38: ppu_BG_Ref_X[3] = value; break;
 				case 0x3C: ppu_BG_Ref_Y[3] = value; ppu_ROT_REF_LY_Update(3); break;
 
@@ -10633,76 +10633,76 @@ namespace GBAHawk
 			}
 		}
 
-		void ppu_Convert_Rotation_to_float_AB(int layer)
+		void ppu_Convert_Rotation_to_float_AC(int layer)
 		{
-			uint16_t A, B;
+			uint16_t A, C;
 
-			int32_t i_A, i_B;
+			int32_t i_A, i_C;
 
-			double f_A, f_B;
+			double f_A, f_C;
 
 			double fract_part = 0.5;
 
 			A = ppu_BG_Rot_A[layer];
-			B = ppu_BG_Rot_B[layer];
+			C = ppu_BG_Rot_C[layer];
 
 			i_A = (int32_t)((A >> 8) & 0x7F);
-			i_B = (int32_t)((B >> 8) & 0x7F);
+			i_C = (int32_t)((C >> 8) & 0x7F);
 
 			if ((A & 0x8000) == 0x8000) { i_A |= (int32_t)0xFFFFFF80; }
-			if ((B & 0x8000) == 0x8000) { i_B |= (int32_t)0xFFFFFF80; }
+			if ((C & 0x8000) == 0x8000) { i_C |= (int32_t)0xFFFFFF80; }
 
 			// convert to floats
 			f_A = i_A;
-			f_B = i_B;
+			f_C = i_C;
 
 			f_A += ppu_Fract_Parts[A & 0xFF];
-			f_B += ppu_Fract_Parts[B & 0xFF];
+			f_C += ppu_Fract_Parts[C & 0xFF];
 
 			if (layer == 2)
 			{
 				ppu_F_Rot_A_2 = f_A;
-				ppu_F_Rot_B_2 = f_B;
+				ppu_F_Rot_C_2 = f_C;
 			}
 			else
 			{
 				ppu_F_Rot_A_3 = f_A;
-				ppu_F_Rot_B_3 = f_B;
+				ppu_F_Rot_C_3 = f_C;
 			}
 		}
 
-		void ppu_Convert_Rotation_to_float_CD(int layer)
+		void ppu_Convert_Rotation_to_float_BD(int layer)
 		{
-			uint16_t C, D;
+			uint16_t B, D;
 
-			int32_t i_C, i_D;
+			int32_t i_B, i_D;
 
-			double f_C, f_D;
+			double f_B, f_D;
 
-			C = ppu_BG_Rot_C_Latch[layer];
+			B = ppu_BG_Rot_B_Latch[layer];
 			D = ppu_BG_Rot_D_Latch[layer];
 
-			i_C = (int32_t)((C >> 8) & 0x7F);
+			i_B = (int32_t)((B >> 8) & 0x7F);
 			i_D = (int32_t)((D >> 8) & 0x7F);
 
-			if ((C & 0x8000) == 0x8000) { i_C |= (int32_t)0xFFFFFF80; }
+			if ((B & 0x8000) == 0x8000) { i_B |= (int32_t)0xFFFFFF80; }
 			if ((D & 0x8000) == 0x8000) { i_D |= (int32_t)0xFFFFFF80; }
 
 			// convert to floats
-			f_C = i_C;
+			f_B = i_B;
 			f_D = i_D;
 
-			f_C += ppu_Fract_Parts[C & 0xFF];
+			f_B += ppu_Fract_Parts[B & 0xFF];
 			f_D += ppu_Fract_Parts[D & 0xFF];
 
 			if (layer == 2)
 			{
-				ppu_F_Rot_C_2 = f_C;
+				ppu_F_Rot_B_2 = f_B;
 				ppu_F_Rot_D_2 = f_D;
 			}
 			else
 			{
-				ppu_F_Rot_C_3 = f_C;
+				ppu_F_Rot_B_3 = f_B;
 				ppu_F_Rot_D_3 = f_D;
 			}
 		}
@@ -10767,7 +10767,7 @@ namespace GBAHawk
 
 			ppu_BG_Rot_A[3] = ppu_BG_Rot_B[3] = ppu_BG_Rot_C[3] = ppu_BG_Rot_D[3] = 0;
 
-			ppu_BG_Rot_C_Latch[2] = ppu_BG_Rot_C_Latch[3] = ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D_Latch[3] = 0;
+			ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D_Latch[3] = 0;
 
 			ppu_WIN_Hor_0 = ppu_WIN_Hor_1 = ppu_WIN_Vert_0 = ppu_WIN_Vert_1 = 0;
 
@@ -10905,10 +10905,10 @@ namespace GBAHawk
 
 			ppu_Convert_Offset_to_float(2);
 			ppu_Convert_Offset_to_float(3);
-			ppu_Convert_Rotation_to_float_AB(2);
-			ppu_Convert_Rotation_to_float_CD(2);
-			ppu_Convert_Rotation_to_float_AB(3);
-			ppu_Convert_Rotation_to_float_CD(3);
+			ppu_Convert_Rotation_to_float_AC(2);
+			ppu_Convert_Rotation_to_float_BD(2);
+			ppu_Convert_Rotation_to_float_AC(3);
+			ppu_Convert_Rotation_to_float_BD(3);
 
 			double fract = 0.5;
 			double f_v = 0;
@@ -11000,7 +11000,7 @@ namespace GBAHawk
 			saver = short_array_saver(ppu_BG_Rot_B, saver, 4);
 			saver = short_array_saver(ppu_BG_Rot_C, saver, 4);
 			saver = short_array_saver(ppu_BG_Rot_D, saver, 4);
-			saver = short_array_saver(ppu_BG_Rot_C_Latch, saver, 4);
+			saver = short_array_saver(ppu_BG_Rot_B_Latch, saver, 4);
 			saver = short_array_saver(ppu_BG_Rot_D_Latch, saver, 4);
 
 			saver = short_array_saver(ppu_ROT_REF_LY, saver, 4);
@@ -11187,7 +11187,7 @@ namespace GBAHawk
 			loader = short_array_loader(ppu_BG_Rot_B, loader, 4);
 			loader = short_array_loader(ppu_BG_Rot_C, loader, 4);
 			loader = short_array_loader(ppu_BG_Rot_D, loader, 4);
-			loader = short_array_loader(ppu_BG_Rot_C_Latch, loader, 4);
+			loader = short_array_loader(ppu_BG_Rot_B_Latch, loader, 4);
 			loader = short_array_loader(ppu_BG_Rot_D_Latch, loader, 4);
 
 			loader = short_array_loader(ppu_ROT_REF_LY, loader, 4);
@@ -11317,10 +11317,10 @@ namespace GBAHawk
 
 			ppu_Convert_Offset_to_float(2);
 			ppu_Convert_Offset_to_float(3);
-			ppu_Convert_Rotation_to_float_AB(2);
-			ppu_Convert_Rotation_to_float_CD(2);
-			ppu_Convert_Rotation_to_float_AB(3);
-			ppu_Convert_Rotation_to_float_CD(3);
+			ppu_Convert_Rotation_to_float_AC(2);
+			ppu_Convert_Rotation_to_float_BD(2);
+			ppu_Convert_Rotation_to_float_AC(3);
+			ppu_Convert_Rotation_to_float_BD(3);
 
 			return loader;
 		}

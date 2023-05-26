@@ -1616,8 +1616,8 @@ namespace GBAHawk
 						{
 							// Latch C-D rotation scaling parameters here.
 							// Seems like X - parameters are not latched but Y - parameters are not?
-							ppu_BG_Rot_C_Latch[2] = ppu_BG_Rot_C[2];
-							ppu_BG_Rot_C_Latch[3] = ppu_BG_Rot_C[3];
+							ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B[2];
+							ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_B[3];
 							ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D[2];
 							ppu_BG_Rot_D_Latch[3] = ppu_BG_Rot_D[3];
 
@@ -1625,8 +1625,8 @@ namespace GBAHawk
 							{
 								if (ppu_BG_Mode > 0)
 								{
-									ppu_Convert_Rotation_to_float_CD(2);
-									ppu_Convert_Rotation_to_float_CD(3);
+									ppu_Convert_Rotation_to_float_BD(2);
+									ppu_Convert_Rotation_to_float_BD(3);
 								}
 							}
 							
