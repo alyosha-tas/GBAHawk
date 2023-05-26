@@ -41,27 +41,39 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool pre_Cycle_Glitch;
 
-		public bool pre_Enable, pre_Seq_Access;
+		public bool pre_Run, pre_Enable, pre_Seq_Access;
+
+		public bool pre_Force_Non_Seq;
 
 		public void pre_Reg_Write(ushort value)
 		{
 			if (!pre_Enable && ((value & 0x4000) == 0x4000))
 			{
+				//Console.WriteLine("enable " + pre_Buffer_Cnt + " " + pre_Seq_Access + " " + TotalExecutedCycles);
+				
 				// set read address to current cpu address
 				pre_Check_Addr = pre_Read_Addr = cpu_Regs[15];
 				pre_Buffer_Cnt = 0;
+				pre_Seq_Access = false;
+				pre_Run = true;
 			}
-			
-			pre_Enable = (value & 0x4000) == 0x4000;
 
-			if (!pre_Enable)
+			if (pre_Enable && ((value & 0x4000) != 0x4000))
 			{
+				//Console.WriteLine("disable " + pre_Buffer_Cnt + " " + pre_Fetch_Cnt + " " + pre_Seq_Access + " " + TotalExecutedCycles + " " + ROM_Waits_0_N + " " + ROM_Waits_0_S);
+				pre_Force_Non_Seq = true;
+
 				if (pre_Fetch_Cnt == 0)
-				{
-					pre_Seq_Access = false;
-					pre_Read_Addr = 0;
-				}
+				{ 
+					// if in ARM mode finish the 32 bit access
+					if ((pre_Buffer_Cnt & 1) == 0) {pre_Run = false; }
+					else if (cpu_Thumb_Mode) { pre_Run = false; }
+
+					if (pre_Buffer_Cnt == 0) { pre_Check_Addr = 0; }
+				}		
 			}
+
+			pre_Enable = (value & 0x4000) == 0x4000;
 		}
 
 		public void pre_Tick()
@@ -70,12 +82,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			// if enabled, try to read from ROM if buffer is not full
 			// if not enabled, finish current fetch
-			if ((pre_Enable && (pre_Buffer_Cnt < 8)) || (pre_Fetch_Cnt != 0))
+			if (pre_Run)
 			{
 				if (pre_Fetch_Cnt == 0)
 				{
 					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) { return; } // cannot start an access on the internal cycles of an instruction
-					
+					if (pre_Buffer_Cnt == 8) { return; } // don't start a read if buffer is full
+
 					pre_Fetch_Wait = 1;
 
 					if (pre_Read_Addr < 0x0A000000)
@@ -105,6 +118,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Read_Addr +=2;
 
 					pre_Cycle_Glitch = true;
+
+					if (!pre_Enable) { pre_Run = false; }
 				}
 			}
 		}
@@ -119,7 +134,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			pre_Cycle_Glitch = false;
 
-			pre_Enable = pre_Seq_Access = false;
+			pre_Run = pre_Enable = pre_Seq_Access = false;
+
+			pre_Force_Non_Seq = false;
 		}
 
 		public void pre_SyncState(Serializer ser)
@@ -133,8 +150,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Fetch_Cnt_Inc), ref pre_Fetch_Cnt_Inc);
 			ser.Sync(nameof(pre_Cycle_Glitch), ref pre_Cycle_Glitch);
 
+			ser.Sync(nameof(pre_Run), ref pre_Run);
 			ser.Sync(nameof(pre_Enable), ref pre_Enable);
-			ser.Sync(nameof(pre_Seq_Access), ref pre_Seq_Access);	
+			ser.Sync(nameof(pre_Seq_Access), ref pre_Seq_Access);
+			ser.Sync(nameof(pre_Force_Non_Seq), ref pre_Force_Non_Seq);
 		}
 	}
 

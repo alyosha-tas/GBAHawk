@@ -74,6 +74,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt  & 1) != 0))
@@ -197,6 +198,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
@@ -320,6 +322,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
@@ -476,6 +479,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
@@ -601,11 +605,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (addr == pre_Check_Addr)
 					{
-						if (pre_Check_Addr != pre_Read_Addr)
+						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
 						{
 							// we have this address, can immediately read it
 							pre_Check_Addr += 2;
 							pre_Buffer_Cnt -= 1;
+
+							if ((pre_Buffer_Cnt == 0) && !pre_Enable) { pre_Check_Addr = 0; }
 						}
 						else
 						{
@@ -617,6 +623,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							pre_Check_Addr += 2;
 							pre_Fetch_Cnt = 0;
 
+							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
+
 							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
 							pre_Fetch_Cnt_Inc = 0;
 						}
@@ -624,6 +632,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					else
 					{
 						// the address is not related to the current ones available to the prefetcher
+						Seq_Access &= !pre_Force_Non_Seq;
+
 						if (addr < 0x0A000000)
 						{
 							if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
@@ -640,6 +650,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
 						}
 
+						pre_Force_Non_Seq = false;
+
 						if (pre_Cycle_Glitch)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
@@ -654,8 +666,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
 						pre_Fetch_Cnt_Inc = 0;
+						pre_Run = pre_Enable;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; }
+						else { pre_Check_Addr = 0; }
 					}
 				}
 				else if ((cart_RAM != null) && (addr < 0x10000000))
@@ -676,6 +690,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))
@@ -768,18 +783,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (addr == pre_Check_Addr)
 					{
-						if (pre_Check_Addr != pre_Read_Addr)
+						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
 						{
 							// we have this address, can immediately read it
 							pre_Check_Addr += 2;
 							pre_Buffer_Cnt -= 1;
 
 							// check if we have the next address as well
-							if (pre_Check_Addr != pre_Read_Addr)
+							if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
 							{
-								// the prefetcher can retun 32 bits in 1 cycle if it has it available
+								// the prefetcher can return 32 bits in 1 cycle if it has it available
 								pre_Check_Addr += 2;
 								pre_Buffer_Cnt -= 1;
+
+								if ((pre_Buffer_Cnt == 0) && !pre_Enable) { pre_Check_Addr = 0; }
 							}
 							else
 							{
@@ -794,6 +811,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								pre_Check_Addr += 2;
 								pre_Fetch_Cnt = 0;
 								pre_Buffer_Cnt = 0;
+								pre_Run = pre_Enable;
+
+								if (!pre_Enable) { pre_Check_Addr = 0; }
 							}
 						}
 						else
@@ -822,11 +842,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							pre_Read_Addr += 4;
 							pre_Check_Addr += 4;
 							pre_Fetch_Cnt = 0;
+							pre_Run = pre_Enable;
+
+							if (!pre_Enable) { pre_Check_Addr = 0; }
 						}
 					}
 					else
 					{
 						// the address is not related to the current ones available to the prefetcher
+						Seq_Access &= !pre_Force_Non_Seq;
+
 						if (addr < 0x0A000000)
 						{
 							if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
@@ -843,6 +868,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
 						}
 
+						pre_Force_Non_Seq = false;
+
 						if (pre_Cycle_Glitch)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
@@ -857,8 +884,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Buffer_Cnt = 0;
 						pre_Fetch_Cnt = 0;
 						pre_Fetch_Cnt_Inc = 0;
+						pre_Run = pre_Enable;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; }
+						else { pre_Check_Addr = 0; }
 					}
 				}
 				else if ((cart_RAM != null) && (addr < 0x10000000))
@@ -879,6 +908,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Fetch_Cnt = 0;
 					pre_Seq_Access = false;
 					pre_Fetch_Cnt_Inc = 0;
+					pre_Run = pre_Enable;
 
 					// if the fetch was in ARM mode, discard the whole thing if only part was fetched
 					if (!cpu_Thumb_Mode && ((pre_Buffer_Cnt & 1) != 0))

@@ -2479,11 +2479,12 @@ namespace GBAHawk
 
 			// if enabled, try to read from ROM if buffer is not full
 			// if not enabled, finish current fetch
-			if ((pre_Enable && (pre_Buffer_Cnt < 8)) || (pre_Fetch_Cnt != 0))
+			if (pre_Run)
 			{
 				if (pre_Fetch_Cnt == 0)
 				{
-					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) {} // cannot start an access on the internal cycles of an instruction
+					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) { } // cannot start an access on the internal cycles of an instruction
+					else if (pre_Buffer_Cnt == 8) { } // don't start a read if buffer is full
 					else
 					{
 						pre_Fetch_Wait = 1;
@@ -2491,7 +2492,7 @@ namespace GBAHawk
 						if (pre_Read_Addr < 0x0A000000)
 						{
 							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0					
+							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0				
 						}
 						else if (pre_Read_Addr < 0x0C000000)
 						{
@@ -2514,8 +2515,10 @@ namespace GBAHawk
 							pre_Read_Addr += 2;
 
 							pre_Cycle_Glitch = true;
+
+							if (!pre_Enable) { pre_Run = false; }
 						}
-					}
+					}				
 				}
 				else
 				{
@@ -2529,6 +2532,8 @@ namespace GBAHawk
 						pre_Read_Addr += 2;
 
 						pre_Cycle_Glitch = true;
+
+						if (!pre_Enable) { pre_Run = false; }
 					}
 				}
 			}
