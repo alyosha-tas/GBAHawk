@@ -7645,12 +7645,12 @@ namespace GBAHawk
 				case 0x4C: ppu_Update_Mosaic((uint16_t)((ppu_Mosaic & 0xFF00) | value)); break;
 				case 0x4D: ppu_Update_Mosaic((uint16_t)((ppu_Mosaic & 0x00FF) | (value << 8))); break;
 
-				case 0x50: ppu_Update_Special_FX((uint16_t)((ppu_WIN_In & 0xFF00) | value)); break;
-				case 0x51: ppu_Update_Special_FX((uint16_t)((ppu_WIN_In & 0x00FF) | (value << 8))); break;
-				case 0x52: ppu_Update_Alpha((uint16_t)((ppu_WIN_In & 0xFF00) | value)); break;
-				case 0x53: ppu_Update_Alpha((uint16_t)((ppu_WIN_In & 0x00FF) | (value << 8))); break;
-				case 0x54: ppu_Update_Bright((uint16_t)((ppu_Mosaic & 0xFF00) | value)); break;
-				case 0x55: ppu_Update_Bright((uint16_t)((ppu_Mosaic & 0x00FF) | (value << 8))); break;
+				case 0x50: ppu_Update_Special_FX((uint16_t)((ppu_Special_FX & 0xFF00) | value)); break;
+				case 0x51: ppu_Update_Special_FX((uint16_t)((ppu_Special_FX & 0x00FF) | (value << 8))); break;
+				case 0x52: ppu_Update_Alpha((uint16_t)((ppu_Alpha & 0xFF00) | value)); break;
+				case 0x53: ppu_Update_Alpha((uint16_t)((ppu_Alpha & 0x00FF) | (value << 8))); break;
+				case 0x54: ppu_Update_Bright((uint16_t)((ppu_Bright & 0xFF00) | value)); break;
+				case 0x55: ppu_Update_Bright((uint16_t)((ppu_Bright & 0x00FF) | (value << 8))); break;
 			}
 		}
 
