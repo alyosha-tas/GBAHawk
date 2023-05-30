@@ -88,6 +88,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_Sprite_Pixel_Occupied = new bool[240 * 2];
 		public bool[] ppu_Sprite_Semi_Transparent = new bool[240 * 2];
 		public bool[] ppu_Sprite_Object_Window = new bool[240 * 2];
+		public bool[] ppu_Sprite_Is_Mosaic = new bool[240 * 2];
 
 		public uint ppu_Cur_Sprite_X;
 		public uint ppu_Cur_Sprite_Y;
@@ -128,6 +129,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool ppu_Fetch_Sprite_VRAM;
 		public bool ppu_New_Sprite, ppu_Sprite_Eval_Finished;
 		public bool ppu_Sprite_Mosaic;
+
+		// latched sprite pixel parameters
+		public uint ppu_Sprite_Pixel_Latch;
+
+		public int ppu_Sprite_Priority_Latch;
+
+		public bool ppu_Sprite_Semi_Transparent_Latch;
+		public bool ppu_Sprite_Mosaic_Latch;
+		public bool ppu_Sprite_Pixel_Occupied_Latch;
 
 		// BG rendering
 		public int[] ppu_Fetch_Count = new int[4];
@@ -1050,8 +1060,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			uint R, G, B;
 			uint R2, G2, B2;
 
-			uint spr_pixel;
-
 			int cur_layer_priority;
 			int second_layer_priority;
 
@@ -1069,6 +1077,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			bool OBJ_Has_Pixel;
 			bool OBJ_Go;
 			bool Color_FX_Go;
+
+			uint spr_pixel = 0;
+			int spr_priority = 0;
+			bool spr_semi_transparent = false;
 
 			BG_Go[0] = ppu_BG_On[0];
 			BG_Go[1] = ppu_BG_On[1];
@@ -1339,7 +1351,80 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						ppu_Brighten_Final_Pixel = false;
 						ppu_Blend_Final_Pixel = false;
 
-						OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle] & ppu_OBJ_On;
+						if (ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+						{
+							// if we are algined with the mosaic grid, latch new data
+							// otherwise, if the currently latched data is not mosaic data, latch new data at the current pixel
+							if ((ppu_Display_Cycle % ppu_OBJ_Mosaic_X) == 0)
+							{
+								ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+
+								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch & ppu_OBJ_On;
+
+								if (OBJ_Has_Pixel)
+								{
+									spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+									spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+									spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+								}
+
+								ppu_Sprite_Pixel_Latch = spr_pixel;
+								ppu_Sprite_Priority_Latch = spr_priority;
+
+								ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+								ppu_Sprite_Mosaic_Latch = true;
+							}
+							else
+							{
+								if (ppu_Sprite_Mosaic_Latch)
+								{
+									OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch & ppu_OBJ_On;
+									spr_pixel = ppu_Sprite_Pixel_Latch;
+									spr_priority = ppu_Sprite_Priority_Latch;
+									spr_semi_transparent = ppu_Sprite_Semi_Transparent_Latch;
+								}
+								else
+								{
+									ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+
+									OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch & ppu_OBJ_On;
+
+									if (OBJ_Has_Pixel)
+									{
+										spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+									}
+
+
+									ppu_Sprite_Pixel_Latch = spr_pixel;
+									ppu_Sprite_Priority_Latch = spr_priority;
+
+									ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+									ppu_Sprite_Mosaic_Latch = true;
+								}
+							}						
+						}
+						else
+						{
+							ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+
+							OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch & ppu_OBJ_On;
+
+							if (OBJ_Has_Pixel)
+							{
+								spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+								spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+								spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+							}
+
+
+							ppu_Sprite_Pixel_Latch = spr_pixel;
+							ppu_Sprite_Priority_Latch = spr_priority;
+
+							ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+							ppu_Sprite_Mosaic_Latch = false;
+						}
 
 						BG_Go_Disp[0] = ppu_BG_On[0];
 						BG_Go_Disp[1] = ppu_BG_On[1];
@@ -1574,14 +1659,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// determine final pixel color, based on sprites and special effects
 						if (OBJ_Go)
 						{
-							spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
-
 							//Console.WriteLine(ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] + " " + cur_layer_priority + " " + cur_BG_layer + " " + ppu_LY);
 							// sprite pixel available, check ordering
-							if (ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= cur_layer_priority)
+							if (spr_priority <= cur_layer_priority)
 							{
 								// sprite pixel has higher priority than BG pixel
-								if (ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+								if (spr_semi_transparent)
 								{
 									// semi transparent pixels with highest priority always enable alpha blending if possible, even if otherwise disabled.
 									// alpha blend if possible
@@ -1673,7 +1756,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										// check if another bg layer has a higher priority pixel than the sprite
 										if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
 										{
-											if ((second_layer_priority < ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle]) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
+											if ((second_layer_priority < spr_priority) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
 											{
 												// Alpha blending BG - BG
 												ppu_Final_Pixel = ppu_BG_Pixel_F;
@@ -1684,7 +1767,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 												ppu_Blend_Final_Pixel = true;
 											}
-											else if ((ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
+											else if ((spr_priority <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
 											{
 												// Alpha blending BG - Sprite
 												ppu_Final_Pixel = ppu_BG_Pixel_F;
@@ -3007,24 +3090,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ppu_Cur_Sprite_X = (uint)((ppu_Sprite_X_Pos + ppu_Fetch_Sprite_VRAM_Cnt) & 0x1FF);
 
-						if (ppu_Sprite_Mosaic)
-						{
-							if (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] < ppu_Sprite_X_Pos)
-							{
-								// lower pixels of sprite not aligned with mosaic grid, nothing to display (in x direction)
-								rel_x_offset = 0;
-								ppu_Cur_Sprite_X = 255;
-							}
-							else
-							{
-								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-								rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
-							}
-						}
-						else
-						{
-							rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
-						}
+						rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
 
 						// if sprite is in range horizontally
 						if (ppu_Cur_Sprite_X < 240)
@@ -3126,6 +3192,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										pix_color = 0;
 									}
+
+									// mosaic state is updated even if pixel is transparent
+									ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
 
 									if ((pix_color & pal_scale) != 0)
 									{
@@ -3722,6 +3791,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_Sprite_Pixel_Occupied[i] = false;
 				ppu_Sprite_Semi_Transparent[i] = false;
 				ppu_Sprite_Object_Window[i] = false;
+				ppu_Sprite_Is_Mosaic[i] = false;
 			}
 
 			ppu_Cur_Sprite_X = ppu_Cur_Sprite_Y = ppu_Cur_Sprite_Y_Temp = 0;
@@ -3761,6 +3831,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = false;
 
 			ppu_Sprite_A_Latch = ppu_Sprite_B_Latch = ppu_Sprite_C_Latch= ppu_Sprite_D_Latch = 0;
+
+
+			ppu_Sprite_Pixel_Latch = 0;
+			ppu_Sprite_Priority_Latch = 0;
+
+			ppu_Sprite_Semi_Transparent_Latch = false;
+			ppu_Sprite_Mosaic_Latch = false;
+			ppu_Sprite_Pixel_Occupied_Latch = false;
 
 			// BG rendering
 			for (int i = 0; i < 4; i++)
@@ -3943,10 +4021,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_Pixel_Occupied), ref ppu_Sprite_Pixel_Occupied, false);
 			ser.Sync(nameof(ppu_Sprite_Semi_Transparent), ref ppu_Sprite_Semi_Transparent, false);
 			ser.Sync(nameof(ppu_Sprite_Object_Window), ref ppu_Sprite_Object_Window, false);
+			ser.Sync(nameof(ppu_Sprite_Is_Mosaic), ref ppu_Sprite_Is_Mosaic, false);
 
 			ser.Sync(nameof(ppu_Cur_Sprite_X), ref ppu_Cur_Sprite_X);
 			ser.Sync(nameof(ppu_Cur_Sprite_Y), ref ppu_Cur_Sprite_Y);
-			ser.Sync(nameof(ppu_Cur_Sprite_Y_Temp), ref ppu_Cur_Sprite_Y_Temp);
+			ser.Sync(nameof(ppu_Cur_Sprite_Y_Temp), ref ppu_Cur_Sprite_Y_Temp);		
 
 			ser.Sync(nameof(ppu_Current_Sprite), ref ppu_Current_Sprite);
 			ser.Sync(nameof(ppu_Process_Sprite), ref ppu_Process_Sprite);
@@ -3996,6 +4075,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_New_Sprite), ref ppu_New_Sprite);
 			ser.Sync(nameof(ppu_Sprite_Eval_Finished), ref ppu_Sprite_Eval_Finished);
 			ser.Sync(nameof(ppu_Sprite_Mosaic), ref ppu_Sprite_Mosaic);
+
+			// sprite latches
+			ser.Sync(nameof(ppu_Sprite_Pixel_Latch), ref ppu_Sprite_Pixel_Latch);
+
+			ser.Sync(nameof(ppu_Sprite_Priority_Latch), ref ppu_Sprite_Priority_Latch);
+
+			ser.Sync(nameof(ppu_Sprite_Semi_Transparent_Latch), ref ppu_Sprite_Semi_Transparent_Latch);
+			ser.Sync(nameof(ppu_Sprite_Mosaic_Latch), ref ppu_Sprite_Mosaic_Latch);
+			ser.Sync(nameof(ppu_Sprite_Pixel_Occupied_Latch), ref ppu_Sprite_Pixel_Occupied_Latch);
 
 			// BG rendering
 			ser.Sync(nameof(ppu_Fetch_Count), ref ppu_Fetch_Count, false);

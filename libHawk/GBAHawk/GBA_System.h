@@ -7358,9 +7358,18 @@ namespace GBAHawk
 		bool ppu_Sprite_Pixel_Occupied[240 * 2] = { };
 		bool ppu_Sprite_Semi_Transparent[240 * 2] = { };
 		bool ppu_Sprite_Object_Window[240 * 2] = { };
+		bool ppu_Sprite_Is_Mosaic[240 * 2] = { };
 
 		uint32_t ppu_Sprite_Pixels[240 * 2] = { };
 		uint32_t ppu_Sprite_Priority[240 * 2] = { };
+
+		// latched sprite pixel parameters
+		uint32_t ppu_Sprite_Pixel_Latch;
+		uint32_t ppu_Sprite_Priority_Latch;
+
+		bool ppu_Sprite_Semi_Transparent_Latch;
+		bool ppu_Sprite_Mosaic_Latch;
+		bool ppu_Sprite_Pixel_Occupied_Latch;
 
 		// BG rendering
 		uint32_t ppu_Fetch_Count[4] = { };
@@ -8137,8 +8146,6 @@ namespace GBAHawk
 			uint32_t R, G, B;
 			uint32_t R2, G2, B2;
 
-			uint32_t spr_pixel;
-
 			int cur_layer_priority;
 			int second_layer_priority;
 
@@ -8156,6 +8163,10 @@ namespace GBAHawk
 			bool OBJ_Has_Pixel;
 			bool OBJ_Go;
 			bool Color_FX_Go;
+
+			uint32_t spr_pixel = 0;
+			uint32_t spr_priority = 0;
+			bool spr_semi_transparent = false;
 
 			BG_Go[0] = ppu_BG_On[0];
 			BG_Go[1] = ppu_BG_On[1];
@@ -8418,7 +8429,80 @@ namespace GBAHawk
 						ppu_Brighten_Final_Pixel = false;
 						ppu_Blend_Final_Pixel = false;
 
-						OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle] && ppu_OBJ_On;
+						if (ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+						{
+							// if we are algined with the mosaic grid, latch new data
+							// otherwise, if the currently latched data is not mosaic data, latch new data at the current pixel
+							if ((ppu_Display_Cycle % ppu_OBJ_Mosaic_X) == 0)
+							{
+								ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+
+								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On;
+
+								if (OBJ_Has_Pixel)
+								{
+									spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+									spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+									spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
+								}
+
+								ppu_Sprite_Pixel_Latch = spr_pixel;
+								ppu_Sprite_Priority_Latch = spr_priority;
+
+								ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+								ppu_Sprite_Mosaic_Latch = true;
+							}
+							else
+							{
+								if (ppu_Sprite_Mosaic_Latch)
+								{
+									OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On;
+									spr_pixel = ppu_Sprite_Pixel_Latch;
+									spr_priority = ppu_Sprite_Priority_Latch;
+									spr_semi_transparent = ppu_Sprite_Semi_Transparent_Latch;
+								}
+								else
+								{
+									ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+
+									OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On;
+
+									if (OBJ_Has_Pixel)
+									{
+										spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+									}
+
+
+									ppu_Sprite_Pixel_Latch = spr_pixel;
+									ppu_Sprite_Priority_Latch = spr_priority;
+
+									ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+									ppu_Sprite_Mosaic_Latch = true;
+								}
+							}
+						}
+						else
+						{
+							ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+
+							OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On;
+
+							if (OBJ_Has_Pixel)
+							{
+								spr_priority = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+								spr_semi_transparent = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+								spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+							}
+
+
+							ppu_Sprite_Pixel_Latch = spr_pixel;
+							ppu_Sprite_Priority_Latch = spr_priority;
+
+							ppu_Sprite_Semi_Transparent_Latch = spr_semi_transparent;
+							ppu_Sprite_Mosaic_Latch = false;
+						}
 
 						BG_Go_Disp[0] = ppu_BG_On[0];
 						BG_Go_Disp[1] = ppu_BG_On[1];
@@ -8653,14 +8737,12 @@ namespace GBAHawk
 						// determine final pixel color, based on sprites and special effects
 						if (OBJ_Go)
 						{
-							spr_pixel = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
-
 							//Console.WriteLine(ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] + " " + cur_layer_priority + " " + cur_BG_layer + " " + ppu_LY);
 							// sprite pixel available, check ordering
-							if (ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= cur_layer_priority)
+							if (spr_priority <= cur_layer_priority)
 							{
 								// sprite pixel has higher priority than BG pixel
-								if (ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+								if (spr_semi_transparent)
 								{
 									// semi transparent pixels with highest priority always enable alpha blending if possible, even if otherwise disabled.
 									// alpha blend if possible
@@ -8752,7 +8834,7 @@ namespace GBAHawk
 										// check if another bg layer has a higher priority pixel than the sprite
 										if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
 										{
-											if ((second_layer_priority < ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle]) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
+											if ((second_layer_priority < spr_priority) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
 											{
 												// Alpha blending BG - BG
 												ppu_Final_Pixel = ppu_BG_Pixel_F;
@@ -8763,7 +8845,7 @@ namespace GBAHawk
 
 												ppu_Blend_Final_Pixel = true;
 											}
-											else if ((ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
+											else if ((spr_priority <= second_layer_priority) && ppu_SFX_OBJ_Target_2)
 											{
 												// Alpha blending BG - Sprite
 												ppu_Final_Pixel = ppu_BG_Pixel_F;
@@ -10081,24 +10163,7 @@ namespace GBAHawk
 					{
 						ppu_Cur_Sprite_X = (uint32_t)((ppu_Sprite_X_Pos + ppu_Fetch_Sprite_VRAM_Cnt) & 0x1FF);
 
-						if (ppu_Sprite_Mosaic)
-						{
-							if (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] < ppu_Sprite_X_Pos)
-							{
-								// lower pixels of sprite not aligned with mosaic grid, nothing to display (in x direction)
-								rel_x_offset = 0;
-								ppu_Cur_Sprite_X = 255;
-							}
-							else
-							{
-								// calculate the pixel that is on a grid point, the grid is relative to the screen, not the sprite
-								rel_x_offset = (ppu_MOS_OBJ_X[ppu_Cur_Sprite_X] - ppu_Sprite_X_Pos) & 0x1FF;
-							}
-						}
-						else
-						{
-							rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
-						}
+						rel_x_offset = ppu_Fetch_Sprite_VRAM_Cnt;
 
 						// if sprite is in range horizontally
 						if (ppu_Cur_Sprite_X < 240)
@@ -10199,6 +10264,9 @@ namespace GBAHawk
 									{
 										pix_color = 0;
 									}
+
+									// mosaic state is updated even if pixel is transparent
+									ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
 
 									if ((pix_color & pal_scale) != 0)
 									{
@@ -10805,6 +10873,7 @@ namespace GBAHawk
 				ppu_Sprite_Pixel_Occupied[i] = false;
 				ppu_Sprite_Semi_Transparent[i] = false;
 				ppu_Sprite_Object_Window[i] = false;
+				ppu_Sprite_Is_Mosaic[i] = false;
 			}
 
 			ppu_Cur_Sprite_X = ppu_Cur_Sprite_Y = ppu_Cur_Sprite_Y_Temp = 0;
@@ -10842,6 +10911,13 @@ namespace GBAHawk
 			ppu_OAM_Access = false;
 
 			ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = false;
+
+			ppu_Sprite_Pixel_Latch = 0;
+			ppu_Sprite_Priority_Latch = 0;
+
+			ppu_Sprite_Semi_Transparent_Latch = false;
+			ppu_Sprite_Mosaic_Latch = false;
+			ppu_Sprite_Pixel_Occupied_Latch = false;
 
 			// BG rendering
 			for (int i = 0; i < 4; i++)
@@ -11069,9 +11145,18 @@ namespace GBAHawk
 			saver = bool_array_saver(ppu_Sprite_Pixel_Occupied, saver, 240 * 2);
 			saver = bool_array_saver(ppu_Sprite_Semi_Transparent, saver, 240 * 2);
 			saver = bool_array_saver(ppu_Sprite_Object_Window, saver, 240 * 2);
+			saver = bool_array_saver(ppu_Sprite_Is_Mosaic, saver, 240 * 2);
 
 			saver = int_array_saver(ppu_Sprite_Pixels, saver, 240 * 2);
 			saver = int_array_saver(ppu_Sprite_Priority, saver, 240 * 2);
+
+			// sprite latches
+			saver = int_saver(ppu_Sprite_Pixel_Latch, saver);
+			saver = int_saver(ppu_Sprite_Priority_Latch, saver);
+
+			saver = bool_saver(ppu_Sprite_Semi_Transparent_Latch, saver);
+			saver = bool_saver(ppu_Sprite_Mosaic_Latch, saver);
+			saver = bool_saver(ppu_Sprite_Pixel_Occupied_Latch, saver);
 
 			// BG rendering
 			saver = int_array_saver(ppu_Fetch_Count, saver, 4);
@@ -11256,9 +11341,18 @@ namespace GBAHawk
 			loader = bool_array_loader(ppu_Sprite_Pixel_Occupied, loader, 240 * 2);
 			loader = bool_array_loader(ppu_Sprite_Semi_Transparent, loader, 240 * 2);
 			loader = bool_array_loader(ppu_Sprite_Object_Window, loader, 240 * 2);
+			loader = bool_array_loader(ppu_Sprite_Is_Mosaic, loader, 240 * 2);
 
 			loader = int_array_loader(ppu_Sprite_Pixels, loader, 240 * 2);
 			loader = int_array_loader(ppu_Sprite_Priority, loader, 240 * 2);
+
+			// sprite latches
+			loader = int_loader(&ppu_Sprite_Pixel_Latch, loader);
+			loader = int_loader(&ppu_Sprite_Priority_Latch, loader);
+
+			loader = bool_loader(&ppu_Sprite_Semi_Transparent_Latch, loader);
+			loader = bool_loader(&ppu_Sprite_Mosaic_Latch, loader);
+			loader = bool_loader(&ppu_Sprite_Pixel_Occupied_Latch, loader);
 
 			// BG rendering
 			loader = int_array_loader(ppu_Fetch_Count, loader, 4);

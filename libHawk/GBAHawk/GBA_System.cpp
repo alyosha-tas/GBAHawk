@@ -1714,6 +1714,7 @@ namespace GBAHawk
 							ppu_Sprite_Pixel_Occupied[i] = false;
 							ppu_Sprite_Semi_Transparent[i] = false;
 							ppu_Sprite_Object_Window[i] = false;
+							ppu_Sprite_Is_Mosaic[i] = false;
 						}
 
 						ppu_Sprite_Render_Cycle = 0;
@@ -1724,6 +1725,14 @@ namespace GBAHawk
 						{
 							delays_to_process = false;
 						}
+
+						// reset latches
+						ppu_Sprite_Pixel_Latch = 0;
+						ppu_Sprite_Priority_Latch = 0;
+
+						ppu_Sprite_Semi_Transparent_Latch = false;
+						ppu_Sprite_Mosaic_Latch = false;
+						ppu_Sprite_Pixel_Occupied_Latch = false;
 					}
 				}
 			}
