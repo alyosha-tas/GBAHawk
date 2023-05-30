@@ -2256,6 +2256,16 @@ namespace GBAHawk
 					}
 				}
 
+				if (ppu_OBJ_On_Time > 0)
+				{
+					ppu_OBJ_On_Time--;
+
+					if (ppu_OBJ_On_Time == 0)
+					{
+						ppu_OBJ_On = true;
+					}
+				}
+
 				if (ppu_Forced_Blank_Time > 0)
 				{
 					ppu_Forced_Blank_Time--;

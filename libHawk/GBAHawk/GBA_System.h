@@ -7288,6 +7288,7 @@ namespace GBAHawk
 		uint32_t ppu_LYC_Vid_Check_cd;
 
 		uint32_t ppu_Forced_Blank_Time;
+		uint32_t ppu_OBJ_On_Time;
 
 		uint16_t ppu_BG_CTRL[4] = { };
 		uint16_t ppu_BG_X[4] = { };
@@ -7799,7 +7800,6 @@ namespace GBAHawk
 			ppu_HBL_Free = (value & 0x20) == 0x20;
 			ppu_OBJ_Dim = (value & 0x40) == 0x40;
 
-			ppu_OBJ_On = (value & 0x1000) == 0x1000;
 			ppu_WIN0_On = (value & 0x2000) == 0x2000;
 			ppu_WIN1_On = (value & 0x4000) == 0x4000;
 			ppu_OBJ_WIN = (value & 0x8000) == 0x8000;
@@ -7825,6 +7825,17 @@ namespace GBAHawk
 						ppu_BG_On_Update_Time[i] = 3;
 					}
 				}
+			}
+
+			// sprites require one scanline to turn on
+			if ((value & 0x1000) == 0)
+			{
+				ppu_OBJ_On = false;
+				ppu_OBJ_On_Time = 0;
+			}
+			else
+			{
+				ppu_OBJ_On_Time = 2;
 			}
 
 			// forced blank timing is the same as BG enable
@@ -10829,7 +10840,7 @@ namespace GBAHawk
 				ppu_BG_On_Update_Time[i] = 0;
 			}
 
-			ppu_Forced_Blank_Time = 0;
+			ppu_Forced_Blank_Time = ppu_OBJ_On_Time = 0;
 
 			ppu_BG_Rot_A[2] = ppu_BG_Rot_B[2] = ppu_BG_Rot_C[2] = ppu_BG_Rot_D[2] = 0;
 
@@ -11055,6 +11066,7 @@ namespace GBAHawk
 			saver = int_saver(ppu_X_RS, saver);
 			saver = int_saver(ppu_Y_RS, saver);
 			saver = int_saver(ppu_Forced_Blank_Time, saver);
+			saver = int_saver(ppu_OBJ_On_Time, saver);
 
 			saver = int_saver(ppu_VBL_IRQ_cd, saver);
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
@@ -11251,6 +11263,7 @@ namespace GBAHawk
 			loader = int_loader(&ppu_X_RS, loader);
 			loader = int_loader(&ppu_Y_RS, loader);
 			loader = int_loader(&ppu_Forced_Blank_Time, loader);
+			loader = int_loader(&ppu_OBJ_On_Time, loader);
 
 			loader = int_loader(&ppu_VBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
