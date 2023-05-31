@@ -93,7 +93,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						ret = (ushort)((VRAM[(addr & 0x17FFF) + 1] << 8) | VRAM[addr & 0x17FFF]);
+						// mirrors behave differently depending on mode
+						if ((addr & 0x00008000) == 0x00008000)
+						{
+							if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+							{
+								ret = (ushort)((VRAM[(addr & 0x17FFF) + 1] << 8) | VRAM[addr & 0x17FFF]);
+							}
+							else
+							{
+								ret = 0;
+							}
+						}
+						else
+						{
+							ret = (ushort)((VRAM[(addr & 0x17FFF) + 1] << 8) | VRAM[addr & 0x17FFF]);
+						}					
 					}
 					else
 					{
@@ -210,10 +225,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if ((addr & 0x00010000) == 0x00010000)
 					{
-						dma_Last_Bus_Value[chan] = (uint)((VRAM[(addr & 0x17FFF) + 3] << 24) |
+						// mirrors behave differently depending on mode
+						if ((addr & 0x00008000) == 0x00008000)
+						{
+							if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+							{
+								dma_Last_Bus_Value[chan] = (uint)((VRAM[(addr & 0x17FFF) + 3] << 24) |
+																  (VRAM[(addr & 0x17FFF) + 2] << 16) |
+																  (VRAM[(addr & 0x17FFF) + 1] << 8) |
+																   VRAM[addr & 0x17FFF]);
+							}
+							else
+							{
+								dma_Last_Bus_Value[chan] = 0;
+							}
+						}
+						else
+						{
+							dma_Last_Bus_Value[chan] = (uint)((VRAM[(addr & 0x17FFF) + 3] << 24) |
 														  (VRAM[(addr & 0x17FFF) + 2] << 16) |
 														  (VRAM[(addr & 0x17FFF) + 1] << 8) |
 														   VRAM[addr & 0x17FFF]);
+						}
 					}
 					else
 					{
@@ -309,8 +342,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+							VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+						}
+					}
+					else
+					{
+						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+					}				
 				}
 				else
 				{
@@ -409,10 +454,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
-					VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
-					VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
-					VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+							VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+							VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
+							VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+						}
+					}
+					else
+					{
+						VRAM[addr & 0x17FFF] = (byte)(value & 0xFF);
+						VRAM[(addr & 0x17FFF) + 1] = (byte)((value >> 8) & 0xFF);
+						VRAM[(addr & 0x17FFF) + 2] = (byte)((value >> 16) & 0xFF);
+						VRAM[(addr & 0x17FFF) + 3] = (byte)((value >> 24) & 0xFF);
+					}
 				}
 				else
 				{

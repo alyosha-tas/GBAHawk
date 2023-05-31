@@ -98,7 +98,22 @@ namespace GBAHawk
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					ret = VRAM[addr & 0x17FFF];
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							ret = VRAM[addr & 0x17FFF];
+						}
+						else
+						{
+							ret = 0;
+						}
+					}
+					else
+					{
+						ret = VRAM[addr & 0x17FFF];
+					}
 				}
 				else
 				{
@@ -248,7 +263,22 @@ namespace GBAHawk
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					ret = VRAM_16[(addr & 0x17FFE) >> 1];
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							ret = VRAM_16[(addr & 0x17FFE) >> 1];
+						}
+						else
+						{
+							ret = 0;
+						}
+					}
+					else
+					{
+						ret = VRAM_16[(addr & 0x17FFE) >> 1];
+					}
 				}
 				else
 				{
@@ -392,7 +422,22 @@ namespace GBAHawk
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					ret = VRAM_32[(addr & 0x17FFC) >> 2];
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							ret = VRAM_32[(addr & 0x17FFC) >> 2];
+						}
+						else
+						{
+							ret = 0;
+						}
+					}
+					else
+					{
+						ret = VRAM_32[(addr & 0x17FFC) >> 2];
+					}
 				}
 				else
 				{
@@ -515,13 +560,30 @@ namespace GBAHawk
 				// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
 				// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
 				// This effects the Quake demo
-				if (ppu_BG_Mode >= 3)
+
+				// mirrors behave differently depending on mode
+				if ((addr & 0x00008000) == 0x00008000)
 				{
-					if ((addr & 0x17FFF) < 0x14000)
+					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
 					{
-						// 8 bit writes stored as halfword (needs more research)
-						VRAM[addr & 0x17FFF] = value;
-						VRAM[(addr + 1) & 0x17FFF] = value;
+						if ((addr & 0x17FFF) < 0x14000)
+						{
+							// 8 bit writes stored as halfword (needs more research)
+							VRAM[addr & 0x17FFF] = value;
+							VRAM[(addr + 1) & 0x17FFF] = value;
+						}
+					}
+				}
+				else
+				{
+					if (ppu_BG_Mode >= 3)
+					{
+						if ((addr & 0x17FFF) < 0x14000)
+						{
+							// 8 bit writes stored as halfword (needs more research)
+							VRAM[addr & 0x17FFF] = value;
+							VRAM[(addr + 1) & 0x17FFF] = value;
+						}
 					}
 				}
 			}
@@ -624,7 +686,18 @@ namespace GBAHawk
 			// Forced Align
 			if ((addr & 0x00010000) == 0x00010000)
 			{
-				VRAM_16[(addr & 0x17FFE) >> 1] = value;
+				// mirrors behave differently depending on mode
+				if ((addr & 0x00008000) == 0x00008000)
+				{
+					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+					{
+						VRAM_16[(addr & 0x17FFE) >> 1] = value;
+					}
+				}
+				else
+				{
+					VRAM_16[(addr & 0x17FFE) >> 1] = value;
+				}	
 			}
 			else
 			{
@@ -719,7 +792,18 @@ namespace GBAHawk
 			// Forced Align
 			if ((addr & 0x00010000) == 0x00010000)
 			{
-				VRAM_32[(addr & 0x17FFC) >> 2] = value;
+				// mirrors behave differently depending on mode
+				if ((addr & 0x00008000) == 0x00008000)
+				{
+					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+					{
+						VRAM_32[(addr & 0x17FFC) >> 2] = value;
+					}
+				}
+				else
+				{
+					VRAM_32[(addr & 0x17FFC) >> 2] = value;
+				}		
 			}
 			else
 			{
@@ -935,7 +1019,22 @@ namespace GBAHawk
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					ret = VRAM_16[(addr & 0x17FFE) >> 1];
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							ret = VRAM_16[(addr & 0x17FFE) >> 1];
+						}
+						else
+						{
+							ret = 0;
+						}
+					}
+					else
+					{
+						ret = VRAM_16[(addr & 0x17FFE) >> 1];
+					}			
 				}
 				else
 				{
@@ -1040,7 +1139,22 @@ namespace GBAHawk
 			{
 				if ((addr & 0x00010000) == 0x00010000)
 				{
-					dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0x17FFC) >> 2];
+					// mirrors behave differently depending on mode
+					if ((addr & 0x00008000) == 0x00008000)
+					{
+						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+						{
+							dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0x17FFC) >> 2];
+						}
+						else
+						{
+							dma_Last_Bus_Value[chan] = 0;
+						}
+					}
+					else
+					{
+						dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0x17FFC) >> 2];
+					}
 				}
 				else
 				{
@@ -1121,7 +1235,18 @@ namespace GBAHawk
 		{
 			if ((addr & 0x00010000) == 0x00010000)
 			{
-				VRAM_16[(addr & 0x17FFE) >> 1] = value;
+				// mirrors behave differently depending on mode
+				if ((addr & 0x00008000) == 0x00008000)
+				{
+					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+					{
+						VRAM_16[(addr & 0x17FFE) >> 1] = value;
+					}
+				}
+				else
+				{
+					VRAM_16[(addr & 0x17FFE) >> 1] = value;
+				}	
 			}
 			else
 			{
@@ -1209,7 +1334,18 @@ namespace GBAHawk
 		{
 			if ((addr & 0x00010000) == 0x00010000)
 			{
-				VRAM_32[(addr & 0x17FFC) >> 2] = value;
+				// mirrors behave differently depending on mode
+				if ((addr & 0x00008000) == 0x00008000)
+				{
+					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
+					{
+						VRAM_32[(addr & 0x17FFC) >> 2] = value;
+					}
+				}
+				else
+				{
+					VRAM_32[(addr & 0x17FFC) >> 2] = value;
+				}	
 			}
 			else
 			{

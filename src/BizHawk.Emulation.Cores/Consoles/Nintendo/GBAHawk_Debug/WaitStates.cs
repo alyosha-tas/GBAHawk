@@ -672,7 +672,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else { pre_Check_Addr = 0; }
 					}
 				}
-				else if ((cart_RAM != null) && (addr < 0x10000000))
+				else if (addr < 0x10000000)
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
@@ -890,7 +890,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else { pre_Check_Addr = 0; }
 					}
 				}
-				else if ((cart_RAM != null) && (addr < 0x10000000))
+				else if (addr < 0x10000000)
 				{
 					wait_ret += SRAM_Waits; // SRAM
 

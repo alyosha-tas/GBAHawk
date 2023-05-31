@@ -5757,7 +5757,7 @@ namespace GBAHawk
 						else { pre_Check_Addr = 0; }
 					}
 				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
+				else if (addr < 0x10000000)
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
@@ -5975,7 +5975,7 @@ namespace GBAHawk
 						else { pre_Check_Addr = 0; }
 					}
 				}
-				else if ((Cart_RAM_Present) && (addr < 0x10000000))
+				else if (addr < 0x10000000)
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
