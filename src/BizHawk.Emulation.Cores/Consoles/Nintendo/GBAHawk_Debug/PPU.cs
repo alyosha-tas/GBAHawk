@@ -9,7 +9,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Does turning on interrupts in the STAT register trigger interrupts if conditions are met? For now assume no.
 
-	TODO: odd vertical windowing
+	TODO: check timing on window y - parameter check
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -70,6 +70,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		public bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN;
+		public bool ppu_WIN0_Active, ppu_WIN1_Active;
 
 		public bool ppu_In_VBlank;
 		public bool ppu_Delays;
@@ -655,7 +656,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_WIN0_Bot = (byte)(ppu_WIN_Vert_0 & 0xFF);
 			ppu_WIN0_Top = (byte)((ppu_WIN_Vert_0 >> 8) & 0xFF);
 
-			//Console.WriteLine("W0: " + ppu_WIN0_Top + " " + ppu_WIN0_Bot + " " + ppu_LY + " " + CycleCount);
+			//Console.WriteLine("W0: " + ppu_WIN0_Top + " " + ppu_WIN0_Bot + " " + ppu_LY + " " + ppu_Cycle);
 		}
 
 		public void ppu_Calc_Win1()
@@ -666,7 +667,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_WIN1_Bot = (byte)(ppu_WIN_Vert_1 & 0xFF);
 			ppu_WIN1_Top = (byte)((ppu_WIN_Vert_1 >> 8) & 0xFF);
 
-			//Console.WriteLine("W1: " + ppu_WIN1_Top + " " + ppu_WIN1_Bot + " " + ppu_LY + " " + CycleCount);
+			//Console.WriteLine("W1: " + ppu_WIN1_Top + " " + ppu_WIN1_Bot + " " + ppu_LY + " " + ppu_Cycle);
 		}
 
 		public void ppu_Update_Win_In(ushort value)
@@ -1024,6 +1025,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ppu_Forced_Blank = false;
 					}
+				}
+
+				// check Y range for windows
+				if (ppu_WIN0_On)
+				{
+					if (ppu_LY == ppu_WIN0_Top) { ppu_WIN0_Active = true; }
+					if (ppu_LY == ppu_WIN0_Bot) { ppu_WIN0_Active = false; }
+				}
+				else
+				{
+					ppu_WIN0_Active = false;
+				}
+
+				if (ppu_WIN1_On)
+				{
+					if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
+					if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }
+				}
+				else
+				{
+					ppu_WIN1_Active = false;
 				}
 			}
 			else if (ppu_Cycle == 1007)
@@ -1483,7 +1505,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (ppu_Any_Window_On)
 						{
 							if (ppu_WIN0_On && (((ppu_Display_Cycle - ppu_WIN0_Left) & 0xFF) < ((ppu_WIN0_Right - ppu_WIN0_Left) & 0xFF)) &&
-								(((ppu_LY - ppu_WIN0_Top) & 0xFF) < ((ppu_WIN0_Bot - ppu_WIN0_Top) & 0xFF)))
+								ppu_WIN0_Active)
 							{
 								Is_Outside = false;
 
@@ -1493,7 +1515,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								Color_FX_Go = ppu_WIN0_Color_En;
 							}
 							else if (ppu_WIN1_On && (((ppu_Display_Cycle - ppu_WIN1_Left) & 0xFF) < ((ppu_WIN1_Right - ppu_WIN1_Left) & 0xFF)) &&
-									(((ppu_LY - ppu_WIN1_Top) & 0xFF) < ((ppu_WIN1_Bot - ppu_WIN1_Top) & 0xFF)))
+									ppu_WIN1_Active)
 							{
 								Is_Outside = false;
 
@@ -3800,6 +3822,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_Delays = false;
 			ppu_Do_Green_Swap = false;
 
+			ppu_WIN0_Active  = ppu_WIN1_Active = false;
+
 			// reset sprite evaluation variables
 			ppu_Current_Sprite = 0;
 			ppu_New_Sprite = true;
@@ -4022,6 +4046,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_WIN0_On), ref ppu_WIN0_On);
 			ser.Sync(nameof(ppu_WIN1_On), ref ppu_WIN1_On);
 			ser.Sync(nameof(ppu_OBJ_WIN), ref ppu_OBJ_WIN);
+			ser.Sync(nameof(ppu_WIN0_Active), ref ppu_WIN0_Active);
+			ser.Sync(nameof(ppu_WIN1_Active), ref ppu_WIN1_Active);
 
 			ser.Sync(nameof(ppu_In_VBlank), ref ppu_In_VBlank);
 			ser.Sync(nameof(ppu_Delays), ref ppu_Delays);

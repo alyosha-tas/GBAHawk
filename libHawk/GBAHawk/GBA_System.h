@@ -7272,6 +7272,7 @@ namespace GBAHawk
 
 		bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN;
+		bool ppu_WIN0_Active, ppu_WIN1_Active;
 
 		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
 
@@ -8551,7 +8552,7 @@ namespace GBAHawk
 						if (ppu_Any_Window_On)
 						{
 							if (ppu_WIN0_On && (((ppu_Display_Cycle - ppu_WIN0_Left) & 0xFF) < ((ppu_WIN0_Right - ppu_WIN0_Left) & 0xFF)) &&
-								(((ppu_LY - ppu_WIN0_Top) & 0xFF) < ((ppu_WIN0_Bot - ppu_WIN0_Top) & 0xFF)))
+								ppu_WIN0_Active)
 							{
 								Is_Outside = false;
 
@@ -8561,7 +8562,7 @@ namespace GBAHawk
 								Color_FX_Go = ppu_WIN0_Color_En;
 							}
 							else if (ppu_WIN1_On && (((ppu_Display_Cycle - ppu_WIN1_Left) & 0xFF) < ((ppu_WIN1_Right - ppu_WIN1_Left) & 0xFF)) &&
-								(((ppu_LY - ppu_WIN1_Top) & 0xFF) < ((ppu_WIN1_Bot - ppu_WIN1_Top) & 0xFF)))
+								ppu_WIN1_Active)
 							{
 								Is_Outside = false;
 
@@ -10876,6 +10877,8 @@ namespace GBAHawk
 			ppu_Sprite_Eval_Finished = false;
 			ppu_Do_Green_Swap = false;
 
+			ppu_WIN0_Active =  ppu_WIN1_Active = false;
+
 			for (int i = 0; i < 240 * 2; i++)
 			{
 				ppu_Sprite_Pixels[i] = 0;
@@ -11040,6 +11043,8 @@ namespace GBAHawk
 			saver = bool_saver(ppu_WIN0_On, saver);
 			saver = bool_saver(ppu_WIN1_On, saver);
 			saver = bool_saver(ppu_OBJ_WIN, saver);
+			saver = bool_saver(ppu_WIN0_Active, saver);
+			saver = bool_saver(ppu_WIN1_Active, saver);
 
 			saver = byte_saver(ppu_STAT, saver);
 			saver = byte_saver(ppu_LY, saver);
@@ -11237,6 +11242,8 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_WIN0_On, loader);
 			loader = bool_loader(&ppu_WIN1_On, loader);
 			loader = bool_loader(&ppu_OBJ_WIN, loader);
+			loader = bool_loader(&ppu_WIN0_Active, loader);
+			loader = bool_loader(&ppu_WIN1_Active, loader);
 
 			loader = byte_loader(&ppu_STAT, loader);
 			loader = byte_loader(&ppu_LY, loader);
