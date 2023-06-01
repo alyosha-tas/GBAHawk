@@ -138,7 +138,7 @@
 			this.SystemDropDown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.SystemDropDown.FormattingEnabled = true;
 			this.SystemDropDown.Items.AddRange(new object[] {
-            "GBL"});
+            "GBL", "GBAL"});
 			this.SystemDropDown.Location = new System.Drawing.Point(405, 75);
 			this.SystemDropDown.Name = "SystemDropDown";
 			this.SystemDropDown.Size = new System.Drawing.Size(89, 21);

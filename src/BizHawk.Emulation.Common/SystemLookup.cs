@@ -34,6 +34,7 @@ namespace BizHawk.Emulation.Common
 			public const string DEBUG = "DEBUG";
 			public const string GB = "GB";
 			public const string GBA = "GBA";
+			public const string GBAL = "GBAL";
 			public const string GBC = "GBC";
 			public const string GBL = "GBL";
 			public const string NULL = "NULL";

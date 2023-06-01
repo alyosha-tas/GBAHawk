@@ -9,9 +9,6 @@
 		GameBoy,
 		GameBoyLink,
 		GameBoyAdvance,
-		Nintendo64,
-		NES,
-		SNES,
-		SuperGameBoy,
+		GameBoyAdvanceLink,
 	}
 }

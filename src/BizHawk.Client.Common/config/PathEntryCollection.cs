@@ -23,6 +23,7 @@ namespace BizHawk.Client.Common
 			[VSystemID.Raw.GBA] = "GBA",
 			[COMBINED_SYSIDS_GB] = "Gameboy",
 			[VSystemID.Raw.GBL] = "Gameboy Link",
+			[VSystemID.Raw.GBAL] = "Gameboy Advance Link",
 		};
 
 		private static PathEntry BaseEntryFor(string sysID, string path)
@@ -156,6 +157,11 @@ namespace BizHawk.Client.Common
 			CommonEntriesFor(VSystemID.Raw.GBL, basePath: Path.Combine(".", "Gameboy Link")),
 			new[] {
 				PalettesEntryFor(VSystemID.Raw.GBL),
+			},
+
+			CommonEntriesFor(VSystemID.Raw.GBAL, basePath: Path.Combine(".", "Gameboy Advance Link")),
+			new[] {
+				PalettesEntryFor(VSystemID.Raw.GBAL),
 			},
 
 			CommonEntriesFor(COMBINED_SYSIDS_GB, basePath: Path.Combine(".", "Gameboy")),

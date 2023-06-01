@@ -30,6 +30,8 @@ namespace BizHawk.Client.Common
 				new[] { CoreNames.GBHawkLink, CoreNames.GBHawkLink4x }),
 			(new[] { VSystemID.Raw.GBA },
 				new[] { CoreNames.GBAHawk, CoreNames.GBAHawk_Debug }),
+			(new[] { VSystemID.Raw.GBAL },
+				new[] { CoreNames.GBAHawkLink }),
 		};
 
 		public Config()
@@ -293,6 +295,7 @@ namespace BizHawk.Client.Common
 			[VSystemID.Raw.GBC] = CoreNames.GBHawk,
 			[VSystemID.Raw.GBL] = CoreNames.GBHawkLink,
 			[VSystemID.Raw.GBA] = CoreNames.GBAHawk,
+			[VSystemID.Raw.GBAL] = CoreNames.GBAHawkLink,
 		};
 
 		public bool DontTryOtherCores { get; set; }
