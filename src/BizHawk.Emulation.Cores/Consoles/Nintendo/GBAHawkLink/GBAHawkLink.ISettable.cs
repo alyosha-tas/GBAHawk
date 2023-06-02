@@ -41,7 +41,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public class GBALinkSettings
 		{
 			[DisplayName("Trace Core")]
-			[Description("Which core passes data to the trace logger.")]
+			[Description("Which core passes data to the trace logger. 0 for left, 1 for right")]
 			[DefaultValue(0)]
 			public uint Trace_Core
 			{
@@ -49,7 +49,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				set => _TraceCore = Math.Max(0, Math.Min(1, value));
 			}
 
+			[DisplayName("Audio Core")]
+			[Description("Which core to use for audio. 0 for left, 1 for right")]
+			[DefaultValue(0)]
+			public uint Audio_Core
+			{
+				get => _AudioCore;
+				set => _AudioCore = Math.Max(0, Math.Min(1, value));
+			}
+
 			private uint _TraceCore;
+			private uint _AudioCore;
 
 			public GBALinkSettings Clone()
 			{

@@ -11,23 +11,33 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
 	public class GBAHawkLink_ControllerDeck
 	{
-		public GBAHawkLink_ControllerDeck(string controller1Name, bool subframe)
+		public GBAHawkLink_ControllerDeck(string controller1Name, string controller2Name, bool subframe)
 		{
+			// Left Console
 			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
 				? ctor1(1)
 				: throw new InvalidOperationException($"Invalid controller type: {controller1Name}");
 
-			Definition = new(Port1.Definition.Name)
+			// Right Console
+			Port2 = ControllerCtors.TryGetValue(controller2Name, out var ctor2)
+				? ctor2(2)
+				: throw new InvalidOperationException($"Invalid controller type: {controller1Name}");
+
+			Definition = new ControllerDefinition(Port1.Definition.Name)
 			{
 				BoolButtons = Port1.Definition.BoolButtons
+					.Concat(Port2.Definition.BoolButtons)
+					.Concat(new[] { "Toggle Cable" })
 					.ToList()
 			};
 
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
+			foreach (var kvp in Port2.Definition.Axes) Definition.Axes.Add(kvp);
 
 			if (subframe)
 			{
-				Definition.AddAxis("Input Cycle", 0.RangeTo(70224), 70224);
+				Definition.AddAxis("Input Cycle P1", 0.RangeTo(70224), 70224);
+				Definition.AddAxis("Input Cycle P2", 0.RangeTo(70224), 70224);
 			}
 
 			Definition.MakeImmutable();
@@ -38,12 +48,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			return Port1.Read(c);
 		}
 
+		public ushort ReadPort2(IController c)
+		{
+			return Port2.Read(c);
+		}
+
 		public (ushort X, ushort Y) ReadAcc1(IController c)
 			=> Port1.ReadAcc(c);
+
+		public (ushort X, ushort Y) ReadAcc2(IController c)
+			=> Port2.ReadAcc(c);
 
 		public byte ReadSolar1(IController c)
 		{
 			return Port1.SolarSense(c);
+		}
+
+		public byte ReadSolar2(IController c)
+		{
+			return Port2.SolarSense(c);
 		}
 
 		public ControllerDefinition Definition { get; }
@@ -51,9 +74,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public void SyncState(Serializer ser)
 		{
 			Port1.SyncState(ser);
+			Port2.SyncState(ser);
 		}
 
 		private readonly IPort Port1;
+		private readonly IPort Port2;
 
 		private static IReadOnlyDictionary<string, Func<int, IPort>> _controllerCtors;
 

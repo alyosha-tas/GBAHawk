@@ -31,8 +31,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				HardReset();
 			}
 
-			_isLag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true,
-																	controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
+			_isLag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state_1, Acc_X_state_1, Acc_Y_state_1, Solar_state_1, true, true,
+																	controller_state_2, Acc_X_state_2, Acc_Y_state_2, Solar_state_2, true, true);
 
 			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_L, 0);
 			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_R, 1);
@@ -58,9 +58,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public void GetControllerState(IController controller)
 		{
 			InputCallbacks.Call();
-			controller_state = _controllerDeck.ReadPort1(controller);
-			(Acc_X_state, Acc_Y_state) = _controllerDeck.ReadAcc1(controller);
-			Solar_state = _controllerDeck.ReadSolar1(controller);
+			controller_state_1 = _controllerDeck.ReadPort1(controller);
+			(Acc_X_state_1, Acc_Y_state_1) = _controllerDeck.ReadAcc1(controller);
+			Solar_state_1 = _controllerDeck.ReadSolar1(controller);
+
+			controller_state_2 = _controllerDeck.ReadPort2(controller);
+			(Acc_X_state_2, Acc_Y_state_2) = _controllerDeck.ReadAcc2(controller);
+			Solar_state_2 = _controllerDeck.ReadSolar2(controller);
 		}
 
 		public int Frame => _frame;
@@ -116,7 +120,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibGBAHawkLink.GBALink_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, 0);
+			uint f_clock = LibGBAHawkLink.GBALink_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, Settings.Audio_Core);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{

@@ -28,10 +28,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public uint[] ROMS_Length = new uint[2];
 
-		public ushort controller_state;
-		public ushort Acc_X_state;
-		public ushort Acc_Y_state;
-		public byte Solar_state;
+		public ushort controller_state_1, controller_state_2;
+		public ushort Acc_X_state_1, Acc_X_state_2;
+		public ushort Acc_Y_state_1, Acc_Y_state_2;
+		public byte Solar_state_1, Solar_state_2;
 
 		public byte[][] cart_RAMS = new byte[2][];
 		public bool[] has_bats = new bool[2];
@@ -170,18 +170,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
+			string cntrllr1 = GBAHawkLink_ControllerDeck.DefaultControllerName;
+			string cntrllr2 = GBAHawkLink_ControllerDeck.DefaultControllerName;
+
+
 			if (mappers[0] == 3)
 			{
-				_controllerDeck = new(typeof(StandardTilt).DisplayName(), false);
+				cntrllr1 = typeof(StandardTilt).DisplayName();
 			}
 			else if (mappers[0] == 4)
 			{
-				_controllerDeck = new(typeof(StandardSolar).DisplayName(), false);
+				cntrllr1 = typeof(StandardSolar).DisplayName();
 			}
-			else
+
+			if (mappers[1] == 3)
 			{
-				_controllerDeck = new(GBAHawkLink_ControllerDeck.DefaultControllerName, false);
+				cntrllr2 = typeof(StandardTilt).DisplayName();
 			}
+			else if (mappers[1] == 4)
+			{
+				cntrllr2 = typeof(StandardSolar).DisplayName();
+			}
+
+			_controllerDeck = new(cntrllr1, cntrllr2, false);
 		}
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1, int i)
