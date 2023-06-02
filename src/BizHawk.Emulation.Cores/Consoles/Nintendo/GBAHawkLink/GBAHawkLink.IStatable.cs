@@ -25,11 +25,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			if (ser.IsReader)
 			{
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);
-				LibGBAHawkLink.GBA_load_state(GBA_Pntr, GBA_core);
+				LibGBAHawkLink.GBALink_load_state(GBA_Pntr, GBA_core);
 			}
 			else
 			{
-				LibGBAHawkLink.GBA_save_state(GBA_Pntr, GBA_core);
+				LibGBAHawkLink.GBALink_save_state(GBA_Pntr, GBA_core);
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);
 			}
 		}

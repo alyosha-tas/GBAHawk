@@ -16,45 +16,87 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			var domains = new List<MemoryDomain>
 			{
 				new MemoryDomainDelegate(
-					"WRAM",
+					"L WRAM",
 					0x40000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBAHawkLink.GBA_getwram(GBA_Pntr, (int)(addr & 0x3FFFF)),
+					(addr) => LibGBAHawkLink.GBALink_getwram(GBA_Pntr, (int)(addr & 0x3FFFF), 0),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"IWRAM",
+					"R WRAM",
+					0x40000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibGBAHawkLink.GBALink_getwram(GBA_Pntr, (int)(addr & 0x3FFFF), 1),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"L IWRAM",
 					0x8000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBAHawkLink.GBA_getiwram(GBA_Pntr, (int)(addr & 0x7FFF)),
+					(addr) => LibGBAHawkLink.GBALink_getiwram(GBA_Pntr, (int)(addr & 0x7FFF), 0),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"VRAM",
+					"R IWRAM",
+					0x8000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibGBAHawkLink.GBALink_getiwram(GBA_Pntr, (int)(addr & 0x7FFF), 1),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"L VRAM",
 					0x18000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBAHawkLink.GBA_getvram(GBA_Pntr, (int)(addr & 0x1FFFF)),
+					(addr) => LibGBAHawkLink.GBALink_getvram(GBA_Pntr, (int)(addr & 0x1FFFF), 0),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"OAM",
+					"R VRAM",
+					0x18000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibGBAHawkLink.GBALink_getvram(GBA_Pntr, (int)(addr & 0x1FFFF), 1),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"L OAM",
 					0x400,
 					MemoryDomain.Endian.Little,
-					addr => LibGBAHawkLink.GBA_getoam(GBA_Pntr, (int)(addr & 0x3FF)),
+					addr => LibGBAHawkLink.GBALink_getoam(GBA_Pntr, (int)(addr & 0x3FF), 0),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"PALRAM",
+					"R OAM",
 					0x400,
 					MemoryDomain.Endian.Little,
-					addr => LibGBAHawkLink.GBA_getpalram(GBA_Pntr, (int)(addr & 0x3FF)),
+					addr => LibGBAHawkLink.GBALink_getoam(GBA_Pntr, (int)(addr & 0x3FF), 1),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"System Bus",
+					"L PALRAM",
+					0x400,
+					MemoryDomain.Endian.Little,
+					addr => LibGBAHawkLink.GBALink_getpalram(GBA_Pntr, (int)(addr & 0x3FF), 0),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"R PALRAM",
+					0x400,
+					MemoryDomain.Endian.Little,
+					addr => LibGBAHawkLink.GBALink_getpalram(GBA_Pntr, (int)(addr & 0x3FF), 1),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"L System Bus",
 					0x10000000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBAHawkLink.GBA_getsysbus(GBA_Pntr, (int)(addr & 0xFFFFFFF)),
+					(addr) => LibGBAHawkLink.GBALink_getsysbus(GBA_Pntr, (int)(addr & 0xFFFFFFF), 0),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"R System Bus",
+					0x10000000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibGBAHawkLink.GBALink_getsysbus(GBA_Pntr, (int)(addr & 0xFFFFFFF), 1),
 					(addr, value) => { },
 					1)
 			};
@@ -65,7 +107,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					"CartRAM 0",
 					cart_RAMS[0].Length,
 					MemoryDomain.Endian.Little,
-					addr => LibGBAHawkLink.GBA_getsram(GBA_Pntr, (int)(addr & (cart_RAMS[0].Length - 1)), 0),
+					addr => LibGBAHawkLink.GBALink_getsram(GBA_Pntr, (int)(addr & (cart_RAMS[0].Length - 1)), 0),
 					(addr, value) => cart_RAMS[0][addr] = value,
 					1);
 				domains.Add(CartRam0);
@@ -77,7 +119,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					"CartRAM 1",
 					cart_RAMS[1].Length,
 					MemoryDomain.Endian.Little,
-					addr => LibGBAHawkLink.GBA_getsram(GBA_Pntr, (int)(addr & (cart_RAMS[1].Length - 1)), 1),
+					addr => LibGBAHawkLink.GBALink_getsram(GBA_Pntr, (int)(addr & (cart_RAMS[1].Length - 1)), 1),
 					(addr, value) => cart_RAMS[1][addr] = value,
 					1);
 				domains.Add(CartRam1);

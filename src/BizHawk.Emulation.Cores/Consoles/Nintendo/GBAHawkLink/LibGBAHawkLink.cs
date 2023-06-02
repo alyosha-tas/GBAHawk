@@ -5,20 +5,20 @@ using System.Text;
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
 	/// <summary>
-	/// static bindings into GBAHawkLink.dll
+	/// static bindings into GBAHawk.dll
 	/// </summary>
 	public static class LibGBAHawkLink
 	{
-		private const string lib = "GBAHawkLink";
+		private const string lib = "GBAHawk";
 		private const CallingConvention cc = CallingConvention.Cdecl;
 
 		/// <returns>opaque state pointer</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern IntPtr GBA_create();
+		public static extern IntPtr GBALink_create();
 
 		/// <param name="core">opaque state pointer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_destroy(IntPtr core);
+		public static extern void GBALink_destroy(IntPtr core);
 
 		/// <summary>
 		/// Load BIOS and BASIC image. each must be 16K in size
@@ -27,7 +27,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load_bios(IntPtr core, byte[] bios);
+		public static extern int GBALink_load_bios(IntPtr core, byte[] bios);
 
 		/// <summary>
 		/// Load ROM image.
@@ -41,7 +41,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="mapper1">Mapper number to load core with</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata0, uint length0, int mapper0, byte[] romdata1, uint length1, int mapper1);
+		public static extern int GBALink_load(IntPtr core, byte[] romdata0, uint length0, int mapper0, byte[] romdata1, uint length1, int mapper1);
 
 		/// <summary>
 		/// Create SRAM image.
@@ -52,7 +52,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core_num">which core to load SRAM to</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_create_SRAM(IntPtr core, byte[] sram_data, uint length, int core_num);
+		public static extern int GBALink_create_SRAM(IntPtr core, byte[] sram_data, uint length, uint core_num);
 
 		/// <summary>
 		/// Load SRAM.
@@ -62,7 +62,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="length">length of romdata in bytes</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load_SRAM(IntPtr core, byte[] sram_data, uint length);
+		public static extern int GBALink_load_SRAM(IntPtr core, byte[] sram_data, uint length, uint core_num);
 
 		/// <summary>
 		/// Hard Reset.
@@ -70,21 +70,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_Hard_Reset(IntPtr core);
+		public static extern void GBALink_Hard_Reset(IntPtr core);
 
 		/// <summary>
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
+		/// <param name="ctrl0">controller data for player 1</param>
+		/// <param name="accx0">x acceleration</param>
+		/// <param name="accy0">y acceleration</param>
+		/// <param name="solar0">solar state</param>
+		/// <param name="render0">length of romdata in bytes</param>
+		/// <param name="sound0">Mapper number to load core with</param>
 		/// <param name="ctrl1">controller data for player 1</param>
-		/// <param name="accx">x acceleration</param>
-		/// <param name="accy">y acceleration</param>
-		/// <param name="solar">solar state</param>
-		/// <param name="render">length of romdata in bytes</param>
-		/// <param name="sound">Mapper number to load core with</param>
+		/// <param name="accx1">x acceleration</param>
+		/// <param name="accy1">y acceleration</param>
+		/// <param name="solar1">solar state</param>
+		/// <param name="render1">length of romdata in bytes</param>
+		/// <param name="sound1">Mapper number to load core with</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern bool GBA_frame_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, byte solar, bool render, bool sound);
+		public static extern bool GBALink_frame_advance(IntPtr core, ushort ctrl0, ushort accx0, ushort accy0, byte solar0, bool render0, bool sound0,
+																	ushort ctrl1, ushort accx1, ushort accy1, byte solar1, bool render1, bool sound1);
 
 		/// <summary>
 		/// Get Video data
@@ -92,7 +99,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="videobuf">where to send video to</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_get_video(IntPtr core, int[] videobuf);
+		public static extern void GBALink_get_video(IntPtr core, int[] videobuf, uint core_num);
 
 		/// <summary>
 		/// Get Video data
@@ -103,7 +110,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="aud_buf_R">where to send right audio to</param>
 		/// <param name="n_samp_R">number of right samples</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern uint GBA_get_audio(IntPtr core, int[] aud_buf_L, ref uint n_samp_L, int[] aud_buf_R, ref uint n_samp_R);
+		public static extern uint GBALink_get_audio(IntPtr core, int[] aud_buf_L, ref uint n_samp_L, int[] aud_buf_R, ref uint n_samp_R, uint core_num);
 
 		/// <summary>
 		/// Save State
@@ -111,7 +118,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="saver">save buffer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_save_state(IntPtr core, byte[] saver);
+		public static extern void GBALink_save_state(IntPtr core, byte[] saver);
 
 		/// <summary>
 		/// Load State
@@ -119,7 +126,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="loader">load buffer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_load_state(IntPtr core, byte[] loader);
+		public static extern void GBALink_load_state(IntPtr core, byte[] loader);
 
 		/// <summary>
 		/// Read the system bus
@@ -127,7 +134,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">system bus address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getsysbus(IntPtr core, int addr);
+		public static extern byte GBALink_getsysbus(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the VRAM
@@ -135,7 +142,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getvram(IntPtr core, int addr);
+		public static extern byte GBALink_getvram(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the OAM
@@ -143,7 +150,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getoam(IntPtr core, int addr);
+		public static extern byte GBALink_getoam(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the OAM
@@ -151,7 +158,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getpalram(IntPtr core, int addr);
+		public static extern byte GBALink_getpalram(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the WRAM
@@ -159,7 +166,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getwram(IntPtr core, int addr);
+		public static extern byte GBALink_getwram(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the IWRAM
@@ -167,7 +174,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getiwram(IntPtr core, int addr);
+		public static extern byte GBALink_getiwram(IntPtr core, int addr, uint core_num);
 
 		/// <summary>
 		/// Read the SRAM
@@ -176,7 +183,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="addr">ram address</param>
 		/// <param name="core_num">ram address</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GBA_getsram(IntPtr core, int addr, int core_num);
+		public static extern byte GBALink_getsram(IntPtr core, int addr, int core_num);
 
 		/// <summary>
 		/// type of the cpu trace callback
@@ -191,28 +198,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="callback">null to clear</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_settracecallback(IntPtr core, TraceCallback callback);
+		public static extern void GBALink_settracecallback(IntPtr core, TraceCallback callback, uint core_num);
 
 		/// <summary>
 		/// get the trace logger header length
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_getheaderlength(IntPtr core);
+		public static extern int GBALink_getheaderlength(IntPtr core);
 
 		/// <summary>
 		/// get the trace logger disassembly length, a constant
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_getdisasmlength(IntPtr core);
+		public static extern int GBALink_getdisasmlength(IntPtr core);
 
 		/// <summary>
 		/// get the trace logger register string length, a constant
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_getregstringlength(IntPtr core);
+		public static extern int GBALink_getregstringlength(IntPtr core);
 
 		/// <summary>
 		/// get the trace logger header
@@ -220,7 +227,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="h">pointer to const char *</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_getheader(IntPtr core, StringBuilder h, int l);
+		public static extern void GBALink_getheader(IntPtr core, StringBuilder h, int l);
 
 		/// <summary>
 		/// get the register state from the cpu
@@ -230,7 +237,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="t">call type</param>
 		/// <param name="l">copy length, must be obtained from appropriate get legnth function</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_getregisterstate(IntPtr core, StringBuilder h, int t, int l);
+		public static extern void GBALink_getregisterstate(IntPtr core, StringBuilder h, int t, int l, uint core_num);
 
 		/// <summary>
 		/// get the disassembly from the cpu
@@ -240,60 +247,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="t">call type</param>
 		/// <param name="l">copy length, must be obtained from appropriate get legnth function</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_getdisassembly(IntPtr core, StringBuilder h, int t, int l);
-
-		/// <summary>
-		/// get a message from the cpu
-		/// </summary>
-		[UnmanagedFunctionPointer(cc)]
-		public delegate void MessageCallback();
-
-		/// <summary>
-		/// set a callback for messages
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="callback">null to clear</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_setmessagecallback(IntPtr core, MessageCallback callback);
-
-		/// <summary>
-		/// get a message from the core
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="h">pointer to const char *</param>
-		/// <param name="l">copy length, must be obtained from appropriate get legnth function</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_getmessage(IntPtr core, StringBuilder h, int l);
-
-
-		#region PPU_Viewer
-
-		/// <summary>
-		/// type of the cpu trace callback
-		/// </summary>
-		/// <param name="lcdc">type of event</param>
-		[UnmanagedFunctionPointer(cc)]
-		public delegate void ScanlineCallback(byte lcdc);
-
-		/// <summary>
-		/// Get PPU Pointers
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="sel">region to get</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern IntPtr GBA_get_ppu_pntrs(IntPtr core, int sel);
-
-		/// <summary>
-		/// set a callback to occur when ly reaches a particular scanline (so at the beginning of the scanline).
-		/// when the LCD is active, typically 145 will be the first callback after the beginning of frame advance,
-		/// and 144 will be the last callback right before frame advance returns
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="callback">null to clear</param>
-		/// <param name="sl">0-153 inclusive</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_setscanlinecallback(IntPtr core, ScanlineCallback callback, int sl);
-
-		#endregion
+		public static extern void GBALink_getdisassembly(IntPtr core, StringBuilder h, int t, int l, uint core_num);
 	}
 }

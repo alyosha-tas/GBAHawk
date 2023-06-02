@@ -36,6 +36,7 @@ namespace GBAHawk
 		uint32_t video_buffer[240 * 160] = { };
 
 		void Frame_Advance();
+		inline void Single_Step();
 
 		uint8_t Read_Memory_8(uint32_t addr);
 		uint16_t Read_Memory_16(uint32_t addr);

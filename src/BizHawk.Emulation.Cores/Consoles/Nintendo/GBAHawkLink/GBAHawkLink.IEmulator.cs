@@ -24,16 +24,31 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				tracecb = null;
 			}
 
-			LibGBAHawkLink.GBA_settracecallback(GBA_Pntr, tracecb);
-
+			LibGBAHawkLink.GBALink_settracecallback(GBA_Pntr, tracecb, Settings.Trace_Core);
+			
 			if (controller.IsPressed("Power"))
 			{
 				HardReset();
 			}
 
-			_isLag = LibGBAHawkLink.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
+			_isLag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true,
+																	controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
 
-			LibGBAHawkLink.GBA_get_video(GBA_Pntr, _vidbuffer);
+			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_L, 0);
+			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_R, 1);
+
+			for (int i = 0; i < 160; i++)
+			{
+				for (int j = 0; j < 240; j++)
+				{
+					_vidbuffer[482 * i + j] = _vidbuffer_L[240 *i + j];
+				}
+
+				for (int j = 0; j < 240; j++)
+				{
+					_vidbuffer[482 * i + 242 + j] = _vidbuffer_R[240 * i + j];
+				}
+			}
 
 			_frame++;
 
@@ -65,7 +80,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		{
 			if (GBA_Pntr != IntPtr.Zero)
 			{
-				LibGBAHawkLink.GBA_destroy(GBA_Pntr);
+				LibGBAHawkLink.GBALink_destroy(GBA_Pntr);
 				GBA_Pntr = IntPtr.Zero;
 			}
 
@@ -101,7 +116,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibGBAHawkLink.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
+			uint f_clock = LibGBAHawkLink.GBALink_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, 0);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{
@@ -144,16 +159,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			blip_R = null;
 		}
 
-		public int[] _vidbuffer = new int[240 * 160];
+		public int[] _vidbuffer_L = new int[240 * 160];
+		public int[] _vidbuffer_R = new int[240 * 160];
+
+		public int[] _vidbuffer = new int[482 * 160];
 
 		public int[] GetVideoBuffer()
 		{
 			return _vidbuffer;
 		}
 
-		public int VirtualWidth => 240;
+		public int VirtualWidth => 482;
 		public int VirtualHeight => 160;
-		public int BufferWidth => 240;
+		public int BufferWidth => 482;
 		public int BufferHeight => 160;
 		public int BackgroundColor => unchecked((int)0xFF000000);
 		public int VsyncNumerator => 262144;

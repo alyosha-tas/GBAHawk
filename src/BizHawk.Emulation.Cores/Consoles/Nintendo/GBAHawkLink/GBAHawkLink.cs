@@ -3,7 +3,6 @@ using System.Text;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
 
 /*
@@ -20,7 +19,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
 	[Core(CoreNames.GBAHawkLink, "", isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
+	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable,
 								ISettable<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings>
 	{
 		public byte[] BIOS;
@@ -139,15 +138,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
-			GBA_Pntr = LibGBAHawkLink.GBA_create();
+			GBA_Pntr = LibGBAHawkLink.GBALink_create();
 
-			LibGBAHawkLink.GBA_load_bios(GBA_Pntr, BIOS);
+			LibGBAHawkLink.GBALink_load_bios(GBA_Pntr, BIOS);
 
 			Console.WriteLine("Mapper: " + mappers);
-			LibGBAHawkLink.GBA_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0], ROMS[1], (uint)ROMS_Length[1], mappers[1]);
+			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0], ROMS[1], (uint)ROMS_Length[1], mappers[1]);
 
-			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBA_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
-			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBA_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }
+			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
+			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }
 
 			blip_L.SetRates(4194304 * 4, 44100);
 			blip_R.SetRates(4194304 * 4, 44100);
@@ -156,12 +155,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 			SetupMemoryDomains();
 
-			Header_Length = LibGBAHawkLink.GBA_getheaderlength(GBA_Pntr);
-			Disasm_Length = LibGBAHawkLink.GBA_getdisasmlength(GBA_Pntr);
-			Reg_String_Length = LibGBAHawkLink.GBA_getregstringlength(GBA_Pntr);
+			Header_Length = LibGBAHawkLink.GBALink_getheaderlength(GBA_Pntr);
+			Disasm_Length = LibGBAHawkLink.GBALink_getdisasmlength(GBA_Pntr);
+			Reg_String_Length = LibGBAHawkLink.GBALink_getregstringlength(GBA_Pntr);
 
 			var newHeader = new StringBuilder(Header_Length);
-			LibGBAHawkLink.GBA_getheader(GBA_Pntr, newHeader, Header_Length);
+			LibGBAHawkLink.GBALink_getheader(GBA_Pntr, newHeader, Header_Length);
 
 			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
 
@@ -183,15 +182,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			{
 				_controllerDeck = new(GBAHawkLink_ControllerDeck.DefaultControllerName, false);
 			}
-
-			Mem_Domains.vram = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 0);
-			Mem_Domains.oam = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 1);
-			Mem_Domains.palram = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 2);
-			Mem_Domains.mmio = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 3);
-
-			GBA_message = null;
-
-			LibGBAHawkLink.GBA_setmessagecallback(GBA_Pntr, GBA_message);
 		}
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1, int i)
@@ -333,7 +323,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void HardReset()
 		{
-			LibGBAHawkLink.GBA_Hard_Reset(GBA_Pntr);
+			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
@@ -359,8 +349,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibGBAHawkLink.GBA_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length);
-			LibGBAHawkLink.GBA_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length);
+			LibGBAHawkLink.GBALink_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length, Settings.Trace_Core);
+			LibGBAHawkLink.GBALink_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length, Settings.Trace_Core);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}
@@ -378,29 +368,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			{
 				_scanlineCallback();
 			}
-		}
-
-		GBAGPUMemoryAreas Mem_Domains = new GBAGPUMemoryAreas();
-
-		public GBAGPUMemoryAreas GetMemoryAreas()
-		{
-			Mem_Domains.vram = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 0);
-			Mem_Domains.oam = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 1);
-			Mem_Domains.palram = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 2);
-			Mem_Domains.mmio = LibGBAHawkLink.GBA_get_ppu_pntrs(GBA_Pntr, 3);
-
-			return Mem_Domains;
-		}
-
-		private LibGBAHawkLink.MessageCallback GBA_message;
-
-		private void GetMessage()
-		{
-			StringBuilder new_m = new StringBuilder(200);
-
-			LibGBAHawkLink.GBA_getmessage(GBA_Pntr, new_m, 200);
-
-			Console.WriteLine(new_m);
 		}
 	}
 }

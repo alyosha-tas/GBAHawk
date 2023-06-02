@@ -40,6 +40,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public class GBALinkSettings
 		{
+			[DisplayName("Trace Core")]
+			[Description("Which core passes data to the trace logger.")]
+			[DefaultValue(0)]
+			public uint Trace_Core
+			{
+				get => _TraceCore;
+				set => _TraceCore = Math.Max(0, Math.Min(1, value));
+			}
+
+			private uint _TraceCore;
+
 			public GBALinkSettings Clone()
 			{
 				return (GBALinkSettings)MemberwiseClone();

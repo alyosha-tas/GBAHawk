@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Core.h" />
     <ClInclude Include="GBAHawk.h" />
+    <ClInclude Include="LinkCore.h" />
     <ClInclude Include="Mappers.h" />
     <ClInclude Include="GBA_System.h" />
   </ItemGroup>
