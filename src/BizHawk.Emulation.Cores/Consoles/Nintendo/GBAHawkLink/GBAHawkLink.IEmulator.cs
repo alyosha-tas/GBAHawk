@@ -44,6 +44,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					_vidbuffer[482 * i + j] = _vidbuffer_L[240 *i + j];
 				}
 
+				_vidbuffer[482 * i + 240] = (int)0xFAFAFA;
+				_vidbuffer[482 * i + 241] = (int)0xFAFAFA;
+
 				for (int j = 0; j < 240; j++)
 				{
 					_vidbuffer[482 * i + 242 + j] = _vidbuffer_R[240 * i + j];

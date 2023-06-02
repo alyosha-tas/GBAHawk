@@ -28,6 +28,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public uint[] ROMS_Length = new uint[2];
 
+		public static readonly byte[] multi_boot_check = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x61, 0x20, 0x52, 0x4F, 0x4D };
+
 		public ushort controller_state_1, controller_state_2;
 		public ushort Acc_X_state_1, Acc_X_state_2;
 		public ushort Acc_Y_state_1, Acc_Y_state_2;
@@ -43,6 +45,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		{
 			if (lp.Roms.Count != 2)
 				throw new InvalidOperationException("Wrong number of roms");
+			
+			// multi boot identified by special ROM
+			bool[] is_multi_boot = new bool[2];
+
+			is_multi_boot[0] = is_multi_boot[1] = true;
 
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBALinkSettings)lp.Settings ?? new GBALinkSettings();
@@ -60,7 +67,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 				Console.WriteLine(romHashSHA1);
 
-				if (rom.Length > 0x6000000)
+				for (int j = 0; j < 16; j++)
+				{
+					if (lp.Roms[i].RomData[j] != multi_boot_check[j]) { is_multi_boot[i] = false; }
+				}
+
+				if (is_multi_boot[i])
+				{
+					// replace with empty ROM
+					for (int j = 0; j < 0x6000000; j += 2)
+					{
+						ROMS[i][j] = (byte)((j & 0xFF) >> 1);
+						ROMS[i][j + 1] = (byte)(((j >> 8) & 0xFF) >> 1);
+					}
+
+					Console.WriteLine("No ROM inserted to console " + i);
+				}
+				else if (rom.Length > 0x6000000)
 				{
 					throw new Exception("Over size ROM?");
 				}
