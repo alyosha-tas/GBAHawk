@@ -62,6 +62,12 @@ GBAHawk_EXPORT bool GBA_frame_advance(GBACore* p, uint16_t ctrl1, uint16_t accx,
 	return p->FrameAdvance(ctrl1, accx, accy, solar, render, sound);
 }
 
+// advance a frame and possibly subframe reset
+GBAHawk_EXPORT bool GBA_subframe_advance(GBACore* p, uint16_t ctrl1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool sound, bool do_reset, uint32_t reset_cycle)
+{
+	return p->SubFrameAdvance(ctrl1, accx, accy, solar, render, sound, do_reset, reset_cycle);
+}
+
 // send video data to external video provider
 GBAHawk_EXPORT void GBA_get_video(GBACore* p, uint32_t* dest)
 {

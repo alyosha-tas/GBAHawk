@@ -1405,6 +1405,25 @@ namespace GBAHawk
 		}
 	}
 
+	bool GBA_System::SubFrame_Advance(uint32_t reset_cycle)
+	{
+		FrameCycle = 0;
+		
+		while (!VBlank_Rise)
+		{
+			Single_Step();
+
+			if (reset_cycle == FrameCycle)
+			{
+				return true;
+			}
+
+			FrameCycle += 1;
+		}
+
+		return false;
+	}
+
 	inline void GBA_System::Single_Step()
 	{			
 		#pragma region Delays

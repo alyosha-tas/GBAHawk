@@ -7,11 +7,11 @@ using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA
+namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
-	public class GBAHawk_ControllerDeck
+	public class SubGBAHawk_ControllerDeck
 	{
-		public GBAHawk_ControllerDeck(string controller1Name)
+		public SubGBAHawk_ControllerDeck(string controller1Name)
 		{
 			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
 				? ctor1(1)
@@ -24,6 +24,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			};
 
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
+
+			Definition.AddAxis("Reset Cycle", 0.RangeTo(280896), 280896);
 
 			Definition.MakeImmutable();
 		}

@@ -2,9 +2,9 @@
 using System;
 using System.Text;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA
+namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
-	public partial class GBAHawk : IEmulator, ISoundProvider, IVideoProvider
+	public partial class SubGBAHawk : IEmulator, ISoundProvider, IVideoProvider
 	{
 		public IEmulatorServiceProvider ServiceProvider { get; }
 
@@ -23,17 +23,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			{
 				tracecb = null;
 			}
-			
-			LibGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
 
-			if (controller.IsPressed("P1 Power"))
-			{
-				HardReset();
-			}
+			LibSubGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
 
-			_isLag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
+			_isLag = LibSubGBAHawk.GBA_subframe_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, 
+														true, true, controller.IsPressed("P1 Power"), (uint)controller.AxisValue("Reset Cycle"));
 
-			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
+			LibSubGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
 			_frame++;
 
@@ -65,7 +61,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		{
 			if (GBA_Pntr != IntPtr.Zero)
 			{
-				LibGBAHawk.GBA_destroy(GBA_Pntr);
+				LibSubGBAHawk.GBA_destroy(GBA_Pntr);
 				GBA_Pntr = IntPtr.Zero;
 			}
 
@@ -101,7 +97,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibGBAHawk.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
+			uint f_clock = LibSubGBAHawk.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{

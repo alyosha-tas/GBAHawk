@@ -36,6 +36,7 @@ namespace GBAHawk
 		uint32_t video_buffer[240 * 160] = { };
 
 		void Frame_Advance();
+		bool SubFrame_Advance(uint32_t reset_cycle);
 		inline void Single_Step();
 
 		uint8_t Read_Memory_8(uint32_t addr);
@@ -873,6 +874,7 @@ namespace GBAHawk
 
 		uint64_t cpu_ALU_Long_Result;
 		uint64_t CycleCount;
+		uint64_t FrameCycle;
 
 		int64_t cpu_ALU_Signed_Long_Result;
 
@@ -1444,7 +1446,7 @@ namespace GBAHawk
 
 			ResetRegisters();
 
-			CycleCount = 0;
+			CycleCount = FrameCycle = 0;
 
 			cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
 
@@ -3847,9 +3849,9 @@ namespace GBAHawk
 		const char* IRQ_event =  "                                 ====IRQ====                                 ";
 		const char* HALT_event = "                                 ====HALT====                                ";
 		const char* No_Reg = 
-			"                                                                                                                                                                                                                                                                    ";
+			"                                                                                                                                                                                                                                                                                          ";
 		const char* Reg_template = 
-			"R0:XXXXXXXX R1:XXXXXXXX R2:XXXXXXXX R3:XXXXXXXX R4:XXXXXXXX R5:XXXXXXXX R6:XXXXXXXX R7:XXXXXXXX R8:XXXXXXXX R9:XXXXXXXX R10:XXXXXXXX R11:XXXXXXXX R12:XXXXXXXX R13:XXXXXXXX R14:XXXXXXXX R15:XXXXXXXX CPSR:XXXXXXXX SPSR:XXXXXXXX Cy:XXXXXXXXXXXXXXXX LY:XXX NZCVIFE";
+			"R0:XXXXXXXX R1:XXXXXXXX R2:XXXXXXXX R3:XXXXXXXX R4:XXXXXXXX R5:XXXXXXXX R6:XXXXXXXX R7:XXXXXXXX R8:XXXXXXXX R9:XXXXXXXX R10:XXXXXXXX R11:XXXXXXXX R12:XXXXXXXX R13:XXXXXXXX R14:XXXXXXXX R15:XXXXXXXX CPSR:XXXXXXXX SPSR:XXXXXXXX Cy:XXXXXXXXXXXXXXXX LY:XXX NZCVIFE F-Cy:XXXXXXXXXXXXXXXX";
 		const char* Disasm_template = "PCPCPCPCPC:  AABBCCDD  (fail)  Di Di Di Di Di Di Di Di                       ";
 
 		char replacer[40] = {};
@@ -3954,7 +3956,7 @@ namespace GBAHawk
 			sprintf_s(val_char_1, 9, "%08X", temp_reg);
 			reg_state.append(val_char_1, 8);
 
-			reg_state.append(" Cy:");			
+			reg_state.append(" Cy:");
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", CycleCount));
 
 			reg_state.append(" LY:");
@@ -3968,6 +3970,9 @@ namespace GBAHawk
 			reg_state.append(cpu_FlagIget() ? "I" : "i");
 			reg_state.append(cpu_FlagFget() ? "F" : "f");
 			reg_state.append(INT_Master_On ? "E" : "e");
+
+			reg_state.append(" F-Cy:");
+			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", FrameCycle));
 
 			return reg_state;
 		}
@@ -12269,6 +12274,16 @@ namespace GBAHawk
 							snd_FIFO_A_ptr = 0;
 						}
 
+						if ((value & 0x80) == 0x80)
+						{
+							for (int i = 0; i < 32; i++)
+							{
+								snd_FIFO_B[i] = 0;
+							}
+
+							snd_FIFO_B_ptr = 0;
+						}
+
 						value &= 0x77;
 						break;
 					case 0x84:                                        // NR52 (ctrl)
@@ -12365,9 +12380,9 @@ namespace GBAHawk
 				snd_Audio_Regs[i] = 0;
 			}
 
-			for (int i = 0; i < 0x16; i++)
+			for (int i = 0; i < 0x30; i++)
 			{
-				snd_Write_Reg_8((uint32_t)(0xFF10 + i), 0);
+				snd_Write_Reg_8((uint32_t)(0x60 + i), 0);
 			}
 
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;

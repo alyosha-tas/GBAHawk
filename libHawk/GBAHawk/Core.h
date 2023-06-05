@@ -198,6 +198,46 @@ namespace GBAHawk
 			return GBA.Is_Lag;
 		}
 
+		bool SubFrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool rendersound, bool do_reset, uint32_t reset_cycle)
+		{
+			GBA.New_Controller = controller_1;
+			GBA.New_Acc_X = accx;
+			GBA.New_Acc_Y = accy;
+			GBA.New_Solar = solar;
+
+			// update the controller state
+			GBA.controller_state = GBA.New_Controller;
+
+			// as long as not in stop mode, vblank will occur and the controller will be checked
+			if (GBA.VBlank_Rise || GBA.stopped)
+			{
+				// check if controller state caused interrupt
+				GBA.do_controller_check();
+			}
+
+			GBA.snd_Master_Clock = 0;
+
+			GBA.num_samples_L = 0;
+			GBA.num_samples_R = 0;
+
+			GBA.Is_Lag = true;
+
+			GBA.VBlank_Rise = false;
+
+			bool reset_was_done = false;
+
+			if (!do_reset) { reset_cycle = -1; }
+
+			reset_was_done = GBA.SubFrame_Advance(reset_cycle);
+
+			if (reset_was_done)
+			{
+				Hard_Reset();
+			}
+
+			return GBA.Is_Lag;
+		}
+
 		void GetVideo(uint32_t* dest) 
 		{
 			uint32_t* src = GBA.video_buffer;
@@ -315,7 +355,7 @@ namespace GBAHawk
 
 		int GetRegStringLength()
 		{
-			return 260 + 1;
+			return 282 + 1;
 		}
 
 		void GetHeader(char* h, int l)

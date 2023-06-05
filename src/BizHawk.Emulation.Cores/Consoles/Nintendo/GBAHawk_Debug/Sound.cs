@@ -1389,9 +1389,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				snd_Audio_Regs[i] = 0;
 			}
 
-			for (int i = 0; i < 0x16; i++)
+			for (int i = 0; i < 0x30; i++)
 			{
-				snd_Write_Reg_8((uint)(0xFF10 + i), 0);
+				snd_Write_Reg_8((uint)(0x60 + i), 0);
 			}
 
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;

@@ -16,17 +16,16 @@ using BizHawk.Common.ReflectionExtensions;
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
 */
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA
+namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
-	[Core(CoreNames.GBAHawk, "", isReleased: true)]
+	[Core(CoreNames.SubGBAHawk, "", isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
-								ISettable<GBAHawk.GBASettings, GBAHawk.GBASyncSettings>
+	public partial class SubGBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
+								ISettable<SubGBAHawk.SubGBASettings, SubGBAHawk.SubGBASyncSettings>
 	{
 		public byte[] BIOS;
 
 		public readonly byte[] ROM = new byte[0x6000000];
-		public readonly byte[] header = new byte[0x50];
 
 		public uint ROM_Length;
 
@@ -40,11 +39,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		int mapper;
 
 		[CoreConstructor(VSystemID.Raw.GBA)]
-		public GBAHawk(CoreComm comm, GameInfo game, byte[] rom, GBAHawk.GBASettings settings, GBAHawk.GBASyncSettings syncSettings)
+		public SubGBAHawk(CoreComm comm, GameInfo game, byte[] rom, SubGBAHawk.SubGBASettings settings, SubGBAHawk.SubGBASyncSettings syncSettings)
 		{
 			ServiceProvider = new BasicServiceProvider(this);
-			Settings = (GBASettings)settings ?? new GBASettings();
-			SyncSettings = (GBASyncSettings)syncSettings ?? new GBASyncSettings();
+			Settings = (SubGBASettings)settings ?? new SubGBASettings();
+			SyncSettings = (SubGBASyncSettings)syncSettings ?? new SubGBASyncSettings();
 
 			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashMD5);
@@ -99,8 +98,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				}
 			}
 
-			Buffer.BlockCopy(ROM, 0x100, header, 0, 0x50);
-
 			mapper = Setup_Mapper(romHashMD5, romHashSHA1);
 
 			if (cart_RAM != null)
@@ -134,14 +131,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
-			GBA_Pntr = LibGBAHawk.GBA_create();
+			GBA_Pntr = LibSubGBAHawk.GBA_create();
 
-			LibGBAHawk.GBA_load_bios(GBA_Pntr, BIOS);
+			LibSubGBAHawk.GBA_load_bios(GBA_Pntr, BIOS);
 
 			Console.WriteLine("Mapper: " + mapper);
-			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
+			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
 
-			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
+			if (cart_RAM != null) { LibSubGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			blip_L.SetRates(4194304 * 4, 44100);
 			blip_R.SetRates(4194304 * 4, 44100);
@@ -150,12 +147,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			SetupMemoryDomains();
 
-			Header_Length = LibGBAHawk.GBA_getheaderlength(GBA_Pntr);
-			Disasm_Length = LibGBAHawk.GBA_getdisasmlength(GBA_Pntr);
-			Reg_String_Length = LibGBAHawk.GBA_getregstringlength(GBA_Pntr);
+			Header_Length = LibSubGBAHawk.GBA_getheaderlength(GBA_Pntr);
+			Disasm_Length = LibSubGBAHawk.GBA_getdisasmlength(GBA_Pntr);
+			Reg_String_Length = LibSubGBAHawk.GBA_getregstringlength(GBA_Pntr);
 
 			var newHeader = new StringBuilder(Header_Length);
-			LibGBAHawk.GBA_getheader(GBA_Pntr, newHeader, Header_Length);
+			LibSubGBAHawk.GBA_getheader(GBA_Pntr, newHeader, Header_Length);
 
 			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
 
@@ -175,17 +172,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			}
 			else
 			{
-				_controllerDeck = new(GBAHawk_ControllerDeck.DefaultControllerName);
+				_controllerDeck = new(SubGBAHawk_ControllerDeck.DefaultControllerName);
 			}
 
-			Mem_Domains.vram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
-			Mem_Domains.oam = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
-			Mem_Domains.palram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
-			Mem_Domains.mmio = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
+			Mem_Domains.vram = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
+			Mem_Domains.oam = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
+			Mem_Domains.palram = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
+			Mem_Domains.mmio = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
 
 			GBA_message = null;
 
-			LibGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
+			LibSubGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
 		}
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1)
@@ -327,13 +324,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public void HardReset()
 		{
-			LibGBAHawk.GBA_Hard_Reset(GBA_Pntr);
+			LibSubGBAHawk.GBA_Hard_Reset(GBA_Pntr);
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GBA_core = new byte[0x80000];
 
-		private readonly GBAHawk_ControllerDeck _controllerDeck;
+		private readonly SubGBAHawk_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 
@@ -341,7 +338,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		private readonly ITraceable Tracer;
 
-		private LibGBAHawk.TraceCallback tracecb;
+		private LibSubGBAHawk.TraceCallback tracecb;
 
 		// these will be constant values assigned during core construction
 		private int Header_Length;
@@ -353,8 +350,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibGBAHawk.GBA_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length);
-			LibGBAHawk.GBA_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length);
+			LibSubGBAHawk.GBA_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length);
+			LibSubGBAHawk.GBA_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}
@@ -378,21 +375,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public GBAGPUMemoryAreas GetMemoryAreas()
 		{
-			Mem_Domains.vram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
-			Mem_Domains.oam = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
-			Mem_Domains.palram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
-			Mem_Domains.mmio = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
+			Mem_Domains.vram = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
+			Mem_Domains.oam = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
+			Mem_Domains.palram = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
+			Mem_Domains.mmio = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
 
 			return Mem_Domains;
 		}
 
-		private LibGBAHawk.MessageCallback GBA_message;
+		private LibSubGBAHawk.MessageCallback GBA_message;
 
 		private void GetMessage()
 		{
 			StringBuilder new_m = new StringBuilder(200);
 
-			LibGBAHawk.GBA_getmessage(GBA_Pntr, new_m, 200);
+			LibSubGBAHawk.GBA_getmessage(GBA_Pntr, new_m, 200);
 
 			Console.WriteLine(new_m);
 		}
