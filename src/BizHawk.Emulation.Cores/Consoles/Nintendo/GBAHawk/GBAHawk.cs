@@ -236,7 +236,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 								break;
 							}
-							if ((ROM[i + 6] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
+							if ((ROM[i + 5] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
 								mppr = 5;

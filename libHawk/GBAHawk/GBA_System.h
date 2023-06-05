@@ -12146,7 +12146,7 @@ namespace GBAHawk
 							snd_FIFO_B_Enable_R = (value & 0x10) == 0x10;
 							snd_FIFO_B_Enable_L = (value & 0x20) == 0x20;
 
-							snd_FIFO_A_Timer = (value & 0x04) >> 3;
+							snd_FIFO_A_Timer = (value & 0x04) >> 2;
 							snd_FIFO_B_Timer = (value & 0x40) >> 6;
 
 							if ((value & 0x08) == 0x08)
@@ -12256,7 +12256,7 @@ namespace GBAHawk
 						snd_FIFO_B_Enable_R = (value & 0x10) == 0x10;
 						snd_FIFO_B_Enable_L = (value & 0x20) == 0x20;
 
-						snd_FIFO_A_Timer = (value & 0x04) >> 3;
+						snd_FIFO_A_Timer = (value & 0x04) >> 2;
 						snd_FIFO_B_Timer = (value & 0x40) >> 6;
 
 						if ((value & 0x08) == 0x08)
