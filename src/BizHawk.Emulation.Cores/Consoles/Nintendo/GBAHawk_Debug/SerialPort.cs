@@ -32,6 +32,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool ser_Delay, key_Delay;
 
+		public byte ser_OUT_State;
+
 		public byte ser_Read_Reg_8(uint addr)
 		{
 			byte ret = 0;
@@ -169,8 +171,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// note no check here, does not seem to trigger onhardware, see joypad.gba
 				case 0x133: key_CTRL = (ushort)((key_CTRL & 0x00FF) | (value << 8)); /* do_controller_check(); do_controller_check_glitch(); */ break;
 
-				case 0x134: ser_Mode = (ushort)((ser_Mode & 0xFF00) | value); break;
-				case 0x135: ser_Mode = (ushort)((ser_Mode & 0x00FF) | (value << 8)); break;
+				case 0x134: ser_Mode_Update((ushort)((ser_Mode & 0xFF00) | value)); break;
+				case 0x135: ser_Mode_Update((ushort)((ser_Mode & 0x00FF) | (value << 8))); break;
 
 				case 0x140: ser_CTRL_J = (ushort)((ser_CTRL_J & 0xFF00) | value); break;
 				case 0x141: ser_CTRL_J = (ushort)((ser_CTRL_J & 0x00FF) | (value << 8)); break;
@@ -202,7 +204,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x130: // no effect
 				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
 
-				case 0x134: ser_Mode = value; break;
+				case 0x134: ser_Mode_Update(value); break;
 
 				case 0x140: ser_CTRL_J = value; break;
 
@@ -227,7 +229,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case 0x130: key_CTRL = (ushort)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
 
-				case 0x134: ser_Mode = (ushort)(value & 0xFFFF); break;
+				case 0x134: ser_Mode_Update((ushort)(value & 0xFFFF)); break;
 
 				case 0x140: ser_CTRL_J = (ushort)(value & 0xFFFF); break;
 
@@ -239,6 +241,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ser_CTRL_Update(ushort value)
 		{
+			Console.WriteLine("CTRL: " + ext_name + " " + value + " " + TotalExecutedCycles);
+			
 			// actiavte the port
 			if (!ser_Start && ((value & 0x80) == 0x80))
 			{
@@ -256,7 +260,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if ((value & 0x80) != 0x80) { ser_Start = false; }
 
 			ser_CTRL = value;
+
+			ser_CTRL |= ser_OUT_State;
 		}
+
+		public void ser_Mode_Update(ushort value)
+		{
+			Console.WriteLine("Mode: " + ext_name + " " + value + " " + TotalExecutedCycles);
+
+			ser_Mode = value;
+		}
+
 
 		public void ser_Tick()
 		{
@@ -301,7 +315,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
-			ser_CTRL = ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
+			ser_CTRL = ser_OUT_State = 4; // assuming no connection
+			
+			ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
 
 			key_CTRL = 0;
 
@@ -347,6 +363,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ser_Delay), ref ser_Delay);
 			ser.Sync(nameof(key_Delay), ref key_Delay);
+			ser.Sync(nameof(ser_OUT_State), ref ser_OUT_State);
 		}
 	}
 

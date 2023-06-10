@@ -77,6 +77,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool INT_Master_On;
 
+		public string ext_name = null;
+
 		// memory domains
 		public byte[] WRAM = new byte[0x40000];
 		public byte[] IWRAM = new byte[0x8000];
@@ -95,6 +97,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int Frame_Count = 0;
 
 		public bool Use_MT;
+
+		public static readonly byte[] multi_boot_check = { 0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x61, 0x20, 0x52, 0x4F, 0x4D };
 
 		public MapperBase mapper;
 
@@ -115,13 +119,34 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
-			
+
+			bool is_multi_boot = true;
+
+			if (rom.Length < 16) { throw new Exception("ROM too small"); }
+
+			for (int j = 0; j < 16; j++)
+			{
+				if (rom[j] != multi_boot_check[j]) { is_multi_boot = false; }
+			}
+
+			if (is_multi_boot)
+			{
+				// replace with empty ROM
+				for (int j = 0; j < 0x6000000; j += 2)
+				{
+					ROM[j] = (byte)((j & 0xFF) >> 1);
+					ROM[j + 1] = (byte)(((j >> 8) & 0xFF) >> 1);
+				}
+
+				Console.WriteLine("No ROM inserted to console");
+			}
+
 			// TODO: Better manage small rom sizes (ex in various test roms.)
 			// the mgba test quite expects ROM to not be mirrored
 			// but the GBA Tests memory test expects it to be mirrored
 			// it probably depends on the cart, GBA TEK only specifies the case where no cart is inserted.
 			// for testing purposes divide the cases with a hash check
-			if (rom.Length > 0x6000000)
+			else if (rom.Length > 0x6000000)
 			{
 				throw new Exception("Over size ROM?");			
 			}

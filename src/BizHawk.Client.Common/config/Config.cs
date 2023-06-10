@@ -31,7 +31,7 @@ namespace BizHawk.Client.Common
 			(new[] { VSystemID.Raw.GBA },
 				new[] { CoreNames.GBAHawk, CoreNames.SubGBAHawk, CoreNames.GBAHawk_Debug }),
 			(new[] { VSystemID.Raw.GBAL },
-				new[] { CoreNames.GBAHawkLink }),
+				new[] { CoreNames.GBAHawkLink, CoreNames.GBAHawkLink_Debug }),
 		};
 
 		public Config()
