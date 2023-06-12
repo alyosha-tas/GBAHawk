@@ -2523,6 +2523,7 @@ namespace GBAHawk
 						// reset start bit
 						ser_Start = false;
 						ser_CTRL &= 0xFF7F;
+						ser_Ext_Tick = true;
 
 						// trigger interrupt if needed
 						if ((ser_CTRL & 0x4000) == 0x4000)

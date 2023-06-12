@@ -27,14 +27,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 					(addr, value) => R.WRAM[addr] = value,
 					1),
 				new MemoryDomainDelegate(
-					"Zero Page RAM L",
+					"Internal RAM L",
 					L.IWRAM.Length,
 					MemoryDomain.Endian.Little,
 					addr => L.IWRAM[addr],
 					(addr, value) => L.IWRAM[addr] = value,
 					1),
 				new MemoryDomainDelegate(
-					"Zero Page RAM R",
+					"Internal RAM R",
 					R.IWRAM.Length,
 					MemoryDomain.Endian.Little,
 					addr => R.IWRAM[addr],

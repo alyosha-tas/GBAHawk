@@ -1,6 +1,7 @@
 ﻿using System;
 
 using BizHawk.Emulation.Common;
+using Newtonsoft.Json.Linq;
 using static BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug.GBAHawkLink_Debug;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
@@ -17,11 +18,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 			if (_tracer.IsEnabled())
 			{
-				L.TraceCallback = s => _tracer.Put(s);
+				R.TraceCallback = s => _tracer.Put(s);
 			}
 			else
 			{
-				L.TraceCallback = null;
+				R.TraceCallback = null;
 			}
 
 			if (controller.IsPressed("P1 Power"))
@@ -76,10 +77,175 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 				L.do_single_step();
 				R.do_single_step();
 
-				if (_cableconnected)
+				// sync up state bits
+				if (L.ser_Ext_Update)
 				{
+					if (L.ser_Mode_State == 3)
+					{
+						L.ser_CTRL &= 0xFFF7;
+						R.ser_CTRL &= 0xFFF7;
+					}
+					else if (L.ser_Mode_State == 2)
+					{
+						L.ser_CTRL &= 0xFFF7;
+						R.ser_CTRL &= 0xFFF7;
+					}
+					else
+					{
+						if (L.ser_Ctrl_Mode_State == 3)
+						{
+							// uart
+							L.ser_CTRL &= 0xFFF7;
+							R.ser_CTRL &= 0xFFF7;
+						}
+						else if (L.ser_Ctrl_Mode_State == 2)
+						{
+							// multiplayer
+							if ((R.ser_Mode_State < 2) && (R.ser_Ctrl_Mode_State == 2))
+							{
+								L.ser_CTRL |= 8;
+								R.ser_CTRL |= 8;
 
+								if ((L.ser_CTRL & 0x80) == 0x80)
+								{
+									R.ser_CTRL |= 0x80;
+								}
+							}
+							else
+							{
+								L.ser_CTRL &= 0xFFF7;
+								R.ser_CTRL &= 0xFFF7;
+							}
+						}
+						else
+						{
+							// normal
+							L.ser_CTRL &= 0xFFF7;
+							R.ser_CTRL &= 0xFFF7;
+						}
+					}
+
+					L.ser_Ext_Update = false;
 				}
+
+				if (R.ser_Ext_Update)
+				{
+					if (R.ser_Mode_State == 3)
+					{
+						L.ser_CTRL &= 0xFFF7;
+						R.ser_CTRL &= 0xFFF7;
+					}
+					else if (R.ser_Mode_State == 2)
+					{
+						L.ser_CTRL &= 0xFFF7;
+						R.ser_CTRL &= 0xFFF7;
+					}
+					else
+					{
+						if (R.ser_Ctrl_Mode_State == 3)
+						{
+							// uart
+							L.ser_CTRL &= 0xFFF7;
+							R.ser_CTRL &= 0xFFF7;
+						}
+						else if (R.ser_Ctrl_Mode_State == 2)
+						{
+							// multiplayer
+							if ((L.ser_Mode_State < 2) && (L.ser_Ctrl_Mode_State == 2))
+							{
+								L.ser_CTRL |= 8;
+								R.ser_CTRL |= 8;
+								/*
+								if ((L.ser_CTRL & 0x80) == 0x80)
+								{
+									R.ser_CTRL |= 0x80;
+								}
+								*/
+							}
+							else
+							{
+								L.ser_CTRL &= 0xFFF7;
+								R.ser_CTRL &= 0xFFF7;
+							}
+						}
+						else
+						{
+							// normal
+							L.ser_CTRL &= 0xFFF7;
+							R.ser_CTRL &= 0xFFF7;
+						}
+					}
+
+					R.ser_Ext_Update = false;
+				}
+
+				// transfer a bit
+				if (L.ser_Ext_Tick)
+				{
+					if (L.ser_Ctrl_Mode_State != 2)
+					{
+						ushort temp_t = L.ser_Data_0;
+						L.ser_Data_0 = R.ser_Data_0;
+						R.ser_Data_0 = temp_t;
+
+						temp_t = L.ser_Data_1;
+						L.ser_Data_1 = R.ser_Data_1;
+						R.ser_Data_1 = temp_t;
+
+						L.ser_CTRL &= 0xFF7F;
+						R.ser_CTRL &= 0xFF7F;
+
+						// trigger interrupt if needed
+						if ((R.ser_CTRL & 0x4000) == 0x4000)
+						{
+							R.INT_Flags |= 0x80;
+
+							R.ser_Delay = true;
+							R.Misc_Delays = true;
+							R.ser_Delay_cd = 2;
+							R.delays_to_process = true;
+						}
+
+						L.ser_Ext_Tick = false;
+
+						Console.WriteLine("transfer complete " + L.ser_Data_0 + " " + R.ser_Data_0);
+					}
+					else
+					{
+						L.ser_Data_0 = L.ser_Data_M;
+						R.ser_Data_0 = L.ser_Data_M;
+
+						L.ser_Data_1 = R.ser_Data_M;
+						R.ser_Data_1 = R.ser_Data_M;
+
+						L.ser_Data_2 = 0xFFFF;
+						R.ser_Data_2 = 0xFFFF;
+
+						L.ser_Data_3 = 0xFFFF;
+						R.ser_Data_3 = 0xFFFF;
+
+						L.ser_CTRL &= 0xFF7F;
+						R.ser_CTRL &= 0xFF7F;
+
+						R.ser_CTRL |= 0x10;
+
+						// trigger interrupt if needed
+						if ((R.ser_CTRL & 0x4000) == 0x4000)
+						{
+							R.INT_Flags |= 0x80;
+
+							R.ser_Delay = true;
+							R.Misc_Delays = true;
+							R.ser_Delay_cd = 2;
+							R.delays_to_process = true;
+						}
+
+						L.ser_Ext_Tick = false;
+
+						Console.WriteLine("transfer complete " + L.ser_Data_M + " " + R.ser_Data_M);
+					}
+				}
+
 			}
 		}
 

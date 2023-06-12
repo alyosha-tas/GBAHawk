@@ -216,6 +216,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			}
 
 			_controllerDeck = new(cntrllr1, cntrllr2, false);
+
+			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
 		}
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1, int i)

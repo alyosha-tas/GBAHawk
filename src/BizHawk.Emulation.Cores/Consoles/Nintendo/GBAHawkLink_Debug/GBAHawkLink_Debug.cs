@@ -52,8 +52,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			L = new GBAHawk_Debug.GBAHawk_Debug(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, temp_set_L, temp_sync_L);
 			R = new GBAHawk_Debug.GBAHawk_Debug(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, temp_set_R, temp_sync_R);
 
-			L.ext_name = "L";
-			R.ext_name = "R";
+			// system starts connected
+			L.ext_num = 1;
+			R.ext_num = 2;
 
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(this); 
@@ -67,6 +68,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			SetupMemoryDomains();
 
 			HardReset();
+
+			// change ser control state since its plugged in
+			L.ser_CTRL = 0;
+			R.ser_CTRL = 0;
 		}
 
 		public ulong TotalExecutedCycles => L.TotalExecutedCycles;

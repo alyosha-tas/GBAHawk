@@ -71,6 +71,14 @@ namespace GBAHawk
 
 			L.GBA.System_Reset();
 			R.GBA.System_Reset();
+
+			// system starts connected
+			L.GBA.ext_num = 1;
+			R.GBA.ext_num = 2;
+
+			// change ser control state since its plugged in
+			L.GBA.ser_CTRL = 0;
+			R.GBA.ser_CTRL = 0;
 		}
 
 		bool FrameAdvance(uint16_t controller_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool rendersound_0,
@@ -131,6 +139,172 @@ namespace GBAHawk
 			{
 				L.GBA.Single_Step();
 				R.GBA.Single_Step();
+
+				// sync up state bits
+				if (L.GBA.ser_Ext_Update)
+				{
+					if (L.GBA.ser_Mode_State == 3)
+					{
+						L.GBA.ser_CTRL &= 0xFFF7;
+						R.GBA.ser_CTRL &= 0xFFF7;
+					}
+					else if (L.GBA.ser_Mode_State == 2)
+					{
+						L.GBA.ser_CTRL &= 0xFFF7;
+						R.GBA.ser_CTRL &= 0xFFF7;
+					}
+					else
+					{
+						if (L.GBA.ser_Ctrl_Mode_State == 3)
+						{
+							// uart
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (L.GBA.ser_Ctrl_Mode_State == 2)
+						{
+							// multiplayer
+							if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
+							{
+								L.GBA.ser_CTRL |= 8;
+								R.GBA.ser_CTRL |= 8;
+
+								if ((L.GBA.ser_CTRL & 0x80) == 0x80)
+								{
+									R.GBA.ser_CTRL |= 0x80;
+								}
+							}
+							else
+							{
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+						else
+						{
+							// normal
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+					}
+
+					L.GBA.ser_Ext_Update = false;
+				}
+
+				if (R.GBA.ser_Ext_Update)
+				{
+					if (R.GBA.ser_Mode_State == 3)
+					{
+						L.GBA.ser_CTRL &= 0xFFF7;
+						R.GBA.ser_CTRL &= 0xFFF7;
+					}
+					else if (R.GBA.ser_Mode_State == 2)
+					{
+						L.GBA.ser_CTRL &= 0xFFF7;
+						R.GBA.ser_CTRL &= 0xFFF7;
+					}
+					else
+					{
+						if (R.GBA.ser_Ctrl_Mode_State == 3)
+						{
+							// uart
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (R.GBA.ser_Ctrl_Mode_State == 2)
+						{
+							// multiplayer
+							if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
+							{
+								L.GBA.ser_CTRL |= 8;
+								R.GBA.ser_CTRL |= 8;
+								/*
+								if ((L.ser_CTRL & 0x80) == 0x80)
+								{
+									R.ser_CTRL |= 0x80;
+								}
+								*/
+							}
+							else
+							{
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+						else
+						{
+							// normal
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+					}
+
+					R.GBA.ser_Ext_Update = false;
+				}
+
+				// transfer a bit
+				if (L.GBA.ser_Ext_Tick)
+				{
+					if (L.GBA.ser_Ctrl_Mode_State != 2)
+					{
+						uint16_t temp_t = L.GBA.ser_Data_0;
+						L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+						R.GBA.ser_Data_0 = temp_t;
+
+						temp_t = L.GBA.ser_Data_1;
+						L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+						R.GBA.ser_Data_1 = temp_t;
+
+						L.GBA.ser_CTRL &= 0xFF7F;
+						R.GBA.ser_CTRL &= 0xFF7F;
+
+						// trigger interrupt if needed
+						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+						{
+							R.GBA.INT_Flags |= 0x80;
+
+							R.GBA.ser_Delay = true;
+							R.GBA.Misc_Delays = true;
+							R.GBA.ser_Delay_cd = 2;
+							R.GBA.delays_to_process = true;
+						}
+
+						L.GBA.ser_Ext_Tick = false;
+					}
+					else
+					{
+						L.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+						R.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+
+						L.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+						R.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+
+						L.GBA.ser_Data_2 = 0xFFFF;
+						R.GBA.ser_Data_2 = 0xFFFF;
+
+						L.GBA.ser_Data_3 = 0xFFFF;
+						R.GBA.ser_Data_3 = 0xFFFF;
+
+						L.GBA.ser_CTRL &= 0xFF7F;
+						R.GBA.ser_CTRL &= 0xFF7F;
+
+						R.GBA.ser_CTRL |= 0x10;
+
+						// trigger interrupt if needed
+						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+						{
+							R.GBA.INT_Flags |= 0x80;
+
+							R.GBA.ser_Delay = true;
+							R.GBA.Misc_Delays = true;
+							R.GBA.ser_Delay_cd = 2;
+							R.GBA.delays_to_process = true;
+						}
+
+						L.GBA.ser_Ext_Tick = false;
+					}
+				}
+
 			}
 
 			return L.GBA.Is_Lag;

@@ -77,7 +77,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool INT_Master_On;
 
-		public string ext_name = null;
+		public int ext_num = 0; // zero here means disconnected
 
 		// memory domains
 		public byte[] WRAM = new byte[0x40000];

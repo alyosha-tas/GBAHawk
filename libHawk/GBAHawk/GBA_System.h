@@ -74,6 +74,8 @@ namespace GBAHawk
 
 		uint8_t Post_Boot, Halt_CTRL;
 
+		uint8_t ext_num = 0; // zero here means disconnected
+
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
 		uint16_t controller_state;
 		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
@@ -6625,7 +6627,6 @@ namespace GBAHawk
 		bool ser_Internal_Clock, ser_Start;
 		bool ser_Delay, key_Delay;
 
-		uint8_t ser_div_cnt, ser_Mask;
 		uint8_t ser_Bit_Count, ser_Bit_Total;
 		
 		uint16_t ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
@@ -6634,6 +6635,15 @@ namespace GBAHawk
 
 		uint32_t ser_RECV_J, ser_TRANS_J;
 		uint32_t ser_Delay_cd, key_Delay_cd;
+		uint32_t ser_div_cnt, ser_Mask;
+
+		uint8_t ser_SC, ser_SD, ser_SI, ser_SO;
+
+		uint8_t ser_Mode_State, ser_Ctrl_Mode_State;
+
+		uint8_t ser_Ext_Current_Console;
+
+		bool ser_Ext_Update, ser_Ext_Tick;
 
 		uint8_t ser_Read_Reg_8(uint32_t addr)
 		{
@@ -6773,8 +6783,8 @@ namespace GBAHawk
 				// note no check here, does not seem to trigger onhardware, see joypad.gba
 				case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
 
-				case 0x134: ser_Mode = (uint16_t)((ser_Mode & 0xFF00) | value); break;
-				case 0x135: ser_Mode = (uint16_t)((ser_Mode & 0x00FF) | (value << 8)); break;
+				case 0x134: ser_Mode_Update((uint16_t)((ser_Mode & 0xFF00) | value)); break;
+				case 0x135: ser_Mode_Update((uint16_t)((ser_Mode & 0x00FF) | (value << 8))); break;
 
 				case 0x140: ser_CTRL_J = (uint16_t)((ser_CTRL_J & 0xFF00) | value); break;
 				case 0x141: ser_CTRL_J = (uint16_t)((ser_CTRL_J & 0x00FF) | (value << 8)); break;
@@ -6806,7 +6816,7 @@ namespace GBAHawk
 				case 0x130: // no effect
 				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
 
-				case 0x134: ser_Mode = value; break;
+				case 0x134: ser_Mode_Update(value); break;
 
 				case 0x140: ser_CTRL_J = value; break;
 
@@ -6831,7 +6841,7 @@ namespace GBAHawk
 
 				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
 
-				case 0x134: ser_Mode = (uint16_t)(value & 0xFFFF); break;
+				case 0x134: ser_Mode_Update((uint16_t)(value & 0xFFFF)); break;
 
 				case 0x140: ser_CTRL_J = (uint16_t)(value & 0xFFFF); break;
 
@@ -6843,23 +6853,115 @@ namespace GBAHawk
 
 		void ser_CTRL_Update(uint16_t value)
 		{
-			// actiavte the port
-			if (!ser_Start && ((value & 0x80) == 0x80))
+			ser_Ctrl_Mode_State = (uint8_t)((value & 0x3000) >> 12);
+
+			ser_Ext_Update = true;
+
+			if (ser_Mode_State == 3)
 			{
-				ser_Bit_Count = 0;
 
-				ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
-
-				ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0xF);
-
-				ser_Internal_Clock = (value & 0x1) == 0x1;
-
-				ser_Start = true;
 			}
+			else if (ser_Mode_State == 2)
+			{
 
-			if ((value & 0x80) != 0x80) { ser_Start = false; }
+			}
+			else
+			{
+				if (ser_Ctrl_Mode_State == 3)
+				{
+					// uart
 
-			ser_CTRL = value;
+				}
+				else if (ser_Ctrl_Mode_State == 2)
+				{
+					// multiplayer
+					ser_CTRL = (uint16_t)((value & 0x7F83) | (ser_CTRL & 0x70));
+
+					// status bit will be set extrenally
+					ser_CTRL &= 0xFFF7;
+
+					if (ext_num == 1)
+					{
+						ser_CTRL &= 0xFFFB;
+
+						// actiavte the port
+						if (!ser_Start && ((value & 0x80) == 0x80))
+						{
+							ser_Bit_Count = 0;
+
+							ser_Bit_Total = 36;
+
+							if ((value & 3) == 0)
+							{
+								ser_Mask = 0x7FF;
+							}
+							else if ((value & 3) == 1)
+							{
+								ser_Mask = 0x1FF;
+							}
+							else if ((value & 3) == 2)
+							{
+								ser_Mask = 0xFF;
+							}
+							else if ((value & 3) == 3)
+							{
+								ser_Mask = 0x7F;
+							}
+
+							ser_Internal_Clock = true;
+
+							ser_Start = true;
+
+							ser_Ext_Current_Console = 1;
+						}
+
+						if ((value & 0x80) != 0x80) { ser_Start = false; }
+					}
+					else
+					{
+						ser_CTRL |= 4;
+					}
+				}
+				else
+				{
+					// normal
+					// actiavte the port
+					if (!ser_Start && ((value & 0x80) == 0x80))
+					{
+						ser_Bit_Count = 0;
+
+						ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
+
+						ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0xF);
+
+						ser_Internal_Clock = (value & 0x1) == 0x1;
+
+						ser_Start = true;
+					}
+
+					if ((value & 0x80) != 0x80) { ser_Start = false; }
+
+					ser_CTRL = value;
+
+					if (ext_num == 0)
+					{
+						ser_CTRL |= 4; // open, no connection
+					}
+					else
+					{
+						ser_CTRL |= (uint8_t)(ser_SI << 2);
+					}
+				}
+			}
+		}
+
+		void ser_Mode_Update(uint16_t value)
+		{
+			ser_Mode = value;
+
+			ser_Mode_State = (uint8_t)((value & 0xC000) >> 14);
+
+			ser_Ext_Update = true;
 		}
 
 		void ser_Reset()
@@ -6870,7 +6972,13 @@ namespace GBAHawk
 
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
-			ser_CTRL = ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
+			ser_CTRL = 4; // assuming no connection
+
+			ser_SC = ser_SD = ser_SI = ser_SO = 0;
+
+			ser_Mode_State = ser_Ctrl_Mode_State = 0;
+
+			ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
 
 			key_CTRL = 0;
 
@@ -6880,9 +6988,13 @@ namespace GBAHawk
 
 			ser_Bit_Count = ser_Bit_Total = 0;
 
+			ser_Ext_Current_Console = 0;
+
 			ser_Internal_Clock = ser_Start = false;
 
 			ser_Delay = key_Delay = false;
+
+			ser_Ext_Update = ser_Ext_Tick = false;
 		}
 
 		uint8_t* ser_SaveState(uint8_t* saver)
@@ -6891,11 +7003,19 @@ namespace GBAHawk
 			saver = bool_saver(ser_Start, saver);
 			saver = bool_saver(ser_Delay, saver);
 			saver = bool_saver(key_Delay, saver);
+			saver = bool_saver(ser_Ext_Update, saver);
+			saver = bool_saver(ser_Ext_Tick, saver);
 
-			saver = byte_saver(ser_div_cnt, saver);
-			saver = byte_saver(ser_Mask, saver);
 			saver = byte_saver(ser_Bit_Count, saver);
 			saver = byte_saver(ser_Bit_Total, saver);
+
+			saver = byte_saver(ser_SC, saver);
+			saver = byte_saver(ser_SD, saver);
+			saver = byte_saver(ser_SI, saver);
+			saver = byte_saver(ser_SO, saver);
+			saver = byte_saver(ser_Mode_State, saver);
+			saver = byte_saver(ser_Ctrl_Mode_State, saver);
+			saver = byte_saver(ser_Ext_Current_Console, saver);
 
 			saver = short_saver(ser_Data_0, saver);
 			saver = short_saver(ser_Data_1, saver);
@@ -6910,6 +7030,8 @@ namespace GBAHawk
 
 			saver = int_saver(ser_RECV_J, saver);
 			saver = int_saver(ser_TRANS_J, saver);
+			saver = int_saver(ser_div_cnt, saver);
+			saver = int_saver(ser_Mask, saver);
 
 			return saver;
 		}
@@ -6920,11 +7042,19 @@ namespace GBAHawk
 			loader = bool_loader(&ser_Start, loader);
 			loader = bool_loader(&ser_Delay, loader);
 			loader = bool_loader(&key_Delay, loader);
+			loader = bool_loader(&ser_Ext_Update, loader);
+			loader = bool_loader(&ser_Ext_Tick, loader);
 
-			loader = byte_loader(&ser_div_cnt, loader);
-			loader = byte_loader(&ser_Mask, loader);
 			loader = byte_loader(&ser_Bit_Count, loader);
 			loader = byte_loader(&ser_Bit_Total, loader);
+
+			loader = byte_loader(&ser_SC, loader);
+			loader = byte_loader(&ser_SD, loader);
+			loader = byte_loader(&ser_SI, loader);
+			loader = byte_loader(&ser_SO, loader);
+			loader = byte_loader(&ser_Mode_State, loader);
+			loader = byte_loader(&ser_Ctrl_Mode_State, loader);
+			loader = byte_loader(&ser_Ext_Current_Console, loader);
 
 			loader = short_loader(&ser_Data_0, loader);
 			loader = short_loader(&ser_Data_1, loader);
@@ -6939,6 +7069,8 @@ namespace GBAHawk
 
 			loader = int_loader(&ser_RECV_J, loader);
 			loader = int_loader(&ser_TRANS_J, loader);
+			loader = int_loader(&ser_div_cnt, loader);
+			loader = int_loader(&ser_Mask, loader);
 
 			return loader;
 		}
@@ -12775,6 +12907,7 @@ namespace GBAHawk
 
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
+			saver = byte_saver(ext_num, saver);
 
 			saver = short_saver(INT_EN, saver);
 			saver = short_saver(INT_Flags, saver);
@@ -12862,6 +12995,7 @@ namespace GBAHawk
 
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);
+			loader = byte_loader(&ext_num, loader);
 
 			loader = short_loader(&INT_EN, loader);
 			loader = short_loader(&INT_Flags, loader);

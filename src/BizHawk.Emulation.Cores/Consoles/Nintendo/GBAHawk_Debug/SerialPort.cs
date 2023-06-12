@@ -1,6 +1,7 @@
 ﻿using BizHawk.Common.NumberExtensions;
 using BizHawk.Common;
 using System;
+using Newtonsoft.Json.Linq;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -9,6 +10,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	NOTES: 
 
 	only most basic serial comm implemented, needs a lot more work
+
+	what happens if mode is changed while transfer in progess? (for now assume transfer completes normally)
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -25,14 +28,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort key_CTRL;
 
-		public byte ser_div_cnt, ser_Mask;
+		public uint ser_div_cnt, ser_Mask;
 		public byte ser_Bit_Count, ser_Bit_Total;
 
 		public bool ser_Internal_Clock, ser_Start;
 
 		public bool ser_Delay, key_Delay;
 
-		public byte ser_OUT_State;
+		public byte ser_SC, ser_SD, ser_SI, ser_SO;
+
+		public byte ser_Mode_State, ser_Ctrl_Mode_State;
+
+		public byte ser_Ext_Current_Console;
+
+		public bool ser_Ext_Update, ser_Ext_Tick;
 
 		public byte ser_Read_Reg_8(uint addr)
 		{
@@ -58,7 +67,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x132: ret = (byte)(key_CTRL & 0xFF); break;
 				case 0x133: ret = (byte)((key_CTRL & 0xFF00) >> 8); break;
 
-				case 0x134: ret = (byte)(ser_Mode & 0xFF); break;
+				case 0x134: ret = (byte)(ser_Mode & 0xFF); Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break; 
 				case 0x135: ret = (byte)((ser_Mode & 0xFF00) >> 8); break;
 				case 0x136: ret = 0; break;
 				case 0x137: ret = 0; break;
@@ -103,7 +112,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x130: ret = controller_state; Is_Lag = false; break;
 				case 0x132: ret = key_CTRL; break;
 
-				case 0x134: ret = ser_Mode; break;
+				case 0x134: ret = ser_Mode; Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break;
 				case 0x136: ret = 0; break;
 
 				case 0x140: ret = ser_CTRL_J; break;
@@ -134,7 +143,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case 0x130: ret = (uint)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
 
-				case 0x134: ret = (uint)((0x00000000) | ser_Mode); break;
+				case 0x134: ret = (uint)((0x00000000) | ser_Mode); Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break;
 
 				case 0x140: ret = (uint)((0x00000000) | ser_CTRL_J); break;
 
@@ -241,34 +250,121 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ser_CTRL_Update(ushort value)
 		{
-			Console.WriteLine("CTRL: " + ext_name + " " + value + " " + TotalExecutedCycles);
 			
-			// actiavte the port
-			if (!ser_Start && ((value & 0x80) == 0x80))
+			ser_Ctrl_Mode_State = (byte)((value & 0x3000) >> 12);
+
+			ser_Ext_Update = true;
+
+			if (ser_Mode_State == 3)
 			{
-				ser_Bit_Count = 0;
 
-				ser_Bit_Total = (byte)((value & 0x1000) == 0x1000 ? 32 : 8);
+			}
+			else if (ser_Mode_State == 2)
+			{
 
-				ser_Mask = (byte)((value & 0x2) == 0x2 ? 0x7 : 0xF);
+			}
+			else
+			{
+				if (ser_Ctrl_Mode_State == 3)
+				{
+					// uart
 
-				ser_Internal_Clock = (value & 0x1) == 0x1;
+				}
+				else if (ser_Ctrl_Mode_State == 2)
+				{
+					// multiplayer
+					ser_CTRL = (ushort)((value & 0x7F83) | (ser_CTRL & 0x70));
 
-				ser_Start = true;
+					// status bit will be set extrenally
+					ser_CTRL &= 0xFFF7;
+
+					if (ext_num == 1)
+					{
+						ser_CTRL &= 0xFFFB;
+
+						// actiavte the port
+						if (!ser_Start && ((value & 0x80) == 0x80))
+						{
+							ser_Bit_Count = 0;
+
+							ser_Bit_Total = 36;
+
+							if ((value & 3) == 0)
+							{
+								ser_Mask = 0x7FF;
+							}
+							else if ((value & 3) == 1)
+							{
+								ser_Mask = 0x1FF;
+							}
+							else if ((value & 3) == 2)
+							{
+								ser_Mask = 0xFF;
+							}
+							else if ((value & 3) == 3)
+							{
+								ser_Mask = 0x7F;
+							}
+
+							ser_Internal_Clock = true;
+
+							ser_Start = true;
+
+							ser_Ext_Current_Console = 1;
+						}
+
+						if ((value & 0x80) != 0x80) { ser_Start = false; }
+					}
+					else
+					{
+						ser_CTRL |= 4;
+					}
+				}
+				else
+				{
+					// normal
+					// actiavte the port
+					if (!ser_Start && ((value & 0x80) == 0x80))
+					{
+						ser_Bit_Count = 0;
+
+						ser_Bit_Total = (byte)((value & 0x1000) == 0x1000 ? 32 : 8);
+
+						ser_Mask = (byte)((value & 0x2) == 0x2 ? 0x7 : 0xF);
+
+						ser_Internal_Clock = (value & 0x1) == 0x1;
+
+						ser_Start = true;
+					}
+
+					if ((value & 0x80) != 0x80) { ser_Start = false; }
+
+					ser_CTRL = value;
+
+					if (ext_num == 0)
+					{
+						ser_CTRL |= 4; // open, no connection
+					}
+					else
+					{
+						ser_CTRL |= (byte)(ser_SI << 2);
+					}
+				}			
 			}
 
-			if ((value & 0x80) != 0x80) { ser_Start = false; }
+			Console.WriteLine("CTRL W : " + ext_num + " " + value + " " + ser_CTRL + " " + TotalExecutedCycles);
 
-			ser_CTRL = value;
-
-			ser_CTRL |= ser_OUT_State;
 		}
 
 		public void ser_Mode_Update(ushort value)
 		{
-			Console.WriteLine("Mode: " + ext_name + " " + value + " " + TotalExecutedCycles);
+			Console.WriteLine("Mode: " + ext_num + " " + value + " " + TotalExecutedCycles);
 
 			ser_Mode = value;
+
+			ser_Mode_State = (byte)((value & 0xC000) >> 14);
+
+			ser_Ext_Update = true;
 		}
 
 
@@ -290,6 +386,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// reset start bit
 							ser_Start = false;
 							ser_CTRL &= 0xFF7F;
+
+							ser_Ext_Tick = true;
 
 							// trigger interrupt if needed
 							if ((ser_CTRL & 0x4000) == 0x4000)
@@ -315,7 +413,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
-			ser_CTRL = ser_OUT_State = 4; // assuming no connection
+			ser_CTRL = 4; // assuming no connection
+
+			ser_SC = ser_SD = ser_SI = ser_SO = 0; 
+
+			ser_Mode_State = ser_Ctrl_Mode_State = 0;
 			
 			ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
 
@@ -327,9 +429,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser_Bit_Count = ser_Bit_Total = 0;
 
+			ser_Ext_Current_Console = 0;
+
 			ser_Internal_Clock = ser_Start = false;
 
 			ser_Delay = key_Delay = false;
+
+			ser_Ext_Update = ser_Ext_Tick = false;
 		}
 
 		public void ser_SyncState(Serializer ser)
@@ -363,7 +469,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ser_Delay), ref ser_Delay);
 			ser.Sync(nameof(key_Delay), ref key_Delay);
-			ser.Sync(nameof(ser_OUT_State), ref ser_OUT_State);
+
+			ser.Sync(nameof(ser_SC), ref ser_SC);
+			ser.Sync(nameof(ser_SD), ref ser_SD);
+			ser.Sync(nameof(ser_SI), ref ser_SI);
+			ser.Sync(nameof(ser_SO), ref ser_SO);
+			ser.Sync(nameof(ser_Mode_State), ref ser_Mode_State);
+			ser.Sync(nameof(ser_Ctrl_Mode_State), ref ser_Ctrl_Mode_State);
+			ser.Sync(nameof(ser_Ext_Current_Console), ref ser_Ext_Current_Console);
+
+			ser.Sync(nameof(ser_Ext_Update), ref ser_Ext_Update);
+			ser.Sync(nameof(ser_Ext_Tick), ref ser_Ext_Tick);
 		}
 	}
 
