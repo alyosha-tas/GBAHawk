@@ -67,7 +67,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x132: ret = (byte)(key_CTRL & 0xFF); break;
 				case 0x133: ret = (byte)((key_CTRL & 0xFF00) >> 8); break;
 
-				case 0x134: ret = (byte)(ser_Mode & 0xFF); Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break; 
+				case 0x134: ret = (byte)(ser_Mode & 0xFF); break; 
 				case 0x135: ret = (byte)((ser_Mode & 0xFF00) >> 8); break;
 				case 0x136: ret = 0; break;
 				case 0x137: ret = 0; break;
@@ -112,7 +112,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x130: ret = controller_state; Is_Lag = false; break;
 				case 0x132: ret = key_CTRL; break;
 
-				case 0x134: ret = ser_Mode; Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break;
+				case 0x134: ret = ser_Mode; break;
 				case 0x136: ret = 0; break;
 
 				case 0x140: ret = ser_CTRL_J; break;
@@ -143,7 +143,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case 0x130: ret = (uint)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
 
-				case 0x134: ret = (uint)((0x00000000) | ser_Mode); Console.WriteLine("Mode R: " + ext_num + " " + ser_Mode + " " + TotalExecutedCycles); break;
+				case 0x134: ret = (uint)((0x00000000) | ser_Mode); break;
 
 				case 0x140: ret = (uint)((0x00000000) | ser_CTRL_J); break;
 
@@ -352,13 +352,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}			
 			}
 
-			Console.WriteLine("CTRL W : " + ext_num + " " + value + " " + ser_CTRL + " " + TotalExecutedCycles);
-
+			//Console.WriteLine("CTRL W : " + ext_num + " " + value + " " + ser_CTRL + " " + TotalExecutedCycles);
 		}
 
 		public void ser_Mode_Update(ushort value)
 		{
-			Console.WriteLine("Mode: " + ext_num + " " + value + " " + TotalExecutedCycles);
+			//Console.WriteLine("Mode: " + ext_num + " " + value + " " + TotalExecutedCycles);
 
 			ser_Mode = value;
 
