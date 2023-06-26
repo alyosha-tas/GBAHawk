@@ -50,7 +50,7 @@ namespace BizHawk.Client.GBAHawk
 			this.recentMacrosToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator22 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.toolStripSeparator20 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.ToBk2MenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
+			this.TogbmvMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.EditSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.UndoMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.RedoMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -236,7 +236,7 @@ namespace BizHawk.Client.GBAHawk
             this.placeMacroAtSelectionToolStripMenuItem,
             this.recentMacrosToolStripMenuItem,
             this.toolStripSeparator20,
-            this.ToBk2MenuItem});
+            this.TogbmvMenuItem});
 			this.FileSubMenu.Text = "&File";
 			this.FileSubMenu.DropDownOpened += new System.EventHandler(this.FileSubMenu_DropDownOpened);
 			// 
@@ -318,10 +318,10 @@ namespace BizHawk.Client.GBAHawk
 			this.recentMacrosToolStripMenuItem.Text = "Recent Macros";
 			this.recentMacrosToolStripMenuItem.DropDownOpened += new System.EventHandler(this.RecentMacrosMenuItem_DropDownOpened);
 			// 
-			// ToBk2MenuItem
+			// TogbmvMenuItem
 			// 
-			this.ToBk2MenuItem.Text = "&Export to Bk2";
-			this.ToBk2MenuItem.Click += new System.EventHandler(this.ToBk2MenuItem_Click);
+			this.TogbmvMenuItem.Text = "&Export to gbmv";
+			this.TogbmvMenuItem.Click += new System.EventHandler(this.TogbmvMenuItem_Click);
 			// 
 			// EditSubMenu
 			// 
@@ -1344,7 +1344,7 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx saveSelectionToMacroToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx placeMacroAtSelectionToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator20;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ToBk2MenuItem;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TogbmvMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx recentMacrosToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator22;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator23;

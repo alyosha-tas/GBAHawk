@@ -15,7 +15,7 @@ namespace BizHawk.Client.GBAHawk
 	{
 		private void FileSubMenu_DropDownOpened(object sender, EventArgs e)
 		{
-			ToBk2MenuItem.Enabled =
+			TogbmvMenuItem.Enabled =
 				!string.IsNullOrWhiteSpace(CurrentTasMovie.Filename) &&
 				(CurrentTasMovie.Filename != DefaultTasProjName());
 
@@ -276,13 +276,13 @@ namespace BizHawk.Client.GBAHawk
 			recentMacrosToolStripMenuItem.DropDownItems.AddRange(Config.RecentMacros.RecentMenu(MainForm, DummyLoadMacro, "Macro", noAutoload: true));
 		}
 
-		private void ToBk2MenuItem_Click(object sender, EventArgs e)
+		private void TogbmvMenuItem_Click(object sender, EventArgs e)
 		{
 			_autosaveTimer.Stop();
 			
 			if (Emulator is Emulation.Cores.Nintendo.SubGBHawk.SubGBHawk)
 			{
-				DialogController.ShowMessageBox("This core requires emulation to be on the last frame when writing the movie, otherwise movie length will appear incorrect.\nTAStudio can't handle this, so Export BK2, play it to the end, and then Save Movie.", "Warning", EMsgBoxIcon.Warning);
+				DialogController.ShowMessageBox("This core requires emulation to be on the last frame when writing the movie, otherwise movie length will appear incorrect.\nTAStudio can't handle this, so Export gbmv, play it to the end, and then Save Movie.", "Warning", EMsgBoxIcon.Warning);
 			}
 
 			var gbmv = CurrentTasMovie.Togbmv();

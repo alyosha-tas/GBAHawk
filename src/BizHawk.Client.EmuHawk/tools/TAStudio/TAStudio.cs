@@ -313,7 +313,7 @@ namespace BizHawk.Client.GBAHawk
 			{
 				if (Settings.AutosaveAsgbmv)
 				{
-					ToBk2MenuItem_Click(sender, e);
+					TogbmvMenuItem_Click(sender, e);
 				}
 				else
 				{
