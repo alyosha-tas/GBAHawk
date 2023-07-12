@@ -5,6 +5,7 @@ using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
+using BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug;
 
 /*
 	GBA Emulator
@@ -300,6 +301,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 					cart_RAM = new byte[0x2000];
 					mppr = 4;
+				}
+				else if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
+						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD"))   // Shrek 2 (EU)
+				{
+					cart_RAM = new byte[0x200];
 				}
 				else
 				{

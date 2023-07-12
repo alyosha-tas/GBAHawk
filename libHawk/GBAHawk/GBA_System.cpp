@@ -3011,7 +3011,8 @@ namespace GBAHawk
 							}
 
 							// Repeat if necessary, or turn the channel off
-							if ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200)
+							// don't repeat if start condition is immediate (see Shrek 2)
+							if (((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200) && ((dma_CTRL[dma_Chan_Exec] & 0x3000) != 0))
 							{
 								dma_CNT_intl[dma_Chan_Exec] = dma_CNT[dma_Chan_Exec];
 
@@ -3030,15 +3031,7 @@ namespace GBAHawk
 									dma_DST_intl[dma_Chan_Exec] = (uint32_t)(dma_DST[dma_Chan_Exec] & dma_DST_Mask[dma_Chan_Exec]);
 								}
 
-								// repeat forever if DMA immediately is set?
-								if ((dma_CTRL[dma_Chan_Exec] & 0x3000) == 0x0000)
-								{
-									dma_Run[dma_Chan_Exec] = true;
-								}
-								else
-								{
-									dma_Run[dma_Chan_Exec] = false;
-								}
+								dma_Run[dma_Chan_Exec] = false;
 
 								// for channel 3 running video capture mode, turn off after scanline 161
 								if ((dma_Chan_Exec == 3) && dma_Start_Snd_Vid[3] && (ppu_LY == 161))
