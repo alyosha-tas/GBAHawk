@@ -303,7 +303,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					mppr = 4;
 				}
 				else if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
-						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD"))   // Shrek 2 (EU)
+						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD") || // Shrek 2 (USA)
+						 (romHashSHA1 == "SHA1:C433C493F54FCD18AD18B7D62F2B7D200FD9D859"))   // Shrek 2 (Input Patch)
 				{
 					cart_RAM = new byte[0x200];
 				}
