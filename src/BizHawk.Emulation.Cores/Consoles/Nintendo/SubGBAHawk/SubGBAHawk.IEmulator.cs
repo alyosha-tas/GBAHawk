@@ -31,6 +31,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			LibSubGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
+			if (_isLag) { _lagCount++; }
+
 			_frame++;
 
 			return true;

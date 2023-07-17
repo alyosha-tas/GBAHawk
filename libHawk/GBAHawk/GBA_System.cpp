@@ -3661,8 +3661,6 @@ namespace GBAHawk
 							{
 								cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFF0000);
 							}
-
-							cpu_Sign_Extend_Load = false;
 						}
 
 						cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -3677,8 +3675,6 @@ namespace GBAHawk
 							{
 								cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 							}
-
-							cpu_Sign_Extend_Load = false;
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
@@ -3736,6 +3732,8 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
+
+				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -3764,8 +3762,6 @@ namespace GBAHawk
 						{
 							cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 						}
-
-						cpu_Sign_Extend_Load = false;
 					}
 
 					cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -3813,6 +3809,8 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
+
+				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -4451,8 +4449,6 @@ namespace GBAHawk
 							{
 								cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFF0000);
 							}
-
-							cpu_Sign_Extend_Load = false;
 						}
 
 						cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -4467,8 +4463,6 @@ namespace GBAHawk
 							{
 								cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 							}
-
-							cpu_Sign_Extend_Load = false;
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
@@ -4526,6 +4520,8 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
+
+				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -4554,8 +4550,6 @@ namespace GBAHawk
 						{
 							cpu_ALU_Temp_Val = (uint32_t)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 						}
-
-						cpu_Sign_Extend_Load = false;
 					}
 
 					cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -4603,6 +4597,8 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
+
+				cpu_Sign_Extend_Load = false;
 			}
 			break;
 

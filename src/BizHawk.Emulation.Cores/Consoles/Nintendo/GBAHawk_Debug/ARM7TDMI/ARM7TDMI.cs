@@ -645,8 +645,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFF0000);
 									}
-
-									cpu_Sign_Extend_Load = false;
 								}
 
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -661,8 +659,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 									}
-
-									cpu_Sign_Extend_Load = false;
 
 									cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 								}
@@ -720,6 +716,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
+
+						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -748,8 +746,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								{
 									cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 								}
-
-								cpu_Sign_Extend_Load = false;
 							}
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -797,6 +793,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
+
+						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -1435,8 +1433,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFF0000);
 									}
-
-									cpu_Sign_Extend_Load = false;
 								}
 
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -1451,8 +1447,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 									}
-
-									cpu_Sign_Extend_Load = false;
 
 									cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 								}
@@ -1510,6 +1504,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
+
+						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -1538,8 +1534,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								{
 									cpu_ALU_Temp_Val = (uint)(cpu_ALU_Temp_Val | 0xFFFFFF00);
 								}
-
-								cpu_Sign_Extend_Load = false;
 							}
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
@@ -1587,6 +1581,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
+
+						cpu_Sign_Extend_Load = false;
 					}
 					break;
 

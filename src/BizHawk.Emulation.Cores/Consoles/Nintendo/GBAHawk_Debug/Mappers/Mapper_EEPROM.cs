@@ -127,7 +127,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					Bit_Read++;
 
-					Console.WriteLine("Read get data: " + ret + " Bit_Read: " + Bit_Read);
+					//Console.WriteLine("Read get data: " + ret + " Bit_Read: " + Bit_Read);
 
 					if (Bit_Read == 68)
 					{
@@ -153,7 +153,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					Ready_Flag = true;
 				}
 
-				Console.WriteLine("state 0: " + (value & 1) + " Bit_Offset: " + Bit_Offset);
+				//Console.WriteLine("state 0: " + (value & 1) + " Bit_Offset: " + Bit_Offset);
 
 				if (Ready_Flag)
 				{
@@ -221,7 +221,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if (Current_State == 3)
 			{
 				// Nothing occurs in read state?
-				Console.WriteLine("Bad write");
+				//Console.WriteLine("Bad write");
 			}
 			else if (Current_State == 6)
 			{
@@ -271,7 +271,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				// Get Address for reading and wait for zero bit
 
-				Console.WriteLine("Read get addr: " + (value & 1) + " Bit_Offset: " + Bit_Offset);
+				//Console.WriteLine("Read get addr: " + (value & 1) + " Bit_Offset: " + Bit_Offset);
 
 				if (Size_Mask == 0x1FF)
 				{
