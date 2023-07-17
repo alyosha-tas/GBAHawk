@@ -602,13 +602,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 						{
 							case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-							case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
-							case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
-							case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
+							case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+							case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+							case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
 							case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-							case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
-							case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
-							case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
+							case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+							case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+							case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
 						}
 
 						cpu_Exec_TMB = cpu_Thumb_Rel_LS;

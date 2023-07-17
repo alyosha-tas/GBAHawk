@@ -2047,7 +2047,7 @@ namespace GBAHawk
 
 			// Frame Sequencer ticks at a rate of 512 hz
 			snd_Internal_cnt++;
-			snd_Internal_cnt &= 0x7FF;
+			snd_Internal_cnt &= 0x1FFF;
 
 			if ((snd_Internal_cnt == 0) && snd_CTRL_power)
 			{
@@ -3700,6 +3700,8 @@ namespace GBAHawk
 					cpu_Overwrite_Base_Reg = false;
 				}
 
+				cpu_Sign_Extend_Load = false;
+
 				if (cpu_LS_Is_Load)
 				{
 					if (cpu_Temp_Reg_Ptr == 15)
@@ -3732,8 +3734,6 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
-
-				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -3777,6 +3777,8 @@ namespace GBAHawk
 					cpu_Overwrite_Base_Reg = false;
 				}
 
+				cpu_Sign_Extend_Load = false;
+
 				if (cpu_LS_Is_Load)
 				{
 					if (cpu_Temp_Reg_Ptr == 15)
@@ -3809,8 +3811,6 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
-
-				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -4488,6 +4488,8 @@ namespace GBAHawk
 					cpu_Overwrite_Base_Reg = false;
 				}
 
+				cpu_Sign_Extend_Load = false;
+
 				if (cpu_LS_Is_Load)
 				{
 					if (cpu_Temp_Reg_Ptr == 15)
@@ -4520,8 +4522,6 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
-
-				cpu_Sign_Extend_Load = false;
 			}
 			break;
 
@@ -4565,6 +4565,8 @@ namespace GBAHawk
 					cpu_Overwrite_Base_Reg = false;
 				}
 
+				cpu_Sign_Extend_Load = false;
+
 				if (cpu_LS_Is_Load)
 				{
 					if (cpu_Temp_Reg_Ptr == 15)
@@ -4597,8 +4599,6 @@ namespace GBAHawk
 
 				cpu_Fetch_Cnt = 0;
 				cpu_Fetch_Wait = 0;
-
-				cpu_Sign_Extend_Load = false;
 			}
 			break;
 

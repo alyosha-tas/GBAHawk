@@ -2067,13 +2067,13 @@ namespace GBAHawk
 					switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 					{
 					case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-					case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
-					case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
-					case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
+					case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+					case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+					case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
 					case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-					case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
-					case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_Sign_Extend_Load = false; break;
-					case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_Sign_Extend_Load = false; break;
+					case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+					case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+					case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
 					}
 
 					cpu_Exec_TMB = cpu_Thumb_Rel_LS;
@@ -3496,13 +3496,13 @@ namespace GBAHawk
 			case cpu_Thumb_Rel_LS:
 				switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 				{
-				case 0: cpu_LS_Is_Load = false; break;
-				case 1: cpu_LS_Is_Load = false; break;
-				case 2: cpu_LS_Is_Load = false; break;
+				case 0: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+				case 1: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+				case 2: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
 				case 3: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
-				case 4: cpu_LS_Is_Load = true; break;
-				case 5: cpu_LS_Is_Load = true; break;
-				case 6: cpu_LS_Is_Load = true; break;
+				case 4: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+				case 5: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+				case 6: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
 				case 7: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
 				}
 

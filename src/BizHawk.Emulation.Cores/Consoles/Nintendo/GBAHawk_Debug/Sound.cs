@@ -237,6 +237,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if (addr < 0xA0)
 			{
 				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
+
 				snd_Wave_RAM[ofst] = (byte)(value & 0xFF);
 				snd_Wave_RAM[ofst + 1] = (byte)((value >> 8) & 0xFF);
 			}
@@ -284,6 +285,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if (addr < 0xA0)
 			{
 				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
+
 				snd_Wave_RAM[ofst] = (byte)(value & 0xFF);
 				snd_Wave_RAM[ofst + 1] = (byte)((value >> 8) & 0xFF);
 				snd_Wave_RAM[ofst + 2] = (byte)((value >> 16) & 0xFF);
@@ -1022,7 +1024,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 							}
 						}
-					
+
 						snd_WAVE_wave_cntr &= 0x1F;
 					
 						snd_Sample = (byte)snd_Wave_RAM[snd_Wave_Bank_Playing + (snd_WAVE_wave_cntr >> 1)];
@@ -1061,7 +1063,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				// Frame Sequencer ticks at a rate of 512 hz
 				snd_Internal_cnt++;
-				snd_Internal_cnt &= 0x7FF;
+				snd_Internal_cnt &= 0x1FFF;
 
 				if ((snd_Internal_cnt == 0) && snd_CTRL_power)
 				{				

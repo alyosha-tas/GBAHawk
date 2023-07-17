@@ -684,6 +684,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Overwrite_Base_Reg = false;
 						}
 
+						cpu_Sign_Extend_Load = false;
+
 						if (cpu_LS_Is_Load)
 						{
 							if (cpu_Temp_Reg_Ptr == 15)
@@ -716,8 +718,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
-
-						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -761,6 +761,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Overwrite_Base_Reg = false;
 						}
 
+						cpu_Sign_Extend_Load = false;
+
 						if (cpu_LS_Is_Load)
 						{
 							if (cpu_Temp_Reg_Ptr == 15)
@@ -793,8 +795,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
-
-						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -1472,6 +1472,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Overwrite_Base_Reg = false;
 						}
 
+						cpu_Sign_Extend_Load = false;
+
 						if (cpu_LS_Is_Load)
 						{
 							if (cpu_Temp_Reg_Ptr == 15)
@@ -1504,8 +1506,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
-
-						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
@@ -1549,6 +1549,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Overwrite_Base_Reg = false;
 						}
 
+						cpu_Sign_Extend_Load = false;
+
 						if (cpu_LS_Is_Load)
 						{
 							if (cpu_Temp_Reg_Ptr == 15)
@@ -1581,8 +1583,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_Fetch_Cnt = 0;
 						cpu_Fetch_Wait = 0;
-
-						cpu_Sign_Extend_Load = false;
 					}
 					break;
 
