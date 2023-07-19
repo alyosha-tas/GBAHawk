@@ -5,6 +5,7 @@ using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
+using BizHawk.Emulation.Cores.Nintendo.GBA;
 
 /*
 	GBA Emulator
@@ -328,7 +329,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0x80000];
+		private byte[] GBA_core = new byte[0xA0000];
 
 		private readonly SubGBAHawk_ControllerDeck _controllerDeck;
 
@@ -368,6 +369,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			if (line == -2)
 			{
 				_scanlineCallback();
+			}
+			else
+			{
+				LibSubGBAHawk.GBA_setscanlinecallback(GBA_Pntr, _scanlineCallback, _scanlineCallbackLine);
 			}
 		}
 

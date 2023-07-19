@@ -363,7 +363,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0x80000 * 2];
+		private byte[] GBA_core = new byte[0xA0000 * 2];
 
 		private readonly GBAHawkLink_ControllerDeck _controllerDeck;
 

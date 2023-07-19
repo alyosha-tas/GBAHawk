@@ -264,13 +264,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		#region PPU_Viewer
 
 		/// <summary>
-		/// type of the cpu trace callback
-		/// </summary>
-		/// <param name="lcdc">type of event</param>
-		[UnmanagedFunctionPointer(cc)]
-		public delegate void ScanlineCallback(byte lcdc);
-
-		/// <summary>
 		/// Get PPU Pointers
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
@@ -287,7 +280,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="callback">null to clear</param>
 		/// <param name="sl">0-153 inclusive</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_setscanlinecallback(IntPtr core, ScanlineCallback callback, int sl);
+		public static extern void GBA_setscanlinecallback(IntPtr core, Action callback, int sl);
 
 		#endregion
 	}
