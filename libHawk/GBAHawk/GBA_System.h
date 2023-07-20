@@ -7558,6 +7558,8 @@ namespace GBAHawk
 		bool ppu_Rendering_Complete;
 		bool ppu_PAL_Rendering_Complete;
 
+		uint16_t ppu_VRAM_Open_Bus;
+
 		// Derived values, not stated, reloaded with savestate
 		uint32_t BG_Scale_X[4] = { };
 		uint32_t BG_Scale_Y[4] = { };
@@ -9211,7 +9213,7 @@ namespace GBAHawk
 			{
 			case 0:
 				a0 = ppu_Cycle & 3;
-				
+
 				if (!ppu_BG_Rendering_Complete[a0])
 				{
 					if ((ppu_Cycle >= ppu_BG_Start_Time[a0]))
@@ -9236,7 +9238,7 @@ namespace GBAHawk
 
 							ppu_Y_Flip_Ofst[a0] = ppu_Y_RS & 7;
 
-							// mark for VRAM access even if it is out of bounds
+							// this access will always be in bounds
 							ppu_Set_VRAM_Access_True();
 
 							VRAM_ofst_X = ppu_X_RS >> 3;
@@ -9272,15 +9274,14 @@ namespace GBAHawk
 
 							ppu_Tile_Addr[a0] = ppu_BG_Screen_Base[a0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a0] * 2 + VRAM_ofst_X * 2;
 
-							ppu_BG_Effect_Byte_New[a0] = VRAM[ppu_Tile_Addr[a0] + 1];
+							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a0] >> 1];
 
-							ppu_Tile_Addr[a0] = VRAM_16[ppu_Tile_Addr[a0] >> 1] & 0x3FF;
+							ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+
+							ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
 						}
 						else if (((ppu_Scroll_Cycle[a0] & 31) == 4) || ((ppu_Scroll_Cycle[a0] & 31) == 20))
 						{
-							// this access will always occur
-							ppu_Set_VRAM_Access_True();
-
 							// this update happens here so that rendering isn't effected further up
 							ppu_BG_Effect_Byte[a0] = ppu_BG_Effect_Byte_New[a0];
 
@@ -9322,7 +9323,14 @@ namespace GBAHawk
 									temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
 								}
 
-								ppu_Pixel_Color[a0] = VRAM_16[temp_addr >> 1];
+								if (temp_addr < 0x10000)
+								{
+									ppu_Set_VRAM_Access_True();
+
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}
+
+								ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
 							}
 							else
 							{
@@ -9362,7 +9370,14 @@ namespace GBAHawk
 									}
 								}
 
-								ppu_Pixel_Color[a0] = VRAM_16[temp_addr >> 1];
+								if (temp_addr < 0x10000)
+								{
+									ppu_Set_VRAM_Access_True();
+
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}
+
+								ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
 							}
 						}
 						else if (((ppu_Scroll_Cycle[a0] & 31) == 12) || ((ppu_Scroll_Cycle[a0] & 31) == 28))
@@ -9370,8 +9385,6 @@ namespace GBAHawk
 							// this access will only occur in 256color mode
 							if (ppu_BG_Pal_Size[a0])
 							{
-								ppu_Set_VRAM_Access_True();
-
 								temp_addr = ppu_Tile_Addr[a0];
 
 								temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a0];
@@ -9408,7 +9421,14 @@ namespace GBAHawk
 									temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
 								}
 
-								ppu_Pixel_Color[a0] = VRAM_16[temp_addr >> 1];
+								if (temp_addr < 0x10000)
+								{
+									ppu_Set_VRAM_Access_True();
+
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}
+
+								ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
 							}
 
 							if ((ppu_Scroll_Cycle[a0] & 31) == 28)
@@ -9437,7 +9457,7 @@ namespace GBAHawk
 
 			case 1:
 				a1 = ppu_Cycle & 3;
-				
+
 				if (a1 < 2)
 				{
 					if (!ppu_BG_Rendering_Complete[a1])
@@ -9464,7 +9484,7 @@ namespace GBAHawk
 
 								ppu_Y_Flip_Ofst[a1] = ppu_Y_RS & 7;
 
-								// mark for VRAM access even if it is out of bounds
+								// this access will always be in bounds
 								ppu_Set_VRAM_Access_True();
 
 								VRAM_ofst_X = ppu_X_RS >> 3;
@@ -9500,15 +9520,14 @@ namespace GBAHawk
 
 								ppu_Tile_Addr[a1] = ppu_BG_Screen_Base[a1] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a1] * 2 + VRAM_ofst_X * 2;
 
-								ppu_BG_Effect_Byte_New[a1] = VRAM[ppu_Tile_Addr[a1] + 1];
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a1] >> 1];
 
-								ppu_Tile_Addr[a1] = VRAM_16[ppu_Tile_Addr[a1] >> 1] & 0x3FF;
+								ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+
+								ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
 							}
 							else if (((ppu_Scroll_Cycle[a1] & 31) == 4) || ((ppu_Scroll_Cycle[a1] & 31) == 20))
 							{
-								// this access will always occur
-								ppu_Set_VRAM_Access_True();
-
 								// this update happens here so that rendering isn't effected further up
 								ppu_BG_Effect_Byte[a1] = ppu_BG_Effect_Byte_New[a1];
 
@@ -9550,7 +9569,14 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 									}
 
-									ppu_Pixel_Color[a1] = VRAM_16[temp_addr >> 1];;
+									if (temp_addr < 0x10000)
+									{
+										ppu_Set_VRAM_Access_True();
+
+										ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									}
+
+									ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 								}
 								else
 								{
@@ -9590,7 +9616,14 @@ namespace GBAHawk
 										}
 									}
 
-									ppu_Pixel_Color[a1] = VRAM_16[temp_addr >> 1];
+									if (temp_addr < 0x10000)
+									{
+										ppu_Set_VRAM_Access_True();
+
+										ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									}
+
+									ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 								}
 							}
 							else if (((ppu_Scroll_Cycle[a1] & 31) == 12) || ((ppu_Scroll_Cycle[a1] & 31) == 28))
@@ -9598,8 +9631,6 @@ namespace GBAHawk
 								// this access will only occur in 256color mode
 								if (ppu_BG_Pal_Size[a1])
 								{
-									ppu_Set_VRAM_Access_True();
-
 									temp_addr = ppu_Tile_Addr[a1];
 
 									temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a1];
@@ -9636,7 +9667,14 @@ namespace GBAHawk
 										temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 									}
 
-									ppu_Pixel_Color[a1] = VRAM_16[temp_addr >> 1];
+									if (temp_addr < 0x10000)
+									{
+										ppu_Set_VRAM_Access_True();
+
+										ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									}
+
+									ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 								}
 
 								if ((ppu_Scroll_Cycle[a1] & 31) == 28)
@@ -9669,172 +9707,65 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle & 3) == 2)
 						{
-							if (ppu_Fetch_Count[2] < 240)
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[2])
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
-
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
-
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
-
-								// adjust if wraparound is enabled
-								if (ppu_BG_Overflow[2])
-								{
-									ppu_X_RS &= (BG_Scale_X[2] - 1);
-									ppu_Y_RS &= (BG_Scale_Y[2] - 1);
-								}
-
-								// mark for VRAM access even if it is out of bounds
-								ppu_Set_VRAM_Access_True();
-
-								// determine if pixel is in valid range, and pick out color if so
-								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
-								{
-									VRAM_ofst_X = ppu_X_RS >> 3;
-									VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-									ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
-
-									ppu_Tile_Addr[2] = ((uint32_t)VRAM[ppu_Tile_Addr[2]] << 6);
-
-									ppu_BG_Has_Pixel[2] = true;
-								}
-								else
-								{
-									ppu_BG_Has_Pixel[2] = false;
-								}
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
+								cur_x = ppu_Fetch_Count[2];
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
-								ppu_BG_Has_Pixel[2] = false;
-
-								if (ppu_Fetch_Count[2] == 244)
-								{
-									ppu_BG_Rendering_Complete[2] = true;
-
-									ppu_Rendering_Complete = true;
-
-									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
-								}
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
+								cur_x = ppu_Fetch_Count[2];
 							}
-						}
-						else if ((ppu_Cycle & 3) == 3)
-						{
-							if (ppu_Fetch_Count[2] < 240)
+
+							sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
+							sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
+
+							// adjust if wraparound is enabled
+							if (ppu_BG_Overflow[2])
 							{
-								// mark for VRAM access even if it is out of bounds
+								ppu_X_RS &= (BG_Scale_X[2] - 1);
+								ppu_Y_RS &= (BG_Scale_Y[2] - 1);
+							}
+
+							VRAM_ofst_X = ppu_X_RS >> 3;
+							VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+							uint32_t m1_2_ofst = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
+
+							if (m1_2_ofst < 0x10000)
+							{
 								ppu_Set_VRAM_Access_True();
 
-								if (ppu_BG_Has_Pixel[2])
-								{
-									ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m1_2_ofst] << 6);
 
-									ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
+								m1_2_ofst &= 0xFFFE;
 
-									if (ppu_Pixel_Color[2] != 0)
-									{
-										ppu_BG_Has_Pixel[2] = true;
-									}
-									else
-									{
-										ppu_BG_Has_Pixel[2] = false;
-									}
-								}
-
-								ppu_Fetch_Count[2] += 1;
+								ppu_VRAM_Open_Bus = VRAM_16[m1_2_ofst >> 1];
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
-								ppu_BG_Has_Pixel[2] = false;
-
-								ppu_Fetch_Count[2] += 1;
+								if ((m1_2_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
 							}
-						}
-					}
-				}
-				break;
 
-			case 2:
-				if (!ppu_BG_Rendering_Complete[2])
-				{
-					if ((ppu_Cycle >= ppu_BG_Start_Time[2]))
-					{
-						if ((ppu_Cycle & 3) == 2)
-						{
-							if (ppu_Fetch_Count[2] < 240)
+							// determine if pixel is in valid range, and pick out color if so
+							if ((ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]) && (ppu_Fetch_Count[2] < 240))
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
-
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
-
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
-
-								// adjust if wraparound is enabled
-								if (ppu_BG_Overflow[2])
-								{
-									ppu_X_RS &= (BG_Scale_X[2] - 1);
-									ppu_Y_RS &= (BG_Scale_Y[2] - 1);
-								}
-
-								// mark for VRAM access even if it is out of bounds
-								ppu_Set_VRAM_Access_True();
-
-								// determine if pixel is in valid range, and pick out color if so
-								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]))
-								{
-									VRAM_ofst_X = ppu_X_RS >> 3;
-									VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-									ppu_Tile_Addr[2] = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
-
-									ppu_Tile_Addr[2] = ((uint32_t)VRAM[ppu_Tile_Addr[2]] << 6);
-
-									ppu_BG_Has_Pixel[2] = true;
-								}
-								else
-								{
-									ppu_BG_Has_Pixel[2] = false;
-								}
+								ppu_BG_Has_Pixel[2] = true;
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
 								ppu_BG_Has_Pixel[2] = false;
 
 								if (ppu_Fetch_Count[2] == 243)
@@ -9853,38 +9784,173 @@ namespace GBAHawk
 						}
 						else if ((ppu_Cycle & 3) == 3)
 						{
-							if (ppu_Fetch_Count[2] < 240)
+							ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+
+							if (ppu_Tile_Addr[2] < 0x10000)
 							{
-								// mark for VRAM access even if it is out of bounds
 								ppu_Set_VRAM_Access_True();
 
-								if (ppu_BG_Has_Pixel[2])
-								{
-									ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;;
+								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
 
-									ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
+								ppu_Tile_Addr[2] &= 0xFFFE;
 
-									if (ppu_Pixel_Color[2] != 0)
-									{
-										ppu_BG_Has_Pixel[2] = true;
-									}
-									else
-									{
-										ppu_BG_Has_Pixel[2] = false;
-									}
-								}
-
-								ppu_Fetch_Count[2] += 1;
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
+								if ((ppu_Tile_Addr[2] & 1) == 1)
+								{
+									ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								}
+								else
+								{
+									ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								}
+							}
+
+							if (ppu_Pixel_Color[2] != 0)
+							{
+								ppu_BG_Has_Pixel[2] &= true;
+							}
+							else
+							{
+								ppu_BG_Has_Pixel[2] = false;
+							}
+
+							if (ppu_Fetch_Count[2] >= 240)
+							{
+								ppu_BG_Has_Pixel[2] = false;
+							}
+
+							ppu_Fetch_Count[2] += 1;
+						}
+					}
+				}
+				break;
+
+			case 2:
+				if (!ppu_BG_Rendering_Complete[2])
+				{
+					if ((ppu_Cycle >= ppu_BG_Start_Time[2]))
+					{
+						if ((ppu_Cycle & 3) == 2)
+						{
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[2])
+							{
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
+								cur_x = ppu_Fetch_Count[2];
+							}
+							else
+							{
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
+								cur_x = ppu_Fetch_Count[2];
+							}
+
+							sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
+							sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
+
+							// adjust if wraparound is enabled
+							if (ppu_BG_Overflow[2])
+							{
+								ppu_X_RS &= (BG_Scale_X[2] - 1);
+								ppu_Y_RS &= (BG_Scale_Y[2] - 1);
+							}
+
+							VRAM_ofst_X = ppu_X_RS >> 3;
+							VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+							uint32_t m2_2_ofst = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
+
+							if (m2_2_ofst < 0x10000)
+							{
 								ppu_Set_VRAM_Access_True();
 
+								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m2_2_ofst] << 6);
+
+								m2_2_ofst &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m2_2_ofst >> 1];
+							}
+							else
+							{
+								if ((m2_2_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
+							}
+
+							// determine if pixel is in valid range, and pick out color if so
+							if ((ppu_X_RS < BG_Scale_X[2]) && (ppu_Y_RS < BG_Scale_Y[2]) && (ppu_Fetch_Count[2] < 240))
+							{
+								ppu_BG_Has_Pixel[2] = true;
+							}
+							else
+							{
 								ppu_BG_Has_Pixel[2] = false;
 
-								ppu_Fetch_Count[2] += 1;
+								if (ppu_Fetch_Count[2] == 243)
+								{
+									ppu_BG_Rendering_Complete[2] = true;
+
+									ppu_Rendering_Complete = true;
+
+									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
+								}
 							}
+						}
+						else if ((ppu_Cycle & 3) == 3)
+						{
+							ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+
+							if (ppu_Tile_Addr[2] < 0x10000)
+							{
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
+
+								ppu_Tile_Addr[2] &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
+							}
+							else
+							{
+								if ((ppu_Tile_Addr[2] & 1) == 1)
+								{
+									ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								}
+								else
+								{
+									ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								}
+							}
+
+							if (ppu_Pixel_Color[2] != 0)
+							{
+								ppu_BG_Has_Pixel[2] &= true;
+							}
+							else
+							{
+								ppu_BG_Has_Pixel[2] = false;
+							}
+
+							if (ppu_Fetch_Count[2] >= 240)
+							{
+								ppu_BG_Has_Pixel[2] = false;
+							}
+
+							ppu_Fetch_Count[2] += 1;
 						}
 					}
 				}
@@ -9895,107 +9961,121 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle & 3) == 0)
 						{
-							if (ppu_Fetch_Count[3] < 240)
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[3])
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[3])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[3]];
-									cur_x = ppu_Fetch_Count[3];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[3]);
-									cur_x = ppu_Fetch_Count[3];
-								}
-
-								sol_x = ppu_F_Rot_A_3 * cur_x - ppu_F_Rot_B_3 * cur_y;
-								sol_y = -ppu_F_Rot_C_3 * cur_x + ppu_F_Rot_D_3 * cur_y;
-
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_3);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_3));
-
-								// adjust if wraparound is enabled
-								if (ppu_BG_Overflow[3])
-								{
-									ppu_X_RS &= (BG_Scale_X[3] - 1);
-									ppu_Y_RS &= (BG_Scale_Y[3] - 1);
-								}
-
-								// mark for VRAM access even if it is out of bounds
-								ppu_Set_VRAM_Access_True();
-
-								// determine if pixel is in valid range, and pick out color if so
-								if ((ppu_X_RS >= 0) && (ppu_Y_RS >= 0) && (ppu_X_RS < BG_Scale_X[3]) && (ppu_Y_RS < BG_Scale_Y[3]))
-								{
-									VRAM_ofst_X = ppu_X_RS >> 3;
-									VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-									ppu_Tile_Addr[3] = ppu_BG_Screen_Base[3] + VRAM_ofst_Y * BG_Num_Tiles[3] + VRAM_ofst_X;
-
-									ppu_Tile_Addr[3] = ((uint32_t)VRAM[ppu_Tile_Addr[3]] << 6);
-
-									ppu_BG_Has_Pixel[3] = true;
-								}
-								else
-								{
-									ppu_BG_Has_Pixel[3] = false;
-								}
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[3]];
+								cur_x = ppu_Fetch_Count[3];
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[3]);
+								cur_x = ppu_Fetch_Count[3];
+							}
+
+							sol_x = ppu_F_Rot_A_3 * cur_x - ppu_F_Rot_B_3 * cur_y;
+							sol_y = -ppu_F_Rot_C_3 * cur_x + ppu_F_Rot_D_3 * cur_y;
+
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_3);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_3));
+
+							// adjust if wraparound is enabled
+							if (ppu_BG_Overflow[3])
+							{
+								ppu_X_RS &= (BG_Scale_X[3] - 1);
+								ppu_Y_RS &= (BG_Scale_Y[3] - 1);
+							}
+
+							VRAM_ofst_X = ppu_X_RS >> 3;
+							VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+							uint32_t m2_3_ofst = ppu_BG_Screen_Base[3] + VRAM_ofst_Y * BG_Num_Tiles[3] + VRAM_ofst_X;
+
+							if (m2_3_ofst < 0x10000)
+							{
 								ppu_Set_VRAM_Access_True();
 
+								ppu_Tile_Addr[3] = ((uint32_t)VRAM[m2_3_ofst] << 6);
+
+								m2_3_ofst &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m2_3_ofst >> 1];
+							}
+							else
+							{
+								if ((m2_3_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
+							}
+
+							// determine if pixel is in valid range, and pick out color if so
+							if ((ppu_X_RS < BG_Scale_X[3]) && (ppu_Y_RS < BG_Scale_Y[3]) && (ppu_Fetch_Count[3] < 240))
+							{
+								ppu_BG_Has_Pixel[3] = true;
+							}
+							else
+							{
 								ppu_BG_Has_Pixel[3] = false;
 							}
 						}
 						else if ((ppu_Cycle & 3) == 1)
 						{
-							if (ppu_Fetch_Count[3] < 240)
+							ppu_Tile_Addr[3] += ppu_BG_Char_Base[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+
+							if (ppu_Tile_Addr[3] < 0x10000)
 							{
-								// mark for VRAM access even if it is out of bounds
 								ppu_Set_VRAM_Access_True();
 
-								if (ppu_BG_Has_Pixel[3])
-								{
-									ppu_Tile_Addr[3] += ppu_BG_Char_Base[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
+								ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
 
-									ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
+								ppu_Tile_Addr[3] &= 0xFFFE;
 
-									if (ppu_Pixel_Color[3] != 0)
-									{
-										ppu_BG_Has_Pixel[3] = true;
-									}
-									else
-									{
-										ppu_BG_Has_Pixel[3] = false;
-									}
-								}
-
-								ppu_Fetch_Count[3] += 1;
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[3] >> 1];
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
-								ppu_BG_Has_Pixel[3] = false;
-
-								ppu_Fetch_Count[3] += 1;
-
-								if (ppu_Fetch_Count[3] == 244)
+								if ((ppu_Tile_Addr[3] & 1) == 1)
 								{
-									ppu_BG_Rendering_Complete[3] = true;
-
-									ppu_Rendering_Complete = true;
-
-									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
+									ppu_Pixel_Color[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
 								}
+								else
+								{
+									ppu_Pixel_Color[3] = ppu_VRAM_Open_Bus & 0xFF;
+								}
+							}
+
+							if (ppu_Pixel_Color[3] != 0)
+							{
+								ppu_BG_Has_Pixel[3] &= true;
+							}
+							else
+							{
+								ppu_BG_Has_Pixel[3] = false;
+							}
+
+							if (ppu_Fetch_Count[3] >= 240)
+							{
+								ppu_BG_Has_Pixel[3] = false;
+							}
+
+							ppu_Fetch_Count[3] += 1;
+
+							if (ppu_Fetch_Count[3] == 244)
+							{
+								ppu_BG_Rendering_Complete[3] = true;
+
+								ppu_Rendering_Complete = true;
+
+								ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+								ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+								ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+								ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+								ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
 							}
 						}
 					}
@@ -10010,53 +10090,48 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle & 3) == 3)
 						{
-							if (ppu_Fetch_Count[2] < 240)
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[2])
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
+								cur_x = ppu_Fetch_Count[2];
+							}
+							else
+							{
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
+								cur_x = ppu_Fetch_Count[2];
+							}
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+							sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
+							sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
-								// mark for VRAM access even if it is out of bounds
+							// pixel color comes direct from VRAM
+							uint32_t m3_ofst = (ppu_X_RS + ppu_Y_RS * 240) * 2;
+
+							if (m3_ofst < 0x14000)
+							{
 								ppu_Set_VRAM_Access_True();
 
-								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
-								{
-									// pixel color comes direct from VRAM
-									int m3_ofst = ppu_X_RS + ppu_Y_RS * 240;
+								ppu_VRAM_Open_Bus = VRAM_16[m3_ofst >> 1];
+							}
 
-									ppu_Pixel_Color[2] = VRAM_16[m3_ofst];
+							ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus;
 
-									ppu_BG_Has_Pixel[2] = true;
-								}
-								else
-								{
-									ppu_BG_Has_Pixel[2] = false;
-								}
+							if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_Fetch_Count[2] < 240))
+							{
+								ppu_BG_Has_Pixel[2] = true;
 
 								ppu_Fetch_Count[2] += 1;
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
 								ppu_BG_Has_Pixel[2] = false;
 
 								ppu_Fetch_Count[2] += 1;
+
 								if (ppu_Fetch_Count[2] == 243)
 								{
 									ppu_BG_Rendering_Complete[2] = true;
@@ -10083,41 +10158,54 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle & 3) == 3)
 						{
-							if (ppu_Fetch_Count[2] < 240)
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[2])
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
+								cur_x = ppu_Fetch_Count[2];
+							}
+							else
+							{
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
+								cur_x = ppu_Fetch_Count[2];
+							}
+
+							sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
+							sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
+
+							// pixel color comes direct from VRAM
+							uint32_t m4_ofst = ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS;
+
+							if (m4_ofst < 0x14000)
+							{
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[2] = VRAM[m4_ofst];
+
+								m4_ofst &= 0x13FFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m4_ofst >> 1];
+							}
+							else
+							{
+								if ((m4_ofst & 1) == 1)
 								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
+									ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF00) >> 7;
 								}
 								else
 								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
+									ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF) << 1;
 								}
+							}
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
-
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
-
-								// mark for VRAM access even if it is out of bounds
-								ppu_Set_VRAM_Access_True();
-
-								if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
+							if ((ppu_X_RS < 240) && (ppu_Y_RS < 160) && (ppu_Fetch_Count[2] < 240))
+							{
+								if (ppu_Pixel_Color[2] != 0)
 								{
-									ppu_Pixel_Color[2] = VRAM[ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS];
-
-									if (ppu_Pixel_Color[2] != 0)
-									{
-										ppu_BG_Has_Pixel[2] = true;
-									}
-									else
-									{
-										ppu_BG_Has_Pixel[2] = false;
-									}
+									ppu_BG_Has_Pixel[2] = true;
 								}
 								else
 								{
@@ -10128,9 +10216,6 @@ namespace GBAHawk
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
 								ppu_BG_Has_Pixel[2] = false;
 
 								ppu_Fetch_Count[2] += 1;
@@ -10160,52 +10245,45 @@ namespace GBAHawk
 					{
 						if ((ppu_Cycle & 3) == 3)
 						{
-							if (ppu_Fetch_Count[2] < 240)
+							// calculate rotation and scaling
+							if (ppu_BG_Mosaic[2])
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
+								cur_x = ppu_Fetch_Count[2];
+							}
+							else
+							{
+								cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
+								cur_x = ppu_Fetch_Count[2];
+							}
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+							sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
+							sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
 
-								ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
+							ppu_X_RS = (uint16_t)floor(sol_x + ppu_F_Ref_X_2);
+							ppu_Y_RS = (uint16_t)floor(-(sol_y - ppu_F_Ref_Y_2));
 
-								// mark for VRAM access even if it is out of bounds
+							// pixel color comes direct from VRAM
+							uint32_t m5_ofst = ppu_Display_Frame * 0xA000 + ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
+
+							if (m5_ofst < 0x14000)
+							{
 								ppu_Set_VRAM_Access_True();
 
-								// display split into 2 frames, outside of 160 x 128, display backdrop
-								if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_X_RS >= 0) && (ppu_Y_RS >= 0))
-								{
-									// pixel color comes direct from VRAM
-									int m5_ofst = ppu_X_RS + ppu_Y_RS * 160;
+								ppu_VRAM_Open_Bus = VRAM_16[m5_ofst >> 1];
+							}
 
-									// Note 0x5000 not 0xA000 since shifting right 1
-									ppu_Pixel_Color[2] = VRAM_16[ppu_Display_Frame * 0x5000 + m5_ofst];
+							ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus;
 
-									ppu_BG_Has_Pixel[2] = true;
-								}
-								else
-								{
-									ppu_BG_Has_Pixel[2] = false;
-								}
+							// display split into 2 frames, outside of 160 x 128, display backdrop
+							if ((ppu_X_RS < 160) && (ppu_Y_RS < 128) && (ppu_Fetch_Count[2] < 240))
+							{
+								ppu_BG_Has_Pixel[2] = true;
 
 								ppu_Fetch_Count[2] += 1;
 							}
 							else
 							{
-								// mark for VRAM access even though we don't need this data
-								ppu_Set_VRAM_Access_True();
-
 								ppu_BG_Has_Pixel[2] = false;
 
 								ppu_Fetch_Count[2] += 1;
@@ -11118,6 +11196,8 @@ namespace GBAHawk
 			ppu_Rendering_Complete = false;
 			ppu_PAL_Rendering_Complete = false;
 
+			ppu_VRAM_Open_Bus = 0;
+
 			// PPU power up
 			ppu_CTRL_Write(0);
 
@@ -11357,6 +11437,8 @@ namespace GBAHawk
 
 			saver = bool_saver(ppu_Rendering_Complete, saver);
 			saver = bool_saver(ppu_PAL_Rendering_Complete, saver);
+
+			saver = short_saver(ppu_VRAM_Open_Bus, saver);
 			
 			return saver;
 		}
@@ -11556,6 +11638,8 @@ namespace GBAHawk
 
 			loader = bool_loader(&ppu_Rendering_Complete, loader);
 			loader = bool_loader(&ppu_PAL_Rendering_Complete, loader);
+
+			loader = short_loader(&ppu_VRAM_Open_Bus, loader);
 
 			// update derived values
 			ppu_Calc_Win0();
