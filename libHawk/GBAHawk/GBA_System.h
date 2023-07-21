@@ -10506,7 +10506,10 @@ namespace GBAHawk
 										{
 											ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
 
-											ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+											if (!ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+											{
+												ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+											}
 
 											ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
 
@@ -10515,6 +10518,17 @@ namespace GBAHawk
 										else if (ppu_Sprite_Mode == 2)
 										{
 											ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+										}
+									}
+									else
+									{
+										// glitchy update to priority, even though this does not happen on non-transparent pixels
+										if (ppu_Sprite_Mode == 2)
+										{
+											if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+											{
+												ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+											}
 										}
 									}
 								}
@@ -11102,7 +11116,7 @@ namespace GBAHawk
 			for (int i = 0; i < 240 * 2; i++)
 			{
 				ppu_Sprite_Pixels[i] = 0;
-				ppu_Sprite_Priority[i] = 0;
+				ppu_Sprite_Priority[i] = 3;
 
 				ppu_Sprite_Pixel_Occupied[i] = false;
 				ppu_Sprite_Semi_Transparent[i] = false;

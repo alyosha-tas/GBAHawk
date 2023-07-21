@@ -614,7 +614,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
 					{
 						ppu_Sprite_Pixels[i] = 0;
-						ppu_Sprite_Priority[i] = 0;
+						ppu_Sprite_Priority[i] = 3;
 						ppu_Sprite_Pixel_Occupied[i] = false;
 						ppu_Sprite_Semi_Transparent[i] = false;
 						ppu_Sprite_Object_Window[i] = false;
