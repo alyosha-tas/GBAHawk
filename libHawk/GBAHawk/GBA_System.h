@@ -7785,8 +7785,8 @@ namespace GBAHawk
 				case 0x47: ppu_WIN_Vert_1 = (uint16_t)((ppu_WIN_Vert_1 & 0x00FF) | (value << 8)); ppu_Calc_Win1(); break;
 				case 0x48: ppu_Update_Win_In((uint16_t)((ppu_WIN_In & 0xFF00) | value)); break;
 				case 0x49: ppu_Update_Win_In((uint16_t)((ppu_WIN_In & 0x00FF) | (value << 8))); break;
-				case 0x4A: ppu_Update_Win_Out((uint16_t)((ppu_WIN_In & 0xFF00) | value)); break;
-				case 0x4B: ppu_Update_Win_Out((uint16_t)((ppu_WIN_In & 0x00FF) | (value << 8))); break;
+				case 0x4A: ppu_Update_Win_Out((uint16_t)((ppu_WIN_Out & 0xFF00) | value)); break;
+				case 0x4B: ppu_Update_Win_Out((uint16_t)((ppu_WIN_Out & 0x00FF) | (value << 8))); break;
 				case 0x4C: ppu_Update_Mosaic((uint16_t)((ppu_Mosaic & 0xFF00) | value)); break;
 				case 0x4D: ppu_Update_Mosaic((uint16_t)((ppu_Mosaic & 0x00FF) | (value << 8))); break;
 
