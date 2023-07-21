@@ -647,7 +647,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_OAM_Access = false;
 			}
 
-			Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " w0: " + ppu_WIN0_On + " w1: " + ppu_WIN0_On + " " + ppu_LY + " " + ppu_Cycle + " " + CycleCount);
+			//Console.WriteLine(value + " Mode: " + ppu_BG_Mode + " w0: " + ppu_WIN0_On + " w1: " + ppu_WIN0_On + " " + ppu_LY + " " + ppu_Cycle + " " + CycleCount);
 		}
 
 		public void ppu_Calc_Win0()

@@ -1077,7 +1077,6 @@ namespace GBAHawk
 
 	#pragma endregion
 
-
 	#pragma region EEPROM_Tilt
 
 	class Mapper_EEPROM_Tilt : public Mappers
@@ -1612,12 +1611,36 @@ namespace GBAHawk
 
 		void Write_Memory_16(uint32_t addr, uint16_t value)
 		{
-			Write_Memory_8((addr & 0xFFFE), (uint8_t)value);
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 1) == 0)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)value);
+			}
+			else
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 8) & 0xFF));
+			}
 		}
 
 		void Write_Memory_32(uint32_t addr, uint32_t value)
 		{
-			Write_Memory_8((addr & 0xFFFC), (uint8_t)value);
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 3) == 0)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)value);
+			}
+			else if ((addr & 3) == 1)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 8) & 0xFF));
+			}
+			else if ((addr & 3) == 2)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 16) & 0xFF));
+			}
+			else
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 24) & 0xFF));
+			}
 		}
 
 		uint8_t Peek_Memory(uint32_t addr)

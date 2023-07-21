@@ -209,12 +209,36 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public override void WriteMemory16(uint addr, ushort value)
 		{
-			WriteMemory8((addr & 0xFFFE), (byte)value);
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 1) == 0)
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)value);
+			}
+			else
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)((value >> 8) & 0xFF));
+			}
 		}
 
 		public override void WriteMemory32(uint addr, uint value)
 		{
-			WriteMemory8((addr & 0xFFFC), (byte)value);
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 3) == 0)
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)value);
+			}
+			else if ((addr & 3) == 1)
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)((value >> 8) & 0xFF));
+			}
+			else if ((addr & 3) == 2)
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)((value >> 16) & 0xFF));
+			}
+			else
+			{
+				WriteMemory8((addr & 0xFFFF), (byte)((value >> 24) & 0xFF));
+			}		
 		}
 
 		public void Update_State()

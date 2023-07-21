@@ -211,12 +211,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 
-				// initialize Flash to 0;
+				// initialize Flash to 0xFF;
 				if (mppr == "FLASH")
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
-						cart_RAM[i] = 0;
+						cart_RAM[i] = 0xFF;
 					}
 				}
 			}

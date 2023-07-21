@@ -122,12 +122,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						cart_RAM[i] = 0xFF;
 					}
 				}
-				// initialize Flash to 0;
+				// initialize Flash to 0xFF;
 				if (mapper == 5)
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
-						cart_RAM[i] = 0;
+						cart_RAM[i] = 0xFF;
 					}
 				}
 			}
