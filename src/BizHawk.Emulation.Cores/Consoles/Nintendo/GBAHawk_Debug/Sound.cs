@@ -975,10 +975,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						snd_WAVE_intl_cntr = (2048 - snd_WAVE_frq) * 2;
 
-						if ((snd_WAVE_wave_cntr & 1) == 0)
-						{
-							snd_Sample = (byte)(snd_Sample >> 4);
-						}
+						snd_Sample = (byte)((snd_Wave_RAM[snd_Wave_Bank_Playing] >> 4) & 0xF);
 
 						if (snd_Wave_Vol_Force)
 						{
@@ -1006,6 +1003,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					
 						snd_WAVE_output = snd_Sample * 4;
 
+						byte temp_samp = (byte)((snd_Wave_RAM[snd_Wave_Bank_Playing] & 0xF0) >> 4);
+
+						snd_Wave_RAM[snd_Wave_Bank_Playing] = (byte)((snd_Wave_RAM[snd_Wave_Bank_Playing] & 0xF) << 4);
+
+						for (int i = 1; i <= 15; i++)
+						{
+							snd_Wave_RAM[snd_Wave_Bank_Playing + i - 1] |= (byte)((snd_Wave_RAM[snd_Wave_Bank_Playing + i] & 0xF0) >> 4);
+
+							snd_Wave_RAM[snd_Wave_Bank_Playing + i] = (byte)((snd_Wave_RAM[snd_Wave_Bank_Playing + i] & 0xF) << 4);
+						}
+
+						snd_Wave_RAM[snd_Wave_Bank_Playing + 15] |= temp_samp;
+
 						// NOTE: The snd_Sample buffer is only reloaded after the current snd_Sample is played, even if just triggered
 						snd_WAVE_wave_cntr++;
 
@@ -1026,8 +1036,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 
 						snd_WAVE_wave_cntr &= 0x1F;
-					
-						snd_Sample = (byte)snd_Wave_RAM[snd_Wave_Bank_Playing + (snd_WAVE_wave_cntr >> 1)];
 					}
 				}
 
