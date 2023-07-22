@@ -1987,7 +1987,7 @@ namespace GBAHawk
 						}
 					}
 
-					snd_WAVE_output = snd_Sample + snd_DAC_Offset;
+					snd_WAVE_output = snd_Sample * 4;
 
 					// NOTE: The snd_Sample buffer is only reloaded after the current snd_Sample is played, even if just triggered
 					snd_WAVE_wave_cntr++;
