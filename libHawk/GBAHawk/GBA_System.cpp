@@ -1914,7 +1914,14 @@ namespace GBAHawk
 					snd_SQ1_duty_cntr++;
 					snd_SQ1_duty_cntr &= 7;
 
-					snd_SQ1_output = snd_Duty_Cycles[snd_SQ1_duty * 8 + snd_SQ1_duty_cntr] ? (snd_SQ1_vol_state + snd_DAC_Offset) : snd_DAC_Offset;
+					if (snd_Duty_Cycles[snd_SQ1_duty * 8 + snd_SQ1_duty_cntr])
+					{
+						snd_SQ1_output = snd_SQ1_vol_state * 4;
+					}
+					else
+					{
+						snd_SQ1_output = 0;
+					}
 				}
 			}
 
@@ -1928,7 +1935,14 @@ namespace GBAHawk
 					snd_SQ2_duty_cntr++;
 					snd_SQ2_duty_cntr &= 7;
 
-					snd_SQ2_output = snd_Duty_Cycles[snd_SQ2_duty * 8 + snd_SQ2_duty_cntr] ? (snd_SQ2_vol_state + snd_DAC_Offset) : snd_DAC_Offset;
+					if (snd_Duty_Cycles[snd_SQ2_duty * 8 + snd_SQ2_duty_cntr])
+					{
+						snd_SQ2_output = snd_SQ2_vol_state * 4;
+					}
+					else
+					{
+						snd_SQ2_output = 0;
+					}
 				}
 			}
 
@@ -1999,29 +2013,6 @@ namespace GBAHawk
 					snd_Sample = (uint8_t)snd_Wave_RAM[snd_Wave_Bank_Playing + (snd_WAVE_wave_cntr >> 1)];
 				}
 			}
-			else if (!snd_Wave_Decay_Done && (++snd_Wave_Decay_cnt == 200))
-			{
-				snd_Wave_Decay_cnt = 0;
-
-				// wave state must decay slow enough that games that turn on and off the wave channel to fill wave RAM don't buzz too much
-				if (!snd_WAVE_DAC_pow)
-				{
-					if (snd_WAVE_output > 0) { snd_WAVE_output--; }
-					else { snd_Wave_Decay_Done = true; }
-				}
-				else
-				{
-					if (snd_WAVE_output > snd_DAC_Offset)
-					{
-						snd_WAVE_output--;
-					}
-					else if (snd_WAVE_output < snd_DAC_Offset)
-					{
-						snd_WAVE_output++;
-					}
-					else { snd_Wave_Decay_Done = true; }
-				}
-			}
 
 			// calculate noise output
 			if (snd_NOISE_enable)
@@ -2041,7 +2032,14 @@ namespace GBAHawk
 						snd_NOISE_LFSR |= (bit_lfsr << 6);
 					}
 
-					snd_NOISE_output = (snd_NOISE_LFSR & 1) > 0 ? snd_DAC_Offset : (snd_NOISE_vol_state + snd_DAC_Offset);
+					if ((snd_NOISE_LFSR & 1) > 0)
+					{
+						snd_NOISE_output = 0;
+					}
+					else
+					{
+						snd_NOISE_output = snd_NOISE_vol_state * 4;
+					}
 				}
 			}
 
