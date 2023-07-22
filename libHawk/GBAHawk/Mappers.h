@@ -1526,7 +1526,6 @@ namespace GBAHawk
 						if (Erase_Command)
 						{
 							Next_Ready_Cycle = Core_Cycle_Count[0] + 4 * (uint64_t)(Size_Mask + 1);
-							//Next_Ready_Cycle = 0;
 
 							Erase_4k = false;
 
@@ -1580,7 +1579,6 @@ namespace GBAHawk
 					if (value == 0x30)
 					{
 						Next_Ready_Cycle = Core_Cycle_Count[0] + (uint64_t)0x4000;
-						//Next_Ready_Cycle = 0;
 
 						Erase_4k = true;
 

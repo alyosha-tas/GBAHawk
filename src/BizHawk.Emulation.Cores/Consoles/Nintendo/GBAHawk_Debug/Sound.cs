@@ -1324,8 +1324,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				//L_final &= 0x3FF;
 				//R_final &= 0x3FF;
 
-				L_final *= 16;
-				R_final *= 16;
+				L_final *= 24;
+				R_final *= 24;
 
 				if (L_final != snd_Latched_Sample_L)
 				{

@@ -122,12 +122,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						cart_RAM[i] = 0xFF;
 					}
 				}
-				// initialize Flash to 0xFF;
+				// initialize Flash to 0x0;
+				// jsmolka test ROM says it should be 0xFF, but this doesn't work with ex. Mario vs Donkey Kong
+				// if the erase function takes a non-negligable amount of time
 				if (mapper == 5)
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
-						cart_RAM[i] = 0xFF;
+						cart_RAM[i] = 0x0;
 					}
 				}
 			}

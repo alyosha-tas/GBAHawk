@@ -1,6 +1,7 @@
 ﻿using System;
 
 using BizHawk.Common;
+using Newtonsoft.Json.Linq;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -42,6 +43,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public override byte ReadMemory8(uint addr)
 		{
+			//Console.WriteLine("Read: " + Chip_Mode + " " + (addr & 0xFFFF) + " " + Core.CycleCount);
+
 			Update_State();
 			
 			if (Swapped_Out)
@@ -99,7 +102,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public override void WriteMemory8(uint addr, byte value)
 		{
-			//Console.WriteLine("Write: " + Chip_Mode + " " + (addr & 0xFFFF) + " " + value);
+			//Console.WriteLine("Write: " + Chip_Mode + " " + (addr & 0xFFFF) + " " + value + " " + Core.CycleCount);
 			
 			if (Chip_Mode == 3)
 			{
@@ -123,8 +126,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (Erase_Command)
 						{
-							//Next_Ready_Cycle = Core.CycleCount + 4 * (ulong)Core.cart_RAM.Length;
-							Next_Ready_Cycle = 0;
+							Next_Ready_Cycle = Core.CycleCount + 4 * (ulong)Core.cart_RAM.Length;
 
 							Erase_4k = false;
 
@@ -177,8 +179,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (value == 0x30)
 					{
-						//Next_Ready_Cycle = Core.CycleCount + 4 * 0x1000;
-						Next_Ready_Cycle = 0;
+						Next_Ready_Cycle = Core.CycleCount + 4 * 0x1000;
 
 						Erase_4k = true;
 
