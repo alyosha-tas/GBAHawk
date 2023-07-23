@@ -1920,7 +1920,7 @@ namespace GBAHawk
 
 					if (snd_Duty_Cycles[snd_SQ1_duty * 8 + snd_SQ1_duty_cntr])
 					{
-						snd_SQ1_output = snd_SQ1_vol_state * 4;
+						snd_SQ1_output = snd_SQ1_vol_state * 2;
 					}
 					else
 					{
@@ -1941,7 +1941,7 @@ namespace GBAHawk
 
 					if (snd_Duty_Cycles[snd_SQ2_duty * 8 + snd_SQ2_duty_cntr])
 					{
-						snd_SQ2_output = snd_SQ2_vol_state * 4;
+						snd_SQ2_output = snd_SQ2_vol_state * 2;
 					}
 					else
 					{
@@ -1988,7 +1988,7 @@ namespace GBAHawk
 						}
 					}
 
-					snd_WAVE_output = snd_Sample * 4;
+					snd_WAVE_output = snd_Sample * 2;
 
 					uint8_t temp_samp = (uint8_t)((snd_Wave_RAM[snd_Wave_Bank_Playing] & 0xF0) >> 4);
 
@@ -2050,7 +2050,7 @@ namespace GBAHawk
 					}
 					else
 					{
-						snd_NOISE_output = snd_NOISE_vol_state * 4;
+						snd_NOISE_output = snd_NOISE_vol_state * 2;
 					}
 				}
 			}
