@@ -1030,25 +1030,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				// check Y range for windows
-				if (ppu_WIN0_On)
-				{
-					if (ppu_LY == ppu_WIN0_Top) { ppu_WIN0_Active = true; }
-					if (ppu_LY == ppu_WIN0_Bot) { ppu_WIN0_Active = false; }
-				}
-				else
-				{
-					ppu_WIN0_Active = false;
-				}
+				// checks happen even if window is disabled
+				if (ppu_LY == ppu_WIN0_Top) { ppu_WIN0_Active = true; }
+				if (ppu_LY == ppu_WIN0_Bot) { ppu_WIN0_Active = false; }
 
-				if (ppu_WIN1_On)
-				{
-					if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
-					if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }
-				}
-				else
-				{
-					ppu_WIN1_Active = false;
-				}
+				if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
+				if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }			
 			}
 			else if (ppu_Cycle == 1007)
 			{

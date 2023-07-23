@@ -1797,7 +1797,10 @@ namespace GBAHawk
 							// only starts on scanline 2
 							if (ppu_LY == 2)
 							{
-								dma_Video_DMA_Start = true;
+								if (!dma_Video_DMA_Delay)
+								{
+									dma_Video_DMA_Start = true;
+								}						
 							}
 
 							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
@@ -1808,6 +1811,7 @@ namespace GBAHawk
 							if (ppu_LY == 162)
 							{
 								dma_Video_DMA_Start = false;
+								dma_Video_DMA_Delay = false;
 							}
 						}
 
@@ -2444,25 +2448,12 @@ namespace GBAHawk
 			}
 
 			// check Y range for windows
-			if (ppu_WIN0_On)
-			{
-				if (ppu_LY == ppu_WIN0_Top) { ppu_WIN0_Active = true; }
-				if (ppu_LY == ppu_WIN0_Bot) { ppu_WIN0_Active = false; }
-			}
-			else
-			{
-				ppu_WIN0_Active = false;
-			}
+			// checks happen even if window is disabled
+			if (ppu_LY == ppu_WIN0_Top) { ppu_WIN0_Active = true; }
+			if (ppu_LY == ppu_WIN0_Bot) { ppu_WIN0_Active = false; }
 
-			if (ppu_WIN1_On)
-			{
-				if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
-				if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }
-			}
-			else
-			{
-				ppu_WIN1_Active = false;
-			}
+			if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
+			if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }
 		}
 		else if (ppu_Cycle == 1007)
 		{

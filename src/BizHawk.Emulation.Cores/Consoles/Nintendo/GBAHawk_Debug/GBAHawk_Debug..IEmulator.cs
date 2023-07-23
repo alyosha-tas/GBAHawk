@@ -540,7 +540,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// only starts on scanline 2
 							if (ppu_LY == 2)
 							{
-								dma_Video_DMA_Start = true;
+								if (!dma_Video_DMA_Delay)
+								{
+									dma_Video_DMA_Start = true;
+								}							
 							}
 
 							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
@@ -551,6 +554,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if (ppu_LY == 162)
 							{
 								dma_Video_DMA_Start = false;
+								dma_Video_DMA_Delay = false;
 							}
 						}
 

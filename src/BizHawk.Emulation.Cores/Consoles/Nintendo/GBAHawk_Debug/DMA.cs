@@ -9,8 +9,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 	Need to implement DRQ?
 
-	is video capture DMA delayed by a frame?
-
 	Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
 
 	What happens when src address control mode 3 is set?
@@ -81,6 +79,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool dma_Shutdown;
 		public bool dma_Delay;
 		public bool dma_Video_DMA_Start;
+		public bool dma_Video_DMA_Delay;
 
 		public byte dma_Read_Reg_8(uint addr)
 		{
@@ -360,11 +359,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (chan == 3)
 						{
 							dma_Video_DMA_Start = false;
+							dma_Video_DMA_Delay = true;
 						}
 					}
 				}
 
-				//Console.WriteLine(chan + " " + value + " " + CycleCount);
+				//Console.WriteLine(chan + " " + value + " " + CycleCount + " " + ppu_LY);
 
 				dma_Go[chan] = true;
 
@@ -893,6 +893,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Shutdown =  false;
 			dma_Delay = false;
 			dma_Video_DMA_Start = false;
+			dma_Video_DMA_Delay = false;
 		}
 
 		public void dma_SyncState(Serializer ser)
@@ -942,6 +943,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);
 			ser.Sync(nameof(dma_Delay), ref dma_Delay);
 			ser.Sync(nameof(dma_Video_DMA_Start), ref dma_Video_DMA_Start);
+			ser.Sync(nameof(dma_Video_DMA_Delay), ref dma_Video_DMA_Delay);
 		}
 	}
 

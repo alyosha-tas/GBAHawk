@@ -6108,6 +6108,7 @@ namespace GBAHawk
 		bool dma_Shutdown;
 		bool dma_Delay;
 		bool dma_Video_DMA_Start;
+		bool dma_Video_DMA_Delay;
 
 		uint16_t dma_TFR_HWord;
 		uint16_t dma_Held_CPU_Instr;
@@ -6432,6 +6433,7 @@ namespace GBAHawk
 						if (chan == 3)
 						{
 							dma_Video_DMA_Start = false;
+							dma_Video_DMA_Delay = true;
 						}
 					}
 				}
@@ -6520,6 +6522,7 @@ namespace GBAHawk
 			dma_Shutdown = false;
 			dma_Delay = false;
 			dma_Video_DMA_Start = false;
+			dma_Video_DMA_Delay = false;
 		}
 
 		uint8_t* dma_SaveState(uint8_t* saver)
@@ -6531,6 +6534,7 @@ namespace GBAHawk
 			saver = bool_saver(dma_Shutdown, saver);
 			saver = bool_saver(dma_Delay, saver);
 			saver = bool_saver(dma_Video_DMA_Start, saver);
+			saver = bool_saver(dma_Video_DMA_Delay, saver);
 
 			saver = short_saver(dma_TFR_HWord, saver);
 			saver = short_saver(dma_Held_CPU_Instr, saver);
@@ -6582,6 +6586,7 @@ namespace GBAHawk
 			loader = bool_loader(&dma_Shutdown, loader);
 			loader = bool_loader(&dma_Delay, loader);
 			loader = bool_loader(&dma_Video_DMA_Start, loader);
+			loader = bool_loader(&dma_Video_DMA_Delay, loader);
 
 			loader = short_loader(&dma_TFR_HWord, loader);
 			loader = short_loader(&dma_Held_CPU_Instr, loader);
