@@ -35,6 +35,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		// General Execution
 		public ulong CycleCount;
 
+		public ulong Clock_Update_Cycle;
+
 		public int[] cpu_Regs_To_Access = new int[16];
 
 		public int cpu_Fetch_Cnt, cpu_Fetch_Wait;
@@ -140,8 +142,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			cpu_Exception_Type = cpu_Next_Load_Store_Type = 0;
 
 			ResetRegisters();
-
-			CycleCount = 0;
 
 			cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
 
@@ -2285,6 +2285,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			// General
 			ser.Sync(nameof(CycleCount), ref CycleCount);
+			ser.Sync(nameof(Clock_Update_Cycle), ref Clock_Update_Cycle);
 
 			ser.Sync(nameof(cpu_Regs_To_Access), ref cpu_Regs_To_Access, false);
 

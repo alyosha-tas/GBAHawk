@@ -42,7 +42,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			Next_State = 0;
 
-			Next_Ready_Cycle = 0;
+			Next_Ready_Cycle = Core.CycleCount;
 
 			ADC_Ready_X = ADC_Ready_Y = false;
 		}

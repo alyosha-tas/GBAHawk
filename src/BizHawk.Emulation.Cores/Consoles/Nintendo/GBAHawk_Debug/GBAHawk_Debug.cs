@@ -257,6 +257,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Register<IStatable>(new StateSerializer(SyncState));
 			SetupMemoryDomains();
 
+			// only reset here, not in pressing power button
+			CycleCount = 0;
+			Clock_Update_Cycle = 0;
+
 			HardReset();
 
 			DeterministicEmulation = true;

@@ -1,5 +1,6 @@
 ﻿using BizHawk.Common;
 using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -40,12 +41,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool Command_Mode;
 		public bool RTC_Clock;
 		public bool RTC_Read;
+		public bool RTC_24_Hour;
 
 		public byte Command_Byte;
 		public byte RTC_SIO;
 		public byte Command_Bit, Command_Bit_Count;
+		public byte Reg_Bit, Reg_Bit_Count;
 		public byte Reg_Access;
 
+		public byte Reg_Year, Reg_Month, Reg_Day, Reg_Week, Reg_Hour, Reg_Minute, Reg_Second;
+
+		public byte Reg_Ctrl;
 
 		public override void Reset()
 		{
@@ -87,18 +93,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			Next_State = 0;
 
-			Next_Ready_Cycle = 0;
+			Next_Ready_Cycle = Core.CycleCount;
 
 			// set up initial variables for RTC
 			Command_Mode = true;
 			RTC_Clock = false;
 			RTC_Read = false;
+			RTC_24_Hour = false;
 
 			Command_Byte = 0;
 			RTC_SIO = 0;
 			Command_Bit = Command_Bit_Count = 0;
+			Reg_Bit = Reg_Bit_Count = 0;
 			Reg_Access = 0;
-	}
+
+			Reg_Year = Reg_Week = Reg_Hour = Reg_Minute = Reg_Second = 0;
+			Reg_Day = Reg_Month = 1;
+
+			Reg_Ctrl = 0;
+		}
 
 		// EEPROM is not mapped to SRAM region
 		public override byte ReadMemory8(uint addr)
@@ -150,6 +163,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			bool change_CS = false;
 			byte read_value_solar = 0;
+			byte read_value_rtc = 0;
 
 			if (addr == 0x080000C4)
 			{
@@ -194,10 +208,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										if ((Port_Dir & 2) == 2)
 										{
 											Command_Bit = (byte)((value & 2) >> 1);
+											RTC_SIO = (byte)(value & 2);
 										}
 										else
 										{
 											Command_Bit = 0;
+											RTC_SIO = 0;
 										}
 
 										Command_Byte |= (byte)(Command_Bit << Command_Bit_Count);
@@ -233,6 +249,141 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								//Console.WriteLine("Res: " + Solar_Reset + " Clk: " + Solar_Clock + " Cnt: " + Solar_Clock_Count);
 							}
+						}
+						else
+						{
+							if ((Port_Dir & 1) == 1)
+							{
+								if ((value & 1) == 1)
+								{
+									RTC_Clock = true;
+								}
+								else
+								{
+									// clock in next bit on falling edge
+									if (RTC_Clock)
+									{
+										switch (Reg_Access)
+										{
+											case 0:
+												// force reset
+												Reg_Year = Reg_Week = 0;
+												Reg_Hour = Reg_Minute = Reg_Second = 0;
+												Reg_Day = Reg_Month = 1;
+
+												Reg_Ctrl = 0;
+
+												Command_Mode = true;
+												break;
+
+											case 1:
+												// purpose unknown, always 0xFF
+												if ((Port_Dir & 2) == 2)
+												{
+													RTC_SIO = (byte)(value & 2);
+
+													Reg_Bit_Count += 1;
+
+													if (Reg_Bit_Count == 8)
+													{
+														Reg_Bit_Count = 0;
+
+														Command_Mode = true;
+													}
+												}
+												else
+												{
+													RTC_SIO = 2;
+												}
+												break;
+
+											case 2:
+												// date time
+												break;
+
+											case 3:
+												// Force IRQ
+												Command_Mode = true;
+												break;
+
+											case 4:
+												// Control
+												break;
+
+											case 5:
+												// nothing to do, always 0xFF
+												if ((Port_Dir & 2) == 2)
+												{
+													RTC_SIO = (byte)(value & 2);
+
+													Reg_Bit_Count += 1;
+
+													if (Reg_Bit_Count == 8)
+													{
+														Reg_Bit_Count = 0;
+
+														Command_Mode = true;
+													}
+												}
+												else
+												{
+													RTC_SIO = 2;
+												}
+
+												break;
+
+											case 6:
+												// time
+
+												break;
+
+											case 7:
+												// nothing to do, always 0xFF
+												if ((Port_Dir & 2) == 2)
+												{
+													RTC_SIO = (byte)(value & 2);
+
+													Reg_Bit_Count += 1;
+
+													if (Reg_Bit_Count == 8)
+													{
+														Reg_Bit_Count = 0;
+
+														Command_Mode = true;
+													}
+												}
+												else
+												{
+													RTC_SIO = 2;
+												}
+												break;
+										}
+
+										RTC_Clock = false;
+									}
+								}
+							}
+						}
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_rtc |= (byte)(RTC_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_rtc |= RTC_SIO;
+						}
+						if ((Port_Dir & 4) == 0)
+						{
+							read_value_rtc |= 4;
+						}
+
+						Port_State = read_value_rtc;
+
+						if (Ports_RW == 1)
+						{
+							Core.ROM[0xC4] = Port_State;
+							Current_C4 = Core.ROM[0xC4];
 						}
 					}
 					else
@@ -343,6 +494,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					else
 					{
 						Chip_Select = true;
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_rtc |= (byte)(RTC_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_rtc |= RTC_SIO;
+						}
+						if ((Port_Dir & 4) == 0)
+						{
+							read_value_rtc |= 4;
+						}
+
+						Port_State = read_value_rtc;
+
+						if (Ports_RW == 1)
+						{
+							Core.ROM[0xC4] = Port_State;
+							Current_C4 = Core.ROM[0xC4];
+						}
 					}
 				}
 			}
@@ -667,6 +839,245 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 		}
 
+		public void Update_Clock()
+		{
+			ulong update_cycles = Core.CycleCount - Core.Clock_Update_Cycle;
+
+			byte temp = 0;
+
+			bool update_days = false;
+			bool pm_flag = false;
+
+			// using clock rate of 16,777,216 cycles per second
+			while (update_cycles >= 16777216)
+			{
+				temp = To_Byte(Reg_Second);
+
+				temp += 1;
+
+				if (temp == 60)
+				{
+					Reg_Second = 0;
+
+					temp = To_Byte(Reg_Minute);
+
+					temp += 1;
+
+					if (temp == 60)
+					{
+						Reg_Minute = 0;
+
+						temp = To_Byte((byte)(Reg_Hour & 0x3F));
+
+						temp += 1;
+
+						if (RTC_24_Hour)
+						{
+							if (temp == 24)
+							{
+								Reg_Hour = 0;
+								update_days = true;
+							}
+							else
+							{
+								if (temp >= 12) { pm_flag = true; }
+
+								Reg_Hour = To_BCD(temp);
+
+								if (pm_flag) { Reg_Hour |= 0x40; }
+							}	
+						}
+						else
+						{
+							if (temp == 12)
+							{
+								if ((Reg_Hour & 0x40) == 0x40)
+								{
+									Reg_Hour = 0;
+
+									update_days = true;
+								}
+								else
+								{
+									Reg_Hour = 0x40;
+								}
+							}
+							else
+							{
+								pm_flag = ((Reg_Hour & 0x40) == 0x40);
+
+								Reg_Hour = To_BCD(temp);
+
+								if (pm_flag) { Reg_Hour |= 0x40; }
+							}
+						}
+
+						if (update_days)
+						{
+							Update_YMD();
+						}
+					}
+					else
+					{
+						Reg_Minute = To_BCD(temp);
+					}
+				}
+				else
+				{
+					Reg_Second = To_BCD(temp);
+				}
+			}
+
+
+
+		}
+
+		public void Update_YMD()
+		{
+			byte temp = 0;
+			byte temp2 = 0;
+
+			Reg_Week += 1;
+
+			if (Reg_Week == 7)
+			{
+				Reg_Week = 0;
+			}
+
+			temp = To_Byte(Reg_Day);
+
+			temp += 1;
+
+			switch(To_Byte(Reg_Month))
+			{
+				case 1:
+				case 3:
+				case 5:
+				case 7:
+				case 8:
+				case 10:
+					if (temp == 32)
+					{
+						Reg_Day = 0;
+
+						temp = To_Byte(Reg_Month);
+
+						temp += 1;
+
+						Reg_Month = To_BCD(temp);
+					}
+					else
+					{
+						Reg_Day = To_BCD(temp);
+					}
+					break;
+
+				case 4:
+				case 6:
+				case 9:
+				case 11:
+					if (temp == 31)
+					{
+						Reg_Day = 0;
+
+						temp = To_Byte(Reg_Month);
+
+						temp += 1;
+
+						Reg_Month = To_BCD(temp);
+					}
+					else
+					{
+						Reg_Day = To_BCD(temp);
+					}
+					break;
+
+				case 2:
+					// leap year
+					temp2 = To_Byte(Reg_Year);
+
+					if ((temp2 & 3) == 0)
+					{
+						if (temp == 30)
+						{
+							Reg_Day = 0;
+
+							temp = To_Byte(Reg_Month);
+
+							temp += 1;
+
+							Reg_Month = To_BCD(temp);
+						}
+						else
+						{
+							Reg_Day = To_BCD(temp);
+						}
+					}
+					else
+					{
+						if (temp == 29)
+						{
+							Reg_Day = 0;
+
+							temp = To_Byte(Reg_Month);
+
+							temp += 1;
+
+							Reg_Month = To_BCD(temp);
+						}
+						else
+						{
+							Reg_Day = To_BCD(temp);
+						}
+					}
+					break;
+
+				case 12:
+					if (temp == 32)
+					{
+						Reg_Day = 0;
+
+						Reg_Month = 0;
+
+						temp = To_Byte(Reg_Year);
+
+						temp += 1;
+
+						if (temp == 100)
+						{
+							Reg_Year = 0; // does it match up with day of week?
+						}
+						else
+						{
+							Reg_Year = To_BCD(temp);
+						}
+					}
+					else
+					{
+						Reg_Day = To_BCD(temp);
+					}
+					break;
+			}
+		}
+
+		public byte To_BCD(byte in_byte)
+		{
+			byte tens_cnt = 0;
+
+			while (in_byte > 10)
+			{
+				tens_cnt += 1;
+				in_byte -= 10;
+			}
+
+			return (byte)((tens_cnt << 4) | in_byte);
+		}
+
+		public byte To_Byte(byte in_BCD)
+		{
+			return (byte)((in_BCD & 0xF) + 10 * ((in_BCD >> 4) & 0xF));
+		}
+
 		public override void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(Ready_Flag), ref Ready_Flag);
@@ -708,12 +1119,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Command_Mode), ref Command_Mode);
 			ser.Sync(nameof(RTC_Clock), ref RTC_Clock);
 			ser.Sync(nameof(RTC_Read), ref RTC_Read);
+			ser.Sync(nameof(RTC_24_Hour), ref RTC_24_Hour);
 
 			ser.Sync(nameof(Command_Byte), ref Command_Byte);
 			ser.Sync(nameof(RTC_SIO), ref RTC_SIO);
 			ser.Sync(nameof(Command_Bit), ref Command_Bit);
 			ser.Sync(nameof(Command_Bit_Count), ref Command_Bit_Count);
+			ser.Sync(nameof(Reg_Bit), ref Reg_Bit);
+			ser.Sync(nameof(Reg_Bit_Count), ref Reg_Bit_Count);
 			ser.Sync(nameof(Reg_Access), ref Reg_Access);
+
+			ser.Sync(nameof(Reg_Year), ref Reg_Year);
+			ser.Sync(nameof(Reg_Month), ref Reg_Month);
+			ser.Sync(nameof(Reg_Week), ref Reg_Week);
+			ser.Sync(nameof(Reg_Day), ref Reg_Day);
+			ser.Sync(nameof(Reg_Hour), ref Reg_Hour);
+			ser.Sync(nameof(Reg_Minute), ref Reg_Minute);
+			ser.Sync(nameof(Reg_Second), ref Reg_Second);
+
+			ser.Sync(nameof(Reg_Ctrl), ref Reg_Ctrl);
 		}
 	}
 }
