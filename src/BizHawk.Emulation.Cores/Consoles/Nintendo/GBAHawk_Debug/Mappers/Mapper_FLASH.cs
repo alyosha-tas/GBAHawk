@@ -203,6 +203,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							Bank_State = 0;
 						}
+
+						Chip_Mode = 0;
 					}
 				}
 			}

@@ -6,14 +6,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	// Cart with EEEPROM and solar sensor with RTC, used in Boktai games
 	public class MapperEEPROM_Solar : MapperBase
 	{
+		// general and solar sensor variables
 		public bool Ready_Flag;
+		public bool Chip_Select;
+		public bool Solar_Clock;
+		public bool Solar_Flag;
+		public bool Solar_Reset;
 
 		public byte Port_State;
 		public byte Port_Dir;
 		public byte Ports_RW;
-		
-		public byte Current_C4, Current_C6, Current_C8;
 
+		public byte Current_C4, Current_C5, Current_C6, Current_C7, Current_C8, Current_C9;
+
+		public ushort Solar_Clock_Count;
+
+		// EEPROM Variables
 		public int Size_Mask = 0;
 		public int Bit_Offset, Bit_Read;
 		public int Access_Address;
@@ -28,23 +36,47 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ulong Next_Ready_Cycle;
 
+		// RTC Variables
+		public bool Command_Mode;
+		public bool RTC_Clock;
+		public bool RTC_Read;
+
+		public byte Command_Byte;
+		public byte RTC_SIO;
+		public byte Command_Bit, Command_Bit_Count;
+		public byte Reg_Access;
+
+
 		public override void Reset()
 		{
+			// set up initial variables for Solar
 			Ready_Flag = true;
+			Chip_Select = false;
+			Solar_Clock = false;
+			Solar_Flag = false;
+			Solar_Flag = false;
 
 			Port_State = 0;
 			Port_Dir = 0;
 			Ports_RW = 0;
 
 			Current_C4 = ROM_C4;
+			Current_C5 = ROM_C5;
 			Current_C6 = ROM_C6;
+			Current_C7 = ROM_C7;
 			Current_C8 = ROM_C8;
+			Current_C9 = ROM_C9;
+
+			Solar_Clock_Count = 0;
 
 			Core.ROM[0xC4] = Current_C4;
+			Core.ROM[0xC5] = Current_C5;
 			Core.ROM[0xC6] = Current_C6;
+			Core.ROM[0xC7] = Current_C7;
 			Core.ROM[0xC8] = Current_C8;
+			Core.ROM[0xC9] = Current_C9;
 
-			// set up initial variables
+			// set up initial variables for EEPROM
 			Size_Mask = Core.cart_RAM.Length - 1;
 
 			Bit_Offset = Bit_Read = 0;
@@ -56,7 +88,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Next_State = 0;
 
 			Next_Ready_Cycle = 0;
-		}
+
+			// set up initial variables for RTC
+			Command_Mode = true;
+			RTC_Clock = false;
+			RTC_Read = false;
+
+			Command_Byte = 0;
+			RTC_SIO = 0;
+			Command_Bit = Command_Bit_Count = 0;
+			Reg_Access = 0;
+	}
 
 		// EEPROM is not mapped to SRAM region
 		public override byte ReadMemory8(uint addr)
@@ -101,21 +143,215 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public override void WriteROM8(uint addr, byte value)
 		{
-			if ((addr & 1) == 0) { WriteROM16(addr, (ushort)value); }
-		}
+			if ((addr & 1)== 0)
+			{
+				Console.WriteLine("addr: " + (addr & 0xF) + " " + value);
+			}
 
-		public override void WriteROM16(uint addr, ushort value)
-		{
+			bool change_CS = false;
+			byte read_value_solar = 0;
+
 			if (addr == 0x080000C4)
 			{
+				// if changing chip select, ignore other writes
+				// not sure if correct or what happes?
+				if ((Port_Dir & 4) == 4)
+				{
+					if ((value & 4) == 0)
+					{
+						if (Chip_Select)
+						{
+							change_CS = true;
+						}
+					}
+					if ((value & 4) == 4)
+					{
+						if (!Chip_Select)
+						{
+							change_CS = true;
+						}
+					}
+				}
 
+				if (!change_CS)
+				{
+					if (Chip_Select)
+					{
+						// RTC
+						if (Command_Mode)
+						{
+							if ((Port_Dir & 1) == 1)
+							{
+								if ((value & 1) == 1)
+								{
+									RTC_Clock = true;
+								}
+								else
+								{
+									// clock in next bit on falling edge
+									if (RTC_Clock)
+									{
+										if ((Port_Dir & 2) == 2)
+										{
+											Command_Bit = (byte)((value & 2) >> 1);
+										}
+										else
+										{
+											Command_Bit = 0;
+										}
+
+										Command_Byte |= (byte)(Command_Bit << Command_Bit_Count);
+
+										Command_Bit_Count += 1;
+
+										if (Command_Bit_Count == 8)
+										{
+											// change mode if valid command, otherwise start over
+											if ((Command_Byte & 0xF) == 6)
+											{
+												Command_Mode = false;
+
+												if ((Command_Byte & 0x80) == 0x80)
+												{
+													RTC_Read = true;
+												}
+												else
+												{
+													RTC_Read = false;
+												}
+
+												Reg_Access = (byte)((Command_Byte & 0x70) >> 4);
+											}
+
+											Command_Byte = 0;
+											Command_Bit_Count = 0;
+										}
+
+										RTC_Clock = false;
+									}
+								}
+
+								//Console.WriteLine("Res: " + Solar_Reset + " Clk: " + Solar_Clock + " Cnt: " + Solar_Clock_Count);
+							}
+						}
+					}
+					else
+					{
+						// Solar			
+						if ((Port_Dir & 2) == 2)
+						{
+							if ((value & 2) == 2)
+							{
+								Solar_Reset = true;
+								Solar_Flag = false;
+								Solar_Clock = false;
+								Solar_Clock_Count = 0;
+							}
+							else
+							{
+								Solar_Reset = false;
+							}
+						}
+
+						if ((Port_Dir & 1) == 1)
+						{
+							if ((value & 1) == 1)
+							{
+								if (!Solar_Reset)
+								{
+									Solar_Clock = true;
+								}
+							}
+							else
+							{
+								if (!Solar_Reset)
+								{
+									if (Solar_Clock)
+									{
+										Solar_Clock_Count += 1;
+										Solar_Clock_Count &= 0xFFF;
+									}
+
+									Solar_Clock = false;
+								}
+
+								//Console.WriteLine("Res: " + Solar_Reset + " Clk: " + Solar_Clock + " Cnt: " + Solar_Clock_Count);
+							}
+						}
+
+						if (Core.Solar_state == Solar_Clock_Count)
+						{
+							if (!Solar_Reset)
+							{
+								Solar_Flag = true;
+								//Console.WriteLine("Match");
+							}
+						}
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Reset ? 2 : 0);
+						}
+						if ((Port_Dir & 8) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Flag ? 8 : 0);
+						}
+
+						Port_State = read_value_solar;
+
+						if (Ports_RW == 1)
+						{
+							Core.ROM[0xC4] = Port_State;
+							Current_C4 = Core.ROM[0xC4];
+						}
+
+						//Console.WriteLine(Current_C4);
+					}
+				}
+				else
+				{
+					// enable Solar Sensor
+					if ((value & 4) == 0)
+					{
+						Chip_Select = false;
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Reset ? 2 : 0);
+						}
+						if ((Port_Dir & 8) == 0)
+						{
+							read_value_solar |= (byte)(Solar_Flag ? 8 : 0);
+						}
+
+						Port_State = read_value_solar;
+
+						if (Ports_RW == 1)
+						{
+							Core.ROM[0xC4] = Port_State;
+							Current_C4 = Core.ROM[0xC4];
+						}
+					}
+					else
+					{
+						Chip_Select = true;
+					}
+				}
 			}
 			else if (addr == 0x080000C6)
 			{
 				Port_Dir = (byte)(value & 0xF);
 
 				if (Ports_RW == 1)
-				{ 
+				{
 					Core.ROM[0xC6] = Port_Dir;
 
 					Port_State &= (byte)((~Port_Dir) & 0xF);
@@ -130,26 +366,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if ((value & 1) == 1)
 				{
 					Core.ROM[0xC4] = Port_State;
+					Core.ROM[0xC5] = 0;
 					Core.ROM[0xC6] = Port_Dir;
+					Core.ROM[0xC7] = 0;
 					Core.ROM[0xC8] = Ports_RW;
+					Core.ROM[0xC9] = 0;
 				}
 				else
 				{
 					Core.ROM[0xC4] = ROM_C4;
+					Core.ROM[0xC5] = ROM_C5;
 					Core.ROM[0xC6] = ROM_C6;
+					Core.ROM[0xC7] = ROM_C7;
 					Core.ROM[0xC8] = ROM_C8;
+					Core.ROM[0xC9] = ROM_C9;
 				}
 			}
 
 			Current_C4 = Core.ROM[0xC4];
+			Current_C5 = Core.ROM[0xC5];
 			Current_C6 = Core.ROM[0xC6];
+			Current_C7 = Core.ROM[0xC7];
 			Current_C8 = Core.ROM[0xC8];
+			Current_C9 = Core.ROM[0xC9];
+		}
+
+		public override void WriteROM16(uint addr, ushort value)
+		{
+			WriteROM8(addr, (byte)value);
+			WriteROM8((addr + 1), (byte)(value >> 8));
 		}
 
 		public override void WriteROM32(uint addr, uint value)
 		{
-			WriteROM16(addr, (ushort)value);
-			WriteROM16((addr + 2), (ushort)(value >> 8));
+			WriteROM8(addr, (byte)value);
+			WriteROM8((addr + 1), (byte)(value >> 8));
+			WriteROM8((addr + 2), (byte)(value >> 16));
+			WriteROM8((addr + 3), (byte)(value >> 24));
 		}
 
 		public override byte Mapper_EEPROM_Read()
@@ -417,18 +670,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public override void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(Ready_Flag), ref Ready_Flag);
+			ser.Sync(nameof(Chip_Select), ref Chip_Select);
+			ser.Sync(nameof(Solar_Clock), ref Solar_Clock);
+			ser.Sync(nameof(Solar_Flag), ref Solar_Flag);
+			ser.Sync(nameof(Solar_Reset), ref Solar_Reset);
 
 			ser.Sync(nameof(Port_State), ref Port_State);
 			ser.Sync(nameof(Port_Dir), ref Port_Dir);
 			ser.Sync(nameof(Ports_RW), ref Ports_RW);
 
 			ser.Sync(nameof(Current_C4), ref Current_C4);
+			ser.Sync(nameof(Current_C5), ref Current_C5);
 			ser.Sync(nameof(Current_C6), ref Current_C6);
+			ser.Sync(nameof(Current_C7), ref Current_C7);
 			ser.Sync(nameof(Current_C8), ref Current_C8);
+			ser.Sync(nameof(Current_C9), ref Current_C9);
+
+			ser.Sync(nameof(Solar_Clock_Count), ref Solar_Clock_Count);
 
 			Core.ROM[0xC4] = Current_C4;
+			Core.ROM[0xC5] = Current_C5;
 			Core.ROM[0xC6] = Current_C6;
+			Core.ROM[0xC7] = Current_C7;
 			Core.ROM[0xC8] = Current_C8;
+			Core.ROM[0xC9] = Current_C9;
 
 			ser.Sync(nameof(Bit_Offset), ref Bit_Offset);
 			ser.Sync(nameof(Bit_Read), ref Bit_Read);
@@ -439,6 +704,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Access_Address), ref Access_Address);
 
 			ser.Sync(nameof(Next_Ready_Cycle), ref Next_Ready_Cycle);
+
+			ser.Sync(nameof(Command_Mode), ref Command_Mode);
+			ser.Sync(nameof(RTC_Clock), ref RTC_Clock);
+			ser.Sync(nameof(RTC_Read), ref RTC_Read);
+
+			ser.Sync(nameof(Command_Byte), ref Command_Byte);
+			ser.Sync(nameof(RTC_SIO), ref RTC_SIO);
+			ser.Sync(nameof(Command_Bit), ref Command_Bit);
+			ser.Sync(nameof(Command_Bit_Count), ref Command_Bit_Count);
+			ser.Sync(nameof(Reg_Access), ref Reg_Access);
 		}
 	}
 }

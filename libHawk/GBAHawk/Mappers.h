@@ -1602,6 +1602,8 @@ namespace GBAHawk
 						{
 							Bank_State = 0;
 						}
+
+						Chip_Mode = 0;
 					}
 				}
 			}

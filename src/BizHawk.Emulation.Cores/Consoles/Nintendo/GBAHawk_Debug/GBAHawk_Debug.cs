@@ -226,8 +226,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			mapper.Core =this;
 
 			mapper.ROM_C4 = ROM[0xC4];
+			mapper.ROM_C5 = ROM[0xC5];
 			mapper.ROM_C6 = ROM[0xC6];
+			mapper.ROM_C7 = ROM[0xC7];
 			mapper.ROM_C8 = ROM[0xC8];
+			mapper.ROM_C9 = ROM[0xC9];
 
 			if (mapper is MapperEEPROM_Tilt)
 			{
@@ -442,6 +445,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if ((romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") || // Aging cart test
 				(romHashSHA1 == "SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E") || // VRAM access test
 				(romHashSHA1 == "SHA1:41D39A0C34F72469DD3FBCC90190605B8ADA93E6") || // Another World
+				(romHashSHA1 == "SHA1:270C426705DF767A4AD2DC69D039842442F779B2") || // Anguna
 				(romHashSHA1 == "SHA1:9B02C4BFD99CCD913A5D7EE7CF269EBC689E1FDE"))   // Higurashi no Nakukoroni (fixed header)
 			{
 				Console.WriteLine("using SRAM mapper");
