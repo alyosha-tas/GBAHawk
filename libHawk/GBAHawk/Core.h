@@ -51,7 +51,7 @@ namespace GBAHawk
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = true;
 
-				if (ext_rom_size < 0x1000000)
+				if (ext_rom_size <= 0x1000000)
 				{
 					GBA.EEPROM_Wiring = true;
 				}
@@ -65,7 +65,7 @@ namespace GBAHawk
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = true;
 
-				if (ext_rom_size < 0x1000000)
+				if (ext_rom_size <= 0x1000000)
 				{
 					GBA.EEPROM_Wiring = true;
 				}
@@ -79,7 +79,7 @@ namespace GBAHawk
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = true;
 
-				if (ext_rom_size < 0x1000000)
+				if (ext_rom_size <= 0x1000000)
 				{
 					GBA.EEPROM_Wiring = true;
 				}
@@ -123,6 +123,8 @@ namespace GBAHawk
 
 			Mapper->Core_Cycle_Count = &GBA.CycleCount;
 
+			Mapper->Core_Clock_Update_Cycle = &GBA.Clock_Update_Cycle;
+
 			Mapper->Core_Acc_X = &GBA.New_Acc_X;
 
 			Mapper->Core_Acc_Y = &GBA.New_Acc_Y;
@@ -140,6 +142,10 @@ namespace GBAHawk
 			Mapper->Current_C8 = GBA.ROM[0xC8];
 
 			Mapper->Reset();
+
+			// Only reset cycle count on initial power on, not power cycles
+			GBA.CycleCount = 0;
+			GBA.Clock_Update_Cycle = 0;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)

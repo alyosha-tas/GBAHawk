@@ -286,7 +286,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			Definition = new ControllerDefinition("Gameboy Advance Controller + Solar")
 			{
 				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
-			}.AddAxis($"P{PortNum} Solar", (0).RangeTo(0xFF), 0x80);
+			}.AddAxis($"P{PortNum} Solar", (0x50).RangeTo(0xF0), 0xA0);
 		}
 
 		public int PortNum { get; }
@@ -346,7 +346,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		public byte SolarSense(IController c)
 		{
-			return (byte)c.AxisValue(Definition.Axes[0]);
+			return (byte)(0x140 - (int)(c.AxisValue(Definition.Axes[0])));
 		}
 
 		private static readonly string[] BaseDefinition =

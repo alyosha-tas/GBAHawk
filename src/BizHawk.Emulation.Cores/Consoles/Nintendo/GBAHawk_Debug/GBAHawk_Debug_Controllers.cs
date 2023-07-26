@@ -288,7 +288,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public byte SolarSense(IController c)
 		{
-			return (byte)c.AxisValue(Definition.Axes[0]);
+			return (byte)(0x140 - (int)(c.AxisValue(Definition.Axes[0])));
 		}
 
 		private static readonly string[] BaseDefinition =

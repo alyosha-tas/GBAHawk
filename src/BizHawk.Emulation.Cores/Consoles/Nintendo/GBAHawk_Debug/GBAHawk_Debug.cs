@@ -77,6 +77,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool INT_Master_On;
 
+		public bool Reset_RTC;
+
 		public int ext_num = 0; // zero here means disconnected
 
 		// memory domains
@@ -261,7 +263,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			CycleCount = 0;
 			Clock_Update_Cycle = 0;
 
+			// only reset RTC on initialize
+			Reset_RTC = true;
 			HardReset();
+			Reset_RTC = false;
 
 			DeterministicEmulation = true;
 
@@ -473,7 +478,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				has_bat = true;
 				Is_EEPROM = true;
 
-				if (ROM_Length < 0x1000000)
+				if (ROM_Length <= 0x1000000)
 				{
 					EEPROM_Wiring = true;
 				}

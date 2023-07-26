@@ -876,6 +876,7 @@ namespace GBAHawk
 
 		uint64_t cpu_ALU_Long_Result;
 		uint64_t CycleCount;
+		uint64_t Clock_Update_Cycle;
 		uint64_t FrameCycle;
 
 		int64_t cpu_ALU_Signed_Long_Result;
@@ -1448,7 +1449,7 @@ namespace GBAHawk
 
 			ResetRegisters();
 
-			CycleCount = FrameCycle = 0;
+			FrameCycle = 0;
 
 			cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
 
@@ -4985,6 +4986,7 @@ namespace GBAHawk
 
 			saver = long_saver(cpu_ALU_Long_Result, saver);
 			saver = long_saver(CycleCount, saver);
+			saver = long_saver(Clock_Update_Cycle, saver);
 
 			saver = long_saver(cpu_ALU_Signed_Long_Result, saver);
 
@@ -5110,6 +5112,7 @@ namespace GBAHawk
 
 			loader = long_loader(&cpu_ALU_Long_Result, loader);
 			loader = long_loader(&CycleCount, loader);
+			loader = long_loader(&Clock_Update_Cycle, loader);
 
 			loader = slong_loader(&cpu_ALU_Signed_Long_Result, loader);
 

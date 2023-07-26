@@ -56,6 +56,8 @@ namespace GBAHawk
 
 		uint64_t* Core_Cycle_Count = nullptr;
 
+		uint64_t* Core_Clock_Update_Cycle = nullptr;
+
 		uint16_t* Core_Acc_X = nullptr;
 
 		uint16_t* Core_Acc_Y = nullptr;
@@ -431,7 +433,7 @@ namespace GBAHawk
 
 			Next_State = 0;
 
-			Next_Ready_Cycle = 0;
+			Next_Ready_Cycle = Core_Cycle_Count[0];
 		}
 
 		uint8_t Read_Memory_8(uint32_t addr)
@@ -743,7 +745,7 @@ namespace GBAHawk
 
 			Next_State = 0;
 
-			Next_Ready_Cycle = 0;
+			Next_Ready_Cycle = Core_Cycle_Count[0];
 		}
 
 		uint8_t Read_Memory_8(uint32_t addr)
@@ -1096,7 +1098,7 @@ namespace GBAHawk
 
 			Next_State = 0;
 
-			Next_Ready_Cycle = 0;
+			Next_Ready_Cycle = Core_Cycle_Count[0];
 
 			ADC_Ready_X = ADC_Ready_Y = false;
 		}
