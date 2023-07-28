@@ -118,6 +118,10 @@ namespace GBAHawk
 			{
 				Mapper = new Mapper_FLASH();
 			}
+			else if (mapper == 6)
+			{
+				Mapper = new Mapper_FLASH_RTC();
+			}
 
 			GBA.mapper_pntr = &Mapper[0];
 
@@ -134,14 +138,23 @@ namespace GBAHawk
 			Mapper->Core_ROM = &GBA.ROM[0];
 
 			Mapper->ROM_C4 = GBA.ROM[0xC4];
+			Mapper->ROM_C5 = GBA.ROM[0xC5];
 			Mapper->ROM_C6 = GBA.ROM[0xC6];
+			Mapper->ROM_C7 = GBA.ROM[0xC7];
 			Mapper->ROM_C8 = GBA.ROM[0xC8];
+			Mapper->ROM_C9 = GBA.ROM[0xC9];
 
 			Mapper->Current_C4 = GBA.ROM[0xC4];
+			Mapper->Current_C5 = GBA.ROM[0xC5];
 			Mapper->Current_C6 = GBA.ROM[0xC6];
+			Mapper->Current_C7 = GBA.ROM[0xC7];
 			Mapper->Current_C8 = GBA.ROM[0xC8];
+			Mapper->Current_C9 = GBA.ROM[0xC9];
 
+			// only reset RTC on initial power on
+			Mapper->Reset_RTC = true;
 			Mapper->Reset();
+			Mapper->Reset_RTC = false;
 
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;
