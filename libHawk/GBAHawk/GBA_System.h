@@ -184,7 +184,7 @@ namespace GBAHawk
 			// default memory config hardware initialized
 			Update_Memory_CTRL(0x0D000020);
 
-			uint32_t startup_color = 0xFFFFFFFF;
+			uint32_t startup_color = 0xFFF8F8F8;
 
 			for (int i = 0; i < 240*160; i++)
 			{

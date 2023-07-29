@@ -30,7 +30,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			//Console.WriteLine("-----------------------FRAME-----------------------");
 			for (int j = 0; j < vid_buffer.Length; j++)
 			{
-				vid_buffer[j] = unchecked((int)0xFFFFFFFF);
+				vid_buffer[j] = unchecked((int)0xFFF8F8F8);
 			}
 
 			if (_tracer.IsEnabled())

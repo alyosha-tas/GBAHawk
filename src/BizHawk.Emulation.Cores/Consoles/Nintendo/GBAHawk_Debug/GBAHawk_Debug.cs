@@ -358,7 +358,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			for (int i = 0; i < vid_buffer.Length; i++)
 			{
-				vid_buffer[i] = unchecked((int)0xFFFFFFFF);
+				vid_buffer[i] = unchecked((int)0xFFF8F8F8);
 			}
 
 			for (int i = 0; i < IWRAM.Length; i++)

@@ -276,7 +276,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			date_time_1 |= ((ulong)temp_year_1 << 48);
 			date_time_1 |= ((ulong)temp_ctrl_1 << 56);
 
-			Console.WriteLine("Mapper: " + mappers);
+			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1]);
+
 			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0],
 												ROMS[1], (uint)ROMS_Length[1], mappers[1],
 												date_time_0, rtc_working_0, date_time_1, rtc_working_1);
@@ -354,7 +355,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			has_bats[i] = false;
 
 			// check for SRAM
-			for (int j = 0; j < ROMS.Length; j += 4)
+			for (int j = 0; j < ROMS[i].Length; j += 4)
 			{
 				if (ROMS[i][j] == 0x53)
 				{
@@ -394,7 +395,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 								break;
 							}
-							if ((ROMS[i][j + 6] == 0x35) && (ROMS[i][j + 6] == 0x31) && (ROMS[i][j + 7] == 0x32))
+							if ((ROMS[i][j + 5] == 0x35) && (ROMS[i][j + 6] == 0x31) && (ROMS[i][j + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
 								mppr = 6;

@@ -325,7 +325,7 @@ namespace GBAHawk
 				// blank the screen
 				for (int i = 0; i < 240 * 160; i++)
 				{
-					L.GBA.video_buffer[i] = 0xFFFFFFFF;
+					L.GBA.video_buffer[i] = 0xFFF8F8F8;
 				}
 			}
 			else
@@ -338,7 +338,7 @@ namespace GBAHawk
 				// blank the screen
 				for (int i = 0; i < 240 * 160; i++)
 				{
-					R.GBA.video_buffer[i] = 0xFFFFFFFF;
+					R.GBA.video_buffer[i] = 0xFFF8F8F8;
 				}
 			}		
 		}

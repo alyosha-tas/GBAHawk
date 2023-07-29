@@ -162,6 +162,8 @@ namespace GBAHawk
 
 			Mapper->RTC_Functional = rtc_functional;
 
+			Mapper->Solar_Functional = mapper == 5;
+
 			Mapper->Reg_Second = (uint8_t)datetime;
 			Mapper->Reg_Minute = (uint8_t)(datetime >> 8);
 			Mapper->Reg_Hour = (uint8_t)(datetime >> 16);
@@ -284,7 +286,7 @@ namespace GBAHawk
 			// blank the screen
 			for (int i = 0; i < 240 * 160; i++)
 			{
-				GBA.video_buffer[i] = 0xFFFFFFFF;
+				GBA.video_buffer[i] = 0xFFF8F8F8;
 			}
 		}
 
