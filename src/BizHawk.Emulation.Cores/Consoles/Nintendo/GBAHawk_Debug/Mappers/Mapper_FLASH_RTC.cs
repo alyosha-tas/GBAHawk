@@ -110,10 +110,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public override void WriteROM8(uint addr, byte value)
 		{
+			/*
 			if ((addr & 1)== 0)
 			{
-				//if (Chip_Select) { Console.WriteLine("addr: " + (addr & 0xF) + " " + value + " Port: " + Port_Dir); }
+				if (Chip_Select) { Console.WriteLine("addr: " + (addr & 0xF) + " " + value + " Port: " + Port_Dir); }
 			}
+			*/
 
 			bool change_CS = false;
 			byte read_value_solar = 0;
@@ -252,6 +254,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 												Reg_Year = Reg_Week = 0;
 												Reg_Hour = Reg_Minute = Reg_Second = 0;
 												Reg_Day = Reg_Month = 1;
+												Reg_Second = 1;
 
 												Reg_Ctrl = 0;
 
@@ -360,7 +363,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 														}
 														else
 														{
-															Reg_Hour = (byte)((RTC_Temp_Write >> 32) & 0x7F);
+															Reg_Hour = (byte)((RTC_Temp_Write >> 32) & 0xBF);
 														}
 
 														Reg_Minute = (byte)((RTC_Temp_Write >> 40) & 0x7F);
@@ -426,7 +429,35 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 														RTC_24_Hour = (Reg_Ctrl & 0x40) == 0x40;
 
-														Console.WriteLine("New Ctrl: " + Reg_Ctrl);
+														if (RTC_24_Hour)
+														{
+															if ((Reg_Hour & 0x80) == 0x80)
+															{
+																byte temp_h1 = To_Byte((byte)(Reg_Hour & 0x3F));
+
+																if (temp_h1 < 12)
+																{
+																	temp_h1 += 12;
+
+																	Reg_Hour = To_Byte(temp_h1);
+																	Reg_Hour |= 0x80;
+																}
+															}
+														}
+														else
+														{
+															byte temp_h2 = To_Byte((byte)(Reg_Hour & 0x3F));
+
+															if (temp_h2 >= 12)
+															{
+																temp_h2 -= 12;
+
+																Reg_Hour = To_Byte(temp_h2);
+																Reg_Hour |= 0x80;
+															}
+														}
+
+														//Console.WriteLine("New Ctrl: " + Reg_Ctrl);
 													}
 												}
 												break;
@@ -490,7 +521,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 												Reg_Bit_Count += 1;
 
-												Console.WriteLine("new bit: " + Reg_Bit_Count);
+												//Console.WriteLine("new bit: " + Reg_Bit_Count);
 
 												if (Reg_Bit_Count == 24)
 												{
@@ -508,19 +539,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 														}
 														else
 														{
-															Reg_Hour = (byte)((RTC_Temp_Write) & 0x7F);
+															Reg_Hour = (byte)((RTC_Temp_Write) & 0xBF);
 														}
 
 														Reg_Minute = (byte)((RTC_Temp_Write >> 8) & 0x7F);
 														Reg_Second = (byte)((RTC_Temp_Write >> 16) & 0x7F);
 
 														Core.Clock_Update_Cycle = Core.CycleCount;
-
-														
+														/*
 														Console.WriteLine(" Hour: " + To_Byte(Reg_Hour) +
-																			" Minute: " + To_Byte(Reg_Minute) +
-																			" Second: " + To_Byte(Reg_Second));
-														
+																				" Minute: " + To_Byte(Reg_Minute) +
+																				" Second: " + To_Byte(Reg_Second));
+														*/
 													}
 												}
 
@@ -554,6 +584,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 							}
 						}
+
+						// if we want the RTC to be non-functional, always return zero
+						if (!RTC_Functional) { RTC_SIO = 0; }
 
 						if ((Port_Dir & 1) == 0)
 						{

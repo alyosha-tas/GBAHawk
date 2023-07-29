@@ -15,6 +15,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool RTC_24_Hour;
 
+		public bool RTC_Functional;
+
 		public virtual byte ReadMemory8(uint addr)
 		{
 			return 0;

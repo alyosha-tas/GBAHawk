@@ -57,22 +57,34 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 		public class SubGBASyncSettings
 		{
+			public enum InitRTCState
+			{
+				Reset_Good_Batt,
+				Reset_Bad_Batt,
+				RTC_Set
+			}
+
+			[DisplayName("RTC Initial State")]
+			[Description("Choose how the RTC starts up")]
+			[DefaultValue(InitRTCState.Reset_Good_Batt)]
+			public InitRTCState RTCInitialState { get; set; }
+
 			[DisplayName("RTC Initial Time")]
-			[Description("Set the initial RTC time in terms of elapsed seconds.")]
-			[DefaultValue(0)]
-			public int RTCInitialTime
+			[Description("Set the initial RTC Date and Time.")]
+			[DefaultValue(typeof(DateTime), "1/1/2000 12:00:00 PM")]
+			public DateTime RTCInitialTime
 			{
 				get => _RTCInitialTime;
-				set => _RTCInitialTime = Math.Max(0, Math.Min(1024 * 24 * 60 * 60, value));
+				set => _RTCInitialTime = value;
 			}
 
 			[DisplayName("RTC Offset")]
-			[Description("Set error in RTC clocking (-127 to 127)")]
+			[Description("Set error in RTC clocking (-32768 to 32767)")]
 			[DefaultValue(0)]
-			public int RTCOffset
+			public short RTCOffset
 			{
 				get => _RTCOffset;
-				set => _RTCOffset = Math.Max(-127, Math.Min(127, value));
+				set => _RTCOffset = value;
 			}
 
 			[DisplayName("Use Existing SaveRAM")]
@@ -81,12 +93,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			public bool Use_SRAM { get; set; }
 
 			[JsonIgnore]
-			private int _RTCInitialTime;
+			private DateTime _RTCInitialTime;
 			[JsonIgnore]
-			private int _RTCOffset;
-			[JsonIgnore]
-			public ushort _DivInitialTime = 8;
-
+			private short _RTCOffset;
 
 			public SubGBASyncSettings Clone()
 			{

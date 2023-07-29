@@ -44,6 +44,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			var temp_sync_L = new GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_SyncSettings();
 			var temp_sync_R = new GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_SyncSettings();
 
+			temp_sync_L.RTCInitialState = (GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_SyncSettings.InitRTCState)((int)linkSyncSettings.RTCInitialState_L);
+			temp_sync_R.RTCInitialState = (GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_SyncSettings.InitRTCState)((int)linkSyncSettings.RTCInitialState_R);
 			temp_sync_L.RTCInitialTime = linkSyncSettings.RTCInitialTime_L;
 			temp_sync_R.RTCInitialTime = linkSyncSettings.RTCInitialTime_R;
 			temp_sync_L.RTCOffset = linkSyncSettings.RTCOffset_L;

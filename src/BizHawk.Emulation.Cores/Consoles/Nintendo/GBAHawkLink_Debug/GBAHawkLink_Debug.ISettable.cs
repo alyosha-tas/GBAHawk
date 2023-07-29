@@ -52,55 +52,57 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public class GBAHawkLink_Debug_SyncSettings
 		{
-			[DisplayName("Console Mode L")]
-			[Description("Pick which console to run, 'Auto' chooses from ROM extension, 'GB' and 'GBC' chooses the respective system")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_L { get; set; }
+			public enum InitRTCState
+			{
+				Reset_Good_Batt,
+				Reset_Bad_Batt,
+				RTC_Set
+			}
 
-			[DisplayName("Console Mode R")]
-			[Description("Pick which console to run, 'Auto' chooses from ROM extension, 'GB' and 'GBC' chooses the respective system")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_R { get; set; }
+			[DisplayName("RTC Initial State")]
+			[Description("Choose how the RTC starts up")]
+			[DefaultValue(InitRTCState.Reset_Good_Batt)]
+			public InitRTCState RTCInitialState_L { get; set; }
 
-			[DisplayName("CGB in GBA")]
-			[Description("Emulate GBA hardware running a CGB game, instead of CGB hardware.  Relevant only for titles that detect the presense of a GBA, such as Shantae.")]
-			[DefaultValue(false)]
-			public bool GBACGB { get; set; }
+			[DisplayName("RTC Initial State")]
+			[Description("Choose how the RTC starts up")]
+			[DefaultValue(InitRTCState.Reset_Good_Batt)]
+			public InitRTCState RTCInitialState_R { get; set; }
 
 			[DisplayName("RTC Initial Time L")]
-			[Description("Set the initial RTC time in terms of elapsed seconds.")]
-			[DefaultValue(0)]
-			public int RTCInitialTime_L
+			[Description("Set the initial RTC Date and Time.")]
+			[DefaultValue(typeof(DateTime), "1/1/2000 12:00:00 PM")]
+			public DateTime RTCInitialTime_L
 			{
 				get => _RTCInitialTime_L;
-				set => _RTCInitialTime_L = Math.Max(0, Math.Min(1024 * 24 * 60 * 60, value));
+				set => _RTCInitialTime_L = value;
 			}
 
 			[DisplayName("RTC Initial Time R")]
-			[Description("Set the initial RTC time in terms of elapsed seconds.")]
-			[DefaultValue(0)]
-			public int RTCInitialTime_R
+			[Description("Set the initial RTC Date and Time.")]
+			[DefaultValue(typeof(DateTime), "1/1/2000 12:00:00 PM")]
+			public DateTime RTCInitialTime_R
 			{
 				get => _RTCInitialTime_R;
-				set => _RTCInitialTime_R = Math.Max(0, Math.Min(1024 * 24 * 60 * 60, value));
+				set => _RTCInitialTime_R = value;
 			}
 
 			[DisplayName("RTC Offset L")]
 			[Description("Set error in RTC clocking (-127 to 127)")]
 			[DefaultValue(0)]
-			public int RTCOffset_L
+			public short RTCOffset_L
 			{
 				get => _RTCOffset_L;
-				set => _RTCOffset_L = Math.Max(-127, Math.Min(127, value));
+				set => _RTCOffset_L = value;
 			}
 
 			[DisplayName("RTC Offset R")]
 			[Description("Set error in RTC clocking (-127 to 127)")]
 			[DefaultValue(0)]
-			public int RTCOffset_R
+			public short RTCOffset_R
 			{
 				get => _RTCOffset_R;
-				set => _RTCOffset_R = Math.Max(-127, Math.Min(127, value));
+				set => _RTCOffset_R = value;
 			}
 
 			[DisplayName("Use Existing SaveRAM")]
@@ -109,17 +111,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			public bool Use_SRAM { get; set; }
 
 			[JsonIgnore]
-			private int _RTCInitialTime_L;
+			private DateTime _RTCInitialTime_L;
 			[JsonIgnore]
-			private int _RTCInitialTime_R;
+			private DateTime _RTCInitialTime_R;
 			[JsonIgnore]
-			private int _RTCOffset_L;
+			private short _RTCOffset_L;
 			[JsonIgnore]
-			private int _RTCOffset_R;
-			[JsonIgnore]
-			public ushort _DivInitialTime_L = 8;
-			[JsonIgnore]
-			public ushort _DivInitialTime_R = 8;
+			private short _RTCOffset_R;
 
 			public GBAHawkLink_Debug_SyncSettings Clone() => (GBAHawkLink_Debug_SyncSettings)MemberwiseClone();
 

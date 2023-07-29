@@ -156,6 +156,8 @@ namespace GBAHawk
 			Mapper->Reset();
 			Mapper->Reset_RTC = false;
 
+			Mapper->RTC_Functional = true;
+
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;
 			GBA.Clock_Update_Cycle = 0;

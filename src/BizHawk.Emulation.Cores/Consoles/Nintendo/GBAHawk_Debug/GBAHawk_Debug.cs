@@ -7,6 +7,8 @@ using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System.Runtime.InteropServices;
 
 using BizHawk.Common.ReflectionExtensions;
+using System.Security.Cryptography;
+using System.ComponentModel.Design;
 
 /*
 	GBA Emulator
@@ -268,6 +270,39 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			HardReset();
 			Reset_RTC = false;
 
+			mapper.RTC_Functional = true;
+
+			if (_syncSettings.RTCInitialState == GBAHawk_Debug_SyncSettings.InitRTCState.Reset_Bad_Batt)
+			{
+				mapper.RTC_Functional = false;
+			}
+			else if (_syncSettings.RTCInitialState == GBAHawk_Debug_SyncSettings.InitRTCState.RTC_Set)
+			{
+				// all games seem to use 24 hour mode,, so use this to represent set time
+				mapper.Reg_Ctrl = 0x40;
+
+				// parse the date and time into the regs
+				DateTime temp = _syncSettings.RTCInitialTime;
+
+				// if year outside range of RTC, just leave the initial values
+				if ((temp.Year < 2100) && (temp.Year >= 2000))
+				{
+					mapper.Reg_Year = mapper.To_BCD((byte)(temp.Year - 2000));
+					mapper.Reg_Month = mapper.To_BCD((byte)temp.Month);
+					mapper.Reg_Day = mapper.To_BCD((byte)temp.Day);
+					mapper.Reg_Week = mapper.To_BCD((byte)temp.DayOfWeek);
+					mapper.Reg_Minute = mapper.To_BCD((byte)temp.Minute);
+					mapper.Reg_Second = mapper.To_BCD((byte)temp.Second);
+
+					mapper.Reg_Hour = mapper.To_BCD((byte)temp.Hour);
+
+					if (temp.Hour >= 12)
+					{
+						mapper.Reg_Hour |= 0x80;
+					}
+				}
+			}
+
 			DeterministicEmulation = true;
 
 			Mem_Domains.vram = Marshal.AllocHGlobal(VRAM.Length + 1);
@@ -464,7 +499,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if (mppr == "")
 			{
 				mppr = "NROM";
-				mapper = new MapperDefault();
+
+				if (romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171")
+				{
+					mapper = new MapperDefaultRTC();
+				}
+				else
+				{
+					mapper = new MapperDefault();
+				}	
 			}
 			else if (mppr == "SRAM")
 			{
@@ -528,7 +571,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				has_bat = true;
 
-				if (pokemon_check(romHashSHA1))
+				if (pokemon_check(romHashSHA1) ||
+					(romHashSHA1 == "SHA1:4DCD7CEE46D3A5E848A22EB371BEBBBC2FB8D488")) // Sennen Kozoku
 				{
 					cart_RAM = new byte[0x20000];
 

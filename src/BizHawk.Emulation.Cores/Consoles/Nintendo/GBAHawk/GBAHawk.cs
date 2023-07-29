@@ -320,7 +320,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			{
 				has_bat = true;
 
-				if (pokemon_check(romHashSHA1))
+				if (pokemon_check(romHashSHA1) ||
+					(romHashSHA1 == "SHA1:4DCD7CEE46D3A5E848A22EB371BEBBBC2FB8D488")) // Sennen Kozoku
 				{
 					cart_RAM = new byte[0x20000];
 

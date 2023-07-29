@@ -17,6 +17,7 @@ namespace GBAHawk
  
 		// not stated
 		bool Reset_RTC;
+		bool RTC_Functional;
 		uint8_t ROM_C4, ROM_C5, ROM_C6, ROM_C7, ROM_C8, ROM_C9;
 
 		bool Command_Mode;
@@ -166,8 +167,6 @@ namespace GBAHawk
 		virtual void Update_State()
 		{
 		}
-
-
 
 		void Update_Clock()
 		{
@@ -1384,7 +1383,7 @@ namespace GBAHawk
 													}
 													else
 													{
-														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0x7F);
+														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0xBF);
 													}
 
 													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 40) & 0x7F);
@@ -1437,6 +1436,34 @@ namespace GBAHawk
 													Reg_Ctrl = (uint8_t)RTC_Temp_Write;
 
 													RTC_24_Hour = (Reg_Ctrl & 0x40) == 0x40;
+
+													if (RTC_24_Hour)
+													{
+														if ((Reg_Hour & 0x80) == 0x80)
+														{
+															uint8_t temp_h1 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+															if (temp_h1 < 12)
+															{
+																temp_h1 += 12;
+
+																Reg_Hour = To_Byte(temp_h1);
+																Reg_Hour |= 0x80;
+															}
+														}
+													}
+													else
+													{
+														uint8_t temp_h2 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+														if (temp_h2 >= 12)
+														{
+															temp_h2 -= 12;
+
+															Reg_Hour = To_Byte(temp_h2);
+															Reg_Hour |= 0x80;
+														}
+													}
 												}
 											}
 											break;
@@ -1518,7 +1545,7 @@ namespace GBAHawk
 													}
 													else
 													{
-														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0x7F);
+														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0xBF);
 													}
 
 													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 8) & 0x7F);
@@ -1558,6 +1585,9 @@ namespace GBAHawk
 								}
 							}
 						}
+
+						// if we want the RTC to be non-functional, always return zero
+						if (!RTC_Functional) { RTC_SIO = 0; }
 
 						if ((Port_Dir & 1) == 0)
 						{
@@ -2930,7 +2960,7 @@ namespace GBAHawk
 													}
 													else
 													{
-														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0x7F);
+														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0xBF);
 													}
 
 													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 40) & 0x7F);
@@ -2983,6 +3013,34 @@ namespace GBAHawk
 													Reg_Ctrl = (uint8_t)RTC_Temp_Write;
 
 													RTC_24_Hour = (Reg_Ctrl & 0x40) == 0x40;
+
+													if (RTC_24_Hour)
+													{
+														if ((Reg_Hour & 0x80) == 0x80)
+														{
+															uint8_t temp_h1 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+															if (temp_h1 < 12)
+															{
+																temp_h1 += 12;
+
+																Reg_Hour = To_Byte(temp_h1);
+																Reg_Hour |= 0x80;
+															}
+														}
+													}
+													else
+													{
+														uint8_t temp_h2 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+														if (temp_h2 >= 12)
+														{
+															temp_h2 -= 12;
+
+															Reg_Hour = To_Byte(temp_h2);
+															Reg_Hour |= 0x80;
+														}
+													}
 												}
 											}
 											break;
@@ -3064,7 +3122,7 @@ namespace GBAHawk
 													}
 													else
 													{
-														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0x7F);
+														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0xBF);
 													}
 
 													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 8) & 0x7F);
@@ -3104,6 +3162,9 @@ namespace GBAHawk
 								}
 							}
 						}
+
+						// if we want the RTC to be non-functional, always return zero
+						if (!RTC_Functional) { RTC_SIO = 0; }
 
 						if ((Port_Dir & 1) == 0)
 						{
@@ -3471,7 +3532,6 @@ namespace GBAHawk
 		}
 	};
 	#pragma endregion
-
 }
 
 #endif
