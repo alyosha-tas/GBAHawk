@@ -36,9 +36,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="romdata">the rom data, can be disposed of once this function returns</param>
 		/// <param name="length">length of romdata in bytes</param>
 		/// <param name="mapper">Mapper number to load core with</param>
+		/// <param name="datetime">rtc initial time</param>
+		/// <param name="rtc_functional">rtc setting</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper);
+		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional);
 
 		/// <summary>
 		/// Create SRAM image.

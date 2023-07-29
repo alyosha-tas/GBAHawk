@@ -669,6 +669,671 @@ namespace GBAHawk
 
 	#pragma endregion
 
+	#pragma region Default RTC
+
+	class Mapper_DefaultRTC : public Mappers
+	{
+	public:
+
+		void Reset()
+		{
+			// set up initial variables for IO
+			Chip_Select = false;
+
+			Port_State = 0;
+			Port_Dir = 0;
+			Ports_RW = 0;
+
+			Current_C4 = ROM_C4;
+			Current_C5 = ROM_C5;
+			Current_C6 = ROM_C6;
+			Current_C7 = ROM_C7;
+			Current_C8 = ROM_C8;
+			Current_C9 = ROM_C9;
+
+			Core_ROM[0xC4] = Current_C4;
+			Core_ROM[0xC5] = Current_C5;
+			Core_ROM[0xC6] = Current_C6;
+			Core_ROM[0xC7] = Current_C7;
+			Core_ROM[0xC8] = Current_C8;
+			Core_ROM[0xC9] = Current_C9;
+
+			// set up initial variables for RTC
+			Command_Mode = true;
+			RTC_Clock = false;
+			RTC_Read = false;
+
+			Command_Byte = 0;
+			RTC_SIO = 0;
+			Command_Bit = Command_Bit_Count = 0;
+			Reg_Bit = Reg_Bit_Count = 0;
+			Reg_Access = 0;
+
+			RTC_Temp_Write = 0;
+
+			if (Reset_RTC)
+			{
+				RTC_24_Hour = false;
+				Reg_Year = Reg_Week = Reg_Hour = Reg_Minute = Reg_Second = 0;
+				Reg_Day = Reg_Month = 1;
+
+				Reg_Ctrl = 0;
+			}
+		}
+
+
+		void Write_ROM_8(uint32_t addr, uint8_t value)
+		{
+			bool change_CS = false;
+			uint8_t read_value_solar = 0;
+			uint8_t read_value_rtc = 0;
+
+			if (addr == 0x080000C4)
+			{
+				// if changing chip select, ignore other writes
+				// not sure if correct or what happes?
+				if ((Port_Dir & 4) == 4)
+				{
+					if ((value & 4) == 0)
+					{
+						if (Chip_Select)
+						{
+							change_CS = true;
+						}
+					}
+					if ((value & 4) == 4)
+					{
+						if (!Chip_Select)
+						{
+							change_CS = true;
+							//Console.WriteLine("activating RTC");
+						}
+					}
+				}
+
+				if (!change_CS)
+				{
+					if (Chip_Select)
+					{
+						// RTC
+						if (Command_Mode)
+						{
+							if ((Port_Dir & 1) == 1)
+							{
+								if ((value & 1) == 0)
+								{
+									RTC_Clock = true;
+								}
+								else
+								{
+									// clock in next bit on falling edge
+									if (RTC_Clock)
+									{
+										if ((Port_Dir & 2) == 2)
+										{
+											Command_Bit = (uint8_t)((value & 2) >> 1);
+											RTC_SIO = (uint8_t)(value & 2);
+										}
+										else
+										{
+											Command_Bit = 0;
+											RTC_SIO = 0;
+										}
+
+										Command_Byte |= (uint8_t)(Command_Bit << Command_Bit_Count);
+
+										Command_Bit_Count += 1;
+
+										if (Command_Bit_Count == 8)
+										{
+											// change mode if valid command, otherwise start over
+											if ((Command_Byte & 0xF) == 6)
+											{
+												Command_Mode = false;
+
+												if ((Command_Byte & 0x80) == 0x80)
+												{
+													RTC_Read = true;
+												}
+												else
+												{
+													RTC_Read = false;
+												}
+
+												Reg_Access = (uint8_t)((Command_Byte & 0x70) >> 4);
+
+												//Console.WriteLine("Read: " + RTC_Read + " Reg_Access: " + Reg_Access + " Command: " + Command_Byte);
+
+												if ((Command_Byte == 0x06) || (Command_Byte == 0x86))
+												{
+													// register reset
+													Reg_Year = Reg_Week = 0;
+													Reg_Hour = Reg_Minute = Reg_Second = 0;
+													Reg_Day = Reg_Month = 1;
+
+													Reg_Ctrl = 0;
+
+													Command_Mode = true;
+
+													Core_Clock_Update_Cycle[0] = Core_Cycle_Count[0];
+												}
+												else if ((Command_Byte == 0x36) || (Command_Byte == 0xB6))
+												{
+													// Force IRQ
+													Command_Mode = true;
+												}
+											}
+											else
+											{
+												// bad command, restart
+											}
+
+											Command_Byte = 0;
+											Command_Bit_Count = 0;
+
+											RTC_Temp_Write = 0;
+
+											Update_Clock();
+										}
+
+										RTC_Clock = false;
+									}
+								}
+							}
+						}
+						else
+						{
+							if ((Port_Dir & 1) == 1)
+							{
+								if ((value & 1) == 0)
+								{
+									RTC_Clock = true;
+								}
+								else
+								{
+									// clock in next bit on falling edge
+									if (RTC_Clock)
+									{
+										switch (Reg_Access)
+										{
+										case 0:
+											// force reset
+											Reg_Year = Reg_Week = 0;
+											Reg_Hour = Reg_Minute = Reg_Second = 0;
+											Reg_Day = Reg_Month = 1;
+
+											Reg_Ctrl = 0;
+
+											Command_Mode = true;
+
+											Core_Clock_Update_Cycle[0] = Core_Cycle_Count[0];
+											break;
+
+										case 1:
+											// purpose unknown, always 0xFF
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+											}
+											else
+											{
+												RTC_SIO = 2;
+											}
+
+											Reg_Bit_Count += 1;
+
+											if (Reg_Bit_Count == 8)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+											}
+
+											break;
+
+										case 2:
+											// date time
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+
+												if (!RTC_Read)
+												{
+													RTC_Temp_Write |= (((uint64_t)(value & 2) >> 1) << Reg_Bit_Count);
+												}
+											}
+											else
+											{
+												if (RTC_Read)
+												{
+													if (Reg_Bit_Count < 8)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Year >> Reg_Bit_Count) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 16)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Month >> (Reg_Bit_Count - 8)) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 24)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Day >> (Reg_Bit_Count - 16)) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 32)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Week >> (Reg_Bit_Count - 24)) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 40)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Hour >> (Reg_Bit_Count - 32)) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 48)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Minute >> (Reg_Bit_Count - 40)) << 1) & 2);
+													}
+													else
+													{
+														RTC_SIO = (uint8_t)(((Reg_Second >> (Reg_Bit_Count - 48)) << 1) & 2);
+													}
+												}
+												else
+												{
+													//what is output when in write mode but port is reading?
+													RTC_SIO = 2;
+												}
+											}
+
+											Reg_Bit_Count += 1;
+
+											//Console.WriteLine("new bit: " + Reg_Bit_Count);
+
+											if (Reg_Bit_Count == 56)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+
+												//Console.WriteLine("hour: " + Reg_Hour);
+
+												if (!RTC_Read)
+												{
+													Reg_Year = (uint8_t)(RTC_Temp_Write);
+													Reg_Month = (uint8_t)((RTC_Temp_Write >> 8) & 0x1F);
+													Reg_Day = (uint8_t)((RTC_Temp_Write >> 16) & 0x3F);
+													Reg_Week = (uint8_t)((RTC_Temp_Write >> 24) & 0x7);
+
+													if (RTC_24_Hour)
+													{
+														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0x3F);
+
+														if (To_Byte(Reg_Hour) >= 12) { Reg_Hour |= 0x80; }
+													}
+													else
+													{
+														Reg_Hour = (uint8_t)((RTC_Temp_Write >> 32) & 0xBF);
+													}
+
+													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 40) & 0x7F);
+													Reg_Second = (uint8_t)((RTC_Temp_Write >> 48) & 0x7F);
+
+													Core_Clock_Update_Cycle[0] = Core_Cycle_Count[0];
+												}
+											}
+											break;
+
+										case 3:
+											// Force IRQ
+											Command_Mode = true;
+											break;
+
+										case 4:
+											// Control
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+
+												if (!RTC_Read)
+												{
+													RTC_Temp_Write |= (((uint64_t)(value & 2) >> 1) << Reg_Bit_Count);
+												}
+											}
+											else
+											{
+												if (RTC_Read)
+												{
+													RTC_SIO = (uint8_t)(((Reg_Ctrl >> Reg_Bit_Count) << 1) & 2);
+												}
+												else
+												{
+													//what is output when in write mode but port is reading?
+													RTC_SIO = 2;
+												}
+											}
+
+											Reg_Bit_Count += 1;
+
+											if (Reg_Bit_Count == 8)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+
+												if (!RTC_Read)
+												{
+													Reg_Ctrl = (uint8_t)RTC_Temp_Write;
+
+													RTC_24_Hour = (Reg_Ctrl & 0x40) == 0x40;
+
+													if (RTC_24_Hour)
+													{
+														if ((Reg_Hour & 0x80) == 0x80)
+														{
+															uint8_t temp_h1 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+															if (temp_h1 < 12)
+															{
+																temp_h1 += 12;
+
+																Reg_Hour = To_Byte(temp_h1);
+																Reg_Hour |= 0x80;
+															}
+														}
+													}
+													else
+													{
+														uint8_t temp_h2 = To_Byte((uint8_t)(Reg_Hour & 0x3F));
+
+														if (temp_h2 >= 12)
+														{
+															temp_h2 -= 12;
+
+															Reg_Hour = To_Byte(temp_h2);
+															Reg_Hour |= 0x80;
+														}
+													}
+												}
+											}
+											break;
+
+										case 5:
+											// nothing to do, always 0xFF
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+											}
+											else
+											{
+												RTC_SIO = 2;
+											}
+
+											Reg_Bit_Count += 1;
+
+											if (Reg_Bit_Count == 8)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+											}
+
+											break;
+
+										case 6:
+											// time
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+
+												if (!RTC_Read)
+												{
+													RTC_Temp_Write |= (((uint64_t)(value & 2) >> 1) << Reg_Bit_Count);
+												}
+											}
+											else
+											{
+												if (RTC_Read)
+												{
+													if (Reg_Bit_Count < 8)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Hour >> Reg_Bit_Count) << 1) & 2);
+													}
+													else if (Reg_Bit_Count < 16)
+													{
+														RTC_SIO = (uint8_t)(((Reg_Minute >> (Reg_Bit_Count - 8)) << 1) & 2);
+													}
+													else
+													{
+														RTC_SIO = (uint8_t)(((Reg_Second >> (Reg_Bit_Count - 16)) << 1) & 2);
+													}
+												}
+												else
+												{
+													//what is output when in write mode but port is reading?
+													RTC_SIO = 2;
+												}
+											}
+
+											Reg_Bit_Count += 1;
+
+											//Console.WriteLine("new bit: " + Reg_Bit_Count);
+
+											if (Reg_Bit_Count == 24)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+
+												if (!RTC_Read)
+												{
+													if (RTC_24_Hour)
+													{
+														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0x3F);
+
+														if (To_Byte(Reg_Hour) >= 12) { Reg_Hour |= 0x80; }
+													}
+													else
+													{
+														Reg_Hour = (uint8_t)((RTC_Temp_Write) & 0xBF);
+													}
+
+													Reg_Minute = (uint8_t)((RTC_Temp_Write >> 8) & 0x7F);
+													Reg_Second = (uint8_t)((RTC_Temp_Write >> 16) & 0x7F);
+
+													Core_Clock_Update_Cycle[0] = Core_Cycle_Count[0];
+												}
+											}
+
+											break;
+
+										case 7:
+											// nothing to do, always 0xFF
+											if ((Port_Dir & 2) == 2)
+											{
+												RTC_SIO = (uint8_t)(value & 2);
+											}
+											else
+											{
+												RTC_SIO = 2;
+											}
+
+											Reg_Bit_Count += 1;
+
+											if (Reg_Bit_Count == 8)
+											{
+												Reg_Bit_Count = 0;
+
+												Command_Mode = true;
+											}
+
+											break;
+										}
+
+										RTC_Clock = false;
+									}
+								}
+							}
+						}
+
+						// if we want the RTC to be non-functional, always return zero
+						if (!RTC_Functional) { RTC_SIO = 0; }
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_rtc |= (uint8_t)(!RTC_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_rtc |= RTC_SIO;
+						}
+						if ((Port_Dir & 4) == 0)
+						{
+							read_value_rtc |= 4;
+						}
+
+						Port_State = read_value_rtc;
+
+						if (Ports_RW == 1)
+						{
+							Core_ROM[0xC4] = Port_State;
+							Current_C4 = Core_ROM[0xC4];
+						}
+					}
+					else
+					{
+						// nothing here, return 0?
+
+						Port_State = read_value_solar;
+
+						if (Ports_RW == 1)
+						{
+							Core_ROM[0xC4] = Port_State;
+							Current_C4 = Core_ROM[0xC4];
+						}
+					}
+				}
+				else
+				{
+					if ((value & 4) == 0)
+					{
+						Chip_Select = false;
+
+						// nothing here, return 0?
+
+						Port_State = read_value_solar;
+
+						if (Ports_RW == 1)
+						{
+							Core_ROM[0xC4] = Port_State;
+							Current_C4 = Core_ROM[0xC4];
+						}
+					}
+					else
+					{
+						Chip_Select = true;
+
+						if ((Port_Dir & 1) == 0)
+						{
+							read_value_rtc |= (uint8_t)(!RTC_Clock ? 1 : 0);
+						}
+						if ((Port_Dir & 2) == 0)
+						{
+							read_value_rtc |= RTC_SIO;
+						}
+						if ((Port_Dir & 4) == 0)
+						{
+							read_value_rtc |= 4;
+						}
+
+						Port_State = read_value_rtc;
+
+						if (Ports_RW == 1)
+						{
+							Core_ROM[0xC4] = Port_State;
+							Current_C4 = Core_ROM[0xC4];
+						}
+					}
+				}
+			}
+			else if (addr == 0x080000C6)
+			{
+				Port_Dir = (uint8_t)(value & 0xF);
+
+				if (Ports_RW == 1)
+				{
+					Core_ROM[0xC6] = Port_Dir;
+
+					Port_State &= (uint8_t)((~Port_Dir) & 0xF);
+
+					Core_ROM[0xC4] = Port_State;
+				}
+			}
+			else if (addr == 0x080000C8)
+			{
+				Ports_RW = (uint8_t)(value & 1);
+
+				if ((value & 1) == 1)
+				{
+					Core_ROM[0xC4] = Port_State;
+					Core_ROM[0xC5] = 0;
+					Core_ROM[0xC6] = Port_Dir;
+					Core_ROM[0xC7] = 0;
+					Core_ROM[0xC8] = Ports_RW;
+					Core_ROM[0xC9] = 0;
+				}
+				else
+				{
+					Core_ROM[0xC4] = ROM_C4;
+					Core_ROM[0xC5] = ROM_C5;
+					Core_ROM[0xC6] = ROM_C6;
+					Core_ROM[0xC7] = ROM_C7;
+					Core_ROM[0xC8] = ROM_C8;
+					Core_ROM[0xC9] = ROM_C9;
+				}
+			}
+
+			Current_C4 = Core_ROM[0xC4];
+			Current_C5 = Core_ROM[0xC5];
+			Current_C6 = Core_ROM[0xC6];
+			Current_C7 = Core_ROM[0xC7];
+			Current_C8 = Core_ROM[0xC8];
+			Current_C9 = Core_ROM[0xC9];
+		}
+
+		void Write_ROM_16(uint32_t addr, uint16_t value)
+		{
+			Write_ROM_8(addr, (uint16_t)value);
+			Write_ROM_8((addr + 1), (uint16_t)(value >> 8));
+		}
+
+		void Write_ROM_32(uint32_t addr, uint32_t value)
+		{
+			Write_ROM_8(addr, (uint8_t)value);
+			Write_ROM_8((addr + 1), (uint8_t)(value >> 8));
+			Write_ROM_8((addr + 2), (uint8_t)(value >> 16));
+			Write_ROM_8((addr + 3), (uint8_t)(value >> 24));
+		}
+
+		uint8_t Read_Memory_8(uint32_t addr)
+		{
+			return 0xFF; // nothing mapped here
+		}
+
+		uint16_t Read_Memory_16(uint32_t addr)
+		{
+			return 0xFFFF; // nothing mapped here
+		}
+
+		uint32_t Read_Memory_32(uint32_t addr)
+		{
+			return 0xFFFFFFFF; // nothing mapped here
+		}
+
+		uint8_t PeekMemory(uint32_t addr)
+		{
+			return Read_Memory_8(addr);
+		}
+	};
+
+	#pragma endregion
+
 	#pragma region SRAM
 
 	class Mapper_SRAM : public Mappers
@@ -3301,8 +3966,6 @@ namespace GBAHawk
 			Write_ROM_8((addr + 2), (uint8_t)(value >> 16));
 			Write_ROM_8((addr + 3), (uint8_t)(value >> 24));
 		}
-
-
 
 		uint8_t Read_Memory_8(uint32_t addr)
 		{

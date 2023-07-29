@@ -6,6 +6,8 @@ using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug;
+using static BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug.GBAHawk_Debug;
+using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 /*
 	GBA Emulator
@@ -107,7 +109,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			if (cart_RAM != null)
 			{
 				// initialize SRAM to 0xFF;
-				if (mapper == 1)
+				if (mapper == 2)
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -115,7 +117,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					}
 				}
 				// initialize EEPROM to 0xFF;
-				if ((mapper == 2) || (mapper == 3) || (mapper == 4))
+				if ((mapper == 3) || (mapper == 4) || (mapper == 5))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -125,7 +127,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				// initialize Flash to 0x0;
 				// jsmolka test ROM says it should be 0xFF, but this doesn't work with ex. Mario vs Donkey Kong
 				// if the erase function takes a non-negligable amount of time
-				if (mapper == 5)
+				if ((mapper == 6) || (mapper == 7))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -141,8 +143,61 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			LibGBAHawk.GBA_load_bios(GBA_Pntr, BIOS);
 
+			bool rtc_working = true;
+
+			byte temp_year = 0;
+			byte temp_month = 1;
+			byte temp_day = 1;
+			byte temp_week = 0;
+			byte temp_hour = 0;
+			byte temp_minute = 0;
+			byte temp_second = 0;
+			byte temp_ctrl = 0;
+
+			if (SyncSettings.RTCInitialState == GBASyncSettings.InitRTCState.Reset_Bad_Batt)
+			{
+				rtc_working = false;
+			}
+			else if (SyncSettings.RTCInitialState == GBASyncSettings.InitRTCState.RTC_Set)
+			{
+				// all games seem to use 24 hour mode,, so use this to represent set time
+				temp_ctrl = 0x40;
+
+				// parse the date and time into the regs
+				DateTime temp = syncSettings.RTCInitialTime;
+
+				// if year outside range of RTC, just leave the initial values
+				if ((temp.Year < 2100) && (temp.Year >= 2000))
+				{
+					temp_year = To_BCD((byte)(temp.Year - 2000));
+					temp_month = To_BCD((byte)temp.Month);
+					temp_day = To_BCD((byte)temp.Day);
+					temp_week = To_BCD((byte)temp.DayOfWeek);
+					temp_minute = To_BCD((byte)temp.Minute);
+					temp_second = To_BCD((byte)temp.Second);
+
+					temp_hour = To_BCD((byte)temp.Hour);
+
+					if (temp.Hour >= 12)
+					{
+						temp_hour |= 0x80;
+					}
+				}
+			}
+
+			ulong date_time = 0;
+
+			date_time |= temp_second;
+			date_time |= ((ulong)temp_minute << 8);
+			date_time |= ((ulong)temp_hour << 16);
+			date_time |= ((ulong)temp_week << 24);
+			date_time |= ((ulong)temp_day << 32);
+			date_time |= ((ulong)temp_month << 40);
+			date_time |= ((ulong)temp_year << 48);
+			date_time |= ((ulong)temp_ctrl << 56);
+
 			Console.WriteLine("Mapper: " + mapper);
-			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
+			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working);
 
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
@@ -168,11 +223,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			if (mapper == 3)
+			if (mapper == 4)
 			{
 				_controllerDeck = new(typeof(StandardTilt).DisplayName());
 			}
-			else if (mapper == 4)
+			else if (mapper == 5)
 			{
 				_controllerDeck = new(typeof(StandardSolar).DisplayName());
 			}
@@ -189,6 +244,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			GBA_message = null;
 
 			LibGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
+		}
+
+		public byte To_BCD(byte in_byte)
+		{
+			byte tens_cnt = 0;
+
+			while (in_byte >= 10)
+			{
+				tens_cnt += 1;
+				in_byte -= 10;
+			}
+
+			return (byte)((tens_cnt << 4) | in_byte);
 		}
 
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1)
@@ -208,7 +276,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						if ((ROM[i + 3] == 0x4D) && (ROM[i + 4] == 0x5F))
 						{
 							Console.WriteLine("using SRAM mapper");
-							mppr = 1;
+							mppr = 2;
 							break;
 						}
 					}
@@ -220,7 +288,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						if ((ROM[i + 3] == 0x52) && (ROM[i + 4] == 0x4F) && (ROM[i + 5] == 0x4D))
 						{
 							Console.WriteLine("using EEPROM mapper");
-							mppr = 2;
+							mppr = 3;
 							break;
 						}
 					}
@@ -234,7 +302,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 64;
 
 								break;
@@ -242,7 +310,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 							if ((ROM[i + 5] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 64;
 
 								break;
@@ -250,7 +318,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 128;
 
 								break;
@@ -268,15 +336,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				(romHashSHA1 == "SHA1:9B02C4BFD99CCD913A5D7EE7CF269EBC689E1FDE"))   // Higurashi no Nakukoroni (fixed header)
 			{
 				Console.WriteLine("using SRAM mapper");
-				mppr = 1;
+				mppr = 2;
 			}
 
-			if (mppr == 1)
+			if (romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171")
+			{
+				mppr = 1;
+			}
+			else if (mppr == 2)
 			{
 				has_bat = true;
 				cart_RAM = new byte[0x8000];
 			}
-			else if (mppr == 2)
+			else if (mppr == 3)
 			{
 				has_bat = true;
 
@@ -289,7 +361,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					Console.WriteLine("Using Tilt Controls");
 
 					cart_RAM = new byte[0x200];
-					mppr = 3;
+					mppr = 4;
 				}
 				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
 						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
@@ -303,7 +375,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					Console.WriteLine("Using Solar Sensor");
 
 					cart_RAM = new byte[0x2000];
-					mppr = 4;
+					mppr = 5;
 				}
 				else if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
 						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD") || // Shrek 2 (USA)
@@ -316,7 +388,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					cart_RAM = new byte[0x2000];
 				}
 			}
-			else if (mppr == 5)
+			else if (mppr == 6)
 			{
 				has_bat = true;
 
@@ -325,7 +397,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				{
 					cart_RAM = new byte[0x20000];
 
-					mppr = 6;
+					mppr = 7;
 				}
 				else
 				{

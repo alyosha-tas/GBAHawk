@@ -32,33 +32,19 @@ namespace GBAHawk
 			std::memcpy(GBA.BIOS, bios, 0x4000);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 
-			if (mapper == 0)
+			if ((mapper == 0) || (mapper == 1))
 			{
 				GBA.Cart_RAM_Present = false;
-				GBA.Is_EEPROM = false;
-			}
-			else if (mapper == 1)
-			{
-				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
 			}
 			else if (mapper == 2)
 			{
 				GBA.Cart_RAM_Present = true;
-				GBA.Is_EEPROM = true;
-
-				if (ext_rom_size <= 0x1000000)
-				{
-					GBA.EEPROM_Wiring = true;
-				}
-				else
-				{
-					GBA.EEPROM_Wiring = false;
-				}
+				GBA.Is_EEPROM = false;
 			}
 			else if (mapper == 3)
 			{
@@ -89,6 +75,20 @@ namespace GBAHawk
 				}
 			}
 			else if (mapper == 5)
+			{
+				GBA.Cart_RAM_Present = true;
+				GBA.Is_EEPROM = true;
+
+				if (ext_rom_size <= 0x1000000)
+				{
+					GBA.EEPROM_Wiring = true;
+				}
+				else
+				{
+					GBA.EEPROM_Wiring = false;
+				}
+			}
+			else if ((mapper == 6) || (mapper == 7))
 			{
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
@@ -100,25 +100,29 @@ namespace GBAHawk
 			}
 			else if (mapper == 1)
 			{
-				Mapper = new Mapper_SRAM();
+				Mapper = new Mapper_DefaultRTC();
 			}
 			else if (mapper == 2)
 			{
-				Mapper = new Mapper_EEPROM();
+				Mapper = new Mapper_SRAM();
 			}
 			else if (mapper == 3)
 			{
-				Mapper = new Mapper_EEPROM_Tilt();
+				Mapper = new Mapper_EEPROM();
 			}
 			else if (mapper == 4)
 			{
-				Mapper = new Mapper_EEPROM_Solar();
+				Mapper = new Mapper_EEPROM_Tilt();
 			}
 			else if (mapper == 5)
 			{
-				Mapper = new Mapper_FLASH();
+				Mapper = new Mapper_EEPROM_Solar();
 			}
 			else if (mapper == 6)
+			{
+				Mapper = new Mapper_FLASH();
+			}
+			else if (mapper == 7)
 			{
 				Mapper = new Mapper_FLASH_RTC();
 			}
@@ -156,7 +160,18 @@ namespace GBAHawk
 			Mapper->Reset();
 			Mapper->Reset_RTC = false;
 
-			Mapper->RTC_Functional = true;
+			Mapper->RTC_Functional = rtc_functional;
+
+			Mapper->Reg_Second = (uint8_t)datetime;
+			Mapper->Reg_Minute = (uint8_t)(datetime >> 8);
+			Mapper->Reg_Hour = (uint8_t)(datetime >> 16);
+			Mapper->Reg_Week = (uint8_t)(datetime >> 24);
+			Mapper->Reg_Day = (uint8_t)(datetime >> 32);
+			Mapper->Reg_Month = (uint8_t)(datetime >> 40);
+			Mapper->Reg_Year = (uint8_t)(datetime >> 48);
+			Mapper->Reg_Ctrl = (uint8_t)(datetime >> 56);
+
+			Mapper->RTC_24_Hour = (Mapper->Reg_Ctrl & 0x40) == 0x40;
 
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;

@@ -6,6 +6,7 @@ using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Cores.Nintendo.GBA;
+using static BizHawk.Emulation.Cores.Nintendo.GBA.GBAHawk;
 
 /*
 	GBA Emulator
@@ -104,7 +105,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			if (cart_RAM != null)
 			{
 				// initialize SRAM to 0xFF;
-				if (mapper == 1)
+				if (mapper == 2)
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -112,7 +113,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					}
 				}
 				// initialize EEPROM to 0xFF;
-				if ((mapper == 2) || (mapper == 3) || (mapper == 4))
+				if ((mapper == 3) || (mapper == 4) || (mapper == 5))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -120,7 +121,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					}
 				}
 				// initialize Flash to 0;
-				if (mapper == 5)
+				if ((mapper == 6) || (mapper == 7))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -136,8 +137,61 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			LibSubGBAHawk.GBA_load_bios(GBA_Pntr, BIOS);
 
+			bool rtc_working = true;
+
+			byte temp_year = 0;
+			byte temp_month = 1;
+			byte temp_day = 1;
+			byte temp_week = 0;
+			byte temp_hour = 0;
+			byte temp_minute = 0;
+			byte temp_second = 0;
+			byte temp_ctrl = 0;
+
+			if (SyncSettings.RTCInitialState == SubGBASyncSettings.InitRTCState.Reset_Bad_Batt)
+			{
+				rtc_working = false;
+			}
+			else if (SyncSettings.RTCInitialState == SubGBASyncSettings.InitRTCState.RTC_Set)
+			{
+				// all games seem to use 24 hour mode,, so use this to represent set time
+				temp_ctrl = 0x40;
+
+				// parse the date and time into the regs
+				DateTime temp = syncSettings.RTCInitialTime;
+
+				// if year outside range of RTC, just leave the initial values
+				if ((temp.Year < 2100) && (temp.Year >= 2000))
+				{
+					temp_year = To_BCD((byte)(temp.Year - 2000));
+					temp_month = To_BCD((byte)temp.Month);
+					temp_day = To_BCD((byte)temp.Day);
+					temp_week = To_BCD((byte)temp.DayOfWeek);
+					temp_minute = To_BCD((byte)temp.Minute);
+					temp_second = To_BCD((byte)temp.Second);
+
+					temp_hour = To_BCD((byte)temp.Hour);
+
+					if (temp.Hour >= 12)
+					{
+						temp_hour |= 0x80;
+					}
+				}
+			}
+
+			ulong date_time = 0;
+
+			date_time |= temp_second;
+			date_time |= ((ulong)temp_minute << 8);
+			date_time |= ((ulong)temp_hour << 16);
+			date_time |= ((ulong)temp_week << 24);
+			date_time |= ((ulong)temp_day << 32);
+			date_time |= ((ulong)temp_month << 40);
+			date_time |= ((ulong)temp_year << 48);
+			date_time |= ((ulong)temp_ctrl << 56);
+
 			Console.WriteLine("Mapper: " + mapper);
-			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper);
+			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working);
 
 			if (cart_RAM != null) { LibSubGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
@@ -163,11 +217,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			if (mapper == 3)
+			if (mapper == 4)
 			{
 				_controllerDeck = new(typeof(StandardTilt).DisplayName());
 			}
-			else if (mapper == 4)
+			else if (mapper == 5)
 			{
 				_controllerDeck = new(typeof(StandardSolar).DisplayName());
 			}
@@ -186,10 +240,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			LibSubGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
 		}
 
+		public byte To_BCD(byte in_byte)
+		{
+			byte tens_cnt = 0;
+
+			while (in_byte >= 10)
+			{
+				tens_cnt += 1;
+				in_byte -= 10;
+			}
+
+			return (byte)((tens_cnt << 4) | in_byte);
+		}
+
 		public int Setup_Mapper(string romHashMD5, string romHashSHA1)
 		{
 			int size_f = 0;
-			
+
 			int mppr = 0;
 			has_bat = false;
 
@@ -203,7 +270,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 						if ((ROM[i + 3] == 0x4D) && (ROM[i + 4] == 0x5F))
 						{
 							Console.WriteLine("using SRAM mapper");
-							mppr = 1;
+							mppr = 2;
 							break;
 						}
 					}
@@ -215,7 +282,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 						if ((ROM[i + 3] == 0x52) && (ROM[i + 4] == 0x4F) && (ROM[i + 5] == 0x4D))
 						{
 							Console.WriteLine("using EEPROM mapper");
-							mppr = 2;
+							mppr = 3;
 							break;
 						}
 					}
@@ -229,7 +296,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 64;
 
 								break;
@@ -237,7 +304,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 64;
 
 								break;
@@ -245,7 +312,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 5;
+								mppr = 6;
 								size_f = 128;
 
 								break;
@@ -258,19 +325,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			// hash checks for individual games / homebrew / test roms
 			if ((romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") || // Aging cart test
 				(romHashSHA1 == "SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E") || // VRAM access test
+				(romHashSHA1 == "SHA1:41D39A0C34F72469DD3FBCC90190605B8ADA93E6") || // Another World
+				(romHashSHA1 == "SHA1:270C426705DF767A4AD2DC69D039842442F779B2") || // Anguna
 				(romHashSHA1 == "SHA1:9B02C4BFD99CCD913A5D7EE7CF269EBC689E1FDE"))   // Higurashi no Nakukoroni (fixed header)
-
 			{
 				Console.WriteLine("using SRAM mapper");
-				mppr = 1;
+				mppr = 2;
 			}
 
-			if (mppr == 1)
+			if (romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171")
+			{
+				mppr = 1;
+			}
+			else if (mppr == 2)
 			{
 				has_bat = true;
 				cart_RAM = new byte[0x8000];
 			}
-			else if (mppr == 2)
+			else if (mppr == 3)
 			{
 				has_bat = true;
 
@@ -283,7 +355,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					Console.WriteLine("Using Tilt Controls");
 
 					cart_RAM = new byte[0x200];
-					mppr = 3;
+					mppr = 4;
 				}
 				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
 						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
@@ -297,28 +369,87 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					Console.WriteLine("Using Solar Sensor");
 
 					cart_RAM = new byte[0x2000];
-					mppr = 4;
+					mppr = 5;
+				}
+				else if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
+						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD") || // Shrek 2 (USA)
+						 (romHashSHA1 == "SHA1:C433C493F54FCD18AD18B7D62F2B7D200FD9D859"))   // Shrek 2 (Input Patch)
+				{
+					cart_RAM = new byte[0x200];
 				}
 				else
 				{
 					cart_RAM = new byte[0x2000];
 				}
 			}
-			else if (mppr == 5)
+			else if (mppr == 6)
 			{
 				has_bat = true;
 
-				if (size_f == 64)
+				if (pokemon_check(romHashSHA1) ||
+					(romHashSHA1 == "SHA1:4DCD7CEE46D3A5E848A22EB371BEBBBC2FB8D488")) // Sennen Kozoku
 				{
-					cart_RAM = new byte[0x10000];
+					cart_RAM = new byte[0x20000];
+
+					mppr = 7;
 				}
 				else
 				{
-					cart_RAM = new byte[0x20000];
+					if (size_f == 64)
+					{
+						cart_RAM = new byte[0x10000];
+					}
+					else
+					{
+						cart_RAM = new byte[0x20000];
+					}
 				}
 			}
 
 			return mppr;
+		}
+
+		public bool pokemon_check(string romHashSHA1)
+		{
+			if ((romHashSHA1 == "SHA1:424740BE1FC67A5DDB954794443646E6AEEE2C1B") || // Pokemon Ruby (Germany) (Rev 1)
+				(romHashSHA1 == "SHA1:1C2A53332382E14DAB8815E3A6DD81AD89534050") || // "" (Germany)	
+				(romHashSHA1 == "SHA1:F28B6FFC97847E94A6C21A63CACF633EE5C8DF1E") || // "" (USA)
+				(romHashSHA1 == "SHA1:5B64EACF892920518DB4EC664E62A086DD5F5BC8") || // "" (USA, Europe) (Rev 2)
+				(romHashSHA1 == "SHA1:610B96A9C9A7D03D2BAFB655E7560CCFF1A6D894") || // "" (Europe) (Rev 1)
+				(romHashSHA1 == "SHA1:A6EE94202BEC0641C55D242757E84DC89336D4CB") || // "" (France)
+				(romHashSHA1 == "SHA1:BA888DFBA231A231CBD60FE228E894B54FB1ED79") || // "" (France) (Rev 1)
+				(romHashSHA1 == "SHA1:5C5E546720300B99AE45D2AA35C646C8B8FF5C56") || // "" (Japan)
+				(romHashSHA1 == "SHA1:1F49F7289253DCBFECBC4C5BA3E67AA0652EC83C") || // "" (Spain)
+				(romHashSHA1 == "SHA1:9AC73481D7F5D150A018309BBA91D185CE99FB7C") || // "" (Spain) (Rev 1)
+				(romHashSHA1 == "SHA1:2B3134224392F58DA00F802FAA1BF4B5CF6270BE") || // "" (Italy)
+				(romHashSHA1 == "SHA1:015A5D380AFE316A2A6FCC561798EBFF9DFB3009") || // "" (Italy) (Rev 1)
+
+				(romHashSHA1 == "SHA1:1692DB322400C3141C5DE2DB38469913CEB1F4D4") || // Pokemon Emerald (Italy)
+				(romHashSHA1 == "SHA1:F3AE088181BF583E55DAF962A92BB46F4F1D07B7") || // "" (USA, Europe)
+				(romHashSHA1 == "SHA1:FE1558A3DCB0360AB558969E09B690888B846DD9") || // "" (Spain)
+				(romHashSHA1 == "SHA1:D7CF8F156BA9C455D164E1EA780A6BF1945465C2") || // "" (Japan)
+				(romHashSHA1 == "SHA1:61C2EB2B380B1A75F0C94B767A2D4C26CD7CE4E3") || // "" (Germany)
+				(romHashSHA1 == "SHA1:CA666651374D89CA439007BED54D839EB7BD14D0") || // "" (France)
+
+				(romHashSHA1 == "SHA1:5A087835009D552D4C5C1F96BE3BE3206E378153") || // Pokemon Sapphire (Germany)
+				(romHashSHA1 == "SHA1:7E6E034F9CDCA6D2C4A270FDB50A94DEF5883D17") || // "" (Germany) (Rev 1)
+				(romHashSHA1 == "SHA1:4722EFB8CD45772CA32555B98FD3B9719F8E60A9") || // "" (Europe) (Rev 1)
+				(romHashSHA1 == "SHA1:89B45FB172E6B55D51FC0E61989775187F6FE63C") || // "" (USA, Europe) (Rev 2)
+				(romHashSHA1 == "SHA1:3CCBBD45F8553C36463F13B938E833F652B793E4") || // "" (USA)
+				(romHashSHA1 == "SHA1:3233342C2F3087E6FFE6C1791CD5867DB07DF842") || // "" (Japan)
+				(romHashSHA1 == "SHA1:0FE9AD1E602E2FAFA090AEE25E43D6980625173C") || // "" (Rev 1)
+				(romHashSHA1 == "SHA1:3A6489189E581C4B29914071B79207883B8C16D8") || // "" (Spain)
+				(romHashSHA1 == "SHA1:C269B5692B2D0E5800BA1DDF117FDA95AC648634") || // "" (France)
+				(romHashSHA1 == "SHA1:860E93F5EA44F4278132F6C1EE5650D07B852FD8") || // "" (France) (Rev 1)
+				(romHashSHA1 == "SHA1:73EDF67B9B82FF12795622DCA412733755D2C0FE") || // "" (Italy) (Rev 1)
+				(romHashSHA1 == "SHA1:F729DD571FB2C09E72C5C1D68FE0A21E72713D34"))   // "" (Italy))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		public ulong TotalExecutedCycles => 0;
