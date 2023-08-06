@@ -2620,7 +2620,6 @@ namespace GBAHawk
 									if (tim_IRQ_CD[i] == 2)
 									{
 										INT_Flags |= (uint16_t)(0x8 << i);
-										if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
 									}
 								}
 							}

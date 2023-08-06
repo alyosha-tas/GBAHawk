@@ -30,6 +30,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
+					"ROM",
+					ROM.Length,
+					MemoryDomain.Endian.Little,
+					addr => ROM[addr],
+					(addr, value) => ROM[addr] = value,
+					1),
+				new MemoryDomainDelegate(
 					"VRAM",
 					0x18000,
 					MemoryDomain.Endian.Little,
@@ -70,32 +77,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					1);
 				domains.Add(CartRam);
 			}
-			
-			SyncAllByteArrayDomains();
 
 			MemoryDomains = new MemoryDomainList(_byteArrayDomains.Values.Concat(domains).ToList());
 			(ServiceProvider as BasicServiceProvider).Register<IMemoryDomains>(MemoryDomains);
 
 			_memoryDomainsInit = true;
-		}
-
-		private void SyncAllByteArrayDomains()
-		{
-			SyncByteArrayDomain("ROM", ROM);
-		}
-
-		private void SyncByteArrayDomain(string name, byte[] data)
-		{
-			if (_memoryDomainsInit)
-			{
-				var m = _byteArrayDomains[name];
-				m.Data = data;
-			}
-			else
-			{
-				var m = new MemoryDomainByteArray(name, MemoryDomain.Endian.Little, data, true, 1);
-				_byteArrayDomains.Add(name, m);
-			}
 		}
 	}
 }

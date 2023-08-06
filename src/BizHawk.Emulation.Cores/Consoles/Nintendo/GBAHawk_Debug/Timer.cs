@@ -281,8 +281,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// trigger IRQ
 						if (tim_IRQ_CD[i] == 2)
 						{
-							INT_Flags |= (ushort)(0x8 << i);
-							
+							INT_Flags |= (ushort)(0x8 << i);				
 						}
 						else if (tim_IRQ_CD[i] == 0)
 						{
@@ -335,7 +334,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										if (tim_IRQ_CD[i] == 2)
 										{ 
 											INT_Flags |= (ushort)(0x8 << i); 
-											if ((INT_EN & (0x8 << i)) == (0x8 << i)) { cpu_Trigger_Unhalt = true; }
 										}
 									}
 								}
