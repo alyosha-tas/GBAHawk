@@ -3171,26 +3171,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						dma_Access_Wait += 1;
 					}
 
-					if (ppu_Fetch_Sprite_VRAM_Cnt == 0)
-					{
-						ppu_Sprite_X_Scale = ppu_Sprite_X_Size >> 3;
-
-						ppu_Sprite_Mode = (ppu_Sprite_Attr_0 >> 10) & 3;
-
-						// GBA tek says lower bit of tile number should be ignored in some cases, but it appears this is not the case?
-						// more testing needed
-						if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
-						{
-							ppu_Sprite_VRAM_Mod = 0x3FF;
-						}
-						else
-						{
-							ppu_Sprite_VRAM_Mod = 0x3FF;
-						}
-
-						ppu_Sprite_Mosaic = (ppu_Sprite_Attr_0 & 0x1000) == 0x1000;
-					}
-
 					for (int i = 0; i < 1 + (ppu_Rot_Scale ? 0 : 1); i++)
 					{
 						ppu_Cur_Sprite_X = (uint)((ppu_Sprite_X_Pos + ppu_Fetch_Sprite_VRAM_Cnt) & 0x1FF);
@@ -3453,6 +3433,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 
+				// check x range
+				if (spr_x_pos >= 240)
+				{
+					if ((spr_x_pos + spr_x_size + spr_size_x_ofst) <= 512)
+					{
+						ppu_New_Sprite = true;
+					}
+				}
+
 				if (ppu_New_Sprite)
 				{
 					ppu_Current_Sprite += 1;
@@ -3553,7 +3542,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Fetch_Sprite_VRAM = true;
 					
 					if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
-					ppu_Fetch_Sprite_VRAM_Cnt = 0;
+
+					ppu_Sprite_VRAM_Cnt_Reset();
 
 					// scan through the properties of this sprite on this scanline
 					ppu_Do_Sprite_Calculation();
@@ -3606,11 +3596,44 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					ppu_Fetch_OAM_A_D = false;
 
 					ppu_Fetch_Sprite_VRAM = true;
-					ppu_Fetch_Sprite_VRAM_Cnt = 0;
+
+					ppu_Sprite_VRAM_Cnt_Reset();
 				}
 			}
 
 			ppu_Sprite_Render_Cycle += 2;
+		}
+
+		public void ppu_Sprite_VRAM_Cnt_Reset()
+		{
+			ppu_Fetch_Sprite_VRAM_Cnt = 0;
+
+			ppu_Sprite_X_Scale = ppu_Sprite_X_Size >> 3;
+
+			ppu_Sprite_Mode = (ppu_Sprite_Attr_0 >> 10) & 3;
+
+			// GBA tek says lower bit of tile number should be ignored in some cases, but it appears this is not the case?
+			// more testing needed
+			if ((ppu_Sprite_Attr_0 & 0x2000) == 0)
+			{
+				ppu_Sprite_VRAM_Mod = 0x3FF;
+			}
+			else
+			{
+				ppu_Sprite_VRAM_Mod = 0x3FF;
+			}
+
+			ppu_Sprite_Mosaic = (ppu_Sprite_Attr_0 & 0x1000) == 0x1000;
+
+			// clip left side of sprite if needed
+			// note if the sprite is completely clipped it is skipped altogether
+			// so this case only comes up if there is definitely something to clip
+			if (ppu_Sprite_X_Pos >= 240)
+			{
+				ppu_Fetch_Sprite_VRAM_Cnt = 512 - ppu_Sprite_X_Pos;
+
+				if (!ppu_Rot_Scale) { ppu_Fetch_Sprite_VRAM_Cnt &= 0xFFFE; }
+			}
 		}
 
 		public void ppu_Do_Sprite_Calculation_Rot()
