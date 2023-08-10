@@ -133,7 +133,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				if (cart_RAMS[i] != null)
 				{
 					// initialize SRAM to 0xFF;
-					if (mappers[i] == 2)
+					if ((mappers[i] == 2) || (mappers[i] == 3))
 					{
 						for (int j = 0; j < cart_RAMS[i].Length; j++)
 						{
@@ -141,7 +141,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 						}
 					}
 					// initialize EEPROM to 0xFF;
-					if ((mappers[i] == 3) || (mappers[i] == 4) || (mappers[i] == 5))
+					if ((mappers[i] == 4) || (mappers[i] == 5) || (mappers[i] == 6))
 					{
 						for (int j = 0; j < cart_RAMS[i].Length; j++)
 						{
@@ -149,7 +149,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 						}
 					}
 					// initialize Flash to 0;
-					if ((mappers[i] == 6) || (mappers[i] == 7))
+					if ((mappers[i] == 7) || (mappers[i] == 8))
 					{
 						for (int j = 0; j < cart_RAMS[i].Length; j++)
 						{
@@ -159,7 +159,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				}
 			}
 			
-
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
@@ -220,7 +219,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			date_time_0 |= ((ulong)temp_month_0 << 40);
 			date_time_0 |= ((ulong)temp_year_0 << 48);
 			date_time_0 |= ((ulong)temp_ctrl_0  << 56);
-
 
 			// load 1 RTC
 			bool rtc_working_1 = true;
@@ -310,21 +308,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			string cntrllr1 = GBAHawkLink_ControllerDeck.DefaultControllerName;
 			string cntrllr2 = GBAHawkLink_ControllerDeck.DefaultControllerName;
 
-
-			if (mappers[0] == 4)
+			if (mappers[0] == 3)
+			{
+				cntrllr1 = typeof(StandardZGyro).DisplayName();
+			}
+			else if (mappers[0] == 5)
 			{
 				cntrllr1 = typeof(StandardTilt).DisplayName();
 			}
-			else if (mappers[0] == 5)
+			else if (mappers[0] == 6)
 			{
 				cntrllr1 = typeof(StandardSolar).DisplayName();
 			}
 
-			if (mappers[1] == 4)
+			if (mappers[1] == 3)
+			{
+				cntrllr1 = typeof(StandardZGyro).DisplayName();
+			}
+			else if (mappers[1] == 5)
 			{
 				cntrllr2 = typeof(StandardTilt).DisplayName();
 			}
-			else if (mappers[1] == 5)
+			else if (mappers[1] == 6)
 			{
 				cntrllr2 = typeof(StandardSolar).DisplayName();
 			}
@@ -376,7 +381,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 						if ((ROMS[i][j + 3] == 0x52) && (ROMS[i][j + 4] == 0x4F) && (ROMS[i][j + 5] == 0x4D))
 						{
 							Console.WriteLine("using EEPROM mapper");
-							mppr = 3;
+							mppr = 4;
 							break;
 						}
 					}
@@ -390,7 +395,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 							if ((ROMS[i][j + 5] == 0x5F) && (ROMS[i][j + 6] == 0x56))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 64;
 
 								break;
@@ -398,7 +403,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 							if ((ROMS[i][j + 5] == 0x35) && (ROMS[i][j + 6] == 0x31) && (ROMS[i][j + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 64;
 
 								break;
@@ -406,7 +411,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 							if ((ROMS[i][j + 5] == 0x31) && (ROMS[i][j + 6] == 0x4D))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 128;
 
 								break;
@@ -436,8 +441,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			{
 				has_bats[i] = true;
 				cart_RAMS[i] = new byte[0x8000];
+
+				if ((romHashSHA1 == "SHA1:A389FA50E2E842B264B980CBE30E980C69D93A5B") || // Mawaru - Made in Wario (JPN)
+					(romHashSHA1 == "SHA1:F0102D0D6F7596FE853D5D0A94682718278E083A"))   // Warioware Twisted (USA)
+				{
+					mppr = 3;
+				}
 			}
-			else if (mppr == 3)
+			else if (mppr == 4)
 			{
 				has_bats[i] = true;
 
@@ -450,7 +461,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					Console.WriteLine("Using Tilt Controls");
 
 					cart_RAMS[i] = new byte[0x200];
-					mppr = 4;
+					mppr = 5;
 				}
 				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
 						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
@@ -464,14 +475,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					Console.WriteLine("Using Solar Sensor");
 
 					cart_RAMS[i] = new byte[0x2000];
-					mppr = 5;
+					mppr = 6;
 				}
 				else
 				{
 					cart_RAMS[i] = new byte[0x2000];
 				}
 			}
-			else if (mppr == 6)
+			else if (mppr == 7)
 			{
 				has_bats[i] = true;
 
@@ -480,7 +491,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				{
 					cart_RAMS[i] = new byte[0x20000];
 
-					mppr = 7;
+					mppr = 8;
 				}
 				else
 				{

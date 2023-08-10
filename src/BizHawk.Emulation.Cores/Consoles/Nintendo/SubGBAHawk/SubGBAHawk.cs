@@ -105,7 +105,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			if (cart_RAM != null)
 			{
 				// initialize SRAM to 0xFF;
-				if (mapper == 2)
+				if ((mapper == 2) || (mapper == 3))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -113,7 +113,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					}
 				}
 				// initialize EEPROM to 0xFF;
-				if ((mapper == 3) || (mapper == 4) || (mapper == 5))
+				if ((mapper == 4) || (mapper == 5) || (mapper == 6))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -121,7 +121,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					}
 				}
 				// initialize Flash to 0;
-				if ((mapper == 6) || (mapper == 7))
+				if ((mapper == 7) || (mapper == 8))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
@@ -217,11 +217,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			if (mapper == 4)
+			if (mapper == 3)
+			{
+				_controllerDeck = new(typeof(StandardZGyro).DisplayName());
+			}
+			else if (mapper == 5)
 			{
 				_controllerDeck = new(typeof(StandardTilt).DisplayName());
 			}
-			else if (mapper == 5)
+			else if (mapper == 6)
 			{
 				_controllerDeck = new(typeof(StandardSolar).DisplayName());
 			}
@@ -282,7 +286,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 						if ((ROM[i + 3] == 0x52) && (ROM[i + 4] == 0x4F) && (ROM[i + 5] == 0x4D))
 						{
 							Console.WriteLine("using EEPROM mapper");
-							mppr = 3;
+							mppr = 4;
 							break;
 						}
 					}
@@ -296,7 +300,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 64;
 
 								break;
@@ -304,7 +308,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 64;
 
 								break;
@@ -312,7 +316,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
 							{
 								Console.WriteLine("using FLASH mapper");
-								mppr = 6;
+								mppr = 7;
 								size_f = 128;
 
 								break;
@@ -341,8 +345,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			{
 				has_bat = true;
 				cart_RAM = new byte[0x8000];
+
+				if ((romHashSHA1 == "SHA1:A389FA50E2E842B264B980CBE30E980C69D93A5B") || // Mawaru - Made in Wario (JPN)
+					(romHashSHA1 == "SHA1:F0102D0D6F7596FE853D5D0A94682718278E083A"))   // Warioware Twisted (USA)
+				{
+					mppr = 3;
+				}
 			}
-			else if (mppr == 3)
+			else if (mppr == 4)
 			{
 				has_bat = true;
 
@@ -355,7 +365,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					Console.WriteLine("Using Tilt Controls");
 
 					cart_RAM = new byte[0x200];
-					mppr = 4;
+					mppr = 5;
 				}
 				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
 						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
@@ -369,7 +379,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					Console.WriteLine("Using Solar Sensor");
 
 					cart_RAM = new byte[0x2000];
-					mppr = 5;
+					mppr = 6;
 				}
 				else if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
 						 (romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD") || // Shrek 2 (USA)
@@ -382,7 +392,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					cart_RAM = new byte[0x2000];
 				}
 			}
-			else if (mppr == 6)
+			else if (mppr == 7)
 			{
 				has_bat = true;
 
@@ -391,7 +401,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				{
 					cart_RAM = new byte[0x20000];
 
-					mppr = 7;
+					mppr = 8;
 				}
 				else
 				{

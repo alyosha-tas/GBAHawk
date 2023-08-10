@@ -41,24 +41,10 @@ namespace GBAHawk
 				GBA.Cart_RAM_Present = false;
 				GBA.Is_EEPROM = false;
 			}
-			else if (mapper == 2)
+			else if ((mapper == 2) || (mapper == 3))
 			{
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
-			}
-			else if (mapper == 3)
-			{
-				GBA.Cart_RAM_Present = true;
-				GBA.Is_EEPROM = true;
-
-				if (ext_rom_size <= 0x1000000)
-				{
-					GBA.EEPROM_Wiring = true;
-				}
-				else
-				{
-					GBA.EEPROM_Wiring = false;
-				}
 			}
 			else if (mapper == 4)
 			{
@@ -88,7 +74,21 @@ namespace GBAHawk
 					GBA.EEPROM_Wiring = false;
 				}
 			}
-			else if ((mapper == 6) || (mapper == 7))
+			else if (mapper == 6)
+			{
+				GBA.Cart_RAM_Present = true;
+				GBA.Is_EEPROM = true;
+
+				if (ext_rom_size <= 0x1000000)
+				{
+					GBA.EEPROM_Wiring = true;
+				}
+				else
+				{
+					GBA.EEPROM_Wiring = false;
+				}
+			}
+			else if ((mapper == 7) || (mapper == 8))
 			{
 				GBA.Cart_RAM_Present = true;
 				GBA.Is_EEPROM = false;
@@ -108,21 +108,25 @@ namespace GBAHawk
 			}
 			else if (mapper == 3)
 			{
-				Mapper = new Mapper_EEPROM();
+				Mapper = new Mapper_SRAM_Gyro();
 			}
 			else if (mapper == 4)
 			{
-				Mapper = new Mapper_EEPROM_Tilt();
+				Mapper = new Mapper_EEPROM();
 			}
 			else if (mapper == 5)
 			{
-				Mapper = new Mapper_EEPROM_Solar();
+				Mapper = new Mapper_EEPROM_Tilt();
 			}
 			else if (mapper == 6)
 			{
-				Mapper = new Mapper_FLASH();
+				Mapper = new Mapper_EEPROM_Solar();
 			}
 			else if (mapper == 7)
+			{
+				Mapper = new Mapper_FLASH();
+			}
+			else if (mapper == 8)
 			{
 				Mapper = new Mapper_FLASH_RTC();
 			}
@@ -162,7 +166,7 @@ namespace GBAHawk
 
 			Mapper->RTC_Functional = rtc_functional;
 
-			Mapper->Solar_Functional = mapper == 5;
+			Mapper->Solar_Functional = mapper == 6;
 
 			Mapper->Reg_Second = (uint8_t)datetime;
 			Mapper->Reg_Minute = (uint8_t)(datetime >> 8);

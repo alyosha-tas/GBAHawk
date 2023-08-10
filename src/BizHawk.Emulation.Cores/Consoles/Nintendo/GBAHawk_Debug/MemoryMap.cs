@@ -747,7 +747,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				// ROM access complete, re-enable prefetcher
 				pre_Fetch_Cnt_Inc = 1;
-
 				mapper.WriteROM16(addr, value);
 			}
 			else if (addr < 0x0E000000)

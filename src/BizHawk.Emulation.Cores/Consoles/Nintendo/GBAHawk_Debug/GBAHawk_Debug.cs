@@ -227,7 +227,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 			}
 
-			mapper.Core =this;
+			mapper.Core = this;
 
 			mapper.ROM_C4 = ROM[0xC4];
 			mapper.ROM_C5 = ROM[0xC5];
@@ -243,6 +243,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			else if (mapper is MapperEEPROM_Solar)
 			{
 				_controllerDeck = new(typeof(StandardSolar).DisplayName(), subframe);
+			}
+			else if (mapper is MapperSRAMGyro)
+			{
+				_controllerDeck = new(typeof(StandardZGyro).DisplayName(), subframe);
 			}
 			else
 			{
@@ -513,7 +517,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				has_bat = true;
 				cart_RAM = new byte[0x8000];
-				mapper = new MapperSRAM();
+
+				if ((romHashSHA1 == "SHA1:A389FA50E2E842B264B980CBE30E980C69D93A5B") || // Mawaru - Made in Wario (JPN)
+					(romHashSHA1 == "SHA1:F0102D0D6F7596FE853D5D0A94682718278E083A"))	// Warioware Twisted (USA)
+				{
+					mapper = new MapperSRAMGyro();
+				}
+				else
+				{
+					mapper = new MapperSRAM();
+				}
 			}
 			else if (mppr == "EEPROM")
 			{

@@ -61,7 +61,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
 				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum),
-				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum)
+				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum),
+				[typeof(StandardZGyro).DisplayName()] = portNum => new StandardZGyro(portNum)
 			};
 
 		public static string DefaultControllerName => typeof(StandardControls).DisplayName();

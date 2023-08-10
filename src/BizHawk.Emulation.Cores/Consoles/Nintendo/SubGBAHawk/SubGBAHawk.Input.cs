@@ -59,7 +59,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			{
 				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
 				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum),
-				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum)
+				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum),
+				[typeof(StandardZGyro).DisplayName()] = portNum => new StandardZGyro(portNum)
 			};
 
 		public static string DefaultControllerName => typeof(StandardControls).DisplayName();
@@ -359,6 +360,102 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public void SyncState(Serializer ser)
 		{
 			// nothing
+		}
+	}
+
+	[DisplayName("Gameboy Advance Controller + Z Gyro")]
+	public class StandardZGyro : IPort
+	{
+		public StandardZGyro(int portNum)
+		{
+			PortNum = portNum;
+			Definition = new ControllerDefinition("Gameboy Advance Controller + Z Gyro")
+			{
+				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
+			}.AddAxis($"P{PortNum} Z Gyro", (-90).RangeTo(90), 0);
+		}
+
+		public int PortNum { get; }
+
+		public float theta, theta_prev;
+
+		public ControllerDefinition Definition { get; }
+
+		public ushort Read(IController c)
+		{
+			ushort result = 0x3FF;
+
+			if (c.IsPressed(Definition.BoolButtons[0]))
+			{
+				result &= 0xFFBF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[1]))
+			{
+				result &= 0xFF7F;
+			}
+			if (c.IsPressed(Definition.BoolButtons[2]))
+			{
+				result &= 0xFFDF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[3]))
+			{
+				result &= 0xFFEF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[4]))
+			{
+				result &= 0xFFF7;
+			}
+			if (c.IsPressed(Definition.BoolButtons[5]))
+			{
+				result &= 0xFFFB;
+			}
+			if (c.IsPressed(Definition.BoolButtons[6]))
+			{
+				result &= 0xFFFD;
+			}
+			if (c.IsPressed(Definition.BoolButtons[7]))
+			{
+				result &= 0xFFFE;
+			}
+			if (c.IsPressed(Definition.BoolButtons[8]))
+			{
+				result &= 0xFDFF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[9]))
+			{
+				result &= 0xFEFF;
+			}
+
+			return result;
+		}
+
+		// repurposing from X/Y controls, X is Z axis, Y is just zero
+		// seems to act like a rate gyro
+		public (ushort X, ushort Y) ReadAcc(IController c)
+		{
+			theta_prev = theta;
+
+			theta = c.AxisValue(Definition.Axes[0]);
+
+			float d_theta = (float)((theta - theta_prev) * 59.7275);
+
+			var accX = (ushort)(0x6C0 + Math.Floor(d_theta));
+
+			return (accX, 0);
+		}
+
+		public byte SolarSense(IController c)
+			=> 0xFF;
+
+		private static readonly string[] BaseDefinition =
+		{
+			"Up", "Down", "Left", "Right", "Start", "Select", "B", "A", "L", "R", "Power"
+		};
+
+		public void SyncState(Serializer ser)
+		{
+			// since we need rate of change of angle, need to savestate them
+			ser.Sync(nameof(theta), ref theta);
 		}
 	}
 }
