@@ -23,6 +23,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public bool do_frame_fill;
 
+		public bool use_sram;
+
 		[CoreConstructor(VSystemID.Raw.GBAL)]
 		public GBAHawkLink_Debug(CoreLoadParameters<GBAHawkLink_Debug.GBAHawkLink_Debug_Settings, GBAHawkLink_Debug.GBAHawkLink_Debug_SyncSettings> lp)
 		{
@@ -34,6 +36,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 			linkSettings = (GBAHawkLink_Debug_Settings)lp.Settings ?? new GBAHawkLink_Debug_Settings();
 			linkSyncSettings = (GBAHawkLink_Debug_SyncSettings)lp.SyncSettings ?? new GBAHawkLink_Debug_SyncSettings();
+			
+			use_sram = linkSyncSettings.Use_SRAM;
+			
 			_controllerDeck = new(
 				GBAHawk_Debug_ControllerDeck.DefaultControllerName,
 				GBAHawk_Debug_ControllerDeck.DefaultControllerName);

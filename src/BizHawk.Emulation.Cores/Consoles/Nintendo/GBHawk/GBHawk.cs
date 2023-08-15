@@ -113,6 +113,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public byte[] cart_RAM;
 		public byte[] cart_RAM_vbls;
 		public bool has_bat;
+		public bool use_sram;
 
 		private int _frame = 0;
 
@@ -162,6 +163,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			_ = PutSettings(settings ?? new GBSettings());
 			_syncSettings = (GBSyncSettings)syncSettings ?? new GBSyncSettings();
+
+			use_sram = _syncSettings.Use_SRAM;
 
 			// Load up a BIOS and initialize the correct PPU
 			_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");

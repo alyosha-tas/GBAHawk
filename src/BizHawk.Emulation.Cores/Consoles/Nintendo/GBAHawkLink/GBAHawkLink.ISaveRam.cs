@@ -1,6 +1,8 @@
 ﻿using System;
 
 using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA;
+using static BizHawk.Emulation.Cores.CoreInventory;
 using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
@@ -18,11 +20,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				if (cart_RAMS[0] != null)
 				{
 					len1 = cart_RAMS[0].Length;
+
+					for (int i = 0; i < cart_RAMS[0].Length; i++)
+					{
+						cart_RAMS[0][i] = LibGBAHawkLink.GBALink_getsram(GBA_Pntr, i, 0);
+					}		
 				}
 
 				if (cart_RAMS[1] != null)
 				{
 					len2 = cart_RAMS[1].Length;
+
+					for (int i = 0; i < cart_RAMS[1].Length; i++)
+					{
+						cart_RAMS[1][i] = LibGBAHawkLink.GBALink_getsram(GBA_Pntr, i, 1);
+					}
 				}
 
 				byte[] temp = new byte[len1 + len2];
@@ -52,7 +64,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (SyncSettings.Use_SRAM)
+			if (use_sram)
 			{
 				if (cart_RAMS[0] != null && cart_RAMS[1] == null)
 				{
@@ -68,10 +80,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					Buffer.BlockCopy(data, cart_RAMS[0].Length, cart_RAMS[1], 0, cart_RAMS[1].Length);
 				}
 
-				Console.WriteLine("loading SRAM here");
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
 			}
 		}
 
-		public bool SaveRamModified => (has_bats[0] || has_bats[1]) & SyncSettings.Use_SRAM;
+		public bool SaveRamModified => (has_bats[0] || has_bats[1]) && use_sram;
 	}
 }

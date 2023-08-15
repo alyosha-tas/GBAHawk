@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using BizHawk.Common.ReflectionExtensions;
 using System.Security.Cryptography;
 using System.ComponentModel.Design;
+using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 /*
 	GBA Emulator
@@ -95,6 +96,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public byte[] cart_RAM;
 		public bool has_bat;
+		public bool use_sram;
 		public bool Is_EEPROM;
 		public bool EEPROM_Wiring; // when true, can access anywhere in 0xDxxxxxx range, otheriwse only 0xDFFFFE0
 
@@ -115,6 +117,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			_ = PutSettings(settings ?? new GBAHawk_Debug_Settings());
 			_syncSettings = (GBAHawk_Debug_SyncSettings)syncSettings ?? new GBAHawk_Debug_SyncSettings();
+
+			use_sram = _syncSettings.Use_SRAM;
 
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");

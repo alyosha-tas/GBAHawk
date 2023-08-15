@@ -16,13 +16,31 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 		{
 			//Console.WriteLine("-----------------------FRAME-----------------------");
 
-			if (_tracer.IsEnabled())
+			if (linkSettings.TraceSet == GBAHawkLink_Debug_Settings.TraceSrc.Left)
 			{
-				R.TraceCallback = s => _tracer.Put(s);
+				R.TraceCallback = null;
+
+				if (_tracer.IsEnabled())
+				{
+					L.TraceCallback = s => _tracer.Put(s);
+				}
+				else
+				{
+					L.TraceCallback = null;
+				}
 			}
 			else
 			{
-				R.TraceCallback = null;
+				L.TraceCallback = null;
+
+				if (_tracer.IsEnabled())
+				{
+					R.TraceCallback = s => _tracer.Put(s);
+				}
+				else
+				{
+					R.TraceCallback = null;
+				}
 			}
 
 			if (controller.IsPressed("P1 Power"))

@@ -12,13 +12,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (_syncSettings.Use_SRAM)
+			if (use_sram)
 			{
 				Buffer.BlockCopy(data, 0, cart_RAM, 0, data.Length);
 				Console.WriteLine("loading SRAM here");
 			}
 		}
 
-		public bool SaveRamModified => has_bat & _syncSettings.Use_SRAM;
+		public bool SaveRamModified => has_bat && use_sram;
 	}
 }

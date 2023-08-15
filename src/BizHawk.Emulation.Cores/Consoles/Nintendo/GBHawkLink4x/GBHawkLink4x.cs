@@ -47,6 +47,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 
 		public bool do_frame_fill;
 
+		public bool use_sram;
+
 		public bool only_3_roms = false;
 
 		[CoreConstructor(VSystemID.Raw.GBL)]
@@ -66,6 +68,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 
 			Link4xSettings = (GBLink4xSettings)lp.Settings ?? new GBLink4xSettings();
 			Link4xSyncSettings = (GBLink4xSyncSettings)lp.SyncSettings ?? new GBLink4xSyncSettings();
+
+			use_sram = Link4xSyncSettings.Use_SRAM;
+
 			_controllerDeck = new(
 				GBHawkControllerDeck.DefaultControllerName,
 				GBHawkControllerDeck.DefaultControllerName,

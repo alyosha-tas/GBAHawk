@@ -51,7 +51,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (linkSyncSettings.Use_SRAM)
+			if (use_sram)
 			{
 				if (L.cart_RAM != null && R.cart_RAM == null)
 				{
@@ -71,6 +71,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 		}
 
-		public bool SaveRamModified => (L.has_bat || R.has_bat) & linkSyncSettings.Use_SRAM;
+		public bool SaveRamModified => (L.has_bat || R.has_bat) && use_sram;
 	}
 }

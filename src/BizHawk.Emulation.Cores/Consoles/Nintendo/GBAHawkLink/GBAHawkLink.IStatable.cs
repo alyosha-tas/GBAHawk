@@ -6,16 +6,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 	{
 		private void SyncState(Serializer ser)
 		{
-			if (cart_RAMS[0] != null)
-			{
-				ser.Sync("cart_RAM 0", ref cart_RAMS[0], false);
-			}
-
-			if (cart_RAMS[1] != null)
-			{
-				ser.Sync("cart_RAM 1", ref cart_RAMS[1], false);
-			}
-
 			_controllerDeck.SyncState(ser);
 
 			ser.Sync("Frame", ref _frame);

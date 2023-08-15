@@ -81,7 +81,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (Link4xSyncSettings.Use_SRAM)
+			if (use_sram)
 			{
 				int temp = 0;
 
@@ -112,6 +112,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 			}
 		}
 
-		public bool SaveRamModified => (A.has_bat || B.has_bat || C.has_bat || D.has_bat) & Link4xSyncSettings.Use_SRAM;
+		public bool SaveRamModified => (A.has_bat || B.has_bat || C.has_bat || D.has_bat) && use_sram;
 	}
 }
