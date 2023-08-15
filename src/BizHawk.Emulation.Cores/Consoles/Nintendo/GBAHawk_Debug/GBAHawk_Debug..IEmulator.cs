@@ -63,10 +63,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			do_frame();
 
-			if (Is_Lag)
-			{
-				Lag_Count++;
-			}
+			if (Is_Lag) { Lag_Count++; }
 
 			Frame_Count++;
 

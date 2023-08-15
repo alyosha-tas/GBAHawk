@@ -6925,6 +6925,8 @@ namespace GBAHawk
 							ser_Start = true;
 
 							ser_Ext_Current_Console = 1;
+
+							ser_CTRL |= 0x80;
 						}
 
 						if ((value & 0x80) != 0x80) { ser_Start = false; }

@@ -582,8 +582,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibGBAHawkLink.GBALink_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length, Settings.Trace_Core);
-			LibGBAHawkLink.GBALink_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length, Settings.Trace_Core);
+			uint tracer_core = (uint)Settings.TraceSet;
+
+			LibGBAHawkLink.GBALink_getdisassembly(GBA_Pntr, new_d, t, Disasm_Length, tracer_core);
+			LibGBAHawkLink.GBALink_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length, tracer_core);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}

@@ -176,6 +176,10 @@ namespace GBAHawk
 								{
 									R.GBA.ser_CTRL |= 0x80;
 								}
+								else
+								{
+									R.GBA.ser_CTRL &= 0xFF7F;
+								}
 							}
 							else
 							{
@@ -310,7 +314,7 @@ namespace GBAHawk
 
 			}
 
-			return L.GBA.Is_Lag;
+			return L.GBA.Is_Lag && R.GBA.Is_Lag;
 		}
 
 		void GetVideo(uint32_t* dest, uint32_t num)
@@ -363,7 +367,7 @@ namespace GBAHawk
 
 				return temp_int;
 			}
-			else
+			else if (num == 1)
 			{
 				int32_t* src = R.GBA.samples_L;
 				int32_t* dst = dest_L;
@@ -380,7 +384,25 @@ namespace GBAHawk
 				uint32_t temp_int = R.GBA.snd_Master_Clock;
 
 				return temp_int;
-			}	
+			}
+			else
+			{
+				int32_t* src = L.GBA.samples_L;
+				int32_t* dst = dest_L;
+
+				std::memcpy(dst, src, sizeof int32_t * L.GBA.num_samples_L * 2);
+				n_samp_L[0] = L.GBA.num_samples_L;
+
+				src = R.GBA.samples_R;
+				dst = dest_R;
+
+				std::memcpy(dst, src, sizeof int32_t * R.GBA.num_samples_R * 2);
+				n_samp_R[0] = R.GBA.num_samples_R;
+
+				uint32_t temp_int = (R.GBA.snd_Master_Clock > L.GBA.snd_Master_Clock) ? R.GBA.snd_Master_Clock : L.GBA.snd_Master_Clock;
+
+				return temp_int;
+			}
 		}
 
 #pragma region State Save / Load
@@ -541,7 +563,7 @@ namespace GBAHawk
 
 		int GetRegStringLength()
 		{
-			return 260 + 1;
+			return 282 + 1;
 		}
 
 		void GetHeader(char* h, int l)

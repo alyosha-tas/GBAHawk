@@ -24,15 +24,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				tracecb = null;
 			}
 
-			LibGBAHawkLink.GBALink_settracecallback(GBA_Pntr, tracecb, Settings.Trace_Core);
+			uint tracer_core = (uint)Settings.TraceSet;
+
+			LibGBAHawkLink.GBALink_settracecallback(GBA_Pntr, tracecb, tracer_core);
 			
 			if (controller.IsPressed("Power"))
 			{
 				HardReset();
 			}
 
-			_isLag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state_1, Acc_X_state_1, Acc_Y_state_1, Solar_state_1, true, true,
+			Is_Lag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state_1, Acc_X_state_1, Acc_Y_state_1, Solar_state_1, true, true,
 																	controller_state_2, Acc_X_state_2, Acc_Y_state_2, Solar_state_2, true, true);
+
+			if (Is_Lag) { Lag_Count++; }
 
 			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_L, 0);
 			LibGBAHawkLink.GBALink_get_video(GBA_Pntr, _vidbuffer_R, 1);
@@ -79,8 +83,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public void ResetCounters()
 		{
 			_frame = 0;
-			_lagCount = 0;
-			_isLag = false;
+			Lag_Count = 0;
+			Is_Lag = false;
 		}
 
 		public void Dispose()
@@ -123,7 +127,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibGBAHawkLink.GBALink_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, Settings.Audio_Core);
+			uint audio_core = (uint)Settings.AudioSet;
+
+			uint f_clock = LibGBAHawkLink.GBALink_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, audio_core);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{

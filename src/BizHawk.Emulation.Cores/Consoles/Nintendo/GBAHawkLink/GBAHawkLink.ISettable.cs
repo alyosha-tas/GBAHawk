@@ -40,26 +40,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public class GBALinkSettings
 		{
-			[DisplayName("Trace Core")]
-			[Description("Which core passes data to the trace logger. 0 for left, 1 for right")]
-			[DefaultValue(0)]
-			public uint Trace_Core
+			public enum TraceSrc
 			{
-				get => _TraceCore;
-				set => _TraceCore = Math.Max(0, Math.Min(1, value));
+				Left,
+				Right
 			}
 
-			[DisplayName("Audio Core")]
-			[Description("Which core to use for audio. 0 for left, 1 for right")]
-			[DefaultValue(0)]
-			public uint Audio_Core
+			[DisplayName("Tracer Selection")]
+			[Description("Choose Trace Logger Source.")]
+			[DefaultValue(TraceSrc.Left)]
+			public TraceSrc TraceSet { get; set; }
+
+			public enum AudioSrc
 			{
-				get => _AudioCore;
-				set => _AudioCore = Math.Max(0, Math.Min(1, value));
+				Left,
+				Right,
+				Both
 			}
 
-			private uint _TraceCore;
-			private uint _AudioCore;
+			[DisplayName("Audio Selection")]
+			[Description("Choose Audio Source. Both will produce Stereo sound.")]
+			[DefaultValue(AudioSrc.Left)]
+			public AudioSrc AudioSet { get; set; }
 
 			public GBALinkSettings Clone()
 			{
@@ -134,7 +136,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 			[DisplayName("Use Existing SaveRAM")]
 			[Description("(Intended for development, for regular use leave as true.) When true, existing SaveRAM will be loaded at boot up.")]
-			[DefaultValue(true)]
+			[DefaultValue(false)]
 			public bool Use_SRAM { get; set; }
 
 			[JsonIgnore]

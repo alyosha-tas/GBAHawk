@@ -43,7 +43,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 			_cablediscosignal = cablediscosignalNew;
 
-			_islag = true;
+			Is_Lag = true;
+			L.Is_Lag = R.Is_Lag = true;
 
 			GetControllerState(controller);
 
@@ -52,12 +53,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 			FillVideoBuffer();
 
-			_islag = L.Is_Lag & R.Is_Lag;
+			Is_Lag = L.Is_Lag & R.Is_Lag;
 
-			if (_islag)
-			{
-				_lagcount++;
-			}
+			if (Is_Lag) { Lag_Count++; }
 
 			_frame++;
 
@@ -70,6 +68,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			R.do_controller_check();
 
 			L.VBlank_Rise = false;
+			R.VBlank_Rise = false;
 
 			// advance one full frame
 			while (!L.VBlank_Rise)
@@ -109,6 +108,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 								if ((L.ser_CTRL & 0x80) == 0x80)
 								{
 									R.ser_CTRL |= 0x80;
+								}
+								else
+								{
+									R.ser_CTRL &= 0xFF7F;
 								}
 							}
 							else
@@ -208,7 +211,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 						L.ser_Ext_Tick = false;
 
-						Console.WriteLine("transfer complete " + L.ser_Data_0 + " " + R.ser_Data_0);
+						//Console.WriteLine("transfer complete normal" + L.ser_Data_0 + " " + R.ser_Data_0);
 					}
 					else
 					{
@@ -239,10 +242,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 							R.ser_Delay_cd = 2;
 							R.delays_to_process = true;
 						}
+						else
+						{
+							Console.WriteLine("error?");
+						}
 
 						L.ser_Ext_Tick = false;
 
-						Console.WriteLine("transfer complete " + L.ser_Data_M + " " + R.ser_Data_M);
+						//Console.WriteLine("transfer complete " + L.ser_Data_M + " " + R.ser_Data_M);
 					}
 				}
 
@@ -265,8 +272,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 		public void ResetCounters()
 		{
 			_frame = 0;
-			_lagcount = 0;
-			_islag = false;
+			Lag_Count = 0;
+			Is_Lag = false;
 		}
 
 		public void Dispose()

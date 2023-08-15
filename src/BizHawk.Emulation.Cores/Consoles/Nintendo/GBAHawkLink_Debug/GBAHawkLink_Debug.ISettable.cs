@@ -33,6 +33,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public class GBAHawkLink_Debug_Settings
 		{
+			public enum TraceSrc
+			{
+				Left,
+				Right
+			}
+
+			[DisplayName("Tracer Selection")]
+			[Description("Choose Trace Logger Source.")]
+			[DefaultValue(TraceSrc.Left)]
+			public TraceSrc TraceSet { get; set; }
+
 			public enum AudioSrc
 			{
 				Left,
@@ -107,7 +118,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 			[DisplayName("Use Existing SaveRAM")]
 			[Description("(Intended for development, for regular use leave as true.) When true, existing SaveRAM will be loaded at boot up.")]
-			[DefaultValue(true)]
+			[DefaultValue(false)]
 			public bool Use_SRAM { get; set; }
 
 			[JsonIgnore]

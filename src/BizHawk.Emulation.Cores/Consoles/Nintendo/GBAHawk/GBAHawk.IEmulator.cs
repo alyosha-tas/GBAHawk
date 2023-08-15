@@ -31,11 +31,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				HardReset();
 			}
 
-			_isLag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
+			Is_Lag = LibGBAHawk.GBA_frame_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, true, true);
 
 			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
-			if (_isLag) { _lagCount++; }
+			if (Is_Lag) { Lag_Count++; }
 
 			_frame++;
 
@@ -59,8 +59,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public void ResetCounters()
 		{
 			_frame = 0;
-			_lagCount = 0;
-			_isLag = false;
+			Lag_Count = 0;
+			Is_Lag = false;
 		}
 
 		public void Dispose()

@@ -14,8 +14,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			_controllerDeck.SyncState(ser);
 
 			ser.Sync("Frame", ref _frame);
-			ser.Sync("LagCount", ref _lagCount);
-			ser.Sync("IsLag", ref _isLag);
+			ser.Sync("LagCount", ref Lag_Count);
+			ser.Sync("IsLag", ref Is_Lag);
 
 			if (ser.IsReader)
 			{

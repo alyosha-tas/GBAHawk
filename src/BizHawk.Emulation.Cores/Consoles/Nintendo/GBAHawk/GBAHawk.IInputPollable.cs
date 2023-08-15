@@ -6,19 +6,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 	{
 		public int LagCount
 		{
-			get => _lagCount;
-			set => _lagCount = value;
+			get => Lag_Count;
+			set => Lag_Count = value;
 		}
 
 		public bool IsLagFrame
 		{
-			get => _isLag;
-			set => _isLag = value;
+			get => Is_Lag;
+			set => Is_Lag = value;
 		}
 
 		public IInputCallbackSystem InputCallbacks { get; } = new InputCallbackSystem();
 
-		public int _lagCount = 0;
-		public bool _isLag = false;
+		public int Lag_Count = 0;
+		public bool Is_Lag = false;
 	}
 }

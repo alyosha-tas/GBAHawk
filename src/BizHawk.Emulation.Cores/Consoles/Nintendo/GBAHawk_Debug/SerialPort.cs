@@ -47,6 +47,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			byte ret = 0;
 
+			//Console.WriteLine("ser 8 R " + ext_num + " " + addr);
+
 			switch (addr)
 			{
 				case 0x120: ret = (byte)(ser_Data_0 & 0xFF); break;
@@ -99,7 +101,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort ser_Read_Reg_16(uint addr)
 		{
 			ushort ret = 0;
-
+			//Console.WriteLine("ser 16 R " + ext_num + " " + addr);
 			switch (addr)
 			{
 				case 0x120: ret = ser_Data_0; break;
@@ -135,6 +137,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			uint ret = 0;
 
+			//Console.WriteLine("ser 32 R " + ext_num + " " + addr);
+
 			switch (addr)
 			{
 				case 0x120: ret = (uint)((ser_Data_1 << 16) | ser_Data_0); break;
@@ -159,6 +163,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ser_Write_Reg_8(uint addr, byte value)
 		{
+			//Console.WriteLine("ser 8 w " + ext_num + " " + addr + " " +  value);
+			
 			switch (addr)
 			{
 				case 0x120: ser_Data_0 = (ushort)((ser_Data_0 & 0xFF00) | value); break;
@@ -201,6 +207,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ser_Write_Reg_16(uint addr, ushort value)
 		{
+			//Console.WriteLine("ser 16 w " + ext_num + " " + addr + " " + value + " " + TotalExecutedCycles);
+
 			switch (addr)
 			{
 				case 0x120: ser_Data_0 = value; break;
@@ -227,6 +235,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ser_Write_Reg_32(uint addr, uint value)
 		{
+			//Console.WriteLine("ser 32 w " + ext_num + " " + addr + " " + value + " " + TotalExecutedCycles);
+
 			switch (addr)
 			{
 				case 0x120: ser_Data_0 = (ushort)(value & 0xFFFF);
@@ -311,6 +321,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							ser_Start = true;
 
 							ser_Ext_Current_Console = 1;
+
+							ser_CTRL |= 0x80;
 						}
 
 						if ((value & 0x80) != 0x80) { ser_Start = false; }
@@ -387,6 +399,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							ser_CTRL &= 0xFF7F;
 
 							ser_Ext_Tick = true;
+
+							//Console.WriteLine("Complete: " + ext_num + " " + TotalExecutedCycles);
 
 							// trigger interrupt if needed
 							if ((ser_CTRL & 0x4000) == 0x4000)

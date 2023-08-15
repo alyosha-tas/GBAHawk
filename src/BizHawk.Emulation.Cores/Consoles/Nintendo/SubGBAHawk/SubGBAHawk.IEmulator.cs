@@ -26,12 +26,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			LibSubGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
 
-			_isLag = LibSubGBAHawk.GBA_subframe_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, 
+			Is_Lag = LibSubGBAHawk.GBA_subframe_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, 
 														true, true, controller.IsPressed("P1 Power"), (uint)controller.AxisValue("Reset Cycle"));
 
 			LibSubGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
-			if (_isLag) { _lagCount++; }
+			if (Is_Lag) { Lag_Count++; }
 
 			_frame++;
 
@@ -55,8 +55,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public void ResetCounters()
 		{
 			_frame = 0;
-			_lagCount = 0;
-			_isLag = false;
+			Lag_Count = 0;
+			Is_Lag = false;
 		}
 
 		public void Dispose()
