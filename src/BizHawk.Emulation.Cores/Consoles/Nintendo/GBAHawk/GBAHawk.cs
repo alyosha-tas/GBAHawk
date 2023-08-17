@@ -5,9 +5,6 @@ using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
-using BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug;
-using static BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug.GBAHawk_Debug;
-using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 /*
 	GBA Emulator

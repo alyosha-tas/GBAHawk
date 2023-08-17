@@ -608,7 +608,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						ppu_Sprite_LY_Check = (byte)(ppu_LY + 1);
 
-						if (ppu_LY == 227) { ppu_Sprite_LY_Check = 0; }
+						if (ppu_LY == 227)
+						{
+							ppu_Sprite_LY_Check = 0;
+							ppu_Sprite_Mosaic_Y_Counter = 0;
+							ppu_Sprite_Mosaic_Y_Compare = 0;
+						}
+						else
+						{
+							ppu_Sprite_Mosaic_Y_Counter++;
+
+							if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
+							{
+								ppu_Sprite_Mosaic_Y_Compare = (int)ppu_LY + 1;
+								ppu_Sprite_Mosaic_Y_Counter = 0;
+							}
+							else if (ppu_Sprite_Mosaic_Y_Counter == 16)
+							{
+								ppu_Sprite_Mosaic_Y_Counter = 0;
+							}
+						}
 					}
 
 					// reset obj window detection for the scanline

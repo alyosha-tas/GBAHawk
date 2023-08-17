@@ -7,9 +7,6 @@ using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System.Runtime.InteropServices;
 
 using BizHawk.Common.ReflectionExtensions;
-using System.Security.Cryptography;
-using System.ComponentModel.Design;
-using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 /*
 	GBA Emulator

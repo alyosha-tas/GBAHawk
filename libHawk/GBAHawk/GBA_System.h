@@ -7508,6 +7508,8 @@ namespace GBAHawk
 		uint32_t ppu_Sprite_Mode;
 		uint32_t ppu_Sprite_Next_Fetch;
 		uint32_t ppu_Param_Pick;
+		uint32_t ppu_Sprite_Mosaic_Y_Counter;
+		uint32_t ppu_Sprite_Mosaic_Y_Compare;
 
 		bool ppu_Sprite_Pixel_Occupied[240 * 2] = { };
 		bool ppu_Sprite_Semi_Transparent[240 * 2] = { };
@@ -7581,7 +7583,6 @@ namespace GBAHawk
 		uint16_t ppu_ROT_OBJ_Y[128] = { };
 
 		uint16_t ppu_MOS_OBJ_X[0x200] = { };
-		uint16_t ppu_MOS_OBJ_Y[0x100] = { };
 
 		uint16_t ppu_MOS_BG_Y[0x200] = { };
 
@@ -8192,22 +8193,6 @@ namespace GBAHawk
 				if (j == ppu_OBJ_Mosaic_X)
 				{
 					mosaic_x += ppu_OBJ_Mosaic_X;
-					j = 0;
-				}
-			}
-
-			mosaic_y = 0;
-			j = 0;
-
-			for (int i = 0; i < 0x100; i++)
-			{
-				ppu_MOS_OBJ_Y[i] = mosaic_y;
-
-				j++;
-
-				if (j == ppu_OBJ_Mosaic_Y)
-				{
-					mosaic_y += ppu_OBJ_Mosaic_Y;
 					j = 0;
 				}
 			}
@@ -10617,7 +10602,7 @@ namespace GBAHawk
 					// account for Mosaic
 					if (((spr_attr_0 & 0x1000) == 0x1000) && !ppu_New_Sprite)
 					{
-						ly_check = (uint8_t)ppu_MOS_OBJ_Y[ppu_Sprite_LY_Check];
+						ly_check = (uint8_t)ppu_Sprite_Mosaic_Y_Compare;
 
 						// account for screen wrapping
 						// if the object would appear at the top of the screen, that is the only part that is drawn
@@ -10638,7 +10623,15 @@ namespace GBAHawk
 							}
 						}
 
-						cur_spr_y = (uint32_t)((ly_check - spr_y_pos) & 0xFF);
+						if (ppu_New_Sprite)
+						{
+							ppu_New_Sprite = false;
+							cur_spr_y = 0;
+						}
+						else
+						{
+							cur_spr_y = (uint32_t)((ly_check - spr_y_pos) & 0xFF);
+						}
 					}
 				}
 
@@ -11172,6 +11165,7 @@ namespace GBAHawk
 			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
 			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
 			ppu_Param_Pick = 0;
+			ppu_Sprite_Mosaic_Y_Counter = ppu_Sprite_Mosaic_Y_Compare = 0;
 
 			ppu_Sprite_LY_Check = 0;
 
@@ -11424,6 +11418,8 @@ namespace GBAHawk
 			saver = int_saver(ppu_Sprite_Mode, saver);
 			saver = int_saver(ppu_Sprite_Next_Fetch, saver);
 			saver = int_saver(ppu_Param_Pick, saver);
+			saver = int_saver(ppu_Sprite_Mosaic_Y_Counter, saver);
+			saver = int_saver(ppu_Sprite_Mosaic_Y_Compare, saver);
 
 			saver = bool_array_saver(ppu_Sprite_Pixel_Occupied, saver, 240 * 2);
 			saver = bool_array_saver(ppu_Sprite_Semi_Transparent, saver, 240 * 2);
@@ -11625,6 +11621,8 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Sprite_Mode, loader);
 			loader = int_loader(&ppu_Sprite_Next_Fetch, loader);
 			loader = int_loader(&ppu_Param_Pick, loader);
+			loader = int_loader(&ppu_Sprite_Mosaic_Y_Counter, loader);
+			loader = int_loader(&ppu_Sprite_Mosaic_Y_Compare, loader);
 
 			loader = bool_array_loader(ppu_Sprite_Pixel_Occupied, loader, 240 * 2);
 			loader = bool_array_loader(ppu_Sprite_Semi_Transparent, loader, 240 * 2);

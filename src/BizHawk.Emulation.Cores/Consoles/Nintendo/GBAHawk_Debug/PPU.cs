@@ -117,6 +117,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int ppu_Sprite_Mode;
 		public int ppu_Sprite_Next_Fetch;
 		public int ppu_Param_Pick;
+		public int ppu_Sprite_Mosaic_Y_Counter;
+		public int ppu_Sprite_Mosaic_Y_Compare;
 
 		public ushort ppu_Sprite_Attr_0, ppu_Sprite_Attr_1, ppu_Sprite_Attr_2;
 		public ushort ppu_Sprite_Attr_0_Temp, ppu_Sprite_Attr_1_Temp;
@@ -193,7 +195,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort[] ppu_ROT_OBJ_Y = new ushort[128];
 
 		public ushort[] ppu_MOS_OBJ_X = new ushort[0x200];
-		public ushort[] ppu_MOS_OBJ_Y = new ushort[0x100];
 
 		public ushort[] ppu_MOS_BG_Y = new ushort[0x200];
 
@@ -817,22 +818,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					j = 0;
 				}
 			}
-
-			mosaic_y = 0;
-			j = 0;
-
-			for (int i = 0; i < 0x100; i++)
-			{
-				ppu_MOS_OBJ_Y[i] = mosaic_y;
-
-				j++;
-
-				if (j == ppu_OBJ_Mosaic_Y)
-				{
-					mosaic_y += ppu_OBJ_Mosaic_Y;
-					j = 0;
-				}
-			}	
 		}
 
 		public void ppu_BG_CTRL_Write(int lyr)
@@ -3408,7 +3393,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// account for Mosaic
 					if (((spr_attr_0 & 0x1000) == 0x1000) && !ppu_New_Sprite)
 					{
-						ly_check = (byte)ppu_MOS_OBJ_Y[ppu_Sprite_LY_Check];
+						ly_check = (byte)ppu_Sprite_Mosaic_Y_Compare;
 
 						// account for screen wrapping
 						// if the object would appear at the top of the screen, that is the only part that is drawn
@@ -3429,7 +3414,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 						}
 
-						cur_spr_y = (uint)((ly_check - spr_y_pos) & 0xFF);
+						if (ppu_New_Sprite)
+						{
+							ppu_New_Sprite = false;
+							cur_spr_y = 0;
+						}
+						else
+						{
+							cur_spr_y = (uint)((ly_check - spr_y_pos) & 0xFF);
+						}
 					}
 				}
 
@@ -3953,6 +3946,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Sprite_Size_X_Ofst_Temp = ppu_Sprite_Size_Y_Ofst_Temp = 0;
 			ppu_Sprite_Mode = ppu_Sprite_Next_Fetch = 0;
 			ppu_Param_Pick = 0;
+			ppu_Sprite_Mosaic_Y_Counter = ppu_Sprite_Mosaic_Y_Compare = 0;
 
 			ppu_Sprite_Attr_0 = ppu_Sprite_Attr_1 = ppu_Sprite_Attr_2 = 0;
 			ppu_Sprite_Attr_0_Temp = ppu_Sprite_Attr_1_Temp = 0;
@@ -4198,7 +4192,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Sprite_Mode), ref ppu_Sprite_Mode);
 			ser.Sync(nameof(ppu_Sprite_Next_Fetch), ref ppu_Sprite_Next_Fetch);
 			ser.Sync(nameof(ppu_Param_Pick), ref ppu_Param_Pick);
-
+			ser.Sync(nameof(ppu_Sprite_Mosaic_Y_Counter), ref ppu_Sprite_Mosaic_Y_Counter);
+			ser.Sync(nameof(ppu_Sprite_Mosaic_Y_Compare), ref ppu_Sprite_Mosaic_Y_Compare);
 			ser.Sync(nameof(ppu_Sprite_Attr_0), ref ppu_Sprite_Attr_0);
 			ser.Sync(nameof(ppu_Sprite_Attr_1), ref ppu_Sprite_Attr_1);
 			ser.Sync(nameof(ppu_Sprite_Attr_2), ref ppu_Sprite_Attr_2);
