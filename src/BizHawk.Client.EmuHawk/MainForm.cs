@@ -116,16 +116,12 @@ namespace BizHawk.Client.GBAHawk
 				FirmwareManager,
 				Config.PathEntries,
 				Config.FirmwareUserSpecifications);
-			var prefs = CoreComm.CorePreferencesFlags.None;
-			if (Config.SkipWaterboxIntegrityChecks)
-				prefs = CoreComm.CorePreferencesFlags.WaterboxMemoryConsistencyCheck;
 
 			// can't pass self as IDialogParent :(
 			return new CoreComm(
 				message => this.ModalMessageBox(message, "Warning", EMsgBoxIcon.Warning),
 				AddOnScreenMessage,
-				cfp,
-				prefs);
+				cfp);
 		}
 
 		private void SetImages()

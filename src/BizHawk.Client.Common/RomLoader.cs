@@ -281,12 +281,6 @@ namespace BizHawk.Client.Common
 			if (game.System == null)
 				return; // The user picked nothing in the Core picker
 
-			switch (game.System)
-			{
-				case VSystemID.Raw.GB:
-				case VSystemID.Raw.GBC:
-					break;
-			}
 			var cip = new CoreInventoryParameters(this)
 			{
 				Comm = nextComm,
@@ -458,21 +452,15 @@ namespace BizHawk.Client.Common
 
 			public static readonly IReadOnlyCollection<string> GBA = new[] { "gba" };
 
-			public static readonly IReadOnlyCollection<string> NES = new[] { "nes", "fds", "unf" };
-
 			public static readonly IReadOnlyCollection<string> AutoloadFromArchive = Array.Empty<string>()
 				.Concat(GB)
 				.Concat(GBA)
-				.Concat(NES)
 				.Select(static s => $".{s}") // this is what's expected at call-site
 				.ToArray();
 		}
 
 		/// <remarks>TODO add and handle <see cref="FilesystemFilter.LuaScripts"/> (you can drag-and-drop scripts and there are already non-rom things in this list, so why not?)</remarks>
 		private static readonly FilesystemFilterSet RomFSFilterSet = new FilesystemFilterSet(
-			new FilesystemFilter("Music Files", Array.Empty<string>(), devBuildExtraExts: new[] { "psf", "minipsf", "sid", "nsf" }),
-			new FilesystemFilter("Disc Images", new[] { "cue", "ccd", "mds", "m3u" }),
-			new FilesystemFilter("NES", RomFileExtensions.NES.Concat(new[] { "nsf" }).ToList(), addArchiveExts: true),
 			new FilesystemFilter("Gameboy", RomFileExtensions.GB, addArchiveExts: true),
 			new FilesystemFilter("Gameboy Advance", RomFileExtensions.GBA, addArchiveExts: true),
 			FilesystemFilter.Archives,

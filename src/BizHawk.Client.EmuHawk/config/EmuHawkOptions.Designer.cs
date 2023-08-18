@@ -66,8 +66,6 @@
 			this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.LuaInterfaceRadio = new System.Windows.Forms.RadioButton();
 			this.NLuaRadio = new System.Windows.Forms.RadioButton();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.cbSkipWaterboxIntegrityChecks = new System.Windows.Forms.CheckBox();
 			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.cbMoviesOnDisk = new System.Windows.Forms.CheckBox();
 			this.LuaDuringTurboCheckbox = new System.Windows.Forms.CheckBox();
@@ -324,8 +322,6 @@
 			this.tabPage3.Controls.Add(this.groupBox2);
 			this.tabPage3.Controls.Add(this.AutosaveSRAMCheckbox);
 			this.tabPage3.Controls.Add(this.panel1);
-			this.tabPage3.Controls.Add(this.label6);
-			this.tabPage3.Controls.Add(this.cbSkipWaterboxIntegrityChecks);
 			this.tabPage3.Controls.Add(this.label5);
 			this.tabPage3.Controls.Add(this.cbMoviesOnDisk);
 			this.tabPage3.Controls.Add(this.LuaDuringTurboCheckbox);
@@ -479,23 +475,6 @@
 			this.NLuaRadio.Text = "NLua+KopiLua";
 			this.NLuaRadio.UseVisualStyleBackColor = true;
 			// 
-			// label6
-			// 
-			this.label6.Location = new System.Drawing.Point(27, 243);
-			this.label6.Name = "label6";
-			this.label6.Text = "Skips some integrity check exceptions in waterbox cores.\r\nUseful for romhackers. " +
-    "Reboot core after changing.\r\nENABLING THIS VOIDS YOUR WARRANTY\r\n";
-			// 
-			// cbSkipWaterboxIntegrityChecks
-			// 
-			this.cbSkipWaterboxIntegrityChecks.AutoSize = true;
-			this.cbSkipWaterboxIntegrityChecks.Location = new System.Drawing.Point(6, 223);
-			this.cbSkipWaterboxIntegrityChecks.Name = "cbSkipWaterboxIntegrityChecks";
-			this.cbSkipWaterboxIntegrityChecks.Size = new System.Drawing.Size(170, 17);
-			this.cbSkipWaterboxIntegrityChecks.TabIndex = 18;
-			this.cbSkipWaterboxIntegrityChecks.Text = "Skip waterbox integrity checks";
-			this.cbSkipWaterboxIntegrityChecks.UseVisualStyleBackColor = true;
-			// 
 			// label5
 			// 
 			this.label5.Location = new System.Drawing.Point(27, 194);
@@ -609,8 +588,6 @@
 		private System.Windows.Forms.CheckBox LuaDuringTurboCheckbox;
 		private BizHawk.WinForms.Controls.LocLabelEx label5;
 		private System.Windows.Forms.CheckBox cbMoviesOnDisk;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
-		private System.Windows.Forms.CheckBox cbSkipWaterboxIntegrityChecks;
 		private System.Windows.Forms.Panel panel1;
 		private BizHawk.WinForms.Controls.LocLabelEx label7;
 		private System.Windows.Forms.RadioButton LuaInterfaceRadio;

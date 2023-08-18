@@ -64,9 +64,6 @@ namespace BizHawk.Client.Common
 		public Dictionary<string, string> PreferredPlatformsForExtensions { get; set; } = new Dictionary<string, string>
 		{
 			[".bin"] = "",
-			[".cue"] = "",
-			[".img"] = "",
-			[".iso"] = "",
 			[".rom"] = "",
 		};
 
@@ -104,7 +101,6 @@ namespace BizHawk.Client.Common
 		public bool ShowContextMenu { get; set; } = true;
 		public bool HotkeyConfigAutoTab { get; set; } = true;
 		public bool InputConfigAutoTab { get; set; } = true;
-		public bool SkipWaterboxIntegrityChecks { get; set; } = false;
 		public int AutofireOn { get; set; } = 1;
 		public int AutofireOff { get; set; } = 1;
 		public bool AutofireLagFrames { get; set; } = true;

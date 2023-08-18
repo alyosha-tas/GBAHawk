@@ -79,7 +79,6 @@ namespace BizHawk.Client.GBAHawk
 			FrameAdvSkipLagCheckbox.Checked = _config.SkipLagFrame;
 			LuaDuringTurboCheckbox.Checked = _config.RunLuaDuringTurbo;
 			cbMoviesOnDisk.Checked = _config.Movies.MoviesOnDisk;
-			cbSkipWaterboxIntegrityChecks.Checked = _config.SkipWaterboxIntegrityChecks;
 			NoMixedKeyPriorityCheckBox.Checked = _config.NoMixedInputHokeyOverride;
 
 			switch (_config.HostInputMethod)
@@ -130,7 +129,6 @@ namespace BizHawk.Client.GBAHawk
 			_config.SkipLagFrame = FrameAdvSkipLagCheckbox.Checked;
 			_config.RunLuaDuringTurbo = LuaDuringTurboCheckbox.Checked;
 			_config.Movies.MoviesOnDisk = cbMoviesOnDisk.Checked;
-			_config.SkipWaterboxIntegrityChecks = cbSkipWaterboxIntegrityChecks.Checked;
 			_config.NoMixedInputHokeyOverride = NoMixedKeyPriorityCheckBox.Checked;
 
 			if (LuaInterfaceRadio.Checked)

@@ -3,27 +3,34 @@ using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
-/*
-	DMA Emulation
-	NOTES:
+	/*
+		DMA Emulation
+		NOTES:
 
-	Need to implement DRQ?
+		Need to implement DRQ?
 
-	Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
+		Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
 
-	What happens when src address control mode 3 is set?
+		What happens when src address control mode 3 is set?
 
-	What happens when channel 0 start condition is set to 3?
+		What happens when channel 0 start condition is set to 3?
 
-	What happens when channel 3 has game pak DMA and repeat selected?
+		What happens when channel 3 has game pak DMA and repeat selected?
 
-	Look at edge cases of start / stop writes
+		Look at edge cases of start / stop writes
 
-	It seems as though DMA started immediately while the cpu is in the BIOS region is able to start 2 cycles sooner
-	see the new versions of haltcnt.gba. Is this really the case?
+		It seems as though DMA started immediately while the cpu is in the BIOS region is able to start 2 cycles sooner
+		see the new versions of haltcnt.gba. Is this really the case?
 
-	Assumption: read / write cycle is atomic
-*/
+		Assumption: read / write cycle is atomic
+
+		TODO:
+
+		There is some sort of hardware glitch when in DEC mode while in BIOS region. When the internal address crosses a boundary 
+		where there would normally be an imposed non-sequential access, there will be 1 two transfers later
+		even though the actual address is not at the boundary. Need to investigate case of both read and write 
+		in ROM region and 16 bit accesses before implementing
+	*/
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
 
@@ -461,6 +468,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (dma_Use_ROM_Addr_SRC[dma_Chan_Exec])
 						{
+							
 							if (dma_Access_32[dma_Chan_Exec])
 							{
 								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
@@ -778,10 +786,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								dma_ROM_Being_Used[dma_Chan_Exec] = true;
 							}
 
-							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
-							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
-							//Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
-							//Console.WriteLine(ppu_LY + " " + ppu_Cycle);
+							Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
+							Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
+							Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
+							Console.WriteLine(ppu_LY + " " + ppu_Cycle);
 						}
 					}
 				}
