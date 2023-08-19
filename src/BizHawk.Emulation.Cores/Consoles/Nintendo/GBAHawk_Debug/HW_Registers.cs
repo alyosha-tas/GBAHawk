@@ -256,19 +256,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void Update_INT_EN(ushort value)
 		{
-			if (INT_Master_On)
-			{
-				if ((value & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-				else
-				{
-					cpu_Next_IRQ_Input_3 = false;
-				}
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;
@@ -290,20 +278,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// if button is pressed interrupt will immediately fire again
 			do_controller_check();
 
-			// check if any remaining interrupts are still valid
-			if (INT_Master_On)
-			{
-				if ((INT_EN & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-				else
-				{
-					cpu_Next_IRQ_Input_3 = false;
-				}
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;
@@ -313,19 +288,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			INT_Master_On = (value & 1) == 1;
 
-			if (INT_Master_On)
-			{
-				if ((INT_EN & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-			}
-			else
-			{
-				cpu_Next_IRQ_Input_3 = false;
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;

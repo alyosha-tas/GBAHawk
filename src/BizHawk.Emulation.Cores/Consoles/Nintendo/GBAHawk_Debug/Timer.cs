@@ -32,8 +32,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort[] tim_ST_Time = new ushort[4];
 
-		public ushort[] tim_IRQ_CD = new ushort[4];
-
 		public ushort[] tim_Timer_Tick = new ushort[4];
 
 		public bool[] tim_Go = new bool[4];
@@ -274,41 +272,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 
-					if (tim_IRQ_CD[i] > 0)
-					{
-						tim_IRQ_CD[i] -= 1;
-
-						// trigger IRQ
-						if (tim_IRQ_CD[i] == 2)
-						{
-							INT_Flags |= (ushort)(0x8 << i);	
-						}
-						else if (tim_IRQ_CD[i] == 0)
-						{
-							if ((INT_EN & INT_Flags & (0x8 << i)) == (0x8 << i))
-							{ 
-								cpu_Trigger_Unhalt = true;
-
-								if (INT_Master_On)
-								{
-									cpu_IRQ_Input = true;
-								}
-							}
-						}
-
-						// check if all timers disabled
-						if (!tim_Go[i])
-						{
-							tim_All_Off = true;
-							for (int j = 0; j < 4; j++) 
-							{ 
-								tim_All_Off &= !tim_Go[j];
-								tim_All_Off &= (tim_IRQ_CD[j] == 0);
-								tim_All_Off &= (tim_ST_Time[j] == 0);
-							}
-						}
-					}
-
 					if (tim_Go[i])
 					{
 						tim_do_tick = false;
@@ -332,11 +295,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								if ((tim_Control[i] & 0x40) == 0x40)
 								{
-									// don't re-trigger if an IRQ is already pending
-									if (tim_IRQ_CD[i] == 0)
-									{
-										tim_IRQ_CD[i] = 3;
-									}
+									Trigger_IRQ((ushort)(3 + i));
 								}
 							}
 
@@ -344,11 +303,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								if ((tim_Control[i] & 0x40) == 0x40)
 								{
-									// don't re-trigger if an IRQ is already pending
-									if (tim_IRQ_CD[i] == 0)
-									{
-										tim_IRQ_CD[i] = 3;
-									}
+									Trigger_IRQ((ushort)(3 + i));
 								}
 
 								// reload the timer
@@ -381,11 +336,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							for (int k = 0; k < 4; k++)
 							{
 								tim_All_Off &= !tim_Go[k];
-								tim_All_Off &= (tim_IRQ_CD[k] == 0);
 								tim_All_Off &= (tim_ST_Time[k] == 0);
 							}
-
-							if (tim_IRQ_CD[i] > 0) { tim_All_Off = false; }
 
 							tim_Disable[i] = false;
 						}
@@ -409,7 +361,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_PreSc[i] = 0;
 				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
-				tim_IRQ_CD[i] = 0;
 				tim_Timer_Tick[i] = 1;
 
 				tim_Go[i] = false;
@@ -435,7 +386,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_PreSc), ref tim_PreSc, false);
 			ser.Sync(nameof(tim_PreSc_En), ref tim_PreSc_En, false);
 			ser.Sync(nameof(tim_ST_Time), ref tim_ST_Time, false);
-			ser.Sync(nameof(tim_IRQ_CD), ref tim_IRQ_CD, false);
 			ser.Sync(nameof(tim_Timer_Tick), ref tim_Timer_Tick, false);
 
 			ser.Sync(nameof(tim_Go), ref tim_Go, false);

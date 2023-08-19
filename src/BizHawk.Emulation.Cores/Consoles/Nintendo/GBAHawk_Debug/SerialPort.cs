@@ -20,8 +20,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	{
 		public uint ser_RECV_J, ser_TRANS_J;
 
-		public int ser_Delay_cd, key_Delay_cd;
-		
 		public ushort ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
 
 		public ushort ser_CTRL, ser_CTRL_J, ser_STAT_J, ser_Mode;
@@ -32,8 +30,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte ser_Bit_Count, ser_Bit_Total;
 
 		public bool ser_Internal_Clock, ser_Start;
-
-		public bool ser_Delay, key_Delay;
 
 		public byte ser_SC, ser_SD, ser_SI, ser_SO;
 
@@ -405,12 +401,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// trigger interrupt if needed
 							if ((ser_CTRL & 0x4000) == 0x4000)
 							{
-								INT_Flags |= 0x80;
-
-								ser_Delay = true;
-								Misc_Delays = true;
-								ser_Delay_cd = 2;
-								delays_to_process = true;
+								Trigger_IRQ(7);
 							}
 						}
 					}
@@ -421,8 +412,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void ser_Reset()
 		{
 			ser_RECV_J = ser_TRANS_J = 0;
-
-			ser_Delay_cd = key_Delay_cd = 0;
 
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
@@ -446,8 +435,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser_Internal_Clock = ser_Start = false;
 
-			ser_Delay = key_Delay = false;
-
 			ser_Ext_Update = ser_Ext_Tick = false;
 		}
 
@@ -455,9 +442,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			ser.Sync(nameof(ser_RECV_J), ref ser_RECV_J);
 			ser.Sync(nameof(ser_TRANS_J), ref ser_TRANS_J);
-
-			ser.Sync(nameof(ser_Delay_cd), ref ser_Delay_cd);
-			ser.Sync(nameof(key_Delay_cd), ref key_Delay_cd);
 
 			ser.Sync(nameof(ser_Data_0), ref ser_Data_0);
 			ser.Sync(nameof(ser_Data_1), ref ser_Data_1);
@@ -479,9 +463,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ser_Internal_Clock), ref ser_Internal_Clock);
 			ser.Sync(nameof(ser_Start), ref ser_Start);
-
-			ser.Sync(nameof(ser_Delay), ref ser_Delay);
-			ser.Sync(nameof(key_Delay), ref key_Delay);
 
 			ser.Sync(nameof(ser_SC), ref ser_SC);
 			ser.Sync(nameof(ser_SD), ref ser_SD);

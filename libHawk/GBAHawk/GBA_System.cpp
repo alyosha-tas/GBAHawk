@@ -1426,6 +1426,14 @@ namespace GBAHawk
 
 	inline void GBA_System::Single_Step()
 	{			
+		INT_Flags_Use = INT_Flags_Gather;
+
+		// NOte that we could have cleared some flags in a write on the previous cycle
+		// This line indicates that those flags will be reset.
+		INT_Flags_Use |= INT_Flags;
+
+		INT_Flags_Gather = 0;
+
 		#pragma region Delays
 		if (delays_to_process)
 		{
@@ -1435,6 +1443,16 @@ namespace GBAHawk
 				{
 					cpu_IRQ_Input = cpu_Next_IRQ_Input;
 					IRQ_Write_Delay = false;
+
+					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
+					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+					{
+						cpu_Trigger_Unhalt = false;
+					}
+					else
+					{
+						cpu_Trigger_Unhalt = true;
+					}
 
 					// check if all delay sources are false
 					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
@@ -1457,19 +1475,28 @@ namespace GBAHawk
 
 				if (IRQ_Write_Delay_3)
 				{
-					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-					IRQ_Write_Delay_2 = true;
-					IRQ_Write_Delay_3 = false;
-
-					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+					// check if any remaining interrupts are still valid
+					if (INT_Master_On)
 					{
-						cpu_Trigger_Unhalt = false;
+						if ((INT_EN & INT_Flags_Use & 0x3FFF) != 0)
+						{
+							cpu_Next_IRQ_Input_3 = true;
+						}
+						else
+						{
+							cpu_Next_IRQ_Input_3 = false;
+						}
 					}
 					else
 					{
-						cpu_Trigger_Unhalt = true;
+						cpu_Next_IRQ_Input_3 = false;
 					}
+
+					INT_Flags = INT_Flags_Use;
+
+					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+					IRQ_Write_Delay_2 = true;
+					IRQ_Write_Delay_3 = false;
 				}
 			}
 
@@ -1500,7 +1527,7 @@ namespace GBAHawk
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!key_Delay && !ser_Delay && !PALRAM_32_Delay)
+						if (!PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -1525,53 +1552,7 @@ namespace GBAHawk
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!key_Delay && !ser_Delay && !VRAM_32_Delay)
-						{
-							Misc_Delays = false;
-						}
-					}
-				}
-
-				if (ser_Delay)
-				{
-					ser_Delay_cd--;
-
-					if (ser_Delay_cd == 0)
-					{
-						// trigger IRQ
-						if (((INT_EN & INT_Flags & 0x80) == 0x80))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						ser_Delay = false;
-
-						// check if all delay sources are false
-						if (!key_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
-						{
-							Misc_Delays = false;
-						}
-					}
-				}
-
-				if (key_Delay)
-				{
-					key_Delay_cd--;
-
-					if (key_Delay_cd == 0)
-					{
-						// trigger IRQ
-						if (((INT_EN & INT_Flags & 0x1000) == 0x1000))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						key_Delay = false;
-
-						// check if all delay sources are false
-						if (!ser_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
+						if (!VRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -1590,9 +1571,9 @@ namespace GBAHawk
 				{
 					ppu_VBL_IRQ_cd -= 1;
 
-					if (ppu_VBL_IRQ_cd == 2)
+					if (ppu_VBL_IRQ_cd == 3)
 					{
-						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }
+						if ((ppu_STAT & 0x8) == 0x8) { Trigger_IRQ(0); }
 					}
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
@@ -1604,12 +1585,6 @@ namespace GBAHawk
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x1) == 0x1))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
@@ -1622,10 +1597,9 @@ namespace GBAHawk
 				{
 					ppu_HBL_IRQ_cd -= 1;
 
-					if (ppu_HBL_IRQ_cd == 2)
+					if (ppu_HBL_IRQ_cd == 3)
 					{
-						// trigger HBL IRQ
-						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }
+						if ((ppu_STAT & 0x10) == 0x10) { Trigger_IRQ(1); }
 					}
 					else if (ppu_HBL_IRQ_cd == 1)
 					{
@@ -1641,12 +1615,6 @@ namespace GBAHawk
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x2) == 0x2))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
@@ -1659,18 +1627,12 @@ namespace GBAHawk
 				{
 					ppu_LYC_IRQ_cd -= 1;
 
-					if (ppu_LYC_IRQ_cd == 2)
+					if (ppu_LYC_IRQ_cd == 3)
 					{
-						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }
+						if ((ppu_STAT & 0x20) == 0x20) { Trigger_IRQ(2); }
 					}
 					else if (ppu_LYC_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x4) == 0x4))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
@@ -2544,12 +2506,7 @@ namespace GBAHawk
 						// trigger interrupt if needed
 						if ((ser_CTRL & 0x4000) == 0x4000)
 						{
-							INT_Flags |= 0x80;
-
-							ser_Delay = true;
-							Misc_Delays = true;
-							ser_Delay_cd = 2;
-							delays_to_process = true;
+							Trigger_IRQ(7);
 						}
 					}
 				}
@@ -2579,37 +2536,6 @@ namespace GBAHawk
 					}
 				}
 
-				if (tim_IRQ_CD[i] > 0)
-				{
-					tim_IRQ_CD[i] -= 1;
-
-					// trigger IRQ
-					if (tim_IRQ_CD[i] == 2)
-					{
-						INT_Flags |= (uint16_t)(0x8 << i);
-					}
-					else if (tim_IRQ_CD[i] == 0)
-					{
-						if (((INT_EN & INT_Flags & (0x8 << i)) == (0x8 << i)))
-						{ 
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-					}
-
-					// check if all timers disabled
-					if (!tim_Go[i])
-					{
-						tim_All_Off = true;
-						for (int j = 0; j < 4; j++)
-						{
-							tim_All_Off &= !tim_Go[j];
-							tim_All_Off &= (tim_IRQ_CD[j] == 0);
-							tim_All_Off &= (tim_ST_Time[j] == 0);
-						}
-					}
-				}
-
 				if (tim_Go[i])
 				{
 					tim_do_tick = false;
@@ -2633,11 +2559,7 @@ namespace GBAHawk
 
 							if ((tim_Control[i] & 0x40) == 0x40)
 							{
-								// don't re-trigger if an IRQ is already pending
-								if (tim_IRQ_CD[i] == 0)
-								{
-									tim_IRQ_CD[i] = 3;
-								}
+								Trigger_IRQ((uint16_t)(3 + i));
 							}
 						}
 
@@ -2645,11 +2567,7 @@ namespace GBAHawk
 						{
 							if ((tim_Control[i] & 0x40) == 0x40)
 							{
-								// don't re-trigger if an IRQ is already pending
-								if (tim_IRQ_CD[i] == 0)
-								{
-									tim_IRQ_CD[i] = 3;
-								}
+								Trigger_IRQ((uint16_t)(3 + i));
 							}
 
 							// reload the timer
@@ -2682,11 +2600,8 @@ namespace GBAHawk
 						for (int k = 0; k < 4; k++)
 						{
 							tim_All_Off &= !tim_Go[k];
-							tim_All_Off &= (tim_IRQ_CD[k] == 0);
 							tim_All_Off &= (tim_ST_Time[k] == 0);
 						}
-
-						if (tim_IRQ_CD[i] > 0) { tim_All_Off = false; }
 
 						tim_Disable[i] = false;
 					}
@@ -2778,48 +2693,7 @@ namespace GBAHawk
 
 				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
-				if (dma_Delay) { dma_All_Off = false; }
-
 				dma_Shutdown = false;
-			}
-
-			if (dma_Delay)
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_IRQ_cd[i] > 0)
-					{
-						dma_IRQ_cd[i]--;
-						if (dma_IRQ_cd[i] == 2)
-						{
-							INT_Flags |= (uint16_t)(0x1 << (8 + i));
-						}
-						else if (dma_IRQ_cd[i] == 0)
-						{
-							// trigger IRQ (Bits 8 through 11)
-							if ((INT_EN & INT_Flags & (0x1 << (8 + i))) == (0x1 << (8 + i)))
-							{
-								cpu_Trigger_Unhalt = true;
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
-						}
-					}
-				}
-
-				dma_Delay = false;
-
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_IRQ_cd[i] != 0) { dma_Delay = true; }
-				}
-
-				dma_All_Off = true;
-
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
-
-				if (dma_Delay) { dma_All_Off = false; }
-
-				if (dma_Shutdown) { dma_All_Off = false; }
 			}
 
 			if (!dma_Pausable)
@@ -3027,11 +2901,7 @@ namespace GBAHawk
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
-								if (dma_IRQ_cd[dma_Chan_Exec] == 0)
-								{
-									dma_IRQ_cd[dma_Chan_Exec] = 3;
-									dma_Delay = true;
-								}
+								Trigger_IRQ((uint16_t)(8 + dma_Chan_Exec));
 							}
 
 							// Repeat if necessary, or turn the channel off

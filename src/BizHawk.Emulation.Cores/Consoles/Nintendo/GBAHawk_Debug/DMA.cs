@@ -47,7 +47,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int[] dma_CNT_intl = new int[4];
 		public int[] dma_ST_Time = new int[4];
-		public int[] dma_IRQ_cd = new int[4];
 
 		public int dma_Access_Cnt, dma_Access_Wait, dma_Chan_Exec;
 		public int dma_ST_Time_Adjust;
@@ -84,7 +83,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool dma_Pausable;
 		public bool dma_All_Off;
 		public bool dma_Shutdown;
-		public bool dma_Delay;
 		public bool dma_Video_DMA_Start;
 		public bool dma_Video_DMA_Delay;
 
@@ -415,48 +413,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
 
-				if (dma_Delay) { dma_All_Off = false; }
-
 				dma_Shutdown = false;
-			}
-
-			if (dma_Delay)
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_IRQ_cd[i] > 0)
-					{
-						dma_IRQ_cd[i]--;
-						if (dma_IRQ_cd[i] == 2)
-						{
-							INT_Flags |= (ushort)(0x1 << (8 + i));
-						}
-						else if (dma_IRQ_cd[i] == 0)
-						{
-							// trigger IRQ (Bits 8 through 11)
-							if ((INT_EN & INT_Flags & (0x1 << (8 + i))) == (0x1 << (8 + i)))
-							{ 
-								cpu_Trigger_Unhalt = true;
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
-							}
-						}
-					}			
-				}
-
-				dma_Delay = false;
-
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_IRQ_cd[i] != 0) { dma_Delay = true; }
-				}
-
-				dma_All_Off = true;
-
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
-
-				if (dma_Delay) { dma_All_Off = false; }
-
-				if (dma_Shutdown) { dma_All_Off = false; }
 			}
 
 			if (!dma_Pausable)
@@ -666,11 +623,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
-								if (dma_IRQ_cd[dma_Chan_Exec] == 0)
-								{
-									dma_IRQ_cd[dma_Chan_Exec] = 3;
-									dma_Delay = true;
-								}					
+								Trigger_IRQ((ushort)(8 + dma_Chan_Exec));					
 							}
 
 							// Repeat if necessary, or turn the channel off
@@ -861,7 +814,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_ST_Time[i] = 0;
-				dma_IRQ_cd[i] = 0;
 				dma_SRC[i] = 0;
 				dma_DST[i] = 0;
 				dma_SRC_intl[i] = 0;
@@ -899,7 +851,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Pausable = true;
 			dma_All_Off = true;
 			dma_Shutdown =  false;
-			dma_Delay = false;
 			dma_Video_DMA_Start = false;
 			dma_Video_DMA_Delay = false;
 		}
@@ -909,7 +860,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Run_En_Time), ref dma_Run_En_Time, false);
 			ser.Sync(nameof(dma_CNT_intl), ref dma_CNT_intl, false);
 			ser.Sync(nameof(dma_ST_Time), ref dma_ST_Time, false);
-			ser.Sync(nameof(dma_IRQ_cd), ref dma_IRQ_cd, false);
 
 			ser.Sync(nameof(dma_Access_Cnt), ref dma_Access_Cnt);
 			ser.Sync(nameof(dma_Access_Wait), ref dma_Access_Wait);
@@ -949,7 +899,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Pausable), ref dma_Pausable);
 			ser.Sync(nameof(dma_All_Off), ref dma_All_Off);
 			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);
-			ser.Sync(nameof(dma_Delay), ref dma_Delay);
 			ser.Sync(nameof(dma_Video_DMA_Start), ref dma_Video_DMA_Start);
 			ser.Sync(nameof(dma_Video_DMA_Delay), ref dma_Video_DMA_Delay);
 		}

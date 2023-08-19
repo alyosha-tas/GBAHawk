@@ -268,12 +268,7 @@ namespace GBAHawk
 						// trigger interrupt if needed
 						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
 						{
-							R.GBA.INT_Flags |= 0x80;
-
-							R.GBA.ser_Delay = true;
-							R.GBA.Misc_Delays = true;
-							R.GBA.ser_Delay_cd = 2;
-							R.GBA.delays_to_process = true;
+							R.GBA.Trigger_IRQ(7);
 						}
 
 						L.GBA.ser_Ext_Tick = false;
@@ -300,12 +295,7 @@ namespace GBAHawk
 						// trigger interrupt if needed
 						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
 						{
-							R.GBA.INT_Flags |= 0x80;
-
-							R.GBA.ser_Delay = true;
-							R.GBA.Misc_Delays = true;
-							R.GBA.ser_Delay_cd = 2;
-							R.GBA.delays_to_process = true;
+							R.GBA.Trigger_IRQ(7);
 						}
 
 						L.GBA.ser_Ext_Tick = false;

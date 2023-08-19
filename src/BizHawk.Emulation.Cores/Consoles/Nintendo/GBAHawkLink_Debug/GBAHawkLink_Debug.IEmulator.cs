@@ -219,12 +219,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 						// trigger interrupt if needed
 						if ((R.ser_CTRL & 0x4000) == 0x4000)
 						{
-							R.INT_Flags |= 0x80;
-
-							R.ser_Delay = true;
-							R.Misc_Delays = true;
-							R.ser_Delay_cd = 2;
-							R.delays_to_process = true;
+							R.Trigger_IRQ(7);
 						}
 
 						L.ser_Ext_Tick = false;
@@ -253,12 +248,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 						// trigger interrupt if needed
 						if ((R.ser_CTRL & 0x4000) == 0x4000)
 						{
-							R.INT_Flags |= 0x80;
-
-							R.ser_Delay = true;
-							R.Misc_Delays = true;
-							R.ser_Delay_cd = 2;
-							R.delays_to_process = true;
+							R.Trigger_IRQ(7);
 						}
 						else
 						{

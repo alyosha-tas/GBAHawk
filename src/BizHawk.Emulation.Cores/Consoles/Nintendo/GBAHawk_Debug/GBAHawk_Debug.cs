@@ -69,6 +69,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort INT_EN, INT_Flags, INT_Master, Wait_CTRL;
 
+		public ushort INT_Flags_Gather, INT_Flags_Use;
+
 		public ushort controller_state;
 
 		public byte Post_Boot, Halt_CTRL;
@@ -343,6 +345,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ROM_Waits_0_N = ROM_Waits_1_N = ROM_Waits_2_N = ROM_Waits_0_S = ROM_Waits_1_S = ROM_Waits_2_S = 0;
 
 			INT_EN = INT_Flags = INT_Master = Wait_CTRL = 0;
+
+			INT_Flags_Gather = INT_Flags_Use = 0;
 
 			Post_Boot = Halt_CTRL = 0;
 

@@ -77,6 +77,7 @@ namespace GBAHawk
 		uint8_t ext_num = 0; // zero here means disconnected
 
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
+		uint16_t INT_Flags_Gather, INT_Flags_Use;
 		uint16_t controller_state;
 		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
 
@@ -167,6 +168,8 @@ namespace GBAHawk
 
 			INT_EN = INT_Flags = INT_Master = Wait_CTRL = 0;
 
+			INT_Flags_Gather = INT_Flags_Use = 0;
+
 			Post_Boot = Halt_CTRL = 0;
 
 			All_RAM_Disable = WRAM_Enable = false;
@@ -224,12 +227,7 @@ namespace GBAHawk
 						// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
 						if ((key_CTRL & 0x3FF) != 0)
 						{
-							INT_Flags |= 0x1000;
-
-							key_Delay = true;
-							Misc_Delays = true;
-							key_Delay_cd = 2;
-							delays_to_process = true;
+							Trigger_IRQ(12);
 						}
 					}
 				}
@@ -240,12 +238,7 @@ namespace GBAHawk
 						// doesn't trigger an interrupt if all keys are selected. (see megaman and bass)
 						if ((key_CTRL & 0x3FF) != 0x3FF)
 						{
-							INT_Flags |= 0x1000;
-
-							key_Delay = true;
-							Misc_Delays = true;
-							key_Delay_cd = 2;
-							delays_to_process = true;
+							Trigger_IRQ(12);
 						}
 					}
 				}
@@ -259,14 +252,18 @@ namespace GBAHawk
 			{
 				if ((controller_state & 0x3FF) == 0x3FF)
 				{
-					INT_Flags |= 0x1000;
-
-					key_Delay = true;
-					Misc_Delays = true;
-					key_Delay_cd = 2;
-					delays_to_process = true;
+					Trigger_IRQ(12);
 				}
 			}
+		}
+
+		void Trigger_IRQ(uint16_t bit)
+		{
+			INT_Flags_Gather |= (uint16_t)(1 << bit);
+
+			delays_to_process = true;
+			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 		}
 
 		void pre_Reg_Write(uint16_t value)
@@ -575,19 +572,7 @@ namespace GBAHawk
 
 		void Update_INT_EN(uint16_t value)
 		{
-			if (INT_Master_On)
-			{
-				if ((value & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-				else
-				{
-					cpu_Next_IRQ_Input_3 = false;
-				}
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;
@@ -609,20 +594,7 @@ namespace GBAHawk
 			// if button is pressed interrupt will immediately fire again
 			do_controller_check();
 
-			// check if any remaining interrupts are still valid
-			if (INT_Master_On)
-			{
-				if ((INT_EN & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-				else
-				{
-					cpu_Next_IRQ_Input_3 = false;
-				}
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;
@@ -632,19 +604,7 @@ namespace GBAHawk
 		{
 			INT_Master_On = (value & 1) == 1;
 
-			if (INT_Master_On)
-			{
-				if ((INT_EN & INT_Flags & 0x3FFF) != 0)
-				{
-					cpu_Next_IRQ_Input_3 = true;
-				}
-			}
-			else
-			{
-				cpu_Next_IRQ_Input_3 = false;
-			}
-
-			// changes to IRQ that happen due to writes should take place next cycle
+			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
 			IRQ_Write_Delay_3 = true;
 			IRQ_Delays = true;
@@ -6109,7 +6069,6 @@ namespace GBAHawk
 		bool dma_Pausable;
 		bool dma_All_Off;
 		bool dma_Shutdown;
-		bool dma_Delay;
 		bool dma_Video_DMA_Start;
 		bool dma_Video_DMA_Delay;
 
@@ -6145,7 +6104,6 @@ namespace GBAHawk
 		uint32_t dma_CNT_intl[4] = { };
 		uint32_t dma_ST_Time[4] = { };
 		uint32_t dma_ROM_Addr[4] = { };
-		uint32_t dma_IRQ_cd[4] = { };
 
 		uint64_t dma_Run_En_Time[4] = { };
 		
@@ -6482,7 +6440,6 @@ namespace GBAHawk
 
 				dma_ST_Time[i] = 0;
 				dma_ROM_Addr[i] = 0;
-				dma_IRQ_cd[i] = 0;
 
 				dma_SRC[i] = 0;
 				dma_DST[i] = 0;
@@ -6523,7 +6480,6 @@ namespace GBAHawk
 			dma_Pausable = true;
 			dma_All_Off = true;
 			dma_Shutdown = false;
-			dma_Delay = false;
 			dma_Video_DMA_Start = false;
 			dma_Video_DMA_Delay = false;
 		}
@@ -6535,7 +6491,6 @@ namespace GBAHawk
 			saver = bool_saver(dma_Pausable, saver);
 			saver = bool_saver(dma_All_Off, saver);
 			saver = bool_saver(dma_Shutdown, saver);
-			saver = bool_saver(dma_Delay, saver);
 			saver = bool_saver(dma_Video_DMA_Start, saver);
 			saver = bool_saver(dma_Video_DMA_Delay, saver);
 
@@ -6573,7 +6528,6 @@ namespace GBAHawk
 			saver = int_array_saver(dma_CNT_intl, saver, 4);
 			saver = int_array_saver(dma_ST_Time, saver, 4);
 			saver = int_array_saver(dma_ROM_Addr, saver, 4);
-			saver = int_array_saver(dma_IRQ_cd, saver, 4);
 
 			saver = long_array_saver(dma_Run_En_Time, saver, 4);
 
@@ -6587,7 +6541,6 @@ namespace GBAHawk
 			loader = bool_loader(&dma_Pausable, loader);
 			loader = bool_loader(&dma_All_Off, loader);
 			loader = bool_loader(&dma_Shutdown, loader);
-			loader = bool_loader(&dma_Delay, loader);
 			loader = bool_loader(&dma_Video_DMA_Start, loader);
 			loader = bool_loader(&dma_Video_DMA_Delay, loader);
 
@@ -6625,7 +6578,6 @@ namespace GBAHawk
 			loader = int_array_loader(dma_CNT_intl, loader, 4);
 			loader = int_array_loader(dma_ST_Time, loader, 4);
 			loader = int_array_loader(dma_ROM_Addr, loader, 4);
-			loader = int_array_loader(dma_IRQ_cd, loader, 4);
 
 			loader = long_array_loader(dma_Run_En_Time, loader, 4);
 
@@ -6637,7 +6589,6 @@ namespace GBAHawk
 	#pragma region Serial port
 
 		bool ser_Internal_Clock, ser_Start;
-		bool ser_Delay, key_Delay;
 
 		uint8_t ser_Bit_Count, ser_Bit_Total;
 		
@@ -6646,7 +6597,6 @@ namespace GBAHawk
 		uint16_t key_CTRL;
 
 		uint32_t ser_RECV_J, ser_TRANS_J;
-		uint32_t ser_Delay_cd, key_Delay_cd;
 		uint32_t ser_div_cnt, ser_Mask;
 
 		uint8_t ser_SC, ser_SD, ser_SI, ser_SO;
@@ -6982,8 +6932,6 @@ namespace GBAHawk
 		{
 			ser_RECV_J = ser_TRANS_J = 0;
 
-			ser_Delay_cd = key_Delay_cd = 0;
-
 			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
 
 			ser_CTRL = 4; // assuming no connection
@@ -7006,8 +6954,6 @@ namespace GBAHawk
 
 			ser_Internal_Clock = ser_Start = false;
 
-			ser_Delay = key_Delay = false;
-
 			ser_Ext_Update = ser_Ext_Tick = false;
 		}
 
@@ -7015,8 +6961,6 @@ namespace GBAHawk
 		{
 			saver = bool_saver(ser_Internal_Clock, saver);
 			saver = bool_saver(ser_Start, saver);
-			saver = bool_saver(ser_Delay, saver);
-			saver = bool_saver(key_Delay, saver);
 			saver = bool_saver(ser_Ext_Update, saver);
 			saver = bool_saver(ser_Ext_Tick, saver);
 
@@ -7054,8 +6998,6 @@ namespace GBAHawk
 		{
 			loader = bool_loader(&ser_Internal_Clock, loader);
 			loader = bool_loader(&ser_Start, loader);
-			loader = bool_loader(&ser_Delay, loader);
-			loader = bool_loader(&key_Delay, loader);
 			loader = bool_loader(&ser_Ext_Update, loader);
 			loader = bool_loader(&ser_Ext_Tick, loader);
 
@@ -7112,7 +7054,6 @@ namespace GBAHawk
 		uint16_t tim_PreSc[4] = { };
 		uint16_t tim_PreSc_En[4] = { };
 		uint16_t tim_ST_Time[4] = { };
-		uint16_t tim_IRQ_CD[4] = { };
 		uint16_t tim_Timer_Tick[4] = { };
 
 		uint16_t PreScales[4] = {0, 0x3F, 0xFF, 0x3FF};
@@ -7324,7 +7265,6 @@ namespace GBAHawk
 				tim_PreSc[i] = 0;
 				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
-				tim_IRQ_CD[i] = 0;
 				tim_Timer_Tick[i] = 1;
 
 				tim_Go[i] = false;
@@ -7362,7 +7302,6 @@ namespace GBAHawk
 			saver = short_array_saver(tim_PreSc, saver, 4);
 			saver = short_array_saver(tim_PreSc_En, saver, 4);
 			saver = short_array_saver(tim_ST_Time, saver, 4);
-			saver = short_array_saver(tim_IRQ_CD, saver, 4);
 			saver = short_array_saver(tim_Timer_Tick, saver, 4);
 
 			return saver;
@@ -7388,7 +7327,6 @@ namespace GBAHawk
 			loader = short_array_loader(tim_PreSc, loader, 4);
 			loader = short_array_loader(tim_PreSc_En, loader, 4);
 			loader = short_array_loader(tim_ST_Time, loader, 4);
-			loader = short_array_loader(tim_IRQ_CD, loader, 4);
 			loader = short_array_loader(tim_Timer_Tick, loader, 4);
 
 			return loader;
@@ -13043,6 +12981,9 @@ namespace GBAHawk
 			saver = short_saver(INT_Flags, saver);
 			saver = short_saver(INT_Master, saver);
 			saver = short_saver(Wait_CTRL, saver);
+			saver = short_saver(INT_Flags_Gather, saver);
+			saver = short_saver(INT_Flags_Use, saver);
+
 			saver = short_saver(controller_state, saver);
 			saver = short_saver(PALRAM_32W_Value, saver);
 			saver = short_saver(VRAM_32W_Value, saver);
@@ -13131,6 +13072,9 @@ namespace GBAHawk
 			loader = short_loader(&INT_Flags, loader);
 			loader = short_loader(&INT_Master, loader);
 			loader = short_loader(&Wait_CTRL, loader);
+			loader = short_loader(&INT_Flags_Gather, loader);
+			loader = short_loader(&INT_Flags_Use, loader);
+
 			loader = short_loader(&controller_state, loader);
 			loader = short_loader(&PALRAM_32W_Value, loader);
 			loader = short_loader(&VRAM_32W_Value, loader);

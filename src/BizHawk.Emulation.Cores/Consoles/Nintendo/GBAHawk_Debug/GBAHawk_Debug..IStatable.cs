@@ -37,6 +37,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(INT_Flags), ref INT_Flags);
 			ser.Sync(nameof(INT_Master), ref INT_Master);
 			ser.Sync(nameof(Wait_CTRL), ref Wait_CTRL);
+			ser.Sync(nameof(INT_Flags_Gather), ref INT_Flags_Gather);
+			ser.Sync(nameof(INT_Flags_Use), ref INT_Flags_Use);
 
 			ser.Sync(nameof(Post_Boot), ref Post_Boot);
 			ser.Sync(nameof(Halt_CTRL), ref Halt_CTRL);

@@ -74,6 +74,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			while (!VBlank_Rise)
 			{
+				INT_Flags_Use = INT_Flags_Gather;
+
+				// NOte that we could have cleared some flags in a write on the previous cycle
+				// This line indicates that those flags will be reset.
+				INT_Flags_Use |= INT_Flags;
+
+				INT_Flags_Gather = 0;
+				
 				if (delays_to_process) { process_delays(); }
 
 				snd_Tick();
@@ -95,6 +103,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void do_single_step()
 		{
+			INT_Flags_Use = INT_Flags_Gather;
+
+			// NOte that we could have cleared some flags in a write on the previous cycle
+			// This line indicates that those flags will be reset.
+			INT_Flags_Use |= INT_Flags;
+
+			INT_Flags_Gather = 0;
+
 			if (delays_to_process) { process_delays(); }
 
 			snd_Tick();
@@ -119,12 +135,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
 						if ((key_CTRL & 0x3FF) != 0)
 						{
-							INT_Flags |= 0x1000;
-
-							key_Delay = true;
-							Misc_Delays = true;
-							key_Delay_cd = 2;
-							delays_to_process = true;
+							Trigger_IRQ(12);
 						}					
 					}
 				}
@@ -135,12 +146,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// doesn't trigger an interrupt if all keys are selected. (see megaman and bass)
 						if ((key_CTRL & 0x3FF) != 0x3FF)
 						{
-							INT_Flags |= 0x1000;
-
-							key_Delay = true;
-							Misc_Delays = true;
-							key_Delay_cd = 2;
-							delays_to_process = true;
+							Trigger_IRQ(12);
 						}
 					}
 				}
@@ -154,14 +160,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if ((controller_state & 0x3FF) == 0x3FF)
 				{
-					INT_Flags |= 0x1000;
-
-					key_Delay = true;
-					Misc_Delays = true;
-					key_Delay_cd = 2;
-					delays_to_process = true;
+					Trigger_IRQ(12);
 				}
 			}
+		}
+
+		public void Trigger_IRQ(ushort bit)
+		{
+			INT_Flags_Gather |= (ushort)(1 << bit);
+
+			delays_to_process = true;
+			IRQ_Write_Delay_3 = true;
+			IRQ_Delays = true;
 		}
 
 		public void process_delays()
@@ -172,6 +182,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					cpu_IRQ_Input = cpu_Next_IRQ_Input;
 					IRQ_Write_Delay = false;
+
+					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
+					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+					{
+						cpu_Trigger_Unhalt = false;
+					}
+					else
+					{
+						cpu_Trigger_Unhalt = true;
+					}
 
 					// check if all delay sources are false
 					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
@@ -194,19 +214,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (IRQ_Write_Delay_3)
 				{
-					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-					IRQ_Write_Delay_2 = true;
-					IRQ_Write_Delay_3 = false;
-
-					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
+					// check if any remaining interrupts are still valid
+					if (INT_Master_On)
 					{
-						cpu_Trigger_Unhalt = false;
+						if ((INT_EN & INT_Flags_Use & 0x3FFF) != 0)
+						{
+							cpu_Next_IRQ_Input_3 = true;
+						}
+						else
+						{
+							cpu_Next_IRQ_Input_3 = false;
+						}
 					}
 					else
 					{
-						cpu_Trigger_Unhalt = true;
+						cpu_Next_IRQ_Input_3 = false;
 					}
+
+					INT_Flags = INT_Flags_Use;
+
+					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+					IRQ_Write_Delay_2 = true;
+					IRQ_Write_Delay_3 = false;
 				}
 			}
 
@@ -239,7 +268,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!key_Delay && !ser_Delay && !PALRAM_32_Delay)
+						if (!PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -265,53 +294,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!key_Delay && !ser_Delay && !VRAM_32_Delay)
-						{
-							Misc_Delays = false;
-						}
-					}
-				}
-
-				if (ser_Delay)
-				{
-					ser_Delay_cd--;
-
-					if (ser_Delay_cd == 0)
-					{
-						// trigger IRQ
-						if (((INT_EN & INT_Flags & 0x80) == 0x80))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						ser_Delay = false;
-
-						// check if all delay sources are false
-						if (!key_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
-						{
-							Misc_Delays = false;
-						}
-					}
-				}
-
-				if (key_Delay)
-				{
-					key_Delay_cd--;
-
-					if (key_Delay_cd == 0)
-					{
-						// trigger IRQ
-						if (((INT_EN & INT_Flags & 0x1000) == 0x1000))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
-						key_Delay = false;
-
-						// check if all delay sources are false
-						if (!ser_Delay && !PALRAM_32_Delay && !VRAM_32_Delay)
+						if (!VRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -330,9 +313,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					ppu_VBL_IRQ_cd -= 1;
 
-					if (ppu_VBL_IRQ_cd == 2)
+					if (ppu_VBL_IRQ_cd == 3)
 					{
-						if ((ppu_STAT & 0x8) == 0x8) { INT_Flags |= 0x1; }				
+						if ((ppu_STAT & 0x8) == 0x8) { Trigger_IRQ(0); }
 					}
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
@@ -344,12 +327,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x1) == 0x1)) 
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }			
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
@@ -362,11 +339,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					ppu_HBL_IRQ_cd -= 1;
 
-					if (ppu_HBL_IRQ_cd == 2)
+					if (ppu_HBL_IRQ_cd == 3)
 					{
-						// trigger HBL IRQ
-						if ((ppu_STAT & 0x10) == 0x10) { INT_Flags |= 0x2; }							
-					}	
+						if ((ppu_STAT & 0x10) == 0x10) { Trigger_IRQ(1); }
+					}
 					else if (ppu_HBL_IRQ_cd == 1)
 					{
 						// trigger any DMAs with HBlank as a start condition
@@ -381,12 +357,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x2) == 0x2))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
@@ -399,18 +369,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					ppu_LYC_IRQ_cd -= 1;
 
-					if (ppu_LYC_IRQ_cd == 2)
+					if (ppu_LYC_IRQ_cd == 3)
 					{
-						if ((ppu_STAT & 0x20) == 0x20) { INT_Flags |= 0x4; }					
+						if ((ppu_STAT & 0x20) == 0x20) { Trigger_IRQ(2); }
 					}
 					else if (ppu_LYC_IRQ_cd == 0)
 					{
-						if (((INT_EN & INT_Flags & 0x4) == 0x4))
-						{
-							cpu_Trigger_Unhalt = true;
-							if (INT_Master_On) { cpu_IRQ_Input = true; }
-						}
-
 						// check for any additional ppu delays
 						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
 						{
