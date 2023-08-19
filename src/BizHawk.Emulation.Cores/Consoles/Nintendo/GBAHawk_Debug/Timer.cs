@@ -34,7 +34,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort[] tim_IRQ_CD = new ushort[4];
 
-		public ushort[] tim_IRQ_Time = new ushort[4];
+		public ushort[] tim_Timer_Tick = new ushort[4];
 
 		public bool[] tim_Go = new bool[4];
 
@@ -213,16 +213,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
-				tim_IRQ_Time[nbr] = 3;
-
 				tim_All_Off = false;
+
+				tim_Timer_Tick[nbr] = 1;
 
 				// if enabling at 0xFFFF and no prescale, it is as if the timer is delayed an extra tick
 				// but the IRQ is still triggered immediately
 				if ((tim_Timer[nbr] == 0xFFFF) && ((value & 3) == 0) && !tim_Tick_By_Prev[nbr])
 				{
-					tim_ST_Time[nbr] = 4;
-					tim_IRQ_Time[nbr] = 2;
+					tim_ST_Time[nbr] = 3;
+					tim_Timer_Tick[nbr] = 0;
 				}
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
@@ -281,14 +281,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// trigger IRQ
 						if (tim_IRQ_CD[i] == 2)
 						{
-							INT_Flags |= (ushort)(0x8 << i);				
+							INT_Flags |= (ushort)(0x8 << i);	
 						}
 						else if (tim_IRQ_CD[i] == 0)
 						{
 							if ((INT_EN & INT_Flags & (0x8 << i)) == (0x8 << i))
 							{ 
 								cpu_Trigger_Unhalt = true;
-								if (INT_Master_On) { cpu_IRQ_Input = true; }
+
+								if (INT_Master_On)
+								{
+									cpu_IRQ_Input = true;
+								}
 							}
 						}
 
@@ -320,7 +324,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (tim_do_tick)
 						{
-							tim_Timer[i] += 1;
+							tim_Timer[i] += tim_Timer_Tick[i];
+
+							if (tim_Timer_Tick[i] == 0)
+							{
+								tim_Timer_Tick[i] = 1;
+
+								if ((tim_Control[i] & 0x40) == 0x40)
+								{
+									// don't re-trigger if an IRQ is already pending
+									if (tim_IRQ_CD[i] == 0)
+									{
+										tim_IRQ_CD[i] = 3;
+									}
+								}
+							}
 
 							if (tim_Timer[i] == 0)
 							{
@@ -329,12 +347,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									// don't re-trigger if an IRQ is already pending
 									if (tim_IRQ_CD[i] == 0)
 									{
-										tim_IRQ_CD[i] = tim_IRQ_Time[i];
-
-										if (tim_IRQ_CD[i] == 2)
-										{ 
-											INT_Flags |= (ushort)(0x8 << i); 
-										}
+										tim_IRQ_CD[i] = 3;
 									}
 								}
 
@@ -397,7 +410,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
 				tim_IRQ_CD[i] = 0;
-				tim_IRQ_Time[i] = 0;
+				tim_Timer_Tick[i] = 1;
 
 				tim_Go[i] = false;
 				tim_Tick_By_Prev[i] = false;
@@ -423,7 +436,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_PreSc_En), ref tim_PreSc_En, false);
 			ser.Sync(nameof(tim_ST_Time), ref tim_ST_Time, false);
 			ser.Sync(nameof(tim_IRQ_CD), ref tim_IRQ_CD, false);
-			ser.Sync(nameof(tim_IRQ_Time), ref tim_IRQ_Time, false);
+			ser.Sync(nameof(tim_Timer_Tick), ref tim_Timer_Tick, false);
 
 			ser.Sync(nameof(tim_Go), ref tim_Go, false);
 			ser.Sync(nameof(tim_Tick_By_Prev), ref tim_Tick_By_Prev, false);

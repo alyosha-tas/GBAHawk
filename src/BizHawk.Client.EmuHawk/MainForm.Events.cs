@@ -317,21 +317,6 @@ namespace BizHawk.Client.GBAHawk
 
 		private void RecordMovieMenuItem_Click(object sender, EventArgs e)
 		{
-			if (!Emulator.Attributes().Released)
-			{
-				var result = this.ModalMessageBox2(
-					"Thanks for using BizHawk!  The emulation core you have selected "
-						+ "is currently BETA-status.  We appreciate your help in testing BizHawk. "
-						+ "You can record a movie on this core if you'd like to, but expect to "
-						+ "encounter bugs and sync problems.  Continue?",
-					"BizHawk");
-
-				if (!result)
-				{
-					return;
-				}
-			}
-
 			using var form = new RecordMovie(this, Config, Game, Emulator, MovieSession, FirmwareManager);
 			form.ShowDialog();
 		}

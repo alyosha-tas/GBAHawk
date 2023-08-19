@@ -2625,7 +2625,21 @@ namespace GBAHawk
 
 					if (tim_do_tick)
 					{
-						tim_Timer[i] += 1;
+						tim_Timer[i] += tim_Timer_Tick[i];
+
+						if (tim_Timer_Tick[i] == 0)
+						{
+							tim_Timer_Tick[i] = 1;
+
+							if ((tim_Control[i] & 0x40) == 0x40)
+							{
+								// don't re-trigger if an IRQ is already pending
+								if (tim_IRQ_CD[i] == 0)
+								{
+									tim_IRQ_CD[i] = 3;
+								}
+							}
+						}
 
 						if (tim_Timer[i] == 0)
 						{
@@ -2634,12 +2648,7 @@ namespace GBAHawk
 								// don't re-trigger if an IRQ is already pending
 								if (tim_IRQ_CD[i] == 0)
 								{
-									tim_IRQ_CD[i] = tim_IRQ_Time[i];
-
-									if (tim_IRQ_CD[i] == 2)
-									{
-										INT_Flags |= (uint16_t)(0x8 << i);
-									}
+									tim_IRQ_CD[i] = 3;
 								}
 							}
 
