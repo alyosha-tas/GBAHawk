@@ -7,8 +7,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	Timer Emulation
 	NOTES: 
 
-	Can tick-by-previous be changed while channel is running?
-
 	Need to test more edge cases of changing prescaler exactly when a tick would happen
 
 	How is count up timing effected by the glitch for activiating with value 0xFFFF?	
@@ -229,6 +227,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// what happens if these changes happen very close together? (The cpu could change them within 2 clocks, but takes 3 to start channel)
 				// for now use the new value		
 				tim_PreSc_En[nbr] = PreScales[value & 3];
+
+				// TODO: check exact changeover timing
+				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
 				if (tim_ST_Time[nbr] == 0)
 				{

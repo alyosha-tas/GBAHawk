@@ -739,10 +739,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								dma_ROM_Being_Used[dma_Chan_Exec] = true;
 							}
 
-							Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
-							Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
-							Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
-							Console.WriteLine(ppu_LY + " " + ppu_Cycle);
+							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
+							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
+							//Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
+							//Console.WriteLine(ppu_LY + " " + ppu_Cycle);
 						}
 					}
 				}

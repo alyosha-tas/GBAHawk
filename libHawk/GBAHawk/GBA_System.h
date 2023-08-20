@@ -7237,6 +7237,9 @@ namespace GBAHawk
 				// for now use the new value
 				tim_PreSc_En[nbr] = PreScales[value & 3];
 
+				// TODO: check exact changeover timing
+				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
+
 				if (tim_ST_Time[nbr] == 0)
 				{
 					tim_ST_Time[nbr] = 2;
