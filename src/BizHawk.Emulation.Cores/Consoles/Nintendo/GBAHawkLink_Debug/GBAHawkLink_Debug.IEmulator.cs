@@ -2,7 +2,9 @@
 
 using BizHawk.Emulation.Common;
 using Newtonsoft.Json.Linq;
+using NymaTypes;
 using static BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug.GBAHawkLink_Debug;
+using static BizHawk.Emulation.Cores.Nintendo.GBALink.GBAHawkLink;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 {
@@ -296,20 +298,44 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public void FillVideoBuffer()
 		{
-			// combine the 2 video buffers from the instances
-			for (int i = 0; i < 160; i++)
+			if (linkSettings.VideoSet == GBAHawkLink_Debug_Settings.VideoSrc.Both)
 			{
-				for (int j = 0; j < 240; j++)
+				for (int i = 0; i < 160; i++)
 				{
-					_vidbuffer[i * 480 + j] = L.vid_buffer[i * 240 + j];
-					_vidbuffer[i * 480 + j + 240] = R.vid_buffer[i * 240 + j];
+					for (int j = 0; j < 240; j++)
+					{
+						_vidbuffer[i * 480 + j] = L.vid_buffer[i * 240 + j];
+						_vidbuffer[i * 480 + j + 240] = R.vid_buffer[i * 240 + j];
+					}
 				}
 			}
+			else if (linkSettings.VideoSet == GBAHawkLink_Debug_Settings.VideoSrc.Left)
+			{
+				for (int i = 0; i < 160; i++)
+				{
+					for (int j = 0; j < 240; j++)
+					{
+						_vidbuffer[i * 240 + j] = L.vid_buffer[i * 240 + j];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 160; i++)
+				{
+					for (int j = 0; j < 240; j++)
+					{
+						_vidbuffer[i * 240 + j] = R.vid_buffer[i * 240 + j];
+					}
+				}
+			}
+
+
 		}
 
-		public int VirtualWidth => 240 * 2;
+		public int VirtualWidth => (linkSettings.VideoSet == GBAHawkLink_Debug_Settings.VideoSrc.Both) ? 480 : 240;
 		public int VirtualHeight => 160;
-		public int BufferWidth => 240 * 2;
+		public int BufferWidth => (linkSettings.VideoSet == GBAHawkLink_Debug_Settings.VideoSrc.Both) ? 480 : 240;
 		public int BufferHeight => 160;
 
 		public int BackgroundColor => unchecked((int)0xFF000000);

@@ -61,7 +61,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 			}
 
 			if (do_frame_fill)
-			{
+			{		
 				FillVideoBuffer();
 			}
 
@@ -202,7 +202,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 		{
 			if (linkSettings.VideoSet == GBLinkSettings.VideoSrc.Both)
 			{
-				// combine the 2 video buffers from the instances
 				for (int i = 0; i < 144; i++)
 				{
 					for (int j = 0; j < 160; j++)
@@ -214,7 +213,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 			}
 			else if (linkSettings.VideoSet == GBLinkSettings.VideoSrc.Left)
 			{
-				// combine the 2 video buffers from the instances
 				for (int i = 0; i < 144; i++)
 				{
 					for (int j = 0; j < 160; j++)
@@ -225,7 +223,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 			}
 			else
 			{
-				// combine the 2 video buffers from the instances
 				for (int i = 0; i < 144; i++)
 				{
 					for (int j = 0; j < 160; j++)

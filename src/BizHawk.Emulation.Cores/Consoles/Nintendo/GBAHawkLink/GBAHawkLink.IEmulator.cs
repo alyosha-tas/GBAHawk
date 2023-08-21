@@ -1,6 +1,7 @@
 ﻿using BizHawk.Emulation.Common;
 using System;
 using System.Text;
+using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
@@ -176,15 +177,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public int[] _vidbuffer_R = new int[240 * 160];
 
 		public int[] _vidbuffer = new int[482 * 160];
-
 		public int[] GetVideoBuffer()
 		{
-			return _vidbuffer;
+			if (Settings.VideoSet == GBALinkSettings.VideoSrc.Both)
+			{
+				return _vidbuffer;
+			}
+			else if (Settings.VideoSet == GBALinkSettings.VideoSrc.Left)
+			{
+				return _vidbuffer_L;
+			}
+			else
+			{
+				return _vidbuffer_R;
+			}
 		}
 
-		public int VirtualWidth => 482;
+		public int VirtualWidth => (Settings.VideoSet == GBALinkSettings.VideoSrc.Both) ? 482 : 240;
 		public int VirtualHeight => 160;
-		public int BufferWidth => 482;
+		public int BufferWidth => (Settings.VideoSet == GBALinkSettings.VideoSrc.Both) ? 482 : 240;
 		public int BufferHeight => 160;
 		public int BackgroundColor => unchecked((int)0xFF000000);
 		public int VsyncNumerator => 262144;
