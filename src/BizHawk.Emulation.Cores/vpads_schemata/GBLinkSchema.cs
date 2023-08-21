@@ -8,7 +8,7 @@ namespace BizHawk.Emulation.Cores
 {
 	[Schema(VSystemID.Raw.GBL)]
 	// ReSharper disable once UnusedMember.Global
-	public class DualGbSchema : IVirtualPadSchema
+	public class GBLinkSchema : IVirtualPadSchema
 	{
 		public IEnumerable<PadSchema> GetPadSchemas(IEmulator core, Action<string> showMessageBox)
 		{

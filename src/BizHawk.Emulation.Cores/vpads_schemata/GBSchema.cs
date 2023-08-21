@@ -99,7 +99,7 @@ namespace BizHawk.Emulation.Cores
 			return new PadSchema
 			{
 				DisplayName = "Tilt",
-				Size = new Size(356, 290),
+				Size = new Size(266, 250),
 				Buttons = new[]
 				{
 					new TargetedPairSchema(14, 17, "P1 Tilt X")

@@ -9,41 +9,85 @@ namespace BizHawk.Emulation.Cores
 {
 	[Schema(VSystemID.Raw.GBA)]
 	// ReSharper disable once UnusedMember.Global
-	public class GbaSchema : IVirtualPadSchema
+	public class GBASchema : IVirtualPadSchema
 	{
 		public IEnumerable<PadSchema> GetPadSchemas(IEmulator core, Action<string> showMessageBox)
 		{
-			yield return StandardController();
-			yield return ConsoleButtons();
+			switch (core.ControllerDefinition.Name)
+			{
+				case "Gameboy Advance Controller + Tilt":
+					yield return StandardController();
+					yield return ConsoleButtons();
+					yield return TiltControls();
+					break;
+				case "Gameboy Advance Controller + Solar":
+					yield return StandardController();
+					yield return ConsoleButtons();
+					yield return SolarControls();
+					break;
+				case "Gameboy Advance Controller + Z Gyro":
+					yield return StandardController();
+					yield return ConsoleButtons();
+					yield return ZControls();
+					break;
+				default:
+					yield return StandardController();
+					yield return ConsoleButtons();
+					break;
+			}
 		}
 
 		private static PadSchema TiltControls()
 		{
 			return new PadSchema
 			{
-				DisplayName = "Tilt Controls",
-				Size = new Size(256, 340),
+				DisplayName = "Tilt",
+				Size = new Size(266, 250),
 				Buttons = new[]
 				{
-					Tilt(10, 15, "X"),
-					Tilt(10, 94, "Y"),
-					Tilt(10, 173, "Z"),
-					new SingleAxisSchema(10, 252, "Light Sensor")
+					new TargetedPairSchema(14, 17, "P1 Tilt X")
 					{
-						TargetSize = new Size(226, 69),
-						MaxValue = byte.MaxValue
+						TargetSize = new Size(256, 240)
 					}
 				}
 			};
 		}
 
-		private static SingleAxisSchema Tilt(int x, int y, string direction)
-			=> new SingleAxisSchema(x, y, "Tilt " + direction)
+		private static PadSchema ZControls()
+		{
+			return new PadSchema
 			{
-				TargetSize = new Size(226, 69),
-				MinValue = short.MinValue,
-				MaxValue = short.MaxValue
+				DisplayName = "Z Gyro",
+				Size = new Size(266, 80),
+				Buttons = new[]
+				{
+					new SingleAxisSchema(10, 15, "P1 Z Gyro")
+					{
+						TargetSize = new Size(226, 69),
+						MinValue = -90,
+						MaxValue = 90
+					}
+				}
 			};
+		}
+
+		private static PadSchema SolarControls()
+		{
+			return new PadSchema
+			{
+				DisplayName = "Solar Sensor",
+				Size = new Size(266, 80),
+				Buttons = new[]
+				{
+					new SingleAxisSchema(10, 15, "P1 Solar")
+					{
+						TargetSize = new Size(226, 69),
+						MinValue = 0x50,
+						MaxValue = 0xF0
+					}
+				}
+			};
+		}
 
 		private static PadSchema StandardController()
 		{
@@ -66,14 +110,14 @@ namespace BizHawk.Emulation.Cores
 			};
 		}
 
-		private static PadSchema ConsoleButtons()
+		protected static PadSchema ConsoleButtons()
 		{
 			return new ConsoleSchema
 			{
 				Size = new Size(75, 50),
 				Buttons = new[]
 				{
-					new ButtonSchema(10, 15,1, "Power")
+					new ButtonSchema(10, 15, "P1 Power") { DisplayName = "Power" }
 				}
 			};
 		}
