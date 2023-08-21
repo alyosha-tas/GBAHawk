@@ -7,11 +7,29 @@ using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
+namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 {
-	public class SubGBAHawk_ControllerDeck
+	public interface IGBAGPUViewable : IEmulatorService
 	{
-		public SubGBAHawk_ControllerDeck(string controller1Name)
+		GBAGPUMemoryAreas GetMemoryAreas();
+
+		/// <summary>
+		/// calls correspond to entering hblank (maybe) and in a regular frame, the sequence of calls will be 160, 161, ..., 227, 0, ..., 159
+		/// </summary>
+		void SetScanlineCallback(Action callback, int scanline);
+	}
+
+	public class GBAGPUMemoryAreas
+	{
+		public IntPtr vram;
+		public IntPtr oam;
+		public IntPtr mmio;
+		public IntPtr palram;
+	}
+
+	public class GBA_ControllerDeck
+	{
+		public GBA_ControllerDeck(string controller1Name, bool is_subrame = false)
 		{
 			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
 				? ctor1(1)
@@ -25,7 +43,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
 
-			Definition.AddAxis("Reset Cycle", 0.RangeTo(280896), 280896);
+			if (is_subrame)
+			{
+				Definition.AddAxis("Reset Cycle", 0.RangeTo(280896), 280896);
+			}
 
 			Definition.MakeImmutable();
 		}
@@ -64,6 +85,70 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			};
 
 		public static string DefaultControllerName => typeof(StandardControls).DisplayName();
+	}
+
+	public class GBALink_ControllerDeck
+	{
+		public GBALink_ControllerDeck(string controller1Name, string controller2Name)
+		{
+			Port1 = GBA_ControllerDeck.ControllerCtors.TryGetValue(controller1Name, out var ctor1)
+				? ctor1(1)
+				: throw new InvalidOperationException($"Invalid controller type: {controller1Name}");
+			Port2 = GBA_ControllerDeck.ControllerCtors.TryGetValue(controller2Name, out var ctor2)
+				? ctor2(2)
+				: throw new InvalidOperationException($"Invalid controller type: {controller2Name}");
+
+			Definition = new ControllerDefinition(Port1.Definition.Name)
+			{
+				BoolButtons = Port1.Definition.BoolButtons
+					.Concat(Port2.Definition.BoolButtons)
+					.Concat(new[] { "Toggle Cable" })
+					.ToList()
+			};
+
+			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
+			foreach (var kvp in Port2.Definition.Axes) Definition.Axes.Add(kvp);
+
+			Definition.MakeImmutable();
+		}
+
+		public ushort ReadPort1(IController c)
+		{
+			return Port1.Read(c);
+		}
+
+		public ushort ReadPort2(IController c)
+		{
+			return Port2.Read(c);
+		}
+
+		public (ushort X, ushort Y) ReadAcc1(IController c)
+			=> Port1.ReadAcc(c);
+
+		public (ushort X, ushort Y) ReadAcc2(IController c)
+			=> Port2.ReadAcc(c);
+
+		public byte ReadSolar1(IController c)
+		{
+			return Port1.SolarSense(c);
+		}
+
+		public byte ReadSolar2(IController c)
+		{
+			return Port2.SolarSense(c);
+		}
+
+		public ControllerDefinition Definition { get; }
+
+		public void SyncState(Serializer ser)
+		{
+			Port1.SyncState(ser);
+
+			Port2.SyncState(ser);
+		}
+
+		private readonly IPort Port1;
+		private readonly IPort Port2;
 	}
 
 

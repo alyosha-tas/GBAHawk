@@ -2,8 +2,8 @@
 using System.Text;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-
 using BizHawk.Common.ReflectionExtensions;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 
 /*
 	GBA Emulator
@@ -306,8 +306,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			string cntrllr1 = GBAHawkLink_ControllerDeck.DefaultControllerName;
-			string cntrllr2 = GBAHawkLink_ControllerDeck.DefaultControllerName;
+			string cntrllr1 = GBA_ControllerDeck.DefaultControllerName;
+			string cntrllr2 = GBA_ControllerDeck.DefaultControllerName;
 
 			if (mappers[0] == 3)
 			{
@@ -335,7 +335,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				cntrllr2 = typeof(StandardSolar).DisplayName();
 			}
 
-			_controllerDeck = new(cntrllr1, cntrllr2, false);
+			_controllerDeck = new(cntrllr1, cntrllr2);
 
 			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
 		}
@@ -563,7 +563,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GBA_core = new byte[0xA0000 * 2];
 
-		private readonly GBAHawkLink_ControllerDeck _controllerDeck;
+		private readonly GBALink_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 

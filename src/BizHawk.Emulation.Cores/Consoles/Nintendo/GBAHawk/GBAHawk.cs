@@ -237,7 +237,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			}
 			else
 			{
-				_controllerDeck = new(GBAHawk_ControllerDeck.DefaultControllerName);
+				_controllerDeck = new(GBA_ControllerDeck.DefaultControllerName);
 			}
 
 			Mem_Domains.vram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
@@ -478,7 +478,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GBA_core = new byte[0xA0000];
 
-		private readonly GBAHawk_ControllerDeck _controllerDeck;
+		private readonly GBA_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 

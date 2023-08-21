@@ -5,8 +5,6 @@ using BizHawk.Emulation.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Common.ReflectionExtensions;
-using BizHawk.Emulation.Cores.Nintendo.GBA;
-using static BizHawk.Emulation.Cores.Nintendo.GBA.GBAHawk;
 
 /*
 	GBA Emulator
@@ -222,19 +220,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			if (mapper == 3)
 			{
-				_controllerDeck = new(typeof(StandardZGyro).DisplayName());
+				_controllerDeck = new(typeof(StandardZGyro).DisplayName(), true);
 			}
 			else if (mapper == 5)
 			{
-				_controllerDeck = new(typeof(StandardTilt).DisplayName());
+				_controllerDeck = new(typeof(StandardTilt).DisplayName(), true);
 			}
 			else if (mapper == 6)
 			{
-				_controllerDeck = new(typeof(StandardSolar).DisplayName());
+				_controllerDeck = new(typeof(StandardSolar).DisplayName(), true);
 			}
 			else
 			{
-				_controllerDeck = new(SubGBAHawk_ControllerDeck.DefaultControllerName);
+				_controllerDeck = new(GBA_ControllerDeck.DefaultControllerName, true);
 			}
 
 			Mem_Domains.vram = LibSubGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 0);
@@ -475,7 +473,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GBA_core = new byte[0xA0000];
 
-		private readonly SubGBAHawk_ControllerDeck _controllerDeck;
+		private readonly GBA_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 

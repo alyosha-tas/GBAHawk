@@ -1,6 +1,6 @@
 ﻿using System;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 {
@@ -40,8 +40,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			use_sram = linkSyncSettings.Use_SRAM;
 			
 			_controllerDeck = new(
-				GBAHawk_Debug_ControllerDeck.DefaultControllerName,
-				GBAHawk_Debug_ControllerDeck.DefaultControllerName);
+				GBA_ControllerDeck.DefaultControllerName,
+				GBA_ControllerDeck.DefaultControllerName);
 
 			var temp_set_L = new GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_Settings();
 			var temp_set_R = new GBAHawk_Debug.GBAHawk_Debug.GBAHawk_Debug_Settings();
@@ -93,7 +93,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public int _frame = 0;
 
-		private readonly GBAHawkLink_Debug_ControllerDeck _controllerDeck;
+		private readonly GBALink_ControllerDeck _controllerDeck;
 
 		private readonly ITraceable _tracer;
 

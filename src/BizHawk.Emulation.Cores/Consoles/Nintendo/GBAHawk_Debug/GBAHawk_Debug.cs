@@ -26,27 +26,6 @@ using BizHawk.Common.ReflectionExtensions;
 	TODO: Investigate interaction between halt and DMA
 */
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
-{
-	public interface IGBAGPUViewable : IEmulatorService
-	{
-		GBAGPUMemoryAreas GetMemoryAreas();
-
-		/// <summary>
-		/// calls correspond to entering hblank (maybe) and in a regular frame, the sequence of calls will be 160, 161, ..., 227, 0, ..., 159
-		/// </summary>
-		void SetScanlineCallback(Action callback, int scanline);
-	}
-
-	public class GBAGPUMemoryAreas
-	{
-		public IntPtr vram;
-		public IntPtr oam;
-		public IntPtr mmio;
-		public IntPtr palram;
-	}
-}
-
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
 	[Core(CoreNames.GBAHawk_Debug, "")]
@@ -253,7 +232,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 			else
 			{
-				_controllerDeck = new(GBAHawk_Debug_ControllerDeck.DefaultControllerName, subframe);
+				_controllerDeck = new(GBA_ControllerDeck.DefaultControllerName, subframe);
 			}
 			
 			ser.Register<IVideoProvider>(this);
@@ -322,7 +301,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public DisplayType Region => DisplayType.NTSC;
 
-		private readonly GBAHawk_Debug_ControllerDeck _controllerDeck;
+		private readonly GBA_ControllerDeck _controllerDeck;
 
 		public void HardReset()
 		{
