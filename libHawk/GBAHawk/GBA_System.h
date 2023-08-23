@@ -7408,6 +7408,7 @@ namespace GBAHawk
 
 		bool ppu_BG_On[4] = { };
 		bool ppu_BG_On_New[4] = { };
+		bool ppu_BG_Ref_LY_Change[4] = { };
 
 		// Sprite Evaluation
 		bool ppu_Rot_Scale;
@@ -8034,14 +8035,7 @@ namespace GBAHawk
 		{
 			if (ppu_BG_On[layer])
 			{
-				if (ppu_Cycle < 40)
-				{
-					ppu_ROT_REF_LY[layer] = ppu_LY;
-				}
-				else
-				{
-					ppu_ROT_REF_LY[layer] = (uint16_t)(ppu_LY + 1);
-				}
+				ppu_BG_Ref_LY_Change[layer] = true;
 			}
 		}
 
@@ -11037,6 +11031,8 @@ namespace GBAHawk
 				ppu_BG_Y[0] = 0;
 
 				ppu_BG_On_Update_Time[i] = 0;
+
+				ppu_BG_Ref_LY_Change[i] = false;
 			}
 
 			ppu_Forced_Blank_Time = ppu_OBJ_On_Time = 0;
@@ -11283,6 +11279,7 @@ namespace GBAHawk
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
 			saver = bool_array_saver(ppu_BG_On_New, saver, 4);
+			saver = bool_array_saver(ppu_BG_Ref_LY_Change, saver, 4);
 
 			saver = short_array_saver(ppu_BG_CTRL, saver, 4);
 			saver = short_array_saver(ppu_BG_X, saver, 4);
@@ -11486,7 +11483,8 @@ namespace GBAHawk
 
 			loader = bool_array_loader(ppu_BG_On, loader, 4);
 			loader = bool_array_loader(ppu_BG_On_New, loader, 4);
-
+			loader = bool_array_loader(ppu_BG_Ref_LY_Change, loader, 4);
+			
 			loader = short_array_loader(ppu_BG_CTRL, loader, 4);
 			loader = short_array_loader(ppu_BG_X, loader, 4);
 			loader = short_array_loader(ppu_BG_Y, loader, 4);
@@ -11940,13 +11938,19 @@ namespace GBAHawk
 			{
 				if (chan_A)
 				{
-					snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
-					if (snd_FIFO_A_ptr < 31) { snd_FIFO_A_ptr += 1; }
+					if (snd_FIFO_A_ptr < 32)
+					{
+						snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
+						snd_FIFO_A_ptr += 1;
+					}
 				}
 				else
 				{
-					snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
-					if (snd_FIFO_B_ptr < 31) { snd_FIFO_B_ptr += 1; }
+					if (snd_FIFO_B_ptr < 32)
+					{
+						snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
+						snd_FIFO_B_ptr += 1;
+					}
 				}
 			}
 		}
@@ -12587,6 +12591,8 @@ namespace GBAHawk
 			{
 				snd_Write_Reg_8((uint32_t)(0x60 + i), 0);
 			}
+
+			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
 
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
 

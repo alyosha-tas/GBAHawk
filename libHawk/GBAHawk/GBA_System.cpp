@@ -1660,97 +1660,105 @@ namespace GBAHawk
 					else if (ppu_LYC_Vid_Check_cd == 4)
 					{
 						// latch rotation and scaling XY here
-						if ((ppu_LY < 160) && !ppu_Forced_Blank)
+						if (ppu_LY < 160)
 						{
-							if (ppu_BG_Mode > 0)
+							ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X[2];
+							ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y[2];
+
+							ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
+							ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
+
+							if (ppu_BG_Ref_LY_Change[2])
 							{
-								ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X[2];
-								ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y[2];
-
-								ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
-								ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
-
-								ppu_Convert_Offset_to_float(2);
-								ppu_Convert_Offset_to_float(3);
+								ppu_ROT_REF_LY[2] = ppu_LY;
 							}
+
+							if (ppu_BG_Ref_LY_Change[3])
+							{
+								ppu_ROT_REF_LY[3] = ppu_LY;
+							}
+
+							ppu_Convert_Offset_to_float(2);
+							ppu_Convert_Offset_to_float(3);
+
+							ppu_BG_Ref_LY_Change[2] = ppu_BG_Ref_LY_Change[3] = false;
 
 							ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
 
-							ppu_Rendering_Complete = false;
-							ppu_PAL_Rendering_Complete = false;
-
-							for (int i = 0; i < 4; i++)
+							if (!ppu_Forced_Blank)
 							{
-								ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
-								ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
+								ppu_Rendering_Complete = false;
+								ppu_PAL_Rendering_Complete = false;
 
-								ppu_Fetch_Count[i] = 0;
-
-								ppu_Scroll_Cycle[i] = 0;
-
-								ppu_Pixel_Color[i] = 0;
-
-								ppu_BG_Has_Pixel[i] = false;
-							}
-
-							if (ppu_BG_Mode <= 1)
-							{
-								ppu_BG_Start_Time[0] = (uint16_t)(32 - 4 * (ppu_BG_X[0] & 0x7));
-								ppu_BG_Start_Time[1] = (uint16_t)(32 - 4 * (ppu_BG_X[1] & 0x7));
-
-								ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
-								ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
-
-								if (ppu_BG_Mode == 0)
+								for (int i = 0; i < 4; i++)
 								{
-									ppu_BG_Start_Time[2] = (uint16_t)(32 - 4 * (ppu_BG_X[2] & 0x7));
-									ppu_BG_Start_Time[3] = (uint16_t)(32 - 4 * (ppu_BG_X[3] & 0x7));
+									ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
+									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
 
-									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-									ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+									ppu_Fetch_Count[i] = 0;
+
+									ppu_Scroll_Cycle[i] = 0;
+
+									ppu_Pixel_Color[i] = 0;
+
+									ppu_BG_Has_Pixel[i] = false;
+								}
+
+								if (ppu_BG_Mode <= 1)
+								{
+									ppu_BG_Start_Time[0] = (uint16_t)(32 - 4 * (ppu_BG_X[0] & 0x7));
+									ppu_BG_Start_Time[1] = (uint16_t)(32 - 4 * (ppu_BG_X[1] & 0x7));
+
+									ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
+									ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
+
+									if (ppu_BG_Mode == 0)
+									{
+										ppu_BG_Start_Time[2] = (uint16_t)(32 - 4 * (ppu_BG_X[2] & 0x7));
+										ppu_BG_Start_Time[3] = (uint16_t)(32 - 4 * (ppu_BG_X[3] & 0x7));
+
+										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+									}
+									else
+									{
+										ppu_BG_Start_Time[2] = 32;
+
+										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+										ppu_BG_Rendering_Complete[3] = true;
+									}
 								}
 								else
 								{
-									ppu_BG_Start_Time[2] = 32;
-
+									ppu_BG_Rendering_Complete[0] = true;
+									ppu_BG_Rendering_Complete[1] = true;
 									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
 									ppu_BG_Rendering_Complete[3] = true;
-								}
-							}
-							else
-							{
-								ppu_BG_Rendering_Complete[0] = true;
-								ppu_BG_Rendering_Complete[1] = true;
-								ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-								ppu_BG_Rendering_Complete[3] = true;
 
-								ppu_BG_Start_Time[2] = 32;
+									ppu_BG_Start_Time[2] = 32;
 
-								if (ppu_BG_Mode == 2)
-								{
-									ppu_BG_Start_Time[3] = 32;
+									if (ppu_BG_Mode == 2)
+									{
+										ppu_BG_Start_Time[3] = 32;
 
-									ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
+									}
 								}
 							}
 						}
 					}
 					else if (ppu_LYC_Vid_Check_cd == 0)
 					{
-						// Latch C-D rotation scaling parameters here.
-						// Seems like X - parameters are not latched but Y - parameters are not?
-						ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B[2];
-						ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_B[3];
-						ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D[2];
-						ppu_BG_Rot_D_Latch[3] = ppu_BG_Rot_D[3];
-
-						if ((ppu_LY < 160) && !ppu_Forced_Blank)
+						if (ppu_LY < 160)
 						{
-							if (ppu_BG_Mode > 0)
-							{
-								ppu_Convert_Rotation_to_float_BD(2);
-								ppu_Convert_Rotation_to_float_BD(3);
-							}
+							// Latch B-D rotation scaling parameters here.
+							ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B[2];
+							ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_B[3];
+							ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D[2];
+							ppu_BG_Rot_D_Latch[3] = ppu_BG_Rot_D[3];
+
+							ppu_Convert_Rotation_to_float_BD(2);
+							ppu_Convert_Rotation_to_float_BD(3);
 						}
 							
 						// video capture DMA, check timing
@@ -2225,7 +2233,7 @@ namespace GBAHawk
 				snd_FIFO_A_ptr -= 1;
 			}
 
-			if (snd_FIFO_A_ptr < 16)
+			if (snd_FIFO_A_ptr <= 14)
 			{
 				if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
 			}
@@ -2251,7 +2259,7 @@ namespace GBAHawk
 				snd_FIFO_B_ptr -= 1;
 			}
 
-			if (snd_FIFO_B_ptr < 16)
+			if (snd_FIFO_B_ptr <= 14)
 			{
 				if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
 			}

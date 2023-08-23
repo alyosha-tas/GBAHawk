@@ -53,6 +53,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_BG_On = new bool[4];
 		public bool[] ppu_BG_On_New = new bool[4];
 
+		public bool[] ppu_BG_Ref_LY_Change = new bool[4];
+
 		public int ppu_BG_Mode, ppu_Display_Frame;
 		public int ppu_X_RS, ppu_Y_RS;
 		public int ppu_Forced_Blank_Time;
@@ -715,14 +717,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			if (ppu_BG_On[layer])
 			{
-				if (ppu_Cycle < 40)
-				{
-					ppu_ROT_REF_LY[layer] = ppu_LY;
-				}
-				else
-				{
-					ppu_ROT_REF_LY[layer] = (ushort)(ppu_LY + 1);
-				}			
+				ppu_BG_Ref_LY_Change[layer] = true;
 			}
 		}
 
@@ -3879,6 +3874,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_BG_Y_Latch[0] = 0;
 
 				ppu_BG_On_Update_Time[i] = 0;
+
+				ppu_BG_Ref_LY_Change[i] = false;
 			}
 
 			ppu_Forced_Blank_Time = ppu_OBJ_On_Time = 0;
@@ -4091,6 +4088,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_BG_On), ref ppu_BG_On, false);
 			ser.Sync(nameof(ppu_BG_On_New), ref ppu_BG_On_New, false);
+			ser.Sync(nameof(ppu_BG_Ref_LY_Change), ref ppu_BG_Ref_LY_Change, false);
 
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
 			ser.Sync(nameof(ppu_Display_Frame), ref ppu_Display_Frame);

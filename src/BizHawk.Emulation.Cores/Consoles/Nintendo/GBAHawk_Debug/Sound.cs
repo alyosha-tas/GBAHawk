@@ -317,13 +317,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (chan_A)
 				{
-					snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];				
-					if (snd_FIFO_A_ptr < 31) { snd_FIFO_A_ptr += 1; }
+					if (snd_FIFO_A_ptr < 32)
+					{
+						snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
+						snd_FIFO_A_ptr += 1;
+					}
 				}
 				else
 				{
-					snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
-					if (snd_FIFO_B_ptr < 31) { snd_FIFO_B_ptr += 1; }
+					if (snd_FIFO_B_ptr < 32)
+					{
+						snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
+						snd_FIFO_B_ptr += 1;
+					}
 				}
 			}		
 		}
@@ -1258,7 +1264,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					snd_FIFO_A_ptr -= 1;				
 				}
 
-				if (snd_FIFO_A_ptr < 16)
+				if (snd_FIFO_A_ptr <= 14)
 				{
 					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
 				}
@@ -1285,7 +1291,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					snd_FIFO_B_ptr -= 1;		
 				}
 
-				if (snd_FIFO_B_ptr < 16)
+				if (snd_FIFO_B_ptr <= 14)
 				{
 					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
 				}
@@ -1366,6 +1372,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			// duty and length are reset
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
+
+			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
 
 			// reset state variables
 			snd_SQ1_enable = snd_SQ1_swp_enable = snd_SQ2_enable = snd_WAVE_enable = snd_NOISE_enable = false;
