@@ -809,13 +809,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// 32 bit fetch regardless of mode
 						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
 
-						if ((cpu_Multi_List_Ptr != 0) && (cpu_Temp_Addr == 0x08000000))
-						{
-							// special glitch case for prefetcher
-							pre_Buffer_Cnt = 0;
-							pre_Check_Addr = pre_Read_Addr;
-						}
-
 						cpu_IRQ_Input_Use = cpu_IRQ_Input;
 					}
 
@@ -1596,13 +1589,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						// 32 bit fetch regardless of mode
 						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
-
-						if ((cpu_Multi_List_Ptr != 0) && (cpu_Temp_Addr == 0x08000000))
-						{
-							// special glitch case for prefetcher
-							pre_Buffer_Cnt = 0;
-							pre_Check_Addr = pre_Read_Addr;
-						}
 
 						cpu_IRQ_Input_Use = cpu_IRQ_Input;
 					}

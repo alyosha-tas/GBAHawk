@@ -45,6 +45,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool pre_Force_Non_Seq;
 
+		public bool pre_Previous_Thumb;
+
 		public void pre_Reg_Write(ushort value)
 		{
 			if (!pre_Enable && ((value & 0x4000) == 0x4000))
@@ -84,12 +86,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// if not enabled, finish current fetch
 			if (pre_Run)
 			{
-				if ((pre_Fetch_Cnt != 0) || ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000)))
+				if ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000))
 				{
 					if (pre_Fetch_Cnt == 0)
 					{
-						if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) { return; } // cannot start an access on the internal cycles of an instruction
-						if (pre_Buffer_Cnt == 8) { return; } // don't start a read if buffer is full
+						// cannot start an access on the internal cycles of an instruction
+						if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) { return; }
+
+						// don't start a read if buffer is full
+						if (pre_Buffer_Cnt >= 8) { return; }
+
+						if (pre_Previous_Thumb != cpu_Thumb_Mode)
+						{
+							pre_Check_Addr = 0;
+							pre_Buffer_Cnt = 0;
+							pre_Seq_Access = false;
+						}
+
+						pre_Previous_Thumb = cpu_Thumb_Mode;
 
 						pre_Fetch_Wait = 1;
 
@@ -124,6 +138,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (!pre_Enable) { pre_Run = false; }
 					}
 				}
+				else
+				{
+					pre_Buffer_Cnt = 0;
+					pre_Fetch_Cnt = 0;
+					pre_Check_Addr = 0;
+					pre_Seq_Access = false;
+				}
 			}
 		}
 
@@ -140,6 +161,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			pre_Run = pre_Enable = pre_Seq_Access = false;
 
 			pre_Force_Non_Seq = false;
+
+			pre_Previous_Thumb = false;
 		}
 
 		public void pre_SyncState(Serializer ser)
@@ -152,6 +175,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Fetch_Wait), ref pre_Fetch_Wait);
 			ser.Sync(nameof(pre_Fetch_Cnt_Inc), ref pre_Fetch_Cnt_Inc);
 			ser.Sync(nameof(pre_Cycle_Glitch), ref pre_Cycle_Glitch);
+			ser.Sync(nameof(pre_Previous_Thumb), ref pre_Previous_Thumb);
 
 			ser.Sync(nameof(pre_Run), ref pre_Run);
 			ser.Sync(nameof(pre_Enable), ref pre_Enable);

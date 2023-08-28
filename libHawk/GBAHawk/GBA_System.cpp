@@ -2630,7 +2630,7 @@ namespace GBAHawk
 		// if not enabled, finish current fetch
 		if (pre_Run)
 		{
-			if ((pre_Fetch_Cnt != 0) || ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000)))
+			if ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000))
 			{
 				if (pre_Fetch_Cnt == 0)
 				{
@@ -2638,6 +2638,14 @@ namespace GBAHawk
 					else if (pre_Buffer_Cnt == 8) {} // don't start a read if buffer is full
 					else
 					{
+						if (pre_Previous_Thumb != cpu_Thumb_Mode)
+						{
+							pre_Check_Addr = 0;
+							pre_Buffer_Cnt = 0;
+						}
+
+						pre_Previous_Thumb = cpu_Thumb_Mode;
+						
 						pre_Fetch_Wait = 1;
 
 						if (pre_Read_Addr < 0x0A000000)
@@ -2687,6 +2695,12 @@ namespace GBAHawk
 						if (!pre_Enable) { pre_Run = false; }
 					}
 				}
+			}
+			else
+			{
+				pre_Buffer_Cnt = 0;
+				pre_Fetch_Cnt = 0;
+				pre_Check_Addr = 0;
 			}
 		}
 
@@ -3730,13 +3744,6 @@ namespace GBAHawk
 				// 32 bit fetch regardless of mode
 				cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
 
-				if ((cpu_Multi_List_Ptr != 0) && (cpu_Temp_Addr == 0x08000000))
-				{
-					// special glitch case for prefetcher
-					pre_Buffer_Cnt = 0;
-					pre_Check_Addr = pre_Read_Addr;
-				}
-
 				cpu_IRQ_Input_Use = cpu_IRQ_Input;
 			}
 
@@ -4517,13 +4524,6 @@ namespace GBAHawk
 					
 				// 32 bit fetch regardless of mode
 				cpu_Fetch_Wait = Wait_State_Access_32(cpu_Temp_Addr, cpu_Seq_Access);
-
-				if ((cpu_Multi_List_Ptr != 0) && (cpu_Temp_Addr == 0x08000000))
-				{
-					// special glitch case for prefetcher
-					pre_Buffer_Cnt = 0;
-					pre_Check_Addr = pre_Read_Addr;
-				}
 
 				cpu_IRQ_Input_Use = cpu_IRQ_Input;
 			}
