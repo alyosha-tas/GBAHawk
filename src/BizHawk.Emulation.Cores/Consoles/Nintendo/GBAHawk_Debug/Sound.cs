@@ -312,26 +312,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void snd_Write_FIFO_Data(bool chan_A)
 		{
 			//Console.WriteLine(CycleCount + " " + chan_A);
-			
-			for (int i = 0; i < 4; i++)
+			if (snd_CTRL_power)
 			{
-				if (chan_A)
+				for (int i = 0; i < 4; i++)
 				{
-					if (snd_FIFO_A_ptr < 32)
+					if (chan_A)
 					{
-						snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
-						snd_FIFO_A_ptr += 1;
+						if (snd_FIFO_A_ptr < 32)
+						{
+							snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
+							snd_FIFO_A_ptr += 1;
+						}
+					}
+					else
+					{
+						if (snd_FIFO_B_ptr < 32)
+						{
+							snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
+							snd_FIFO_B_ptr += 1;
+						}
 					}
 				}
-				else
-				{
-					if (snd_FIFO_B_ptr < 32)
-					{
-						snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
-						snd_FIFO_B_ptr += 1;
-					}
-				}
-			}		
+			}
 		}
 
 		public void snd_Update_Regs(uint addr, byte value)
@@ -1266,7 +1268,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (snd_FIFO_A_ptr <= 14)
 				{
-					if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
+					if (dma_Go[1] && dma_Start_Snd_Vid[1])
+					{
+						FIFO_DMA_A_cd = 1;
+						FIFO_DMA_A_Delay = true;
+						Misc_Delays = true;
+						delays_to_process = true;					
+					}
 				}
 
 				snd_FIFO_A_Output = ((sbyte)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
@@ -1293,7 +1301,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				if (snd_FIFO_B_ptr <= 14)
 				{
-					if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
+					if (dma_Go[2] && dma_Start_Snd_Vid[2])
+					{
+						FIFO_DMA_B_cd = 1;
+						FIFO_DMA_B_Delay = true;
+						Misc_Delays = true;
+						delays_to_process = true;
+					}
 				}
 
 				snd_FIFO_B_Output = ((sbyte)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;
@@ -1421,6 +1435,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			snd_SQ1_output = snd_SQ2_output = snd_WAVE_output = snd_NOISE_output = 0;
 
 			snd_SQ1_length = snd_SQ2_length = snd_WAVE_length = snd_NOISE_length = 0;
+
 			snd_SQ1_len_cntr = snd_SQ2_len_cntr = snd_WAVE_len_cntr = snd_NOISE_len_cntr = 0;
 
 			snd_Master_Clock = 0;
@@ -1440,6 +1455,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			snd_Wave_Bank = snd_Wave_Bank_Playing = 0;
 
 			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
+
 			snd_FIFO_A_Sample = snd_FIFO_B_Sample = 0;
 
 			snd_FIFO_A_Output = snd_FIFO_B_Output = 0;

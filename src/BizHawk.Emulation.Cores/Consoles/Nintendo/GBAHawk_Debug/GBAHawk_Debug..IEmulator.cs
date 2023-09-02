@@ -13,6 +13,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public uint PALRAM_32W_Addr, VRAM_32W_Addr;
 		public ushort PALRAM_32W_Value, VRAM_32W_Value;
 
+		public ushort FIFO_DMA_A_cd, FIFO_DMA_B_cd;
+
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
 		public byte Solar_state;
@@ -22,6 +24,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool VRAM_32_Check, PALRAM_32_Check;
 		public bool VRAM_32_Delay, PALRAM_32_Delay;
+
+		public bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
 
 		public bool IRQ_Delays, Misc_Delays;
 
@@ -268,7 +272,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!PALRAM_32_Delay)
+						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -294,7 +298,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!VRAM_32_Delay)
+						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (FIFO_DMA_A_Delay)
+				{
+					FIFO_DMA_A_cd--;
+					
+					if (FIFO_DMA_A_cd == 0)
+					{
+						dma_Run[1] = true;
+
+						FIFO_DMA_A_Delay = false;
+
+						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (FIFO_DMA_B_Delay)
+				{
+					FIFO_DMA_B_cd--;
+
+					if (FIFO_DMA_B_cd == 0)
+					{
+						dma_Run[2] = true;
+
+						FIFO_DMA_B_Delay = false;
+
+						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}

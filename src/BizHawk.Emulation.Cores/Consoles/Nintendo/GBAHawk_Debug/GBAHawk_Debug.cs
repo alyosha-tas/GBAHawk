@@ -313,6 +313,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			VRAM_32_Check = PALRAM_32_Check = false;
 
+			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
+
 			controller_state = 0x3FF;
 
 			Memory_CTRL = 0;
@@ -320,6 +322,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Last_BIOS_Read = 0;
 
 			WRAM_Waits = SRAM_Waits = 0;
+
+			FIFO_DMA_A_cd = FIFO_DMA_B_cd = 0;
 
 			ROM_Waits_0_N = ROM_Waits_1_N = ROM_Waits_2_N = ROM_Waits_0_S = ROM_Waits_1_S = ROM_Waits_2_S = 0;
 

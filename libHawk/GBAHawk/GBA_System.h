@@ -71,6 +71,7 @@ namespace GBAHawk
 		bool VRAM_32_Check, PALRAM_32_Check;
 		bool VRAM_32_Delay, PALRAM_32_Delay;
 		bool IRQ_Delays, Misc_Delays;
+		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
 
 		uint8_t Post_Boot, Halt_CTRL;
 
@@ -80,6 +81,7 @@ namespace GBAHawk
 		uint16_t INT_Flags_Gather, INT_Flags_Use;
 		uint16_t controller_state;
 		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
+		uint16_t FIFO_DMA_A_cd, FIFO_DMA_B_cd;
 
 		uint32_t PALRAM_32W_Addr, VRAM_32W_Addr;
 		uint32_t Memory_CTRL, ROM_Length;
@@ -156,6 +158,8 @@ namespace GBAHawk
 
 			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
 
+			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
+
 			VRAM_32_Check = PALRAM_32_Check = false;
 
 			controller_state = 0x3FF;
@@ -173,6 +177,10 @@ namespace GBAHawk
 			INT_Flags_Gather = INT_Flags_Use = 0;
 
 			Post_Boot = Halt_CTRL = 0;
+
+			PALRAM_32W_Value = VRAM_32W_Value = 0;
+			
+			FIFO_DMA_A_cd = FIFO_DMA_B_cd = 0;
 
 			All_RAM_Disable = WRAM_Enable = false;
 
@@ -11880,22 +11888,25 @@ namespace GBAHawk
 
 		void snd_Write_FIFO_Data(bool chan_A)
 		{
-			for (int i = 0; i < 4; i++)
+			if (snd_CTRL_power)
 			{
-				if (chan_A)
+				for (int i = 0; i < 4; i++)
 				{
-					if (snd_FIFO_A_ptr < 32)
+					if (chan_A)
 					{
-						snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
-						snd_FIFO_A_ptr += 1;
+						if (snd_FIFO_A_ptr < 32)
+						{
+							snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
+							snd_FIFO_A_ptr += 1;
+						}
 					}
-				}
-				else
-				{
-					if (snd_FIFO_B_ptr < 32)
+					else
 					{
-						snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
-						snd_FIFO_B_ptr += 1;
+						if (snd_FIFO_B_ptr < 32)
+						{
+							snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
+							snd_FIFO_B_ptr += 1;
+						}
 					}
 				}
 			}
@@ -12498,6 +12509,8 @@ namespace GBAHawk
 				snd_FIFO_B[i] = 0;
 			}
 
+			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
+
 			// duty and length are reset
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
 
@@ -12538,8 +12551,6 @@ namespace GBAHawk
 				snd_Write_Reg_8((uint32_t)(0x60 + i), 0);
 			}
 
-			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
-
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
 
 			snd_SQ1_enable = snd_SQ1_swp_enable = snd_SQ2_enable = snd_WAVE_enable = snd_NOISE_enable = false;
@@ -12568,6 +12579,7 @@ namespace GBAHawk
 			snd_Wave_Bank = snd_Wave_Bank_Playing = 0;
 
 			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
+
 			snd_FIFO_A_Sample = snd_FIFO_B_Sample = 0;
 
 			snd_FIFO_A_Output = snd_FIFO_B_Output = 0;
@@ -12927,6 +12939,8 @@ namespace GBAHawk
 			saver = bool_saver(PALRAM_32_Delay, saver);
 			saver = bool_saver(IRQ_Delays, saver);
 			saver = bool_saver(Misc_Delays, saver);
+			saver = bool_saver(FIFO_DMA_A_Delay, saver);
+			saver = bool_saver(FIFO_DMA_B_Delay, saver);
 
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
@@ -12942,6 +12956,8 @@ namespace GBAHawk
 			saver = short_saver(controller_state, saver);
 			saver = short_saver(PALRAM_32W_Value, saver);
 			saver = short_saver(VRAM_32W_Value, saver);
+			saver = short_saver(FIFO_DMA_A_cd, saver);
+			saver = short_saver(FIFO_DMA_B_cd, saver);
 
 			saver = int_saver(PALRAM_32W_Addr, saver);
 			saver = int_saver(VRAM_32W_Addr, saver);
@@ -13019,6 +13035,8 @@ namespace GBAHawk
 			loader = bool_loader(&PALRAM_32_Delay, loader);
 			loader = bool_loader(&IRQ_Delays, loader);
 			loader = bool_loader(&Misc_Delays, loader);
+			loader = bool_loader(&FIFO_DMA_A_Delay, loader);
+			loader = bool_loader(&FIFO_DMA_B_Delay, loader);
 
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);
@@ -13034,6 +13052,8 @@ namespace GBAHawk
 			loader = short_loader(&controller_state, loader);
 			loader = short_loader(&PALRAM_32W_Value, loader);
 			loader = short_loader(&VRAM_32W_Value, loader);
+			loader = short_loader(&FIFO_DMA_A_cd, loader);
+			loader = short_loader(&FIFO_DMA_B_cd, loader);
 
 			loader = int_loader(&PALRAM_32W_Addr, loader);
 			loader = int_loader(&VRAM_32W_Addr, loader);

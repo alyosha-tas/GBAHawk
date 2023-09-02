@@ -1527,7 +1527,7 @@ namespace GBAHawk
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!PALRAM_32_Delay)
+						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -1552,7 +1552,41 @@ namespace GBAHawk
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!VRAM_32_Delay)
+						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (FIFO_DMA_A_Delay)
+				{
+					FIFO_DMA_A_cd--;
+
+					if (FIFO_DMA_A_cd == 0)
+					{
+						dma_Run[1] = true;
+
+						FIFO_DMA_A_Delay = false;
+
+						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (FIFO_DMA_B_Delay)
+				{
+					FIFO_DMA_B_cd--;
+
+					if (FIFO_DMA_B_cd == 0)
+					{
+						dma_Run[2] = true;
+
+						FIFO_DMA_B_Delay = false;
+
+						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -2235,7 +2269,13 @@ namespace GBAHawk
 
 			if (snd_FIFO_A_ptr <= 14)
 			{
-				if (dma_Go[1] && dma_Start_Snd_Vid[1]) { dma_Run[1] = true; }
+				if (dma_Go[1] && dma_Start_Snd_Vid[1])
+				{
+					FIFO_DMA_A_cd = 1;
+					FIFO_DMA_A_Delay = true;
+					Misc_Delays = true;
+					delays_to_process = true;
+				}
 			}
 
 			snd_FIFO_A_Output = ((int8_t)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
@@ -2261,7 +2301,13 @@ namespace GBAHawk
 
 			if (snd_FIFO_B_ptr <= 14)
 			{
-				if (dma_Go[2] && dma_Start_Snd_Vid[2]) { dma_Run[2] = true; }
+				if (dma_Go[2] && dma_Start_Snd_Vid[2])
+				{
+					FIFO_DMA_B_cd = 1;
+					FIFO_DMA_B_Delay = true;
+					Misc_Delays = true;
+					delays_to_process = true;
+				}
 			}
 
 			snd_FIFO_B_Output = ((int8_t)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;
@@ -2701,6 +2747,7 @@ namespace GBAHawk
 				pre_Buffer_Cnt = 0;
 				pre_Fetch_Cnt = 0;
 				pre_Check_Addr = 0;
+				pre_Seq_Access = false;
 			}
 		}
 
