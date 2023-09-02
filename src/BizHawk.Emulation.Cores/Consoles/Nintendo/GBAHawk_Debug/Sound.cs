@@ -1270,7 +1270,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (dma_Go[1] && dma_Start_Snd_Vid[1])
 					{
-						FIFO_DMA_A_cd = 1;
+						FIFO_DMA_A_cd = 3;
 						FIFO_DMA_A_Delay = true;
 						Misc_Delays = true;
 						delays_to_process = true;					
@@ -1303,7 +1303,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (dma_Go[2] && dma_Start_Snd_Vid[2])
 					{
-						FIFO_DMA_B_cd = 1;
+						FIFO_DMA_B_cd = 3;
 						FIFO_DMA_B_Delay = true;
 						Misc_Delays = true;
 						delays_to_process = true;
