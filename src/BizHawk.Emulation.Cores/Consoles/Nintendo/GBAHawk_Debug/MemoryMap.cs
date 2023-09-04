@@ -916,17 +916,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 		}
 
-		public void Update_Memory_CTRL(uint value)
-		{
-			All_RAM_Disable = (value & 1) == 1;
-
-			WRAM_Enable = (value & 0x20) == 0x20;
-
-			WRAM_Waits = (int)(((~value) >> 24) & 0xF);
-
-			Memory_CTRL = value;
-		}
-
 		public byte Peek_Memory_8(uint addr)
 		{
 			if (addr >= 0x08000000)

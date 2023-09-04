@@ -350,9 +350,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			pre_Reg_Write(value);
 
-			//Console.WriteLine("Prefetch enabled: " + pre_Enable +  " ctrl value: " + value + " cycles: " + TotalExecutedCycles);
+			Console.WriteLine("Prefetch enabled: " + pre_Enable +  " ctrl value: " + value + " cycles: " + TotalExecutedCycles);
 
 			Wait_CTRL = value;
+		}
+
+		public void Update_Memory_CTRL(uint value)
+		{
+			All_RAM_Disable = (value & 1) == 1;
+
+			WRAM_Enable = (value & 0x20) == 0x20;
+
+			WRAM_Waits = (int)(((~value) >> 24) & 0xF);
+
+			Memory_CTRL = value;
+
+			Console.WriteLine("wram: " + WRAM_Waits);
 		}
 
 		public void Update_Post_Boot(byte value)

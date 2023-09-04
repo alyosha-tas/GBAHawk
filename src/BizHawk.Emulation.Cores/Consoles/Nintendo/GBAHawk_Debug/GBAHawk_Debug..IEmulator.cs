@@ -247,7 +247,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if (VRAM_32_Delay)
 				{
-					if (!VRAM_32_Check)
+					if (VRAM_32_Check)
 					{
 						// always write first 16 bits when not blocked
 						if (!ppu_VRAM_Access)

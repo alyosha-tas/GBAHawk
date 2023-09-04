@@ -1435,6 +1435,7 @@ namespace GBAHawk
 		INT_Flags_Gather = 0;
 
 		#pragma region Delays
+
 		if (delays_to_process)
 		{
 			if (IRQ_Delays)
@@ -1504,7 +1505,7 @@ namespace GBAHawk
 			{
 				if (VRAM_32_Delay)
 				{
-					if (!VRAM_32_Check)
+					if (VRAM_32_Check)
 					{
 						// always write first 16 bits when not blocked
 						if (!ppu_VRAM_Access)
@@ -2681,9 +2682,16 @@ namespace GBAHawk
 				if (pre_Fetch_Cnt == 0)
 				{
 					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) {} // cannot start an access on the internal cycles of an instruction
-					else if (pre_Buffer_Cnt == 8) {} // don't start a read if buffer is full
+					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; } // don't start a read if buffer is full
+					else if (pre_Buffer_Was_Full && (pre_Buffer_Cnt != 0)) {} // if buffer was full, wait until empty
 					else
 					{
+						if (pre_Buffer_Was_Full)
+						{
+							pre_Seq_Access = false;
+							pre_Buffer_Was_Full = false;
+						}
+						
 						if (pre_Previous_Thumb != cpu_Thumb_Mode)
 						{
 							pre_Check_Addr = 0;
@@ -2748,6 +2756,7 @@ namespace GBAHawk
 				pre_Fetch_Cnt = 0;
 				pre_Check_Addr = 0;
 				pre_Seq_Access = false;
+				pre_Buffer_Was_Full = false;
 			}
 		}
 

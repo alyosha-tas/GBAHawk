@@ -73,6 +73,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -188,6 +189,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -303,6 +305,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -451,6 +454,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -620,10 +624,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
-
-							// additionally, the prefetch value is not added to the buffer
-							pre_Buffer_Cnt -= 1;
-							pre_Read_Addr -= 2;
 						}
 
 						//abandon the prefetcher current fetch and reset the address
@@ -631,6 +631,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Fetch_Cnt = 0;
 						pre_Fetch_Cnt_Inc = 0;
 						pre_Run = pre_Enable;
+						pre_Buffer_Was_Full = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; }
 						else { pre_Check_Addr = 0; }
@@ -653,6 +654,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -836,6 +838,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Fetch_Cnt = 0;
 						pre_Fetch_Cnt_Inc = 0;
 						pre_Run = pre_Enable;
+						pre_Buffer_Was_Full = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; }
 						else { pre_Check_Addr = 0; }
@@ -858,6 +861,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Run = pre_Enable;
 					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Buffer_Was_Full = false;
 				}
 			}
 			else if (addr >= 0x05000000)
