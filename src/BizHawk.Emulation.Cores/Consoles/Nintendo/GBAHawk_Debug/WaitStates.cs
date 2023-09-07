@@ -579,7 +579,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							pre_Check_Addr += 2;
 							pre_Buffer_Cnt -= 1;
 
-							if ((pre_Buffer_Cnt == 0) && !pre_Enable) { pre_Check_Addr = 0; }
+							if (pre_Buffer_Cnt == 0)
+							{
+								if (pre_Buffer_Was_Full) { pre_Check_Addr = 0; pre_Force_Non_Seq = true; }
+
+								if (!pre_Enable) { pre_Check_Addr = 0; }
+							}
 						}
 						else
 						{
@@ -753,7 +758,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								pre_Check_Addr += 2;
 								pre_Buffer_Cnt -= 1;
 
-								if ((pre_Buffer_Cnt == 0) && !pre_Enable) { pre_Check_Addr = 0; }
+								if (pre_Buffer_Cnt == 0)
+								{
+									if (pre_Buffer_Was_Full) { pre_Check_Addr = 0; pre_Force_Non_Seq = true; }
+
+									if (!pre_Enable) { pre_Check_Addr = 0; }
+								}
 							}
 							else
 							{

@@ -101,16 +101,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// don't start a read if buffer is full
 						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; return; }
 
-						if (pre_Buffer_Was_Full)
-						{
-							if (pre_Buffer_Cnt != 0)
-							{
-								return;
-							}
-
-							pre_Seq_Access = false;
-							pre_Buffer_Was_Full = false;
-						}
+						if (pre_Buffer_Was_Full) { return; }
 
 						if (pre_Previous_Thumb != cpu_Thumb_Mode)
 						{
