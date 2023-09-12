@@ -11,7 +11,7 @@ namespace BizHawk.Common
 		/// Bump this immediately after release.
 		/// Only use '0'..'9' and '.' or it will fail to parse and the new version notification won't work.
 		/// </remarks>
-		public static readonly string MainVersion = "1.0.0";
+		public static readonly string MainVersion = "1.8.0";
 
 		public static string GetEmuVersion()
 			=> $"Version {MainVersion}";
