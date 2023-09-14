@@ -619,7 +619,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (dma_CNT_intl[dma_Chan_Exec] == 0)
 						{
-							//Console.WriteLine("complete " + dma_Chan_Exec);
+							//Console.WriteLine("complete " + dma_Chan_Exec + " " + TotalExecutedCycles);
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{

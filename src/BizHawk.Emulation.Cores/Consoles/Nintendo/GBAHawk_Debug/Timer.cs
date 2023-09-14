@@ -10,8 +10,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	Need to test more edge cases of changing prescaler exactly when a tick would happen
 
 	How is count up timing effected by the glitch for activiating with value 0xFFFF?	
-
-	Todo: check timing of sound FIFO interrupts
 */
 
 	partial class GBAHawk_Debug

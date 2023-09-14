@@ -50,6 +50,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool pre_Buffer_Was_Full;
 
+		public bool pre_Following;
+
 		public void pre_Reg_Write(ushort value)
 		{
 			if (!pre_Enable && ((value & 0x4000) == 0x4000))
@@ -141,6 +143,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Read_Addr += 2;
 
 						pre_Cycle_Glitch = true;
+						pre_Following = true;
 
 						if (!pre_Enable) { pre_Run = false; }
 					}
@@ -152,6 +155,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					pre_Check_Addr = 0;
 					pre_Seq_Access = false;
 					pre_Buffer_Was_Full = false;
+					pre_Following = false;
 				}
 			}
 		}
@@ -173,6 +177,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			pre_Previous_Thumb = false;
 
 			pre_Buffer_Was_Full = false;
+
+			pre_Following = false;
 		}
 
 		public void pre_SyncState(Serializer ser)
@@ -192,6 +198,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Seq_Access), ref pre_Seq_Access);
 			ser.Sync(nameof(pre_Force_Non_Seq), ref pre_Force_Non_Seq);
 			ser.Sync(nameof(pre_Buffer_Was_Full), ref pre_Buffer_Was_Full);
+			ser.Sync(nameof(pre_Following), ref pre_Following);
 		}
 	}
 

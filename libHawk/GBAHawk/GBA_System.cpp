@@ -2738,6 +2738,8 @@ namespace GBAHawk
 						pre_Fetch_Cnt = 0;
 						pre_Read_Addr += 2;
 
+						pre_Following = true;
+
 						pre_Cycle_Glitch = true;
 
 						if (!pre_Enable) { pre_Run = false; }
@@ -2751,6 +2753,7 @@ namespace GBAHawk
 				pre_Check_Addr = 0;
 				pre_Seq_Access = false;
 				pre_Buffer_Was_Full = false;
+				pre_Following = false;
 			}
 		}
 
