@@ -1915,6 +1915,11 @@ namespace GBAHawk
 
 			if (Current_State == 0)
 			{
+				if (Core_Cycle_Count[0] >= Next_Ready_Cycle)
+				{
+					Ready_Flag = true;
+				}
+				
 				return (uint8_t)(Ready_Flag ? 1 : 0);
 			}
 			else if (Current_State != 3)
@@ -2034,6 +2039,8 @@ namespace GBAHawk
 						Current_State = 0;
 						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
 					}
+
+					Ready_Flag = false;
 				}
 			}
 			else if (Current_State == 3)
@@ -2280,6 +2287,11 @@ namespace GBAHawk
 
 			if (Current_State == 0)
 			{
+				if (Core_Cycle_Count[0] >= Next_Ready_Cycle)
+				{
+					Ready_Flag = true;
+				}
+				
 				return (uint8_t)(Ready_Flag ? 1 : 0);
 			}
 			else if (Current_State != 3)
@@ -2399,6 +2411,8 @@ namespace GBAHawk
 						Current_State = 0;
 						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
 					}
+
+					Ready_Flag = false;
 				}
 			}
 			else if (Current_State == 3)
@@ -2627,6 +2641,11 @@ namespace GBAHawk
 
 			if (Current_State == 0)
 			{
+				if (Core_Cycle_Count[0] >= Next_Ready_Cycle)
+				{
+					Ready_Flag = true;
+				}
+				
 				return (uint8_t)(Ready_Flag ? 1 : 0);
 			}
 			else if (Current_State != 3)
@@ -2746,6 +2765,8 @@ namespace GBAHawk
 						Current_State = 0;
 						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
 					}
+
+					Ready_Flag = false;
 				}
 			}
 			else if (Current_State == 3)

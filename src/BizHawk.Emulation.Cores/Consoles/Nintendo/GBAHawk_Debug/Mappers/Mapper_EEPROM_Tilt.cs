@@ -137,6 +137,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			
 			if (Current_State == 0)
 			{
+				if (Core.CycleCount >= Next_Ready_Cycle)
+				{
+					Ready_Flag = true;
+				}
+
 				return (byte)(Ready_Flag ? 1 : 0);
 			}
 			else if (Current_State != 3)
@@ -260,6 +265,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						Current_State = 0;
 						Next_Ready_Cycle = Core.CycleCount + 0x1A750;
 					}
+
+					Ready_Flag = false;
 				}
 			}
 			else if (Current_State == 3)
