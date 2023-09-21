@@ -68,13 +68,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -185,13 +180,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -302,13 +292,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -452,13 +437,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -593,7 +573,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							// plus 1 since the prefetcher already used this cycle, so don't double count
 							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
 							{
 								//Console.WriteLine("16 " + TotalExecutedCycles + " " + cpu_Instr_Type);
@@ -613,7 +592,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 							else
 							{
+								// plus 1 since the prefetcher already used this cycle, so don't double count
 								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
+
+								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							pre_Read_Addr += 2;
@@ -663,7 +645,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
 
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; }
+						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; pre_Inactive = false;}
 						else { pre_Check_Addr = 0; }
 					}
 				}
@@ -679,13 +661,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -812,7 +789,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							// plus 1 since the prefetcher already used this cycle, so don't double count
 							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
 							{
 								//Console.WriteLine("32 " + TotalExecutedCycles + " " + cpu_Instr_Type);
@@ -832,6 +808,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 							else
 							{
+								// plus 1 since the prefetcher already used this cycle, so don't double count
 								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
 
 								// then add the second access
@@ -847,6 +824,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								{
 									wait_ret += ROM_Waits_2_S + 1; // ROM 2
 								}
+
+								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
@@ -897,7 +876,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
 
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; }
+						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
 					}
 				}
@@ -913,13 +892,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)

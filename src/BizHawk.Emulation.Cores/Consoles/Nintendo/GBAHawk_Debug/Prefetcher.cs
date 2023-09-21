@@ -52,6 +52,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool pre_Following;
 
+		public bool pre_Inactive;
+
 		public void pre_Reg_Write(ushort value)
 		{
 			if (!pre_Enable && ((value & 0x4000) == 0x4000))
@@ -59,10 +61,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				//Console.WriteLine("enable " + pre_Buffer_Cnt + " " + pre_Seq_Access + " " + TotalExecutedCycles);
 				
 				// set read address to current cpu address
-				pre_Check_Addr = pre_Read_Addr = cpu_Regs[15];
+				pre_Check_Addr = 0;
 				pre_Buffer_Cnt = 0;
+				pre_Fetch_Cnt = 0;
 				pre_Seq_Access = false;
 				pre_Run = true;
+				pre_Inactive = true;
 			}
 
 			if (pre_Enable && ((value & 0x4000) != 0x4000))
@@ -98,10 +102,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (pre_Fetch_Cnt == 0)
 					{
 						// cannot start an access on the internal cycles of an instruction
-						if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) { return; }
+						if (pre_Inactive) { return; }
 
 						// don't start a read if buffer is full
-						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; return; }
+						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; pre_Following = false; return; }
 
 						if (pre_Buffer_Was_Full) { return; }
 
@@ -150,12 +154,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					pre_Buffer_Cnt = 0;
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Seq_Access = false;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 		}
@@ -179,6 +180,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			pre_Buffer_Was_Full = false;
 
 			pre_Following = false;
+
+			pre_Inactive = true;
 		}
 
 		public void pre_SyncState(Serializer ser)
@@ -199,6 +202,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Force_Non_Seq), ref pre_Force_Non_Seq);
 			ser.Sync(nameof(pre_Buffer_Was_Full), ref pre_Buffer_Was_Full);
 			ser.Sync(nameof(pre_Following), ref pre_Following);
+			ser.Sync(nameof(pre_Inactive), ref pre_Inactive);
 		}
 	}
 

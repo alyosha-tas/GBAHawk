@@ -2681,8 +2681,8 @@ namespace GBAHawk
 			{
 				if (pre_Fetch_Cnt == 0)
 				{
-					if ((cpu_Instr_Type >= 42) && !pre_Seq_Access) {} // cannot start an access on the internal cycles of an instruction
-					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; } // don't start a read if buffer is full
+					if (pre_Inactive) {} // cannot start an access on the internal cycles of an instruction
+					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Following = false; } // don't start a read if buffer is full
 					else if (pre_Buffer_Was_Full) {} // if buffer was full, wait until empty
 					else
 					{
@@ -2748,12 +2748,9 @@ namespace GBAHawk
 			}
 			else
 			{
-				pre_Buffer_Cnt = 0;
 				pre_Fetch_Cnt = 0;
 				pre_Check_Addr = 0;
-				pre_Seq_Access = false;
-				pre_Buffer_Was_Full = false;
-				pre_Following = false;
+				pre_Inactive = true;
 			}
 		}
 

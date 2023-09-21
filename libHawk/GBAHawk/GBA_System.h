@@ -144,6 +144,8 @@ namespace GBAHawk
 
 		bool pre_Following;
 
+		bool pre_Inactive;
+
 		uint32_t pre_Read_Addr, pre_Check_Addr;
 		uint32_t pre_Buffer_Cnt;
 
@@ -285,8 +287,10 @@ namespace GBAHawk
 			if (!pre_Enable && ((value & 0x4000) == 0x4000))
 			{
 				// set read address to current cpu address
-				pre_Check_Addr = pre_Read_Addr = cpu_Regs[15];
+				pre_Check_Addr = 0;
 				pre_Buffer_Cnt = 0;
+				pre_Fetch_Cnt = 0;
+				pre_Inactive = true;
 				pre_Seq_Access = false;
 				pre_Run = true;
 			}
@@ -329,6 +333,8 @@ namespace GBAHawk
 			pre_Buffer_Was_Full = false;
 
 			pre_Following = false;
+
+			pre_Inactive = true;
 		}
 
 		void On_VBlank()
@@ -5148,13 +5154,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5265,13 +5266,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5382,13 +5378,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5532,13 +5523,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5673,7 +5659,6 @@ namespace GBAHawk
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							// plus 1 since the prefetcher already used this cycle, so don't double count
 							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
 							{
 								// this happens in a branch to the current prefetcher fetch address
@@ -5692,7 +5677,10 @@ namespace GBAHawk
 							}
 							else
 							{
+								// plus 1 since the prefetcher already used this cycle, so don't double count
 								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
+
+								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							pre_Read_Addr += 2;
@@ -5742,7 +5730,7 @@ namespace GBAHawk
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
 
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; }
+						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
 					}
 				}
@@ -5758,13 +5746,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5891,7 +5874,6 @@ namespace GBAHawk
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							// plus 1 since the prefetcher already used this cycle, so don't double count
 							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
 							{
 								// this happens in a branch to the current prefetcher fetch address
@@ -5910,6 +5892,7 @@ namespace GBAHawk
 							}
 							else
 							{
+								// plus 1 since the prefetcher already used this cycle, so don't double count
 								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
 
 								// then add the second access
@@ -5925,6 +5908,8 @@ namespace GBAHawk
 								{
 									wait_ret += ROM_Waits_2_S + 1; // ROM 2
 								}
+
+								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
@@ -5975,7 +5960,7 @@ namespace GBAHawk
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
 
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; }
+						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
 					}
 				}
@@ -5991,13 +5976,8 @@ namespace GBAHawk
 
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
-					pre_Seq_Access = false;
-					pre_Fetch_Cnt_Inc = 0;
-					pre_Run = pre_Enable;
-					pre_Buffer_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Buffer_Was_Full = false;
-					pre_Following = false;
+					pre_Inactive = true;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -13059,6 +13039,7 @@ namespace GBAHawk
 			saver = bool_saver(pre_Previous_Thumb, saver);
 			saver = bool_saver(pre_Buffer_Was_Full, saver);
 			saver = bool_saver(pre_Following, saver);
+			saver = bool_saver(pre_Inactive, saver);
 
 			saver = int_saver(pre_Read_Addr, saver);
 			saver = int_saver(pre_Check_Addr, saver);
@@ -13157,6 +13138,7 @@ namespace GBAHawk
 			loader = bool_loader(&pre_Previous_Thumb, loader);
 			loader = bool_loader(&pre_Buffer_Was_Full, loader);
 			loader = bool_loader(&pre_Following, loader);
+			loader = bool_loader(&pre_Inactive, loader);
 
 			loader = int_loader(&pre_Read_Addr, loader);
 			loader = int_loader(&pre_Check_Addr, loader);
