@@ -138,8 +138,6 @@ namespace GBAHawk
 
 		bool pre_Force_Non_Seq;
 
-		bool pre_Previous_Thumb;
-
 		bool pre_Buffer_Was_Full;
 
 		bool pre_Following;
@@ -327,8 +325,6 @@ namespace GBAHawk
 			pre_Run = pre_Enable = pre_Seq_Access = false;
 
 			pre_Force_Non_Seq = false;
-
-			pre_Previous_Thumb = false;
 
 			pre_Buffer_Was_Full = false;
 
@@ -814,6 +810,8 @@ namespace GBAHawk
 		bool jammed;
 
 		bool cpu_Trigger_Unhalt;
+		bool cpu_Trigger_Unhalt_2;
+		bool cpu_Trigger_Unhalt_3;
 		bool cpu_Just_Halted;
 
 		// ARM Related Variables
@@ -1453,7 +1451,7 @@ namespace GBAHawk
 
 			stopped = jammed = cpu_Halted = false;
 
-			cpu_Trigger_Unhalt = cpu_Just_Halted = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Just_Halted = false;
 		}
 
 		void cpu_Decode_ARM()
@@ -4891,6 +4889,8 @@ namespace GBAHawk
 			saver = bool_saver(stopped, saver);
 			saver = bool_saver(jammed, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt, saver);
+			saver = bool_saver(cpu_Trigger_Unhalt_2, saver);
+			saver = bool_saver(cpu_Trigger_Unhalt_3, saver);
 			saver = bool_saver(cpu_Just_Halted, saver);
 
 			saver = short_saver(cpu_Exec_ARM, saver);
@@ -5017,6 +5017,8 @@ namespace GBAHawk
 			loader = bool_loader(&stopped, loader);
 			loader = bool_loader(&jammed, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt, loader);
+			loader = bool_loader(&cpu_Trigger_Unhalt_2, loader);
+			loader = bool_loader(&cpu_Trigger_Unhalt_3, loader);
 			loader = bool_loader(&cpu_Just_Halted, loader);
 
 			loader = short_loader(&cpu_Exec_ARM, loader);
@@ -13036,7 +13038,6 @@ namespace GBAHawk
 			saver = bool_saver(pre_Enable, saver);
 			saver = bool_saver(pre_Seq_Access, saver);
 			saver = bool_saver(pre_Force_Non_Seq, saver);
-			saver = bool_saver(pre_Previous_Thumb, saver);
 			saver = bool_saver(pre_Buffer_Was_Full, saver);
 			saver = bool_saver(pre_Following, saver);
 			saver = bool_saver(pre_Inactive, saver);
@@ -13135,7 +13136,6 @@ namespace GBAHawk
 			loader = bool_loader(&pre_Enable, loader);
 			loader = bool_loader(&pre_Seq_Access, loader);
 			loader = bool_loader(&pre_Force_Non_Seq, loader);
-			loader = bool_loader(&pre_Previous_Thumb, loader);
 			loader = bool_loader(&pre_Buffer_Was_Full, loader);
 			loader = bool_loader(&pre_Following, loader);
 			loader = bool_loader(&pre_Inactive, loader);

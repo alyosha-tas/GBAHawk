@@ -1446,14 +1446,7 @@ namespace GBAHawk
 					IRQ_Write_Delay = false;
 
 					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
-					{
-						cpu_Trigger_Unhalt = false;
-					}
-					else
-					{
-						cpu_Trigger_Unhalt = true;
-					}
+					cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
 
 					// check if all delay sources are false
 					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
@@ -1470,6 +1463,8 @@ namespace GBAHawk
 				if (IRQ_Write_Delay_2)
 				{
 					cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
+					cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
+
 					IRQ_Write_Delay = true;
 					IRQ_Write_Delay_2 = false;
 				}
@@ -1491,6 +1486,15 @@ namespace GBAHawk
 					else
 					{
 						cpu_Next_IRQ_Input_3 = false;
+					}
+
+					if ((INT_EN & INT_Flags_Use & 0x3FFF) == 0)
+					{
+						cpu_Trigger_Unhalt_3 = false;
+					}
+					else
+					{
+						cpu_Trigger_Unhalt_3 = true;
 					}
 
 					INT_Flags = INT_Flags_Use;
@@ -2682,18 +2686,9 @@ namespace GBAHawk
 				if (pre_Fetch_Cnt == 0)
 				{
 					if (pre_Inactive) {} // cannot start an access on the internal cycles of an instruction
-					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Following = false; } // don't start a read if buffer is full
-					else if (pre_Buffer_Was_Full) {} // if buffer was full, wait until empty
+					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; } // don't start a read if buffer is full
 					else
 					{
-						if (pre_Previous_Thumb != cpu_Thumb_Mode)
-						{
-							pre_Check_Addr = 0;
-							pre_Buffer_Cnt = 0;
-						}
-
-						pre_Previous_Thumb = cpu_Thumb_Mode;
-						
 						pre_Fetch_Wait = 1;
 
 						if (pre_Read_Addr < 0x0A000000)

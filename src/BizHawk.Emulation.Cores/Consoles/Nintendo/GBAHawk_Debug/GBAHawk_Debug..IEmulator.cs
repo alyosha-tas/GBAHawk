@@ -188,14 +188,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					IRQ_Write_Delay = false;
 
 					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-					if ((INT_EN & INT_Flags & 0x3FFF) == 0)
-					{
-						cpu_Trigger_Unhalt = false;
-					}
-					else
-					{
-						cpu_Trigger_Unhalt = true;
-					}
+					cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
 
 					// check if all delay sources are false
 					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
@@ -212,6 +205,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (IRQ_Write_Delay_2)
 				{
 					cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
+					cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
+
 					IRQ_Write_Delay = true;
 					IRQ_Write_Delay_2 = false;
 				}
@@ -235,9 +230,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						cpu_Next_IRQ_Input_3 = false;
 					}
 
+					// halting does not depend on master enable
+					if ((INT_EN & INT_Flags_Use & 0x3FFF) == 0)
+					{
+						cpu_Trigger_Unhalt_3 = false;
+					}
+					else
+					{
+						cpu_Trigger_Unhalt_3 = true;
+					}
+
 					INT_Flags = INT_Flags_Use;
 
 					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+
 					IRQ_Write_Delay_2 = true;
 					IRQ_Write_Delay_3 = false;
 				}

@@ -46,8 +46,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool pre_Force_Non_Seq;
 
-		public bool pre_Previous_Thumb;
-
 		public bool pre_Buffer_Was_Full;
 
 		public bool pre_Following;
@@ -105,18 +103,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (pre_Inactive) { return; }
 
 						// don't start a read if buffer is full
-						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; pre_Following = false; return; }
-
-						if (pre_Buffer_Was_Full) { return; }
-
-						if (pre_Previous_Thumb != cpu_Thumb_Mode)
-						{
-							pre_Check_Addr = 0;
-							pre_Buffer_Cnt = 0;
-							pre_Seq_Access = false;
-						}
-
-						pre_Previous_Thumb = cpu_Thumb_Mode;
+						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; return; }
 
 						pre_Fetch_Wait = 1;
 
@@ -175,8 +162,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			pre_Force_Non_Seq = false;
 
-			pre_Previous_Thumb = false;
-
 			pre_Buffer_Was_Full = false;
 
 			pre_Following = false;
@@ -194,7 +179,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Fetch_Wait), ref pre_Fetch_Wait);
 			ser.Sync(nameof(pre_Fetch_Cnt_Inc), ref pre_Fetch_Cnt_Inc);
 			ser.Sync(nameof(pre_Cycle_Glitch), ref pre_Cycle_Glitch);
-			ser.Sync(nameof(pre_Previous_Thumb), ref pre_Previous_Thumb);
 
 			ser.Sync(nameof(pre_Run), ref pre_Run);
 			ser.Sync(nameof(pre_Enable), ref pre_Enable);

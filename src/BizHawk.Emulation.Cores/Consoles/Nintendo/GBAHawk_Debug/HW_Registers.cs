@@ -263,7 +263,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			INT_EN = value;
 
-			Console.WriteLine("en " + value);
+			//Console.WriteLine("en " + value);
 		}
 
 		public void Update_INT_Flags(ushort value)

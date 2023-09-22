@@ -110,7 +110,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool stopped;
 		public bool jammed;
 
-		public bool cpu_Trigger_Unhalt;
+		public bool cpu_Trigger_Unhalt, cpu_Trigger_Unhalt_2, cpu_Trigger_Unhalt_3;
 		public bool cpu_Just_Halted;
 
 		public void cpu_Reset()
@@ -159,7 +159,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			stopped = jammed = cpu_Halted = false;
 
-			cpu_Trigger_Unhalt = cpu_Just_Halted = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Just_Halted = false;
 		}
 
 		//this only calls when the first byte of an instruction is fetched.
@@ -2400,6 +2400,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(jammed), ref jammed);
 
 			ser.Sync(nameof(cpu_Trigger_Unhalt), ref cpu_Trigger_Unhalt);
+			ser.Sync(nameof(cpu_Trigger_Unhalt_2), ref cpu_Trigger_Unhalt_2);
+			ser.Sync(nameof(cpu_Trigger_Unhalt_3), ref cpu_Trigger_Unhalt_3);
+
 			ser.Sync(nameof(cpu_Just_Halted), ref cpu_Just_Halted);
 		}
 	}
