@@ -1428,8 +1428,6 @@ namespace GBAHawk
 	{			
 		INT_Flags_Use = INT_Flags_Gather;
 
-		// NOte that we could have cleared some flags in a write on the previous cycle
-		// This line indicates that those flags will be reset.
 		INT_Flags_Use |= INT_Flags;
 
 		INT_Flags_Gather = 0;
@@ -2616,7 +2614,7 @@ namespace GBAHawk
 						{
 							tim_Timer_Tick[i] = 1;
 
-							if ((tim_Control[i] & 0x40) == 0x40)
+							if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 							{
 								Trigger_IRQ((uint16_t)(3 + i));
 							}
@@ -2624,7 +2622,7 @@ namespace GBAHawk
 
 						if (tim_Timer[i] == 0)
 						{
-							if ((tim_Control[i] & 0x40) == 0x40)
+							if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 							{
 								Trigger_IRQ((uint16_t)(3 + i));
 							}
@@ -2638,7 +2636,7 @@ namespace GBAHawk
 								tim_Timer[i] = tim_Old_Reload;
 							}
 
-							tim_Just_Reloaded = i;
+							//tim_Just_Reloaded = i;
 
 							// Trigger sound FIFO updates
 							if (snd_FIFO_A_Timer == i) { snd_FIFO_A_Tick = snd_CTRL_power; }
@@ -2663,6 +2661,8 @@ namespace GBAHawk
 						}
 
 						tim_Disable[i] = false;
+
+						tim_Old_IRQ[i] = false;
 					}
 				}
 

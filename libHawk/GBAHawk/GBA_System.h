@@ -610,6 +610,9 @@ namespace GBAHawk
 				if ((value & (1 << i)) == (1 << i))
 				{
 					INT_Flags &= (uint16_t)(~(1 << i));
+
+					// if a flag is set on the same cycle a write occurs, it is cleared
+					INT_Flags_Gather &= (uint16_t)(~(1 << i));
 				}
 			}
 
@@ -7051,6 +7054,7 @@ namespace GBAHawk
 		bool tim_Tick_By_Prev[4] = { };
 		bool tim_Prev_Tick[5] = { };
 		bool tim_Disable[4] = { };
+		bool tim_Old_IRQ[4] = { };
 
 		uint16_t tim_Timer[4] = { };
 		uint16_t tim_Reload[4] = { };
@@ -7256,6 +7260,8 @@ namespace GBAHawk
 				if (tim_Go[nbr])
 				{
 					tim_Disable[nbr] = true;
+
+					tim_Old_IRQ[nbr] = (tim_Control[nbr] & 0x40) == 0x40;
 				}
 			}
 
@@ -7278,6 +7284,7 @@ namespace GBAHawk
 				tim_Tick_By_Prev[i] = false;
 				tim_Prev_Tick[i] = false;
 				tim_Disable[i] = false;
+				tim_Old_IRQ[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
@@ -7302,6 +7309,7 @@ namespace GBAHawk
 			saver = bool_array_saver(tim_Tick_By_Prev, saver, 4);
 			saver = bool_array_saver(tim_Prev_Tick, saver, 5);
 			saver = bool_array_saver(tim_Disable, saver, 4);
+			saver = bool_array_saver(tim_Old_IRQ, saver, 4);
 
 			saver = short_array_saver(tim_Timer, saver, 4);
 			saver = short_array_saver(tim_Reload, saver, 4);
@@ -7327,6 +7335,7 @@ namespace GBAHawk
 			loader = bool_array_loader(tim_Tick_By_Prev, loader, 4);
 			loader = bool_array_loader(tim_Prev_Tick, loader, 5);
 			loader = bool_array_loader(tim_Disable, loader, 4);
+			loader = bool_array_loader(tim_Old_IRQ, loader, 4);
 
 			loader = short_array_loader(tim_Timer, loader, 4);
 			loader = short_array_loader(tim_Reload, loader, 4);

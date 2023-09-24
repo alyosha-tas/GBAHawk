@@ -80,8 +80,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				INT_Flags_Use = INT_Flags_Gather;
 
-				// NOte that we could have cleared some flags in a write on the previous cycle
-				// This line indicates that those flags will be reset.
 				INT_Flags_Use |= INT_Flags;
 
 				INT_Flags_Gather = 0;

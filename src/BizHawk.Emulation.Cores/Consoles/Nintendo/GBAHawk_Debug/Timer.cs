@@ -38,6 +38,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool[] tim_Disable = new bool[4];
 
+		public bool[] tim_Old_IRQ = new bool[4];
+
 		public int tim_Just_Reloaded;
 
 		public ushort tim_SubCnt;
@@ -241,6 +243,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (tim_Go[nbr])
 				{
 					tim_Disable[nbr] = true;
+					tim_Old_IRQ[nbr] = (tim_Control[nbr] & 0x40) == 0x40;
 				}
 			}
 
@@ -292,15 +295,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								tim_Timer_Tick[i] = 1;
 
-								if ((tim_Control[i] & 0x40) == 0x40)
+								if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 								{
 									Trigger_IRQ((ushort)(3 + i));
-								}
+								}							
 							}
 
 							if (tim_Timer[i] == 0)
 							{
-								if ((tim_Control[i] & 0x40) == 0x40)
+								if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 								{
 									Trigger_IRQ((ushort)(3 + i));
 								}
@@ -314,7 +317,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									tim_Timer[i] = tim_Old_Reload;
 								}
 
-								tim_Just_Reloaded = i;
+								//tim_Just_Reloaded = i;
 
 								// Trigger sound FIFO updates
 								if (snd_FIFO_A_Timer == i) { snd_FIFO_A_Tick = snd_CTRL_power; }
@@ -339,6 +342,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							}
 
 							tim_Disable[i] = false;
+
+							tim_Old_IRQ[i] = false;
 						}
 					}
 
@@ -366,6 +371,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_Tick_By_Prev[i] = false;
 				tim_Prev_Tick[i] = false;
 				tim_Disable[i] = false;
+				tim_Old_IRQ[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
@@ -391,6 +397,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_Tick_By_Prev), ref tim_Tick_By_Prev, false);
 			ser.Sync(nameof(tim_Prev_Tick), ref tim_Prev_Tick, false);
 			ser.Sync(nameof(tim_Disable), ref tim_Disable, false);
+			ser.Sync(nameof(tim_Old_IRQ), ref tim_Old_IRQ, false);
 
 			ser.Sync(nameof(tim_Just_Reloaded), ref tim_Just_Reloaded);
 

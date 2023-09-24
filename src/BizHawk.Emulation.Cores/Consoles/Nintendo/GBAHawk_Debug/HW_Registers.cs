@@ -274,6 +274,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if ((value & (1 << i)) == (1 << i))
 				{
 					INT_Flags &= (ushort)(~(1 << i));
+
+					// if a flag is set on the same cycle a write occurs, it is cleared
+					INT_Flags_Gather &= (ushort)(~(1 << i));
 				}
 			}
 
