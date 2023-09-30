@@ -293,15 +293,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 							}
 
+							//upper bit of mode must always be set
+							cpu_ALU_Temp_Val |= 0x10;
+
 							cpu_Swap_Regs(((cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask)) & 0x1F, false, false);
 							cpu_Regs[16] = (cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
-
-							cpu_Thumb_Mode = cpu_FlagT;
 						}
 						else
 						{
-							// user (unpriviliged)
-							if ((cpu_Regs[16] & 0x1F) == 0x10)
+							// user and system have no SPSR to write to
+							if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
 							{
 								// unpredictable
 							}
@@ -320,7 +321,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 						else
 						{
-							cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = cpu_Regs[17];
+							// user and system have no SPSR to read from
+							if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+							{
+								cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = cpu_Regs[16];
+							}
+							else
+							{
+								cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = cpu_Regs[17];
+							}								
 						}
 						break;
 

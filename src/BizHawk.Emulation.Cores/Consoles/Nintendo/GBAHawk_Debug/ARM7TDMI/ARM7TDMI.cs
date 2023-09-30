@@ -341,6 +341,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// this code path comes from an ALU instruction in ARM mode using R15 as the destination register
 					if (cpu_Fetch_Cnt == 0)
 					{
+						cpu_FlagI_Old = cpu_FlagI;
+						
 						cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
 
 						cpu_IRQ_Input_Use = cpu_IRQ_Input;
@@ -359,7 +361,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
 							if (cpu_ALU_S_Bit)
 							{
-								cpu_Swap_Regs(cpu_Regs[17] & 0x1F, false, true);
+								if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+								{
+									//Console.WriteLine("using reg swap on bad mode");
+								}
+								else
+								{
+									//upper bit of mode must always be set
+									cpu_Swap_Regs((cpu_Regs[17] & 0x1F) | 0x10, false, true);
+								}
 
 								if (cpu_FlagT) { cpu_Thumb_Mode = true; cpu_Clear_Pipeline = true; }
 								else { cpu_Thumb_Mode = false; }
@@ -381,7 +391,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 								cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-								if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+								if (cpu_IRQ_Input_Use & !cpu_FlagI_Old) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 								else { cpu_Decode_ARM(); }
 
 								cpu_Seq_Access = true;
@@ -394,7 +404,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-							if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							if (cpu_IRQ_Input_Use & !cpu_FlagI_Old) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 							else { cpu_Decode_ARM(); }
 
 							cpu_Seq_Access = true;
@@ -1929,10 +1939,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
+					cpu_FlagI_Old = cpu_FlagI;
+
 					// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
 					if (cpu_ALU_S_Bit)
 					{
-						cpu_Swap_Regs(cpu_Regs[17] & 0x1F, false, true);
+						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+						{
+							//Console.WriteLine("using reg swap on bad mode");
+						}
+						else
+						{
+							//upper bit of mode must always be set
+							cpu_Swap_Regs((cpu_Regs[17] & 0x1F) | 0x10, false, true);
+						}
 
 						if (cpu_FlagT) { cpu_Thumb_Mode = true; cpu_Clear_Pipeline = true; }
 						else { cpu_Thumb_Mode = false; }
@@ -1954,7 +1974,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+						if (cpu_IRQ_Input_Use & !cpu_FlagI_Old) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_ARM(); }
 
 						// instructions with internal cycles revert to non-sequential accesses 
@@ -2078,10 +2098,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
+								cpu_FlagI_Old = cpu_FlagI;
+
 								// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
 								if (cpu_ALU_S_Bit)
 								{
-									cpu_Swap_Regs(cpu_Regs[17] & 0x1F, false, true);
+									if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+									{
+										//Console.WriteLine("using reg swap on bad mode");
+									}
+									else
+									{
+										//upper bit of mode must always be set
+										cpu_Swap_Regs((cpu_Regs[17] & 0x1F) | 0x10, false, true);
+									}
 
 									if (cpu_FlagT) { cpu_Thumb_Mode = true; cpu_Clear_Pipeline = true; }
 									else { cpu_Thumb_Mode = false; }
@@ -2103,7 +2133,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 									cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-									if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+									if (cpu_IRQ_Input_Use & !cpu_FlagI_Old) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 									else { cpu_Decode_ARM(); }
 
 									// instructions with internal cycles revert to non-sequential accesses 
