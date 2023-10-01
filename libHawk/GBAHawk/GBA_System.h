@@ -1473,14 +1473,7 @@ namespace GBAHawk
 							// Multiply
 							cpu_Instr_Type = cpu_Multiply_ARM;
 							cpu_Exec_ARM = cpu_ARM_MUL;
-							if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-							{
-								cpu_Mul_Cycles = 2;
-							}
-							else
-							{
-								cpu_Calculate_Mul_Cycles();
-							}
+							cpu_Calculate_Mul_Cycles();
 							break;
 
 						case 0x1:
@@ -2253,6 +2246,14 @@ namespace GBAHawk
 			else
 			{
 				cpu_Mul_Cycles = 1;
+			}
+
+			if (!cpu_Thumb_Mode)
+			{
+				if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+				{
+					cpu_Mul_Cycles += 1;
+				}
 			}
 		}
 

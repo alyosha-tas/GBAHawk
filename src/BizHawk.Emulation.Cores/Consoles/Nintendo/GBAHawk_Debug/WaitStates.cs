@@ -771,7 +771,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							else
 							{
 								// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-								if ((pre_Buffer_Cnt == 0) && pre_Buffer_Was_Full)
+								if (pre_Buffer_Was_Full && (pre_Buffer_Cnt == 0))
 								{
 									Console.WriteLine("Jam due to disabled prefetcher mid instruction");
 									wait_ret = (int)0x7FFFFFF0;					
