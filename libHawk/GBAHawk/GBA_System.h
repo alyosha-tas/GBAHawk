@@ -2635,8 +2635,6 @@ namespace GBAHawk
 
 						cpu_Swap_Regs(((cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask)) & 0x1F, false, false);
 						cpu_Regs[16] = (cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
-
-						cpu_Thumb_Mode = cpu_FlagTget();
 					}
 					else
 					{
@@ -5872,19 +5870,32 @@ namespace GBAHawk
 							else
 							{
 								// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-								// plus 1 since the prefetcher already used this cycle, so don't double count
-								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
+								if (pre_Buffer_Was_Full && (pre_Buffer_Cnt == 0))
+								{
+									// console crashes when prefetcher is stopped mid instruction fetch
+									wait_ret = (int)0x7FFFFFF0;
 
-								// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-								pre_Fetch_Cnt_Inc = 0;
+									//abandon the prefetcher current fetch and reset
+									pre_Fetch_Cnt = 0;
+									pre_Check_Addr = 0;
+									pre_Inactive = true;
+								}
+								else
+								{
+									// plus 1 since the prefetcher already used this cycle, so don't double count
+									wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
 
-								pre_Read_Addr += 2;
-								pre_Check_Addr += 2;
-								pre_Fetch_Cnt = 0;
-								pre_Buffer_Cnt = 0;
-								pre_Run = pre_Enable;
+									// it is as if the cpu takes over a regular access, so reset the pre-fetcher
+									pre_Fetch_Cnt_Inc = 0;
 
-								if (!pre_Enable) { pre_Check_Addr = 0; }
+									pre_Read_Addr += 2;
+									pre_Check_Addr += 2;
+									pre_Fetch_Cnt = 0;
+									pre_Buffer_Cnt = 0;
+									pre_Run = pre_Enable;
+
+									if (!pre_Enable) { pre_Check_Addr = 0; }
+								}
 							}
 						}
 						else
