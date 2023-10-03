@@ -691,7 +691,7 @@ namespace GBAHawk
 
 			pre_Reg_Write(value);
 
-			Wait_CTRL = value;
+			Wait_CTRL = (uint16_t)(value & 0x5FFF);
 		}
 
 
