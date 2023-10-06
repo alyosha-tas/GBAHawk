@@ -326,11 +326,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if ((value & 0x3000) == 0x0000)
 				{ 
 					dma_Run_En_Time[chan] = CycleCount + 3;
-
-					if (cpu_Regs[15] <= 0x3FFF)
-					{
-						dma_Run_En_Time[chan] = CycleCount + 1;
-					}
 				}
 				else if ((value & 0x3000) == 0x1000) { dma_Start_VBL[chan] = true; }
 				else if ((value & 0x3000) == 0x2000) { dma_Start_HBL[chan] = true; }
