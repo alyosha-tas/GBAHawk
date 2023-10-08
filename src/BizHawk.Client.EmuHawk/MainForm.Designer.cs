@@ -187,6 +187,7 @@ namespace BizHawk.Client.GBAHawk
 			this.LoadConfigMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.LoadConfigFromMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.ToolsSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
+			this.AboutSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.RamWatchMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.RamSearchMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.LuaConsoleMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -290,7 +291,8 @@ namespace BizHawk.Client.GBAHawk
 			this.ToolsSubMenu,
 			this.GBSubMenu,
 			this.GBLSubMenu,
-			this.GenericCoreSubMenu});
+			this.GenericCoreSubMenu,
+			this.AboutSubMenu});
 			this.MainformMenu.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
 			this.MainformMenu.TabIndex = 0;
 			this.MainformMenu.MenuActivate += new System.EventHandler(this.MainformMenu_MenuActivate);
@@ -1223,6 +1225,11 @@ namespace BizHawk.Client.GBAHawk
 			this.ToolsSubMenu.Text = "&Tools";
 			this.ToolsSubMenu.DropDownOpened += new System.EventHandler(this.ToolsSubMenu_DropDownOpened);
 			// 
+			// AboutSubMenu
+			// 
+			this.AboutSubMenu.Text = "About";
+			this.AboutSubMenu.Click += new System.EventHandler(this.AboutSubMenu_Click);
+			// 
 			// RamWatchMenuItem
 			// 
 			this.RamWatchMenuItem.Text = "RAM &Watch";
@@ -1759,6 +1766,7 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ViewSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ConfigSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ToolsSubMenu;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AboutSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx PauseMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RebootCoreMenuItem;

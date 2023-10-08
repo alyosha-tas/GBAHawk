@@ -1074,6 +1074,11 @@ namespace BizHawk.Client.GBAHawk
 			}
 		}
 
+		private void AboutSubMenu_Click(object sender, EventArgs e)
+		{
+			ShowMessageBox(owner: null, "Current GBAHwak version: " + VersionInfo.MainVersion);
+		}
+
 		private void RamWatchMenuItem_Click(object sender, EventArgs e)
 		{
 			Tools.LoadRamWatch(true);

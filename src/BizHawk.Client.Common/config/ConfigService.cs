@@ -36,10 +36,7 @@ namespace BizHawk.Client.Common
 
 		public static bool IsFromSameVersion(string filepath, out string msg)
 		{
-			const string MSGFMT_NEWER = "Your config file ({0}) is from a newer version of EmuHawk, {2} (this is {1}). It may fail to load.";
-			const string MSGFMT_OLDER = "Your config file ({0}) is from an older version of EmuHawk, {2} (this is {1}). It may fail to load.";
-			const string MSGFMT_PRE_2_3_3 = "Your config file ({0}) is corrupted, or is from an older version of EmuHawk, predating 2.3.3 (this is {1}). It may fail to load.";
-			const string MSGFMT_PRE_2_5 = "Your config file ({0}) is corrupted, or is from an older version of EmuHawk, predating 2.5 (this is {1}). It may fail to load.";
+			const string MSGFMT = "Your config file ({0}) is corrupted, or is from a different version of GBAHawk (this is {1}). It may fail to load.";
 
 			if (!new FileInfo(filepath).Exists)
 			{
@@ -60,24 +57,9 @@ namespace BizHawk.Client.Common
 				msg = null;
 				return true;
 			}
-			string fmt;
-			if (cfgVersionStr == null)
-			{
-				fmt = MSGFMT_PRE_2_3_3;
-			}
-			else
-			{
-				var cfgVersion = VersionInfo.VersionStrToInt(cfgVersionStr);
-				if (cfgVersion < 0x02050000U)
-				{
-					fmt = MSGFMT_PRE_2_5;
-				}
-				else
-				{
-					var thisVersion = VersionInfo.VersionStrToInt(VersionInfo.MainVersion);
-					fmt = cfgVersion < thisVersion ? MSGFMT_OLDER : MSGFMT_NEWER;
-				}
-			}
+
+			string fmt = MSGFMT;
+
 			msg = string.Format(fmt, Path.GetFileName(filepath), VersionInfo.MainVersion, cfgVersionStr);
 			return false;
 		}
