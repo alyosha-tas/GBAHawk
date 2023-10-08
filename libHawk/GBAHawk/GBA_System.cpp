@@ -2585,6 +2585,22 @@ namespace GBAHawk
 				{
 					tim_ST_Time[i] -= 1;
 
+					if (tim_ST_Time[i] == 1)
+					{
+						if (tim_Glitch_Tick[i])
+						{
+							if ((tim_SubCnt & tim_PreSc_En[i]) == 0)
+							{
+								if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
+								{
+									Trigger_IRQ((uint16_t)(3 + i));
+								}
+							}
+
+							tim_Glitch_Tick[i] = false;
+						}
+					}
+
 					if (tim_ST_Time[i] == 0)
 					{
 						tim_Go[i] = true;
@@ -2609,16 +2625,6 @@ namespace GBAHawk
 					if (tim_do_tick)
 					{
 						tim_Timer[i] += tim_Timer_Tick[i];
-
-						if (tim_Timer_Tick[i] == 0)
-						{
-							tim_Timer_Tick[i] = 1;
-
-							if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
-							{
-								Trigger_IRQ((uint16_t)(3 + i));
-							}
-						}
 
 						if (tim_Timer[i] == 0)
 						{

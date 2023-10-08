@@ -7073,6 +7073,7 @@ namespace GBAHawk
 		bool tim_Prev_Tick[5] = { };
 		bool tim_Disable[4] = { };
 		bool tim_Old_IRQ[4] = { };
+		bool tim_Glitch_Tick[4] = { };
 
 		uint16_t tim_Timer[4] = { };
 		uint16_t tim_Reload[4] = { };
@@ -7236,6 +7237,19 @@ namespace GBAHawk
 		{
 			if (((tim_Control[nbr] & 0x80) == 0) && ((value & 0x80) != 0))
 			{
+				// if enabling when internal timer value is 0xFFFF, an extra tick cycle occurs before resetting
+				// so it may trigger an interrupt
+				tim_Glitch_Tick[nbr] = false;
+
+				if (tim_Timer[nbr] == 0xFFFF)
+				{
+					// TODO: check cases of ticking by previous timer
+					if ((nbr == 0) || ((value & 0x4) == 0))
+					{
+						tim_Glitch_Tick[nbr] = true;
+					}
+				}
+				
 				tim_Timer[nbr] = tim_Reload[nbr];
 
 				tim_ST_Time[nbr] = 3;
@@ -7247,14 +7261,6 @@ namespace GBAHawk
 				tim_All_Off = false;
 
 				tim_Timer_Tick[nbr] = 1;
-
-				// if enabling at 0xFFFF and no prescale, it is as if the timer is delayed an extra tick
-				// but the IRQ is still triggered immediately
-				if ((tim_Timer[nbr] == 0xFFFF) && ((value & 3) == 0) && !tim_Tick_By_Prev[nbr])
-				{
-					tim_ST_Time[nbr] = 3;
-					tim_Timer_Tick[nbr] = 0;
-				}
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{		
@@ -7303,6 +7309,7 @@ namespace GBAHawk
 				tim_Prev_Tick[i] = false;
 				tim_Disable[i] = false;
 				tim_Old_IRQ[i] = false;
+				tim_Glitch_Tick[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
@@ -7328,6 +7335,7 @@ namespace GBAHawk
 			saver = bool_array_saver(tim_Prev_Tick, saver, 5);
 			saver = bool_array_saver(tim_Disable, saver, 4);
 			saver = bool_array_saver(tim_Old_IRQ, saver, 4);
+			saver = bool_array_saver(tim_Glitch_Tick, saver, 4);
 
 			saver = short_array_saver(tim_Timer, saver, 4);
 			saver = short_array_saver(tim_Reload, saver, 4);
@@ -7354,6 +7362,7 @@ namespace GBAHawk
 			loader = bool_array_loader(tim_Prev_Tick, loader, 5);
 			loader = bool_array_loader(tim_Disable, loader, 4);
 			loader = bool_array_loader(tim_Old_IRQ, loader, 4);
+			loader = bool_array_loader(tim_Glitch_Tick, loader, 4);
 
 			loader = short_array_loader(tim_Timer, loader, 4);
 			loader = short_array_loader(tim_Reload, loader, 4);

@@ -40,6 +40,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool[] tim_Old_IRQ = new bool[4];
 
+		public bool[] tim_Glitch_Tick = new bool[4];
+
 		public int tim_Just_Reloaded;
 
 		public ushort tim_SubCnt;
@@ -201,6 +203,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			if (((tim_Control[nbr] & 0x80) == 0) && ((value & 0x80) != 0))
 			{
+				// if enabling when internal timer value is 0xFFFF, an extra tick cycle occurs before resetting
+				// so it may trigger an interrupt
+				tim_Glitch_Tick[nbr] = false;
+
+				if (tim_Timer[nbr] == 0xFFFF)
+				{
+					// TODO: check cases of ticking by previous timer
+					if ((nbr == 0) || ((value & 0x4) == 0))
+					{
+						tim_Glitch_Tick[nbr] = true;
+					}
+				}
+
 				tim_Timer[nbr] = tim_Reload[nbr];
 				
 				tim_ST_Time[nbr] = 3;
@@ -212,14 +227,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_All_Off = false;
 
 				tim_Timer_Tick[nbr] = 1;
-
-				// if enabling at 0xFFFF and no prescale, it is as if the timer is delayed an extra tick
-				// but the IRQ is still triggered immediately
-				if ((tim_Timer[nbr] == 0xFFFF) && ((value & 3) == 0) && !tim_Tick_By_Prev[nbr])
-				{
-					tim_ST_Time[nbr] = 3;
-					tim_Timer_Tick[nbr] = 0;
-				}
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{
@@ -265,6 +272,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					if (tim_ST_Time[i] > 0)
 					{
 						tim_ST_Time[i] -= 1;
+						
+						if (tim_ST_Time[i] == 1)
+						{
+							if (tim_Glitch_Tick[i])
+							{
+								if ((tim_SubCnt & tim_PreSc_En[i]) == 0)
+								{
+									if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
+									{
+										Trigger_IRQ((ushort)(3 + i));
+									}
+								}
+
+								tim_Glitch_Tick[i] = false;
+							}
+						}
 
 						if (tim_ST_Time[i] == 0)
 						{
@@ -290,16 +313,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (tim_do_tick)
 						{
 							tim_Timer[i] += tim_Timer_Tick[i];
-
-							if (tim_Timer_Tick[i] == 0)
-							{
-								tim_Timer_Tick[i] = 1;
-
-								if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
-								{
-									Trigger_IRQ((ushort)(3 + i));
-								}							
-							}
 
 							if (tim_Timer[i] == 0)
 							{
@@ -372,6 +385,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_Prev_Tick[i] = false;
 				tim_Disable[i] = false;
 				tim_Old_IRQ[i] = false;
+				tim_Glitch_Tick[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
@@ -398,6 +412,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_Prev_Tick), ref tim_Prev_Tick, false);
 			ser.Sync(nameof(tim_Disable), ref tim_Disable, false);
 			ser.Sync(nameof(tim_Old_IRQ), ref tim_Old_IRQ, false);
+			ser.Sync(nameof(tim_Glitch_Tick), ref tim_Glitch_Tick, false);
 
 			ser.Sync(nameof(tim_Just_Reloaded), ref tim_Just_Reloaded);
 
