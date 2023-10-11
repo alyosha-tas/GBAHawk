@@ -283,6 +283,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									{
 										Trigger_IRQ((ushort)(3 + i));
 									}
+
+									// Trigger sound FIFO updates
+									if (snd_FIFO_A_Timer == i) { snd_FIFO_A_Tick = snd_CTRL_power; }
+									if (snd_FIFO_B_Timer == i) { snd_FIFO_B_Tick = snd_CTRL_power; }
+
+									tim_Prev_Tick[i + 1] = true;
 								}
 
 								tim_Glitch_Tick[i] = false;

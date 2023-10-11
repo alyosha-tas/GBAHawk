@@ -7,9 +7,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		DMA Emulation
 		NOTES:
 
-		Need to implement DRQ?
+		DMA mode cannot be changed while enabled (important for Flinstones)
 
-		Can any DMA parameters be changed by writing to DMA registers while an DMA is ongoing but intermittenly paused?
+		Need to implement DRQ?
 
 		What happens when src address control mode 3 is set?
 
@@ -18,9 +18,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		What happens when channel 3 has game pak DMA and repeat selected?
 
 		Look at edge cases of start / stop writes
-
-		It seems as though DMA started immediately while the cpu is in the BIOS region is able to start 2 cycles sooner
-		see the new versions of haltcnt.gba. Is this really the case?
 
 		Assumption: read / write cycle is atomic
 

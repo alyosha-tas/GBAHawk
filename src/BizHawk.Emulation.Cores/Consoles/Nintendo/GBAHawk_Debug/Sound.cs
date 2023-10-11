@@ -323,6 +323,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
 							snd_FIFO_A_ptr += 1;
 						}
+
+						if (snd_FIFO_A_ptr == 32)
+						{
+							snd_FIFO_A_ptr = 0;
+						}
 					}
 					else
 					{
@@ -330,6 +335,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
 							snd_FIFO_B_ptr += 1;
+						}
+
+						if (snd_FIFO_B_ptr == 32)
+						{
+							snd_FIFO_B_ptr = 0;
 						}
 					}
 				}
