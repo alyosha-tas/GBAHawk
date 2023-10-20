@@ -2630,7 +2630,7 @@ namespace GBAHawk
 
 					if (tim_do_tick)
 					{
-						tim_Timer[i] += tim_Timer_Tick[i];
+						tim_Timer[i] += 1;
 
 						if (tim_Timer[i] == 0)
 						{

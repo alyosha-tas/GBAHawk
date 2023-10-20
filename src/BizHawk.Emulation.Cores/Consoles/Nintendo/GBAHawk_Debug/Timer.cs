@@ -28,8 +28,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort[] tim_ST_Time = new ushort[4];
 
-		public ushort[] tim_Timer_Tick = new ushort[4];
-
 		public bool[] tim_Go = new bool[4];
 
 		public bool[] tim_Tick_By_Prev = new bool[4];
@@ -225,8 +223,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
 				tim_All_Off = false;
-
-				tim_Timer_Tick[nbr] = 1;
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{
@@ -318,7 +314,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						if (tim_do_tick)
 						{
-							tim_Timer[i] += tim_Timer_Tick[i];
+							tim_Timer[i] += 1;
 
 							if (tim_Timer[i] == 0)
 							{
@@ -384,7 +380,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_PreSc[i] = 0;
 				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
-				tim_Timer_Tick[i] = 1;
 
 				tim_Go[i] = false;
 				tim_Tick_By_Prev[i] = false;
@@ -411,7 +406,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_PreSc), ref tim_PreSc, false);
 			ser.Sync(nameof(tim_PreSc_En), ref tim_PreSc_En, false);
 			ser.Sync(nameof(tim_ST_Time), ref tim_ST_Time, false);
-			ser.Sync(nameof(tim_Timer_Tick), ref tim_Timer_Tick, false);
 
 			ser.Sync(nameof(tim_Go), ref tim_Go, false);
 			ser.Sync(nameof(tim_Tick_By_Prev), ref tim_Tick_By_Prev, false);

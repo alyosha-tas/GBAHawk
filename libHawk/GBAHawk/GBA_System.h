@@ -7081,7 +7081,6 @@ namespace GBAHawk
 		uint16_t tim_PreSc[4] = { };
 		uint16_t tim_PreSc_En[4] = { };
 		uint16_t tim_ST_Time[4] = { };
-		uint16_t tim_Timer_Tick[4] = { };
 
 		uint16_t PreScales[4] = {0, 0x3F, 0xFF, 0x3FF};
 
@@ -7259,8 +7258,6 @@ namespace GBAHawk
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
 				tim_All_Off = false;
-
-				tim_Timer_Tick[nbr] = 1;
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{		
@@ -7302,7 +7299,6 @@ namespace GBAHawk
 				tim_PreSc[i] = 0;
 				tim_PreSc_En[i] = 0;
 				tim_ST_Time[i] = 0;
-				tim_Timer_Tick[i] = 1;
 
 				tim_Go[i] = false;
 				tim_Tick_By_Prev[i] = false;
@@ -7343,7 +7339,6 @@ namespace GBAHawk
 			saver = short_array_saver(tim_PreSc, saver, 4);
 			saver = short_array_saver(tim_PreSc_En, saver, 4);
 			saver = short_array_saver(tim_ST_Time, saver, 4);
-			saver = short_array_saver(tim_Timer_Tick, saver, 4);
 
 			return saver;
 		}
@@ -7370,7 +7365,6 @@ namespace GBAHawk
 			loader = short_array_loader(tim_PreSc, loader, 4);
 			loader = short_array_loader(tim_PreSc_En, loader, 4);
 			loader = short_array_loader(tim_ST_Time, loader, 4);
-			loader = short_array_loader(tim_Timer_Tick, loader, 4);
 
 			return loader;
 		}
