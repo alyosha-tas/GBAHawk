@@ -1447,7 +1447,7 @@ namespace GBAHawk
 					cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
 
 					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
+					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !Halt_Enter && !Halt_Leave)
 					{
 						IRQ_Delays = false;
 
@@ -1500,6 +1500,76 @@ namespace GBAHawk
 					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
 					IRQ_Write_Delay_2 = true;
 					IRQ_Write_Delay_3 = false;
+				}
+
+				if (Halt_Enter)
+				{
+					if (Halt_Enter_cd > 0)
+					{
+						Halt_Enter_cd -= 1;
+
+						if (Halt_Enter_cd == 0)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								Halt_Held_CPU_Instr = dma_Held_CPU_Instr;
+								dma_Held_CPU_Instr = cpu_Internal_Halted;
+							}
+							else
+							{
+								Halt_Held_CPU_Instr = cpu_Instr_Type;
+								cpu_Instr_Type = cpu_Internal_Halted;
+							}
+
+							if (TraceCallback) TraceCallback(4);
+
+							Halt_Enter = false;
+
+							// check if all delay sources are false
+							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Leave)
+							{
+								IRQ_Delays = false;
+
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								{
+									delays_to_process = false;
+								}
+							}
+						}
+					}
+				}
+
+				if (Halt_Leave)
+				{
+					if (Halt_Leave_cd > 0)
+					{
+						Halt_Leave_cd -= 1;
+
+						if (Halt_Leave_cd == 0)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								dma_Held_CPU_Instr = Halt_Held_CPU_Instr;
+							}
+							else
+							{
+								cpu_Instr_Type = Halt_Held_CPU_Instr;
+							}
+
+							Halt_Leave = false;
+
+							// check if all delay sources are false
+							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Enter)
+							{
+								IRQ_Delays = false;
+
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								{
+									delays_to_process = false;
+								}
+							}
+						}
+					}
 				}
 			}
 
@@ -4854,13 +4924,6 @@ namespace GBAHawk
 			// IRQ uses a prefetch cycle not an internal cycle (just like swi and undef)
 			if (cpu_Fetch_Cnt == 0)
 			{
-				// it could be that an IRQ happens directly following a halt/stop instruction
-				// in this case, cancel the halt/stop
-				cpu_Halted = false;
-				cpu_Just_Halted = false;
-				cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-				cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
 				if (TraceCallback) TraceCallback(3); // IRQ
 
 				if (cpu_Thumb_Mode)
@@ -5031,28 +5094,14 @@ namespace GBAHawk
 			break;
 
 		case cpu_Internal_Halted:
-			if (cpu_Just_Halted)
+			if (cpu_Trigger_Unhalt)
 			{
-				// must be halted for at least one cycle, even if conditions for unhalting are immediately true
-				cpu_Just_Halted = false;
-			}
-			else
-			{
-				if (cpu_Trigger_Unhalt)
+				if (!Halt_Leave)
 				{
-					cpu_Halted = false;
-					cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-					cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-					if (INT_Master_On)
-					{
-						cpu_Instr_Type = cpu_Prefetch_IRQ;
-					}
-					else
-					{
-						if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-						else { cpu_Decode_ARM(); }
-					}
+					Halt_Leave = true;
+					Halt_Leave_cd = 2;
+					IRQ_Delays = true;
+					delays_to_process = true;
 				}
 			}
 			break;
@@ -5190,28 +5239,14 @@ namespace GBAHawk
 					break;
 
 				case cpu_Internal_Halted:
-					if (cpu_Just_Halted)
+					if (cpu_Trigger_Unhalt)
 					{
-						// must be halted for at least one cycle, even if conditions for unhalting are immediately true
-						cpu_Just_Halted = false;
-					}
-					else
-					{
-						if (cpu_Trigger_Unhalt)
+						if (!Halt_Leave)
 						{
-							cpu_Halted = false;
-							cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-							cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-							if (INT_Master_On)
-							{
-								cpu_Instr_Type = cpu_Prefetch_IRQ;
-							}
-							else
-							{
-								if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-								else { cpu_Decode_ARM(); }
-							}
+							Halt_Leave = true;
+							Halt_Leave_cd = 2;
+							IRQ_Delays = true;
+							delays_to_process = true;
 						}
 					}
 					break;

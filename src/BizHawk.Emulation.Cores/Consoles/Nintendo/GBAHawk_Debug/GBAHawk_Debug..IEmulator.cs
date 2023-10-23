@@ -14,6 +14,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort PALRAM_32W_Value, VRAM_32W_Value;
 
 		public ushort FIFO_DMA_A_cd, FIFO_DMA_B_cd;
+		public ushort Halt_Enter_cd, Halt_Leave_cd;
+		public ushort Halt_Held_CPU_Instr;
 
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
@@ -21,6 +23,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool VBlank_Rise;
 		public bool delays_to_process;
 		public bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
+		public bool Halt_Enter, Halt_Leave;
 
 		public bool VRAM_32_Check, PALRAM_32_Check;
 		public bool VRAM_32_Delay, PALRAM_32_Delay;
@@ -189,7 +192,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
 
 					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2)
+					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !Halt_Enter && !Halt_Leave)
 					{
 						IRQ_Delays = false;
 						
@@ -244,6 +247,76 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					IRQ_Write_Delay_2 = true;
 					IRQ_Write_Delay_3 = false;
+				}
+
+				if (Halt_Enter)
+				{
+					if (Halt_Enter_cd > 0)
+					{
+						Halt_Enter_cd -= 1;
+
+						if (Halt_Enter_cd == 0)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								Halt_Held_CPU_Instr = dma_Held_CPU_Instr;
+								dma_Held_CPU_Instr = cpu_Internal_Halted;
+							}
+							else
+							{
+								Halt_Held_CPU_Instr = cpu_Instr_Type;
+								cpu_Instr_Type = cpu_Internal_Halted;
+							}
+
+							TraceCallback?.Invoke(new(disassembly: "====Halt====", registerInfo: string.Empty));
+
+							Halt_Enter = false;
+
+							// check if all delay sources are false
+							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Leave)
+							{
+								IRQ_Delays = false;
+
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								{
+									delays_to_process = false;
+								}
+							}
+						}
+					}
+				}
+
+				if (Halt_Leave)
+				{
+					if (Halt_Leave_cd > 0)
+					{
+						Halt_Leave_cd -= 1;
+
+						if (Halt_Leave_cd == 0)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								dma_Held_CPU_Instr = Halt_Held_CPU_Instr;
+							}
+							else
+							{
+								cpu_Instr_Type = Halt_Held_CPU_Instr;
+							}
+
+							Halt_Leave = false;
+
+							// check if all delay sources are false
+							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Enter)
+							{
+								IRQ_Delays = false;
+
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								{
+									delays_to_process = false;
+								}
+							}
+						}
+					}
 				}
 			}
 

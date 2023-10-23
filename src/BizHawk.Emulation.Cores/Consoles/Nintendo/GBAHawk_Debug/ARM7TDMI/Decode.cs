@@ -6,7 +6,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	{
 		public void cpu_Decode_ARM()
 		{
-			switch (((cpu_Instr_ARM_2 >> 25) & 7) + cpu_HS_Ofst_ARM2)
+			switch ((cpu_Instr_ARM_2 >> 25) & 7)
 			{
 				case 0:
 					if ((cpu_Instr_ARM_2 & 0x90) == 0x90)
@@ -461,15 +461,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					break;
 			}
 
-			if ((TraceCallback != null) && (cpu_HS_Ofst_ARM2 == 0)) TraceCallback(State());
-
-			cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1;
-			cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0;
+			if (TraceCallback != null) TraceCallback(State());
 		}
 
 		public void cpu_Decode_TMB()
 		{
-			switch (((cpu_Instr_TMB_2 >> 13) & 7) + cpu_HS_Ofst_TMB2)
+			switch ((cpu_Instr_TMB_2 >> 13) & 7)
 			{
 				case 0:
 					// shift / add / sub
@@ -748,10 +745,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					break;
 			}
 
-			if ((TraceCallback != null) && (cpu_HS_Ofst_TMB2 == 0)) TraceCallback(State());
-
-			cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1;
-			cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0;
+			if (TraceCallback != null) TraceCallback(State());
 		}
 
 		public void cpu_Calculate_Mul_Cycles()

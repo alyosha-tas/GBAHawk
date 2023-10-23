@@ -48,7 +48,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int cpu_Mul_Cycles, cpu_Mul_Cycles_Cnt;
 
 		public uint cpu_Instr_ARM_0, cpu_Instr_ARM_1, cpu_Instr_ARM_2;
-		public uint cpu_HS_Ofst_ARM0, cpu_HS_Ofst_ARM1, cpu_HS_Ofst_ARM2;
 		public uint cpu_Temp_Reg;
 		public uint cpu_Temp_Addr;
 		public uint cpu_Temp_Data;
@@ -62,7 +61,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public uint cpu_ALU_Temp_Val, cpu_ALU_Temp_S_Val, cpu_ALU_Shift_Carry;
 
 		public ushort cpu_Instr_TMB_0, cpu_Instr_TMB_1, cpu_Instr_TMB_2;
-		public ushort cpu_HS_Ofst_TMB0, cpu_HS_Ofst_TMB1, cpu_HS_Ofst_TMB2;
 		public ushort cpu_Instr_Type;
 		public ushort cpu_Exception_Type;
 		public ushort cpu_Next_Load_Store_Type;
@@ -106,12 +104,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ulong cpu_ALU_Long_Result;
 		public int cpu_Shift_Imm;
 
-		public bool cpu_Halted;
 		public bool stopped;
-		public bool jammed;
 
 		public bool cpu_Trigger_Unhalt, cpu_Trigger_Unhalt_2, cpu_Trigger_Unhalt_3;
-		public bool cpu_Just_Halted;
 
 		public void cpu_Reset()
 		{
@@ -125,15 +120,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_Mul_Cycles = cpu_Mul_Cycles_Cnt = 0;
 
-			cpu_HS_Ofst_ARM0 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM2 = 0;
-
 			cpu_Temp_Reg = cpu_Temp_Addr = cpu_Temp_Data = cpu_Temp_Mode = cpu_Bit_To_Check = 0;
 
 			cpu_Write_Back_Addr = cpu_Addr_Offset = cpu_Last_Bus_Value = cpu_Last_Bus_Value_Old = 0;		
 
 			cpu_ALU_Temp_Val = cpu_ALU_Temp_S_Val = cpu_ALU_Shift_Carry = 0;
-
-			cpu_HS_Ofst_TMB0 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB2 = 0;
 
 			cpu_Thumb_Mode = cpu_ARM_Cond_Passed = false; // Reset is exitted in ARM mode
 
@@ -157,9 +148,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_FlagI_Old = false;
 
-			stopped = jammed = cpu_Halted = false;
+			stopped = false;
 
-			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Just_Halted = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = false;
 		}
 
 		//this only calls when the first byte of an instruction is fetched.
@@ -1862,13 +1853,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// IRQ uses a prefetch cycle not an internal cycle (just like swi and undef)
 					if (cpu_Fetch_Cnt == 0)
 					{
-						// it could be that an IRQ happens directly following a halt/stop instruction
-						// in this case, cancel the halt/stop
-						cpu_Halted = false;
-						cpu_Just_Halted = false;
-						cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-						cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
 						TraceCallback?.Invoke(new(disassembly: "====IRQ====", registerInfo: string.Empty));
 
 						if (cpu_Thumb_Mode)
@@ -2039,28 +2023,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					break;
 
 				case cpu_Internal_Halted:
-					if (cpu_Just_Halted)
+					if (cpu_Trigger_Unhalt)
 					{
-						// must be halted for at least one cycle, even if conditions for unhalting are immediately true
-						cpu_Just_Halted = false;
-					}
-					else
-					{
-						if (cpu_Trigger_Unhalt)
+						if (!Halt_Leave)
 						{
-							cpu_Halted = false;
-							cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-							cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
-
-							if (INT_Master_On)
-							{
-								cpu_Instr_Type = cpu_Prefetch_IRQ;
-							}
-							else
-							{
-								if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-								else { cpu_Decode_ARM(); }
-							}
+							Halt_Leave = true;
+							Halt_Leave_cd = 2;
+							IRQ_Delays = true;
+							delays_to_process = true;
 						}
 					}
 					break;
@@ -2198,30 +2168,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								break;
 
 							case cpu_Internal_Halted:
-								if (cpu_Just_Halted)
-								{
-									// must be halted for at least one cycle, even if conditions for unhalting are immediately true
-									cpu_Just_Halted = false;
-								}
-								else
-								{
-									if (cpu_Trigger_Unhalt)
-									{
-										cpu_Halted = false;
-										cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0 = 0;
-										cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0 = 0;
 
-										if (INT_Master_On)
-										{
-											cpu_Instr_Type = cpu_Prefetch_IRQ;
-										}
-										else
-										{
-											if (cpu_Thumb_Mode) { cpu_Decode_TMB(); }
-											else { cpu_Decode_ARM(); }
-										}
+								if (cpu_Trigger_Unhalt)
+								{
+									if (!Halt_Leave)
+									{
+										Halt_Leave = true;
+										Halt_Leave_cd = 2;
+										IRQ_Delays = true;
+										delays_to_process = true;
 									}
 								}
+
 								break;
 
 							case cpu_Multiply_Cycles:
@@ -2324,17 +2282,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Instr_ARM_1), ref cpu_Instr_ARM_1);
 			ser.Sync(nameof(cpu_Instr_ARM_2), ref cpu_Instr_ARM_2);
 
-			ser.Sync(nameof(cpu_HS_Ofst_ARM0), ref cpu_HS_Ofst_ARM0);
-			ser.Sync(nameof(cpu_HS_Ofst_ARM1), ref cpu_HS_Ofst_ARM1);
-			ser.Sync(nameof(cpu_HS_Ofst_ARM2), ref cpu_HS_Ofst_ARM2);
-
 			ser.Sync(nameof(cpu_Instr_TMB_0), ref cpu_Instr_TMB_0);
 			ser.Sync(nameof(cpu_Instr_TMB_1), ref cpu_Instr_TMB_1);
 			ser.Sync(nameof(cpu_Instr_TMB_2), ref cpu_Instr_TMB_2);
-
-			ser.Sync(nameof(cpu_HS_Ofst_TMB0), ref cpu_HS_Ofst_TMB0);
-			ser.Sync(nameof(cpu_HS_Ofst_TMB1), ref cpu_HS_Ofst_TMB1);
-			ser.Sync(nameof(cpu_HS_Ofst_TMB2), ref cpu_HS_Ofst_TMB2);
 
 			ser.Sync(nameof(cpu_Temp_Reg), ref cpu_Temp_Reg);
 			ser.Sync(nameof(cpu_Temp_Addr), ref cpu_Temp_Addr);
@@ -2425,15 +2375,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Regs), ref cpu_Regs, false);
 
 			// Other
-			ser.Sync(nameof(cpu_Halted), ref cpu_Halted);
 			ser.Sync(nameof(stopped), ref stopped);
-			ser.Sync(nameof(jammed), ref jammed);
 
 			ser.Sync(nameof(cpu_Trigger_Unhalt), ref cpu_Trigger_Unhalt);
 			ser.Sync(nameof(cpu_Trigger_Unhalt_2), ref cpu_Trigger_Unhalt_2);
 			ser.Sync(nameof(cpu_Trigger_Unhalt_3), ref cpu_Trigger_Unhalt_3);
-
-			ser.Sync(nameof(cpu_Just_Halted), ref cpu_Just_Halted);
 		}
 	}
 }

@@ -72,6 +72,7 @@ namespace GBAHawk
 		bool VRAM_32_Delay, PALRAM_32_Delay;
 		bool IRQ_Delays, Misc_Delays;
 		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
+		bool Halt_Enter, Halt_Leave;
 
 		uint8_t Post_Boot, Halt_CTRL;
 
@@ -82,6 +83,8 @@ namespace GBAHawk
 		uint16_t controller_state;
 		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
 		uint16_t FIFO_DMA_A_cd, FIFO_DMA_B_cd;
+		uint16_t Halt_Enter_cd, Halt_Leave_cd;
+		uint16_t Halt_Held_CPU_Instr;
 
 		uint32_t PALRAM_32W_Addr, VRAM_32W_Addr;
 		uint32_t Memory_CTRL, ROM_Length;
@@ -164,6 +167,8 @@ namespace GBAHawk
 
 			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
 
+			Halt_Enter =  Halt_Leave = false;
+
 			VRAM_32_Check = PALRAM_32_Check = false;
 
 			controller_state = 0x3FF;
@@ -185,6 +190,8 @@ namespace GBAHawk
 			PALRAM_32W_Value = VRAM_32W_Value = 0;
 			
 			FIFO_DMA_A_cd = FIFO_DMA_B_cd = 0;
+
+			Halt_Enter_cd = Halt_Leave_cd = Halt_Held_CPU_Instr = 0;
 
 			All_RAM_Disable = WRAM_Enable = false;
 
@@ -710,17 +717,10 @@ namespace GBAHawk
 			{
 				if ((value & 0x80) == 0)
 				{
-					cpu_Halted = true;
-					cpu_Just_Halted = true;
-					if (TraceCallback) TraceCallback(4);
-					cpu_HS_Ofst_ARM0 = 0x8;
-					cpu_HS_Ofst_TMB0 = 0x8;
-
-					cpu_HS_Ofst_ARM1 = 0x8;
-					cpu_HS_Ofst_TMB1 = 0x8;
-
-					cpu_HS_Ofst_ARM2 = 0x8;
-					cpu_HS_Ofst_TMB2 = 0x8;
+					Halt_Enter = true;
+					Halt_Enter_cd = 2;
+					IRQ_Delays = true;
+					delays_to_process = true;
 				}
 				else
 				{
@@ -808,14 +808,11 @@ namespace GBAHawk
 		bool cpu_Special_Inc;
 		bool cpu_FlagI_Old;
 
-		bool cpu_Halted;
 		bool stopped;
-		bool jammed;
 
 		bool cpu_Trigger_Unhalt;
 		bool cpu_Trigger_Unhalt_2;
 		bool cpu_Trigger_Unhalt_3;
-		bool cpu_Just_Halted;
 
 		// ARM Related Variables
 		uint16_t cpu_Exec_ARM;
@@ -824,7 +821,6 @@ namespace GBAHawk
 		uint16_t cpu_Exec_TMB;
 
 		uint16_t cpu_Instr_TMB_0, cpu_Instr_TMB_1, cpu_Instr_TMB_2;
-		uint16_t cpu_HS_Ofst_TMB0, cpu_HS_Ofst_TMB1, cpu_HS_Ofst_TMB2;
 		uint16_t cpu_Instr_Type;
 		uint16_t cpu_Exception_Type;
 		uint16_t cpu_Next_Load_Store_Type;
@@ -838,7 +834,6 @@ namespace GBAHawk
 		uint32_t cpu_fiq_R8, cpu_fiq_R9, cpu_fiq_R10, cpu_fiq_R11, cpu_fiq_R12, cpu_fiq_R13, cpu_fiq_R14, cpu_fiq_S;
 
 		uint32_t cpu_Instr_ARM_0, cpu_Instr_ARM_1, cpu_Instr_ARM_2;
-		uint32_t cpu_HS_Ofst_ARM0, cpu_HS_Ofst_ARM1, cpu_HS_Ofst_ARM2;
 		uint32_t cpu_Temp_Reg;
 		uint32_t cpu_Temp_Addr;
 		uint32_t cpu_Temp_Data;
@@ -1418,15 +1413,11 @@ namespace GBAHawk
 
 			cpu_Mul_Cycles = cpu_Mul_Cycles_Cnt = 0;
 
-			cpu_HS_Ofst_ARM0 = cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM2 = 0;
-
 			cpu_Temp_Reg = cpu_Temp_Addr = cpu_Temp_Data = cpu_Temp_Mode = cpu_Bit_To_Check = 0;
 
 			cpu_Write_Back_Addr = cpu_Addr_Offset = cpu_Last_Bus_Value = cpu_Last_Bus_Value_Old = 0;
 
 			cpu_ALU_Temp_Val = cpu_ALU_Temp_S_Val = cpu_ALU_Shift_Carry = 0;
-
-			cpu_HS_Ofst_TMB0 = cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB2 = 0;
 
 			cpu_Thumb_Mode = cpu_ARM_Cond_Passed = false; // Reset is exitted in ARM mode
 
@@ -1452,14 +1443,14 @@ namespace GBAHawk
 
 			cpu_FlagI_Old = false;
 
-			stopped = jammed = cpu_Halted = false;
+			stopped = false;
 
-			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Just_Halted = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = false;
 		}
 
 		void cpu_Decode_ARM()
 		{
-			switch (((cpu_Instr_ARM_2 >> 25) & 7) + cpu_HS_Ofst_ARM2)
+			switch ((cpu_Instr_ARM_2 >> 25) & 7)
 			{
 			case 0:
 				if ((cpu_Instr_ARM_2 & 0x90) == 0x90)
@@ -1914,15 +1905,12 @@ namespace GBAHawk
 				break;
 			}
 
-			if ((TraceCallback) && (cpu_HS_Ofst_ARM2 == 0)) TraceCallback(0);
-
-			cpu_HS_Ofst_ARM2 = cpu_HS_Ofst_ARM1;
-			cpu_HS_Ofst_ARM1 = cpu_HS_Ofst_ARM0;
+			if (TraceCallback) TraceCallback(0);
 		}
 
 		void cpu_Decode_TMB()
 		{
-			switch (((cpu_Instr_TMB_2 >> 13) & 7) + cpu_HS_Ofst_TMB2)
+			switch ((cpu_Instr_TMB_2 >> 13) & 7)
 			{
 			case 0:
 				// shift / add / sub
@@ -2201,10 +2189,7 @@ namespace GBAHawk
 				break;
 			}
 
-			if ((TraceCallback) && (cpu_HS_Ofst_TMB2 == 0)) TraceCallback(0);
-
-			cpu_HS_Ofst_TMB2 = cpu_HS_Ofst_TMB1;
-			cpu_HS_Ofst_TMB1 = cpu_HS_Ofst_TMB0;
+			if (TraceCallback) TraceCallback(0);
 		}
 
 		void cpu_Calculate_Mul_Cycles()
@@ -4898,22 +4883,16 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Special_Inc, saver);
 			saver = bool_saver(cpu_FlagI_Old, saver);
 
-			saver = bool_saver(cpu_Halted, saver);
 			saver = bool_saver(stopped, saver);
-			saver = bool_saver(jammed, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt_2, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt_3, saver);
-			saver = bool_saver(cpu_Just_Halted, saver);
 
 			saver = short_saver(cpu_Exec_ARM, saver);
 			saver = short_saver(cpu_Exec_TMB, saver);
 			saver = short_saver(cpu_Instr_TMB_0, saver);
 			saver = short_saver(cpu_Instr_TMB_1, saver);
 			saver = short_saver(cpu_Instr_TMB_2, saver);
-			saver = short_saver(cpu_HS_Ofst_TMB0, saver);
-			saver = short_saver(cpu_HS_Ofst_TMB1, saver);
-			saver = short_saver(cpu_HS_Ofst_TMB2, saver);
 			saver = short_saver(cpu_Instr_Type, saver);
 			saver = short_saver(cpu_Exception_Type, saver);
 			saver = short_saver(cpu_Next_Load_Store_Type, saver);
@@ -4949,9 +4928,6 @@ namespace GBAHawk
 			saver = int_saver(cpu_Instr_ARM_0, saver);
 			saver = int_saver(cpu_Instr_ARM_1, saver);
 			saver = int_saver(cpu_Instr_ARM_2, saver);
-			saver = int_saver(cpu_HS_Ofst_ARM0, saver);
-			saver = int_saver(cpu_HS_Ofst_ARM1, saver);
-			saver = int_saver(cpu_HS_Ofst_ARM2, saver);
 			saver = int_saver(cpu_Temp_Reg, saver);
 			saver = int_saver(cpu_Temp_Addr, saver);
 			saver = int_saver(cpu_Temp_Data, saver);
@@ -5026,22 +5002,16 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Special_Inc, loader);
 			loader = bool_loader(&cpu_FlagI_Old, loader);
 
-			loader = bool_loader(&cpu_Halted, loader);
 			loader = bool_loader(&stopped, loader);
-			loader = bool_loader(&jammed, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt_2, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt_3, loader);
-			loader = bool_loader(&cpu_Just_Halted, loader);
 
 			loader = short_loader(&cpu_Exec_ARM, loader);
 			loader = short_loader(&cpu_Exec_TMB, loader);
 			loader = short_loader(&cpu_Instr_TMB_0, loader);
 			loader = short_loader(&cpu_Instr_TMB_1, loader);
 			loader = short_loader(&cpu_Instr_TMB_2, loader);
-			loader = short_loader(&cpu_HS_Ofst_TMB0, loader);
-			loader = short_loader(&cpu_HS_Ofst_TMB1, loader);
-			loader = short_loader(&cpu_HS_Ofst_TMB2, loader);
 			loader = short_loader(&cpu_Instr_Type, loader);
 			loader = short_loader(&cpu_Exception_Type, loader);
 			loader = short_loader(&cpu_Next_Load_Store_Type, loader);
@@ -5077,9 +5047,6 @@ namespace GBAHawk
 			loader = int_loader(&cpu_Instr_ARM_0, loader);
 			loader = int_loader(&cpu_Instr_ARM_1, loader);
 			loader = int_loader(&cpu_Instr_ARM_2, loader);
-			loader = int_loader(&cpu_HS_Ofst_ARM0, loader);
-			loader = int_loader(&cpu_HS_Ofst_ARM1, loader);
-			loader = int_loader(&cpu_HS_Ofst_ARM2, loader);
 			loader = int_loader(&cpu_Temp_Reg, loader);
 			loader = int_loader(&cpu_Temp_Addr, loader);
 			loader = int_loader(&cpu_Temp_Data, loader);
@@ -13031,6 +12998,8 @@ namespace GBAHawk
 			saver = bool_saver(Misc_Delays, saver);
 			saver = bool_saver(FIFO_DMA_A_Delay, saver);
 			saver = bool_saver(FIFO_DMA_B_Delay, saver);
+			saver = bool_saver(Halt_Enter, saver);
+			saver = bool_saver(Halt_Leave, saver);
 
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
@@ -13048,6 +13017,9 @@ namespace GBAHawk
 			saver = short_saver(VRAM_32W_Value, saver);
 			saver = short_saver(FIFO_DMA_A_cd, saver);
 			saver = short_saver(FIFO_DMA_B_cd, saver);
+			saver = short_saver(Halt_Enter_cd, saver);
+			saver = short_saver(Halt_Leave_cd, saver);
+			saver = short_saver(Halt_Held_CPU_Instr, saver);
 
 			saver = int_saver(PALRAM_32W_Addr, saver);
 			saver = int_saver(VRAM_32W_Addr, saver);
@@ -13129,6 +13101,8 @@ namespace GBAHawk
 			loader = bool_loader(&Misc_Delays, loader);
 			loader = bool_loader(&FIFO_DMA_A_Delay, loader);
 			loader = bool_loader(&FIFO_DMA_B_Delay, loader);
+			loader = bool_loader(&Halt_Enter, loader);
+			loader = bool_loader(&Halt_Leave, loader);
 
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);
@@ -13146,6 +13120,9 @@ namespace GBAHawk
 			loader = short_loader(&VRAM_32W_Value, loader);
 			loader = short_loader(&FIFO_DMA_A_cd, loader);
 			loader = short_loader(&FIFO_DMA_B_cd, loader);
+			loader = short_loader(&Halt_Enter_cd, loader);
+			loader = short_loader(&Halt_Leave_cd, loader);
+			loader = short_loader(&Halt_Held_CPU_Instr, loader);
 
 			loader = int_loader(&PALRAM_32W_Addr, loader);
 			loader = int_loader(&VRAM_32W_Addr, loader);

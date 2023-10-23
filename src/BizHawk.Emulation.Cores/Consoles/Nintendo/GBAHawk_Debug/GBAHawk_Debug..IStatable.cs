@@ -64,6 +64,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(FIFO_DMA_A_cd), ref FIFO_DMA_A_cd);
 			ser.Sync(nameof(FIFO_DMA_B_cd), ref FIFO_DMA_B_cd);
+			ser.Sync(nameof(Halt_Enter_cd), ref Halt_Enter_cd);
+			ser.Sync(nameof(Halt_Leave_cd), ref Halt_Leave_cd);
+			ser.Sync(nameof(Halt_Held_CPU_Instr), ref Halt_Held_CPU_Instr);
 
 			ser.Sync(nameof(VRAM_32_Check), ref VRAM_32_Check);
 			ser.Sync(nameof(PALRAM_32_Check), ref PALRAM_32_Check);
@@ -71,6 +74,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(PALRAM_32_Delay), ref PALRAM_32_Delay);
 			ser.Sync(nameof(FIFO_DMA_A_Delay), ref FIFO_DMA_A_Delay);
 			ser.Sync(nameof(FIFO_DMA_B_Delay), ref FIFO_DMA_B_Delay);
+			ser.Sync(nameof(Halt_Enter), ref Halt_Enter);
+			ser.Sync(nameof(Halt_Leave), ref Halt_Leave);
 
 			ser.Sync(nameof(IRQ_Delays), ref IRQ_Delays);
 			ser.Sync(nameof(Misc_Delays), ref Misc_Delays);

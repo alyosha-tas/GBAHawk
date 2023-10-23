@@ -388,18 +388,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				if ((value & 0x80) == 0)
 				{
-					cpu_Halted = true;
-					cpu_Just_Halted = true;
-
-					TraceCallback?.Invoke(new(disassembly: "====Halt====", registerInfo: string.Empty));
-					cpu_HS_Ofst_ARM0 = 0x8;
-					cpu_HS_Ofst_TMB0 = 0x8;
-
-					cpu_HS_Ofst_ARM1 = 0x8;
-					cpu_HS_Ofst_TMB1 = 0x8;
-
-					cpu_HS_Ofst_ARM2 = 0x8;
-					cpu_HS_Ofst_TMB2 = 0x8;
+					Halt_Enter = true;
+					Halt_Enter_cd = 2;
+					IRQ_Delays = true;
+					delays_to_process = true;
 				}
 				else
 				{
