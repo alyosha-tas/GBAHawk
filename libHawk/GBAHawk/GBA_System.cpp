@@ -1587,7 +1587,18 @@ namespace GBAHawk
 
 							if ((VRAM_32W_Addr & 0x00010000) == 0x00010000)
 							{
-								VRAM_16[(VRAM_32W_Addr & 0x17FFF) >> 1] = (uint16_t)(VRAM_32W_Value & 0xFFFF);
+								// mirrors behave differently depending on mode
+								if ((VRAM_32W_Addr & 0x00008000) == 0x00008000)
+								{
+									if ((ppu_BG_Mode < 3) || ((VRAM_32W_Addr & 0x00004000) == 0x00004000))
+									{
+										VRAM_16[(VRAM_32W_Addr & 0x17FFF) >> 1] = (uint16_t)(VRAM_32W_Value & 0xFFFF);
+									}
+								}
+								else
+								{
+									VRAM_16[(VRAM_32W_Addr & 0x17FFF) >> 1] = (uint16_t)(VRAM_32W_Value & 0xFFFF);
+								}
 							}
 							else
 							{
@@ -2674,6 +2685,17 @@ namespace GBAHawk
 							}
 
 							tim_Glitch_Tick[i] = false;
+						}
+
+						if (tim_Enable_Not_Update[i])
+						{
+							tim_Timer[i] = tim_Reload[i];
+
+							// if the reload register was just written to, use the old value
+							if (tim_Just_Reloaded == i)
+							{
+								tim_Timer[i] = tim_Old_Reload;
+							}
 						}
 					}
 

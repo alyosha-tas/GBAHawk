@@ -1,4 +1,5 @@
 ﻿using BizHawk.Emulation.Common;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.InteropServices;
 
@@ -334,8 +335,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 							if ((VRAM_32W_Addr & 0x00010000) == 0x00010000)
 							{
-								VRAM[VRAM_32W_Addr & 0x17FFF] = (byte)(VRAM_32W_Value & 0xFF);
-								VRAM[(VRAM_32W_Addr & 0x17FFF) + 1] = (byte)((VRAM_32W_Value >> 8) & 0xFF);
+								// mirrors behave differently depending on mode
+								if ((VRAM_32W_Addr & 0x00008000) == 0x00008000)
+								{
+									if ((ppu_BG_Mode < 3) || ((VRAM_32W_Addr & 0x00004000) == 0x00004000))
+									{
+										VRAM[VRAM_32W_Addr & 0x17FFF] = (byte)(VRAM_32W_Value & 0xFF);
+										VRAM[(VRAM_32W_Addr & 0x17FFF) + 1] = (byte)((VRAM_32W_Value >> 8) & 0xFF);
+									}
+								}
+								else
+								{
+									VRAM[VRAM_32W_Addr & 0x17FFF] = (byte)(VRAM_32W_Value & 0xFF);
+									VRAM[(VRAM_32W_Addr & 0x17FFF) + 1] = (byte)((VRAM_32W_Value >> 8) & 0xFF);
+								}
 							}
 							else
 							{

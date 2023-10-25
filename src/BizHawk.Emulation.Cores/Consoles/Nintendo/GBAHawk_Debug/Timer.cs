@@ -40,6 +40,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool[] tim_Glitch_Tick = new bool[4];
 
+		public bool[] tim_Enable_Not_Update = new bool[4];
+
 		public int tim_Just_Reloaded;
 
 		public ushort tim_SubCnt;
@@ -214,8 +216,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 
-				tim_Timer[nbr] = tim_Reload[nbr];
-				
 				tim_ST_Time[nbr] = 3;
 
 				tim_PreSc_En[nbr] = PreScales[value & 3];
@@ -223,6 +223,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
 				tim_All_Off = false;
+
+				tim_Enable_Not_Update[nbr] = true;
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{
@@ -237,7 +239,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (tim_ST_Time[nbr] == 0)
 				{
 					tim_ST_Time[nbr] = 2;
-				}			
+				}
+
+				tim_Enable_Not_Update[nbr] = false;
 			}
 
 			if ((value & 0x80) == 0)
@@ -288,6 +292,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 
 								tim_Glitch_Tick[i] = false;
+							}
+
+							if (tim_Enable_Not_Update[i])
+							{
+								tim_Timer[i] = tim_Reload[i];
+
+								// if the reload register was just written to, use the old value
+								if (tim_Just_Reloaded == i)
+								{
+									tim_Timer[i] = tim_Old_Reload;
+								}
 							}
 						}
 
@@ -387,11 +402,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				tim_Disable[i] = false;
 				tim_Old_IRQ[i] = false;
 				tim_Glitch_Tick[i] = false;
+				tim_Enable_Not_Update[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
 
-			tim_SubCnt = 0;
+			tim_SubCnt = 0xFFFF;
 
 			tim_Old_Reload = 0;
 
@@ -413,6 +429,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(tim_Disable), ref tim_Disable, false);
 			ser.Sync(nameof(tim_Old_IRQ), ref tim_Old_IRQ, false);
 			ser.Sync(nameof(tim_Glitch_Tick), ref tim_Glitch_Tick, false);
+			ser.Sync(nameof(tim_Enable_Not_Update), ref tim_Enable_Not_Update, false);
 
 			ser.Sync(nameof(tim_Just_Reloaded), ref tim_Just_Reloaded);
 

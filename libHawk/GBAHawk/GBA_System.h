@@ -7041,6 +7041,7 @@ namespace GBAHawk
 		bool tim_Disable[4] = { };
 		bool tim_Old_IRQ[4] = { };
 		bool tim_Glitch_Tick[4] = { };
+		bool tim_Enable_Not_Update[4] = { };
 
 		uint16_t tim_Timer[4] = { };
 		uint16_t tim_Reload[4] = { };
@@ -7215,8 +7216,6 @@ namespace GBAHawk
 						tim_Glitch_Tick[nbr] = true;
 					}
 				}
-				
-				tim_Timer[nbr] = tim_Reload[nbr];
 
 				tim_ST_Time[nbr] = 3;
 
@@ -7225,6 +7224,8 @@ namespace GBAHawk
 				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
 
 				tim_All_Off = false;
+
+				tim_Enable_Not_Update[nbr] = true;
 			}
 			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
 			{		
@@ -7240,6 +7241,8 @@ namespace GBAHawk
 				{
 					tim_ST_Time[nbr] = 2;
 				}
+
+				tim_Enable_Not_Update[nbr] = false;
 			}
 
 			if ((value & 0x80) == 0)
@@ -7273,11 +7276,12 @@ namespace GBAHawk
 				tim_Disable[i] = false;
 				tim_Old_IRQ[i] = false;
 				tim_Glitch_Tick[i] = false;
+				tim_Enable_Not_Update[i] = false;
 			}
 
 			tim_Just_Reloaded = 5;
 
-			tim_SubCnt = 0;
+			tim_SubCnt = 0xFFFF;
 
 			tim_Old_Reload = 0;
 
@@ -7299,6 +7303,7 @@ namespace GBAHawk
 			saver = bool_array_saver(tim_Disable, saver, 4);
 			saver = bool_array_saver(tim_Old_IRQ, saver, 4);
 			saver = bool_array_saver(tim_Glitch_Tick, saver, 4);
+			saver = bool_array_saver(tim_Enable_Not_Update, saver, 4);
 
 			saver = short_array_saver(tim_Timer, saver, 4);
 			saver = short_array_saver(tim_Reload, saver, 4);
@@ -7325,6 +7330,7 @@ namespace GBAHawk
 			loader = bool_array_loader(tim_Disable, loader, 4);
 			loader = bool_array_loader(tim_Old_IRQ, loader, 4);
 			loader = bool_array_loader(tim_Glitch_Tick, loader, 4);
+			loader = bool_array_loader(tim_Enable_Not_Update, loader, 4);
 
 			loader = short_array_loader(tim_Timer, loader, 4);
 			loader = short_array_loader(tim_Reload, loader, 4);
@@ -11056,8 +11062,8 @@ namespace GBAHawk
 			// based on console verification testing, it seems 225 is correct.
 			ppu_LY = 225;
 
-			// 2 gives the correct value in music4.gba
-			ppu_Cycle = 2;
+			// 1 gives the correct value in music4.gba
+			ppu_Cycle = 1;
 				
 			ppu_Display_Cycle = 0;
 

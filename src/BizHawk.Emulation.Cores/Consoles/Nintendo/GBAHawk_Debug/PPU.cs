@@ -3898,8 +3898,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// based on console verification testing, it seems 225 is correct.
 			ppu_LY = 225;
 
-			// 2 gives the correct value in music4.gba
-			ppu_Cycle = 2;
+			// 1 gives the correct value in music4.gba
+			ppu_Cycle = 1;
 
 			ppu_Display_Cycle = 0;
 
