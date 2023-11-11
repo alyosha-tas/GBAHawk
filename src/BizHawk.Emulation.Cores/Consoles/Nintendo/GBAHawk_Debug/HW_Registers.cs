@@ -355,7 +355,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			pre_Reg_Write(value);
 
-			Console.WriteLine("Prefetch enabled: " + pre_Enable +  " ctrl value: " + value + " cycles: " + TotalExecutedCycles);
+			//Console.WriteLine("Prefetch enabled: " + pre_Enable +  " ctrl value: " + value + " cycles: " + TotalExecutedCycles);
 
 			Wait_CTRL = (ushort)(value & 0x5FFF);
 		}

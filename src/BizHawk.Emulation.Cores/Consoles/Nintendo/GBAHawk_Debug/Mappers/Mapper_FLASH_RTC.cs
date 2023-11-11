@@ -22,10 +22,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int Bank_State;
 		public int Next_Mode;
 		public int Erase_4k_Addr;
+		public int Access_Address;
 
 		public bool Swapped_Out;
 		public bool Erase_Command;
 		public bool Erase_4k;
+		public bool Erase_All;
+		public bool Force_Bit_6;
 
 		// general IO
 		public bool Chip_Select;
@@ -33,6 +36,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte Port_State;
 		public byte Port_Dir;
 		public byte Ports_RW;
+		public byte Write_Value;
 
 		public byte Current_C4, Current_C5, Current_C6, Current_C7, Current_C8, Current_C9;
 
@@ -55,12 +59,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Chip_Mode = 0;
 			Next_Mode = 0;
 			Erase_4k_Addr = 0;
+			Access_Address = 0;
 
 			Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
 
 			Swapped_Out = false;
 			Erase_Command = false;
 			Erase_4k = false;
+			Erase_All = false;
+			Force_Bit_6 = false;
 
 			// set up initial variables for IO
 			Chip_Select = false;
@@ -68,6 +75,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			Port_State = 0;
 			Port_Dir = 0;
 			Ports_RW = 0;
+			Write_Value = 0;
 
 			Current_C4 = ROM_C4;
 			Current_C5 = ROM_C5;
@@ -731,40 +739,74 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			//Console.WriteLine("Read: " + Chip_Mode + " " + (addr & 0xFFFF) + " " + Core.CycleCount);
 
 			Update_State();
-			
+
+			byte ret_value = 0;
+
 			if (Swapped_Out)
 			{
 				if ((addr & 0xFFFF) > 1)
 				{
-					return Core.cart_RAM[(addr & 0xFFFF) + Bank_State];
+					ret_value = Core.cart_RAM[(addr & 0xFFFF) + Bank_State];
 				}
 				else if ((addr & 0xFFFF) == 1)
 				{
 					if (Core.cart_RAM.Length == 0x10000)
 					{
-						return 0x1B;
+						ret_value = 0x1B;
 					}
 					else
 					{
-						return 0x13;
-					}		
+						ret_value = 0x13;
+					}
 				}
 				else
 				{
 					if (Core.cart_RAM.Length == 0x10000)
 					{
-						return 0x32;
+						ret_value = 0x32;
 					}
 					else
 					{
-						return 0x62;
+						ret_value = 0x62;
 					}
 				}
 			}
 			else
 			{
-				return Core.cart_RAM[(addr & 0xFFFF) + Bank_State];
-			}	
+				ret_value = Core.cart_RAM[(addr & 0xFFFF) + Bank_State];
+			}
+
+			if (Next_Ready_Cycle != 0xFFFFFFFFFFFFFFFF)
+			{
+				if (Core.cart_RAM.Length == 0x10000)
+				{
+					// according to data sheet, upper bit returns 0 when an operation is in progress
+					// and the 6th bit alternates
+					// this is important to ex Sonic Advance
+					ret_value &= 0x7F;
+
+					ret_value &= 0xBF;
+
+					if (Force_Bit_6)
+					{
+						ret_value |= 0x40;
+					}
+
+					Force_Bit_6 ^= true;
+				}
+				else
+				{
+					// for the larger chips, it seems a status register is activated on wirtes, which
+					// returns 0 until done (for our purposes since operations always succeed.)
+
+					ret_value = 0;
+				}
+
+				//Console.WriteLine("not ready " + Force_Bit_6 + " " + ret_value);
+			}
+
+
+			return ret_value;
 		}
 
 		public override ushort ReadMemory16(uint addr)
@@ -788,14 +830,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public override void WriteMemory8(uint addr, byte value)
 		{
 			//Console.WriteLine("Write: " + Chip_Mode + " " + (addr & 0xFFFF) + " " + value + " " + Core.CycleCount);
-			
+
+			Update_State();
+
 			if (Chip_Mode == 3)
 			{
-				Core.cart_RAM[(addr & 0xFFFF) + Bank_State] = value;
+				if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+				{
+					Access_Address = (int)((addr & 0xFFFF) + Bank_State);
+					Write_Value = value;
 
-				// instant writes good enough?
+					Next_Ready_Cycle = Core.CycleCount + 325;
+				}
+
 				Chip_Mode = 0;
-			}	
+			}
 			else if ((addr & 0xFFFF) == 0x5555)
 			{
 				if (Chip_Mode == 0)
@@ -806,14 +855,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 				if (Chip_Mode == 2)
-				{			
+				{
 					if (value == 0x10)
 					{
 						if (Erase_Command)
 						{
-							Next_Ready_Cycle = Core.CycleCount + 4 * (ulong)Core.cart_RAM.Length;
+							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+							{
+								Next_Ready_Cycle = Core.CycleCount + 3 * 430000;
 
-							Erase_4k = false;
+								Erase_All = true;
+
+								Force_Bit_6 = false;
+							}
 
 							Erase_Command = false;
 
@@ -839,7 +893,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (Core.cart_RAM.Length == 0x20000)
 						{
 							Chip_Mode = 4;
-						}			
+						}
 					}
 					else if (value == 0xF0)
 					{
@@ -856,7 +910,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						Chip_Mode = 2;
 					}
-				}			
+				}
 			}
 			else if ((addr & 0xFFF) == 0)
 			{
@@ -864,12 +918,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (value == 0x30)
 					{
-						Next_Ready_Cycle = Core.CycleCount + 4 * 0x1000;
+						if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+						{
+							Next_Ready_Cycle = Core.CycleCount + 460000;
 
-						Erase_4k = true;
+							Erase_4k = true;
 
-						Erase_4k_Addr = (int)(addr & 0xF000);
-						
+							Erase_4k_Addr = (int)(addr & 0xF000);
+
+							Force_Bit_6 = false;
+						}
+
 						Erase_Command = false;
 
 						Chip_Mode = 0;
@@ -939,15 +998,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						Core.cart_RAM[i + Erase_4k_Addr + Bank_State] = 0xFF;
 					}
+
+					Erase_4k = false;
 				}
-				else
+				else if (Erase_All)
 				{
 					for (int i = 0; i < Core.cart_RAM.Length; i++)
 					{
 						Core.cart_RAM[i] = 0xFF;
 					}
+
+					Erase_All = false;
 				}
-				
+				else
+				{
+					Core.cart_RAM[Access_Address] = Write_Value;
+				}
+
 				Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
 			}
 		}
@@ -970,10 +1037,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Bank_State), ref Bank_State);
 			ser.Sync(nameof(Next_Mode), ref Next_Mode);
 			ser.Sync(nameof(Erase_4k_Addr), ref Erase_4k_Addr);
+			ser.Sync(nameof(Access_Address), ref Access_Address);
 
 			ser.Sync(nameof(Swapped_Out), ref Swapped_Out);
 			ser.Sync(nameof(Erase_Command), ref Erase_Command);
 			ser.Sync(nameof(Erase_4k), ref Erase_4k);
+			ser.Sync(nameof(Erase_All), ref Erase_All);
+			ser.Sync(nameof(Force_Bit_6), ref Force_Bit_6);
 
 			ser.Sync(nameof(Chip_Select), ref Chip_Select);
 
@@ -1007,6 +1077,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Reg_Bit), ref Reg_Bit);
 			ser.Sync(nameof(Reg_Bit_Count), ref Reg_Bit_Count);
 			ser.Sync(nameof(Reg_Access), ref Reg_Access);
+			ser.Sync(nameof(Write_Value), ref Write_Value);
 
 			ser.Sync(nameof(Reg_Year), ref Reg_Year);
 			ser.Sync(nameof(Reg_Month), ref Reg_Month);

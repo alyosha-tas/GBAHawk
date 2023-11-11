@@ -32,6 +32,8 @@ namespace GBAHawk
 		bool Swapped_Out;
 		bool Erase_Command;
 		bool Erase_4k;
+		bool Erase_All;
+		bool Force_Bit_6;
 
 		bool Chip_Select;
 		bool Solar_Clock;
@@ -52,6 +54,7 @@ namespace GBAHawk
 		uint8_t Reg_Bit, Reg_Bit_Count;
 		uint8_t Reg_Access;
 		uint8_t Reg_Ctrl;
+		uint8_t Write_Value;
 
 		uint8_t Current_C4, Current_C5, Current_C6, Current_C7, Current_C8, Current_C9;
 
@@ -1095,6 +1098,8 @@ namespace GBAHawk
 			saver = bool_saver(Swapped_Out, saver);
 			saver = bool_saver(Erase_Command, saver);
 			saver = bool_saver(Erase_4k, saver);
+			saver = bool_saver(Erase_All, saver);
+			saver = bool_saver(Force_Bit_6, saver);
 
 			saver = bool_saver(Chip_Select, saver);
 			saver = bool_saver(Solar_Clock, saver);
@@ -1117,6 +1122,7 @@ namespace GBAHawk
 			saver = byte_saver(Reg_Bit_Count, saver);
 			saver = byte_saver(Reg_Access, saver);
 			saver = byte_saver(Reg_Ctrl, saver);
+			saver = byte_saver(Write_Value, saver);
 
 			saver = byte_saver(Current_C4, saver);
 			saver = byte_saver(Current_C5, saver);
@@ -1166,6 +1172,8 @@ namespace GBAHawk
 			loader = bool_loader(&Swapped_Out, loader);
 			loader = bool_loader(&Erase_Command, loader);
 			loader = bool_loader(&Erase_4k, loader);
+			loader = bool_loader(&Erase_All, loader);
+			loader = bool_loader(&Force_Bit_6, loader);
 
 			loader = bool_loader(&Chip_Select, loader);
 			loader = bool_loader(&Solar_Clock, loader);
@@ -1188,6 +1196,7 @@ namespace GBAHawk
 			loader = byte_loader(&Reg_Bit_Count, loader);
 			loader = byte_loader(&Reg_Access, loader);
 			loader = byte_loader(&Reg_Ctrl, loader);
+			loader = byte_loader(&Write_Value, loader);
 
 			loader = byte_loader(&Current_C4, loader);
 			loader = byte_loader(&Current_C5, loader);
@@ -1862,7 +1871,6 @@ namespace GBAHawk
 		}
 	};
 	#pragma endregion
-
 
 	#pragma region EEPROM
 
@@ -2905,6 +2913,9 @@ namespace GBAHawk
 
 		void Reset()
 		{
+			Write_Value = 0;
+			Access_Address = 0;
+			
 			Bank_State = 0;
 			Chip_Mode = 0;
 			Next_Mode = 0;
@@ -2915,45 +2926,80 @@ namespace GBAHawk
 			Swapped_Out = false;
 			Erase_Command = false;
 			Erase_4k = false;
+			Erase_All = false;
+			Force_Bit_6 = false;
 		}
 
 		uint8_t Read_Memory_8(uint32_t addr)
 		{
 			Update_State();
 
+			uint8_t ret_value = 0;
+
 			if (Swapped_Out)
 			{
 				if ((addr & 0xFFFF) > 1)
 				{
-					return Cart_RAM[(addr & 0xFFFF) + Bank_State];
+					ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
 				}
 				else if ((addr & 0xFFFF) == 1)
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						return 0x1B;
+						ret_value = 0x1B;
 					}
 					else
 					{
-						return 0x13;
+						ret_value = 0x13;
 					}
 				}
 				else
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						return 0x32;
+						ret_value = 0x32;
 					}
 					else
 					{
-						return 0x62;
+						ret_value = 0x62;
 					}
 				}
 			}
 			else
 			{
-				return Cart_RAM[(addr & 0xFFFF) + Bank_State];
+				ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
 			}
+
+			// according to data sheet, upper bit returns 0 when an operation is in progress
+			// this is important to ex Sonic Advance
+			if (Next_Ready_Cycle != 0xFFFFFFFFFFFFFFFF)
+			{
+				if ((Size_Mask + 1) == 0x10000)
+				{
+					// according to data sheet, upper bit returns 0 when an operation is in progress
+					// and the 6th bit alternates
+					// this is important to ex Sonic Advance
+					ret_value &= 0x7F;
+
+					ret_value &= 0xBF;
+
+					if (Force_Bit_6)
+					{
+						ret_value |= 0x40;
+					}
+
+					Force_Bit_6 ^= true;
+				}
+				else
+				{
+					// for the larger chips, it seems a status register is activated on wirtes, which
+					// returns 0 until done (for our purposes since operations always succeed.)
+
+					ret_value = 0;
+				}
+			}
+
+			return ret_value;
 		}
 
 		uint16_t Read_Memory_16(uint32_t addr)
@@ -2976,11 +3022,18 @@ namespace GBAHawk
 
 		void Write_Memory_8(uint32_t addr, uint8_t value)
 		{
+			Update_State();
+			
 			if (Chip_Mode == 3)
 			{
-				Cart_RAM[(addr & 0xFFFF) + Bank_State] = value;
+				if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+				{
+					Access_Address = (addr & 0xFFFF) + Bank_State;
+					Write_Value = value;
 
-				// instant writes good enough?
+					Next_Ready_Cycle = Core_Cycle_Count[0] + 325;
+				}
+
 				Chip_Mode = 0;
 			}
 			else if ((addr & 0xFFFF) == 0x5555)
@@ -2998,10 +3051,15 @@ namespace GBAHawk
 					{
 						if (Erase_Command)
 						{
-							Next_Ready_Cycle = Core_Cycle_Count[0] + 4 * (uint64_t)(Size_Mask + 1);
+							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+							{
+								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000;
 
-							Erase_4k = false;
+								Erase_All = true;
 
+								Force_Bit_6 = false;
+							}
+							
 							Erase_Command = false;
 
 							Chip_Mode = 0;
@@ -3051,11 +3109,16 @@ namespace GBAHawk
 				{
 					if (value == 0x30)
 					{
-						Next_Ready_Cycle = Core_Cycle_Count[0] + (uint64_t)0x4000;
+						if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+						{
+							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000;
 
-						Erase_4k = true;
+							Erase_4k = true;
 
-						Erase_4k_Addr = (uint32_t)(addr & 0xF000);
+							Erase_4k_Addr = (uint32_t)(addr & 0xF000);
+
+							Force_Bit_6 = false;
+						}
 
 						Erase_Command = false;
 
@@ -3131,13 +3194,21 @@ namespace GBAHawk
 					{
 						Cart_RAM[i + Erase_4k_Addr + Bank_State] = 0xFF;
 					}
+
+					Erase_4k = false;
 				}
-				else
+				else if (Erase_All)
 				{
 					for (uint32_t i = 0; i < (Size_Mask + 1); i++)
 					{
 						Cart_RAM[i] = 0xFF;
 					}
+
+					Erase_All = false;
+				}
+				else
+				{
+					Cart_RAM[Access_Address] = Write_Value;
 				}
 
 				Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
@@ -3159,11 +3230,16 @@ namespace GBAHawk
 			Next_Mode = 0;
 			Erase_4k_Addr = 0;
 
+			Access_Address = 0;
+			Write_Value = 0;
+
 			Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
 
 			Swapped_Out = false;
 			Erase_Command = false;
 			Erase_4k = false;
+			Erase_All = false;
+			Force_Bit_6 = false;
 
 			// set up initial variables for IO
 			Chip_Select = false;
@@ -3232,39 +3308,72 @@ namespace GBAHawk
 		{
 			Update_State();
 
+			uint8_t ret_value = 0;
+
 			if (Swapped_Out)
 			{
 				if ((addr & 0xFFFF) > 1)
 				{
-					return Cart_RAM[(addr & 0xFFFF) + Bank_State];
+					ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
 				}
 				else if ((addr & 0xFFFF) == 1)
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						return 0x1B;
+						ret_value = 0x1B;
 					}
 					else
 					{
-						return 0x13;
+						ret_value = 0x13;
 					}
 				}
 				else
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						return 0x32;
+						ret_value = 0x32;
 					}
 					else
 					{
-						return 0x62;
+						ret_value = 0x62;
 					}
 				}
 			}
 			else
 			{
-				return Cart_RAM[(addr & 0xFFFF) + Bank_State];
+				ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
 			}
+
+			// according to data sheet, upper bit returns 0 when an operation is in progress
+			// this is important to ex Sonic Advance
+			if (Next_Ready_Cycle != 0xFFFFFFFFFFFFFFFF)
+			{
+				if ((Size_Mask + 1) == 0x10000)
+				{
+					// according to data sheet, upper bit returns 0 when an operation is in progress
+					// and the 6th bit alternates
+					// this is important to ex Sonic Advance
+					ret_value &= 0x7F;
+
+					ret_value &= 0xBF;
+
+					if (Force_Bit_6)
+					{
+						ret_value |= 0x40;
+					}
+
+					Force_Bit_6 ^= true;
+				}
+				else
+				{
+					// for the larger chips, it seems a status register is activated on wirtes, which
+					// returns 0 until done (for our purposes since operations always succeed.)
+
+					ret_value = 0;
+				}
+			}
+
+			return ret_value;
 		}
 
 		uint16_t Read_Memory_16(uint32_t addr)
@@ -3287,11 +3396,18 @@ namespace GBAHawk
 
 		void Write_Memory_8(uint32_t addr, uint8_t value)
 		{
+			Update_State();
+			
 			if (Chip_Mode == 3)
 			{
-				Cart_RAM[(addr & 0xFFFF) + Bank_State] = value;
+				if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+				{
+					Access_Address = (addr & 0xFFFF) + Bank_State;
+					Write_Value = value;
 
-				// instant writes good enough?
+					Next_Ready_Cycle = Core_Cycle_Count[0] + 325;
+				}
+
 				Chip_Mode = 0;
 			}
 			else if ((addr & 0xFFFF) == 0x5555)
@@ -3309,9 +3425,14 @@ namespace GBAHawk
 					{
 						if (Erase_Command)
 						{
-							Next_Ready_Cycle = Core_Cycle_Count[0] + 4 * (uint64_t)(Size_Mask + 1);
+							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+							{
+								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000;
 
-							Erase_4k = false;
+								Erase_All = true;
+
+								Force_Bit_6 = false;
+							}
 
 							Erase_Command = false;
 
@@ -3362,11 +3483,16 @@ namespace GBAHawk
 				{
 					if (value == 0x30)
 					{
-						Next_Ready_Cycle = Core_Cycle_Count[0] + (uint64_t)0x4000;
+						if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+						{
+							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000;
 
-						Erase_4k = true;
+							Erase_4k = true;
 
-						Erase_4k_Addr = (uint32_t)(addr & 0xF000);
+							Erase_4k_Addr = (uint32_t)(addr & 0xF000);
+
+							Force_Bit_6 = false;
+						}
 
 						Erase_Command = false;
 
@@ -3442,13 +3568,21 @@ namespace GBAHawk
 					{
 						Cart_RAM[i + Erase_4k_Addr + Bank_State] = 0xFF;
 					}
+
+					Erase_4k = false;
 				}
-				else
+				else if (Erase_All)
 				{
 					for (uint32_t i = 0; i < (Size_Mask + 1); i++)
 					{
 						Cart_RAM[i] = 0xFF;
 					}
+
+					Erase_All = false;
+				}
+				else
+				{
+					Cart_RAM[Access_Address] = Write_Value;
 				}
 
 				Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;

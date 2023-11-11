@@ -131,7 +131,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
-						cart_RAM[i] = 0x0;
+						cart_RAM[i] = 0xFF;
 					}
 				}
 			}
