@@ -311,7 +311,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void snd_Write_FIFO_Data(bool chan_A)
 		{
-			//Console.WriteLine(CycleCount + " " + chan_A);
+			Console.WriteLine(CycleCount + " " + chan_A);
 			if (snd_CTRL_power)
 			{
 				for (int i = 0; i < 4; i++)
@@ -349,7 +349,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void snd_Update_Regs(uint addr, byte value)
 		{
 			// while power is on, everything is writable
-			//Console.WriteLine("write: " + (addr & 0xFF) + " " + value + " " + CycleCount);
+			Console.WriteLine("write: " + (addr & 0xFF) + " " + value + " " + CycleCount);
 			if (snd_CTRL_power)
 			{
 				if (addr < 0x90)
@@ -1383,7 +1383,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void power_off()
 		{
-			for (uint i = 0x60; i < 0x84; i++)
+			for (uint i = 0x60; i < 0x82; i++)
 			{
 				snd_Write_Reg_8(i, 0);
 			}

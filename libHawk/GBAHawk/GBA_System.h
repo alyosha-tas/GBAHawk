@@ -12561,7 +12561,7 @@ namespace GBAHawk
 
 		void power_off()
 		{
-			for (uint32_t i = 0x60; i < 0x84; i++)
+			for (uint32_t i = 0x60; i < 0x82; i++)
 			{
 				snd_Write_Reg_8(i, 0);
 			}

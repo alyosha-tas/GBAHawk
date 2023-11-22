@@ -121,12 +121,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 						cart_RAM[i] = 0xFF;
 					}
 				}
-				// initialize Flash to 0;
+				// initialize Flash to 0xF;
 				if ((mapper == 7) || (mapper == 8))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
 					{
-						cart_RAM[i] = 0;
+						cart_RAM[i] = 0xFF;
 					}
 				}
 			}
