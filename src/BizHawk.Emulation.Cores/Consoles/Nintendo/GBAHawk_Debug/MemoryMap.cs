@@ -197,8 +197,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					ret = (ushort)((ROM[addr + 1] << 8) | ROM[addr]);
 
-					// in ROM area, upper bits also used if bit 1 in the address is set
-					if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint)(ret << 16);}
+					// in ROM area, upper bits in bus are set same as return value
+					cpu_Last_Bus_Value = (uint)(ret << 16);
+					cpu_Last_Bus_Value |= ret;
 				}
 				else if (addr < 0x0E000000)
 				{
@@ -233,12 +234,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 
-					// in ROM area, upper bits also used if bit 1 in the address is set
-					if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint)(ret << 16); }
+					// in ROM area, upper bits in bus are set same as return value
+					cpu_Last_Bus_Value = (uint)(ret << 16);
+					cpu_Last_Bus_Value |= ret;
 				}
 				else if (addr < 0x10000000)
 				{
 					ret = mapper.ReadMemory16(addr - 0x0E000000);
+
+					// in ROM area, upper bits in bus are set same as return value
+					cpu_Last_Bus_Value = (uint)(ret << 16);
+					cpu_Last_Bus_Value |= ret;
 				}
 				else
 				{
@@ -256,6 +262,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				if (addr >= 0x07000000)
 				{
 					ret = (ushort)((OAM[(addr & 0x3FF) + 1] << 8) | OAM[addr & 0x3FF]);
+
+					// in OAM area, upper bits in bus depend on alignment
+					if ((addr & 2) == 0)
+					{
+						cpu_Last_Bus_Value = (uint)((ushort)((OAM[(addr & 0x3FF) + 3] << 8) | OAM[(addr & 0x3FF) + 2]) << 16);
+						cpu_Last_Bus_Value |= ret;
+					}
+					else
+					{
+						cpu_Last_Bus_Value = (uint)(ret << 16);
+						cpu_Last_Bus_Value |= (ushort)((OAM[(addr & 0x3FF) - 1] << 8) | OAM[(addr & 0x3FF) - 2]);
+					}				
 				}
 				else if (addr >= 0x06000000)
 				{
@@ -285,12 +303,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					ppu_VRAM_High_In_Use = false;
 					ppu_VRAM_In_Use = false;
+
+					// in VRAM area, upper bits in bus are set same as return value
+					cpu_Last_Bus_Value = (uint)(ret << 16);
+					cpu_Last_Bus_Value |= ret;
 				}
 				else if (addr >= 0x05000000)
 				{
 					ret = (ushort)((PALRAM[(addr & 0x3FF) + 1] << 8) | PALRAM[addr & 0x3FF]);
 
 					ppu_PALRAM_In_Use = false;
+
+					// in PALRAM area, upper bits in bus are set same as return value
+					cpu_Last_Bus_Value = (uint)(ret << 16);
+					cpu_Last_Bus_Value |= ret;
 				}
 				else
 				{
@@ -324,6 +350,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				addr &= 0xFFFFFFFE;
 
 				ret = (ushort)((IWRAM[(addr & 0x7FFF) + 1] << 8) | IWRAM[addr & 0x7FFF]);
+
+				// in IWRAM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr >= 0x02000000)
 			{
@@ -331,6 +361,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				addr &= 0xFFFFFFFE;
 
 				ret = (ushort)((WRAM[(addr & 0x3FFFF) + 1] << 8) | WRAM[addr & 0x3FFFF]);
+
+				// in WRAM area, upper bits in bus depend on alighnment
+				if ((addr & 2) == 0)
+				{
+					cpu_Last_Bus_Value &= 0xFFFF0000;
+					cpu_Last_Bus_Value |= ret;
+				}
+				else
+				{
+					cpu_Last_Bus_Value &= 0xFFFF;
+					cpu_Last_Bus_Value |= (uint)(ret << 16);
+				}
 			}
 			else if (addr < 0x4000)
 			{
@@ -345,15 +387,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					addr &= 0xFFFFFFFE;
 
 					ret = (ushort)((BIOS[addr + 1] << 8) | BIOS[addr]);
-				}			
+
+					// in BIOS area, upper bits in bus depend on alignment
+					if ((addr & 2) == 0)
+					{
+						cpu_Last_Bus_Value = (uint)((ushort)((BIOS[(addr & 0x3FFF) + 3] << 8) | BIOS[(addr & 0x3FFF) + 2]) << 16);
+						cpu_Last_Bus_Value |= ret;
+					}
+					else
+					{
+						cpu_Last_Bus_Value = (uint)(ret << 16);
+						cpu_Last_Bus_Value |= (ushort)((BIOS[(addr & 0x3FFF) - 1] << 8) | BIOS[(addr & 0x3FFF) - 2]);
+					}
+
+					Last_BIOS_Read = cpu_Last_Bus_Value;
+				}
 			}
 			else
 			{
 				ret = (ushort)(cpu_Last_Bus_Value & 0xFFFF); // open bus
 			}
-
-			cpu_Last_Bus_Value &= 0xFFFF0000;
-			cpu_Last_Bus_Value |= ret;
 
 			return ret;
 		}

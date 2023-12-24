@@ -201,8 +201,9 @@ namespace GBAHawk
 				// Forced Align
 				ret = ROM_16[addr >> 1];
 
-				// in ROM area, upper bits also used if bit 1 in he address is set
-				if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint32_t)(ret << 16); }
+				// in ROM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr < 0x0E000000)
 			{
@@ -237,12 +238,17 @@ namespace GBAHawk
 					}
 				}
 
-				// in ROM area, upper bits also used if bit 1 in the address is set
-				if ((addr & 2) == 2) { cpu_Last_Bus_Value = (uint32_t)(ret << 16); }
+				// in ROM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr < 0x10000000)
 			{
 				ret = mapper_pntr->Read_Memory_16(addr - 0x0E000000);
+
+				// in ROM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else
 			{
@@ -258,6 +264,18 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
+
+				// in OAM area, upper bits in bus depend on alignment
+				if ((addr & 2) == 0)
+				{
+					cpu_Last_Bus_Value = (uint32_t)(OAM_16[((addr & 0x3FE) >> 1) + 1] << 16);
+					cpu_Last_Bus_Value |= ret;
+				}
+				else
+				{
+					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+					cpu_Last_Bus_Value |= OAM_16[((addr & 0x3FE) >> 1) - 1];
+				}
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -287,12 +305,20 @@ namespace GBAHawk
 
 				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
+
+				// in VRAM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
+
+				// in PALRAM area, upper bits in bus are set same as return value
+				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
 			}
 			else
 			{
@@ -324,11 +350,27 @@ namespace GBAHawk
 		{
 			// Forced Align
 			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
+
+			// in IWRAM area, upper bits in bus are set same as return value
+			cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+			cpu_Last_Bus_Value |= ret;
 		}
 		else if (addr >= 0x02000000)
 		{
 			// Forced Align
 			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
+
+			// in WRAM area, upper bits in bus depend on alighnment
+			if ((addr & 2) == 0)
+			{
+				cpu_Last_Bus_Value &= 0xFFFF0000;
+				cpu_Last_Bus_Value |= ret;
+			}
+			else
+			{
+				cpu_Last_Bus_Value &= 0xFFFF;
+				cpu_Last_Bus_Value |= (uint32_t)(ret << 16);
+			}
 		}
 		else if (addr < 0x4000)
 		{
@@ -341,15 +383,26 @@ namespace GBAHawk
 			{
 				// Forced Align
 				ret = BIOS_16[addr >> 1];
+
+				// in BIOS area, upper bits in bus depend on alignment
+				if ((addr & 2) == 0)
+				{
+					cpu_Last_Bus_Value = (uint32_t)(BIOS_16[(addr >> 1) + 1] << 16);
+					cpu_Last_Bus_Value |= ret;
+				}
+				else
+				{
+					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+					cpu_Last_Bus_Value |= BIOS_16[(addr >> 1) - 1];
+				}
+
+				Last_BIOS_Read = cpu_Last_Bus_Value;
 			}
 		}
 		else
 		{
 			ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
 		}
-
-		cpu_Last_Bus_Value &= 0xFFFF0000;
-		cpu_Last_Bus_Value |= ret;
 
 		return ret;
 	}
