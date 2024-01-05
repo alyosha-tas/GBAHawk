@@ -178,7 +178,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				case 0x130: // no effect
 				case 0x131: // no effect
-				case 0x132: key_CTRL = (ushort)((key_CTRL & 0xFF00) | value); do_controller_check(); do_controller_check_glitch(); break;
+				case 0x132: key_CTRL = (ushort)((key_CTRL & 0xFF00) | value); do_controller_check(true); do_controller_check_glitch(); break;
 				// note no check here, does not seem to trigger onhardware, see joypad.gba
 				case 0x133: key_CTRL = (ushort)((key_CTRL & 0x00FF) | (value << 8)); /* do_controller_check(); do_controller_check_glitch(); */ break;
 
@@ -215,7 +215,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x12A: ser_Data_M = value; break;
 
 				case 0x130: // no effect
-				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
+				case 0x132: key_CTRL = value; do_controller_check(true); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode_Update(value); break;
 
@@ -242,7 +242,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x128: ser_CTRL_Update((ushort)(value & 0xFFFF));
 							ser_Data_M = (ushort)((value >> 16) & 0xFFFF); break;
 
-				case 0x130: key_CTRL = (ushort)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
+				case 0x130: key_CTRL = (ushort)((value >> 16) & 0xFFFF); do_controller_check(true); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode_Update((ushort)(value & 0xFFFF)); break;
 

@@ -217,13 +217,14 @@ namespace GBAHawk
 			GBA.New_Solar = solar;
 
 			// update the controller state
+			GBA.controller_state_old = GBA.controller_state;
 			GBA.controller_state = GBA.New_Controller;
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (GBA.VBlank_Rise || GBA.stopped)
 			{
 				// check if controller state caused interrupt
-				GBA.do_controller_check();
+				GBA.do_controller_check(false);
 			}
 
 			GBA.snd_Master_Clock = 0;
@@ -248,13 +249,14 @@ namespace GBAHawk
 			GBA.New_Solar = solar;
 
 			// update the controller state
+			GBA.controller_state_old = GBA.controller_state;
 			GBA.controller_state = GBA.New_Controller;
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (GBA.VBlank_Rise || GBA.stopped)
 			{
 				// check if controller state caused interrupt
-				GBA.do_controller_check();
+				GBA.do_controller_check(false);
 			}
 
 			GBA.snd_Master_Clock = 0;

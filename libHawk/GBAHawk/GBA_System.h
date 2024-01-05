@@ -80,7 +80,7 @@ namespace GBAHawk
 
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
 		uint16_t INT_Flags_Gather, INT_Flags_Use;
-		uint16_t controller_state;
+		uint16_t controller_state, controller_state_old;
 		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
 		uint16_t FIFO_DMA_A_cd, FIFO_DMA_B_cd;
 		uint16_t Halt_Enter_cd, Halt_Leave_cd;
@@ -237,33 +237,50 @@ namespace GBAHawk
 			Memory_CTRL = value;
 		}
 
-		void do_controller_check()
+		void do_controller_check(bool from_reg)
 		{
-			if ((key_CTRL & 0x4000) == 0x4000)
+			// only check interrupts on new button press or change in register
+			bool do_check = false;
+
+			if (from_reg)
 			{
-				if ((key_CTRL & 0x8000) == 0x8000)
+				do_check = true;
+			}
+			for (int i = 0; i < 10; i++)
+			{
+				if (((controller_state >> i) & 1) == 0)
 				{
-					if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
+					if (((controller_state_old >> i) & 1) == 1)
 					{
-						// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
-						if ((key_CTRL & 0x3FF) != 0)
-						{
-							Trigger_IRQ(12);
-						}
-					}
-				}
-				else
-				{
-					if ((key_CTRL & ~controller_state & 0x3FF) != 0)
-					{
-						// doesn't trigger an interrupt if all keys are selected. (see megaman and bass)
-						if ((key_CTRL & 0x3FF) != 0x3FF)
-						{
-							Trigger_IRQ(12);
-						}
+						do_check = true;
 					}
 				}
 			}
+			
+			if (do_check)
+			{
+				if ((key_CTRL & 0x4000) == 0x4000)
+				{
+					if ((key_CTRL & 0x8000) == 0x8000)
+					{
+						if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
+						{
+							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
+							if ((key_CTRL & 0x3FF) != 0)
+							{
+								Trigger_IRQ(12);
+							}
+						}
+					}
+					else
+					{
+						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
+						{
+							Trigger_IRQ(12);
+						}
+					}
+				}
+			}		
 		}
 
 		// only on writes, it is possible to trigger an interrupt with and mode and no keys selected or pressed
@@ -622,9 +639,6 @@ namespace GBAHawk
 					INT_Flags_Gather &= (uint16_t)(~(1 << i));
 				}
 			}
-
-			// if button is pressed interrupt will immediately fire again
-			do_controller_check();
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
@@ -6733,7 +6747,7 @@ namespace GBAHawk
 
 				case 0x130: // no effect
 				case 0x131: // no effect
-				case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(); do_controller_check_glitch(); break;
+				case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(true); do_controller_check_glitch(); break;
 				// note no check here, does not seem to trigger onhardware, see joypad.gba
 				case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
 
@@ -6768,7 +6782,7 @@ namespace GBAHawk
 				case 0x12A: ser_Data_M = value; break;
 
 				case 0x130: // no effect
-				case 0x132: key_CTRL = value; do_controller_check(); do_controller_check_glitch(); break;
+				case 0x132: key_CTRL = value; do_controller_check(true); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode_Update(value); break;
 
@@ -6793,7 +6807,7 @@ namespace GBAHawk
 				case 0x128: ser_CTRL_Update((uint16_t)(value & 0xFFFF));
 					ser_Data_M = (uint16_t)((value >> 16) & 0xFFFF); break;
 
-				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(); do_controller_check_glitch(); break;
+				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(true); do_controller_check_glitch(); break;
 
 				case 0x134: ser_Mode_Update((uint16_t)(value & 0xFFFF)); break;
 
@@ -13019,6 +13033,7 @@ namespace GBAHawk
 			saver = short_saver(INT_Flags_Use, saver);
 
 			saver = short_saver(controller_state, saver);
+			saver = short_saver(controller_state_old, saver);
 			saver = short_saver(PALRAM_32W_Value, saver);
 			saver = short_saver(VRAM_32W_Value, saver);
 			saver = short_saver(FIFO_DMA_A_cd, saver);
@@ -13122,6 +13137,7 @@ namespace GBAHawk
 			loader = short_loader(&INT_Flags_Use, loader);
 
 			loader = short_loader(&controller_state, loader);
+			loader = short_loader(&controller_state_old, loader);
 			loader = short_loader(&PALRAM_32W_Value, loader);
 			loader = short_loader(&VRAM_32W_Value, loader);
 			loader = short_loader(&FIFO_DMA_A_cd, loader);

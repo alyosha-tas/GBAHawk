@@ -93,13 +93,14 @@ namespace GBAHawk
 			L.GBA.New_Solar = solar_0;
 
 			// update the controller state
+			L.GBA.controller_state_old = L.GBA.controller_state;
 			L.GBA.controller_state = L.GBA.New_Controller;
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (L.GBA.VBlank_Rise || L.GBA.stopped)
 			{
 				// check if controller state caused interrupt
-				L.GBA.do_controller_check();
+				L.GBA.do_controller_check(false);
 			}
 
 			L.GBA.snd_Master_Clock = 0;
@@ -118,13 +119,14 @@ namespace GBAHawk
 			R.GBA.New_Solar = solar_1;
 
 			// update the controller state
+			R.GBA.controller_state_old = R.GBA.controller_state;
 			R.GBA.controller_state = R.GBA.New_Controller;
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (R.GBA.VBlank_Rise || R.GBA.stopped)
 			{
 				// check if controller state caused interrupt
-				R.GBA.do_controller_check();
+				R.GBA.do_controller_check(false);
 			}
 
 			R.GBA.snd_Master_Clock = 0;

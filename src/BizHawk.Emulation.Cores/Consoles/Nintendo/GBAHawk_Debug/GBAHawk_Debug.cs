@@ -50,7 +50,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort INT_Flags_Gather, INT_Flags_Use;
 
-		public ushort controller_state;
+		public ushort controller_state, controller_state_old;
 
 		public byte Post_Boot, Halt_CTRL;
 
@@ -317,7 +317,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
 
-			controller_state = 0x3FF;
+			controller_state = controller_state_old = 0x3FF;
 
 			Memory_CTRL = 0;
 

@@ -160,7 +160,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort snd_Read_Reg_16(uint addr)
 		{
 			ushort ret = 0;
-			
+
 			if (addr < 0x8C)
 			{
 				ret = (ushort)((snd_Audio_Regs[addr - 0x60 + 1] << 8) | snd_Audio_Regs[addr - 0x60]);
@@ -311,7 +311,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void snd_Write_FIFO_Data(bool chan_A)
 		{
-			Console.WriteLine(CycleCount + " " + chan_A);
+			//Console.WriteLine(CycleCount + " " + chan_A);
 			if (snd_CTRL_power)
 			{
 				for (int i = 0; i < 4; i++)
@@ -349,7 +349,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public void snd_Update_Regs(uint addr, byte value)
 		{
 			// while power is on, everything is writable
-			Console.WriteLine("write: " + (addr & 0xFF) + " " + value + " " + CycleCount);
+			//Console.WriteLine("write: " + (addr & 0xFF) + " " + value + " " + CycleCount);
 			if (snd_CTRL_power)
 			{
 				if (addr < 0x90)

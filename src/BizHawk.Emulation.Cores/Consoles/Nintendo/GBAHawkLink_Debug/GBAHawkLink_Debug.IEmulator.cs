@@ -66,6 +66,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			Is_Lag = true;
 			L.Is_Lag = R.Is_Lag = true;
 
+			L.controller_state_old = L.controller_state;
+			R.controller_state_old = R.controller_state;
+
 			GetControllerState(controller);
 
 			do_frame_fill = false;
@@ -84,8 +87,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 
 		public void do_frame()
 		{			
-			L.do_controller_check();
-			R.do_controller_check();
+			L.do_controller_check(false);
+			R.do_controller_check(false);
 
 			L.VBlank_Rise = false;
 			R.VBlank_Rise = false;

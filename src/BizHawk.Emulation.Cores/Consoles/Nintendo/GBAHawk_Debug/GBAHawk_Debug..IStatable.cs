@@ -48,6 +48,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(INT_Master_On), ref INT_Master_On);
 
 			ser.Sync(nameof(controller_state), ref controller_state);
+			ser.Sync(nameof(controller_state_old), ref controller_state_old);
 			ser.Sync(nameof(Acc_X_state), ref Acc_X_state);
 			ser.Sync(nameof(Acc_Y_state), ref Acc_Y_state);
 			ser.Sync(nameof(Solar_state), ref Solar_state);

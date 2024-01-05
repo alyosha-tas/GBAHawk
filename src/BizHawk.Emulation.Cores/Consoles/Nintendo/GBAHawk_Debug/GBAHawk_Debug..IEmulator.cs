@@ -56,13 +56,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 
 			// update the controller state on VBlank
+			controller_state_old = controller_state;
 			GetControllerState(controller);
 
 			// as long as not in stop mode, vblank will occur and the controller will be checked
 			if (VBlank_Rise || stopped)
 			{
 				// check if controller state caused interrupt
-				do_controller_check();
+				do_controller_check(false);
 			}
 
 			Is_Lag = true;
@@ -130,27 +131,48 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			CycleCount++;
 		}
 
-		public void do_controller_check()
+		public void do_controller_check(bool from_reg)
 		{
-			if ((key_CTRL & 0x4000) == 0x4000)
+			// only check interrupts on new button press or change in register
+			bool do_check = false;
+
+			if (from_reg)
 			{
-				if ((key_CTRL & 0x8000) == 0x8000)
+				do_check = true;
+			}
+			else
+			{
+				for (int i = 0; i < 10; i++)
 				{
-					if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
+					if (((controller_state >> i) & 1) == 0)
 					{
-						// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
-						if ((key_CTRL & 0x3FF) != 0)
+						if (((controller_state_old >> i) & 1) == 1)
 						{
-							Trigger_IRQ(12);
-						}					
+							do_check = true;
+							Console.WriteLine("press " +  i);
+						}
 					}
 				}
-				else
+			}
+
+			if (do_check)
+			{
+				if ((key_CTRL & 0x4000) == 0x4000)
 				{
-					if ((key_CTRL & ~controller_state & 0x3FF) != 0)
+					if ((key_CTRL & 0x8000) == 0x8000)
 					{
-						// doesn't trigger an interrupt if all keys are selected. (see megaman and bass)
-						if ((key_CTRL & 0x3FF) != 0x3FF)
+						if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
+						{
+							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
+							if ((key_CTRL & 0x3FF) != 0)
+							{
+								Trigger_IRQ(12);
+							}
+						}
+					}
+					else
+					{
+						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
 						{
 							Trigger_IRQ(12);
 						}

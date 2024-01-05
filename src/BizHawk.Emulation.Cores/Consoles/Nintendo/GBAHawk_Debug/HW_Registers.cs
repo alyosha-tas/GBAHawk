@@ -263,7 +263,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			INT_EN = value;
 
-			//Console.WriteLine("en " + value);
+			//Console.WriteLine("en " + value + " " + CycleCount);
 		}
 
 		public void Update_INT_Flags(ushort value)
@@ -279,9 +279,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					INT_Flags_Gather &= (ushort)(~(1 << i));
 				}
 			}
-
-			// if button is pressed interrupt will immediately fire again
-			do_controller_check();
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
