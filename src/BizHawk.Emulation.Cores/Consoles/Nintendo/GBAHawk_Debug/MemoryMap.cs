@@ -351,18 +351,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				ret = (ushort)((IWRAM[(addr & 0x7FFF) + 1] << 8) | IWRAM[addr & 0x7FFF]);
 
-				// in IWRAM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
-			}
-			else if (addr >= 0x02000000)
-			{
-				// Forced Align
-				addr &= 0xFFFFFFFE;
-
-				ret = (ushort)((WRAM[(addr & 0x3FFFF) + 1] << 8) | WRAM[addr & 0x3FFFF]);
-
-				// in WRAM area, upper bits in bus depend on alighnment
+				// in IWRAM area, upper bits in bus depend on alighnment
 				if ((addr & 2) == 0)
 				{
 					cpu_Last_Bus_Value &= 0xFFFF0000;
@@ -373,6 +362,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cpu_Last_Bus_Value &= 0xFFFF;
 					cpu_Last_Bus_Value |= (uint)(ret << 16);
 				}
+			}
+			else if (addr >= 0x02000000)
+			{
+				// Forced Align
+				addr &= 0xFFFFFFFE;
+
+				ret = (ushort)((WRAM[(addr & 0x3FFFF) + 1] << 8) | WRAM[addr & 0x3FFFF]);
+
+				// in WRAM area, upper bits are same as lower
+				cpu_Last_Bus_Value = (uint)(ret << 16);
+				cpu_Last_Bus_Value |= ret;
+
 			}
 			else if (addr < 0x4000)
 			{

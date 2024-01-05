@@ -351,16 +351,7 @@ namespace GBAHawk
 			// Forced Align
 			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
 
-			// in IWRAM area, upper bits in bus are set same as return value
-			cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-			cpu_Last_Bus_Value |= ret;
-		}
-		else if (addr >= 0x02000000)
-		{
-			// Forced Align
-			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
-
-			// in WRAM area, upper bits in bus depend on alighnment
+			// in IWRAM area, upper bits in bus depend on alighnment
 			if ((addr & 2) == 0)
 			{
 				cpu_Last_Bus_Value &= 0xFFFF0000;
@@ -371,6 +362,15 @@ namespace GBAHawk
 				cpu_Last_Bus_Value &= 0xFFFF;
 				cpu_Last_Bus_Value |= (uint32_t)(ret << 16);
 			}
+		}
+		else if (addr >= 0x02000000)
+		{
+			// Forced Align
+			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
+
+			// in WRAM area, upper bits in bus are set same as return value
+			cpu_Last_Bus_Value = (uint32_t)(ret << 16);
+			cpu_Last_Bus_Value |= ret; 
 		}
 		else if (addr < 0x4000)
 		{
