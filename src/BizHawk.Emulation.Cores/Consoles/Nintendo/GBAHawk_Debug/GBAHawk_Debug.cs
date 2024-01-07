@@ -17,7 +17,7 @@ using BizHawk.Common.ReflectionExtensions;
 
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
 
-	Need to implement STOP mode
+	Stop mode is disabled on GBP, will need to implement this when gamecube detection is implemented
 
 	What is a good way to handle different FLASH types?
 
@@ -61,6 +61,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool Reset_RTC;
 
 		public int ext_num = 0; // zero here means disconnected
+
+		public bool is_linked_system = false;
 
 		// memory domains
 		public byte[] WRAM = new byte[0x40000];

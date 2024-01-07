@@ -79,6 +79,9 @@ namespace GBAHawk
 			L.GBA.ext_num = 1;
 			R.GBA.ext_num = 2;
 
+			L.GBA.is_linked_system = true;
+			R.GBA.is_linked_system = true;
+
 			// change ser control state since its plugged in
 			L.GBA.ser_CTRL = 0;
 			R.GBA.ser_CTRL = 0;

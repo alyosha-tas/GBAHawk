@@ -236,7 +236,17 @@ namespace GBAHawk
 
 			GBA.VBlank_Rise = false;
 
-			GBA.Frame_Advance();
+			if (!GBA.stopped)
+			{
+				GBA.Frame_Advance();
+			}
+			else
+			{
+				if ((GBA.INT_EN & GBA.INT_Flags & 0x1000) == 0x1000)
+				{
+					GBA.stopped = false;
+				}
+			}
 
 			return GBA.Is_Lag;
 		}
@@ -272,7 +282,17 @@ namespace GBAHawk
 
 			if (!do_reset) { reset_cycle = -1; }
 
-			reset_was_done = GBA.SubFrame_Advance(reset_cycle);
+			if (!GBA.stopped)
+			{
+				reset_was_done = GBA.SubFrame_Advance(reset_cycle);
+			}
+			else
+			{
+				if ((GBA.INT_EN & GBA.INT_Flags & 0x1000) == 0x1000)
+				{
+					GBA.stopped = false;
+				}
+			}
 
 			if (reset_was_done)
 			{

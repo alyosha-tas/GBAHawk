@@ -392,7 +392,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					/* stop mode */
+					if (!is_linked_system)
+					{
+						stopped = true;
+						// use this to end the frame
+						VBlank_Rise = true;
+					}
 				}
 			}
 		}

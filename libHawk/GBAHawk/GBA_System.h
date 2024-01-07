@@ -78,6 +78,8 @@ namespace GBAHawk
 
 		uint8_t ext_num = 0; // zero here means disconnected
 
+		bool is_linked_system = false;
+
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
 		uint16_t INT_Flags_Gather, INT_Flags_Use;
 		uint16_t controller_state, controller_state_old;
@@ -268,7 +270,14 @@ namespace GBAHawk
 							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
 							if ((key_CTRL & 0x3FF) != 0)
 							{
-								Trigger_IRQ(12);
+								if (stopped)
+								{
+									INT_Flags |= 0x1000;
+								}
+								else
+								{
+									Trigger_IRQ(12);
+								}
 							}
 						}
 					}
@@ -276,7 +285,14 @@ namespace GBAHawk
 					{
 						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
 						{
-							Trigger_IRQ(12);
+							if (stopped)
+							{
+								INT_Flags |= 0x1000;
+							}
+							else
+							{
+								Trigger_IRQ(12);
+							}
 						}
 					}
 				}
@@ -738,7 +754,12 @@ namespace GBAHawk
 				}
 				else
 				{
-					/* stop mode */
+					if (!is_linked_system)
+					{
+						stopped = true;
+						// use this to end the frame
+						VBlank_Rise = true;
+					}
 				}
 			}
 		}

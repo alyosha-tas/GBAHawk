@@ -70,7 +70,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			VBlank_Rise = false;
 
-			do_frame();
+			if (!stopped)
+			{
+				do_frame();
+			}
+			else
+			{
+				if ((INT_EN & INT_Flags & 0x1000) == 0x1000)
+				{
+					stopped = false;
+				}
+			}
 
 			if (Is_Lag) { Lag_Count++; }
 
@@ -149,7 +159,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (((controller_state_old >> i) & 1) == 1)
 						{
 							do_check = true;
-							Console.WriteLine("press " +  i);
 						}
 					}
 				}
@@ -166,7 +175,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
 							if ((key_CTRL & 0x3FF) != 0)
 							{
-								Trigger_IRQ(12);
+								if (stopped)
+								{
+									INT_Flags |= 0x1000;
+								}
+								else
+								{
+									Trigger_IRQ(12);
+								}
 							}
 						}
 					}
@@ -174,7 +190,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
 						{
-							Trigger_IRQ(12);
+							if (stopped)
+							{
+								INT_Flags |= 0x1000;
+							}
+							else
+							{
+								Trigger_IRQ(12);
+							}
 						}
 					}
 				}

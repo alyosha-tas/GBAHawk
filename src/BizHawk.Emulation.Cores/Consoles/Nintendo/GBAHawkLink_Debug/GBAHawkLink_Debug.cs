@@ -63,6 +63,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			L.ext_num = 1;
 			R.ext_num = 2;
 
+			// stop mode not allowed for linked systems for now to avoid complicaitons in frame timing
+			L.is_linked_system = true;
+			R.is_linked_system = true;
+
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(this); 
 
