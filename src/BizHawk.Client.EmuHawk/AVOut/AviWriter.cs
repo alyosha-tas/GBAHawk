@@ -48,7 +48,7 @@ namespace BizHawk.Client.GBAHawk
 			}
 			else
 			{
-				throw new ArgumentException($"{nameof(AviWriter)} only takes its own {nameof(CodecToken)}s!");
+				throw new ArgumentException(message: $"{nameof(AviWriter)} only takes its own {nameof(CodecToken)}s!", paramName: nameof(token));
 			}
 		}
 
@@ -516,8 +516,8 @@ namespace BizHawk.Client.GBAHawk
 
 				AVIWriterImports.AVICOMPRESSOPTIONS comprOptions = new AVIWriterImports.AVICOMPRESSOPTIONS();
 
-				byte[] Format;
-				byte[] Parms;
+				byte[] format;
+				byte[] parms;
 
 				try
 				{
@@ -534,8 +534,8 @@ namespace BizHawk.Client.GBAHawk
 					comprOptions.cbParms = b.ReadInt32();
 					comprOptions.dwInterleaveEvery = b.ReadInt32();
 
-					Format = b.ReadBytes(comprOptions.cbFormat);
-					Parms = b.ReadBytes(comprOptions.cbParms);
+					format = b.ReadBytes(comprOptions.cbFormat);
+					parms = b.ReadBytes(comprOptions.cbParms);
 				}
 				catch (IOException)
 				{
@@ -550,8 +550,8 @@ namespace BizHawk.Client.GBAHawk
 				var ret = new CodecToken
 				{
 					_comprOptions = comprOptions,
-					Format = Format,
-					Parms = Parms,
+					Format = format,
+					Parms = parms,
 					codec = Decode_mmioFOURCC(comprOptions.fccHandler)
 				};
 				return ret;
