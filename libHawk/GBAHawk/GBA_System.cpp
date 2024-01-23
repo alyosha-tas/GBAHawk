@@ -1702,7 +1702,7 @@ namespace GBAHawk
 
 					if (FIFO_DMA_A_cd == 0)
 					{
-						dma_Run[1] = true;
+						if (dma_Go[1]) { dma_Run[1] = true; }
 
 						FIFO_DMA_A_Delay = false;
 
@@ -1719,7 +1719,7 @@ namespace GBAHawk
 
 					if (FIFO_DMA_B_cd == 0)
 					{
-						dma_Run[2] = true;
+						if (dma_Go[2]) { dma_Run[2] = true; }
 
 						FIFO_DMA_B_Delay = false;
 
@@ -2838,49 +2838,39 @@ namespace GBAHawk
 		// if not enabled, finish current fetch
 		if (pre_Run)
 		{
-			if ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000))
+			if (pre_Fetch_Cnt == 0)
 			{
-				if (pre_Fetch_Cnt == 0)
+				if (pre_Inactive) {} // cannot start an access on the internal cycles of an instruction
+				else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; } // don't start a read if buffer is full
+				else if ((pre_Read_Addr & 0x1FFFE) == 0)
 				{
-					if (pre_Inactive) {} // cannot start an access on the internal cycles of an instruction
-					else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; } // don't start a read if buffer is full
-					else
+					pre_Fetch_Wait = 0;
+					pre_Buffer_Was_Full = true;
+					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = true;
+					if (pre_Buffer_Cnt == 0)
 					{
-						pre_Fetch_Wait = 1;
-
-						if (pre_Read_Addr < 0x0A000000)
-						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0				
-						}
-						else if (pre_Read_Addr < 0x0C000000)
-						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
-						}
-						else
-						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
-						}
-
-						// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-						pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
-
-						if (pre_Fetch_Cnt == pre_Fetch_Wait)
-						{
-							pre_Buffer_Cnt += 1;
-							pre_Fetch_Cnt = 0;
-							pre_Read_Addr += 2;
-
-							pre_Cycle_Glitch = true;
-
-							if (!pre_Enable) { pre_Run = false; }
-						}
+						pre_Cycle_Glitch_2 = false;
+						pre_Check_Addr = 0;
 					}
 				}
 				else
 				{
+					pre_Fetch_Wait = 1;
+
+					if (pre_Read_Addr < 0x0A000000)
+					{
+						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; // ROM 0				
+					}
+					else if (pre_Read_Addr < 0x0C000000)
+					{
+						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; // ROM 1
+					}
+					else
+					{
+						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; // ROM 2
+					}
+
 					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
 					pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
 
@@ -2890,8 +2880,6 @@ namespace GBAHawk
 						pre_Fetch_Cnt = 0;
 						pre_Read_Addr += 2;
 
-						pre_Following = true;
-
 						pre_Cycle_Glitch = true;
 
 						if (!pre_Enable) { pre_Run = false; }
@@ -2900,9 +2888,21 @@ namespace GBAHawk
 			}
 			else
 			{
-				pre_Fetch_Cnt = 0;
-				pre_Check_Addr = 0;
-				pre_Inactive = true;
+				// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
+				pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+
+				if (pre_Fetch_Cnt == pre_Fetch_Wait)
+				{
+					pre_Buffer_Cnt += 1;
+					pre_Fetch_Cnt = 0;
+					pre_Read_Addr += 2;
+
+					pre_Following = true;
+
+					pre_Cycle_Glitch = true;
+
+					if (!pre_Enable) { pre_Run = false; }
+				}
 			}
 		}
 
@@ -5015,6 +5015,15 @@ namespace GBAHawk
 
 			if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 			{
+				if (cpu_Thumb_Mode)
+				{
+					cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
+				}
+				else
+				{
+					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
+				}
+				
 				// IRQ mode
 				cpu_Swap_Regs(0x12, true, false);
 

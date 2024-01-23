@@ -830,45 +830,36 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			uint temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
 
-			if ((temp_calc & 0x80000000) == 0)
+			// all F's seems to be a special case
+			if ((temp_calc & 0xFF000000) == 0xFF000000)
 			{
-				// seems to be based on the number of non-zero upper bits if sign bit is zero
-				if ((temp_calc & 0xFF000000) != 0)
+				cpu_Mul_Cycles = 4;
+
+				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
 				{
-					cpu_Mul_Cycles = 5;
+					cpu_Mul_Cycles -= 1;
+
+					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
+					{
+						cpu_Mul_Cycles -= 1;
+					}
 				}
-				else if ((temp_calc & 0x00FF0000) != 0)
-				{
-					cpu_Mul_Cycles = 4;
-				}
-				else if ((temp_calc & 0x0000FF00) != 0)
-				{
-					cpu_Mul_Cycles = 3;
-				}
-				else
-				{
-					cpu_Mul_Cycles = 2;
-				}
+			}
+			else if ((temp_calc & 0xFF000000) != 0)
+			{
+				cpu_Mul_Cycles = 5;
+			}
+			else if ((temp_calc & 0x00FF0000) != 0)
+			{
+				cpu_Mul_Cycles = 4;
+			}
+			else if ((temp_calc & 0x0000FF00) != 0)
+			{
+				cpu_Mul_Cycles = 3;
 			}
 			else
 			{
-				// seems to be based on the number of non-zero lower bits if sign bit is not zero
-				if ((temp_calc & 0x00FFFFFF) == 0)
-				{
-					cpu_Mul_Cycles = 4;
-				}
-				else if ((temp_calc & 0x0000FFFF) == 0)
-				{
-					cpu_Mul_Cycles = 3;
-				}
-				else if ((temp_calc & 0x000000FF) == 0)
-				{
-					cpu_Mul_Cycles = 2;
-				}
-				else
-				{
-					cpu_Mul_Cycles = 2;
-				}
+				cpu_Mul_Cycles = 2;
 			}
 
 			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)

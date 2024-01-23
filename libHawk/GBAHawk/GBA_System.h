@@ -137,7 +137,7 @@ namespace GBAHawk
 		uint8_t New_Solar;
 
 		// Prefetcher
-		bool pre_Cycle_Glitch;
+		bool pre_Cycle_Glitch, pre_Cycle_Glitch_2;
 
 		bool pre_Run, pre_Enable, pre_Seq_Access;
 
@@ -360,7 +360,7 @@ namespace GBAHawk
 			pre_Fetch_Cnt = pre_Fetch_Wait = 0;
 			pre_Fetch_Cnt_Inc = 1;
 
-			pre_Cycle_Glitch = false;
+			pre_Cycle_Glitch = pre_Cycle_Glitch_2 = false;
 
 			pre_Run = pre_Enable = pre_Seq_Access = false;
 
@@ -2309,45 +2309,36 @@ namespace GBAHawk
 		{
 			uint32_t temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
 
-			if ((temp_calc & 0x80000000) == 0)
+			// all F's seems to be a special case
+			if ((temp_calc & 0xFF000000) == 0xFF000000)
 			{
-				// seems to be based on the number of non-zero upper bits if sign bit is zero
-				if ((temp_calc & 0xFF000000) != 0)
+				cpu_Mul_Cycles = 4;
+
+				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
 				{
-					cpu_Mul_Cycles = 5;
+					cpu_Mul_Cycles -= 1;
+
+					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
+					{
+						cpu_Mul_Cycles -= 1;
+					}
 				}
-				else if ((temp_calc & 0x00FF0000) != 0)
-				{
-					cpu_Mul_Cycles = 4;
-				}
-				else if ((temp_calc & 0x0000FF00) != 0)
-				{
-					cpu_Mul_Cycles = 3;
-				}
-				else
-				{
-					cpu_Mul_Cycles = 2;
-				}
+			}
+			else if ((temp_calc & 0xFF000000) != 0)
+			{
+				cpu_Mul_Cycles = 5;
+			}
+			else if ((temp_calc & 0x00FF0000) != 0)
+			{
+				cpu_Mul_Cycles = 4;
+			}
+			else if ((temp_calc & 0x0000FF00) != 0)
+			{
+				cpu_Mul_Cycles = 3;
 			}
 			else
 			{
-				// seems to be based on the number of non-zero lower bits if sign bit is not zero
-				if ((temp_calc & 0x00FFFFFF) == 0)
-				{
-					cpu_Mul_Cycles = 4;
-				}
-				else if ((temp_calc & 0x0000FFFF) == 0)
-				{
-					cpu_Mul_Cycles = 3;
-				}
-				else if ((temp_calc & 0x000000FF) == 0)
-				{
-					cpu_Mul_Cycles = 2;
-				}
-				else
-				{
-					cpu_Mul_Cycles = 2;
-				}
+				cpu_Mul_Cycles = 2;
 			}
 
 			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
@@ -5163,7 +5154,7 @@ namespace GBAHawk
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -5173,6 +5164,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5275,7 +5267,7 @@ namespace GBAHawk
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -5285,6 +5277,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5387,7 +5380,7 @@ namespace GBAHawk
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -5397,6 +5390,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5532,7 +5526,7 @@ namespace GBAHawk
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -5542,6 +5536,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5733,7 +5728,7 @@ namespace GBAHawk
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch)
+						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -5746,6 +5741,7 @@ namespace GBAHawk
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
+						pre_Cycle_Glitch_2 = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
@@ -5755,7 +5751,7 @@ namespace GBAHawk
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -5765,6 +5761,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -5976,7 +5973,7 @@ namespace GBAHawk
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch)
+						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -5989,6 +5986,7 @@ namespace GBAHawk
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
+						pre_Cycle_Glitch_2 = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
@@ -5998,7 +5996,7 @@ namespace GBAHawk
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -6008,6 +6006,7 @@ namespace GBAHawk
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
 					pre_Inactive = true;
+					pre_Cycle_Glitch_2 = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -13088,6 +13087,7 @@ namespace GBAHawk
 
 			// Prefetcher
 			saver = bool_saver(pre_Cycle_Glitch, saver);
+			saver = bool_saver(pre_Cycle_Glitch_2, saver);
 			saver = bool_saver(pre_Run, saver);
 			saver = bool_saver(pre_Enable, saver);
 			saver = bool_saver(pre_Seq_Access, saver);
@@ -13192,6 +13192,7 @@ namespace GBAHawk
 
 			// Prefetcher
 			loader = bool_loader(&pre_Cycle_Glitch, loader);
+			loader = bool_loader(&pre_Cycle_Glitch_2, loader);
 			loader = bool_loader(&pre_Run, loader);
 			loader = bool_loader(&pre_Enable, loader);
 			loader = bool_loader(&pre_Seq_Access, loader);

@@ -446,7 +446,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					
 					if (FIFO_DMA_A_cd == 0)
 					{
-						dma_Run[1] = true;
+						if (dma_Go[1]) { dma_Run[1] = true; }						
 
 						FIFO_DMA_A_Delay = false;
 
@@ -463,7 +463,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (FIFO_DMA_B_cd == 0)
 					{
-						dma_Run[2] = true;
+						if (dma_Go[2]) { dma_Run[2] = true; }
 
 						FIFO_DMA_B_Delay = false;
 

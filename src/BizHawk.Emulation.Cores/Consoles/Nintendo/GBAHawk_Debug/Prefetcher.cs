@@ -40,7 +40,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int pre_Fetch_Cnt, pre_Fetch_Wait, pre_Fetch_Cnt_Inc;
 
-		public bool pre_Cycle_Glitch;
+		public bool pre_Cycle_Glitch, pre_Cycle_Glitch_2;
 
 		public bool pre_Run, pre_Enable, pre_Seq_Access;
 
@@ -93,57 +93,67 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// if not enabled, finish current fetch
 			if (pre_Run)
 			{
-				if ((cpu_Regs[15] >= 0x08000000) && (cpu_Regs[15] < 0x0E000000))
+				//if (pre_Buffer_Cnt >= 1) { Console.WriteLine(pre_Buffer_Cnt + " cyc " + TotalExecutedCycles); }
+
+				if (pre_Fetch_Cnt == 0)
 				{
-					//if (pre_Buffer_Cnt >= 1) { Console.WriteLine(pre_Buffer_Cnt + " cyc " + TotalExecutedCycles); }
+					// cannot start an access on the internal cycles of an instruction
+					if (pre_Inactive) { return; }
 
-					if (pre_Fetch_Cnt == 0)
+					if (pre_Buffer_Cnt >= 8)
 					{
-						// cannot start an access on the internal cycles of an instruction
-						if (pre_Inactive) { return; }
-
 						// don't start a read if buffer is full
-						if (pre_Buffer_Cnt >= 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; return; }
+						pre_Buffer_Was_Full = true;
+						pre_Inactive = true;
+						return;
+					}
 
-						pre_Fetch_Wait = 1;
+					pre_Fetch_Wait = 1;
 
+					// stop on 0x20000 boundary
+					if ((pre_Read_Addr & 0x1FFFE) == 0)
+					{
+						pre_Fetch_Wait = 0;
+						pre_Buffer_Was_Full = true;
+						pre_Inactive = true;
+						pre_Cycle_Glitch_2 = true;
+						if (pre_Buffer_Cnt == 0)
+						{
+							pre_Cycle_Glitch_2 = false;
+							pre_Check_Addr = 0;
+						}
+						return;
+					}
+					else
+					{
 						if (pre_Read_Addr < 0x0A000000)
 						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0				
+							pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; // ROM 0				
 						}
 						else if (pre_Read_Addr < 0x0C000000)
 						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
+							pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; // ROM 1
 						}
 						else
 						{
-							if ((pre_Read_Addr & 0x1FFFE) == 0) { pre_Fetch_Wait += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
+							pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; // ROM 2
 						}
-					}
-
-					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-					pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
-
-					if (pre_Fetch_Cnt == pre_Fetch_Wait)
-					{
-						pre_Buffer_Cnt += 1;
-						pre_Fetch_Cnt = 0;
-						pre_Read_Addr += 2;
-
-						pre_Cycle_Glitch = true;
-						pre_Following = true;
-
-						if (!pre_Enable) { pre_Run = false; }
-					}
+					}						
 				}
-				else
+
+				// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
+				pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+
+				if (pre_Fetch_Cnt == pre_Fetch_Wait)
 				{
+					pre_Buffer_Cnt += 1;
 					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-					pre_Inactive = true;
+					pre_Read_Addr += 2;
+
+					pre_Cycle_Glitch = true;
+					pre_Following = true;
+
+					if (!pre_Enable) { pre_Run = false; }
 				}
 			}
 		}
@@ -156,7 +166,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			pre_Fetch_Cnt = pre_Fetch_Wait = 0;
 			pre_Fetch_Cnt_Inc = 1;
 
-			pre_Cycle_Glitch = false;
+			pre_Cycle_Glitch = pre_Cycle_Glitch_2 = false;
 
 			pre_Run = pre_Enable = pre_Seq_Access = false;
 
@@ -179,6 +189,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(pre_Fetch_Wait), ref pre_Fetch_Wait);
 			ser.Sync(nameof(pre_Fetch_Cnt_Inc), ref pre_Fetch_Cnt_Inc);
 			ser.Sync(nameof(pre_Cycle_Glitch), ref pre_Cycle_Glitch);
+			ser.Sync(nameof(pre_Cycle_Glitch_2), ref pre_Cycle_Glitch_2);
 
 			ser.Sync(nameof(pre_Run), ref pre_Run);
 			ser.Sync(nameof(pre_Enable), ref pre_Enable);

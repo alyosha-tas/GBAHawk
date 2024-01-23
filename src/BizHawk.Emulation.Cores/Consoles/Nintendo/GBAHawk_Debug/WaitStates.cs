@@ -60,7 +60,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -69,6 +69,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}
@@ -172,7 +173,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -181,6 +182,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}
@@ -284,7 +286,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -293,6 +295,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}
@@ -429,7 +432,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						wait_ret += SRAM_Waits; // SRAM
 					}
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -438,6 +441,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}
@@ -631,7 +635,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch)
+						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -644,6 +648,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
+						pre_Cycle_Glitch_2 = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; pre_Inactive = false;}
 						else { pre_Check_Addr = 0; }
@@ -653,7 +658,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -662,6 +667,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}
@@ -875,7 +881,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch)
+						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -888,6 +894,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
 						pre_Following = false;
+						pre_Cycle_Glitch_2 = false;
 
 						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; pre_Inactive = false; }
 						else { pre_Check_Addr = 0; }
@@ -897,7 +904,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					wait_ret += SRAM_Waits; // SRAM
 
-					if (pre_Cycle_Glitch)
+					if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
 					{
 						// lose 1 cycle if prefetcher is holding the bus
 						wait_ret += 1;
@@ -906,6 +913,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					//abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
+					pre_Cycle_Glitch_2 = false;
 					pre_Inactive = true;
 				}
 			}

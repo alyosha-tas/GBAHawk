@@ -1869,6 +1869,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 					if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 					{
+						if (cpu_Thumb_Mode)
+						{
+							cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
+						}
+						else
+						{
+							cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
+						}
+
 						// IRQ mode
 						cpu_Swap_Regs(0x12, true, false);
 
