@@ -36,8 +36,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public uint[] ppu_BG_Ref_X = new uint[4];
 		public uint[] ppu_BG_Ref_Y = new uint[4];
-		public uint[] ppu_BG_Ref_X_Latch = new uint[4];
-		public uint[] ppu_BG_Ref_Y_Latch = new uint[4];
 
 		public int[] ppu_BG_On_Update_Time = new int[4];
 
@@ -45,14 +43,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort[] ppu_BG_Rot_B = new ushort[4];
 		public ushort[] ppu_BG_Rot_C = new ushort[4];
 		public ushort[] ppu_BG_Rot_D = new ushort[4];
-		public ushort[] ppu_BG_Rot_B_Latch = new ushort[4];
-		public ushort[] ppu_BG_Rot_D_Latch = new ushort[4];
 
 		public ushort[] ppu_ROT_REF_LY = new ushort[4];
 
 		public bool[] ppu_BG_On = new bool[4];
 		public bool[] ppu_BG_On_New = new bool[4];
 
+		public bool[] ppu_BG_Ref_X_Change = new bool[4];
 		public bool[] ppu_BG_Ref_LY_Change = new bool[4];
 
 		public int ppu_BG_Mode, ppu_Display_Frame;
@@ -192,6 +189,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort ppu_VRAM_Open_Bus;
 
+		public uint ppu_Base_LY_2, ppu_Base_LY_3;
+
+		public ulong ppu_Current_Ref_X_2, ppu_Current_Ref_Y_2;
+		public ulong ppu_Current_Ref_X_3, ppu_Current_Ref_Y_3;
+
 		// Derived values, not stated, reloaded with savestate
 		public ushort[] ppu_ROT_OBJ_X = new ushort[128];
 		public ushort[] ppu_ROT_OBJ_Y = new ushort[128];
@@ -217,11 +219,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] ppu_OBJ_BG_En = new bool[4];
 		public bool[] ppu_OUT_BG_En = new bool[4];
 
-		public double ppu_F_Ref_X_2, ppu_F_Ref_X_3;
-		public double ppu_F_Ref_Y_2, ppu_F_Ref_Y_3;
-
-		public double ppu_F_Rot_A_2, ppu_F_Rot_B_2, ppu_F_Rot_C_2, ppu_F_Rot_D_2;
-		public double ppu_F_Rot_A_3, ppu_F_Rot_B_3, ppu_F_Rot_C_3, ppu_F_Rot_D_3;
+		public ulong ppu_F_Rot_A_2, ppu_F_Rot_B_2, ppu_F_Rot_C_2, ppu_F_Rot_D_2;
+		public ulong ppu_F_Rot_A_3, ppu_F_Rot_B_3, ppu_F_Rot_C_3, ppu_F_Rot_D_3;
 
 		public int ppu_SFX_mode, ppu_SFX_BRT_Num;
 		public int ppu_SFX_Alpha_Num_1, ppu_SFX_Alpha_Num_2;
@@ -370,39 +369,39 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x1E: ppu_BG_Y[3] = (ushort)((ppu_BG_Y[3] & 0xFF00) | value); break;
 				case 0x1F: ppu_BG_Y[3] = (ushort)((ppu_BG_Y[3] & 0x00FF) | (value << 8)); break;
 
-				case 0x20: ppu_BG_Rot_A[2] = (ushort)((ppu_BG_Rot_A[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(2); break;
-				case 0x21: ppu_BG_Rot_A[2] = (ushort)((ppu_BG_Rot_A[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x20: ppu_BG_Rot_A[2] = (ushort)((ppu_BG_Rot_A[2] & 0xFF00) | value); ppu_Convert_Rotation_to_ulong_AC(2); break;
+				case 0x21: ppu_BG_Rot_A[2] = (ushort)((ppu_BG_Rot_A[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_ulong_AC(2); break;
 				case 0x22: ppu_BG_Rot_B[2] = (ushort)((ppu_BG_Rot_B[2] & 0xFF00) | value); break;
 				case 0x23: ppu_BG_Rot_B[2] = (ushort)((ppu_BG_Rot_B[2] & 0x00FF) | (value << 8)); break;
-				case 0x24: ppu_BG_Rot_C[2] = (ushort)((ppu_BG_Rot_C[2] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(2); break;
-				case 0x25: ppu_BG_Rot_C[2] = (ushort)((ppu_BG_Rot_C[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x24: ppu_BG_Rot_C[2] = (ushort)((ppu_BG_Rot_C[2] & 0xFF00) | value); ppu_Convert_Rotation_to_ulong_AC(2); break;
+				case 0x25: ppu_BG_Rot_C[2] = (ushort)((ppu_BG_Rot_C[2] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_ulong_AC(2); break;
 				case 0x26: ppu_BG_Rot_D[2] = (ushort)((ppu_BG_Rot_D[2] & 0xFF00) | value); break;
 				case 0x27: ppu_BG_Rot_D[2] = (ushort)((ppu_BG_Rot_D[2] & 0x00FF) | (value << 8)); break;
-				case 0x28: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFFFF00) | value); break;
-				case 0x29: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFF00FF) | (value << 8)); break;
-				case 0x2A: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFF00FFFF) | (value << 16)); break;
-				case 0x2B: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0x00FFFFFF) | (value << 24)); break;
+				case 0x28: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFFFF00) | value); ppu_ROT_REF_X_Update(2); break;
+				case 0x29: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFF00FF) | (value << 8)); ppu_ROT_REF_X_Update(2); break;
+				case 0x2A: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFF00FFFF) | (value << 16)); ppu_ROT_REF_X_Update(2); break;
+				case 0x2B: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0x00FFFFFF) | ((value & 0xF) << 24)); ppu_ROT_REF_X_Update(2); break;
 				case 0x2C: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0xFFFFFF00) | value); ppu_ROT_REF_LY_Update(2); break;
 				case 0x2D: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0xFFFF00FF) | (value << 8)); ppu_ROT_REF_LY_Update(2); break;
 				case 0x2E: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0xFF00FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(2); break;
-				case 0x2F: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0x00FFFFFF) | (value << 24)); ppu_ROT_REF_LY_Update(2); break;
+				case 0x2F: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0x00FFFFFF) | ((value & 0xF) << 24)); ppu_ROT_REF_LY_Update(2); break;
 
-				case 0x30: ppu_BG_Rot_A[3] = (ushort)((ppu_BG_Rot_A[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(3); break;
-				case 0x31: ppu_BG_Rot_A[3] = (ushort)((ppu_BG_Rot_A[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x30: ppu_BG_Rot_A[3] = (ushort)((ppu_BG_Rot_A[3] & 0xFF00) | value); ppu_Convert_Rotation_to_ulong_AC(3); break;
+				case 0x31: ppu_BG_Rot_A[3] = (ushort)((ppu_BG_Rot_A[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_ulong_AC(3); break;
 				case 0x32: ppu_BG_Rot_B[3] = (ushort)((ppu_BG_Rot_B[3] & 0xFF00) | value); break;
 				case 0x33: ppu_BG_Rot_B[3] = (ushort)((ppu_BG_Rot_B[3] & 0x00FF) | (value << 8)); break;
-				case 0x34: ppu_BG_Rot_C[3] = (ushort)((ppu_BG_Rot_C[3] & 0xFF00) | value); ppu_Convert_Rotation_to_float_AC(3); break;
-				case 0x35: ppu_BG_Rot_C[3] = (ushort)((ppu_BG_Rot_C[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x34: ppu_BG_Rot_C[3] = (ushort)((ppu_BG_Rot_C[3] & 0xFF00) | value); ppu_Convert_Rotation_to_ulong_AC(3); break;
+				case 0x35: ppu_BG_Rot_C[3] = (ushort)((ppu_BG_Rot_C[3] & 0x00FF) | (value << 8)); ppu_Convert_Rotation_to_ulong_AC(3); break;
 				case 0x36: ppu_BG_Rot_D[3] = (ushort)((ppu_BG_Rot_D[3] & 0xFF00) | value); break;
 				case 0x37: ppu_BG_Rot_D[3] = (ushort)((ppu_BG_Rot_D[3] & 0x00FF) | (value << 8)); break;
-				case 0x38: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFFFF00) | value); break;
-				case 0x39: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFF00FF) | (value << 8)); break;
-				case 0x3A: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFF00FFFF) | (value << 16)); break;
-				case 0x3B: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0x00FFFFFF) | (value << 24)); break;
+				case 0x38: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFFFF00) | value); ppu_ROT_REF_X_Update(3); break;
+				case 0x39: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFF00FF) | (value << 8)); ppu_ROT_REF_X_Update(3); break;
+				case 0x3A: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFF00FFFF) | (value << 16)); ppu_ROT_REF_X_Update(3); break;
+				case 0x3B: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0x00FFFFFF) | ((value & 0xF) << 24)); ppu_ROT_REF_X_Update(3); break;
 				case 0x3C: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0xFFFFFF00) | value); ppu_ROT_REF_LY_Update(3); break;
 				case 0x3D: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0xFFFF00FF) | (value << 8)); ppu_ROT_REF_LY_Update(3); break;
 				case 0x3E: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0xFF00FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(3); break;
-				case 0x3F: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0x00FFFFFF) | (value << 24)); ppu_ROT_REF_LY_Update(3); break;
+				case 0x3F: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0x00FFFFFF) | ((value & 0xF) << 24)); ppu_ROT_REF_LY_Update(3); break;
 
 				case 0x40: ppu_WIN_Hor_0 = (ushort)((ppu_WIN_Hor_0 & 0xFF00) | value); ppu_Calc_Win0(); break;
 				case 0x41: ppu_WIN_Hor_0 = (ushort)((ppu_WIN_Hor_0 & 0x00FF) | (value << 8)); ppu_Calc_Win0(); break;
@@ -450,23 +449,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x1C: ppu_BG_X[3] = value; break;
 				case 0x1E: ppu_BG_Y[3] = value; break;
 
-				case 0x20: ppu_BG_Rot_A[2] = value; ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x20: ppu_BG_Rot_A[2] = value; ppu_Convert_Rotation_to_ulong_AC(2); break;
 				case 0x22: ppu_BG_Rot_B[2] = value; break;
-				case 0x24: ppu_BG_Rot_C[2] = value; ppu_Convert_Rotation_to_float_AC(2); break;
+				case 0x24: ppu_BG_Rot_C[2] = value; ppu_Convert_Rotation_to_ulong_AC(2); break;
 				case 0x26: ppu_BG_Rot_D[2] = value; break;
-				case 0x28: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFF0000) | value); break;
-				case 0x2A: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0x0000FFFF) | (value << 16)); break;
+				case 0x28: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0xFFFF0000) | value); ppu_ROT_REF_X_Update(2); break;
+				case 0x2A: ppu_BG_Ref_X[2] = (uint)((ppu_BG_Ref_X[2] & 0x0000FFFF) | ((value & 0xFFF) << 16)); ppu_ROT_REF_X_Update(2); break;
 				case 0x2C: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0xFFFF0000) | value); ppu_ROT_REF_LY_Update(2); break;
-				case 0x2E: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0x0000FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(2); break;
+				case 0x2E: ppu_BG_Ref_Y[2] = (uint)((ppu_BG_Ref_Y[2] & 0x0000FFFF) | ((value & 0xFFF) << 16)); ppu_ROT_REF_LY_Update(2); break;
 
-				case 0x30: ppu_BG_Rot_A[3] = value; ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x30: ppu_BG_Rot_A[3] = value; ppu_Convert_Rotation_to_ulong_AC(3); break;
 				case 0x32: ppu_BG_Rot_B[3] = value; break;
-				case 0x34: ppu_BG_Rot_C[3] = value; ppu_Convert_Rotation_to_float_AC(3); break;
+				case 0x34: ppu_BG_Rot_C[3] = value; ppu_Convert_Rotation_to_ulong_AC(3); break;
 				case 0x36: ppu_BG_Rot_D[3] = value; break;
-				case 0x38: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFF0000) | value); break;
-				case 0x3A: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0x0000FFFF) | (value << 16)); break;
+				case 0x38: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0xFFFF0000) | value); ppu_ROT_REF_X_Update(3); break;
+				case 0x3A: ppu_BG_Ref_X[3] = (uint)((ppu_BG_Ref_X[3] & 0x0000FFFF) | ((value & 0xFFF) << 16)); ppu_ROT_REF_X_Update(3); break;
 				case 0x3C: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0xFFFF0000) | value); ppu_ROT_REF_LY_Update(3); break;
-				case 0x3E: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0x0000FFFF) | (value << 16)); ppu_ROT_REF_LY_Update(3); break;
+				case 0x3E: ppu_BG_Ref_Y[3] = (uint)((ppu_BG_Ref_Y[3] & 0x0000FFFF) | ((value & 0xFFF) << 16)); ppu_ROT_REF_LY_Update(3); break;
 
 				case 0x40: ppu_WIN_Hor_0 = value; ppu_Calc_Win0(); break;
 				case 0x42: ppu_WIN_Hor_1 = value; ppu_Calc_Win1(); break;
@@ -505,18 +504,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						   ppu_BG_Y[3] = (ushort)((value >> 16) & 0xFFFF); break;
 
 				case 0x20: ppu_BG_Rot_A[2] = (ushort)(value & 0xFFFF);
-						   ppu_BG_Rot_B[2] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(2); break;
+						   ppu_BG_Rot_B[2] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_ulong_AC(2); break;
 				case 0x24: ppu_BG_Rot_C[2] = (ushort)(value & 0xFFFF);
-						   ppu_BG_Rot_D[2] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(2); break;
-				case 0x28: ppu_BG_Ref_X[2] = value; break;
-				case 0x2C: ppu_BG_Ref_Y[2] = value; ppu_ROT_REF_LY_Update(2); break;
+						   ppu_BG_Rot_D[2] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_ulong_AC(2); break;
+				case 0x28: ppu_BG_Ref_X[2] = (value & 0xFFFFFFF); ppu_ROT_REF_X_Update(2); break;
+				case 0x2C: ppu_BG_Ref_Y[2] = (value & 0xFFFFFFF); ppu_ROT_REF_LY_Update(2); break;
 
 				case 0x30: ppu_BG_Rot_A[3] = (ushort)(value & 0xFFFF);
-						   ppu_BG_Rot_B[3] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(3); break;
+						   ppu_BG_Rot_B[3] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_ulong_AC(3); break;
 				case 0x34: ppu_BG_Rot_C[3] = (ushort)(value & 0xFFFF);
-						   ppu_BG_Rot_D[3] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_float_AC(3); break;
-				case 0x38: ppu_BG_Ref_X[3] = value; break;
-				case 0x3C: ppu_BG_Ref_Y[3] = value; ppu_ROT_REF_LY_Update(3); break;
+						   ppu_BG_Rot_D[3] = (ushort)((value >> 16) & 0xFFFF); ppu_Convert_Rotation_to_ulong_AC(3); break;
+				case 0x38: ppu_BG_Ref_X[3] = (value & 0xFFFFFFF); ppu_ROT_REF_X_Update(3); break;
+				case 0x3C: ppu_BG_Ref_Y[3] = (value & 0xFFFFFFF); ppu_ROT_REF_LY_Update(3); break;
 
 				case 0x40: ppu_WIN_Hor_0 = (ushort)(value & 0xFFFF);
 						   ppu_WIN_Hor_1 = (ushort)((value >> 16) & 0xFFFF); ppu_Calc_Win0(); ppu_Calc_Win1(); break;
@@ -711,6 +710,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_OBJ_BG_En[3] = (ppu_WIN_Out & 0x800) == 0x800;
 			ppu_OBJ_OBJ_En = (ppu_WIN_Out & 0x1000) == 0x1000;
 			ppu_OBJ_Color_En = (ppu_WIN_Out & 0x2000) == 0x2000;
+		}
+
+		public void ppu_ROT_REF_X_Update(int layer)
+		{
+			if (ppu_BG_On[layer])
+			{
+				ppu_BG_Ref_X_Change[layer] = true;
+			}
 		}
 
 		public void ppu_ROT_REF_LY_Update(int layer)
@@ -1066,8 +1073,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ppu_Render()
 		{
-			double cur_x, cur_y;
-			double sol_x, sol_y;
+			ulong cur_x;
+			ulong sol_x, sol_y;
 
 			uint R, G, B;
 			uint R2, G2, B2;
@@ -2486,22 +2493,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_Cycle & 3) == 2)
 							{
 								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[2];
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+								sol_x = ppu_F_Rot_A_2 * cur_x;
+								sol_y = ppu_F_Rot_C_2 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								sol_x += ppu_Current_Ref_X_2;
+								sol_y += ppu_Current_Ref_Y_2;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// adjust if wraparound is enabled
 								if (ppu_BG_Overflow[2])
@@ -2614,22 +2618,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_Cycle & 3) == 2)
 							{
 								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[2];
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+								sol_x = ppu_F_Rot_A_2 * cur_x;
+								sol_y = ppu_F_Rot_C_2 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								sol_x += ppu_Current_Ref_X_2;
+								sol_y += ppu_Current_Ref_Y_2;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// adjust if wraparound is enabled
 								if (ppu_BG_Overflow[2])
@@ -2739,23 +2740,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if ((ppu_Cycle & 3) == 0)
 							{
-								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[3])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[3]];
-									cur_x = ppu_Fetch_Count[3];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[3]);
-									cur_x = ppu_Fetch_Count[3];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[3];
 
-								sol_x = ppu_F_Rot_A_3 * cur_x - ppu_F_Rot_B_3 * cur_y;
-								sol_y = -ppu_F_Rot_C_3 * cur_x + ppu_F_Rot_D_3 * cur_y;
+								sol_x = ppu_F_Rot_A_3 * cur_x;
+								sol_y = ppu_F_Rot_C_3 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_3);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_3));
+								sol_x += ppu_Current_Ref_X_3;
+								sol_y += ppu_Current_Ref_Y_3;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// adjust if wraparound is enabled
 								if (ppu_BG_Overflow[3])
@@ -2869,22 +2866,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_Cycle & 3) == 3)
 							{
 								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[2];
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+								sol_x = ppu_F_Rot_A_2 * cur_x;
+								sol_y = ppu_F_Rot_C_2 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								sol_x += ppu_Current_Ref_X_2;
+								sol_y += ppu_Current_Ref_Y_2;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// pixel color comes direct from VRAM
 								int m3_ofst = (ppu_X_RS + ppu_Y_RS * 240) * 2;
@@ -2937,22 +2931,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_Cycle & 3) == 3)
 							{
 								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[2];
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+								sol_x = ppu_F_Rot_A_2 * cur_x;
+								sol_y = ppu_F_Rot_C_2 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								sol_x += ppu_Current_Ref_X_2;
+								sol_y += ppu_Current_Ref_Y_2;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// pixel color comes direct from VRAM
 								int m4_ofst = ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS;
@@ -3026,22 +3017,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if ((ppu_Cycle & 3) == 3)
 							{
 								// calculate rotation and scaling
-								if (ppu_BG_Mosaic[2])
-								{
-									cur_y = -ppu_MOS_BG_Y[ppu_LY - ppu_ROT_REF_LY[2]];
-									cur_x = ppu_Fetch_Count[2];
-								}
-								else
-								{
-									cur_y = -(ppu_LY - ppu_ROT_REF_LY[2]);
-									cur_x = ppu_Fetch_Count[2];
-								}
+								cur_x = (ulong)ppu_Fetch_Count[2];
 
-								sol_x = ppu_F_Rot_A_2 * cur_x - ppu_F_Rot_B_2 * cur_y;
-								sol_y = -ppu_F_Rot_C_2 * cur_x + ppu_F_Rot_D_2 * cur_y;
+								sol_x = ppu_F_Rot_A_2 * cur_x;
+								sol_y = ppu_F_Rot_C_2 * cur_x;
 
-								ppu_X_RS = (ushort)Math.Floor(sol_x + ppu_F_Ref_X_2);
-								ppu_Y_RS = (ushort)Math.Floor(-(sol_y - ppu_F_Ref_Y_2));
+								sol_x += ppu_Current_Ref_X_2;
+								sol_y += ppu_Current_Ref_Y_2;
+
+								sol_x >>= 8;
+								sol_y >>= 8;
+
+								ppu_X_RS = (ushort)sol_x;
+								ppu_Y_RS = (ushort)sol_y;
 
 								// pixel color comes direct from VRAM
 								int m5_ofst = ppu_Display_Frame * 0xA000 + ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
@@ -3745,105 +3733,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 		}
 
-		public void ppu_Convert_Rotation_to_float_AC(int layer)
+		public void ppu_Convert_Rotation_to_ulong_AC(int layer)
 		{
-			ushort A, C;
-
-			int i_A, i_C;
-
-			double f_A, f_C;
-
-			A = ppu_BG_Rot_A[layer];
-			C = ppu_BG_Rot_C[layer];
-
-			i_A = (int)((A >> 8) & 0x7F);
-			i_C = (int)((C >> 8) & 0x7F);
-
-			if ((A & 0x8000) == 0x8000) { i_A |= unchecked((int)0xFFFFFF80); }
-			if ((C & 0x8000) == 0x8000) { i_C |= unchecked((int)0xFFFFFF80); }
-
-			// convert to floats
-			f_A = i_A;
-			f_C = i_C;
-
-			f_A += ppu_Fract_Parts[A & 0xFF];
-			f_C += ppu_Fract_Parts[C & 0xFF];
-
 			if (layer == 2)
 			{
-				ppu_F_Rot_A_2 = f_A;
-				ppu_F_Rot_C_2 = f_C;
+				ppu_F_Rot_A_2 = ppu_BG_Rot_A[2];
+				ppu_F_Rot_C_2 = ppu_BG_Rot_C[2];
+
+				if ((ppu_F_Rot_A_2 & 0x8000) != 0) { ppu_F_Rot_A_2 |= 0xFFFFFFFFFFFF0000; }
+				if ((ppu_F_Rot_C_2 & 0x8000) != 0) { ppu_F_Rot_C_2 |= 0xFFFFFFFFFFFF0000; }
 			}
 			else
 			{
-				ppu_F_Rot_A_3 = f_A;
-				ppu_F_Rot_C_3 = f_C;
+				ppu_F_Rot_A_3 = ppu_BG_Rot_A[3];
+				ppu_F_Rot_C_3 = ppu_BG_Rot_C[3];
+
+				if ((ppu_F_Rot_A_3 & 0x8000) != 0) { ppu_F_Rot_A_3 |= 0xFFFFFFFFFFFF0000; }
+				if ((ppu_F_Rot_C_3 & 0x8000) != 0) { ppu_F_Rot_C_3 |= 0xFFFFFFFFFFFF0000; }
 			}
-		}
-
-		public void ppu_Convert_Rotation_to_float_BD(int layer)
-		{
-			ushort B, D;
-
-			int i_B, i_D;
-
-			double f_B, f_D;
-
-			B = ppu_BG_Rot_B_Latch[layer];
-			D = ppu_BG_Rot_D_Latch[layer];
-
-			i_B = (int)((B >> 8) & 0x7F);
-			i_D = (int)((D >> 8) & 0x7F);
-
-			if ((B & 0x8000) == 0x8000) { i_B |= unchecked((int)0xFFFFFF80); }
-			if ((D & 0x8000) == 0x8000) { i_D |= unchecked((int)0xFFFFFF80); }
-
-			// convert to floats
-			f_B = i_B;
-			f_D = i_D;
-
-			f_B += ppu_Fract_Parts[B & 0xFF];
-			f_D += ppu_Fract_Parts[D & 0xFF];
-
-			if (layer == 2)
-			{
-				ppu_F_Rot_B_2 = f_B;
-				ppu_F_Rot_D_2 = f_D;
-			}
-			else
-			{
-				ppu_F_Rot_B_3 = f_B;
-				ppu_F_Rot_D_3 = f_D;
-			}
-		}
-
-		public void ppu_Convert_Offset_to_float(int layer)
-		{
-			uint Ref_X = ppu_BG_Ref_X_Latch[layer];
-			uint Ref_Y = ppu_BG_Ref_Y_Latch[layer];
-
-			int i_ref_x = (int)((Ref_X >> 8) & 0x7FFFF);
-			int i_ref_y = (int)((Ref_Y >> 8) & 0x7FFFF);
-
-			if ((Ref_X & 0x8000000) == 0x8000000) { i_ref_x |= unchecked((int)0xFFF80000); }
-			if ((Ref_Y & 0x8000000) == 0x8000000) { i_ref_y |= unchecked((int)0xFFF80000); }
-
-			if (layer == 2)
-			{
-				ppu_F_Ref_X_2 = i_ref_x;
-				ppu_F_Ref_Y_2 = i_ref_y;
-
-				ppu_F_Ref_X_2 += ppu_Fract_Parts[Ref_X & 0xFF];
-				ppu_F_Ref_Y_2 += ppu_Fract_Parts[Ref_Y & 0xFF];
-			}
-			else
-			{
-				ppu_F_Ref_X_3 = i_ref_x;
-				ppu_F_Ref_Y_3 = i_ref_y;
-
-				ppu_F_Ref_X_3 += ppu_Fract_Parts[Ref_X & 0xFF];
-				ppu_F_Ref_Y_3 += ppu_Fract_Parts[Ref_Y & 0xFF];
-			}		
 		}
 
 		public void ppu_Reset()
@@ -3851,10 +3758,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_X_RS = ppu_Y_RS = 0;
 			
 			ppu_BG_Ref_X[2] = ppu_BG_Ref_X[3] = 0;
-			ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X_Latch[3] = 0;
-
 			ppu_BG_Ref_Y[2] = ppu_BG_Ref_Y[3] = 0;
-			ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y_Latch[3] = 0;
 
 			ppu_ROT_REF_LY[2] = ppu_ROT_REF_LY[3] = 0;
 
@@ -3875,6 +3779,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				ppu_BG_On_Update_Time[i] = 0;
 
+				ppu_BG_Ref_X_Change[i] = false;
 				ppu_BG_Ref_LY_Change[i] = false;
 			}
 
@@ -3883,8 +3788,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_BG_Rot_A[2] = ppu_BG_Rot_B[2] = ppu_BG_Rot_C[2] = ppu_BG_Rot_D[2] = 0;
 
 			ppu_BG_Rot_A[3] = ppu_BG_Rot_B[3] = ppu_BG_Rot_C[3] = ppu_BG_Rot_D[3] = 0;
-
-			ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D_Latch[3] = 0;
 
 			ppu_WIN_Hor_0 = ppu_WIN_Hor_1 = ppu_WIN_Vert_0 = ppu_WIN_Vert_1 = 0;
 
@@ -3994,8 +3897,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ppu_BG_Has_Pixel_1[i] = false;
 				ppu_BG_Has_Pixel_M[i] = false;
 				ppu_BG_Has_Pixel_R[i] = false;
-
 			}
+
+			ppu_Base_LY_2 = ppu_Base_LY_3 = 0;
 
 			ppu_BG_Pixel_F = 0;
 			ppu_BG_Pixel_S = 0;
@@ -4034,12 +3938,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Update_Bright(0);
 			ppu_Update_Mosaic(0);
 
-			ppu_Convert_Offset_to_float(2);
-			ppu_Convert_Offset_to_float(3);
-			ppu_Convert_Rotation_to_float_AC(2);
-			ppu_Convert_Rotation_to_float_BD(2);
-			ppu_Convert_Rotation_to_float_AC(3);
-			ppu_Convert_Rotation_to_float_BD(3);
+			ppu_Convert_Rotation_to_ulong_AC(2);
+			ppu_Convert_Rotation_to_ulong_AC(3);
 
 			double fract = 0.5;
 			double f_v = 0;
@@ -4072,9 +3972,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_BG_Ref_X), ref ppu_BG_Ref_X, false);
 			ser.Sync(nameof(ppu_BG_Ref_Y), ref ppu_BG_Ref_Y, false);
 
-			ser.Sync(nameof(ppu_BG_Ref_X_Latch), ref ppu_BG_Ref_X_Latch, false);
-			ser.Sync(nameof(ppu_BG_Ref_Y_Latch), ref ppu_BG_Ref_Y_Latch, false);
-
 			ser.Sync(nameof(ppu_ROT_REF_LY), ref ppu_ROT_REF_LY, false);
 
 			ser.Sync(nameof(ppu_BG_On_Update_Time), ref ppu_BG_On_Update_Time, false);
@@ -4083,11 +3980,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_BG_Rot_B), ref ppu_BG_Rot_B, false);
 			ser.Sync(nameof(ppu_BG_Rot_C), ref ppu_BG_Rot_C, false);
 			ser.Sync(nameof(ppu_BG_Rot_D), ref ppu_BG_Rot_D, false);
-			ser.Sync(nameof(ppu_BG_Rot_B_Latch), ref ppu_BG_Rot_B_Latch, false);
-			ser.Sync(nameof(ppu_BG_Rot_D_Latch), ref ppu_BG_Rot_D_Latch, false);
 
 			ser.Sync(nameof(ppu_BG_On), ref ppu_BG_On, false);
 			ser.Sync(nameof(ppu_BG_On_New), ref ppu_BG_On_New, false);
+			ser.Sync(nameof(ppu_BG_Ref_X_Change), ref ppu_BG_Ref_X_Change, false);
 			ser.Sync(nameof(ppu_BG_Ref_LY_Change), ref ppu_BG_Ref_LY_Change, false);
 
 			ser.Sync(nameof(ppu_BG_Mode), ref ppu_BG_Mode);
@@ -4269,6 +4165,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ppu_VRAM_Open_Bus), ref ppu_VRAM_Open_Bus);
 
+			ser.Sync(nameof(ppu_Base_LY_2), ref ppu_Base_LY_2);
+			ser.Sync(nameof(ppu_Base_LY_3), ref ppu_Base_LY_3);
+
+			ser.Sync(nameof(ppu_Current_Ref_X_2), ref ppu_Current_Ref_X_2);
+			ser.Sync(nameof(ppu_Current_Ref_Y_2), ref ppu_Current_Ref_Y_2);
+			ser.Sync(nameof(ppu_Current_Ref_X_3), ref ppu_Current_Ref_X_3);
+			ser.Sync(nameof(ppu_Current_Ref_Y_3), ref ppu_Current_Ref_Y_3);
+
+
 			// update derived values
 			ppu_Calc_Win0();
 			ppu_Calc_Win1();
@@ -4283,12 +4188,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ppu_Update_Bright(ppu_Bright);
 			ppu_Update_Mosaic(ppu_Mosaic);
 
-			ppu_Convert_Offset_to_float(2);
-			ppu_Convert_Offset_to_float(3);
-			ppu_Convert_Rotation_to_float_AC(2);
-			ppu_Convert_Rotation_to_float_BD(2);
-			ppu_Convert_Rotation_to_float_AC(3);
-			ppu_Convert_Rotation_to_float_BD(3);
+			ppu_Convert_Rotation_to_ulong_AC(2);
+			ppu_Convert_Rotation_to_ulong_AC(3);
 		}
 	}
 

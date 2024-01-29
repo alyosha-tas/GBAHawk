@@ -577,25 +577,61 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// latch rotation and scaling XY here
 						if (ppu_LY < 160)
 						{
-							ppu_BG_Ref_X_Latch[2] = ppu_BG_Ref_X[2];
-							ppu_BG_Ref_Y_Latch[2] = ppu_BG_Ref_Y[2];
-
-							ppu_BG_Ref_X_Latch[3] = ppu_BG_Ref_X[3];
-							ppu_BG_Ref_Y_Latch[3] = ppu_BG_Ref_Y[3];
-
-							if (ppu_BG_Ref_LY_Change[2])
+							if ((ppu_LY == 0) || ppu_BG_Ref_LY_Change[2])
 							{
-								ppu_ROT_REF_LY[2] = ppu_LY;
+								if(ppu_BG_Mosaic[2])
+								{
+									ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
+								}
+								else
+								{
+									ppu_Base_LY_2 = ppu_LY;
+								}
+
+								ppu_Current_Ref_Y_2 = ppu_BG_Ref_Y[2];
+								if ((ppu_Current_Ref_Y_2 & 0x8000000) != 0)
+								{
+									ppu_Current_Ref_Y_2 |= 0xFFFFFFFFF0000000;
+								}
 							}
 
-							if (ppu_BG_Ref_LY_Change[3])
+							if ((ppu_LY == 0) || ppu_BG_Ref_LY_Change[3])
 							{
-								ppu_ROT_REF_LY[3] = ppu_LY;
+								if (ppu_BG_Mosaic[3])
+								{
+									ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
+								}
+								else
+								{
+									ppu_Base_LY_3 = ppu_LY;
+								}
+
+								ppu_Current_Ref_Y_3 = ppu_BG_Ref_Y[3];
+								if ((ppu_Current_Ref_Y_3 & 0x8000000) != 0)
+								{
+									ppu_Current_Ref_Y_3 |= 0xFFFFFFFFF0000000;
+								}
 							}
 
-							ppu_Convert_Offset_to_float(2);
-							ppu_Convert_Offset_to_float(3);
+							if ((ppu_LY == 0) || ppu_BG_Ref_X_Change[2])
+							{
+								ppu_Current_Ref_X_2 = ppu_BG_Ref_X[2];
+								if ((ppu_Current_Ref_X_2 & 0x8000000) != 0)
+								{
+									ppu_Current_Ref_X_2 |= 0xFFFFFFFFF0000000;
+								}
+							}
 
+							if ((ppu_LY == 0) || ppu_BG_Ref_X_Change[3])
+							{
+								ppu_Current_Ref_X_3 = ppu_BG_Ref_X[3];
+								if ((ppu_Current_Ref_X_3 & 0x8000000) != 0)
+								{
+									ppu_Current_Ref_X_3 |= 0xFFFFFFFFF0000000;
+								}
+							}
+
+							ppu_BG_Ref_X_Change[2] = ppu_BG_Ref_X_Change[3] = false;
 							ppu_BG_Ref_LY_Change[2] = ppu_BG_Ref_LY_Change[3] = false;
 
 							ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
@@ -668,13 +704,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						if (ppu_LY < 160)
 						{
 							// Latch B-D rotation scaling parameters here.
-							ppu_BG_Rot_B_Latch[2] = ppu_BG_Rot_B[2];
-							ppu_BG_Rot_B_Latch[3] = ppu_BG_Rot_B[3];
-							ppu_BG_Rot_D_Latch[2] = ppu_BG_Rot_D[2];
-							ppu_BG_Rot_D_Latch[3] = ppu_BG_Rot_D[3];
+							ppu_F_Rot_B_2 = ppu_BG_Rot_B[2];
+							ppu_F_Rot_B_3 = ppu_BG_Rot_B[3];
+							ppu_F_Rot_D_2 = ppu_BG_Rot_D[2];
+							ppu_F_Rot_D_3 = ppu_BG_Rot_D[3];
 
-							ppu_Convert_Rotation_to_float_BD(2);
-							ppu_Convert_Rotation_to_float_BD(3);
+							if ((ppu_F_Rot_B_2 & 0x8000) != 0) { ppu_F_Rot_B_2 |= 0xFFFFFFFFFFFF0000; }
+							if ((ppu_F_Rot_B_3 & 0x8000) != 0) { ppu_F_Rot_B_3 |= 0xFFFFFFFFFFFF0000; }
+							if ((ppu_F_Rot_D_2 & 0x8000) != 0) { ppu_F_Rot_D_2 |= 0xFFFFFFFFFFFF0000; }
+							if ((ppu_F_Rot_D_3 & 0x8000) != 0) { ppu_F_Rot_D_3 |= 0xFFFFFFFFFFFF0000; }
+
+							if (ppu_BG_Mosaic[2])
+							{
+								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
+								{
+									ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+									ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+								}
+							}
+							else if (ppu_LY != ppu_Base_LY_2)
+							{
+								ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+								ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+							}
+
+							if (ppu_BG_Mosaic[3])
+							{
+								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
+								{
+									ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+									ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+								}
+							}
+							else if (ppu_LY != ppu_Base_LY_3)
+							{
+								ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+								ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+							}
 						}
 
 						// video capture DMA, check timing
