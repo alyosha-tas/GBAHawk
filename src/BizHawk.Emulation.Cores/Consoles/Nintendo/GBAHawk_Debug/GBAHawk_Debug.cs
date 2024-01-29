@@ -568,7 +568,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						 (romHashSHA1 == "SHA1:D53FBC63E08C15BFDC045B5664FE24E8E2718469") || // Mario Pinball land (EU)
 						 (romHashSHA1 == "SHA1:3BAA3735AED4CFC6C7C5A157E7EA0285AC40B1EF") || // Mario Pinball land (JPN)
 						 (romHashSHA1 == "SHA1:0D994A58B7ACDFE9357E5405ACEBE232128B80FE") || // Super Monkey Ball Jr. (USA)
-						 (romHashSHA1 == "SHA1:9C87FCF42A27644AE5BEC273AC3AFC3F672B4F94"))   // Super Monkey Ball Jr. (EU)
+						 (romHashSHA1 == "SHA1:9C87FCF42A27644AE5BEC273AC3AFC3F672B4F94") || // Super Monkey Ball Jr. (EU)
+						 (romHashSHA1 == "SHA1:FCC62356A3B7157CA7DDA1398C9BF1AF1DD31265") || // Donkey Kong Country (USA)
+						 (romHashSHA1 == "SHA1:8995F0BE99A9CFF66474A8975B8499BD69FB4C45"))   // Donkey Kong Country (EU)
 				{
 					cart_RAM = new byte[0x200];
 					mapper = new MapperEEPROM();
