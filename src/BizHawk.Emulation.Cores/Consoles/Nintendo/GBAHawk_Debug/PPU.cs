@@ -1775,7 +1775,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										// check if another bg layer has a higher priority pixel than the sprite
 										if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
 										{
-											if ((second_layer_priority < spr_priority) && ((ppu_Special_FX & (1 << second_BG_layer)) != 0))
+											if ((second_layer_priority < spr_priority) && ((ppu_Special_FX & (1 << (second_BG_layer + 8))) != 0))
 											{
 												// Alpha blending BG - BG
 												ppu_Final_Pixel = ppu_BG_Pixel_F;
