@@ -754,7 +754,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if (cpu_Instr_Type == cpu_Pause_For_DMA)
 							{
 								// we just ended a DMA and immediately want to start another one
-								// or paused a DMA to do a higher priority one
+								// with 1 cycle in between
 								cpu_Is_Paused = true;
 
 								dma_Seq_Access = false;
@@ -786,6 +786,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									dma_ST_Time[dma_Chan_Exec] += 1;
 								}
 							}
+						}
+						else
+						{
+							// we paused a dma for a higher priority one
+							cpu_Is_Paused = true;
+
+							dma_Seq_Access = false;
+							dma_Read_Cycle = true;
+
+							dma_Access_Cnt = 0;
+							dma_Access_Wait = 0;
 						}
 					}
 
