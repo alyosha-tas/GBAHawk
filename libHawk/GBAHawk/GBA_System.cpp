@@ -1664,7 +1664,7 @@ namespace GBAHawk
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -1689,7 +1689,7 @@ namespace GBAHawk
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -1706,7 +1706,7 @@ namespace GBAHawk
 
 						FIFO_DMA_A_Delay = false;
 
-						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -1723,7 +1723,29 @@ namespace GBAHawk
 
 						FIFO_DMA_B_Delay = false;
 
-						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (DMA_Any_IRQ)
+				{
+					for (int i = 0; i < 4; i++)
+					{
+						if (DMA_IRQ_Delay[i])
+						{
+							Trigger_IRQ((uint16_t)(8 + i));
+							DMA_IRQ_Delay[i] = false;
+						}
+					}
+
+					if (!DMA_IRQ_Delay[0] && !DMA_IRQ_Delay[1] && !DMA_IRQ_Delay[2] && !DMA_IRQ_Delay[3])
+					{
+						DMA_Any_IRQ = false;
+
+						if (!FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
 						{
 							Misc_Delays = false;
 						}
@@ -3194,7 +3216,10 @@ namespace GBAHawk
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
-								Trigger_IRQ((uint16_t)(8 + dma_Chan_Exec));
+								Misc_Delays = true;
+								delays_to_process = true;
+								DMA_IRQ_Delay[dma_Chan_Exec] = true;
+								DMA_Any_IRQ = true;
 							}
 
 							// Repeat if necessary, or turn the channel off

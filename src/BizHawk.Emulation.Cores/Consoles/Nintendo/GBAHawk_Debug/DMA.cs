@@ -27,6 +27,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		where there would normally be an imposed non-sequential access, there will be 1 two transfers later
 		even though the actual address is not at the boundary. Need to investigate case of both read and write 
 		in ROM region and 16 bit accesses before implementing
+
+		check IRQ timing when pasusing one dma for another
 	*/
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -615,7 +617,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							// generate an IRQ if needed
 							if ((dma_CTRL[dma_Chan_Exec] & 0x4000) == 0x4000)
 							{
-								Trigger_IRQ((ushort)(8 + dma_Chan_Exec));					
+								Misc_Delays = true;
+								delays_to_process = true;
+								DMA_IRQ_Delay[dma_Chan_Exec] = true;
+								DMA_Any_IRQ = true;
 							}
 
 							// Repeat if necessary, or turn the channel off
@@ -730,6 +735,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = true;
 								dma_ROM_Being_Used[dma_Chan_Exec] = true;
 							}
+
+							TraceCallback?.Invoke(new(disassembly: "====DMA==== " + dma_Chan_Exec + " " + CycleCount, registerInfo: string.Empty));
 
 							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
 							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));

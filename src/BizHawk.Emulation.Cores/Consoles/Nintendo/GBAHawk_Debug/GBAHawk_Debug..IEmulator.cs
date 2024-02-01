@@ -29,7 +29,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool VRAM_32_Check, PALRAM_32_Check;
 		public bool VRAM_32_Delay, PALRAM_32_Delay;
 
-		public bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
+		public bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay, DMA_Any_IRQ;
+
+
+		public bool[] DMA_IRQ_Delay = new bool[4];
 
 		public bool IRQ_Delays, Misc_Delays;
 
@@ -407,7 +410,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -433,7 +436,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay)
+						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -450,7 +453,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						FIFO_DMA_A_Delay = false;
 
-						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -467,13 +470,35 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						FIFO_DMA_B_Delay = false;
 
-						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
 					}
 				}
 
+				if (DMA_Any_IRQ)
+				{
+					for (int i = 0; i < 4; i++)
+					{
+						if (DMA_IRQ_Delay[i])
+						{
+							Trigger_IRQ((ushort)(8 + i));
+							DMA_IRQ_Delay[i] = false;
+						}
+					}
+
+					if (!DMA_IRQ_Delay[0] && !DMA_IRQ_Delay[1] && !DMA_IRQ_Delay[2] && !DMA_IRQ_Delay[3])
+					{
+						DMA_Any_IRQ = false;
+
+						if (!FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+				
 				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
 				{
 					delays_to_process = false;

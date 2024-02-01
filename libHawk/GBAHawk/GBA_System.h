@@ -71,7 +71,7 @@ namespace GBAHawk
 		bool VRAM_32_Check, PALRAM_32_Check;
 		bool VRAM_32_Delay, PALRAM_32_Delay;
 		bool IRQ_Delays, Misc_Delays;
-		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
+		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay, DMA_Any_IRQ;
 		bool Halt_Enter, Halt_Leave;
 
 		uint8_t Post_Boot, Halt_CTRL;
@@ -94,6 +94,8 @@ namespace GBAHawk
 		uint32_t WRAM_Waits, SRAM_Waits;
 
 		uint32_t ROM_Waits_0_N, ROM_Waits_1_N, ROM_Waits_2_N, ROM_Waits_0_S, ROM_Waits_1_S, ROM_Waits_2_S;
+
+		bool DMA_IRQ_Delay[4] = { };
 
 		uint8_t WRAM[0x40000] = { };
 		uint8_t IWRAM[0x8000] = { };
@@ -167,7 +169,9 @@ namespace GBAHawk
 
 			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
 
-			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
+			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = DMA_Any_IRQ = false;
+
+			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; }
 
 			Halt_Enter =  Halt_Leave = false;
 
@@ -12943,6 +12947,7 @@ namespace GBAHawk
 			saver = bool_saver(Misc_Delays, saver);
 			saver = bool_saver(FIFO_DMA_A_Delay, saver);
 			saver = bool_saver(FIFO_DMA_B_Delay, saver);
+			saver = bool_saver(DMA_Any_IRQ, saver);
 			saver = bool_saver(Halt_Enter, saver);
 			saver = bool_saver(Halt_Leave, saver);
 
@@ -12983,6 +12988,8 @@ namespace GBAHawk
 			saver = int_saver(ROM_Waits_0_S, saver);
 			saver = int_saver(ROM_Waits_1_S, saver);
 			saver = int_saver(ROM_Waits_2_S, saver);
+
+			saver = bool_array_saver(DMA_IRQ_Delay, saver, 4);
 			
 			saver = byte_array_saver(WRAM, saver, 0x40000);
 			saver = byte_array_saver(IWRAM, saver, 0x8000);
@@ -13048,6 +13055,7 @@ namespace GBAHawk
 			loader = bool_loader(&Misc_Delays, loader);
 			loader = bool_loader(&FIFO_DMA_A_Delay, loader);
 			loader = bool_loader(&FIFO_DMA_B_Delay, loader);
+			loader = bool_loader(&DMA_Any_IRQ, loader);
 			loader = bool_loader(&Halt_Enter, loader);
 			loader = bool_loader(&Halt_Leave, loader);
 
@@ -13088,6 +13096,8 @@ namespace GBAHawk
 			loader = int_loader(&ROM_Waits_0_S, loader);
 			loader = int_loader(&ROM_Waits_1_S, loader);
 			loader = int_loader(&ROM_Waits_2_S, loader);
+
+			loader = bool_array_loader(DMA_IRQ_Delay, loader, 4);
 			
 			loader = byte_array_loader(WRAM, loader, 0x40000);
 			loader = byte_array_loader(IWRAM, loader, 0x8000);
