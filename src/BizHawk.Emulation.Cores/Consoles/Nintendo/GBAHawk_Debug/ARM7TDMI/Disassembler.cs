@@ -319,39 +319,81 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// load / store register offset
 						if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
 						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
 							{
-								case 0:         // LSL
-									return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
-											$"R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
-								case 1:         // LSR
-									return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
-											$"R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
-								case 2:         // ASR
-									return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
-											$"R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
-								case 3:         // RRX
-									return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
-											$"R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+								switch ((cpu_Instr_ARM_2 >> 5) & 3)
+								{
+									case 0:         // LSL
+										return $"LDB R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 1:         // LSR
+										return $"LDB R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 2:         // ASR
+										return $"LDB R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 3:         // RRX
+										return $"LDB R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+								}
 							}
+							else
+							{
+								switch ((cpu_Instr_ARM_2 >> 5) & 3)
+								{
+									case 0:         // LSL
+										return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 1:         // LSR
+										return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 2:         // ASR
+										return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+									case 3:         // RRX
+										return $"LD R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}, (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, " +
+												$"R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2})";
+								}
+							}							
 						}
 						else
 						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
 							{
-								case 0:         // LSL
-									return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
-											$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
-								case 1:         // LSR
-									return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
-											$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
-								case 2:         // ASR
-									return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
-											$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
-								case 3:         // RRX
-									return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
-											$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+								switch ((cpu_Instr_ARM_2 >> 5) & 3)
+								{
+									case 0:         // LSL
+										return $"STB (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 1:         // LSR
+										return $"STB (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 2:         // ASR
+										return $"STB (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 3:         // RRX
+										return $"STB (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+								}
 							}
+							else
+							{
+								switch ((cpu_Instr_ARM_2 >> 5) & 3)
+								{
+									case 0:         // LSL
+										return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} << {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 1:         // LSR
+										return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} >> {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 2:         // ASR
+										return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} ASR {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									case 3:         // RRX
+										return $"ST (R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{(cpu_Instr_ARM_2 & 0xF):D2} RRX {((cpu_Instr_ARM_2 >> 7) & 0x1F):X2}), " +
+												$"R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+								}
+							}								
 						}
 					}
 					else

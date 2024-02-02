@@ -4372,38 +4372,80 @@ namespace GBAHawk
 					// load / store register offset
 					if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
 					{
-						switch ((cpu_Instr_ARM_2 >> 5) & 3)
+						if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
 						{
-						case 0:         // LSL
-							sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d << %2X)",
+							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							{
+							case 0:         // LSL
+								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d << %2X)",
 									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-						case 1:         // LSR
-							sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d >> %2X)",
+							case 1:         // LSR
+								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d >> %2X)",
 									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-						case 2:         // ASR
-							sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d ASR %2X)",
+							case 2:         // ASR
+								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d ASR %2X)",
 									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-						case 3:         // RRX
-							sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d RRX %2X)",
+							case 3:         // RRX
+								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d RRX %2X)",
 									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+							}
+						}
+						else
+						{
+							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							{
+							case 0:         // LSL
+								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d << %2X)",
+									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+							case 1:         // LSR
+								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d >> %2X)",
+									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+							case 2:         // ASR
+								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d ASR %2X)",
+									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+							case 3:         // RRX
+								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d RRX %2X)",
+									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+							}
 						}
 					}
 					else
 					{
-						switch ((cpu_Instr_ARM_2 >> 5) & 3)
+						if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
 						{
-						case 0:         // LSL
-							sprintf_s(val_char_2, 40, "ST (R%02d, R%02d << %2X), R%02d",
+							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							{
+							case 0:         // LSL
+								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d << %2X), R%02d",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-						case 1:         // LSR
-							sprintf_s(val_char_2, 40, "ST (R%02d, R%02d >> %2X), R%02d",
+							case 1:         // LSR
+								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d >> %2X), R%02d",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-						case 2:         // ASR
-							sprintf_s(val_char_2, 40, "ST (R%02d, R%02d ASR %2X), R%02d",
+							case 2:         // ASR
+								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d ASR %2X), R%02d",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-						case 3:         // RRX
-							sprintf_s(val_char_2, 40, "ST (R%02d, R%02d RRX %2X), R%02d",
+							case 3:         // RRX
+								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d RRX %2X), R%02d",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+							}
+						}
+						else
+						{
+							switch ((cpu_Instr_ARM_2 >> 5) & 3)
+							{
+							case 0:         // LSL
+								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d << %2X), R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+							case 1:         // LSR
+								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d >> %2X), R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+							case 2:         // ASR
+								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d ASR %2X), R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+							case 3:         // RRX
+								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d RRX %2X), R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+							}
 						}
 					}
 
