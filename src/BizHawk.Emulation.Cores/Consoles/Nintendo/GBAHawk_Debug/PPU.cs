@@ -3655,15 +3655,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					cur_x = j - ppu_Sprite_X_Size;
 
-					cur_y = -ppu_Cur_Sprite_Y + ppu_Sprite_Y_Size;
+					cur_y = ppu_Cur_Sprite_Y - ppu_Sprite_Y_Size;
 
-					sol_x = f_A * cur_x - f_B * cur_y;
-					sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x + f_B * cur_y;
+					sol_y = f_C * cur_x + f_D * cur_y;
 
 					sol_x += ppu_Sprite_X_Size >> 1;
-					sol_y -= ppu_Sprite_Y_Size >> 1;
-
-					sol_y = -sol_y;
+					sol_y += ppu_Sprite_Y_Size >> 1;
 
 					sol_x = Math.Floor(sol_x);
 					sol_y = Math.Floor(sol_y);
@@ -3678,15 +3676,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					cur_x = j - (ppu_Sprite_X_Size >> 1);
 
-					cur_y = -ppu_Cur_Sprite_Y + (ppu_Sprite_Y_Size >> 1);
+					cur_y = ppu_Cur_Sprite_Y - (ppu_Sprite_Y_Size >> 1);
 
-					sol_x = f_A * cur_x - f_B * cur_y;
-					sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x + f_B * cur_y;
+					sol_y = f_C * cur_x + f_D * cur_y;
 
 					sol_x += ppu_Sprite_X_Size >> 1;
-					sol_y -= ppu_Sprite_Y_Size >> 1;
-
-					sol_y = -sol_y;
+					sol_y += ppu_Sprite_Y_Size >> 1;
 
 					sol_x = Math.Floor(sol_x);
 					sol_y = Math.Floor(sol_y);

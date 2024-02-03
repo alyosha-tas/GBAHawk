@@ -10902,16 +10902,13 @@ namespace GBAHawk
 				for (int j = 0; j < 2 * spr_size_x_int; j++)
 				{
 					cur_x = j - spr_size_x;
+					cur_y = ppu_Cur_Sprite_Y - spr_size_y;
 
-					cur_y = spr_size_y - ppu_Cur_Sprite_Y;
-
-					sol_x = f_A * cur_x - f_B * cur_y;
-					sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x + f_B * cur_y;
+					sol_y = f_C * cur_x + f_D * cur_y;
 
 					sol_x += spr_half_x;
-					sol_y -= spr_half_y;
-
-					sol_y = -sol_y;
+					sol_y += spr_half_y;
 
 					sol_x = floor(sol_x);
 					sol_y = floor(sol_y);
@@ -10925,16 +10922,13 @@ namespace GBAHawk
 				for (int j = 0; j < spr_size_x_int; j++)
 				{
 					cur_x = j - spr_half_x;
+					cur_y = ppu_Cur_Sprite_Y - spr_half_y;
 
-					cur_y = spr_half_y - ppu_Cur_Sprite_Y;
-
-					sol_x = f_A * cur_x - f_B * cur_y;
-					sol_y = -f_C * cur_x + f_D * cur_y;
+					sol_x = f_A * cur_x + f_B * cur_y;
+					sol_y = f_C * cur_x + f_D * cur_y;
 
 					sol_x += spr_half_x;
-					sol_y -= spr_half_y;
-
-					sol_y = -sol_y;
+					sol_y += spr_half_y;
 
 					sol_x = floor(sol_x);
 					sol_y = floor(sol_y);
