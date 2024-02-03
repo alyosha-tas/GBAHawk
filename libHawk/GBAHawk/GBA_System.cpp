@@ -1664,7 +1664,7 @@ namespace GBAHawk
 						VRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
+						if (!PALRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
 						}
@@ -1689,7 +1689,7 @@ namespace GBAHawk
 						PALRAM_32_Delay = false;
 
 						// check if all delay sources are false
-						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ)
+						if (!VRAM_32_Delay && !FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
 						}
@@ -1702,11 +1702,11 @@ namespace GBAHawk
 
 					if (FIFO_DMA_A_cd == 0)
 					{
-						if (dma_Go[1]) { dma_Run[1] = true; }
+						if (dma_Go[1]) { dma_Run[1] = true; dma_All_Off = false; }
 
 						FIFO_DMA_A_Delay = false;
 
-						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
+						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
 						}
@@ -1719,11 +1719,11 @@ namespace GBAHawk
 
 					if (FIFO_DMA_B_cd == 0)
 					{
-						if (dma_Go[2]) { dma_Run[2] = true; }
+						if (dma_Go[2]) { dma_Run[2] = true; dma_All_Off = false; }
 
 						FIFO_DMA_B_Delay = false;
 
-						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
+						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
 						}
@@ -1745,7 +1745,35 @@ namespace GBAHawk
 					{
 						DMA_Any_IRQ = false;
 
-						if (!FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay)
+						if (!FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_Start)
+						{
+							Misc_Delays = false;
+						}
+					}
+				}
+
+				if (DMA_Any_Start)
+				{
+					for (int i = 0; i < 4; i++)
+					{
+						if (DMA_Start_Delay[i])
+						{
+							dma_Run_En_Time[i] -= 1;
+
+							if (dma_Run_En_Time[i] == 0)
+							{
+								dma_Run[i] = dma_Go[i];
+								if (dma_Run[i]) { dma_All_Off = false; }
+								DMA_Start_Delay[i] = false;
+							}
+						}
+					}
+
+					if (!DMA_Start_Delay[0] && !DMA_Start_Delay[1] && !DMA_Start_Delay[2] && !DMA_Start_Delay[3])
+					{
+						DMA_Any_Start = false;
+
+						if (!FIFO_DMA_A_Delay && !FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ)
 						{
 							Misc_Delays = false;
 						}
@@ -1771,10 +1799,10 @@ namespace GBAHawk
 					else if (ppu_VBL_IRQ_cd == 1)
 					{
 						// trigger any DMAs with VBlank as a start condition
-						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; }
-						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; }
-						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; }
-						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; }
+						if (dma_Go[0] && dma_Start_VBL[0]) { dma_Run[0] = true; dma_All_Off = false; }
+						if (dma_Go[1] && dma_Start_VBL[1]) { dma_Run[1] = true; dma_All_Off = false; }
+						if (dma_Go[2] && dma_Start_VBL[2]) { dma_Run[2] = true; dma_All_Off = false; }
+						if (dma_Go[3] && dma_Start_VBL[3]) { dma_Run[3] = true; dma_All_Off = false; }
 					}
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
@@ -1800,10 +1828,10 @@ namespace GBAHawk
 						// but not if in vblank
 						if (ppu_LY < 160)
 						{
-							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; }
-							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; }
-							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; }
-							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; }
+							if (dma_Go[0] && dma_Start_HBL[0]) { dma_Run[0] = true; dma_All_Off = false; }
+							if (dma_Go[1] && dma_Start_HBL[1]) { dma_Run[1] = true; dma_All_Off = false; }
+							if (dma_Go[2] && dma_Start_HBL[2]) { dma_Run[2] = true; dma_All_Off = false; }
+							if (dma_Go[3] && dma_Start_HBL[3]) { dma_Run[3] = true; dma_All_Off = false; }
 						}
 					}
 					else if (ppu_HBL_IRQ_cd == 0)
@@ -2035,6 +2063,7 @@ namespace GBAHawk
 							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
 							{
 								dma_Run[3] = true;
+								dma_All_Off = false;
 							}
 
 							if (ppu_LY == 162)
@@ -3006,7 +3035,7 @@ namespace GBAHawk
 
 				dma_All_Off = true;
 
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Run[i]; }
 
 				dma_Shutdown = false;
 			}
@@ -3252,7 +3281,6 @@ namespace GBAHawk
 
 									dma_Run[dma_Chan_Exec] = false;
 									dma_Go[dma_Chan_Exec] = false;
-									dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
 								}
 							}
 							else
@@ -3261,7 +3289,6 @@ namespace GBAHawk
 
 								dma_Run[dma_Chan_Exec] = false;
 								dma_Go[dma_Chan_Exec] = false;
-								dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
 							}
 
 							// In any case, we start a new DMA
@@ -3286,12 +3313,6 @@ namespace GBAHawk
 				// zero is highest priority channel
 				for (int i = 0; i < 4; i++)
 				{
-					if (CycleCount >= dma_Run_En_Time[i])
-					{
-						dma_Run[i] = true;
-						dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
-					}
-
 					if (dma_Run[i])
 					{
 						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing

@@ -317,9 +317,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			VRAM_32_Check = PALRAM_32_Check = false;
 
-			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = DMA_Any_IRQ = false;
+			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
 
-			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; }
+			DMA_Any_Start = DMA_Any_IRQ = false;
+
+			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; DMA_Start_Delay[i] = false; }
 
 			controller_state = controller_state_old = 0x3FF;
 

@@ -17,7 +17,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		What happens when channel 3 has game pak DMA and repeat selected?
 
-		Look at edge cases of start / stop writes
+		Look at edge cases of start / stop writes ex enable FIFO dma near timer overflow
 
 		Assumption: read / write cycle is atomic
 
@@ -42,7 +42,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public readonly ushort[] dma_CNT_Mask = { 0x3FFF, 0x3FFF, 0x3FFF, 0xFFFF };
 
-		public ulong[] dma_Run_En_Time = new ulong[4];
+		public int[] dma_Run_En_Time = new int[4];
 
 		public int[] dma_CNT_intl = new int[4];
 		public int[] dma_ST_Time = new int[4];
@@ -319,12 +319,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 
 				dma_Start_VBL[chan] = dma_Start_HBL[chan] = dma_Run[chan] = false;
-				dma_Run_En_Time[chan] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_Start_Snd_Vid[chan] = false;
 				if ((value & 0x3000) == 0x0000)
 				{ 
-					dma_Run_En_Time[chan] = CycleCount + 3;
+					dma_Run_En_Time[chan] = 3;
+					Misc_Delays = true;
+					delays_to_process = true;
+					DMA_Start_Delay[chan] = true;
+					DMA_Any_Start = true;
 				}
 				else if ((value & 0x3000) == 0x1000) { dma_Start_VBL[chan] = true; }
 				else if ((value & 0x3000) == 0x2000) { dma_Start_HBL[chan] = true; }
@@ -366,8 +369,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				//Console.WriteLine(chan + " " + value + " " + CycleCount + " " + ppu_LY);
 
 				dma_Go[chan] = true;
-
-				dma_All_Off = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -375,11 +376,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// if the channel isnt currently running, turn it off
 				dma_Run[chan] = false;
 				dma_Go[chan] = false;
-				dma_Run_En_Time[chan] = 0xFFFFFFFFFFFFFFFF;
 
-				dma_All_Off = true;
+				if (dma_Chan_Exec == 4)
+				{
+					dma_All_Off = true;
 
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Run[i]; }
+
+					dma_All_Off &= !dma_Shutdown;
+				}
 			}
 
 			//if (!dma_All_Off) { Console.WriteLine(dma_Go[0] + " " + dma_Go[1] + " " + dma_Go[2] + " " + dma_Go[3]); }
@@ -405,7 +410,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 				dma_All_Off = true;
 
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Run[i]; }
 
 				dma_Shutdown = false;
 			}
@@ -653,7 +658,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 									dma_Run[dma_Chan_Exec] = false;
 									dma_Go[dma_Chan_Exec] = false;
-									dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
 								}
 							}
 							else
@@ -662,7 +666,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 								dma_Run[dma_Chan_Exec] = false;
 								dma_Go[dma_Chan_Exec] = false;
-								dma_Run_En_Time[dma_Chan_Exec] = 0xFFFFFFFFFFFFFFFF;
 							}
 
 							// In any case, we start a new DMA
@@ -689,12 +692,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// zero is highest priority channel
 				for (int i = 0; i < 4; i++)
 				{
-					if (CycleCount >= dma_Run_En_Time[i])
-					{
-						dma_Run[i] = true;
-						dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
-					}
-
 					if (dma_Run[i])
 					{
 						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
@@ -821,7 +818,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				dma_CNT_intl[i] = 0;
 
-				dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
+				dma_Run_En_Time[i] = 0;
 
 				dma_ST_Time[i] = 0;
 				dma_SRC[i] = 0;

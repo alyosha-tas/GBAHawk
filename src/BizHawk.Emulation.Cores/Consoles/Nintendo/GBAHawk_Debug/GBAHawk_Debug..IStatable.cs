@@ -78,7 +78,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(Halt_Enter), ref Halt_Enter);
 			ser.Sync(nameof(Halt_Leave), ref Halt_Leave);
 			ser.Sync(nameof(DMA_Any_IRQ), ref DMA_Any_IRQ);
+			ser.Sync(nameof(DMA_Any_Start), ref DMA_Any_Start);
 			ser.Sync(nameof(DMA_IRQ_Delay), ref DMA_IRQ_Delay, false);
+			ser.Sync(nameof(DMA_Start_Delay), ref DMA_Start_Delay, false);
 
 			ser.Sync(nameof(IRQ_Delays), ref IRQ_Delays);
 			ser.Sync(nameof(Misc_Delays), ref Misc_Delays);

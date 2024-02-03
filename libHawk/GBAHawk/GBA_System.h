@@ -71,7 +71,8 @@ namespace GBAHawk
 		bool VRAM_32_Check, PALRAM_32_Check;
 		bool VRAM_32_Delay, PALRAM_32_Delay;
 		bool IRQ_Delays, Misc_Delays;
-		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay, DMA_Any_IRQ;
+		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
+		bool DMA_Any_Start, DMA_Any_IRQ;
 		bool Halt_Enter, Halt_Leave;
 
 		uint8_t Post_Boot, Halt_CTRL;
@@ -95,6 +96,7 @@ namespace GBAHawk
 
 		uint32_t ROM_Waits_0_N, ROM_Waits_1_N, ROM_Waits_2_N, ROM_Waits_0_S, ROM_Waits_1_S, ROM_Waits_2_S;
 
+		bool DMA_Start_Delay[4] = { };
 		bool DMA_IRQ_Delay[4] = { };
 
 		uint8_t WRAM[0x40000] = { };
@@ -169,9 +171,11 @@ namespace GBAHawk
 
 			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
 
-			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = DMA_Any_IRQ = false;
+			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
 
-			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; }
+			DMA_Any_Start = DMA_Any_IRQ = false;
+
+			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; DMA_Start_Delay[i] = false; }
 
 			Halt_Enter =  Halt_Leave = false;
 
@@ -6181,8 +6185,7 @@ namespace GBAHawk
 		uint32_t dma_CNT_intl[4] = { };
 		uint32_t dma_ST_Time[4] = { };
 		uint32_t dma_ROM_Addr[4] = { };
-
-		uint64_t dma_Run_En_Time[4] = { };
+		uint32_t dma_Run_En_Time[4] = { };
 		
 		uint32_t dma_SRC_Mask[4] = {0x7FFFFFF, 0xFFFFFFF, 0xFFFFFFF, 0xFFFFFFF};
 
@@ -6427,12 +6430,15 @@ namespace GBAHawk
 				}
 
 				dma_Start_VBL[chan] = dma_Start_HBL[chan] = dma_Run[chan] = false;
-				dma_Run_En_Time[chan] = 0xFFFFFFFFFFFFFFFF;
 
 				dma_Start_Snd_Vid[chan] = false;
 				if ((value & 0x3000) == 0x0000)
 				{ 
-					dma_Run_En_Time[chan] = CycleCount + 3;
+					dma_Run_En_Time[chan] = 3;
+					Misc_Delays = true;
+					delays_to_process = true;
+					DMA_Start_Delay[chan] = true;
+					DMA_Any_Start = true;
 				}
 				else if ((value & 0x3000) == 0x1000) { dma_Start_VBL[chan] = true; }
 				else if ((value & 0x3000) == 0x2000) { dma_Start_HBL[chan] = true; }
@@ -6474,8 +6480,6 @@ namespace GBAHawk
 				//Console.WriteLine(chan + " " + value);
 
 				dma_Go[chan] = true;
-
-				dma_All_Off = false;
 			}
 
 			if ((value & 0x8000) == 0)
@@ -6483,11 +6487,15 @@ namespace GBAHawk
 				// if the channel isnt currently running, turn it off
 				dma_Run[chan] = false;
 				dma_Go[chan] = false;
-				dma_Run_En_Time[chan] = 0xFFFFFFFFFFFFFFFF;
 
-				dma_All_Off = true;
+				if (dma_Chan_Exec == 4)
+				{
+					dma_All_Off = true;
 
-				for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Go[i]; }
+					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Run[i]; }
+
+					dma_All_Off &= !dma_Shutdown;
+				}
 			}
 
 			//if (!dma_All_Off) { Console.WriteLine(dma_Go[0] + " " + dma_Go[1] + " " + dma_Go[2] + " " + dma_Go[3]); }
@@ -6508,7 +6516,7 @@ namespace GBAHawk
 			{
 				dma_CNT_intl[i] = 0;
 
-				dma_Run_En_Time[i] = 0xFFFFFFFFFFFFFFFF;
+				dma_Run_En_Time[i] = 0;
 
 				dma_ST_Time[i] = 0;
 				dma_ROM_Addr[i] = 0;
@@ -6600,8 +6608,7 @@ namespace GBAHawk
 			saver = int_array_saver(dma_CNT_intl, saver, 4);
 			saver = int_array_saver(dma_ST_Time, saver, 4);
 			saver = int_array_saver(dma_ROM_Addr, saver, 4);
-
-			saver = long_array_saver(dma_Run_En_Time, saver, 4);
+			saver = int_array_saver(dma_Run_En_Time, saver, 4);
 
 			return saver;
 		}
@@ -6650,8 +6657,7 @@ namespace GBAHawk
 			loader = int_array_loader(dma_CNT_intl, loader, 4);
 			loader = int_array_loader(dma_ST_Time, loader, 4);
 			loader = int_array_loader(dma_ROM_Addr, loader, 4);
-
-			loader = long_array_loader(dma_Run_En_Time, loader, 4);
+			loader = int_array_loader(dma_Run_En_Time, loader, 4);
 
 			return loader;
 		}
@@ -12932,6 +12938,7 @@ namespace GBAHawk
 			saver = bool_saver(Misc_Delays, saver);
 			saver = bool_saver(FIFO_DMA_A_Delay, saver);
 			saver = bool_saver(FIFO_DMA_B_Delay, saver);
+			saver = bool_saver(DMA_Any_Start, saver);
 			saver = bool_saver(DMA_Any_IRQ, saver);
 			saver = bool_saver(Halt_Enter, saver);
 			saver = bool_saver(Halt_Leave, saver);
@@ -12974,6 +12981,7 @@ namespace GBAHawk
 			saver = int_saver(ROM_Waits_1_S, saver);
 			saver = int_saver(ROM_Waits_2_S, saver);
 
+			saver = bool_array_saver(DMA_Start_Delay, saver, 4);
 			saver = bool_array_saver(DMA_IRQ_Delay, saver, 4);
 			
 			saver = byte_array_saver(WRAM, saver, 0x40000);
@@ -13040,6 +13048,7 @@ namespace GBAHawk
 			loader = bool_loader(&Misc_Delays, loader);
 			loader = bool_loader(&FIFO_DMA_A_Delay, loader);
 			loader = bool_loader(&FIFO_DMA_B_Delay, loader);
+			loader = bool_loader(&DMA_Any_Start, loader);
 			loader = bool_loader(&DMA_Any_IRQ, loader);
 			loader = bool_loader(&Halt_Enter, loader);
 			loader = bool_loader(&Halt_Leave, loader);
@@ -13082,6 +13091,7 @@ namespace GBAHawk
 			loader = int_loader(&ROM_Waits_1_S, loader);
 			loader = int_loader(&ROM_Waits_2_S, loader);
 
+			loader = bool_array_loader(DMA_Start_Delay, loader, 4);
 			loader = bool_array_loader(DMA_IRQ_Delay, loader, 4);
 			
 			loader = byte_array_loader(WRAM, loader, 0x40000);
