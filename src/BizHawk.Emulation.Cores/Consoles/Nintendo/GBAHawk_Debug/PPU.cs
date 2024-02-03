@@ -26,8 +26,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 														32, 16, 32, 8,
 														64, 32, 64, 8};
 
-		public double[] ppu_Fract_Parts = new double[256];
-
 		public ushort[] ppu_BG_CTRL = new ushort[4];
 		public ushort[] ppu_BG_X = new ushort[4];
 		public ushort[] ppu_BG_Y = new ushort[4];
@@ -3614,57 +3612,36 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public void ppu_Do_Sprite_Calculation_Rot()
 		{
-			int i_A, i_B, i_C, i_D;
+			ulong A, B, C, D;
 
-			uint A, B, C, D;
-
-			double f_A, f_B, f_C, f_D;
-
-			double cur_x, cur_y;
-			double sol_x, sol_y;
+			ulong cur_x, cur_y;
+			ulong sol_x, sol_y;
 
 			A = ppu_Sprite_A_Latch;
 			B = ppu_Sprite_B_Latch;
 			C = ppu_Sprite_C_Latch;
 			D = ppu_Sprite_D_Latch;
 
-			i_A = (int)((A >> 8) & 0x7F);
-			i_B = (int)((B >> 8) & 0x7F);
-			i_C = (int)((C >> 8) & 0x7F);
-			i_D = (int)((D >> 8) & 0x7F);
-
-			if ((A & 0x8000) == 0x8000) { i_A |= unchecked((int)0xFFFFFF80); }
-			if ((B & 0x8000) == 0x8000) { i_B |= unchecked((int)0xFFFFFF80); }
-			if ((C & 0x8000) == 0x8000) { i_C |= unchecked((int)0xFFFFFF80); }
-			if ((D & 0x8000) == 0x8000) { i_D |= unchecked((int)0xFFFFFF80); }
-
-			// convert to floats
-			f_A = i_A;
-			f_B = i_B;
-			f_C = i_C;
-			f_D = i_D;
-
-			f_A += ppu_Fract_Parts[A & 0xFF];
-			f_B += ppu_Fract_Parts[B & 0xFF];
-			f_C += ppu_Fract_Parts[C & 0xFF];
-			f_D += ppu_Fract_Parts[D & 0xFF];
+			if ((A & 0x8000) == 0x8000) { A |= 0xFFFFFFFFFFFF0000; }
+			if ((B & 0x8000) == 0x8000) { B |= 0xFFFFFFFFFFFF0000; }
+			if ((C & 0x8000) == 0x8000) { C |= 0xFFFFFFFFFFFF0000; }
+			if ((D & 0x8000) == 0x8000) { D |= 0xFFFFFFFFFFFF0000; }
 
 			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
 			{
 				for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
 				{
-					cur_x = j - ppu_Sprite_X_Size;
+					cur_x = (ulong)(j - ppu_Sprite_X_Size);
+					cur_y = (ulong)(ppu_Cur_Sprite_Y - ppu_Sprite_Y_Size);
 
-					cur_y = ppu_Cur_Sprite_Y - ppu_Sprite_Y_Size;
+					sol_x = A * cur_x + B * cur_y;
+					sol_y = C * cur_x + D * cur_y;
 
-					sol_x = f_A * cur_x + f_B * cur_y;
-					sol_y = f_C * cur_x + f_D * cur_y;
+					sol_x >>= 8;
+					sol_y >>= 8;
 
-					sol_x += ppu_Sprite_X_Size >> 1;
-					sol_y += ppu_Sprite_Y_Size >> 1;
-
-					sol_x = Math.Floor(sol_x);
-					sol_y = Math.Floor(sol_y);
+					sol_x += (ulong)(ppu_Sprite_X_Size >> 1);
+					sol_y += (ulong)(ppu_Sprite_Y_Size >> 1);
 
 					ppu_ROT_OBJ_X[j] = (ushort)(sol_x);
 					ppu_ROT_OBJ_Y[j] = (ushort)(sol_y);
@@ -3674,18 +3651,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				for (int j = 0; j < ppu_Sprite_X_Size; j++)
 				{
-					cur_x = j - (ppu_Sprite_X_Size >> 1);
+					cur_x = (ulong)(j - (ppu_Sprite_X_Size >> 1));
 
-					cur_y = ppu_Cur_Sprite_Y - (ppu_Sprite_Y_Size >> 1);
+					cur_y = (ulong)(ppu_Cur_Sprite_Y - (ppu_Sprite_Y_Size >> 1));
 
-					sol_x = f_A * cur_x + f_B * cur_y;
-					sol_y = f_C * cur_x + f_D * cur_y;
+					sol_x = A * cur_x + B * cur_y;
+					sol_y = C * cur_x + D * cur_y;
 
-					sol_x += ppu_Sprite_X_Size >> 1;
-					sol_y += ppu_Sprite_Y_Size >> 1;
+					sol_x >>= 8;
+					sol_y >>= 8;
 
-					sol_x = Math.Floor(sol_x);
-					sol_y = Math.Floor(sol_y);
+					sol_x += (ulong)(ppu_Sprite_X_Size >> 1);
+					sol_y += (ulong)(ppu_Sprite_Y_Size >> 1);
 
 					ppu_ROT_OBJ_X[j] = (ushort)(sol_x);
 					ppu_ROT_OBJ_Y[j] = (ushort)(sol_y);
@@ -3936,25 +3913,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_Convert_Rotation_to_ulong_AC(2);
 			ppu_Convert_Rotation_to_ulong_AC(3);
-
-			double fract = 0.5;
-			double f_v = 0;
-
-			// compile fractional parts matrix
-			for (int i = 0; i < 256; i++)
-			{
-				f_v = 0;
-				fract = 0.5;
-
-				for (int j = 7; j >= 0; j--)
-				{
-					if ((i & (1 << j)) == (1 << j)) { f_v += fract; }
-
-					fract *= 0.5;
-				}
-
-				ppu_Fract_Parts[i] = f_v;
-			}
 		}
 
 		public void ppu_SyncState(Serializer ser)

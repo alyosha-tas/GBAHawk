@@ -7436,8 +7436,6 @@ namespace GBAHawk
 										32, 16, 32, 8,
 										64, 32, 64, 8 };
 
-		double ppu_Fract_Parts[256] = { };
-
 		bool ppu_In_VBlank;
 		bool ppu_Delays;
 		bool ppu_Sprite_Delays;
@@ -10851,67 +10849,36 @@ namespace GBAHawk
 
 		void ppu_Do_Sprite_Calculation_Rot()
 		{
-			uint32_t spr_size_x_int, spr_size_y_int;
+			uint64_t A, B, C, D;
 
-			uint32_t A, B, C, D;
-
-			int32_t i_A, i_B, i_C, i_D;
-
-			double f_A, f_B, f_C, f_D;
-
-			double cur_x, cur_y;
-			double sol_x, sol_y;
-
-			spr_size_x_int = ppu_Sprite_X_Size;
-			spr_size_y_int = ppu_Sprite_Y_Size;
-
-			double spr_size_x = spr_size_x_int;
-			double spr_size_y = spr_size_y_int;
-
-			double spr_half_x = spr_size_x * 0.5;
-			double spr_half_y = spr_size_y * 0.5;
+			uint64_t cur_x, cur_y;
+			uint64_t sol_x, sol_y;
 
 			A = ppu_Sprite_A_Latch;
 			B = ppu_Sprite_B_Latch;
 			C = ppu_Sprite_C_Latch;
 			D = ppu_Sprite_D_Latch;
 
-			i_A = (int32_t)((A >> 8) & 0x7F);
-			i_B = (int32_t)((B >> 8) & 0x7F);
-			i_C = (int32_t)((C >> 8) & 0x7F);
-			i_D = (int32_t)((D >> 8) & 0x7F);
-
-			if ((A & 0x8000) == 0x8000) { i_A |= (int32_t)0xFFFFFF80; }
-			if ((B & 0x8000) == 0x8000) { i_B |= (int32_t)0xFFFFFF80; }
-			if ((C & 0x8000) == 0x8000) { i_C |= (int32_t)0xFFFFFF80; }
-			if ((D & 0x8000) == 0x8000) { i_D |= (int32_t)0xFFFFFF80; }
-
-			// convert to floats
-			f_A = i_A;
-			f_B = i_B;
-			f_C = i_C;
-			f_D = i_D;
-
-			f_A += ppu_Fract_Parts[A & 0xFF];
-			f_B += ppu_Fract_Parts[B & 0xFF];
-			f_C += ppu_Fract_Parts[C & 0xFF];
-			f_D += ppu_Fract_Parts[D & 0xFF];
+			if ((A & 0x8000) == 0x8000) { A |= 0xFFFFFFFFFFFF0000; }
+			if ((B & 0x8000) == 0x8000) { B |= 0xFFFFFFFFFFFF0000; }
+			if ((C & 0x8000) == 0x8000) { C |= 0xFFFFFFFFFFFF0000; }
+			if ((D & 0x8000) == 0x8000) { D |= 0xFFFFFFFFFFFF0000; }
 
 			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
 			{
-				for (int j = 0; j < 2 * spr_size_x_int; j++)
+				for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
 				{
-					cur_x = j - spr_size_x;
-					cur_y = ppu_Cur_Sprite_Y - spr_size_y;
+					cur_x = (uint64_t)(j - ppu_Sprite_X_Size);
+					cur_y = (uint64_t)(ppu_Cur_Sprite_Y - ppu_Sprite_Y_Size);
 
-					sol_x = f_A * cur_x + f_B * cur_y;
-					sol_y = f_C * cur_x + f_D * cur_y;
+					sol_x = A * cur_x + B * cur_y;
+					sol_y = C * cur_x + D * cur_y;
 
-					sol_x += spr_half_x;
-					sol_y += spr_half_y;
+					sol_x >>= 8;
+					sol_y >>= 8;
 
-					sol_x = floor(sol_x);
-					sol_y = floor(sol_y);
+					sol_x += (uint64_t)(ppu_Sprite_X_Size >> 1);
+					sol_y += (uint64_t)(ppu_Sprite_Y_Size >> 1);
 
 					ppu_ROT_OBJ_X[j] = (uint16_t)(sol_x);
 					ppu_ROT_OBJ_Y[j] = (uint16_t)(sol_y);
@@ -10919,19 +10886,20 @@ namespace GBAHawk
 			}
 			else
 			{
-				for (int j = 0; j < spr_size_x_int; j++)
+				for (int j = 0; j < ppu_Sprite_X_Size; j++)
 				{
-					cur_x = j - spr_half_x;
-					cur_y = ppu_Cur_Sprite_Y - spr_half_y;
+					cur_x = (uint64_t)(j - (ppu_Sprite_X_Size >> 1));
 
-					sol_x = f_A * cur_x + f_B * cur_y;
-					sol_y = f_C * cur_x + f_D * cur_y;
+					cur_y = (uint64_t)(ppu_Cur_Sprite_Y - (ppu_Sprite_Y_Size >> 1));
 
-					sol_x += spr_half_x;
-					sol_y += spr_half_y;
+					sol_x = A * cur_x + B * cur_y;
+					sol_y = C * cur_x + D * cur_y;
 
-					sol_x = floor(sol_x);
-					sol_y = floor(sol_y);
+					sol_x >>= 8;
+					sol_y >>= 8;
+
+					sol_x += (uint64_t)(ppu_Sprite_X_Size >> 1);
+					sol_y += (uint64_t)(ppu_Sprite_Y_Size >> 1);
 
 					ppu_ROT_OBJ_X[j] = (uint16_t)(sol_x);
 					ppu_ROT_OBJ_Y[j] = (uint16_t)(sol_y);
@@ -11176,25 +11144,6 @@ namespace GBAHawk
 
 			ppu_Convert_Rotation_to_ulong_AC(2);
 			ppu_Convert_Rotation_to_ulong_AC(3);
-
-			double fract = 0.5;
-			double f_v = 0;
-
-			// compile fractional parts matrix
-			for (int i = 0; i < 256; i++)
-			{
-				f_v = 0;
-				fract = 0.5;
-
-				for (int j = 7; j >= 0; j--)
-				{
-					if ((i & (1 << j)) == (1 << j)) { f_v += fract; }
-
-					fract *= 0.5;
-				}
-
-				ppu_Fract_Parts[i] = f_v;
-			}
 		}
 
 		uint8_t* ppu_SaveState(uint8_t* saver)
