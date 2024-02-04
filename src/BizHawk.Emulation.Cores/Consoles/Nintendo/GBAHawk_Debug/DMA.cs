@@ -48,7 +48,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int[] dma_ST_Time = new int[4];
 
 		public int dma_Access_Cnt, dma_Access_Wait, dma_Chan_Exec;
-		public int dma_ST_Time_Adjust;
 
 		public uint[] dma_SRC = new uint[4];
 		public uint[] dma_DST = new uint[4];
@@ -76,9 +75,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] dma_Use_ROM_Addr_SRC = new bool[4];
 		public bool[] dma_Use_ROM_Addr_DST = new bool[4];
 		public bool[] dma_ROM_Being_Used = new bool[4];
+		public bool[] dma_Read_Cycle = new bool[4];
 
 		public bool dma_Seq_Access;
-		public bool dma_Read_Cycle;
+
 		public bool dma_Pausable;
 		public bool dma_All_Off;
 		public bool dma_Shutdown;
@@ -404,6 +404,127 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// if no channels are on, skip
 			if (dma_All_Off) { return; }
 
+			if (dma_Pausable)
+			{
+				// if no channel is currently running, or we have completed a memory cycle, look for a new one to run
+				// zero is highest priority channel
+				for (int i = 0; i < 4; i++)
+				{
+					if (dma_Run[i])
+					{
+						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
+						if (i < dma_Chan_Exec)
+						{
+							if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
+							{
+								dma_ST_Time[i] = 4;
+							}
+							else
+							{
+								dma_ST_Time[i] = 2;
+							}
+
+							if ((dma_Chan_Exec < 4) || dma_Shutdown)
+							{
+								dma_ST_Time[i] -= 1;
+							}
+
+							dma_Chan_Exec = i;
+
+							// Is this correct for all cases?
+							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
+
+							dma_ROM_Being_Used[dma_Chan_Exec] = false;
+
+							if (((dma_DST_intl[i] & 0x08000000) != 0) && ((dma_DST_intl[i] & 0x0E000000) != 0x0E000000))
+							{
+								// special case for ROM area
+								dma_ROM_Addr[dma_Chan_Exec] = dma_DST_intl[i];
+								dma_Use_ROM_Addr_DST[dma_Chan_Exec] = true;
+								dma_ROM_Being_Used[dma_Chan_Exec] = true;
+							}
+
+							if (((dma_SRC_intl[i] & 0x08000000) != 0) && ((dma_SRC_intl[i] & 0x0E000000) != 0x0E000000))
+							{
+								// special case for ROM area
+								dma_ROM_Addr[dma_Chan_Exec] = dma_SRC_intl[i];
+								dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = true;
+								dma_ROM_Being_Used[dma_Chan_Exec] = true;
+							}
+
+							TraceCallback?.Invoke(new(disassembly: "====DMA==== " + dma_Chan_Exec + " " + CycleCount, registerInfo: string.Empty));
+
+							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
+							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
+							//Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
+							//Console.WriteLine(ppu_LY + " " + ppu_Cycle);
+						}
+					}
+				}
+
+				if (dma_Chan_Exec < 4)
+				{
+					dma_Shutdown = false;
+
+					if (dma_ST_Time[dma_Chan_Exec] > 0)
+					{
+						dma_ST_Time[dma_Chan_Exec] -= 1;
+
+						if (!cpu_Is_Paused)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								// we just ended a DMA and immediately want to start another one
+								// with 1 cycle in between
+								cpu_Is_Paused = true;
+
+								dma_Seq_Access = false;
+
+								dma_Access_Cnt = 0;
+								dma_Access_Wait = 0;
+							}
+							else
+							{
+								// CPU can be paused on the edge of a memory access, if bus is not locked
+								if ((cpu_Fetch_Cnt == 0) && !cpu_Swap_Lock)
+								{
+									// hold the current cpu instruction
+									dma_Held_CPU_Instr = cpu_Instr_Type;
+									cpu_Instr_Type = cpu_Pause_For_DMA;
+									cpu_Is_Paused = true;
+
+									dma_Seq_Access = false;
+
+									dma_Access_Cnt = 0;
+									dma_Access_Wait = 0;
+
+									cpu_Seq_Access = false;
+								}
+								else
+								{
+									dma_ST_Time[dma_Chan_Exec] += 1;
+								}
+							}
+						}
+						else
+						{
+							// we paused a dma for a higher priority one
+							cpu_Is_Paused = true;
+
+							dma_Seq_Access = false;
+
+							dma_Access_Cnt = 0;
+							dma_Access_Wait = 0;
+						}
+					}
+
+					if (dma_ST_Time[dma_Chan_Exec] == 0)
+					{
+						dma_Pausable = false;
+					}
+				}
+			}
+
 			if (dma_Shutdown)
 			{
 				cpu_Is_Paused = false;
@@ -418,7 +539,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if (!dma_Pausable)
 			{
 				// if a channel is in the middle of read/write cycle, continue with the cycle
-				if (dma_Read_Cycle)
+				if (dma_Read_Cycle[dma_Chan_Exec])
 				{
 					if (dma_Access_Cnt == 0)
 					{
@@ -524,7 +645,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
 						}
 
-						dma_Read_Cycle = !dma_Read_Cycle;
+						dma_Read_Cycle[dma_Chan_Exec] = !dma_Read_Cycle[dma_Chan_Exec];
 						dma_Access_Cnt = 0;
 					}
 				}
@@ -605,13 +726,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = false;
 						}
 
-						dma_Read_Cycle = !dma_Read_Cycle;
+						dma_Read_Cycle[dma_Chan_Exec] = !dma_Read_Cycle[dma_Chan_Exec];
 						dma_Access_Cnt = 0;
 						dma_Seq_Access = true;
 
 						// end of a write cycle allows a possibility for a pause
 						dma_Pausable = true;
-						dma_ST_Time_Adjust = 1;
 
 						// check if the DMA is complete
 						dma_CNT_intl[dma_Chan_Exec] -= 1;
@@ -685,131 +805,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					}
 				}
 			}
-
-			if (dma_Pausable)
-			{
-				// if no channel is currently running, or we have completed a memory cycle, look for a new one to run
-				// zero is highest priority channel
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_Run[i])
-					{
-						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
-						if (i < dma_Chan_Exec)
-						{
-							if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
-							{
-								dma_ST_Time[i] = 3;
-							}
-							else
-							{
-								dma_ST_Time[i] = 1;
-							}
-
-							// we don't need to add extra start cycles if we are resuming a DMA paused by a higher priority one
-							// but still have at least one cycle wait, otherwise we would be counting twice, since the current cycle just ran
-							if (dma_ST_Time_Adjust != 0) { dma_ST_Time[i] = 1; }
-
-							dma_Chan_Exec = i;
-
-							// Is this correct for all cases?
-							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
-
-							dma_ROM_Being_Used[dma_Chan_Exec] = false;
-
-							if (((dma_DST_intl[i] & 0x08000000) != 0) && ((dma_DST_intl[i] & 0x0E000000) != 0x0E000000))
-							{
-								// special case for ROM area
-								dma_ROM_Addr[dma_Chan_Exec] = dma_DST_intl[i];
-								dma_Use_ROM_Addr_DST[dma_Chan_Exec] = true;
-								dma_ROM_Being_Used[dma_Chan_Exec] = true;
-							}
-
-							if (((dma_SRC_intl[i] & 0x08000000) != 0) && ((dma_SRC_intl[i] & 0x0E000000) != 0x0E000000))
-							{
-								// special case for ROM area
-								dma_ROM_Addr[dma_Chan_Exec] = dma_SRC_intl[i];
-								dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = true;
-								dma_ROM_Being_Used[dma_Chan_Exec] = true;
-							}
-
-							TraceCallback?.Invoke(new(disassembly: "====DMA==== " + dma_Chan_Exec + " " + CycleCount, registerInfo: string.Empty));
-
-							//Console.WriteLine("DMA " + i + " running at " + CycleCount + " from " + dma_SRC_intl[i] + " to " + dma_DST_intl[i]);
-							//Console.WriteLine("len " + dma_CNT_intl[i] + " inc s " + dma_SRC_INC[i] + " inc d " + dma_DST_INC[i] + " rep " + ((dma_CTRL[dma_Chan_Exec] & 0x200) == 0x200));
-							//Console.WriteLine("St time: " + dma_ST_Time[i] + " SRC: " + dma_SRC[i] + " DST: " + dma_DST[i]);
-							//Console.WriteLine(ppu_LY + " " + ppu_Cycle);
-						}
-					}
-				}
-
-				dma_ST_Time_Adjust = 0;
-
-				if (dma_Chan_Exec < 4)
-				{
-					dma_Shutdown = false;
-					
-					if (dma_ST_Time[dma_Chan_Exec] > 0)
-					{
-						dma_ST_Time[dma_Chan_Exec] -= 1;
-
-						if (!cpu_Is_Paused)
-						{
-							if (cpu_Instr_Type == cpu_Pause_For_DMA)
-							{
-								// we just ended a DMA and immediately want to start another one
-								// with 1 cycle in between
-								cpu_Is_Paused = true;
-
-								dma_Seq_Access = false;
-								dma_Read_Cycle = true;
-
-								dma_Access_Cnt = 0;
-								dma_Access_Wait = 0;
-							}
-							else
-							{
-								// CPU can be paused on the edge of a memory access, if bus is not locked
-								if ((cpu_Fetch_Cnt == 0) && !cpu_Swap_Lock)
-								{
-									// hold the current cpu instruction
-									dma_Held_CPU_Instr = cpu_Instr_Type;
-									cpu_Instr_Type = cpu_Pause_For_DMA;
-									cpu_Is_Paused = true;
-
-									dma_Seq_Access = false;
-									dma_Read_Cycle = true;
-
-									dma_Access_Cnt = 0;
-									dma_Access_Wait = 0;
-
-									cpu_Seq_Access = false;
-								}
-								else
-								{
-									dma_ST_Time[dma_Chan_Exec] += 1;
-								}
-							}
-						}
-						else
-						{
-							// we paused a dma for a higher priority one
-							cpu_Is_Paused = true;
-
-							dma_Seq_Access = false;
-							dma_Read_Cycle = true;
-
-							dma_Access_Cnt = 0;
-							dma_Access_Wait = 0;
-						}
-					}
-
-					if (dma_ST_Time[dma_Chan_Exec] == 0)
-					{
-						dma_Pausable = false;
-					}
-				}		
-			}
 		}
 
 		public void dma_Reset()
@@ -843,18 +838,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_Use_ROM_Addr_SRC[i] = false;		
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_ROM_Being_Used[i] = false;
+				 
+				dma_Read_Cycle[i] = true;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
 			
 			dma_Chan_Exec = 4;
 
-			dma_ST_Time_Adjust = 0;
 			dma_TFR_Word = 0;
 			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
 
 			dma_Seq_Access = false;
-			dma_Read_Cycle = true;
 			dma_Pausable = true;
 			dma_All_Off = true;
 			dma_Shutdown =  false;
@@ -871,8 +866,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Access_Cnt), ref dma_Access_Cnt);
 			ser.Sync(nameof(dma_Access_Wait), ref dma_Access_Wait);
 			ser.Sync(nameof(dma_Chan_Exec), ref dma_Chan_Exec);
-			ser.Sync(nameof(dma_ST_Time_Adjust), ref dma_ST_Time_Adjust);
-			
+
 			ser.Sync(nameof(dma_SRC), ref dma_SRC, false);
 			ser.Sync(nameof(dma_DST), ref dma_DST, false);
 			ser.Sync(nameof(dma_SRC_intl), ref dma_SRC_intl, false);
@@ -896,13 +890,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Start_Snd_Vid), ref dma_Start_Snd_Vid, false);
 			ser.Sync(nameof(dma_Run), ref dma_Run, false);
 			ser.Sync(nameof(dma_Access_32), ref dma_Access_32, false);
+			ser.Sync(nameof(dma_Read_Cycle), ref dma_Read_Cycle, false);
 
 			ser.Sync(nameof(dma_Use_ROM_Addr_SRC), ref dma_Use_ROM_Addr_SRC, false);
 			ser.Sync(nameof(dma_Use_ROM_Addr_DST), ref dma_Use_ROM_Addr_DST, false);
 			ser.Sync(nameof(dma_ROM_Being_Used), ref dma_ROM_Being_Used, false);
 
 			ser.Sync(nameof(dma_Seq_Access), ref dma_Seq_Access);
-			ser.Sync(nameof(dma_Read_Cycle), ref dma_Read_Cycle);
 			ser.Sync(nameof(dma_Pausable), ref dma_Pausable);
 			ser.Sync(nameof(dma_All_Off), ref dma_All_Off);
 			ser.Sync(nameof(dma_Shutdown), ref dma_Shutdown);

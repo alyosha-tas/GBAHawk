@@ -3029,6 +3029,120 @@ namespace GBAHawk
 		// if no channels are on, skip
 		if (!dma_All_Off)
 		{
+			if (dma_Pausable)
+			{
+				// if no channel is currently running, or we have completed a memory cycle, look for a new one to run
+				// zero is highest priority channel
+				for (int i = 0; i < 4; i++)
+				{
+					if (dma_Run[i])
+					{
+						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
+						if (i < dma_Chan_Exec)
+						{
+							if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
+							{
+								dma_ST_Time[i] = 4;
+							}
+							else
+							{
+								dma_ST_Time[i] = 2;
+							}
+
+							if ((dma_Chan_Exec < 4) || dma_Shutdown)
+							{
+								dma_ST_Time[i] -= 1;
+							}
+
+							dma_Chan_Exec = i;
+
+							// Is this correct for all cases?
+							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
+
+							dma_ROM_Being_Used[dma_Chan_Exec] = false;
+
+							if (((dma_DST_intl[i] & 0x08000000) != 0) && ((dma_DST_intl[i] & 0x0E000000) != 0x0E000000))
+							{
+								// special case for ROM area
+								dma_ROM_Addr[dma_Chan_Exec] = dma_DST_intl[i];
+								dma_Use_ROM_Addr_DST[dma_Chan_Exec] = true;
+								dma_ROM_Being_Used[dma_Chan_Exec] = true;
+							}
+
+							if (((dma_SRC_intl[i] & 0x08000000) != 0) && ((dma_SRC_intl[i] & 0x0E000000) != 0x0E000000))
+							{
+								// special case for ROM area
+								dma_ROM_Addr[dma_Chan_Exec] = dma_SRC_intl[i];
+								dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = true;
+								dma_ROM_Being_Used[dma_Chan_Exec] = true;
+							}
+						}
+					}
+				}
+
+				if (dma_Chan_Exec < 4)
+				{
+					dma_Shutdown = false;
+
+					if (dma_ST_Time[dma_Chan_Exec] > 0)
+					{
+						dma_ST_Time[dma_Chan_Exec] -= 1;
+
+						if (!cpu_Is_Paused)
+						{
+							if (cpu_Instr_Type == cpu_Pause_For_DMA)
+							{
+								// we just ended a DMA and immediately want to start another one
+								// with 1 cycle in between
+								cpu_Is_Paused = true;
+
+								dma_Seq_Access = false;
+
+								dma_Access_Cnt = 0;
+								dma_Access_Wait = 0;
+							}
+							else
+							{
+								// CPU can be paused on the edge of a memory access, if bus is not locked
+								if ((cpu_Fetch_Cnt == 0) && !cpu_Swap_Lock)
+								{
+									// hold the current cpu instruction
+									dma_Held_CPU_Instr = cpu_Instr_Type;
+									cpu_Instr_Type = cpu_Pause_For_DMA;
+									cpu_Is_Paused = true;
+
+									dma_Seq_Access = false;
+
+									dma_Access_Cnt = 0;
+									dma_Access_Wait = 0;
+
+									cpu_Seq_Access = false;
+								}
+								else
+								{
+									dma_ST_Time[dma_Chan_Exec] += 1;
+								}
+							}
+						}
+						else
+						{
+							// we paused a dma for a higher priority one
+							cpu_Is_Paused = true;
+
+							dma_Seq_Access = false;
+
+							dma_Access_Cnt = 0;
+							dma_Access_Wait = 0;
+						}
+					}
+
+					if (dma_ST_Time[dma_Chan_Exec] == 0)
+					{
+						dma_Pausable = false;
+					}
+				}
+			}
+			
 			if (dma_Shutdown)
 			{
 				cpu_Is_Paused = false;
@@ -3043,7 +3157,7 @@ namespace GBAHawk
 			if (!dma_Pausable)
 			{
 				// if a channel is in the middle of read/write cycle, continue with the cycle
-				if (dma_Read_Cycle)
+				if (dma_Read_Cycle[dma_Chan_Exec])
 				{
 					if (dma_Access_Cnt == 0)
 					{
@@ -3148,7 +3262,7 @@ namespace GBAHawk
 							dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
 						}
 
-						dma_Read_Cycle = !dma_Read_Cycle;
+						dma_Read_Cycle[dma_Chan_Exec] = !dma_Read_Cycle[dma_Chan_Exec];
 						dma_Access_Cnt = 0;
 					}
 				}
@@ -3229,13 +3343,12 @@ namespace GBAHawk
 							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = false;
 						}
 
-						dma_Read_Cycle = !dma_Read_Cycle;
+						dma_Read_Cycle[dma_Chan_Exec] = !dma_Read_Cycle[dma_Chan_Exec];
 						dma_Access_Cnt = 0;
 						dma_Seq_Access = true;
 
 						// end of a write cycle allows a possibility for a pause
 						dma_Pausable = true;
-						dma_ST_Time_Adjust = 1;
 
 						// check if the DMA is complete
 						dma_CNT_intl[dma_Chan_Exec] -= 1;
@@ -3303,124 +3416,6 @@ namespace GBAHawk
 
 							dma_All_Off = false;
 						}
-					}
-				}
-			}
-
-			if (dma_Pausable)
-			{
-				// if no channel is currently running, or we have completed a memory cycle, look for a new one to run
-				// zero is highest priority channel
-				for (int i = 0; i < 4; i++)
-				{
-					if (dma_Run[i])
-					{
-						// if the current channel is less then the previous (i.e. not just unpaused) reset execution timing
-						if (i < dma_Chan_Exec)
-						{
-							if ((dma_SRC_intl[i] >= 0xE000000) && (dma_DST_intl[i] >= 0xE000000))
-							{
-								dma_ST_Time[i] = 3;
-							}
-							else
-							{
-								dma_ST_Time[i] = 1;
-							}
-
-							// we don't need to add extra start cycles if we are resuming a DMA paused by a higher priority one
-							// but still have at least one cycle wait, otherwise we would be counting twice, since the current cycle just ran
-							if (dma_ST_Time_Adjust != 0) { dma_ST_Time[i] = 1; }
-
-							dma_Chan_Exec = i;
-
-							// Is this correct for all cases?
-							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
-
-							dma_ROM_Being_Used[dma_Chan_Exec] = false;
-
-							if (((dma_DST_intl[i] & 0x08000000) != 0) && ((dma_DST_intl[i] & 0x0E000000) != 0x0E000000))
-							{
-								// special case for ROM area
-								dma_ROM_Addr[dma_Chan_Exec] = dma_DST_intl[i];
-								dma_Use_ROM_Addr_DST[dma_Chan_Exec] = true;
-								dma_ROM_Being_Used[dma_Chan_Exec] = true;
-							}
-
-							if (((dma_SRC_intl[i] & 0x08000000) != 0) && ((dma_SRC_intl[i] & 0x0E000000) != 0x0E000000))
-							{
-								// special case for ROM area
-								dma_ROM_Addr[dma_Chan_Exec] = dma_SRC_intl[i];
-								dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = true;
-								dma_ROM_Being_Used[dma_Chan_Exec] = true;
-							}
-						}
-					}
-				}
-
-				dma_ST_Time_Adjust = 0;
-
-				if (dma_Chan_Exec < 4)
-				{
-					dma_Shutdown = false;
-
-					if (dma_ST_Time[dma_Chan_Exec] > 0)
-					{
-						dma_ST_Time[dma_Chan_Exec] -= 1;
-
-						if (!cpu_Is_Paused)
-						{
-							if (cpu_Instr_Type == cpu_Pause_For_DMA)
-							{
-								// we just ended a DMA and immediately want to start another one
-								// with 1 cycle in between
-								cpu_Is_Paused = true;
-
-								dma_Seq_Access = false;
-								dma_Read_Cycle = true;
-
-								dma_Access_Cnt = 0;
-								dma_Access_Wait = 0;
-							}
-							else
-							{
-								// CPU can be paused on the edge of a memory access, if bus is not locked
-								if ((cpu_Fetch_Cnt == 0) && !cpu_Swap_Lock)
-								{
-									// hold the current cpu instruction
-									dma_Held_CPU_Instr = cpu_Instr_Type;
-									cpu_Instr_Type = cpu_Pause_For_DMA;
-									cpu_Is_Paused = true;
-
-									dma_Seq_Access = false;
-									dma_Read_Cycle = true;
-
-									dma_Access_Cnt = 0;
-									dma_Access_Wait = 0;
-
-									cpu_Seq_Access = false;
-								}
-								else
-								{
-									dma_ST_Time[dma_Chan_Exec] += 1;
-								}
-							}
-						}
-						else
-						{
-							// we paused a dma for a higher priority one
-							cpu_Is_Paused = true;
-
-							dma_Seq_Access = false;
-							dma_Read_Cycle = true;
-
-							dma_Access_Cnt = 0;
-							dma_Access_Wait = 0;
-						}
-					}
-
-					if (dma_ST_Time[dma_Chan_Exec] == 0)
-					{
-						dma_Pausable = false;
 					}
 				}
 			}

@@ -5649,7 +5649,7 @@ namespace GBAHawk
 						ppu_VRAM_In_Use = true;
 					}
 
-					if (!dma_Read_Cycle)
+					if (!dma_Read_Cycle[dma_Chan_Exec])
 					{
 						VRAM_32_Check = true;
 						VRAM_32_Delay = true;
@@ -5673,7 +5673,7 @@ namespace GBAHawk
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
 
-					if (!dma_Read_Cycle)
+					if (!dma_Read_Cycle[dma_Chan_Exec])
 					{
 						PALRAM_32_Check = true;
 						PALRAM_32_Delay = true;
@@ -6146,7 +6146,6 @@ namespace GBAHawk
 	#pragma region DMA
 
 		bool dma_Seq_Access;
-		bool dma_Read_Cycle;
 		bool dma_Pausable;
 		bool dma_All_Off;
 		bool dma_Shutdown;
@@ -6159,8 +6158,8 @@ namespace GBAHawk
 		uint32_t dma_TFR_Word;
 
 		uint32_t dma_Access_Cnt, dma_Access_Wait, dma_Chan_Exec;
-		uint32_t dma_ST_Time_Adjust;
 
+		bool dma_Read_Cycle[4] = { };
 		bool dma_Go[4] = { }; // Tell Condition checkers when the channel is on
 		bool dma_Start_VBL[4] = { };
 		bool dma_Start_HBL[4] = { };
@@ -6533,6 +6532,7 @@ namespace GBAHawk
 				dma_CNT[i] = 0;
 				dma_CTRL[i] = 0;
 
+				dma_Read_Cycle[i] = true;
 				dma_Go[i] = false;
 				dma_Start_VBL[i] = false;
 				dma_Start_HBL[i] = false;
@@ -6549,14 +6549,11 @@ namespace GBAHawk
 
 			dma_Chan_Exec = 4;
 
-			dma_ST_Time_Adjust = 0;
-
 			dma_TFR_Word = 0;
 
 			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
 
 			dma_Seq_Access = false;
-			dma_Read_Cycle = true;
 			dma_Pausable = true;
 			dma_All_Off = true;
 			dma_Shutdown = false;
@@ -6567,7 +6564,6 @@ namespace GBAHawk
 		uint8_t* dma_SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(dma_Seq_Access, saver);
-			saver = bool_saver(dma_Read_Cycle, saver);
 			saver = bool_saver(dma_Pausable, saver);
 			saver = bool_saver(dma_All_Off, saver);
 			saver = bool_saver(dma_Shutdown, saver);
@@ -6582,8 +6578,8 @@ namespace GBAHawk
 			saver = int_saver(dma_Access_Cnt, saver);
 			saver = int_saver(dma_Access_Wait, saver);
 			saver = int_saver(dma_Chan_Exec, saver);
-			saver = int_saver(dma_ST_Time_Adjust, saver);
 
+			saver = bool_array_saver(dma_Read_Cycle, saver, 4);
 			saver = bool_array_saver(dma_Go, saver, 4);
 			saver = bool_array_saver(dma_Start_VBL, saver, 4);
 			saver = bool_array_saver(dma_Start_HBL, saver, 4);
@@ -6616,7 +6612,6 @@ namespace GBAHawk
 		uint8_t* dma_LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&dma_Seq_Access, loader);
-			loader = bool_loader(&dma_Read_Cycle, loader);
 			loader = bool_loader(&dma_Pausable, loader);
 			loader = bool_loader(&dma_All_Off, loader);
 			loader = bool_loader(&dma_Shutdown, loader);
@@ -6631,8 +6626,8 @@ namespace GBAHawk
 			loader = int_loader(&dma_Access_Cnt, loader);
 			loader = int_loader(&dma_Access_Wait, loader);
 			loader = int_loader(&dma_Chan_Exec, loader);
-			loader = int_loader(&dma_ST_Time_Adjust, loader);
 
+			loader = bool_array_loader(dma_Read_Cycle, loader, 4);
 			loader = bool_array_loader(dma_Go, loader, 4);
 			loader = bool_array_loader(dma_Start_VBL, loader, 4);
 			loader = bool_array_loader(dma_Start_HBL, loader, 4);

@@ -505,7 +505,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						ppu_VRAM_In_Use = true;
 					}
 
-					if (!dma_Read_Cycle)
+					if (!dma_Read_Cycle[dma_Chan_Exec])
 					{ 
 						VRAM_32_Check = true;
 						VRAM_32_Delay = true;
@@ -529,7 +529,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// set to true since we also need to check the next cycle
 					ppu_PALRAM_In_Use = true;
 
-					if (!dma_Read_Cycle)
+					if (!dma_Read_Cycle[dma_Chan_Exec])
 					{ 
 						PALRAM_32_Check = true;
 						PALRAM_32_Delay = true;
