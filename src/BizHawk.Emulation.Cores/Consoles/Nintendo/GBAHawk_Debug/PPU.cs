@@ -1,5 +1,6 @@
 ﻿using BizHawk.Common;
 using System;
+using System.Runtime.ConstrainedExecution;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -59,7 +60,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public int ppu_LYC_Vid_Check_cd;
 
-		public ushort ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
+		public ushort ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle;
+		public ushort ppu_Sprite_Eval_Time, ppu_Sprite_Eval_Time_VRAM;
 		public ushort ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
 		public ushort ppu_WIN_In, ppu_WIN_Out, ppu_Mosaic, ppu_Special_FX, ppu_Alpha, ppu_Bright;
 
@@ -629,8 +631,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ppu_CTRL = value;
 
-			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 964; }
-			else { ppu_Sprite_Eval_Time = 1232; }
+			if (ppu_HBL_Free)
+			{
+				ppu_Sprite_Eval_Time = 964;
+				ppu_Sprite_Eval_Time_VRAM = 958;
+			}
+			else
+			{
+				ppu_Sprite_Eval_Time = 1232;
+				ppu_Sprite_Eval_Time_VRAM = 1230;
+			}
 
 			ppu_Any_Window_On = ppu_WIN0_On | ppu_WIN1_On | ppu_OBJ_WIN;
 
@@ -3127,7 +3137,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if (ppu_Fetch_Sprite_VRAM)
 			{
 				// no VRAM access after eval cycle 960 when H blank is free, even though one more OAM access may still occur
-				if ((ppu_Sprite_Render_Cycle < 960) || !ppu_HBL_Free)
+				if (ppu_Sprite_Render_Cycle <= ppu_Sprite_Eval_Time_VRAM)
 				{
 					ppu_VRAM_High_Access = true;
 
@@ -3244,37 +3254,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 										pix_color = 0;
 									}
 
-									// mosaic state is updated even if pixel is transparent
-									ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
-
-									if ((pix_color & pal_scale) != 0)
+									// sprite info not added on last possible cycle
+									// presumably this happens on the odd cycle that vram is not being read on
+									// and that is the cycle that processing is shut down
+									if (ppu_Sprite_Render_Cycle != ppu_Sprite_Eval_Time_VRAM)
 									{
-										if (ppu_Sprite_Mode < 2)
-										{
-											ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x200;
+										// mosaic state is updated even if pixel is transparent
+										ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
 
-											ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
-
-											ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-
-											ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
-										}
-										else if (ppu_Sprite_Mode == 2)
+										if ((pix_color & pal_scale) != 0)
 										{
-											ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-										}
-									}
-									else
-									{
-										// glitchy update to priority, even though this does not happen on non-transparent pixels
-										if (ppu_Sprite_Mode == 2)
-										{
-											if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+											if (ppu_Sprite_Mode < 2)
 											{
+												ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x200;
+
 												ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+
+												ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+
+												ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
+											}
+											else if (ppu_Sprite_Mode == 2)
+											{
+												ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
 											}
 										}
-									}
+										else
+										{
+											// glitchy update to priority, even though this does not happen on non-transparent pixels
+											if (ppu_Sprite_Mode == 2)
+											{
+												if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+												{
+													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+												}
+											}
+										}
+									}								
 								}
 							}
 						}
@@ -3961,6 +3977,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(ppu_Cycle), ref ppu_Cycle);
 			ser.Sync(nameof(ppu_Display_Cycle), ref ppu_Display_Cycle);
 			ser.Sync(nameof(ppu_Sprite_Eval_Time), ref ppu_Sprite_Eval_Time);
+			ser.Sync(nameof(ppu_Sprite_Eval_Time_VRAM), ref ppu_Sprite_Eval_Time_VRAM);
 
 			ser.Sync(nameof(ppu_WIN_Hor_0), ref ppu_WIN_Hor_0);
 			ser.Sync(nameof(ppu_WIN_Hor_1), ref ppu_WIN_Hor_1);

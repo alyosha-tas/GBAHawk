@@ -19,7 +19,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		Look at edge cases of start / stop writes ex enable FIFO dma near timer overflow
 
-		Assumption: read / write cycle is atomic
+		read / write cycle is atomic
 
 		TODO:
 

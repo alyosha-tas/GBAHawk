@@ -316,6 +316,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if ((addr & 0x00004000) == 0x00004000)
 						{
+							Console.WriteLine("read " + CycleCount + " " + ppu_LY + " " + ppu_Cycle + " " + ppu_Sprite_Render_Cycle + " " + ppu_VRAM_High_Access);
+							
 							if (ppu_VRAM_High_Access)
 							{
 								wait_ret += 1;

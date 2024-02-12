@@ -7455,7 +7455,8 @@ namespace GBAHawk
 
 		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
 
-		uint16_t ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle, ppu_Sprite_Eval_Time;
+		uint16_t ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle;
+		uint16_t ppu_Sprite_Eval_Time, ppu_Sprite_Eval_Time_VRAM;
 		uint16_t ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
 		uint16_t ppu_WIN_In, ppu_WIN_Out, ppu_Mosaic, ppu_Special_FX, ppu_Alpha, ppu_Bright;
 
@@ -8039,8 +8040,16 @@ namespace GBAHawk
 				}
 			}
 
-			if (ppu_HBL_Free) { ppu_Sprite_Eval_Time = 964; }
-			else { ppu_Sprite_Eval_Time = 1232; }
+			if (ppu_HBL_Free)
+			{
+				ppu_Sprite_Eval_Time = 964;
+				ppu_Sprite_Eval_Time_VRAM = 958;
+			}
+			else
+			{
+				ppu_Sprite_Eval_Time = 1232;
+				ppu_Sprite_Eval_Time_VRAM = 1230;
+			}
 
 			ppu_Any_Window_On = ppu_WIN0_On || ppu_WIN1_On || ppu_OBJ_WIN;
 
@@ -10366,7 +10375,7 @@ namespace GBAHawk
 			if (ppu_Fetch_Sprite_VRAM)
 			{
 				// no VRAM access after eval cycle 960 when H blank is free, even though one more OAM access amy still occur
-				if ((ppu_Sprite_Render_Cycle < 960) || !ppu_HBL_Free)
+				if (ppu_Sprite_Render_Cycle <= ppu_Sprite_Eval_Time_VRAM)
 				{
 					ppu_VRAM_High_Access = true;
 
@@ -10476,40 +10485,46 @@ namespace GBAHawk
 										pal_scale = 0xFF;
 									}
 
-									// only allow upper half of vram sprite tiles to be used in modes 3-5
-									if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
+									// sprite info not added on last possible cycle
+									// presumably this happens on the odd cycle that vram is not being read on
+									// and that is the cycle that processing is shut down
+									if (ppu_Sprite_Render_Cycle != ppu_Sprite_Eval_Time_VRAM)
 									{
-										pix_color = 0;
-									}
-
-									// mosaic state is updated even if pixel is transparent
-									ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
-
-									if ((pix_color & pal_scale) != 0)
-									{
-										if (ppu_Sprite_Mode < 2)
+										// only allow upper half of vram sprite tiles to be used in modes 3-5
+										if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
 										{
-											ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
-
-											ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
-
-											ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-
-											ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
+											pix_color = 0;
 										}
-										else if (ppu_Sprite_Mode == 2)
+
+										// mosaic state is updated even if pixel is transparent
+										ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
+
+										if ((pix_color & pal_scale) != 0)
 										{
-											ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-										}
-									}
-									else
-									{
-										// glitchy update to priority, even though this does not happen on non-transparent pixels
-										if (ppu_Sprite_Mode == 2)
-										{
-											if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+											if (ppu_Sprite_Mode < 2)
 											{
+												ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
+
 												ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+
+												ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+
+												ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
+											}
+											else if (ppu_Sprite_Mode == 2)
+											{
+												ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+											}
+										}
+										else
+										{
+											// glitchy update to priority, even though this does not happen on non-transparent pixels
+											if (ppu_Sprite_Mode == 2)
+											{
+												if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
+												{
+													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+												}
 											}
 										}
 									}
@@ -11182,6 +11197,7 @@ namespace GBAHawk
 			saver = short_saver(ppu_Cycle, saver);
 			saver = short_saver(ppu_Display_Cycle, saver);
 			saver = short_saver(ppu_Sprite_Eval_Time, saver);
+			saver = short_saver(ppu_Sprite_Eval_Time_VRAM, saver);
 			saver = short_saver(ppu_WIN_Hor_0, saver);
 			saver = short_saver(ppu_WIN_Hor_1, saver);
 			saver = short_saver(ppu_WIN_Vert_0, saver);
@@ -11391,6 +11407,7 @@ namespace GBAHawk
 			loader = short_loader(&ppu_Cycle, loader);
 			loader = short_loader(&ppu_Display_Cycle, loader);
 			loader = short_loader(&ppu_Sprite_Eval_Time, loader);
+			loader = short_loader(&ppu_Sprite_Eval_Time_VRAM, loader);
 			loader = short_loader(&ppu_WIN_Hor_0, loader);
 			loader = short_loader(&ppu_WIN_Hor_1, loader);
 			loader = short_loader(&ppu_WIN_Vert_0, loader);
