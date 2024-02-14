@@ -14,17 +14,9 @@ using BizHawk.Common.NumberExtensions;
 
 	What happens when specifying R15 in an MRS instruction? (For now assume nothing.)
 
-	What happens when using MSR in user mode? (For now assume nothing.)
-
-	Investigate various edge cases of Mul instructions (need more timing tests.)
-
 	Investigate various edge cases of Bx instructions
 
-	Are multiple load/stores able to be stopped by DMA or are they atomic? (For now assume stoppable.)
-
 	What value is written when a multi store accesses the base reg? (For now it is the initial value in all cases.)
-
-	If the pipline is invalidated by a write to Reg 15, can interrupts occur during refilling? (For now assume not.)
 
 	Instruction decoding happens after the pipeline is incremented, so is always done on cpu_Instr_ARM_2 or cpu_Instr_TMB_2
 */

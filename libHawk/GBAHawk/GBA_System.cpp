@@ -3165,10 +3165,32 @@ namespace GBAHawk
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
+								if (dma_ROM_Dec_Glitch_Read[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_SRC_intl[dma_Chan_Exec] & 0x1FFFC) == 0x1FFFC)
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = true;
+								}
+								
 								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
+								if (dma_ROM_Dec_Glitch_Read[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_SRC_intl[dma_Chan_Exec] & 0x1FFFE) == 0x1FFFE)
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = true;
+								}
+								
 								dma_Access_Wait = Wait_State_Access_16(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 
@@ -3274,10 +3296,32 @@ namespace GBAHawk
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
+								if (dma_ROM_Dec_Glitch_Write[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_DST_intl[dma_Chan_Exec] & 0x1FFFC) == 0x1FFFC)
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = true;
+								}
+								
 								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
+								if (dma_ROM_Dec_Glitch_Write[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_DST_intl[dma_Chan_Exec] & 0x1FFFE) == 0x1FFFE)
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = true;
+								}
+								
 								dma_Access_Wait = Wait_State_Access_16(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 						}
@@ -3301,7 +3345,7 @@ namespace GBAHawk
 						if (dma_Use_ROM_Addr_DST[dma_Chan_Exec])
 						{
 							if (dma_Access_32[dma_Chan_Exec])
-							{
+							{							
 								Write_Memory_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_TFR_Word, dma_Chan_Exec);
 							}
 							else
@@ -3404,12 +3448,18 @@ namespace GBAHawk
 								dma_Go[dma_Chan_Exec] = false;
 							}
 
+							dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+							dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+
 							// In any case, we start a new DMA
 							dma_Chan_Exec = 4;
 							dma_Shutdown = true;
 						}
 						else if (!dma_Run[dma_Chan_Exec])
 						{
+							dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+							dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+							
 							// DMA channel was turned off by the DMA itself
 							dma_Chan_Exec = 4;
 							dma_Shutdown = true;

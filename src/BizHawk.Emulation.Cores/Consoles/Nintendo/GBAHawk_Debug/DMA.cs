@@ -76,6 +76,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool[] dma_Use_ROM_Addr_DST = new bool[4];
 		public bool[] dma_ROM_Being_Used = new bool[4];
 		public bool[] dma_Read_Cycle = new bool[4];
+		public bool[] dma_ROM_Dec_Glitch_Read = new bool[4];
+		public bool[] dma_ROM_Dec_Glitch_Write = new bool[4];
 
 		public bool dma_Seq_Access;
 
@@ -545,13 +547,36 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						if (dma_Use_ROM_Addr_SRC[dma_Chan_Exec])
 						{
-							
+							// if adjacent to a 0x20000 boundary, a non-sequential access will occur
+							// on the next access even in dec mode
 							if (dma_Access_32[dma_Chan_Exec])
 							{
+								if (dma_ROM_Dec_Glitch_Read[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+								
+								if ((dma_SRC_intl[dma_Chan_Exec] & 0x1FFFC) == 0x1FFFC)
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = true;
+								}
+
 								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
+								if (dma_ROM_Dec_Glitch_Read[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_SRC_intl[dma_Chan_Exec] & 0x1FFFE) == 0x1FFFE)
+								{
+									dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = true;
+								}
+
 								dma_Access_Wait = Wait_State_Access_16(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 
@@ -657,10 +682,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (dma_Access_32[dma_Chan_Exec])
 							{
+								if (dma_ROM_Dec_Glitch_Write[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_DST_intl[dma_Chan_Exec] & 0x1FFFC) == 0x1FFFC)
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = true;
+								}
+
 								dma_Access_Wait = Wait_State_Access_32_DMA(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 							else
 							{
+								if (dma_ROM_Dec_Glitch_Write[dma_Chan_Exec])
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+									dma_Seq_Access = false;
+								}
+
+								if ((dma_DST_intl[dma_Chan_Exec] & 0x1FFFE) == 0x1FFFE)
+								{
+									dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = true;
+								}
+
 								dma_Access_Wait = Wait_State_Access_16(dma_ROM_Addr[dma_Chan_Exec], dma_Seq_Access);
 							}
 						}
@@ -788,6 +835,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								dma_Go[dma_Chan_Exec] = false;
 							}
 
+							dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+							dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+
 							// In any case, we start a new DMA
 							dma_Chan_Exec = 4;
 
@@ -795,6 +845,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 						else if (!dma_Run[dma_Chan_Exec])
 						{
+							dma_ROM_Dec_Glitch_Read[dma_Chan_Exec] = false;
+							dma_ROM_Dec_Glitch_Write[dma_Chan_Exec] = false;
+
 							// DMA channel was turned off by the DMA itself
 							dma_Chan_Exec = 4;
 
@@ -840,6 +893,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				dma_ROM_Being_Used[i] = false;
 				 
 				dma_Read_Cycle[i] = true;
+				dma_ROM_Dec_Glitch_Read[i] = false;
+				dma_ROM_Dec_Glitch_Write[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -891,6 +946,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(dma_Run), ref dma_Run, false);
 			ser.Sync(nameof(dma_Access_32), ref dma_Access_32, false);
 			ser.Sync(nameof(dma_Read_Cycle), ref dma_Read_Cycle, false);
+			ser.Sync(nameof(dma_ROM_Dec_Glitch_Read), ref dma_ROM_Dec_Glitch_Read, false);
+			ser.Sync(nameof(dma_ROM_Dec_Glitch_Write), ref dma_ROM_Dec_Glitch_Write, false);
 
 			ser.Sync(nameof(dma_Use_ROM_Addr_SRC), ref dma_Use_ROM_Addr_SRC, false);
 			ser.Sync(nameof(dma_Use_ROM_Addr_DST), ref dma_Use_ROM_Addr_DST, false);

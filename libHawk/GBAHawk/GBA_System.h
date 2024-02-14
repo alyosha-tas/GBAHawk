@@ -6169,6 +6169,8 @@ namespace GBAHawk
 		bool dma_Use_ROM_Addr_SRC[4] = { };
 		bool dma_Use_ROM_Addr_DST[4] = { };
 		bool dma_ROM_Being_Used[4] = { };
+		bool dma_ROM_Dec_Glitch_Read[4] = { };
+		bool dma_ROM_Dec_Glitch_Write[4] = { };
 
 		uint16_t dma_CNT[4] = { };
 		uint16_t dma_CTRL[4] = { };
@@ -6543,6 +6545,9 @@ namespace GBAHawk
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_Use_ROM_Addr_DST[i] = false;
 				dma_ROM_Being_Used[i] = false;
+
+				dma_ROM_Dec_Glitch_Read[i] = false;
+				dma_ROM_Dec_Glitch_Write[i] = false;
 			}
 
 			dma_Access_Cnt = dma_Access_Wait = 0;
@@ -6589,6 +6594,8 @@ namespace GBAHawk
 			saver = bool_array_saver(dma_Use_ROM_Addr_SRC, saver, 4);
 			saver = bool_array_saver(dma_Use_ROM_Addr_DST, saver, 4);
 			saver = bool_array_saver(dma_ROM_Being_Used, saver, 4);
+			saver = bool_array_saver(dma_ROM_Dec_Glitch_Read, saver, 4);
+			saver = bool_array_saver(dma_ROM_Dec_Glitch_Write, saver, 4);
 
 			saver = short_array_saver(dma_CNT, saver, 4);
 			saver = short_array_saver(dma_CTRL, saver, 4);
@@ -6637,6 +6644,8 @@ namespace GBAHawk
 			loader = bool_array_loader(dma_Use_ROM_Addr_SRC, loader, 4);
 			loader = bool_array_loader(dma_Use_ROM_Addr_DST, loader, 4);
 			loader = bool_array_loader(dma_ROM_Being_Used, loader, 4);
+			loader = bool_array_loader(dma_ROM_Dec_Glitch_Read, loader, 4);
+			loader = bool_array_loader(dma_ROM_Dec_Glitch_Write, loader, 4);
 
 			loader = short_array_loader(dma_CNT, loader, 4);
 			loader = short_array_loader(dma_CTRL, loader, 4);
