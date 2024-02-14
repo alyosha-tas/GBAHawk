@@ -45,6 +45,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 				}
 			}
 
+			// Proper power cycling not currently supported
+			/*
 			if (controller.IsPressed("P1 Power"))
 			{
 				L.HardReset();
@@ -53,6 +55,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			{
 				R.HardReset();
 			}
+			*/
 
 			bool cablediscosignalNew = controller.IsPressed("Toggle Cable");
 			if (cablediscosignalNew && !_cablediscosignal)
