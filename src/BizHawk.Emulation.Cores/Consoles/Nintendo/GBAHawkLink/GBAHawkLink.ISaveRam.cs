@@ -66,19 +66,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				if (cart_RAMS[0] != null && cart_RAMS[1] == null)
 				{
 					Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
+
+					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
 				}
 				else if (cart_RAMS[1] != null && cart_RAMS[0] == null)
 				{
 					Buffer.BlockCopy(data, 0, cart_RAMS[1], 0, cart_RAMS[1].Length);
+
+					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
 				}
 				else if (cart_RAMS[1] != null && cart_RAMS[0] != null)
 				{
 					Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
 					Buffer.BlockCopy(data, cart_RAMS[0].Length, cart_RAMS[1], 0, cart_RAMS[1].Length);
-				}
 
-				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
-				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
+					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
+					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
+				}
 			}
 		}
 
