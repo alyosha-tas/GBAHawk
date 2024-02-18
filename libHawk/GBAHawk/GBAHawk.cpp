@@ -249,9 +249,10 @@ GBAHawk_EXPORT void GBALink_Hard_Reset(GBALinkCore* p)
 
 // advance a frame
 GBAHawk_EXPORT bool GBALink_frame_advance(GBALinkCore* p, uint16_t ctrl_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool sound_0,
-															uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool sound_1)
+														  uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool sound_1,
+														  bool l_reset, bool r_reset)
 {
-	return p->FrameAdvance(ctrl_0, accx_0, accy_0, solar_0, render_0, sound_0, ctrl_1, accx_1, accy_1, solar_1, render_1, sound_1);
+	return p->FrameAdvance(ctrl_0, accx_0, accy_0, solar_0, render_0, sound_0, ctrl_1, accx_1, accy_1, solar_1, render_1, sound_1, l_reset, r_reset);
 }
 
 // send video data to external video provider

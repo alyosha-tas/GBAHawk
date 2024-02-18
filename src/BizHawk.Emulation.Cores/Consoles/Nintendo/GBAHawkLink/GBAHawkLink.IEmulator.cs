@@ -28,17 +28,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			uint tracer_core = (uint)Settings.TraceSet;
 
 			LibGBAHawkLink.GBALink_settracecallback(GBA_Pntr, tracecb, tracer_core);
-			
-			// Proper cycling not currently supported
-			/*
-			if (controller.IsPressed("Power"))
+
+			bool L_Reset = false;
+			bool R_Reset = false;
+
+			if (controller.IsPressed("P1 Power"))
 			{
-				HardReset();
+				L_Reset = true;
 			}
-			*/
+			if (controller.IsPressed("P2 Power"))
+			{
+				R_Reset = true;
+			}
 
 			Is_Lag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, controller_state_1, Acc_X_state_1, Acc_Y_state_1, Solar_state_1, true, true,
-																	controller_state_2, Acc_X_state_2, Acc_Y_state_2, Solar_state_2, true, true);
+																	controller_state_2, Acc_X_state_2, Acc_Y_state_2, Solar_state_2, true, true,
+																	L_Reset, R_Reset);
 
 			if (Is_Lag) { Lag_Count++; }
 

@@ -95,10 +95,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="solar1">solar state</param>
 		/// <param name="render1">length of romdata in bytes</param>
 		/// <param name="sound1">Mapper number to load core with</param>
+		/// <param name="l_reset">left console reset</param>
+		/// <param name="r_reset">right console reset</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern bool GBALink_frame_advance(IntPtr core, ushort ctrl0, ushort accx0, ushort accy0, byte solar0, bool render0, bool sound0,
-																	ushort ctrl1, ushort accx1, ushort accy1, byte solar1, bool render1, bool sound1);
+																	 ushort ctrl1, ushort accx1, ushort accy1, byte solar1, bool render1, bool sound1,
+																	 bool l_reset, bool r_reset);
 
 		/// <summary>
 		/// Get Video data

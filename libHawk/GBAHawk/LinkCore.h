@@ -88,7 +88,8 @@ namespace GBAHawk
 		}
 
 		bool FrameAdvance(uint16_t controller_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool rendersound_0,
-						uint16_t controller_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool rendersound_1)
+						  uint16_t controller_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool rendersound_1,
+						  bool l_reset, bool r_reset)
 		{
 			L.GBA.New_Controller = controller_0;
 			L.GBA.New_Acc_X = accx_0;
@@ -115,7 +116,6 @@ namespace GBAHawk
 
 			L.GBA.VBlank_Rise = false;
 
-
 			R.GBA.New_Controller = controller_1;
 			R.GBA.New_Acc_X = accx_1;
 			R.GBA.New_Acc_Y = accy_1;
@@ -141,6 +141,347 @@ namespace GBAHawk
 
 			R.GBA.VBlank_Rise = false;
 
+			if (l_reset)
+			{
+				L.Mapper->Reset();
+				L.GBA.System_Reset();
+				L.GBA.ser_CTRL = 0;
+
+				for (int i = 0; i < 80081; i++)
+				{
+					R.GBA.Single_Step();
+
+					// sync up state bits
+					if (L.GBA.ser_Ext_Update)
+					{
+						if (L.GBA.ser_Mode_State == 3)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (L.GBA.ser_Mode_State == 2)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else
+						{
+							if (L.GBA.ser_Ctrl_Mode_State == 3)
+							{
+								// uart
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+							else if (L.GBA.ser_Ctrl_Mode_State == 2)
+							{
+								// multiplayer
+								if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
+								{
+									L.GBA.ser_CTRL |= 8;
+									R.GBA.ser_CTRL |= 8;
+
+									if ((L.GBA.ser_CTRL & 0x80) == 0x80)
+									{
+										R.GBA.ser_CTRL |= 0x80;
+									}
+									else
+									{
+										R.GBA.ser_CTRL &= 0xFF7F;
+									}
+								}
+								else
+								{
+									L.GBA.ser_CTRL &= 0xFFF7;
+									R.GBA.ser_CTRL &= 0xFFF7;
+								}
+							}
+							else
+							{
+								// normal
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+
+						L.GBA.ser_Ext_Update = false;
+					}
+
+					if (R.GBA.ser_Ext_Update)
+					{
+						if (R.GBA.ser_Mode_State == 3)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (R.GBA.ser_Mode_State == 2)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else
+						{
+							if (R.GBA.ser_Ctrl_Mode_State == 3)
+							{
+								// uart
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+							else if (R.GBA.ser_Ctrl_Mode_State == 2)
+							{
+								// multiplayer
+								if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
+								{
+									L.GBA.ser_CTRL |= 8;
+									R.GBA.ser_CTRL |= 8;
+									/*
+									if ((L.ser_CTRL & 0x80) == 0x80)
+									{
+										R.ser_CTRL |= 0x80;
+									}
+									*/
+								}
+								else
+								{
+									L.GBA.ser_CTRL &= 0xFFF7;
+									R.GBA.ser_CTRL &= 0xFFF7;
+								}
+							}
+							else
+							{
+								// normal
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+
+						R.GBA.ser_Ext_Update = false;
+					}
+
+					// transfer a bit
+					if (L.GBA.ser_Ext_Tick)
+					{
+						if (L.GBA.ser_Ctrl_Mode_State != 2)
+						{
+							uint16_t temp_t = L.GBA.ser_Data_0;
+							L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+							R.GBA.ser_Data_0 = temp_t;
+
+							temp_t = L.GBA.ser_Data_1;
+							L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+							R.GBA.ser_Data_1 = temp_t;
+
+							L.GBA.ser_CTRL &= 0xFF7F;
+							R.GBA.ser_CTRL &= 0xFF7F;
+
+							// trigger interrupt if needed
+							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+							{
+								R.GBA.Trigger_IRQ(7);
+							}
+
+							L.GBA.ser_Ext_Tick = false;
+						}
+						else
+						{
+							L.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+							R.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+
+							L.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+							R.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+
+							L.GBA.ser_Data_2 = 0xFFFF;
+							R.GBA.ser_Data_2 = 0xFFFF;
+
+							L.GBA.ser_Data_3 = 0xFFFF;
+							R.GBA.ser_Data_3 = 0xFFFF;
+
+							L.GBA.ser_CTRL &= 0xFF7F;
+							R.GBA.ser_CTRL &= 0xFF7F;
+
+							R.GBA.ser_CTRL |= 0x10;
+
+							// trigger interrupt if needed
+							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+							{
+								R.GBA.Trigger_IRQ(7);
+							}
+
+							L.GBA.ser_Ext_Tick = false;
+						}
+					}
+				}
+			}
+
+			if (r_reset)
+			{
+				R.Mapper->Reset();
+				R.GBA.System_Reset();
+				R.GBA.ser_CTRL = 0;
+
+				for (int i = 0; i < 80081; i++)
+				{
+					L.GBA.Single_Step();
+
+					// sync up state bits
+					if (L.GBA.ser_Ext_Update)
+					{
+						if (L.GBA.ser_Mode_State == 3)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (L.GBA.ser_Mode_State == 2)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else
+						{
+							if (L.GBA.ser_Ctrl_Mode_State == 3)
+							{
+								// uart
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+							else if (L.GBA.ser_Ctrl_Mode_State == 2)
+							{
+								// multiplayer
+								if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
+								{
+									L.GBA.ser_CTRL |= 8;
+									R.GBA.ser_CTRL |= 8;
+
+									if ((L.GBA.ser_CTRL & 0x80) == 0x80)
+									{
+										R.GBA.ser_CTRL |= 0x80;
+									}
+									else
+									{
+										R.GBA.ser_CTRL &= 0xFF7F;
+									}
+								}
+								else
+								{
+									L.GBA.ser_CTRL &= 0xFFF7;
+									R.GBA.ser_CTRL &= 0xFFF7;
+								}
+							}
+							else
+							{
+								// normal
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+
+						L.GBA.ser_Ext_Update = false;
+					}
+
+					if (R.GBA.ser_Ext_Update)
+					{
+						if (R.GBA.ser_Mode_State == 3)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else if (R.GBA.ser_Mode_State == 2)
+						{
+							L.GBA.ser_CTRL &= 0xFFF7;
+							R.GBA.ser_CTRL &= 0xFFF7;
+						}
+						else
+						{
+							if (R.GBA.ser_Ctrl_Mode_State == 3)
+							{
+								// uart
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+							else if (R.GBA.ser_Ctrl_Mode_State == 2)
+							{
+								// multiplayer
+								if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
+								{
+									L.GBA.ser_CTRL |= 8;
+									R.GBA.ser_CTRL |= 8;
+									/*
+									if ((L.ser_CTRL & 0x80) == 0x80)
+									{
+										R.ser_CTRL |= 0x80;
+									}
+									*/
+								}
+								else
+								{
+									L.GBA.ser_CTRL &= 0xFFF7;
+									R.GBA.ser_CTRL &= 0xFFF7;
+								}
+							}
+							else
+							{
+								// normal
+								L.GBA.ser_CTRL &= 0xFFF7;
+								R.GBA.ser_CTRL &= 0xFFF7;
+							}
+						}
+
+						R.GBA.ser_Ext_Update = false;
+					}
+
+					// transfer a bit
+					if (L.GBA.ser_Ext_Tick)
+					{
+						if (L.GBA.ser_Ctrl_Mode_State != 2)
+						{
+							uint16_t temp_t = L.GBA.ser_Data_0;
+							L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+							R.GBA.ser_Data_0 = temp_t;
+
+							temp_t = L.GBA.ser_Data_1;
+							L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+							R.GBA.ser_Data_1 = temp_t;
+
+							L.GBA.ser_CTRL &= 0xFF7F;
+							R.GBA.ser_CTRL &= 0xFF7F;
+
+							// trigger interrupt if needed
+							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+							{
+								R.GBA.Trigger_IRQ(7);
+							}
+
+							L.GBA.ser_Ext_Tick = false;
+						}
+						else
+						{
+							L.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+							R.GBA.ser_Data_0 = L.GBA.ser_Data_M;
+
+							L.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+							R.GBA.ser_Data_1 = R.GBA.ser_Data_M;
+
+							L.GBA.ser_Data_2 = 0xFFFF;
+							R.GBA.ser_Data_2 = 0xFFFF;
+
+							L.GBA.ser_Data_3 = 0xFFFF;
+							R.GBA.ser_Data_3 = 0xFFFF;
+
+							L.GBA.ser_CTRL &= 0xFF7F;
+							R.GBA.ser_CTRL &= 0xFF7F;
+
+							R.GBA.ser_CTRL |= 0x10;
+
+							// trigger interrupt if needed
+							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
+							{
+								R.GBA.Trigger_IRQ(7);
+							}
+
+							L.GBA.ser_Ext_Tick = false;
+						}
+					}
+				}
+			}
 
 			// NOTE: the two cores will always be in sync in terms of vblank rise
 			while (!L.GBA.VBlank_Rise)
