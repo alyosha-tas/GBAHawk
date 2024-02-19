@@ -48,7 +48,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public static extern int GBALink_load(IntPtr core, byte[] romdata0, uint length0, int mapper0,
 															byte[] romdata1, uint length1, int mapper1,
 															ulong datetime0, bool rtc_functional0,
-															ulong datetime1, bool rtc_functional1);
+															ulong datetime1, bool rtc_functional1,
+															short EEPROMoffset0, short EEPROMoffset1);
 
 		/// <summary>
 		/// Create SRAM image.

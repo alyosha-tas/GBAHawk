@@ -37,10 +37,11 @@ namespace GBAHawk
 		void Load_ROM(uint8_t* ext_rom_0, uint32_t ext_rom_size_0, uint32_t mapper_0,
 						uint8_t* ext_rom_1, uint32_t ext_rom_size_1, uint32_t mapper_1,
 						uint64_t datetime_0, bool rtc_functional_0,
-						uint64_t datetime_1, bool rtc_functional_1)
+						uint64_t datetime_1, bool rtc_functional_1,
+						int16_t EEPROM_offset_0, int16_t EEPROM_offset_1)
 		{
-			L.Load_ROM(ext_rom_0, ext_rom_size_0, mapper_0, datetime_0, rtc_functional_0);
-			R.Load_ROM(ext_rom_1, ext_rom_size_1, mapper_1, datetime_1, rtc_functional_1);
+			L.Load_ROM(ext_rom_0, ext_rom_size_0, mapper_0, datetime_0, rtc_functional_0, EEPROM_offset_0);
+			R.Load_ROM(ext_rom_1, ext_rom_size_1, mapper_1, datetime_1, rtc_functional_1, EEPROM_offset_1);
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)

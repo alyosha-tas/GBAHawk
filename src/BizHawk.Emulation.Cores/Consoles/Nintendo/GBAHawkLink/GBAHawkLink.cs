@@ -278,8 +278,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1]);
 
 			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0],
-												ROMS[1], (uint)ROMS_Length[1], mappers[1],
-												date_time_0, rtc_working_0, date_time_1, rtc_working_1);
+												  ROMS[1], (uint)ROMS_Length[1], mappers[1],
+												  date_time_0, rtc_working_0, date_time_1, rtc_working_1,
+												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R);
 
 			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
 			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }

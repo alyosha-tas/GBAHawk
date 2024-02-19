@@ -40,7 +40,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="rtc_functional">rtc setting</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional);
+		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, short EEPROMoffset);
 
 		/// <summary>
 		/// Create SRAM image.

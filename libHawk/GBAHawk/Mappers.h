@@ -20,6 +20,7 @@ namespace GBAHawk
 		bool RTC_Functional;
 		bool Solar_Functional;
 		uint8_t ROM_C4, ROM_C5, ROM_C6, ROM_C7, ROM_C8, ROM_C9;
+		int16_t EEPROM_Offset;
 
 		// stated
 		bool Command_Mode;
@@ -2038,14 +2039,14 @@ namespace GBAHawk
 					{
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 					else
 					{
 						// error? GBA Tek says it should be zero
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 
 					Ready_Flag = false;
@@ -2410,14 +2411,14 @@ namespace GBAHawk
 					{
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 					else
 					{
 						// error? GBA Tek says it should be zero
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 
 					Ready_Flag = false;
@@ -2764,14 +2765,14 @@ namespace GBAHawk
 					{
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 					else
 					{
 						// error? GBA Tek says it should be zero
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 0x1A750 + (uint64_t)EEPROM_Offset;
 					}
 
 					Ready_Flag = false;

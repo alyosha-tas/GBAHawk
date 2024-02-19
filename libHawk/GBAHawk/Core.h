@@ -32,7 +32,7 @@ namespace GBAHawk
 			std::memcpy(GBA.BIOS, bios, 0x4000);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 
@@ -178,6 +178,8 @@ namespace GBAHawk
 			Mapper->Reg_Ctrl = (uint8_t)(datetime >> 56);
 
 			Mapper->RTC_24_Hour = (Mapper->Reg_Ctrl & 0x40) == 0x40;
+
+			Mapper->EEPROM_Offset = EEPROM_offset;
 
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;

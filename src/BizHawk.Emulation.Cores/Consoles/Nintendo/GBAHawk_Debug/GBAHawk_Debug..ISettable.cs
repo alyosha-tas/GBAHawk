@@ -81,6 +81,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				set => _RTCOffset = value;
 			}
 
+			[DisplayName("EEPROM Offset")]
+			[Description("Set error in EEPROM clocking (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short EEPROMOffset
+			{
+				get => _EEPROM_Offset;
+				set => _EEPROM_Offset = value;
+			}
+
 			[DisplayName("Use Existing SaveRAM")]
 			[Description("When true, existing SaveRAM will be loaded at boot up.")]
 			[DefaultValue(true)]
@@ -90,6 +99,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			private DateTime _RTCInitialTime;
 			[JsonIgnore]
 			private short _RTCOffset;
+			[JsonIgnore]
+			private short _EEPROM_Offset;
 
 			public GBAHawk_Debug_SyncSettings Clone()
 			{

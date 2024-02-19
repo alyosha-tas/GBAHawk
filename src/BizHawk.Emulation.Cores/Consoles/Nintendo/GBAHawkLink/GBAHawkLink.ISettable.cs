@@ -130,7 +130,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			}
 
 			[DisplayName("RTC Offset L")]
-			[Description("Set error in RTC clocking (-127 to 127)")]
+			[Description("Set error in RTC clocking (-32768 to 32767)")]
 			[DefaultValue(0)]
 			public short RTCOffset_L
 			{
@@ -139,12 +139,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			}
 
 			[DisplayName("RTC Offset R")]
-			[Description("Set error in RTC clocking (-127 to 127)")]
+			[Description("Set error in RTC clocking (-32768 to 32767)")]
 			[DefaultValue(0)]
 			public short RTCOffset_R
 			{
 				get => _RTCOffset_R;
 				set => _RTCOffset_R = value;
+			}
+
+			[DisplayName("EEPROM Offset L")]
+			[Description("Set error in EEPROM clocking (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short EEPROMOffset_L
+			{
+				get => _EEPROM_Offset_L;
+				set => _EEPROM_Offset_L = value;
+			}
+
+			[DisplayName("EEPROM Offset R")]
+			[Description("Set error in EEPROM clocking (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short EEPROMOffset_R
+			{
+				get => _EEPROM_Offset_R;
+				set => _EEPROM_Offset_R = value;
 			}
 
 			[DisplayName("Use Existing SaveRAM")]
@@ -160,6 +178,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			private short _RTCOffset_L;
 			[JsonIgnore]
 			private short _RTCOffset_R;
+			[JsonIgnore]
+			private short _EEPROM_Offset_L;
+			[JsonIgnore]
+			private short _EEPROM_Offset_R;
 
 			public GBALinkSyncSettings Clone()
 			{

@@ -33,9 +33,9 @@ GBAHawk_EXPORT void GBA_load_bios(GBACore* p, uint8_t* bios)
 }
 
 // load a rom into the core
-GBAHawk_EXPORT void GBA_load(GBACore* p, uint8_t* rom, uint32_t size, uint32_t mapper, uint64_t datetime, bool rtc_functional)
+GBAHawk_EXPORT void GBA_load(GBACore* p, uint8_t* rom, uint32_t size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset)
 {
-	p->Load_ROM(rom, size, mapper, datetime, rtc_functional);
+	p->Load_ROM(rom, size, mapper, datetime, rtc_functional, EEPROM_offset);
 }
 
 // Create a default SRAM
@@ -222,11 +222,12 @@ GBAHawk_EXPORT void GBALink_load_bios(GBALinkCore* p, uint8_t* bios)
 
 // load a rom into the core
 GBAHawk_EXPORT void GBALink_load(GBALinkCore* p, uint8_t* rom_0, uint32_t size_0, uint32_t mapper_0,
-												uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1,
-												uint64_t datetime_0, bool rtc_functional_0,
-												uint64_t datetime_1, bool rtc_functional_1)
+												 uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1,
+												 uint64_t datetime_0, bool rtc_functional_0,
+												 uint64_t datetime_1, bool rtc_functional_1,
+												 int16_t EEPROM_offset_0, int16_t EEPROM_offset_1)
 {
-	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1);
+	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1, EEPROM_offset_0, EEPROM_offset_1);
 }
 
 // Create a default SRAM

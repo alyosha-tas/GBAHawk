@@ -212,14 +212,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core.CycleCount + 0x1A750;
+						Next_Ready_Cycle = Core.CycleCount + 0x1A750 + (ulong)Core._syncSettings.EEPROMOffset;
 					}
 					else
 					{
 						// error? GBA Tek says it should be zero
 						Bit_Read = 0;
 						Current_State = 0;
-						Next_Ready_Cycle = Core.CycleCount + 0x1A750;
+						Next_Ready_Cycle = Core.CycleCount + 0x1A750 + (ulong)Core._syncSettings.EEPROMOffset;
 					}
 
 					Ready_Flag = false;

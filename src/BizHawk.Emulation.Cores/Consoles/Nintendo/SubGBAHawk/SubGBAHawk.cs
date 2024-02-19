@@ -192,7 +192,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			date_time |= ((ulong)temp_ctrl << 56);
 
 			Console.WriteLine("Mapper: " + mapper);
-			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working);
+			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, syncSettings.EEPROMOffset);
 
 			if (cart_RAM != null) { LibSubGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 

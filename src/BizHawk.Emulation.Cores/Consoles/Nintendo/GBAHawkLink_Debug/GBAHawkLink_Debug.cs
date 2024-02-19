@@ -55,6 +55,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			temp_sync_R.RTCInitialTime = linkSyncSettings.RTCInitialTime_R;
 			temp_sync_L.RTCOffset = linkSyncSettings.RTCOffset_L;
 			temp_sync_R.RTCOffset = linkSyncSettings.RTCOffset_R;
+			temp_sync_L.EEPROMOffset = linkSyncSettings.EEPROMOffset_L;
+			temp_sync_R.EEPROMOffset = linkSyncSettings.EEPROMOffset_R;
 
 			L = new GBAHawk_Debug.GBAHawk_Debug(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, temp_set_L, temp_sync_L);
 			R = new GBAHawk_Debug.GBAHawk_Debug(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, temp_set_R, temp_sync_R);
