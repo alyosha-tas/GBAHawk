@@ -158,14 +158,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				// BIOS is protected against reading from memory beyond the BIOS range
 				if (cpu_Regs[15] > 0x4000)
 				{
-					if ((addr & 1) == 0)
-					{
-						ret = (byte)(Last_BIOS_Read & 0xFF);
-					}
-					else
-					{
-						ret = (byte)((Last_BIOS_Read >> 8) & 0xFF);
-					}
+					ret = (byte)((Last_BIOS_Read >> (8 * (int)(addr & 3))) & 0xFF); // open bus
 				}
 				else
 				{

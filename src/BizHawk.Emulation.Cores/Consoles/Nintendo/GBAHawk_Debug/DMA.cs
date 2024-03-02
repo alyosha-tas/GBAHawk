@@ -20,15 +20,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		Look at edge cases of start / stop writes ex enable FIFO dma near timer overflow
 
 		read / write cycle is atomic
-
-		TODO:
-
-		There is some sort of hardware glitch when in DEC mode while in BIOS region. When the internal address crosses a boundary 
-		where there would normally be an imposed non-sequential access, there will be 1 two transfers later
-		even though the actual address is not at the boundary. Need to investigate case of both read and write 
-		in ROM region and 16 bit accesses before implementing
-
-		check IRQ timing when pasusing one dma for another
 	*/
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
