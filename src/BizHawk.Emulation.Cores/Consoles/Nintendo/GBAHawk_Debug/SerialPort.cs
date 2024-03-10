@@ -97,7 +97,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public ushort ser_Read_Reg_16(uint addr)
 		{
 			ushort ret = 0;
-			//Console.WriteLine("ser 16 R " + ext_num + " " + addr);
+			//Console.WriteLine("ser 16 R " + ext_num + " " + addr + " " + ppu_LY);
 			switch (addr)
 			{
 				case 0x120: ret = ser_Data_0; break;

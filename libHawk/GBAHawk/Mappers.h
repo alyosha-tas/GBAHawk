@@ -1283,7 +1283,7 @@ namespace GBAHawk
 
 		uint8_t* bool_loader(bool* to_load, uint8_t* loader)
 		{
-			to_load[0] = *to_load == 1; loader++;
+			to_load[0] = *loader == 1; loader++;
 
 			return loader;
 		}
@@ -1305,8 +1305,8 @@ namespace GBAHawk
 
 		uint8_t* int_loader(uint32_t* to_load, uint8_t* loader)
 		{
-			to_load[0] = *loader; loader++; to_load[0] |= (*loader << 8); loader++;
-			to_load[0] |= (*loader << 16); loader++; to_load[0] |= (*loader << 24); loader++;
+			to_load[0] = *loader; loader++; to_load[0] |= (uint32_t)(*loader << 8); loader++;
+			to_load[0] |= (uint32_t)(*loader << 16); loader++; to_load[0] |= (uint32_t)(*loader << 24); loader++;
 
 			return loader;
 		}
