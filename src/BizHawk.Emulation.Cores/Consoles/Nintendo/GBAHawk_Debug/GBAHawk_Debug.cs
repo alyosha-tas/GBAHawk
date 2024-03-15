@@ -170,7 +170,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					Console.WriteLine("here");
 					// mirror the rom accross the whole region (might need different increment sizes for different ROMs)
 					for (int i = 0; i < rom.Length; i++)
 					{
