@@ -7,6 +7,7 @@ using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System.Runtime.InteropServices;
 
 using BizHawk.Common.ReflectionExtensions;
+using System.Security.Cryptography;
 
 /*
 	GBA Emulator
@@ -143,10 +144,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				ROM_Length = (uint)rom.Length;
 				Buffer.BlockCopy(rom, 0, ROM, 0, rom.Length);
 
-				if (romHashSHA1 != "SHA1:5F989B9A4017F16A431F76FD78A95E9799AA8FCA") // GBA Suite Memory test
+				if ((romHashSHA1 != "SHA1:5F989B9A4017F16A431F76FD78A95E9799AA8FCA") && // GBA Suite Memory test
+					(romHashSHA1 != "SHA1:D015A5039FF5D08EEBA3DDB16470EAAB259631D0"))   // Broken Circle
 				{
 					// fill unused ROM area (assuming the ROM chip doesn't respond)
-					// for now mirror across 2MB boundaries, but might need to be more precise for smaller ROMs (do they exist?)
+					// for now mirror across 32MB boundaries, but might need to be more precise for smaller ROMs (do they exist?)
 					if (rom.Length < 0x6000000)
 					{
 						int ofst_base = rom.Length & 0xF000000;
@@ -168,6 +170,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
+					Console.WriteLine("here");
 					// mirror the rom accross the whole region (might need different increment sizes for different ROMs)
 					for (int i = 0; i < rom.Length; i++)
 					{

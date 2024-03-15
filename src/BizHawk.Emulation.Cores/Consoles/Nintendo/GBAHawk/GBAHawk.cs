@@ -69,7 +69,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				ROM_Length = (uint)rom.Length;
 				Buffer.BlockCopy(rom, 0, ROM, 0, rom.Length);
 
-				if (romHashSHA1 != "SHA1:5F989B9A4017F16A431F76FD78A95E9799AA8FCA") // GBA Suite Memory test
+				if ((romHashSHA1 != "SHA1:5F989B9A4017F16A431F76FD78A95E9799AA8FCA") && // GBA Suite Memory test
+					(romHashSHA1 != "SHA1:D015A5039FF5D08EEBA3DDB16470EAAB259631D0"))   // Broken Circle
 				{
 					// fill unused ROM area (assuming the ROM chip doesn't respond)
 					// for now mirror across 2MB boundaries, but might need to be more precise for smaller ROMs (do they exist?)
