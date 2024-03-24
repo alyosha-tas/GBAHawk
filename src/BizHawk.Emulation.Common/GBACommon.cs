@@ -71,6 +71,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				return false;
 			}
 		}
+
+		public static bool EEPROM_512_check(string romHashSHA1)
+		{
+			if ((romHashSHA1 == "SHA1:D3C3201F4A401B337009E667F5B001D5E12ECE83") || // Shrek 2 (USA)
+				(romHashSHA1 == "SHA1:1F28AB954789F3946E851D5A132CDA4EDB9B74DD") || // Shrek 2 (USA)
+				(romHashSHA1 == "SHA1:C433C493F54FCD18AD18B7D62F2B7D200FD9D859") || // Shrek 2 (Input Patch)
+				(romHashSHA1 == "SHA1:FF8A41C781735D2B4FE6CDE65E82FB5A68F77F8B") || // Rayman Advance (USA)
+				(romHashSHA1 == "SHA1:6A32D270848AE302A3E4FB873E53B663C2DB4811") || // Rayman Advance (EU)
+				(romHashSHA1 == "SHA1:2A473E6A0664412EAD33AA9889912DC25DB93714") || // Rayman Advance (BETA)
+				(romHashSHA1 == "SHA1:A9768FA99AE74034AB19A45B30004306F1DEFF89") || // Spyro: Season of Ice (USA)
+				(romHashSHA1 == "SHA1:854E788E5E1316B7D5CDF6B961D0969E5CD62119") || // Spyro: Season of Ice (EU)	
+				(romHashSHA1 == "SHA1:3FDCD3BB30D61B4DD6829DBDC1A0AC116618B87D") || // Mario Pinball land (USA)
+				(romHashSHA1 == "SHA1:D53FBC63E08C15BFDC045B5664FE24E8E2718469") || // Mario Pinball land (EU)
+				(romHashSHA1 == "SHA1:3BAA3735AED4CFC6C7C5A157E7EA0285AC40B1EF") || // Mario Pinball land (JPN)
+				(romHashSHA1 == "SHA1:0D994A58B7ACDFE9357E5405ACEBE232128B80FE") || // Super Monkey Ball Jr. (USA)
+				(romHashSHA1 == "SHA1:9C87FCF42A27644AE5BEC273AC3AFC3F672B4F94") || // Super Monkey Ball Jr. (EU)
+				(romHashSHA1 == "SHA1:FCC62356A3B7157CA7DDA1398C9BF1AF1DD31265") || // Donkey Kong Country (USA)
+				(romHashSHA1 == "SHA1:8995F0BE99A9CFF66474A8975B8499BD69FB4C45"))   // Donkey Kong Country (EU)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 
 	public class GBA_ControllerDeck
