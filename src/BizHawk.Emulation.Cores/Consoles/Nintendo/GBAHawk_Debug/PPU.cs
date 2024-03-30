@@ -1,6 +1,5 @@
 ﻿using BizHawk.Common;
 using System;
-using System.Runtime.ConstrainedExecution;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -11,6 +10,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	Does turning on interrupts in the STAT register trigger interrupts if conditions are met? For now assume no.
 
 	TODO: check timing on window y - parameter check
+
+	TODO: check latching of mosaic registers
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand

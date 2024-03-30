@@ -160,7 +160,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				temp_ctrl = 0x40;
 
 				// parse the date and time into the regs
-				DateTime temp = syncSettings.RTCInitialTime;
+				DateTime temp = SyncSettings.RTCInitialTime;
 
 				// if year outside range of RTC, just leave the initial values
 				if ((temp.Year < 2100) && (temp.Year >= 2000))
@@ -193,7 +193,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			date_time |= ((ulong)temp_ctrl << 56);
 
 			Console.WriteLine("Mapper: " + mapper);
-			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, syncSettings.EEPROMOffset);
+			LibSubGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset);
 
 			if (cart_RAM != null) { LibSubGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 

@@ -643,6 +643,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 
 								ppu_Current_Ref_Y_2 = ppu_BG_Ref_Y[2];
+
 								if ((ppu_Current_Ref_Y_2 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_Y_2 |= 0xFFFFFFFFF0000000;
@@ -661,6 +662,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								}
 
 								ppu_Current_Ref_Y_3 = ppu_BG_Ref_Y[3];
+
 								if ((ppu_Current_Ref_Y_3 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_Y_3 |= 0xFFFFFFFFF0000000;
@@ -772,8 +774,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
 								{
-									ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
-									ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+									for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+									{
+										ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+										ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+									}
+
+									ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
 								}
 							}
 							else if (ppu_LY != ppu_Base_LY_2)
@@ -786,8 +793,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
 								{
-									ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
-									ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+									for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+									{
+										ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+										ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+									}
+
+									ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
 								}
 							}
 							else if (ppu_LY != ppu_Base_LY_3)
