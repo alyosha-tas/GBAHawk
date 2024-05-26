@@ -91,6 +91,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				(romHashSHA1 == "SHA1:FACA3026CBD32EDDC8B9F2FAC1A40D9CA248A065") || // Madagascar - Operation Penguin(Europe)(Fr, De) GBA
 				(romHashSHA1 == "SHA1:F33187BBC0187DD3BDBAAEC6F88380BF2F107AB2") || // Madagascar - Operation Penguin(Europe) GBA
 				(romHashSHA1 == "SHA1:0218E3BE69334CAC752D5AD5B3763A26252CB88B") || // Harry Potter and the Chamber of Secrets (USA, Europe)
+				(romHashSHA1 == "SHA1:AF2B2206777651C7993C1AE9008D07C31430207E") || // Doom (USA, Europe)
 				(romHashSHA1 == "SHA1:0D994A58B7ACDFE9357E5405ACEBE232128B80FE") || // Super Monkey Ball Jr. (USA)
 				(romHashSHA1 == "SHA1:9C87FCF42A27644AE5BEC273AC3AFC3F672B4F94") || // Super Monkey Ball Jr. (EU)
 				(romHashSHA1 == "SHA1:FCC62356A3B7157CA7DDA1398C9BF1AF1DD31265") || // Donkey Kong Country (USA)
