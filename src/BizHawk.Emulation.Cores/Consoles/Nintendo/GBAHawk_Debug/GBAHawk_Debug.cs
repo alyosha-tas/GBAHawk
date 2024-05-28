@@ -530,7 +530,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			}
 			else if (mppr == "EEPROM")
 			{
-				// assume 8 KB saves, use hash check to pick out 512 bytes versions
+				// assume 512 byte saves, use hash check to pick out 8k versions
 				has_bat = true;
 				Is_EEPROM = true;
 
@@ -568,14 +568,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cart_RAM = new byte[0x2000];
 					mapper = new MapperEEPROM_Solar();
 				}
-				else if (GBACommonFunctions.EEPROM_512_check(romHashSHA1))
+				else if (GBACommonFunctions.EEPROM_64K_check(romHashSHA1))
 				{
-					cart_RAM = new byte[0x200];
+					cart_RAM = new byte[0x2000];
 					mapper = new MapperEEPROM();
 				}
 				else
 				{
-					cart_RAM = new byte[0x2000];
+					cart_RAM = new byte[0x200];
 					mapper = new MapperEEPROM();
 				}
 			}

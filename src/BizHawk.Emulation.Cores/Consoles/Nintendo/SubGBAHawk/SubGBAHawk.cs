@@ -358,7 +358,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			{
 				has_bat = true;
 
-				// assume 8 KB saves, use hash check to pick out 512 bytes versions
+				// assume 512 byte saves, use hash check to pick out 8k versions
 				if ((romHashSHA1 == "SHA1:947498CB1DB918D305500257E8223DEEADDF561D") || // Yoshi USA
 					(romHashSHA1 == "SHA1:A3F2035CA2BDC2BC59E9E46EFBB6187705EBE3D1") || // Yoshi Japan
 					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1") || // Yoshi EU
@@ -384,13 +384,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					cart_RAM = new byte[0x2000];
 					mppr = 6;
 				}
-				else if (GBACommonFunctions.EEPROM_512_check(romHashSHA1))
+				else if (GBACommonFunctions.EEPROM_64K_check(romHashSHA1))
 				{
-					cart_RAM = new byte[0x200];
+					cart_RAM = new byte[0x2000];
 				}
 				else
 				{
-					cart_RAM = new byte[0x2000];
+					cart_RAM = new byte[0x200];
 				}
 			}
 			else if (mppr == 7)
