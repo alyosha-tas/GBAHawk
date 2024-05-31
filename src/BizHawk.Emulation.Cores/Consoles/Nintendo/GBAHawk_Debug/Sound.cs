@@ -844,8 +844,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					case 0x82:                                              // GBA Low (ctrl)
 						snd_Chan_Mult = snd_Chan_Mult_Table[value & 3];
 
-						snd_FIFO_A_Mult = ((value & 0x04) == 0x04) ? 4 : 2;
-						snd_FIFO_B_Mult = ((value & 0x08) == 0x08) ? 4 : 2;
+						snd_FIFO_A_Mult = ((value & 0x04) == 0x04) ? 6 : 3;
+						snd_FIFO_B_Mult = ((value & 0x08) == 0x08) ? 6 : 3;
 
 						value &= 0xF;
 						break;
