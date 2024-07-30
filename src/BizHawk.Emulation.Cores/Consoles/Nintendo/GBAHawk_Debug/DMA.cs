@@ -56,6 +56,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort dma_TFR_HWord;
 		public ushort dma_Held_CPU_Instr;
+		public ushort dma_Held_CPU_LDM_Glitch_Instr;
 
 		public bool[] dma_Go = new bool[4]; // Tell Condition checkers when the channel is on
 		public bool[] dma_Start_VBL = new bool[4];
@@ -484,6 +485,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									// hold the current cpu instruction
 									dma_Held_CPU_Instr = cpu_Instr_Type;
 									cpu_Instr_Type = cpu_Pause_For_DMA;
+
+									dma_Held_CPU_LDM_Glitch_Instr = cpu_LDM_Glitch_Instr_Type;
+									cpu_LDM_Glitch_Instr_Type = cpu_Pause_For_DMA;
+
 									cpu_Is_Paused = true;
 
 									dma_Seq_Access = false;
@@ -893,7 +898,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			dma_Chan_Exec = 4;
 
 			dma_TFR_Word = 0;
-			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
+			dma_TFR_HWord = dma_Held_CPU_Instr = dma_Held_CPU_LDM_Glitch_Instr = 0;
 
 			dma_Seq_Access = false;
 			dma_Pausable = true;
@@ -929,6 +934,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(dma_TFR_HWord), ref dma_TFR_HWord);
 			ser.Sync(nameof(dma_Held_CPU_Instr), ref dma_Held_CPU_Instr);
+			ser.Sync(nameof(dma_Held_CPU_LDM_Glitch_Instr), ref dma_Held_CPU_LDM_Glitch_Instr);
 
 			ser.Sync(nameof(dma_Go), ref dma_Go, false);
 			ser.Sync(nameof(dma_Start_VBL), ref dma_Start_VBL, false);

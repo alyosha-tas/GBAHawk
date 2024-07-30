@@ -6,6 +6,8 @@ using BizHawk.Common.NumberExtensions;
 /* 
 	GameBoy Advance CPU (ARM7TDMI) Emulation
 	NOTES:
+	For now assume instruction after exceptions are not effected by LDM gltich
+
 	Is SRAM mirrored every 32K/64K?
 
 	Check timing of Stop
@@ -54,6 +56,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public ushort cpu_Instr_TMB_0, cpu_Instr_TMB_1, cpu_Instr_TMB_2;
 		public ushort cpu_Instr_Type;
+		public ushort cpu_LDM_Glitch_Instr_Type;
 		public ushort cpu_Exception_Type;
 		public ushort cpu_Next_Load_Store_Type;
 
@@ -84,6 +87,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool cpu_Clear_Pipeline;
 		public bool cpu_Special_Inc;
 		public bool cpu_FlagI_Old;
+		public bool cpu_LDM_Glitch_Mode;
 
 		// ARM Related Variables
 		public ushort cpu_Exec_ARM;
@@ -122,6 +126,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_Instr_Type = cpu_Internal_Reset_1; // 2 internal cycles pass after rest before instruction fetching begins
 
+			cpu_LDM_Glitch_Instr_Type = 0;
+
 			cpu_Exception_Type = cpu_Next_Load_Store_Type = 0;
 
 			ResetRegisters();
@@ -138,7 +144,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_Swap_Store = cpu_Swap_Lock = cpu_Clear_Pipeline = cpu_Special_Inc = false;
 
-			cpu_FlagI_Old = false;
+			cpu_FlagI_Old = cpu_LDM_Glitch_Mode = false;
 
 			stopped = false;
 
@@ -856,9 +862,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						// if done, the next cycle depends on whether or not Reg 15 was written to
 						if (cpu_Multi_List_Ptr == cpu_Multi_List_Size)
 						{
+							cpu_LDM_Glitch_Mode = false;
+
 							if (cpu_Multi_Swap)
 							{
 								cpu_Swap_Regs(cpu_Temp_Mode, false, false);
+
+								cpu_LDM_Glitch_Mode = true;
+
+								Console.WriteLine("LDM_Glitch");
 							}
 
 							if (cpu_LS_Is_Load)
@@ -890,7 +902,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// if the next cycle is a memory access, one cycle can be saved
-									cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+									if (cpu_LDM_Glitch_Mode)
+									{
+										cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
+
+										cpu_LDM_Glitch_Instr_Type = cpu_Internal_Can_Save_ARM;
+									}
+									else
+									{
+										cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+									}									
+									
 									cpu_Internal_Save_Access = true;
 									cpu_Seq_Access = false;
 								}
@@ -902,8 +924,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 								cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-								if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-								else { cpu_Decode_ARM(); }
+								if (cpu_LDM_Glitch_Mode)
+								{
+									if (cpu_IRQ_Input_Use & !cpu_FlagI)
+									{										
+										cpu_Instr_Type = cpu_Prefetch_IRQ;
+										cpu_LDM_Glitch_Mode = false;
+									}
+									else
+									{
+										cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
+										cpu_LDM_Glitch_Decode_ARM();
+									}
+								}
+								else
+								{
+									if (cpu_IRQ_Input_Use & !cpu_FlagI) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+									else { cpu_Decode_ARM(); }
+								}
 
 								cpu_Seq_Access = false;
 							}						
@@ -2023,6 +2061,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					cpu_Invalidate_Pipeline = false;
 					break;
 
+				case cpu_LDM_Glitch_Mode_Execute:
+					Console.WriteLine("glitch tick");
+					cpu_LDM_Glitch_Tick();
+					break;
+
 				case cpu_Internal_Halted:
 					if (cpu_Trigger_Unhalt)
 					{
@@ -2168,6 +2211,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								cpu_Invalidate_Pipeline = false;
 								break;
 
+							case cpu_LDM_Glitch_Mode_Execute:
+								cpu_LDM_Glitch_Tick();
+								break;
+
 							case cpu_Internal_Halted:
 
 								if (cpu_Trigger_Unhalt)
@@ -2302,6 +2349,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_ALU_Shift_Carry), ref cpu_ALU_Shift_Carry);
 
 			ser.Sync(nameof(cpu_Instr_Type), ref cpu_Instr_Type);
+			ser.Sync(nameof(cpu_LDM_Glitch_Instr_Type), ref cpu_LDM_Glitch_Instr_Type);
 			ser.Sync(nameof(cpu_Exception_Type), ref cpu_Exception_Type);
 			ser.Sync(nameof(cpu_Next_Load_Store_Type), ref cpu_Next_Load_Store_Type);
 

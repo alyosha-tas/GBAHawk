@@ -48,6 +48,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public const ushort cpu_Internal_And_Branch_4_ARM = 42;
 		public const ushort cpu_Internal_Can_Save_ARM = 43;
 		public const ushort cpu_Internal_Can_Save_TMB = 44;
+		public const ushort cpu_LDM_Glitch_Mode_Execute = 45;
 		public const ushort cpu_Internal_Halted = 46;
 		public const ushort cpu_Multiply_Cycles = 47;
 		public const ushort cpu_Pause_For_DMA = 48;
