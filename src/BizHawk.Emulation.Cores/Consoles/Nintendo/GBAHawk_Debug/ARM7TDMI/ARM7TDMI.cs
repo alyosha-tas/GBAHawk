@@ -2062,7 +2062,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					break;
 
 				case cpu_LDM_Glitch_Mode_Execute:
-					Console.WriteLine("glitch tick");
+					//Console.WriteLine("glitch tick");
 					cpu_LDM_Glitch_Tick();
 					break;
 

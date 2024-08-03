@@ -107,7 +107,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						cpu_ALU_Reg_Dest = (int)((cpu_Instr_ARM_2 >> 12) & 0xF);
 
 						cpu_ALU_Reg_Src = (int)((cpu_Instr_ARM_2 >> 16) & 0xF);
-						cpu_Temp_Reg = cpu_Regs[cpu_ALU_Reg_Src];
+
+						cpu_Temp_Reg = cpu_LDM_Glitch_Get_Reg((uint)cpu_ALU_Reg_Src);
 
 						// slightly different code path for R15 as destination, since it's closer to a branch
 						cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
@@ -137,10 +138,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						bool is_RRX = false;
 
-						cpu_ALU_Long_Result = cpu_Regs[cpu_Instr_ARM_2 & 0xF];
-						
+						cpu_ALU_Long_Result = cpu_LDM_Glitch_Get_Reg(cpu_Instr_ARM_2 & 0xF);
+
 						if ((cpu_Instr_ARM_2 & 0x10) != 0x0)
 						{
+							// don't use glitched operanddds because the glitched reg is read first
+							cpu_Temp_Reg = cpu_Regs[cpu_ALU_Reg_Src];
+							cpu_ALU_Long_Result = cpu_Regs[cpu_Instr_ARM_2 & 0xF];
+
 							// if the pc is the shifted value or operand, and its a register shift, it is the incremented value that is used
 							if ((cpu_Instr_ARM_2 & 0xF) == 15) 
 							{				
@@ -171,7 +176,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// register shift
-									cpu_Shift_Imm = (int)(cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF] & 0xFF);								
+									cpu_Shift_Imm = (int)(cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF) & 0xFF);								
 								}
 
 								cpu_ALU_Long_Result = cpu_ALU_Long_Result << cpu_Shift_Imm;
@@ -194,7 +199,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// register shift
-									cpu_Shift_Imm = (int)(cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF] & 0xFF);
+									cpu_Shift_Imm = (int)(cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF) & 0xFF);
 								}
 
 								if (cpu_Shift_Imm != 0) 
@@ -216,7 +221,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// register shift
-									cpu_Shift_Imm = (int)(cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF] & 0xFF);
+									cpu_Shift_Imm = (int)(cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF) & 0xFF);
 								}
 
 								cpu_ALU_Temp_S_Val = (uint)(cpu_ALU_Long_Result & cpu_Neg_Compare);
@@ -241,7 +246,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								else
 								{
 									// register shift
-									cpu_Shift_Imm = (int)(cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF] & 0xFF);
+									cpu_Shift_Imm = (int)(cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF) & 0xFF);
 								}
 
 								if (is_RRX)
@@ -805,13 +810,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						break;
 
 					case cpu_ARM_MUL:
-						cpu_ALU_Long_Result = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
-						//cpu_ALU_Long_Result *= cpu_LDM_Glitch_Get_Reg(cpu_Instr_ARM_2 & 0xF);
-						cpu_ALU_Long_Result *= cpu_Regs[cpu_Instr_ARM_2 & 0xF];
-
 						if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
 						{
+							cpu_ALU_Long_Result = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
+							cpu_ALU_Long_Result *= cpu_Regs[cpu_Instr_ARM_2 & 0xF];
+
+
 							cpu_ALU_Long_Result += cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 12) & 0xF);
+						}
+						else
+						{
+							cpu_ALU_Long_Result = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
+							cpu_ALU_Long_Result *= cpu_LDM_Glitch_Get_Reg(cpu_Instr_ARM_2 & 0xF);
 						}
 
 						cpu_ALU_Long_Result &= cpu_Cast_Int;
@@ -823,8 +833,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 
 						cpu_LDM_Glitch_Set_Reg((cpu_Instr_ARM_2 >> 16) & 0xF, (uint)cpu_ALU_Long_Result);
-
-						Console.WriteLine("glitch mul");
 						break;
 
 					case cpu_ARM_MUL_UL:

@@ -22,7 +22,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								case 0x0:
 									// Multiply
-									return $"MUL R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{((cpu_Instr_ARM_2 >> 8) & 0xF):D2} * R{(cpu_Instr_ARM_2 & 0xF):D2}";
+									if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+									{
+										return $"MLA R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{((cpu_Instr_ARM_2 >> 8) & 0xF):D2} * R{(cpu_Instr_ARM_2 & 0xF):D2} + R{((cpu_Instr_ARM_2 >> 12) & 0xF):D2}";
+									}
+									else
+									{
+										return $"MUL R{((cpu_Instr_ARM_2 >> 16) & 0xF):D2}, R{((cpu_Instr_ARM_2 >> 8) & 0xF):D2} * R{(cpu_Instr_ARM_2 & 0xF):D2}";
+									}
 
 								case 0x1:
 									// Undefined Opcode Exception
