@@ -86,7 +86,7 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -249,7 +249,7 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -455,7 +455,7 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr >= 0x04000000)
 		{
@@ -653,7 +653,7 @@ namespace GBAHawk
 			mapper_pntr->Write_ROM_8(addr, value);
 			
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr < 0x0E000000)
 		{
@@ -673,14 +673,14 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_8(addr - 0x0E000000, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 	}
 
@@ -763,7 +763,7 @@ namespace GBAHawk
 			mapper_pntr->Write_ROM_16(addr, value);
 			
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr < 0x0E000000)
 		{
@@ -783,14 +783,14 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 	}
 
@@ -870,7 +870,7 @@ namespace GBAHawk
 			mapper_pntr->Write_ROM_32(addr, value);
 			
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if (addr < 0x0E000000)
 		{
@@ -890,14 +890,14 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 	}
 
@@ -1012,7 +1012,7 @@ namespace GBAHawk
 		if (addr >= 0x08000000)
 		{
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 			
 			if (addr < 0x0D000000)
 			{
@@ -1136,7 +1136,7 @@ namespace GBAHawk
 		if (addr >= 0x08000000)
 		{
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 			
 			if (addr < 0x0D000000)
 			{
@@ -1311,7 +1311,7 @@ namespace GBAHawk
 			mapper_pntr->Write_ROM_16(addr, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -1331,14 +1331,14 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 	}
 
@@ -1411,7 +1411,7 @@ namespace GBAHawk
 			mapper_pntr->Write_ROM_32(addr, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0D000000) && (addr < 0x0E000000))
 		{
@@ -1431,14 +1431,14 @@ namespace GBAHawk
 			}
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
 		{
 			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
 
 			// ROM access complete, re-enable prefetcher
-			pre_Fetch_Cnt_Inc = 1;
+			pre_Inactive = false;
 		}
 	}
 	#pragma endregion
@@ -2958,41 +2958,49 @@ namespace GBAHawk
 		// if not enabled, finish current fetch
 		if (pre_Run)
 		{
-			if (pre_Fetch_Cnt == 0)
+			if (pre_Inactive || (pre_Check_Addr == 0) || pre_Buffer_Was_Full)
 			{
-				if (pre_Inactive) {} // cannot start an access on the internal cycles of an instruction
-				else if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; pre_Inactive = true; } // don't start a read if buffer is full
+				// if we reached an 0x20000 boundary, and haven't immediately encountered an instruction access, add a cycle glitch
+				if (pre_Boundary_Reached)
+				{
+					pre_Cycle_Glitch_2 = true;
+				}
+			}		
+			else if (pre_Fetch_Cnt == 0)
+			{
+				if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; } // don't start a read if buffer is full
 				else if ((pre_Read_Addr & 0x1FFFE) == 0)
 				{
-					pre_Fetch_Wait = 0;
+					pre_Boundary_Reached = true;
+
 					pre_Buffer_Was_Full = true;
+
+					pre_Fetch_Wait = 0;
+
 					pre_Inactive = true;
-					pre_Cycle_Glitch_2 = true;
+
 					if (pre_Buffer_Cnt == 0)
 					{
-						pre_Cycle_Glitch_2 = false;
 						pre_Check_Addr = 0;
 					}
 				}
 				else
 				{
-					pre_Fetch_Wait = 1;
-
 					if (pre_Read_Addr < 0x0A000000)
 					{
-						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; // ROM 0				
+						pre_Fetch_Wait = ROM_Waits_0_S + 1; // ROM 0				
 					}
 					else if (pre_Read_Addr < 0x0C000000)
 					{
-						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; // ROM 1
+						pre_Fetch_Wait = ROM_Waits_1_S + 1; // ROM 1
 					}
 					else
 					{
-						pre_Fetch_Wait += pre_Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; // ROM 2
+						pre_Fetch_Wait = ROM_Waits_2_S + 1; // ROM 2
 					}
 
 					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-					pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+					pre_Fetch_Cnt += 1;
 
 					if (pre_Fetch_Cnt == pre_Fetch_Wait)
 					{
@@ -3009,7 +3017,7 @@ namespace GBAHawk
 			else
 			{
 				// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-				pre_Fetch_Cnt += pre_Fetch_Cnt_Inc;
+				pre_Fetch_Cnt += 1;
 
 				if (pre_Fetch_Cnt == pre_Fetch_Wait)
 				{
