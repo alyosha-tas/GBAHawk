@@ -2999,24 +2999,15 @@ namespace GBAHawk
 						pre_Fetch_Wait = ROM_Waits_2_S + 1; // ROM 2
 					}
 
-					// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
-					pre_Fetch_Cnt += 1;
-
-					if (pre_Fetch_Cnt == pre_Fetch_Wait)
-					{
-						pre_Buffer_Cnt += 1;
-						pre_Fetch_Cnt = 0;
-						pre_Read_Addr += 2;
-
-						pre_Cycle_Glitch = true;
-
-						if (!pre_Enable) { pre_Run = false; }
-					}
+					// NOTE: minimum time to fetch somethiung from cart is 2 cycles
+					pre_Fetch_Cnt = 1;
 				}
 			}
 			else
 			{
-				// if Inc is zero, ROM is being accessed by another component, otherwise it is 1
+
+				pre_Following = true;
+
 				pre_Fetch_Cnt += 1;
 
 				if (pre_Fetch_Cnt == pre_Fetch_Wait)
@@ -3024,8 +3015,6 @@ namespace GBAHawk
 					pre_Buffer_Cnt += 1;
 					pre_Fetch_Cnt = 0;
 					pre_Read_Addr += 2;
-
-					pre_Following = true;
 
 					pre_Cycle_Glitch = true;
 

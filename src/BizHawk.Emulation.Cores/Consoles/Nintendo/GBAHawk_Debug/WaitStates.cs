@@ -597,8 +597,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								// plus 1 since the prefetcher already used this cycle, so don't double count
 								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
-
-								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							pre_Read_Addr += 2;
@@ -842,8 +840,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								{
 									wait_ret += ROM_Waits_2_S + 1; // ROM 2
 								}
-
-								if (pre_Fetch_Cnt > 1) { pre_Following = true; }
 							}
 
 							// it is as if the cpu takes over a regular access, so reset the pre-fetcher

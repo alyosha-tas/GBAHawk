@@ -116,7 +116,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				{
 					if (pre_Buffer_Cnt == 8)
 					{
-						Console.WriteLine("full " + CycleCount);
+						//Console.WriteLine("full " + CycleCount);
 
 						// don't start a read if buffer is full
 						pre_Buffer_Was_Full = true;
@@ -126,7 +126,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					// stop on 0x20000 boundary
 					if ((pre_Read_Addr & 0x1FFFE) == 0)
 					{
-						Console.WriteLine("boundary " + pre_Buffer_Cnt + " " + pre_Following + " " + CycleCount);
+						//Console.WriteLine("boundary " + pre_Buffer_Cnt + " " + pre_Following + " " + CycleCount);
 
 						pre_Boundary_Reached = true;
 
@@ -157,21 +157,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							pre_Fetch_Wait = ROM_Waits_2_S + 1; // ROM 2
 						}
+
+						pre_Fetch_Cnt = 1;
 					}						
 				}
-
-				pre_Fetch_Cnt += 1;
-
-				if (pre_Fetch_Cnt == pre_Fetch_Wait)
+				else
 				{
-					pre_Buffer_Cnt += 1;
-					pre_Fetch_Cnt = 0;
-					pre_Read_Addr += 2;
-
-					pre_Cycle_Glitch = true;
 					pre_Following = true;
 
-					if (!pre_Enable) { pre_Run = false; }
+					pre_Fetch_Cnt += 1;
+
+					if (pre_Fetch_Cnt == pre_Fetch_Wait)
+					{
+						pre_Buffer_Cnt += 1;
+						pre_Fetch_Cnt = 0;
+						pre_Read_Addr += 2;
+
+						pre_Cycle_Glitch = true;
+
+						if (!pre_Enable) { pre_Run = false; }
+					}
 				}
 			}
 		}
