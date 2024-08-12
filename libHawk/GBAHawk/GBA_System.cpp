@@ -3109,6 +3109,10 @@ namespace GBAHawk
 									// hold the current cpu instruction
 									dma_Held_CPU_Instr = cpu_Instr_Type;
 									cpu_Instr_Type = cpu_Pause_For_DMA;
+
+									dma_Held_CPU_LDM_Glitch_Instr = cpu_LDM_Glitch_Instr_Type;
+									cpu_LDM_Glitch_Instr_Type = cpu_Pause_For_DMA;
+
 									cpu_Is_Paused = true;
 
 									dma_Seq_Access = false;
@@ -4178,8 +4182,12 @@ namespace GBAHawk
 				// if done, the next cycle depends on whether or not Reg 15 was written to
 				if (cpu_Multi_List_Ptr == cpu_Multi_List_Size)
 				{
+					cpu_LDM_Glitch_Mode = false;
+					
 					if (cpu_Multi_Swap)
 					{
+						cpu_LDM_Glitch_Mode = true;
+						
 						cpu_Swap_Regs(cpu_Temp_Mode, false, false);
 					}
 
@@ -4212,7 +4220,17 @@ namespace GBAHawk
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
-							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+							if (cpu_LDM_Glitch_Mode)
+							{
+								cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
+
+								cpu_LDM_Glitch_Instr_Type = cpu_Internal_Can_Save_ARM;
+							}
+							else
+							{
+								cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+							}
+
 							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
@@ -4224,8 +4242,24 @@ namespace GBAHawk
 						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
+						if (cpu_LDM_Glitch_Mode)
+						{
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget())
+							{
+								cpu_Instr_Type = cpu_Prefetch_IRQ;
+								cpu_LDM_Glitch_Mode = false;
+							}
+							else
+							{
+								cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
+								cpu_LDM_Glitch_Decode_ARM();
+							}
+						}
+						else
+						{
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							else { cpu_Decode_ARM(); }
+						}
 
 						cpu_Seq_Access = false;
 					}
@@ -5345,6 +5379,10 @@ namespace GBAHawk
 			cpu_Invalidate_Pipeline = false;
 			break;
 
+		case cpu_LDM_Glitch_Mode_Execute:
+			cpu_LDM_Glitch_Tick();
+			break;
+
 		case cpu_Internal_Halted:
 			if (cpu_Trigger_Unhalt)
 			{
@@ -5488,6 +5526,10 @@ namespace GBAHawk
 
 					cpu_Internal_Save_Access = false;
 					cpu_Invalidate_Pipeline = false;
+					break;
+
+				case cpu_LDM_Glitch_Mode_Execute:
+					cpu_LDM_Glitch_Tick();
 					break;
 
 				case cpu_Internal_Halted:

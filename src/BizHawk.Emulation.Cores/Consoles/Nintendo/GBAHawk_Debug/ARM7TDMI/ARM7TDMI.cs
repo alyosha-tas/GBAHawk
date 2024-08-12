@@ -88,6 +88,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool cpu_Special_Inc;
 		public bool cpu_FlagI_Old;
 		public bool cpu_LDM_Glitch_Mode;
+		public bool cpu_LDM_Glitch_Store;
 
 		// ARM Related Variables
 		public ushort cpu_Exec_ARM;
@@ -144,7 +145,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_Swap_Store = cpu_Swap_Lock = cpu_Clear_Pipeline = cpu_Special_Inc = false;
 
-			cpu_FlagI_Old = cpu_LDM_Glitch_Mode = false;
+			cpu_FlagI_Old = cpu_LDM_Glitch_Mode = cpu_LDM_Glitch_Store = false;
 
 			stopped = false;
 
@@ -2380,6 +2381,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Clear_Pipeline), ref cpu_Clear_Pipeline);
 			ser.Sync(nameof(cpu_Special_Inc), ref cpu_Special_Inc);
 			ser.Sync(nameof(cpu_FlagI_Old), ref cpu_FlagI_Old);
+			ser.Sync(nameof(cpu_LDM_Glitch_Mode), ref cpu_LDM_Glitch_Mode);
+			ser.Sync(nameof(cpu_LDM_Glitch_Store), ref cpu_LDM_Glitch_Store);
 
 			// ARM related
 			ser.Sync(nameof(cpu_Exec_ARM), ref cpu_Exec_ARM);

@@ -140,9 +140,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 						cpu_ALU_Long_Result = cpu_LDM_Glitch_Get_Reg(cpu_Instr_ARM_2 & 0xF);
 
+						cpu_LDM_Glitch_Store = true;
+
 						if ((cpu_Instr_ARM_2 & 0x10) != 0x0)
 						{
-							// don't use glitched operanddds because the glitched reg is read first
+							// don't use glitched operands because the glitched reg is read first
+							cpu_LDM_Glitch_Store = false;
 							cpu_Temp_Reg = cpu_Regs[cpu_ALU_Reg_Src];
 							cpu_ALU_Long_Result = cpu_Regs[cpu_Instr_ARM_2 & 0xF];
 
@@ -335,6 +338,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						case 0xE: cpu_Exec_ARM = cpu_ARM_BIC; cpu_Clear_Pipeline = true; break;
 						case 0xF: cpu_Exec_ARM = cpu_ARM_MVN; cpu_Clear_Pipeline = true; break;
 					}
+
+					cpu_LDM_Glitch_Store = true;
 
 					// even TST / TEQ / CMP / CMN take the branch path, but don't reset the pipeline
 					cpu_LDM_Glitch_Instr_Type = cpu_Dest_Is_R15 ? cpu_Internal_And_Branch_2_ARM : cpu_Internal_And_Prefetch_ARM;
@@ -563,6 +568,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_FlagV = cpu_Calc_V_Flag_Add(cpu_Temp_Reg, cpu_ALU_Temp_Val, (uint)cpu_ALU_Long_Result);
 						}
 
+						//if (cpu_LDM_Glitch_Store) { cpu_LDM_Glitch_Set_Reg((uint)cpu_ALU_Reg_Dest, (uint)cpu_ALU_Long_Result); }
 						cpu_Regs[cpu_ALU_Reg_Dest] = (uint)cpu_ALU_Long_Result;
 						break;
 
@@ -832,7 +838,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							cpu_FlagZ = cpu_ALU_Long_Result == 0;
 						}
 
-						cpu_LDM_Glitch_Set_Reg((cpu_Instr_ARM_2 >> 16) & 0xF, (uint)cpu_ALU_Long_Result);
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint)cpu_ALU_Long_Result;
 						break;
 
 					case cpu_ARM_MUL_UL:
