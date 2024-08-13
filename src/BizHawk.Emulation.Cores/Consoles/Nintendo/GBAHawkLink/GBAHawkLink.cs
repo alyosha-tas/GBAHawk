@@ -521,6 +521,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void HardReset()
 		{
+			GBP_Mode_Enabled_L = false;
+			GBP_Screen_Detection_L = false;
+			GBP_Screen_Count_L = 0;
+
+			GBP_Mode_Enabled_R = false;
+			GBP_Screen_Detection_R = false;
+			GBP_Screen_Count_R = 0;
+
 			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
 		}
 
@@ -530,6 +538,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		private readonly GBALink_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
+
+		public bool GBP_Mode_Enabled_L;
+		public bool GBP_Screen_Detection_L;
+		public int GBP_Screen_Count_L;
+
+		public bool GBP_Mode_Enabled_R;
+		public bool GBP_Screen_Detection_R;
+		public int GBP_Screen_Count_R;
 
 		public DisplayType Region => DisplayType.NTSC;
 

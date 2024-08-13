@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using NymaTypes;
 using static BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug.GBAHawkLink_Debug;
 using static BizHawk.Emulation.Cores.Nintendo.GBALink.GBAHawkLink;
+using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 {
@@ -102,8 +103,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			Is_Lag = L.Is_Lag & R.Is_Lag;
 
 			if (Is_Lag) { Lag_Count++; }
-
 			_frame++;
+
+			// Detect GBP via image
+			if (L._syncSettings.Use_GBP)
+			{
+
+			}
+
+			// Detect GBP via image
+			if (R._syncSettings.Use_GBP)
+			{
+
+			}
 
 			return true;
 		}

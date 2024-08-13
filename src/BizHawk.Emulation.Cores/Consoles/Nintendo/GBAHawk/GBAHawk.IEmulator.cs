@@ -39,6 +39,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			_frame++;
 
+			// Detect GBP via image
+			if (SyncSettings.Use_GBP)
+			{
+
+			}
+
 			return true;
 		}
 

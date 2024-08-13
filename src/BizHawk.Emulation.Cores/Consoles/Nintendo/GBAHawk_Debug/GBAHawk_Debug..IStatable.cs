@@ -96,6 +96,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(Use_MT), ref Use_MT);
 
+			ser.Sync(nameof(GBP_Mode_Enabled), ref GBP_Mode_Enabled);
+			ser.Sync(nameof(GBP_Screen_Detection), ref GBP_Screen_Detection);
+			ser.Sync(nameof(GBP_Screen_Count), ref GBP_Screen_Count);
+
 			if (cart_RAM != null) { ser.Sync(nameof(cart_RAM), ref cart_RAM, false); }
 		}
 	}

@@ -85,6 +85,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool Use_MT;
 
+		public bool GBP_Mode_Enabled;
+		public bool GBP_Screen_Detection;
+		public int GBP_Screen_Count;
+
 		public static readonly byte[] multi_boot_check = { 0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x61, 0x20, 0x52, 0x4F, 0x4D };
 
 		public MapperBase mapper;
@@ -377,6 +381,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			// default memory config hardware initialized
 			Update_Memory_CTRL(0x0D000020);
+
+			GBP_Mode_Enabled = false;
+			GBP_Screen_Detection = false;
+			GBP_Screen_Count = 0;
 		}
 
 		// GBA PPU Viewer

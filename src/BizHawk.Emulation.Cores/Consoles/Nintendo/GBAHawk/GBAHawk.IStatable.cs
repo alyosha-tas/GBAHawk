@@ -12,6 +12,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			ser.Sync("LagCount", ref Lag_Count);
 			ser.Sync("IsLag", ref Is_Lag);
 
+			ser.Sync(nameof(GBP_Mode_Enabled), ref GBP_Mode_Enabled);
+			ser.Sync(nameof(GBP_Screen_Detection), ref GBP_Screen_Detection);
+			ser.Sync(nameof(GBP_Screen_Count), ref GBP_Screen_Count);
+
 			if (ser.IsReader)
 			{
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);

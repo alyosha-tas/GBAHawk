@@ -151,6 +151,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			[DefaultValue(true)]
 			public bool Use_SRAM { get; set; }
 
+			[DisplayName("Use Gamerboy Player L")]
+			[Description("Gameboy Player will be used and detected by supported games on left console.")]
+			[DefaultValue(false)]
+			public bool Use_GBP_L { get; set; }
+
+			[DisplayName("Use Gamerboy Player R")]
+			[Description("Gameboy Player will be used and detected by supported games on right console.")]
+			[DefaultValue(false)]
+			public bool Use_GBP_R { get; set; }
+
 			[JsonIgnore]
 			private DateTime _RTCInitialTime_L;
 			[JsonIgnore]

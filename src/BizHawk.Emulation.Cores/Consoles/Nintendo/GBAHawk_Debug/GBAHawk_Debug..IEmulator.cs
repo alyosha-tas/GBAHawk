@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.InteropServices;
+using static BizHawk.Emulation.Cores.Nintendo.GBHawk.GBHawk;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -89,6 +90,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			if (Is_Lag) { Lag_Count++; }
 
 			Frame_Count++;
+
+			// Detect GBP via image
+			if (_syncSettings.Use_GBP)
+			{
+
+			}
 
 			return true;
 		}

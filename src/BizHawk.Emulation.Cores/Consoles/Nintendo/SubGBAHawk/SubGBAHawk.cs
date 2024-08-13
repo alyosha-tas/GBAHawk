@@ -424,6 +424,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 		public void HardReset()
 		{
+			GBP_Mode_Enabled = false;
+			GBP_Screen_Detection = false;
+			GBP_Screen_Count = 0;
+
 			LibSubGBAHawk.GBA_Hard_Reset(GBA_Pntr);
 		}
 
@@ -433,6 +437,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		private readonly GBA_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
+
+		public bool GBP_Mode_Enabled;
+		public bool GBP_Screen_Detection;
+		public int GBP_Screen_Count;
 
 		public DisplayType Region => DisplayType.NTSC;
 

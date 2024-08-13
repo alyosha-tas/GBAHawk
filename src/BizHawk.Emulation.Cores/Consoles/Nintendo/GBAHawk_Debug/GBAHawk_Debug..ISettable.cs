@@ -95,6 +95,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			[DefaultValue(true)]
 			public bool Use_SRAM { get; set; }
 
+			[DisplayName("Use Gamerboy Player")]
+			[Description("Gameboy Player will be used and detected by supported games.")]
+			[DefaultValue(false)]
+			public bool Use_GBP { get; set; }
+
 			[JsonIgnore]
 			private DateTime _RTCInitialTime;
 			[JsonIgnore]
