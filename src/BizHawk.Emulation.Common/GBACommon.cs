@@ -492,6 +492,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				Definition.AddAxis("Reset Cycle", 0.RangeTo(280896), 280896);
 			}
 
+			Definition.HapticsChannels.Add("P1 Rumble");
+
 			Definition.MakeImmutable();
 		}
 
@@ -552,6 +554,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
 			foreach (var kvp in Port2.Definition.Axes) Definition.Axes.Add(kvp);
+
+			Definition.HapticsChannels.Add("P1 Rumble");
+			Definition.HapticsChannels.Add("P2 Rumble");
 
 			Definition.MakeImmutable();
 		}

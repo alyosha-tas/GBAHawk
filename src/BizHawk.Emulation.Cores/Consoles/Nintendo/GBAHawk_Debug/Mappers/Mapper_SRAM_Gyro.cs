@@ -249,6 +249,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								Rumble_Bit = false;
 							}
+
+							Core.SetControllerRumble(Rumble_Bit);
 						}
 
 						if ((Port_Dir & 8) == 0)

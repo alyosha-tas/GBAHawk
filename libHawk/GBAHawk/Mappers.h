@@ -102,6 +102,8 @@ namespace GBAHawk
 		uint8_t* Cart_RAM = nullptr;
 
 		uint8_t* Core_ROM = nullptr;
+
+		void (*RumbleCallback)(bool);
 		
 		Mappers()
 		{
@@ -1749,6 +1751,8 @@ namespace GBAHawk
 							{
 								Rumble_Bit = false;
 							}
+
+							RumbleCallback(Rumble_Bit);
 						}
 
 						if ((Port_Dir & 8) == 0)

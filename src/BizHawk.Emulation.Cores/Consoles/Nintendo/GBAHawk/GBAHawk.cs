@@ -198,9 +198,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			date_time |= ((ulong)temp_year << 48);
 			date_time |= ((ulong)temp_ctrl << 56);
 
+			rumblecb = MakeRumble;
+
+			LibGBAHawk.GBA_setrumblecallback(GBA_Pntr, rumblecb);
+
 			Console.WriteLine("Mapper: " + mapper);
 
-			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset);
+			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset, SyncSettings.Use_GBP);
 
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
@@ -456,6 +460,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 		private LibGBAHawk.TraceCallback tracecb;
 
+		private LibGBAHawk.RumbleCallback rumblecb;
+
 		// these will be constant values assigned during core construction
 		private int Header_Length;
 		private readonly int Disasm_Length;
@@ -470,6 +476,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			LibGBAHawk.GBA_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
+		}
+
+		private void MakeRumble(bool rumble_on)
+		{
+			Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0);
 		}
 
 		// GBA PPU Viewer

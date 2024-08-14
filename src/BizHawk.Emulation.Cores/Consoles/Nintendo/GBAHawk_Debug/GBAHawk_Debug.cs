@@ -18,8 +18,6 @@ using System.Security.Cryptography;
 
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
 
-	Stop mode is disabled on GBP, will need to implement this when gamecube detection is implemented
-
 	What is a good way to handle different FLASH types?
 
 	TODO: Check timing of 32 bit reads / writes to GPIO
@@ -242,7 +240,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				_controllerDeck = new(GBA_ControllerDeck.DefaultControllerName, subframe);
 			}
-			
+
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(this);
 			ServiceProvider = ser;

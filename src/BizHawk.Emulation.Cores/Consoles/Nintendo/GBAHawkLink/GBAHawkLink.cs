@@ -4,6 +4,7 @@ using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA;
 
 /*
 	GBA Emulator
@@ -276,12 +277,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			date_time_1 |= ((ulong)temp_year_1 << 48);
 			date_time_1 |= ((ulong)temp_ctrl_1 << 56);
 
+			rumblecb0 = MakeRumble0;
+			rumblecb1 = MakeRumble1;
+
+			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb0, 0);
+			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb1, 1);
+
 			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1]);
 
 			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0],
 												  ROMS[1], (uint)ROMS_Length[1], mappers[1],
 												  date_time_0, rtc_working_0, date_time_1, rtc_working_1,
-												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R);
+												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R,
+												  SyncSettings.Use_GBP_L, SyncSettings.Use_GBP_R);
 
 			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
 			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }
@@ -326,7 +334,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 			if (mappers[1] == 3)
 			{
-				cntrllr1 = typeof(StandardZGyro).DisplayName();
+				cntrllr2 = typeof(StandardZGyro).DisplayName();
 			}
 			else if (mappers[1] == 5)
 			{
@@ -553,6 +561,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		private LibGBAHawkLink.TraceCallback tracecb;
 
+		private LibGBAHawkLink.RumbleCallback rumblecb0;
+		private LibGBAHawkLink.RumbleCallback rumblecb1;
+
 		// these will be constant values assigned during core construction
 		private int Header_Length;
 		private readonly int Disasm_Length;
@@ -569,6 +580,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			LibGBAHawkLink.GBALink_getregisterstate(GBA_Pntr, new_r, t, Reg_String_Length, tracer_core);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
+		}
+
+		private void MakeRumble0(bool rumble_on)
+		{
+			Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0);
+		}
+
+		private void MakeRumble1(bool rumble_on)
+		{
+			Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0);
 		}
 
 		// GBA PPU Viewer

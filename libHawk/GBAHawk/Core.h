@@ -32,7 +32,7 @@ namespace GBAHawk
 			std::memcpy(GBA.BIOS, bios, 0x4000);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, bool is_GBP)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 
@@ -181,9 +181,13 @@ namespace GBAHawk
 
 			Mapper->EEPROM_Offset = EEPROM_offset;
 
+			Mapper->RumbleCallback = GBA.RumbleCallback;
+
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;
 			GBA.Clock_Update_Cycle = 0;
+
+			GBA.Is_GBP = is_GBP;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -407,6 +411,11 @@ namespace GBAHawk
 		void SetTraceCallback(void (*callback)(int))
 		{
 			GBA.TraceCallback = callback;
+		}
+
+		void SetRumbleCallback(void (*callback)(bool))
+		{
+			GBA.RumbleCallback = callback;
 		}
 
 		int GetHeaderLength()

@@ -11,6 +11,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public IEmulatorServiceProvider ServiceProvider { get; }
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
+		public IController Controller;
 
 		public uint PALRAM_32W_Addr, VRAM_32W_Addr;
 		public ushort PALRAM_32W_Value, VRAM_32W_Value;
@@ -40,6 +41,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
+			Controller = controller;
+			
 			//Console.WriteLine("-----------------------FRAME-----------------------");
 			for (int j = 0; j < vid_buffer.Length; j++)
 			{
@@ -953,6 +956,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			controller_state = _controllerDeck.ReadPort1(controller);
 			(Acc_X_state, Acc_Y_state) = _controllerDeck.ReadAcc1(controller);
 			Solar_state = _controllerDeck.ReadSolar1(controller);
+		}
+
+		public void SetControllerRumble(bool rumble_on)
+		{
+			if (ext_num < 2)
+			{
+				Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0);
+			}
+			else
+			{
+				Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0);
+			}
 		}
 
 		public int Frame => Frame_Count;

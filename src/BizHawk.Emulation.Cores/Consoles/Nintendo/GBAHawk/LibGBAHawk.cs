@@ -38,9 +38,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="mapper">Mapper number to load core with</param>
 		/// <param name="datetime">rtc initial time</param>
 		/// <param name="rtc_functional">rtc setting</param>
+		/// <param name="EEPROMoffset"></param>
+		/// <param name="is_GBP">playing on GBP</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, short EEPROMoffset);
+		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, short EEPROMoffset, bool is_GBP);
 
 		/// <summary>
 		/// Create SRAM image.
@@ -189,6 +191,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		/// <param name="callback">null to clear</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBA_settracecallback(IntPtr core, TraceCallback callback);
+
+		/// <summary>
+		/// rumble callback
+		/// </summary>
+		[UnmanagedFunctionPointer(cc)]
+		public delegate void RumbleCallback(bool rumble_on);
+
+		/// <summary>
+		/// set a callback for rumble
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="callback">null to clear</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callback);
 
 		/// <summary>
 		/// get the trace logger header length

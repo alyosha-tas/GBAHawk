@@ -49,7 +49,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 															byte[] romdata1, uint length1, int mapper1,
 															ulong datetime0, bool rtc_functional0,
 															ulong datetime1, bool rtc_functional1,
-															short EEPROMoffset0, short EEPROMoffset1);
+															short EEPROMoffset0, short EEPROMoffset1,
+															bool is_GBP0, bool is_GBP1);
 
 		/// <summary>
 		/// Create SRAM image.
@@ -210,6 +211,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		/// <param name="callback">null to clear</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBALink_settracecallback(IntPtr core, TraceCallback callback, uint core_num);
+
+		/// <summary>
+		/// rumble callback
+		/// </summary>
+		[UnmanagedFunctionPointer(cc)]
+		public delegate void RumbleCallback(bool rumble_on);
+
+		/// <summary>
+		/// set a callback for rumble
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="callback">null to clear</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callback, int num);
 
 		/// <summary>
 		/// get the trace logger header length

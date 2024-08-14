@@ -406,6 +406,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 				}
+				else if (GBP_Mode_Enabled)
+				{
+					// GBP rumble feature
+				}
 			}
 		}
 

@@ -392,7 +392,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					if (!is_linked_system)
+					if (!is_linked_system && !_syncSettings.Use_GBP)
 					{
 						stopped = true;
 						// use this to end the frame

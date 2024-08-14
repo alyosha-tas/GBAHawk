@@ -81,6 +81,8 @@ namespace GBAHawk
 
 		bool is_linked_system = false;
 
+		bool Is_GBP = false;
+
 		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
 		uint16_t INT_Flags_Gather, INT_Flags_Use;
 		uint16_t controller_state, controller_state_old;
@@ -762,7 +764,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					if (!is_linked_system)
+					if (!is_linked_system && !Is_GBP)
 					{
 						stopped = true;
 						// use this to end the frame
@@ -3889,6 +3891,7 @@ namespace GBAHawk
 		uint32_t temp_reg;
 
 		void (*TraceCallback)(int);
+		void (*RumbleCallback)(bool);
 
 		string CPURegisterState()
 		{		

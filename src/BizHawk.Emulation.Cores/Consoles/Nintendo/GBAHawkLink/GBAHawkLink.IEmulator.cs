@@ -11,8 +11,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
 
+		public IController Controller;
+
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
+			Controller = controller;
+			
 			// update the controller state on VBlank
 			GetControllerState(controller);
 
