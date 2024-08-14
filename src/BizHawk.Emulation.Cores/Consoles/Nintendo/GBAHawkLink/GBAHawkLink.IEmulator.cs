@@ -1,4 +1,5 @@
 ﻿using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System;
 using System.Text;
 using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink;
@@ -75,13 +76,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			// Detect GBP via image
 			if (SyncSettings.Use_GBP_L)
 			{
-
+				GBP_Screen_Detection_L = GBACommonFunctions.Check_Video_GBP(_vidbuffer_L);
 			}
 
 			// Detect GBP via image
 			if (SyncSettings.Use_GBP_R)
 			{
-
+				GBP_Screen_Detection_R = GBACommonFunctions.Check_Video_GBP(_vidbuffer_R);
 			}
 
 			return true;
@@ -97,6 +98,48 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			controller_state_2 = _controllerDeck.ReadPort2(controller);
 			(Acc_X_state_2, Acc_Y_state_2) = _controllerDeck.ReadAcc2(controller);
 			Solar_state_2 = _controllerDeck.ReadSolar2(controller);
+
+			// override the input state from the GBP directly
+			if (GBP_Screen_Detection_L)
+			{
+				if (GBP_Screen_Count_L < 2)
+				{
+					controller_state_1 = 0x3FF;
+
+					GBP_Screen_Count_L += 1;
+				}
+				else
+				{
+					controller_state_1 = 0x3F0;
+
+					GBP_Mode_Enabled_L = true;
+
+					//Console.WriteLine("GBP Rumble mode enabled");
+
+					GBP_Screen_Count_L = 0;
+				}
+			}
+
+			// override the input state from the GBP directly
+			if (GBP_Screen_Detection_R)
+			{
+				if (GBP_Screen_Count_R < 2)
+				{
+					controller_state_2 = 0x3FF;
+
+					GBP_Screen_Count_R += 1;
+				}
+				else
+				{
+					controller_state_2 = 0x3F0;
+
+					GBP_Mode_Enabled_R = true;
+
+					//Console.WriteLine("GBP Rumble mode enabled");
+
+					GBP_Screen_Count_R = 0;
+				}
+			}
 		}
 
 		public int Frame => _frame;

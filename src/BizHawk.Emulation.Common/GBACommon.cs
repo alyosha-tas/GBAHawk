@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
@@ -469,6 +470,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				return false;
 			}
 		}
+
+		public static readonly uint[] GBP_Check = { 0xFF8840D0, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFFA870E0, 0xFFF8F8F8 };
+		public static readonly string GBP_SCreen_Hash = "SHA1:EBE758CA95050270173C716B2BDB97DABE0F7303";
+
+
+		public static bool Check_Video_GBP(int[] scr)
+		{
+			bool GBP_Screen_Detect = false;
+
+			if ((uint)scr[240 * 80 + 60] == 0xFF8840D0)
+			{
+				GBP_Screen_Detect = true;
+
+				for (int i = 1; i < 8; i++)
+				{
+					if ((uint)scr[240 * 80 + 60 + i] != GBP_Check[i])
+					{
+						GBP_Screen_Detect = false;
+					}
+				}
+				if (GBP_Screen_Detect)
+				{
+					ReadOnlySpan<byte> byteRef = MemoryMarshal.AsBytes(scr.AsSpan());
+
+					var ScreenSHA1 = SHA1Checksum.ComputePrefixedHex(byteRef);
+
+					if (ScreenSHA1 != GBP_SCreen_Hash)
+					{
+						GBP_Screen_Detect = false;
+					}
+				}
+			}
+
+			return GBP_Screen_Detect;
+		}
+
+
 	}
 
 	public class GBA_ControllerDeck
