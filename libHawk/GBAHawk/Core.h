@@ -215,6 +215,11 @@ namespace GBAHawk
 			GBA.System_Reset();
 		}
 
+		void Set_GBP_Enable()
+		{
+			GBA.GBP_Mode_Enabled = true;
+		}
+
 		bool FrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool rendersound)
 		{
 			GBA.New_Controller = controller_1;

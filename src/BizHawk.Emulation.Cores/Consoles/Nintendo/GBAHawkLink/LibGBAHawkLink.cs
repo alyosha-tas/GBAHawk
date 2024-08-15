@@ -82,6 +82,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public static extern void GBALink_Hard_Reset(IntPtr core);
 
 		/// <summary>
+		/// Hard Reset.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBALink_Set_GBP_Enable(IntPtr core, uint core_num);
+
+		/// <summary>
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>

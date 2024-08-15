@@ -89,6 +89,18 @@ namespace GBAHawk
 			R.GBA.ser_CTRL = 0;
 		}
 
+		void Set_GBP_Enable(int num)
+		{
+			if (num == 0)
+			{
+				L.GBA.GBP_Mode_Enabled = true;
+			}
+			else
+			{
+				R.GBA.GBP_Mode_Enabled = true;
+			}
+		}
+
 		bool FrameAdvance(uint16_t controller_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool rendersound_0,
 						  uint16_t controller_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool rendersound_1,
 						  bool l_reset, bool r_reset)

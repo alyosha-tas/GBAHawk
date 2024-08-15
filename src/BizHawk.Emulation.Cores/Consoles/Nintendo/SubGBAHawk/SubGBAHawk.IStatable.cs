@@ -1,4 +1,5 @@
 ﻿using BizHawk.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
@@ -19,11 +20,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			if (ser.IsReader)
 			{
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);
-				LibSubGBAHawk.GBA_load_state(GBA_Pntr, GBA_core);
+				LibGBAHawk.GBA_load_state(GBA_Pntr, GBA_core);
 			}
 			else
 			{
-				LibSubGBAHawk.GBA_save_state(GBA_Pntr, GBA_core);
+				LibGBAHawk.GBA_save_state(GBA_Pntr, GBA_core);
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);
 			}
 		}

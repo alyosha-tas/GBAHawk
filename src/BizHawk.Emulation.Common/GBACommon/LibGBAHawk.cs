@@ -2,12 +2,12 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
+namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 {
 	/// <summary>
 	/// static bindings into GBAHawk.dll
 	/// </summary>
-	public static class LibSubGBAHawk
+	public static class LibGBAHawk
 	{
 		private const string lib = "GBAHawk";
 		private const CallingConvention cc = CallingConvention.Cdecl;
@@ -73,6 +73,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public static extern void GBA_Hard_Reset(IntPtr core);
 
 		/// <summary>
+		/// Hard Reset.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBA_Set_GBP_Enable(IntPtr core);
+
+		/// <summary>
+		/// Advance a frame and send controller data.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="ctrl1">controller data for player 1</param>
+		/// <param name="accx">x acceleration</param>
+		/// <param name="accy">y acceleration</param>
+		/// <param name="solar">solar state</param>
+		/// <param name="render">length of romdata in bytes</param>
+		/// <param name="sound">Mapper number to load core with</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern bool GBA_frame_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, byte solar, bool render, bool sound);
+
+		/// <summary>
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
@@ -87,6 +109,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern bool GBA_subframe_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, byte solar, bool render, bool sound, bool do_reset, uint reset_cycle);
+
 
 		/// <summary>
 		/// Get Video data

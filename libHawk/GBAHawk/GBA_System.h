@@ -74,6 +74,7 @@ namespace GBAHawk
 		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
 		bool DMA_Any_Start, DMA_Any_IRQ;
 		bool Halt_Enter, Halt_Leave;
+		bool GBP_Mode_Enabled;
 
 		uint8_t Post_Boot, Halt_CTRL;
 
@@ -182,6 +183,8 @@ namespace GBAHawk
 			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; DMA_Start_Delay[i] = false; }
 
 			Halt_Enter =  Halt_Leave = false;
+
+			GBP_Mode_Enabled = false;
 
 			VRAM_32_Check = PALRAM_32_Check = false;
 
@@ -15498,6 +15501,7 @@ namespace GBAHawk
 			saver = bool_saver(DMA_Any_IRQ, saver);
 			saver = bool_saver(Halt_Enter, saver);
 			saver = bool_saver(Halt_Leave, saver);
+			saver = bool_saver(GBP_Mode_Enabled, saver);
 
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
@@ -15607,6 +15611,7 @@ namespace GBAHawk
 			loader = bool_loader(&DMA_Any_IRQ, loader);
 			loader = bool_loader(&Halt_Enter, loader);
 			loader = bool_loader(&Halt_Leave, loader);
+			loader = bool_loader(&GBP_Mode_Enabled, loader);
 
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);

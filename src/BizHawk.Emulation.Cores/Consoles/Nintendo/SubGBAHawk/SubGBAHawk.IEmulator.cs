@@ -1,5 +1,6 @@
 ﻿using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
+
 using System;
 using System.Text;
 
@@ -29,12 +30,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				tracecb = null;
 			}
 
-			LibSubGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
+			LibGBAHawk.GBA_settracecallback(GBA_Pntr, tracecb);
 
-			Is_Lag = LibSubGBAHawk.GBA_subframe_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, 
+			Is_Lag = LibGBAHawk.GBA_subframe_advance(GBA_Pntr, controller_state, Acc_X_state, Acc_Y_state, Solar_state, 
 														true, true, controller.IsPressed("P1 Power"), (uint)controller.AxisValue("Reset Cycle"));
 
-			LibSubGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
+			LibGBAHawk.GBA_get_video(GBA_Pntr, _vidbuffer);
 
 			if (Is_Lag) { Lag_Count++; }
 
@@ -72,6 +73,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 					GBP_Mode_Enabled = true;
 
 					//Console.WriteLine("GBP Rumble mode enabled");
+					LibGBAHawk.GBA_Set_GBP_Enable(GBA_Pntr);
 
 					GBP_Screen_Count = 0;
 				}
@@ -95,7 +97,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		{
 			if (GBA_Pntr != IntPtr.Zero)
 			{
-				LibSubGBAHawk.GBA_destroy(GBA_Pntr);
+				LibGBAHawk.GBA_destroy(GBA_Pntr);
 				GBA_Pntr = IntPtr.Zero;
 			}
 
@@ -131,7 +133,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibSubGBAHawk.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
+			uint f_clock = LibGBAHawk.GBA_get_audio(GBA_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{

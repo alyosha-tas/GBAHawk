@@ -2,6 +2,7 @@
 
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GBA;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
@@ -28,7 +29,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			{
 				Buffer.BlockCopy(data, 0, cart_RAM, 0, data.Length);
 				Console.WriteLine("loading SRAM here");
-				LibSubGBAHawk.GBA_load_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length);
+				LibGBAHawk.GBA_load_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length);
 			}
 		}
 

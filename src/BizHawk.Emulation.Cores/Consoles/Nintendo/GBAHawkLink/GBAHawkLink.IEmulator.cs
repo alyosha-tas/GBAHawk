@@ -115,6 +115,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					GBP_Mode_Enabled_L = true;
 
 					//Console.WriteLine("GBP Rumble mode enabled");
+					LibGBAHawkLink.GBALink_Set_GBP_Enable(GBA_Pntr, 0);
 
 					GBP_Screen_Count_L = 0;
 				}
@@ -136,6 +137,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					GBP_Mode_Enabled_R = true;
 
 					//Console.WriteLine("GBP Rumble mode enabled");
+					LibGBAHawkLink.GBALink_Set_GBP_Enable(GBA_Pntr, 1);
 
 					GBP_Screen_Count_R = 0;
 				}

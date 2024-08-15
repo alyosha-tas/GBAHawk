@@ -2,6 +2,7 @@
 using System.Linq;
 
 using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBA
 {

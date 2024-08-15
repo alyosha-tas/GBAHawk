@@ -56,6 +56,12 @@ GBAHawk_EXPORT void GBA_Hard_Reset(GBACore* p)
 	p->Hard_Reset();
 }
 
+// enable GBP
+GBAHawk_EXPORT void GBA_Set_GBP_Enable(GBACore* p)
+{
+	p->Set_GBP_Enable();
+}
+
 // advance a frame
 GBAHawk_EXPORT bool GBA_frame_advance(GBACore* p, uint16_t ctrl1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool sound)
 {
@@ -252,6 +258,12 @@ GBAHawk_EXPORT void GBALink_load_SRAM(GBALinkCore* p, uint8_t* sram, uint32_t si
 GBAHawk_EXPORT void GBALink_Hard_Reset(GBALinkCore* p)
 {
 	p->Hard_Reset();
+}
+
+// enable GBP
+GBAHawk_EXPORT void GBALink_Set_GBP_Enable(GBALinkCore* p, uint32_t num)
+{
+	p->Set_GBP_Enable(num);
 }
 
 // advance a frame
