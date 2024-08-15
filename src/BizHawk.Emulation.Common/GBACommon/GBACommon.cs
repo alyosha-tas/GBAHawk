@@ -474,6 +474,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		public static readonly uint[] GBP_Check = { 0xFF8840D0, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFF6000C8, 0xFFA870E0, 0xFFF8F8F8 };
 		public static readonly string GBP_SCreen_Hash = "SHA1:EBE758CA95050270173C716B2BDB97DABE0F7303";
 
+		public static readonly uint[] GBP_TRansfer_List = { 0x0000494E, 0x0000494E, 0xB6B1494E, 0xB6B1544E, 0xABB1544E, 0xABB14E45, 0xB1BA4E45, 0xB1BA4F44, 0xB0BB4F44,
+															0xB0BB8002, 0x10000010, 0x20000013, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x00000000 };
+
 
 		public static bool Check_Video_GBP(int[] scr)
 		{

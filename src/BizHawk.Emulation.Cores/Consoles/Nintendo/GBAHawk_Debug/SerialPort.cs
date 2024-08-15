@@ -1,7 +1,9 @@
 ﻿using BizHawk.Common.NumberExtensions;
 using BizHawk.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System;
 using Newtonsoft.Json.Linq;
+using static BizHawk.Emulation.Cores.CoreInventory;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -12,6 +14,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	only most basic serial comm implemented, needs a lot more work
 
 	what happens if mode is changed while transfer in progess? (for now assume transfer completes normally)
+
+	Interaction of GBP with other transfers?
 */
 
 #pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
@@ -38,6 +42,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public byte ser_Ext_Current_Console;
 
 		public bool ser_Ext_Update, ser_Ext_Tick;
+
+		// GBP external commands
+		public ulong ser_GBP_Next_Start_Time;
+
+		public uint ser_GBP_Div_Count;
+
+		public uint ser_GBP_Transfer_Count;
+
 
 		public byte ser_Read_Reg_8(uint addr)
 		{
@@ -357,6 +369,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					{
 						ser_CTRL |= (byte)(ser_SI << 2);
 					}
+
+					// GBP features
+					if (!ser_Internal_Clock && GBP_Mode_Enabled && ser_Start && (ser_Bit_Total == 32))
+					{
+						ser_GBP_Next_Start_Time = CycleCount + 32;
+						ser_GBP_Div_Count = 0;
+					}
 				}			
 			}
 
@@ -409,6 +428,56 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				else if (GBP_Mode_Enabled)
 				{
 					// GBP rumble feature
+					if (CycleCount >= ser_GBP_Next_Start_Time)
+					{
+						ser_GBP_Div_Count += 1;
+
+						if ((ser_GBP_Div_Count & 0xF) == 0)
+						{
+							ser_Bit_Count += 1;
+
+							if (ser_Bit_Count == ser_Bit_Total)
+							{
+								// reset start bit
+								ser_Start = false;
+								ser_CTRL &= 0xFF7F;
+
+								//Console.WriteLine("Complete: " + $"{ser_Data_0 | ( ser_Data_1 << 16):X8}:  ");
+
+								if (ser_GBP_Transfer_Count == 15)
+								{
+									if ((ser_Data_0 & 0xFF) == 0x26)
+									{
+										SetControllerRumble(true);
+
+										Console.WriteLine("Rumble on");
+									}
+									if ((ser_Data_0 & 0xFF) == 0x04)
+									{
+										SetControllerRumble(false);
+
+										Console.WriteLine("Rumble off");
+									}
+								}
+
+								ser_Data_0 = (ushort)GBACommonFunctions.GBP_TRansfer_List[ser_GBP_Transfer_Count];
+								ser_Data_1 = (ushort)(GBACommonFunctions.GBP_TRansfer_List[ser_GBP_Transfer_Count] >> 16);
+
+								ser_GBP_Transfer_Count += 1;
+
+								if (ser_GBP_Transfer_Count== 18)
+								{
+									ser_GBP_Transfer_Count = 0;
+								}
+
+								// trigger interrupt if needed
+								if ((ser_CTRL & 0x4000) == 0x4000)
+								{
+									Trigger_IRQ(7);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -440,6 +509,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser_Internal_Clock = ser_Start = false;
 
 			ser_Ext_Update = ser_Ext_Tick = false;
+
+			ser_GBP_Next_Start_Time = 0;
+
+			ser_GBP_Div_Count = 0;
+
+			ser_GBP_Transfer_Count = 0;
 		}
 
 		public void ser_SyncState(Serializer ser)
@@ -478,6 +553,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			ser.Sync(nameof(ser_Ext_Update), ref ser_Ext_Update);
 			ser.Sync(nameof(ser_Ext_Tick), ref ser_Ext_Tick);
+
+			ser.Sync(nameof(ser_GBP_Next_Start_Time), ref ser_GBP_Next_Start_Time);
+			ser.Sync(nameof(ser_GBP_Div_Count), ref ser_GBP_Div_Count);
+			ser.Sync(nameof(ser_GBP_Transfer_Count), ref ser_GBP_Transfer_Count);
 		}
 	}
 

@@ -110,7 +110,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				}
 				else
 				{
-					controller_state_1 = 0x3F0;
+					controller_state_1 = 0x30F;
 
 					GBP_Mode_Enabled_L = true;
 
@@ -132,7 +132,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				}
 				else
 				{
-					controller_state_2 = 0x3F0;
+					controller_state_2 = 0x30F;
 
 					GBP_Mode_Enabled_R = true;
 

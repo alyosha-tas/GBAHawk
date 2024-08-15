@@ -969,11 +969,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				}
 				else
 				{
-					controller_state = 0x3F0;
+					controller_state = 0x30F;
 
 					GBP_Mode_Enabled = true;
 
-					//Console.WriteLine("GBP Rumble mode enabled");
+					Console.WriteLine("GBP Rumble mode enabled");
 
 					GBP_Screen_Count= 0;
 				}

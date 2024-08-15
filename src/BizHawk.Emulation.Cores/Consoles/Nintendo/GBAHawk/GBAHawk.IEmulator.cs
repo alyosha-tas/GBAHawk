@@ -71,7 +71,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				}
 				else
 				{
-					controller_state = 0x3F0;
+					controller_state = 0x30F;
 
 					GBP_Mode_Enabled = true;
 
