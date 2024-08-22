@@ -258,7 +258,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 
 			INT_EN = value;
@@ -282,7 +282,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 		}
 
@@ -292,7 +292,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 
 			INT_Master = value;
@@ -407,7 +407,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			if (addr < 0x60)
 			{
-				return ppu_Read_Reg_8(addr);
+				return ppu_Read_Reg_8_vis(addr);
 			}
 			else if (addr < 0xB0)
 			{

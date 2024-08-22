@@ -66,7 +66,7 @@ namespace GBAHawk
 		bool EEPROM_Wiring; // when true, can access anywhere in 0xDxxxxxx range, otheriwse only 0xDFFFFE0
 
 		bool delays_to_process;
-		bool IRQ_Write_Delay, IRQ_Write_Delay_2, IRQ_Write_Delay_3;
+		bool IRQ_Write_Delay;
 
 		bool VRAM_32_Check, PALRAM_32_Check;
 		bool VRAM_32_Delay, PALRAM_32_Delay;
@@ -172,7 +172,7 @@ namespace GBAHawk
 		{
 			delays_to_process = false;
 
-			IRQ_Write_Delay = IRQ_Write_Delay_2 = IRQ_Write_Delay_3 = false;
+			IRQ_Write_Delay = false;
 
 			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
 
@@ -331,7 +331,7 @@ namespace GBAHawk
 			INT_Flags_Gather |= (uint16_t)(1 << bit);
 
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 		}
 
@@ -649,7 +649,7 @@ namespace GBAHawk
 		{
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 
 			INT_EN = value;
@@ -671,7 +671,7 @@ namespace GBAHawk
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 		}
 
@@ -681,7 +681,7 @@ namespace GBAHawk
 
 			// changes to IRQ that happen due to writes should take place in 3 cycles
 			delays_to_process = true;
-			IRQ_Write_Delay_3 = true;
+			IRQ_Write_Delay = true;
 			IRQ_Delays = true;
 
 			INT_Master = value;
@@ -837,6 +837,8 @@ namespace GBAHawk
 		bool cpu_Next_IRQ_Input_2;
 		bool cpu_Next_IRQ_Input_3;
 		bool cpu_Is_Paused;
+		bool cpu_No_IRQ_Clock;
+		bool cpu_Restore_IRQ_Clock;
 		bool cpu_Take_Branch;
 		bool cpu_LS_Is_Load;
 		bool cpu_LS_First_Access;
@@ -863,6 +865,7 @@ namespace GBAHawk
 		bool cpu_Trigger_Unhalt;
 		bool cpu_Trigger_Unhalt_2;
 		bool cpu_Trigger_Unhalt_3;
+		bool cpu_Trigger_Unhalt_4;
 
 		// ARM Related Variables
 		uint16_t cpu_Exec_ARM;
@@ -1485,6 +1488,8 @@ namespace GBAHawk
 
 			cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
 
+			cpu_No_IRQ_Clock = cpu_Restore_IRQ_Clock = false;
+
 			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3 = false;
 
 			cpu_LS_Is_Load = cpu_LS_First_Access = cpu_Internal_Save_Access = cpu_Invalidate_Pipeline = false;
@@ -1499,7 +1504,7 @@ namespace GBAHawk
 
 			stopped = false;
 
-			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4 = false;
 		}
 
 		void cpu_Decode_ARM()
@@ -4959,6 +4964,8 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Next_IRQ_Input_2, saver);
 			saver = bool_saver(cpu_Next_IRQ_Input_3, saver);
 			saver = bool_saver(cpu_Is_Paused, saver);
+			saver = bool_saver(cpu_No_IRQ_Clock, saver);
+			saver = bool_saver(cpu_Restore_IRQ_Clock, saver);
 			saver = bool_saver(cpu_Take_Branch, saver);
 			saver = bool_saver(cpu_LS_Is_Load, saver);
 			saver = bool_saver(cpu_LS_First_Access, saver);
@@ -4984,6 +4991,7 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Trigger_Unhalt, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt_2, saver);
 			saver = bool_saver(cpu_Trigger_Unhalt_3, saver);
+			saver = bool_saver(cpu_Trigger_Unhalt_4, saver);
 
 			saver = short_saver(cpu_Exec_ARM, saver);
 			saver = short_saver(cpu_Exec_TMB, saver);
@@ -5081,6 +5089,8 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Next_IRQ_Input_2, loader);
 			loader = bool_loader(&cpu_Next_IRQ_Input_3, loader);
 			loader = bool_loader(&cpu_Is_Paused, loader);
+			loader = bool_loader(&cpu_No_IRQ_Clock, loader);
+			loader = bool_loader(&cpu_Restore_IRQ_Clock, loader);
 			loader = bool_loader(&cpu_Take_Branch, loader);
 			loader = bool_loader(&cpu_LS_Is_Load, loader);
 			loader = bool_loader(&cpu_LS_First_Access, loader);
@@ -5106,6 +5116,7 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Trigger_Unhalt, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt_2, loader);
 			loader = bool_loader(&cpu_Trigger_Unhalt_3, loader);
+			loader = bool_loader(&cpu_Trigger_Unhalt_4, loader);
 
 			loader = short_loader(&cpu_Exec_ARM, loader);
 			loader = short_loader(&cpu_Exec_TMB, loader);
@@ -15486,8 +15497,6 @@ namespace GBAHawk
 
 			saver = bool_saver(delays_to_process, saver);
 			saver = bool_saver(IRQ_Write_Delay, saver);
-			saver = bool_saver(IRQ_Write_Delay_2, saver);
-			saver = bool_saver(IRQ_Write_Delay_3, saver);
 
 			saver = bool_saver(VRAM_32_Check, saver);
 			saver = bool_saver(PALRAM_32_Check, saver);
@@ -15596,8 +15605,6 @@ namespace GBAHawk
 
 			loader = bool_loader(&delays_to_process, loader);
 			loader = bool_loader(&IRQ_Write_Delay, loader);
-			loader = bool_loader(&IRQ_Write_Delay_2, loader);
-			loader = bool_loader(&IRQ_Write_Delay_3, loader);
 
 			loader = bool_loader(&VRAM_32_Check, loader);
 			loader = bool_loader(&PALRAM_32_Check, loader);

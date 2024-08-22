@@ -313,7 +313,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		{
 			delays_to_process = false;
 
-			IRQ_Write_Delay = IRQ_Write_Delay_2 = IRQ_Write_Delay_3 = false;
+			IRQ_Write_Delay = false;
 
 			Halt_Enter = Halt_Leave = false;
 

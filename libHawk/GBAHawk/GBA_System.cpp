@@ -1486,35 +1486,6 @@ namespace GBAHawk
 			{
 				if (IRQ_Write_Delay)
 				{
-					cpu_IRQ_Input = cpu_Next_IRQ_Input;
-					IRQ_Write_Delay = false;
-
-					// in any case, if the flags and enable registers no longer have any bits in common, the cpu can no longer be unhalted
-					cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
-
-					// check if all delay sources are false
-					if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !Halt_Enter && !Halt_Leave)
-					{
-						IRQ_Delays = false;
-
-						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
-						{
-							delays_to_process = false;
-						}
-					}
-				}
-
-				if (IRQ_Write_Delay_2)
-				{
-					cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
-					cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
-
-					IRQ_Write_Delay = true;
-					IRQ_Write_Delay_2 = false;
-				}
-
-				if (IRQ_Write_Delay_3)
-				{
 					// check if any remaining interrupts are still valid
 					if (INT_Master_On)
 					{
@@ -1532,20 +1503,30 @@ namespace GBAHawk
 						cpu_Next_IRQ_Input_3 = false;
 					}
 
+					// halting does not depend on master enable
 					if ((INT_EN & INT_Flags_Use & 0x3FFF) == 0)
 					{
-						cpu_Trigger_Unhalt_3 = false;
+						cpu_Trigger_Unhalt_4 = false;
 					}
 					else
 					{
-						cpu_Trigger_Unhalt_3 = true;
+						cpu_Trigger_Unhalt_4 = true;
 					}
 
 					INT_Flags = INT_Flags_Use;
 
-					cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
-					IRQ_Write_Delay_2 = true;
-					IRQ_Write_Delay_3 = false;
+					IRQ_Write_Delay = false;
+
+					// check if all delay sources are false
+					if (!Halt_Enter && !Halt_Leave)
+					{
+						IRQ_Delays = false;
+
+						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !IRQ_Delays)
+						{
+							delays_to_process = false;
+						}
+					}
 				}
 
 				if (Halt_Enter)
@@ -1572,7 +1553,7 @@ namespace GBAHawk
 							Halt_Enter = false;
 
 							// check if all delay sources are false
-							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Leave)
+							if (!IRQ_Write_Delay && !Halt_Leave)
 							{
 								IRQ_Delays = false;
 
@@ -1605,7 +1586,7 @@ namespace GBAHawk
 							Halt_Leave = false;
 
 							// check if all delay sources are false
-							if (!IRQ_Write_Delay_3 && !IRQ_Write_Delay_2 && !IRQ_Write_Delay && !Halt_Enter)
+							if (!IRQ_Write_Delay && !Halt_Enter)
 							{
 								IRQ_Delays = false;
 
@@ -3096,6 +3077,8 @@ namespace GBAHawk
 								// with 1 cycle in between
 								cpu_Is_Paused = true;
 
+								cpu_Restore_IRQ_Clock = false;
+
 								dma_Seq_Access = false;
 
 								dma_Access_Cnt = 0;
@@ -3115,6 +3098,8 @@ namespace GBAHawk
 
 									cpu_Is_Paused = true;
 
+									cpu_Restore_IRQ_Clock = false;
+
 									dma_Seq_Access = false;
 
 									dma_Access_Cnt = 0;
@@ -3132,6 +3117,8 @@ namespace GBAHawk
 						{
 							// we paused a dma for a higher priority one
 							cpu_Is_Paused = true;
+
+							cpu_Restore_IRQ_Clock = false;
 
 							dma_Seq_Access = false;
 
@@ -3477,6 +3464,24 @@ namespace GBAHawk
 		#pragma endregion
 
 		#pragma region CPU Tick
+		if (cpu_Restore_IRQ_Clock)
+		{
+			cpu_No_IRQ_Clock = false;
+			cpu_Restore_IRQ_Clock = false;
+		}
+
+		if (!cpu_No_IRQ_Clock)
+		{
+			cpu_IRQ_Input = cpu_Next_IRQ_Input;
+			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
+
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
+			cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
+		}
+
+		cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+		cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4;
+		
 		switch (cpu_Instr_Type)
 		{
 		case cpu_Internal_And_Prefetch_ARM:
@@ -5574,7 +5579,16 @@ namespace GBAHawk
 				}
 			}
 
-			if (!cpu_Is_Paused) { cpu_Instr_Type = dma_Held_CPU_Instr; }
+			if (!cpu_Is_Paused)
+			{
+				cpu_Instr_Type = dma_Held_CPU_Instr;
+
+				cpu_Restore_IRQ_Clock = true;
+			}
+			else
+			{
+				cpu_No_IRQ_Clock = true;
+			}
 			break;
 		}
 		#pragma endregion

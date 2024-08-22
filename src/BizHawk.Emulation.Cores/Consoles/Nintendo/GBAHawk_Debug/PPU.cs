@@ -1,5 +1,7 @@
 ﻿using BizHawk.Common;
+using Newtonsoft.Json.Linq;
 using System;
+using static BizHawk.Common.AVIWriterImports.AVISTREAMINFOW;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 {
@@ -532,6 +534,107 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				case 0x54: ppu_Update_Bright((ushort)(value & 0xFFFF));
 						   /* no effect*/ break;
 			}
+		}
+
+		public byte ppu_Read_Reg_8_vis(uint addr)
+		{
+			byte ret = 0;
+			
+			switch (addr)
+			{
+				case 0x00: ret = (byte)(ppu_CTRL & 0xFF); break;
+				case 0x01: ret = (byte)((ppu_CTRL & 0xFF00) >> 8); break;
+				case 0x02: ret = (byte)(ppu_Green_Swap & 0xFF); break;
+				case 0x03: ret = (byte)((ppu_Green_Swap & 0xFF00) >> 8); break;
+				case 0x04: ret = ppu_STAT; break;
+				case 0x05: ret = ppu_LYC; break;
+				case 0x06: ret = ppu_LY; break;
+				case 0x07: ret = 0; break;
+
+				case 0x08: ret = (byte)(ppu_BG_CTRL[0] & 0xFF); break;
+				case 0x09: ret = (byte)((ppu_BG_CTRL[0] & 0xFF00) >> 8); break;
+				case 0x0A: ret = (byte)(ppu_BG_CTRL[1] & 0xFF); break;
+				case 0x0B: ret = (byte)((ppu_BG_CTRL[1] & 0xFF00) >> 8); break;
+				case 0x0C: ret = (byte)(ppu_BG_CTRL[2] & 0xFF); break;
+				case 0x0D: ret = (byte)((ppu_BG_CTRL[2] & 0xFF00) >> 8); break;
+				case 0x0E: ret = (byte)(ppu_BG_CTRL[3] & 0xFF); break;
+				case 0x0F: ret = (byte)((ppu_BG_CTRL[3] & 0xFF00) >> 8); break;
+
+				case 0x10: ret = (byte)ppu_BG_X[0]; break;
+				case 0x11: ret = (byte)(ppu_BG_X[0] >> 8); break;
+				case 0x12: ret = (byte)ppu_BG_Y[0]; break;
+				case 0x13: ret = (byte)(ppu_BG_Y[0] >> 8); break;
+				case 0x14: ret = (byte)ppu_BG_X[1]; break;
+				case 0x15: ret = (byte)(ppu_BG_X[1] >> 8); break;
+				case 0x16: ret = (byte)ppu_BG_Y[1]; break;
+				case 0x17: ret = (byte)(ppu_BG_Y[1] >> 8); break;
+				case 0x18: ret = (byte)ppu_BG_X[2]; break;
+				case 0x19: ret = (byte)(ppu_BG_X[2] >> 8); break;
+				case 0x1A: ret = (byte)ppu_BG_Y[2]; break;
+				case 0x1B: ret = (byte)(ppu_BG_Y[2] >> 8); break;
+				case 0x1C: ret = (byte)ppu_BG_X[3]; break;
+				case 0x1D: ret = (byte)(ppu_BG_X[3] >> 8); break;
+				case 0x1E: ret = (byte)ppu_BG_Y[3]; break;
+				case 0x1F: ret = (byte)(ppu_BG_Y[3] >> 8); break;
+
+				case 0x20: ret = (byte)ppu_BG_Rot_A[2]; break;
+				case 0x21: ret = (byte)(ppu_BG_Rot_A[2] >> 8); break;
+				case 0x22: ret = (byte)ppu_BG_Rot_B[2]; break;
+				case 0x23: ret = (byte)(ppu_BG_Rot_B[2] >> 8); break;
+				case 0x24: ret = (byte)ppu_BG_Rot_C[2]; break;
+				case 0x25: ret = (byte)(ppu_BG_Rot_C[2] >> 8); break;
+				case 0x26: ret = (byte)ppu_BG_Rot_D[2]; break;
+				case 0x27: ret = (byte)(ppu_BG_Rot_D[2] >> 8); break;
+				case 0x28: ret = (byte)ppu_BG_Ref_X[2]; break;
+				case 0x29: ret = (byte)(ppu_BG_Ref_X[2] >> 8); break;
+				case 0x2A: ret = (byte)(ppu_BG_Ref_X[2] >> 16); break;
+				case 0x2B: ret = (byte)(ppu_BG_Ref_X[2] >> 24); break;
+				case 0x2C: ret = (byte)ppu_BG_Ref_Y[2]; break;
+				case 0x2D: ret = (byte)(ppu_BG_Ref_Y[2] >> 8); break;
+				case 0x2E: ret = (byte)(ppu_BG_Ref_Y[2] >> 16); break;
+				case 0x2F: ret = (byte)(ppu_BG_Ref_Y[2] >> 24); break;
+
+				case 0x30: ret = (byte)ppu_BG_Rot_A[3]; break;
+				case 0x31: ret = (byte)(ppu_BG_Rot_A[3] >> 8); break;
+				case 0x32: ret = (byte)ppu_BG_Rot_B[3]; break;
+				case 0x33: ret = (byte)(ppu_BG_Rot_B[3] >> 8); break;
+				case 0x34: ret = (byte)ppu_BG_Rot_C[3]; break;
+				case 0x35: ret = (byte)(ppu_BG_Rot_C[3] >> 8); break;
+				case 0x36: ret = (byte)ppu_BG_Rot_D[3]; break;
+				case 0x37: ret = (byte)(ppu_BG_Rot_D[3] >> 8); break;
+				case 0x38: ret = (byte)ppu_BG_Ref_X[3]; break;
+				case 0x39: ret = (byte)(ppu_BG_Ref_X[3] >> 8); break;
+				case 0x3A: ret = (byte)(ppu_BG_Ref_X[3] >> 16); break;
+				case 0x3B: ret = (byte)(ppu_BG_Ref_X[3] >> 24); break;
+				case 0x3C: ret = (byte)ppu_BG_Ref_Y[3]; break;
+				case 0x3D: ret = (byte)(ppu_BG_Ref_Y[3] >> 8); break;
+				case 0x3E: ret = (byte)(ppu_BG_Ref_Y[3] >> 16); break;
+				case 0x3F: ret = (byte)(ppu_BG_Ref_Y[3] >> 24); break;
+
+				case 0x40: ret = (byte)ppu_WIN_Hor_0; break;
+				case 0x41: ret = (byte)(ppu_WIN_Hor_0 >> 8); break;
+				case 0x42: ret = (byte)ppu_WIN_Hor_1; break;
+				case 0x43: ret = (byte)(ppu_WIN_Hor_1 >> 8); break;
+				case 0x44: ret = (byte)ppu_WIN_Vert_0; break;
+				case 0x45: ret = (byte)(ppu_WIN_Vert_0 >> 8); break;
+				case 0x46: ret = (byte)ppu_WIN_Vert_1; break;
+				case 0x47: ret = (byte)(ppu_WIN_Vert_1 >> 8); break;
+				case 0x48: ret = (byte)(ppu_WIN_In & 0xFF); break;
+				case 0x49: ret = (byte)((ppu_WIN_In & 0xFF00) >> 8); break;
+				case 0x4A: ret = (byte)(ppu_WIN_Out & 0xFF); break;
+				case 0x4B: ret = (byte)((ppu_WIN_Out & 0xFF00) >> 8); break;
+				case 0x4C: ret = (byte)ppu_Mosaic; break;
+				case 0x4D: ret = (byte)(ppu_Mosaic >> 8); break;
+
+				case 0x50: ret = (byte)(ppu_Special_FX & 0xFF); break;
+				case 0x51: ret = (byte)((ppu_Special_FX & 0xFF00) >> 8); break;
+				case 0x52: ret = (byte)(ppu_Alpha & 0xFF); break;
+				case 0x53: ret = (byte)((ppu_Alpha & 0xFF00) >> 8); break;
+				case 0x54: ret = (byte)ppu_Bright; break;
+				case 0x55: ret = (byte)(ppu_Bright >> 8); break;
+			}
+
+			return ret;
 		}
 
 		public void ppu_STAT_Write(byte value)

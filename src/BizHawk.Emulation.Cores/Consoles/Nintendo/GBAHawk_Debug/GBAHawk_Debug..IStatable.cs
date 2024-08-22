@@ -55,8 +55,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(VBlank_Rise), ref VBlank_Rise);
 			ser.Sync(nameof(delays_to_process), ref delays_to_process);
 			ser.Sync(nameof(IRQ_Write_Delay), ref IRQ_Write_Delay);
-			ser.Sync(nameof(IRQ_Write_Delay_2), ref IRQ_Write_Delay_2);
-			ser.Sync(nameof(IRQ_Write_Delay_3), ref IRQ_Write_Delay_3);
 
 			ser.Sync(nameof(PALRAM_32W_Addr), ref PALRAM_32W_Addr);
 			ser.Sync(nameof(VRAM_32W_Addr), ref VRAM_32W_Addr);

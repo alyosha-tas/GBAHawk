@@ -68,7 +68,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public bool cpu_Next_IRQ_Input;
 		public bool cpu_Next_IRQ_Input_2;
 		public bool cpu_Next_IRQ_Input_3;
+
 		public bool cpu_Is_Paused;
+		public bool cpu_No_IRQ_Clock;
+		public bool cpu_Restore_IRQ_Clock;
 		public bool cpu_Take_Branch;
 		public bool cpu_LS_Is_Load;
 		public bool cpu_LS_First_Access;
@@ -103,7 +106,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 		public bool stopped;
 
-		public bool cpu_Trigger_Unhalt, cpu_Trigger_Unhalt_2, cpu_Trigger_Unhalt_3;
+		public bool cpu_Trigger_Unhalt, cpu_Trigger_Unhalt_2, cpu_Trigger_Unhalt_3, cpu_Trigger_Unhalt_4;
 
 		public void cpu_Reset()
 		{
@@ -135,6 +138,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
 
+			cpu_No_IRQ_Clock = cpu_Restore_IRQ_Clock = false;
+
 			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3 = false;
 
 			cpu_LS_Is_Load  = cpu_LS_First_Access = cpu_Internal_Save_Access = cpu_Invalidate_Pipeline = false;
@@ -149,7 +154,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 
 			stopped = false;
 
-			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = false;
+			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4 = false;
 		}
 
 		//this only calls when the first byte of an instruction is fetched.
@@ -158,6 +163,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		// Execute instructions
 		public void cpu_Tick()
 		{
+			/*
+			if ((CycleCount >= 76004318) && (CycleCount <= 76004348))
+			{
+				Console.WriteLine(cpu_Instr_Type + " " + dma_Run[0] + " " + dma_Run[1] + " " + dma_Run[2] + " " + dma_Run[3] + " " + dma_Chan_Exec + " " + cpu_Next_IRQ_Input_3);
+			}
+			*/
+			if (cpu_Restore_IRQ_Clock)
+			{
+				cpu_No_IRQ_Clock = false;
+				cpu_Restore_IRQ_Clock = false;
+			}
+
+			if (!cpu_No_IRQ_Clock)
+			{
+				cpu_IRQ_Input = cpu_Next_IRQ_Input;
+				cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
+
+				cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
+				cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
+			}
+
+			cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+			cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4;
+
 			switch (cpu_Instr_Type)
 			{
 				case cpu_Internal_And_Prefetch_ARM:
@@ -2217,7 +2246,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								break;
 
 							case cpu_Internal_Halted:
-
 								if (cpu_Trigger_Unhalt)
 								{
 									if (!Halt_Leave)
@@ -2260,7 +2288,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						}
 					}
 
-					if (!cpu_Is_Paused) { cpu_Instr_Type = dma_Held_CPU_Instr; }
+					if (!cpu_Is_Paused)
+					{
+						cpu_Instr_Type = dma_Held_CPU_Instr;
+
+						cpu_Restore_IRQ_Clock = true;
+					}
+					else
+					{
+						cpu_No_IRQ_Clock = true;
+					}
 					break;			
 			}
 		}
@@ -2363,6 +2400,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Next_IRQ_Input_2), ref cpu_Next_IRQ_Input_2);
 			ser.Sync(nameof(cpu_Next_IRQ_Input_3), ref cpu_Next_IRQ_Input_3);
 			ser.Sync(nameof(cpu_Is_Paused), ref cpu_Is_Paused);
+			ser.Sync(nameof(cpu_No_IRQ_Clock), ref cpu_No_IRQ_Clock);
+			ser.Sync(nameof(cpu_Restore_IRQ_Clock), ref cpu_Restore_IRQ_Clock);
 			ser.Sync(nameof(cpu_Take_Branch), ref cpu_Take_Branch);
 			ser.Sync(nameof(cpu_LS_Is_Load), ref cpu_LS_Is_Load);
 			ser.Sync(nameof(cpu_LS_First_Access), ref cpu_LS_First_Access);
@@ -2432,6 +2471,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			ser.Sync(nameof(cpu_Trigger_Unhalt), ref cpu_Trigger_Unhalt);
 			ser.Sync(nameof(cpu_Trigger_Unhalt_2), ref cpu_Trigger_Unhalt_2);
 			ser.Sync(nameof(cpu_Trigger_Unhalt_3), ref cpu_Trigger_Unhalt_3);
+			ser.Sync(nameof(cpu_Trigger_Unhalt_4), ref cpu_Trigger_Unhalt_4);
 		}
 	}
 }

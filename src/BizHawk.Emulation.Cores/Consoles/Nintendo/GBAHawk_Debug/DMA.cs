@@ -469,8 +469,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							if (cpu_Instr_Type == cpu_Pause_For_DMA)
 							{
 								// we just ended a DMA and immediately want to start another one
-								// with 1 cycle in between
+								// with 1 cycle in between							
 								cpu_Is_Paused = true;
+								cpu_Restore_IRQ_Clock = false;
 
 								dma_Seq_Access = false;
 
@@ -482,6 +483,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 								// CPU can be paused on the edge of a memory access, if bus is not locked
 								if ((cpu_Fetch_Cnt == 0) && !cpu_Swap_Lock)
 								{
+									
 									// hold the current cpu instruction
 									dma_Held_CPU_Instr = cpu_Instr_Type;
 									cpu_Instr_Type = cpu_Pause_For_DMA;
@@ -490,6 +492,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 									cpu_LDM_Glitch_Instr_Type = cpu_Pause_For_DMA;
 
 									cpu_Is_Paused = true;
+									cpu_Restore_IRQ_Clock = false;
 
 									dma_Seq_Access = false;
 
@@ -508,6 +511,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							// we paused a dma for a higher priority one
 							cpu_Is_Paused = true;
+							cpu_Restore_IRQ_Clock = false;
 
 							dma_Seq_Access = false;
 
