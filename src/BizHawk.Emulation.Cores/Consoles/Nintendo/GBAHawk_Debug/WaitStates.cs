@@ -745,12 +745,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 		public int Wait_State_Access_32_Instr(uint addr, bool Seq_Access)
 		{
 			int wait_ret = 1;
+			uint addr_check = (addr & 0xFFFFFFFC);
 
 			if (addr >= 0x08000000)
 			{
 				if (addr < 0x0E000000)
 				{
-					if (addr == pre_Check_Addr)
+					if (addr_check == pre_Check_Addr)
 					{
 						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
 						{

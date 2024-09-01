@@ -24,6 +24,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 	
 	The prefetch unit cannot begin a read on an idle cycle after a data read from ROM.
 
+	Prefetcher runs if in ARM mode and not word aligned, but check for match will always fail
+
 	If the prefetch unit has 2 16 bit accesses in the buffer for a ARM mode opcode fetch, it will return both on the same cycle.
 
 	When performaing multi load-stores at the transition from VRAM to ROM, it is as if the prefetcher is completely reset on the boundary access.
@@ -100,7 +102,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			{
 				//if ((CycleCount > 76198284) && (CycleCount < 76198384)) { Console.WriteLine(pre_Buffer_Cnt + " " + pre_Fetch_Cnt + " " + pre_Fetch_Wait + 
 				//															" " + pre_Inactive + " " + pre_Check_Addr + " " + pre_Read_Addr + " " + pre_Buffer_Was_Full); }
-
 				if (pre_Inactive || (pre_Check_Addr == 0) || pre_Buffer_Was_Full)
 				{
 					// if we reached an 0x20000 boundary, and haven't immediately encountered an instruction access, add a cycle glitch

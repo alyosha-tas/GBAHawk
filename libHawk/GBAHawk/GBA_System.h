@@ -8437,12 +8437,13 @@ namespace GBAHawk
 		uint32_t Wait_State_Access_32_Instr(uint32_t addr, bool Seq_Access)
 		{
 			uint32_t wait_ret = 1;
+			uint32_t addr_check = (addr & 0xFFFFFFFC);
 
 			if (addr >= 0x08000000)
 			{
 				if (addr < 0x0E000000)
 				{
-					if (addr == pre_Check_Addr)
+					if (addr_check == pre_Check_Addr)
 					{
 						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
 						{
