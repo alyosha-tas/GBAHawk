@@ -32,7 +32,8 @@ namespace GBAHawk
 			std::memcpy(GBA.BIOS, bios, 0x4000);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, bool is_GBP)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, 
+					  int16_t flash_write_offset, int16_t flash_sector_offset, int16_t flash_chip_offset, bool is_GBP)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 
@@ -180,6 +181,9 @@ namespace GBAHawk
 			Mapper->RTC_24_Hour = (Mapper->Reg_Ctrl & 0x40) == 0x40;
 
 			Mapper->EEPROM_Offset = EEPROM_offset;
+			Mapper->Flash_Write_Offset = flash_write_offset;
+			Mapper->Flash_Sector_Erase_Offset = flash_sector_offset;
+			Mapper->Flash_Chip_Erase_Offset = flash_chip_offset;
 
 			Mapper->RumbleCallback = GBA.RumbleCallback;
 

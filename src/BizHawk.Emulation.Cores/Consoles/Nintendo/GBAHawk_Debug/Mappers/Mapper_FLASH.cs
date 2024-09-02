@@ -156,7 +156,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 					Access_Address = (int)((addr & 0xFFFF) + Bank_State);
 					Write_Value = value;
 
-					Next_Ready_Cycle = Core.CycleCount + 325;
+					Next_Ready_Cycle = Core.CycleCount + 325 + (ulong)Core._syncSettings.FlashWriteOffset;
 				}
 
 				Chip_Mode = 0;
@@ -178,7 +178,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
 							{
-								Next_Ready_Cycle = Core.CycleCount + 3 * 430000;
+								Next_Ready_Cycle = Core.CycleCount + 3 * 430000 + (ulong)Core._syncSettings.FlashChipEraseOffset;
 
 								Erase_All = true;
 
@@ -238,7 +238,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 						{
 							//Console.WriteLine("Erase 4k");
 
-							Next_Ready_Cycle = Core.CycleCount + 460000;
+							Next_Ready_Cycle = Core.CycleCount + 460000 + (ulong)Core._syncSettings.FlashSectorEraseOffset;
 
 							Erase_4k = true;
 

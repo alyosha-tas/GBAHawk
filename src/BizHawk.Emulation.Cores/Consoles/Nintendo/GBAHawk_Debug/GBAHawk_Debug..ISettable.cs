@@ -90,6 +90,47 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 				set => _EEPROM_Offset = value;
 			}
 
+			[DisplayName("Flash Write Offset")]
+			[Description("Set offset in Flash write timing (-128 to 127)")]
+			[DefaultValue(0)]
+			public short FlashWriteOffset
+			{
+				get => _Flash_Write_Offset;
+				set
+				{
+					if (value > 127)
+					{
+						_Flash_Write_Offset = 127;
+					}
+					else if (value < -128)
+					{
+						_Flash_Write_Offset = -128;
+					}
+					else
+					{
+						_Flash_Write_Offset = value;
+					}
+				}
+			}
+
+			[DisplayName("Flash Sector Erase Offset")]
+			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashSectorEraseOffset
+			{
+				get => _Flash_Sector_Erase_Offset;
+				set =>_Flash_Sector_Erase_Offset = value;
+			}
+
+			[DisplayName("Flash Chip Erase Offset")]
+			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashChipEraseOffset
+			{
+				get => _Flash_Chip_Erase_Offset;
+				set => _Flash_Chip_Erase_Offset = value;
+			}
+
 			[DisplayName("Use Existing SaveRAM")]
 			[Description("When true, existing SaveRAM will be loaded at boot up.")]
 			[DefaultValue(true)]
@@ -106,6 +147,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			private short _RTCOffset;
 			[JsonIgnore]
 			private short _EEPROM_Offset;
+			[JsonIgnore]
+			private short _Flash_Write_Offset;
+			[JsonIgnore]
+			private short _Flash_Sector_Erase_Offset;
+			[JsonIgnore]
+			private short _Flash_Chip_Erase_Offset;
 
 			public GBAHawk_Debug_SyncSettings Clone()
 			{

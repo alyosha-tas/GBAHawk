@@ -21,7 +21,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		public static extern void GBA_destroy(IntPtr core);
 
 		/// <summary>
-		/// Load BIOS and BASIC image. each must be 16K in size
+		/// Free the memory.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
@@ -42,7 +42,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// <param name="is_GBP">playing on GBP</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, short EEPROMoffset, bool is_GBP);
+		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, 
+										  short EEPROMoffset, short FlashWriteOffset, short FlashSectorOffset, short FlashChipOffset, bool is_GBP);
 
 		/// <summary>
 		/// Create SRAM image.

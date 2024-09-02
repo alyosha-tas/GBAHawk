@@ -21,7 +21,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public static extern void GBALink_destroy(IntPtr core);
 
 		/// <summary>
-		/// Load BIOS and BASIC image. each must be 16K in size
+		/// Free the memory.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
@@ -50,6 +50,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 															ulong datetime0, bool rtc_functional0,
 															ulong datetime1, bool rtc_functional1,
 															short EEPROMoffset0, short EEPROMoffset1,
+															short FlashWriteOffset_L, short FlashWriteOffset_R,
+															short FlashSectorOffset_L, short FlashSectorOffset_R,
+															short FlashChipOffset_L, short FlashChipOffset_R,
 															bool is_GBP0, bool is_GBP1);
 
 		/// <summary>

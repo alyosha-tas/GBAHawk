@@ -21,6 +21,9 @@ namespace GBAHawk
 		bool Solar_Functional;
 		uint8_t ROM_C4, ROM_C5, ROM_C6, ROM_C7, ROM_C8, ROM_C9;
 		int16_t EEPROM_Offset;
+		int16_t Flash_Write_Offset;
+		int16_t Flash_Sector_Erase_Offset;
+		int16_t Flash_Chip_Erase_Offset;
 
 		// stated
 		bool Command_Mode;
@@ -3036,7 +3039,7 @@ namespace GBAHawk
 					Access_Address = (addr & 0xFFFF) + Bank_State;
 					Write_Value = value;
 
-					Next_Ready_Cycle = Core_Cycle_Count[0] + 325;
+					Next_Ready_Cycle = Core_Cycle_Count[0] + 325 + (uint64_t)Flash_Write_Offset;
 				}
 
 				Chip_Mode = 0;
@@ -3058,7 +3061,7 @@ namespace GBAHawk
 						{
 							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
 							{
-								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000;
+								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000 + (uint64_t)Flash_Chip_Erase_Offset;
 
 								Erase_All = true;
 
@@ -3116,7 +3119,7 @@ namespace GBAHawk
 					{
 						if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
 						{
-							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000;
+							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000 + (uint64_t)Flash_Sector_Erase_Offset;
 
 							Erase_4k = true;
 
@@ -3410,7 +3413,7 @@ namespace GBAHawk
 					Access_Address = (addr & 0xFFFF) + Bank_State;
 					Write_Value = value;
 
-					Next_Ready_Cycle = Core_Cycle_Count[0] + 325;
+					Next_Ready_Cycle = Core_Cycle_Count[0] + 325 + (uint64_t)Flash_Write_Offset;
 				}
 
 				Chip_Mode = 0;
@@ -3432,7 +3435,7 @@ namespace GBAHawk
 						{
 							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
 							{
-								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000;
+								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000 + (uint64_t)Flash_Chip_Erase_Offset;
 
 								Erase_All = true;
 
@@ -3490,7 +3493,7 @@ namespace GBAHawk
 					{
 						if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
 						{
-							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000;
+							Next_Ready_Cycle = Core_Cycle_Count[0] + 460000 + (uint64_t)Flash_Sector_Erase_Offset;
 
 							Erase_4k = true;
 

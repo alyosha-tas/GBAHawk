@@ -146,6 +146,88 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 				set => _EEPROM_Offset_R = value;
 			}
 
+			[DisplayName("Flash Write Offset L")]
+			[Description("Set offset in Flash write timing (-128 to 127)")]
+			[DefaultValue(0)]
+			public short FlashWriteOffset_L
+			{
+				get => _Flash_Write_Offset_L;
+				set
+				{
+					if (value > 127)
+					{
+						_Flash_Write_Offset_L = 127;
+					}
+					else if (value < -128)
+					{
+						_Flash_Write_Offset_L = -128;
+					}
+					else
+					{
+						_Flash_Write_Offset_L = value;
+					}
+				}
+			}
+
+			[DisplayName("Flash Write Offset R")]
+			[Description("Set offset in Flash write timing (-128 to 127)")]
+			[DefaultValue(0)]
+			public short FlashWriteOffset_R
+			{
+				get => _Flash_Write_Offset_R;
+				set
+				{
+					if (value > 127)
+					{
+						_Flash_Write_Offset_R = 127;
+					}
+					else if (value < -128)
+					{
+						_Flash_Write_Offset_R = -128;
+					}
+					else
+					{
+						_Flash_Write_Offset_R = value;
+					}
+				}
+			}
+
+			[DisplayName("Flash Sector Erase Offset L")]
+			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashSectorEraseOffset_L
+			{
+				get => _Flash_Sector_Erase_Offset_L;
+				set => _Flash_Sector_Erase_Offset_L = value;
+			}
+
+			[DisplayName("Flash Sector Erase Offset R")]
+			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashSectorEraseOffset_R
+			{
+				get => _Flash_Sector_Erase_Offset_R;
+				set => _Flash_Sector_Erase_Offset_R = value;
+			}
+
+			[DisplayName("Flash Chip Erase Offset L")]
+			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashChipEraseOffset_L
+			{
+				get => _Flash_Chip_Erase_Offset_L;
+				set => _Flash_Chip_Erase_Offset_L = value;
+			}
+
+			[DisplayName("Flash Chip Erase Offset R")]
+			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
+			[DefaultValue(0)]
+			public short FlashChipEraseOffset_R
+			{
+				get => _Flash_Chip_Erase_Offset_R;
+				set => _Flash_Chip_Erase_Offset_R = value;
+			}
+
 			[DisplayName("Use Existing SaveRAM")]
 			[Description("(Intended for development, for regular use leave as true.) When true, existing SaveRAM will be loaded at boot up.")]
 			[DefaultValue(true)]
@@ -173,6 +255,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			private short _EEPROM_Offset_L;
 			[JsonIgnore]
 			private short _EEPROM_Offset_R;
+			[JsonIgnore]
+			private short _Flash_Write_Offset_L;
+			[JsonIgnore]
+			private short _Flash_Write_Offset_R;
+			[JsonIgnore]
+			private short _Flash_Sector_Erase_Offset_L;
+			[JsonIgnore]
+			private short _Flash_Sector_Erase_Offset_R;
+			[JsonIgnore]
+			private short _Flash_Chip_Erase_Offset_L;
+			[JsonIgnore]
+			private short _Flash_Chip_Erase_Offset_R;
 
 			public GBAHawkLink_Debug_SyncSettings Clone() => (GBAHawkLink_Debug_SyncSettings)MemberwiseClone();
 

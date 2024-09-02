@@ -289,6 +289,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 												  ROMS[1], (uint)ROMS_Length[1], mappers[1],
 												  date_time_0, rtc_working_0, date_time_1, rtc_working_1,
 												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R,
+												  SyncSettings.FlashWriteOffset_L, SyncSettings.FlashWriteOffset_R,
+												  SyncSettings.FlashSectorEraseOffset_L, SyncSettings.FlashSectorEraseOffset_R,
+												  SyncSettings.FlashChipEraseOffset_L, SyncSettings.FlashChipEraseOffset_R,
 												  SyncSettings.Use_GBP_L, SyncSettings.Use_GBP_R);
 
 			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }

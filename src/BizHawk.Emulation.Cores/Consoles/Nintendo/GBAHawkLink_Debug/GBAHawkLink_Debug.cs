@@ -57,6 +57,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			temp_sync_R.RTCOffset = linkSyncSettings.RTCOffset_R;
 			temp_sync_L.EEPROMOffset = linkSyncSettings.EEPROMOffset_L;
 			temp_sync_R.EEPROMOffset = linkSyncSettings.EEPROMOffset_R;
+			temp_sync_L.FlashWriteOffset = linkSyncSettings.FlashWriteOffset_L;
+			temp_sync_R.FlashWriteOffset = linkSyncSettings.FlashWriteOffset_R;
+			temp_sync_L.FlashChipEraseOffset = linkSyncSettings.FlashChipEraseOffset_L;
+			temp_sync_R.FlashChipEraseOffset = linkSyncSettings.FlashChipEraseOffset_R;
+			temp_sync_L.FlashSectorEraseOffset = linkSyncSettings.FlashSectorEraseOffset_L;
+			temp_sync_R.FlashSectorEraseOffset = linkSyncSettings.FlashSectorEraseOffset_R;
 			temp_sync_L.Use_GBP = linkSyncSettings.Use_GBP_L;
 			temp_sync_R.Use_GBP = linkSyncSettings.Use_GBP_R;
 
