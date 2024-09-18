@@ -34,7 +34,7 @@ GBAHawk_EXPORT void GBA_load_bios(GBACore* p, uint8_t* bios)
 
 // load a rom into the core
 GBAHawk_EXPORT void GBA_load(GBACore* p, uint8_t* rom, uint32_t size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset,
-							 int16_t flash_write_offset, int16_t flash_sector_offset, int16_t flash_chip_offset, bool is_GBP)
+							 int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
 {
 	p->Load_ROM(rom, size, mapper, datetime, rtc_functional, EEPROM_offset, flash_write_offset, flash_sector_offset, flash_chip_offset, is_GBP);
 }
@@ -239,8 +239,8 @@ GBAHawk_EXPORT void GBALink_load(GBALinkCore* p, uint8_t* rom_0, uint32_t size_0
 												 uint64_t datetime_1, bool rtc_functional_1,
 												 int16_t EEPROM_offset_0, int16_t EEPROM_offset_1,
 												 int16_t flash_write_offset_0, int16_t flash_write_offset_1,
-												 int16_t flash_sector_offset_0, int16_t flash_sector_offset_1,
-												 int16_t flash_chip_offset_0, int16_t flash_chip_offset_1,
+												 int32_t flash_sector_offset_0, int32_t flash_sector_offset_1,
+												 int32_t flash_chip_offset_0, int32_t flash_chip_offset_1,
 												 bool is_GBP_0, bool is_GBP_1)
 {
 	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1, EEPROM_offset_0, EEPROM_offset_1,

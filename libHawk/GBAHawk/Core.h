@@ -33,7 +33,7 @@ namespace GBAHawk
 		}
 
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, 
-					  int16_t flash_write_offset, int16_t flash_sector_offset, int16_t flash_chip_offset, bool is_GBP)
+					  int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 

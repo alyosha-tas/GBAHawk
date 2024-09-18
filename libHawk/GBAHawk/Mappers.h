@@ -22,8 +22,8 @@ namespace GBAHawk
 		uint8_t ROM_C4, ROM_C5, ROM_C6, ROM_C7, ROM_C8, ROM_C9;
 		int16_t EEPROM_Offset;
 		int16_t Flash_Write_Offset;
-		int16_t Flash_Sector_Erase_Offset;
-		int16_t Flash_Chip_Erase_Offset;
+		int32_t Flash_Sector_Erase_Offset;
+		int32_t Flash_Chip_Erase_Offset;
 
 		// stated
 		bool Command_Mode;

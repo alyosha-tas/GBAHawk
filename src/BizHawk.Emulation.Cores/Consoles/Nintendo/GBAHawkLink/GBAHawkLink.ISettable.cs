@@ -214,7 +214,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DisplayName("Flash Sector Erase Offset L")]
 			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
 			[DefaultValue(0)]
-			public short FlashSectorEraseOffset_L
+			public int FlashSectorEraseOffset_L
 			{
 				get => _Flash_Sector_Erase_Offset_L;
 				set => _Flash_Sector_Erase_Offset_L = value;
@@ -223,7 +223,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DisplayName("Flash Sector Erase Offset R")]
 			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
 			[DefaultValue(0)]
-			public short FlashSectorEraseOffset_R
+			public int FlashSectorEraseOffset_R
 			{
 				get => _Flash_Sector_Erase_Offset_R;
 				set => _Flash_Sector_Erase_Offset_R = value;
@@ -232,7 +232,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DisplayName("Flash Chip Erase Offset L")]
 			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
 			[DefaultValue(0)]
-			public short FlashChipEraseOffset_L
+			public int FlashChipEraseOffset_L
 			{
 				get => _Flash_Chip_Erase_Offset_L;
 				set => _Flash_Chip_Erase_Offset_L = value;
@@ -241,7 +241,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DisplayName("Flash Chip Erase Offset R")]
 			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
 			[DefaultValue(0)]
-			public short FlashChipEraseOffset_R
+			public int FlashChipEraseOffset_R
 			{
 				get => _Flash_Chip_Erase_Offset_R;
 				set => _Flash_Chip_Erase_Offset_R = value;
@@ -279,13 +279,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[JsonIgnore]
 			private short _Flash_Write_Offset_R;
 			[JsonIgnore]
-			private short _Flash_Sector_Erase_Offset_L;
+			private int _Flash_Sector_Erase_Offset_L;
 			[JsonIgnore]
-			private short _Flash_Sector_Erase_Offset_R;
+			private int _Flash_Sector_Erase_Offset_R;
 			[JsonIgnore]
-			private short _Flash_Chip_Erase_Offset_L;
+			private int _Flash_Chip_Erase_Offset_L;
 			[JsonIgnore]
-			private short _Flash_Chip_Erase_Offset_R;
+			private int _Flash_Chip_Erase_Offset_R;
 
 			public GBALinkSyncSettings Clone()
 			{
