@@ -147,20 +147,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Write Offset L")]
-			[Description("Set offset in Flash write timing (-128 to 127)")]
+			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset_L
 			{
 				get => _Flash_Write_Offset_L;
 				set
 				{
-					if (value > 127)
+					if (value > 511)
 					{
-						_Flash_Write_Offset_L = 127;
+						_Flash_Write_Offset_L = 511;
 					}
-					else if (value < -128)
+					else if (value < -512)
 					{
-						_Flash_Write_Offset_L = -128;
+						_Flash_Write_Offset_L = -512;
 					}
 					else
 					{
@@ -170,20 +170,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Write Offset R")]
-			[Description("Set offset in Flash write timing (-128 to 127)")]
+			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset_R
 			{
 				get => _Flash_Write_Offset_R;
 				set
 				{
-					if (value > 127)
+					if (value > 511)
 					{
-						_Flash_Write_Offset_R = 127;
+						_Flash_Write_Offset_R = 511;
 					}
-					else if (value < -128)
+					else if (value < -512)
 					{
-						_Flash_Write_Offset_R = -128;
+						_Flash_Write_Offset_R = -512;
 					}
 					else
 					{
@@ -193,7 +193,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Sector Erase Offset L")]
-			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
+			[Description("Set offset in Flash Sector Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashSectorEraseOffset_L
 			{
@@ -202,7 +202,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Sector Erase Offset R")]
-			[Description("Set offset in Flash Sector Erase timing (-32768 to 32767)")]
+			[Description("Set offset in Flash Sector Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashSectorEraseOffset_R
 			{
@@ -211,7 +211,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Chip Erase Offset L")]
-			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
+			[Description("Set offset in Flash Chip Erase timing (Int range")]
 			[DefaultValue(0)]
 			public int FlashChipEraseOffset_L
 			{
@@ -220,7 +220,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawkLink_Debug
 			}
 
 			[DisplayName("Flash Chip Erase Offset R")]
-			[Description("Set offset in Flash Chip Erase timing (-32768 to 32767)")]
+			[Description("Set offset in Flash Chip Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashChipEraseOffset_R
 			{
