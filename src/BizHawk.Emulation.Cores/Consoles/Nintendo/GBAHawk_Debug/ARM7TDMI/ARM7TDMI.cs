@@ -898,7 +898,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 							{
 								cpu_Swap_Regs(cpu_Temp_Mode, false, false);
 
-								cpu_LDM_Glitch_Mode = true;
+								//cpu_LDM_Glitch_Mode = true;
 
 								Console.WriteLine("LDM_Glitch");
 							}

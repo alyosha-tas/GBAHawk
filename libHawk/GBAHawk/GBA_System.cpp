@@ -4191,7 +4191,7 @@ namespace GBAHawk
 					
 					if (cpu_Multi_Swap)
 					{
-						cpu_LDM_Glitch_Mode = true;
+						//cpu_LDM_Glitch_Mode = true;
 						
 						cpu_Swap_Regs(cpu_Temp_Mode, false, false);
 					}

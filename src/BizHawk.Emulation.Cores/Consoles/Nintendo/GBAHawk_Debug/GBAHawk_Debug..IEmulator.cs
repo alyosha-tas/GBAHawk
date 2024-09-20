@@ -98,7 +98,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBAHawk_Debug
 			// Detect GBP via image
 			if (_syncSettings.Use_GBP)
 			{
-				GBP_Screen_Detection = GBACommonFunctions.Check_Video_GBP(vid_buffer);
+				//GBP_Screen_Detection = GBACommonFunctions.Check_Video_GBP(vid_buffer);
 			}
 
 			return true;
