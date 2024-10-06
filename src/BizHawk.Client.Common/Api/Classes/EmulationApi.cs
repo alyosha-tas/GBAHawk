@@ -17,9 +17,6 @@ namespace BizHawk.Client.Common
 		private IEmulator? Emulator { get; set; }
 
 		[OptionalService]
-		private IBoardInfo? BoardInfo { get; set; }
-
-		[OptionalService]
 		private IDisassemblable? DisassemblableCore { get; set; }
 
 		[OptionalService]
@@ -126,8 +123,6 @@ namespace BizHawk.Client.Common
 		public void MinimizeFrameskip(bool enabled) => _config.AutoMinimizeSkipping = enabled;
 
 		public string GetDisplayType() => (RegionableCore?.Region)?.ToString() ?? "";
-
-		public string GetBoardName() => BoardInfo?.BoardName ?? "";
 
 		public IGameInfo? GetGameInfo()
 			=> _game;

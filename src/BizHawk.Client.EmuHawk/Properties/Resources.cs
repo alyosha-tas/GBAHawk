@@ -94,7 +94,6 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap MoveUp = ReadEmbeddedBitmap("MoveUp");
 		internal static readonly Icon MsgBoxIcon = ReadEmbeddedIcon("MsgBox");
 		internal static readonly Bitmap NE = ReadEmbeddedBitmap("NE");
-		internal static readonly Icon NesControllerIcon = ReadEmbeddedIcon("NESControllerIcon");
 		internal static readonly Bitmap NewFile = ReadEmbeddedBitmap("NewFile");
 		internal static readonly Bitmap NNE = ReadEmbeddedBitmap("NNE");
 		internal static readonly Bitmap NNW = ReadEmbeddedBitmap("NNW");
@@ -127,9 +126,6 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap SE = ReadEmbeddedBitmap("SE");
 		internal static readonly Bitmap Search = ReadEmbeddedBitmap("search");
 		internal static readonly Icon SearchIcon = ReadEmbeddedIcon("search");
-		internal static readonly Icon SharkIcon = ReadEmbeddedIcon("Shark");
-		internal static readonly Bitmap Shark = ReadEmbeddedBitmap("Shark");
-		internal static readonly Icon SmsIcon = ReadEmbeddedIcon("sms-icon");
 		internal static readonly Bitmap Split = ReadEmbeddedBitmap("Split");
 		internal static readonly Bitmap Square = ReadEmbeddedBitmap("Square");
 		internal static readonly Bitmap SSE = ReadEmbeddedBitmap("SSE");

@@ -201,11 +201,6 @@ namespace BizHawk.Client.Common
 				}
 			}
 
-			if (emulator.HasBoardInfo())
-			{
-				movie.BoardName = emulator.AsBoardInfo().BoardName;
-			}
-
 			if (emulator.HasRegions())
 			{
 				var region = emulator.AsRegionable().Region;

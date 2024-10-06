@@ -11,16 +11,10 @@ namespace BizHawk.Client.Common
 	[Obsolete("use IEmulationApi")]
 	public sealed class GameInfoApi : IGameInfoApi
 	{
-		[OptionalService]
-		public IBoardInfo? _boardInfo { get; set; }
-
 		private readonly IGameInfo? _game;
 
 		public GameInfoApi(IGameInfo? game)
 			=> _game = game;
-
-		public string GetBoardType()
-			=> _boardInfo?.BoardName ?? string.Empty;
 
 		public IGameInfo? GetGameInfo()
 			=> _game;

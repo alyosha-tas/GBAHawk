@@ -189,16 +189,6 @@ namespace BizHawk.Emulation.Common
 			return core.ServiceProvider.GetService<ICreateGameDBEntries>();
 		}
 
-		public static bool HasBoardInfo(this IEmulator core)
-		{
-			return core != null && core.ServiceProvider.HasService<IBoardInfo>();
-		}
-
-		public static IBoardInfo AsBoardInfo(this IEmulator core)
-		{
-			return core.ServiceProvider.GetService<IBoardInfo>();
-		}
-
 		public static string RomDetails(this IEmulator core)
 		{
 			if (core != null && core.ServiceProvider.HasService<IRomInfo>())

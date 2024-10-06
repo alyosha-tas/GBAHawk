@@ -3325,11 +3325,6 @@ namespace BizHawk.Client.GBAHawk
 						_defaultRomDetails = $"{loader.Game.Name}\r\nSHA1:N/A\r\nMD5:N/A\r\n";
 					}
 
-					if (Emulator.HasBoardInfo())
-					{
-						Console.WriteLine("Core reported BoardID: \"{0}\"", Emulator.AsBoardInfo().BoardName);
-					}
-
 					Config.RecentRoms.Add(openAdvancedArgs);
 					JumpLists.AddRecentItem(openAdvancedArgs, ioa.DisplayName);
 

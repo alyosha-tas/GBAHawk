@@ -20,7 +20,6 @@ namespace BizHawk.Client.Common
 		void LimitFramerate(bool enabled);
 		void MinimizeFrameskip(bool enabled);
 		string GetDisplayType();
-		string GetBoardName();
 
 		IGameInfo? GetGameInfo();
 

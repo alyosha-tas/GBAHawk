@@ -92,11 +92,6 @@ namespace BizHawk.Client.Common
 		public string GetDisplayType()
 			=> APIs.Emulation.GetDisplayType();
 
-		[LuaMethodExample("local stemuget = emu.getboardname();")]
-		[LuaMethod("getboardname", "returns (if available) the board name of the loaded ROM")]
-		public string GetBoardName()
-			=> APIs.Emulation.GetBoardName();
-
 		[LuaDeprecatedMethod]
 		[LuaMethod("getluacore", "returns the name of the Lua core currently in use")]
 		public string GetLuaBackend()
