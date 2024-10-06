@@ -65,7 +65,6 @@ namespace BizHawk.WinForms.Controls
 
 		/// <summary>Inherits <see cref="System.Windows.Forms.TabPage"/>.</summary>
 		/// <seealso cref="TypeNamePrefix">Naming convention for control types</seealso>
-		/// <seealso cref="TabPageEx"/>
 		public const bool TabPage = true;
 
 		/// <summary>Inherits <see cref="System.Windows.Forms.TextBox"/>. Only <c>Sz*</c> variants are available.</summary>
