@@ -28,8 +28,9 @@ namespace GBAHawk
 
 		uint8_t* Cart_RAM = nullptr;
 		uint32_t Cart_RAM_Length = 0;
+		string Message_String = "";
 
-		void (*MessageCallback)(void);
+		void (*MessageCallback)(int);
 
 	# pragma region General System and Prefetch
 
@@ -9895,6 +9896,10 @@ namespace GBAHawk
 					tim_Old_IRQ[nbr] = (tim_Control[nbr] & 0x40) == 0x40;
 				}
 			}
+
+			//Message_String = "rld " + to_string(nbr) + " v " + to_string(value) + " t " + to_string(tim_Timer[nbr]) + " sub " + to_string(tim_SubCnt) + " " + to_string(CycleCount);
+
+			//MessageCallback(Message_String.length());
 
 			tim_Control[nbr] = value;
 		}

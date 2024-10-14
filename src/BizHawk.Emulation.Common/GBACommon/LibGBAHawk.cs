@@ -285,7 +285,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// get a message from the cpu
 		/// </summary>
 		[UnmanagedFunctionPointer(cc)]
-		public delegate void MessageCallback();
+		public delegate void MessageCallback(int str_length);
 
 		/// <summary>
 		/// set a callback for messages
@@ -302,7 +302,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// <param name="h">pointer to const char *</param>
 		/// <param name="l">copy length, must be obtained from appropriate get legnth function</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_getmessage(IntPtr core, StringBuilder h, int l);
+		public static extern void GBA_getmessage(IntPtr core, StringBuilder h);
 
 
 		#region PPU_Viewer

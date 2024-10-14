@@ -182,7 +182,7 @@ GBAHawk_EXPORT void GBA_getdisassembly(GBACore* p, char* d, int t, int l) {
 #pragma region Messages
 
 // set message callback
-GBAHawk_EXPORT void GBA_setmessagecallback(GBACore* p, void (*callback)(void)) {
+GBAHawk_EXPORT void GBA_setmessagecallback(GBACore* p, void (*callback)(int)) {
 	p->SetMessageCallback(callback);
 }
 

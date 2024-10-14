@@ -487,19 +487,14 @@ namespace GBAHawk
 
 		#pragma endregion
 
-		void SetMessageCallback(void (*callback)(void))
+		void SetMessageCallback(void (*callback)(int))
 		{
 			GBA.MessageCallback = callback;
 		}
 
 		void GetMessage(char* d, int l)
 		{
-			char rep[80] = {};
-			char* message_char = rep;
-
-			//sprintf_s(message_char, 80, "A %8f B %8f C %8f D %8f", GBA.ppu_f_A, GBA.ppu_f_B, GBA.ppu_f_C, GBA.ppu_f_D);
-
-			std::memcpy(d, rep, 80);
+			std::memcpy(d, GBA.Message_String.c_str(), GBA.Message_String.length() + 1);
 		}
 
 		uint8_t* Get_PPU_Pointers(int sel)

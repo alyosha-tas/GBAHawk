@@ -247,7 +247,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			Mem_Domains.palram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
 			Mem_Domains.mmio = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
 
-			GBA_message = null;
+			GBA_message = GetMessage;
 
 			LibGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
 		}
@@ -510,11 +510,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 		private LibGBAHawk.MessageCallback GBA_message;
 
-		private void GetMessage()
+		private void GetMessage(int str_length)
 		{
-			StringBuilder new_m = new StringBuilder(200);
+			StringBuilder new_m = new StringBuilder(str_length + 1);
 
-			LibGBAHawk.GBA_getmessage(GBA_Pntr, new_m, 200);
+			LibGBAHawk.GBA_getmessage(GBA_Pntr, new_m);
 
 			Console.WriteLine(new_m);
 		}
