@@ -50,6 +50,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 															ulong datetime0, bool rtc_functional0,
 															ulong datetime1, bool rtc_functional1,
 															short EEPROMoffset0, short EEPROMoffset1,
+															ushort FlashType64Value0, ushort FlashType64Value1,
+															ushort FlashType128Value0, ushort FlashType128Value1,
 															short FlashWriteOffset_L, short FlashWriteOffset_R,
 															int FlashSectorOffset_L, int FlashSectorOffset_R,
 															int FlashChipOffset_L, int FlashChipOffset_R,

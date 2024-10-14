@@ -36,6 +36,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public ushort Acc_Y_state_1, Acc_Y_state_2;
 		public byte Solar_state_1, Solar_state_2;
 
+		public ushort Flash_Type_64_Value_L = 0;
+		public ushort Flash_Type_128_Value_L = 0;
+		public ushort Flash_Type_64_Value_R = 0;
+		public ushort Flash_Type_128_Value_R = 0;
+
 		public byte[][] cart_RAMS = new byte[2][];
 		public bool[] has_bats = new bool[2];
 		public bool use_sram;
@@ -161,7 +166,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					}
 				}
 			}
-			
+
+			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_L = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_L = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_L = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_L = 0xD48F; }
+
+			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_L = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_L = 0x1362; }
+
+			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_R = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_R = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_R = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_R = 0xD48F; }
+
+			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_R = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_R = 0x1362; }
+
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
@@ -289,6 +310,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 												  ROMS[1], (uint)ROMS_Length[1], mappers[1],
 												  date_time_0, rtc_working_0, date_time_1, rtc_working_1,
 												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R,
+												  Flash_Type_64_Value_L, Flash_Type_64_Value_R,
+												  Flash_Type_128_Value_L, Flash_Type_128_Value_R,
 												  SyncSettings.FlashWriteOffset_L, SyncSettings.FlashWriteOffset_R,
 												  SyncSettings.FlashSectorEraseOffset_L, SyncSettings.FlashSectorEraseOffset_R,
 												  SyncSettings.FlashChipEraseOffset_L, SyncSettings.FlashChipEraseOffset_R,

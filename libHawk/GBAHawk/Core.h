@@ -32,8 +32,8 @@ namespace GBAHawk
 			std::memcpy(GBA.BIOS, bios, 0x4000);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, 
-					  int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, uint16_t flash_type_64_value,
+					  uint16_t flash_type_128_value, int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
 		{
 			std::memcpy(GBA.ROM, ext_rom, 0x6000000);
 
@@ -164,6 +164,9 @@ namespace GBAHawk
 			Mapper->Reset_RTC = true;
 			Mapper->Reset();
 			Mapper->Reset_RTC = false;
+
+			Mapper->Flash_Type_64_Value = flash_type_64_value;
+			Mapper->Flash_Type_128_Value = flash_type_128_value;
 
 			Mapper->RTC_Functional = rtc_functional;
 

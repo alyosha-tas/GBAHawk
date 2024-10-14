@@ -96,6 +96,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				set => _EEPROM_Offset = value;
 			}
 
+			public enum FlashChipType64
+			{
+				Atmel,
+				Macronix,
+				Panasonic,
+				SST
+			}
+
+			public enum FlashChipType128
+			{
+				Macronix,
+				Sanyo
+			}
+
+			[DisplayName("Flash Chip Type (64K)")]
+			[Description("NOTE: Flash timings not fully characterized.")]
+			[DefaultValue(FlashChipType64.Panasonic)]
+			public FlashChipType64 Flash_Type_64 { get; set; }
+
+			[DisplayName("Flash Chip Type (128K)")]
+			[Description("NOTE: Flash timings not fully characterized.")]
+			[DefaultValue(FlashChipType128.Sanyo)]
+			public FlashChipType128 Flash_Type_128 { get; set; }
+
 			[DisplayName("Flash Write Offset")]
 			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]

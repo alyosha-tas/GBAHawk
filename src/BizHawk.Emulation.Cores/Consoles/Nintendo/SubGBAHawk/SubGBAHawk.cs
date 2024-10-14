@@ -35,6 +35,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public ushort Acc_Y_state;
 		public byte Solar_state;
 
+		public ushort Flash_Type_64_Value = 0;
+		public ushort Flash_Type_128_Value = 0;
 		public byte[] cart_RAM;
 		public bool has_bat;
 		public bool use_sram;
@@ -133,6 +135,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				}
 			}
 
+			if (SyncSettings.Flash_Type_64 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value = 0x1B32; }
+			if (SyncSettings.Flash_Type_64 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType64.SST) { Flash_Type_64_Value = 0xD48F; }
+
+			if (SyncSettings.Flash_Type_128 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value = 0x09C2; }
+			if (SyncSettings.Flash_Type_128 == SubGBA.SubGBAHawk.SubGBASyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value = 0x1362; }
+
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
@@ -198,7 +208,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			LibGBAHawk.GBA_setrumblecallback(GBA_Pntr, rumblecb);
 
 			Console.WriteLine("Mapper: " + mapper);
-			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset,
+			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset, Flash_Type_64_Value, Flash_Type_128_Value,
 								SyncSettings.FlashWriteOffset, SyncSettings.FlashSectorEraseOffset, SyncSettings.FlashChipEraseOffset, false); //SyncSettings.Use_GBP);
 
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }

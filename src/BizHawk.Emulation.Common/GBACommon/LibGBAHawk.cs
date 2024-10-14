@@ -43,7 +43,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, 
-										  short EEPROMoffset, short FlashWriteOffset, int FlashSectorOffset, int FlashChipOffset, bool is_GBP);
+										  short EEPROMoffset, ushort FlashType64Value, ushort FlashType128Value, short FlashWriteOffset, int FlashSectorOffset, int FlashChipOffset, bool is_GBP);
 
 		/// <summary>
 		/// Create SRAM image.

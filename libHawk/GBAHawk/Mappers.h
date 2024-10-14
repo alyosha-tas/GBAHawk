@@ -25,6 +25,9 @@ namespace GBAHawk
 		int32_t Flash_Sector_Erase_Offset;
 		int32_t Flash_Chip_Erase_Offset;
 
+		uint16_t Flash_Type_64_Value;
+		uint16_t Flash_Type_128_Value;
+
 		// stated
 		bool Command_Mode;
 		bool RTC_Clock;
@@ -2954,22 +2957,22 @@ namespace GBAHawk
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						ret_value = 0x1B;
+						ret_value = (uint8_t)((Flash_Type_64_Value >> 8) & 0xFF);
 					}
 					else
 					{
-						ret_value = 0x13;
+						ret_value = (uint8_t) ((Flash_Type_128_Value >> 8) & 0xFF);
 					}
 				}
 				else
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						ret_value = 0x32;
+						ret_value = (uint8_t)(Flash_Type_64_Value & 0xFF);
 					}
 					else
 					{
-						ret_value = 0x62;
+						ret_value = (uint8_t)(Flash_Type_128_Value & 0xFF);
 					}
 				}
 			}
@@ -3328,22 +3331,22 @@ namespace GBAHawk
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						ret_value = 0x1B;
+						ret_value = (uint8_t)((Flash_Type_64_Value >> 8) & 0xFF);
 					}
 					else
 					{
-						ret_value = 0x13;
+						ret_value = (uint8_t)((Flash_Type_128_Value >> 8) & 0xFF);
 					}
 				}
 				else
 				{
 					if ((Size_Mask + 1) == 0x10000)
 					{
-						ret_value = 0x32;
+						ret_value = (uint8_t)(Flash_Type_64_Value & 0xFF);
 					}
 					else
 					{
-						ret_value = 0x62;
+						ret_value = (uint8_t)(Flash_Type_128_Value & 0xFF);
 					}
 				}
 			}
