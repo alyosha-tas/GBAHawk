@@ -62,6 +62,7 @@ namespace GBAHawk
 		uint8_t Reg_Access;
 		uint8_t Reg_Ctrl;
 		uint8_t Write_Value;
+		uint8_t Write_Count; // for Atmel devices only
 
 		uint8_t Current_C4, Current_C5, Current_C6, Current_C7, Current_C8, Current_C9;
 
@@ -1132,6 +1133,7 @@ namespace GBAHawk
 			saver = byte_saver(Reg_Access, saver);
 			saver = byte_saver(Reg_Ctrl, saver);
 			saver = byte_saver(Write_Value, saver);
+			saver = byte_saver(Write_Count, saver);
 
 			saver = byte_saver(Current_C4, saver);
 			saver = byte_saver(Current_C5, saver);
@@ -1206,6 +1208,7 @@ namespace GBAHawk
 			loader = byte_loader(&Reg_Access, loader);
 			loader = byte_loader(&Reg_Ctrl, loader);
 			loader = byte_loader(&Write_Value, loader);
+			loader = byte_loader(&Write_Count, loader);
 
 			loader = byte_loader(&Current_C4, loader);
 			loader = byte_loader(&Current_C5, loader);
@@ -3003,7 +3006,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					// for the larger chips, it seems a status register is activated on wirtes, which
+					// for the larger chips, it seems a status register is activated on writes, which
 					// returns 0 until done (for our purposes since operations always succeed.)
 
 					ret_value = 0;
@@ -3377,7 +3380,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					// for the larger chips, it seems a status register is activated on wirtes, which
+					// for the larger chips, it seems a status register is activated on writes, which
 					// returns 0 until done (for our purposes since operations always succeed.)
 
 					ret_value = 0;
@@ -3601,6 +3604,259 @@ namespace GBAHawk
 		}
 	};
 	#pragma endregion
+
+	#pragma region FLASH Atmel
+
+	class Mapper_FLASH_Atmel : public Mappers
+	{
+	public:
+
+		void Reset()
+		{
+			Write_Value = 0;
+			Access_Address = 0;
+
+			Bank_State = 0;
+			Chip_Mode = 0;
+			Next_Mode = 0;
+			Erase_4k_Addr = 0;
+
+			Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
+
+			Swapped_Out = false;
+			Erase_Command = false;
+			Erase_4k = false;
+			Erase_All = false;
+			Force_Bit_6 = false;
+			Write_Count = 0;
+		}
+
+		uint8_t Read_Memory_8(uint32_t addr)
+		{
+			Update_State();
+
+			uint8_t ret_value = 0;
+
+			if (Swapped_Out)
+			{
+				if ((addr & 0xFFFF) > 1)
+				{
+					ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
+				}
+				else if ((addr & 0xFFFF) == 1)
+				{
+					ret_value = (uint8_t)((Flash_Type_64_Value >> 8) & 0xFF);
+				}
+				else
+				{
+					ret_value = (uint8_t)(Flash_Type_64_Value & 0xFF);
+				}
+			}
+			else
+			{
+				ret_value = Cart_RAM[(addr & 0xFFFF) + Bank_State];
+			}
+
+			// according to data sheet, upper bit returns 0 when an operation is in progress
+			// this is important to ex Sonic Advance
+			if (Next_Ready_Cycle != 0xFFFFFFFFFFFFFFFF)
+			{
+				// according to data sheet, upper bit returns 0 when an operation is in progress
+				// and the 6th bit alternates
+				// this is important to ex Sonic Advance
+				ret_value &= 0x7F;
+
+				ret_value &= 0xBF;
+
+				if (Force_Bit_6)
+				{
+					ret_value |= 0x40;
+				}
+
+				Force_Bit_6 ^= true;
+			}
+
+			return ret_value;
+		}
+
+		uint16_t Read_Memory_16(uint32_t addr)
+		{
+			// 8 bit bus only
+			uint16_t ret = Read_Memory_8(addr & 0xFFFE);
+
+			ret = (uint16_t)(ret | (ret << 8));
+			return ret;
+		}
+
+		uint32_t Read_Memory_32(uint32_t addr)
+		{
+			// 8 bit bus only
+			uint32_t ret = Read_Memory_8(addr & 0xFFFC);
+
+			ret = (uint32_t)(ret | (ret << 8) | (ret << 16) | (ret << 24));
+			return ret;
+		}
+
+		void Write_Memory_8(uint32_t addr, uint8_t value)
+		{
+			Update_State();
+
+			if (Chip_Mode == 3)
+			{
+				if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+				{
+					Access_Address = (addr & 0xFFFF) + Bank_State;
+					Write_Value = value;
+
+					Write_Count += 1;
+
+					if (Write_Count == 128)
+					{
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 325 * 10 + (uint64_t)Flash_Write_Offset;
+
+						Chip_Mode = 0;
+					}
+					else
+					{
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 1;
+					}
+				}
+			}
+			else if ((addr & 0xFFFF) == 0x5555)
+			{
+				if (Chip_Mode == 0)
+				{
+					if (value == 0xAA)
+					{
+						Chip_Mode = 1;
+					}
+				}
+				if (Chip_Mode == 2)
+				{
+					if (value == 0x10)
+					{
+						if (Erase_Command)
+						{
+							if (Next_Ready_Cycle == 0xFFFFFFFFFFFFFFFF)
+							{
+								Next_Ready_Cycle = Core_Cycle_Count[0] + 3 * 430000 + (uint64_t)Flash_Chip_Erase_Offset;
+
+								Erase_All = true;
+
+								Force_Bit_6 = false;
+							}
+
+							Erase_Command = false;
+
+							Chip_Mode = 0;
+						}
+					}
+					else if (value == 0x80)
+					{
+						Erase_Command = true;
+						Chip_Mode = 0;
+					}
+					else if (value == 0x90)
+					{
+						Swapped_Out = true;
+						Chip_Mode = 0;
+					}
+					else if (value == 0xA0)
+					{
+						Chip_Mode = 3;
+						Write_Count = 0;
+					}
+					else if (value == 0xF0)
+					{
+						Swapped_Out = false;
+						Chip_Mode = 0;
+					}
+				}
+			}
+			else if ((addr & 0xFFFF) == 0x2AAA)
+			{
+				if (Chip_Mode == 1)
+				{
+					if (value == 0x55)
+					{
+						Chip_Mode = 2;
+					}
+				}
+			}
+		}
+
+		void Write_Memory_16(uint32_t addr, uint16_t value)
+		{
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 1) == 0)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)value);
+			}
+			else
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 8) & 0xFF));
+			}
+		}
+
+		void Write_Memory_32(uint32_t addr, uint32_t value)
+		{
+			// stores the correct byte in the correct position, but only 1
+			if ((addr & 3) == 0)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)value);
+			}
+			else if ((addr & 3) == 1)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 8) & 0xFF));
+			}
+			else if ((addr & 3) == 2)
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 16) & 0xFF));
+			}
+			else
+			{
+				Write_Memory_8((addr & 0xFFFF), (uint8_t)((value >> 24) & 0xFF));
+			}
+		}
+
+		uint8_t Peek_Memory(uint32_t addr)
+		{
+			return Cart_RAM[(addr & 0xFFFF) + Bank_State];
+		}
+
+		void Update_State()
+		{
+			if (Core_Cycle_Count[0] >= Next_Ready_Cycle)
+			{
+				if (Erase_4k)
+				{
+					for (uint32_t i = 0; i < 0x1000; i++)
+					{
+						Cart_RAM[i + Erase_4k_Addr + Bank_State] = 0xFF;
+					}
+
+					Erase_4k = false;
+				}
+				else if (Erase_All)
+				{
+					for (uint32_t i = 0; i < (Size_Mask + 1); i++)
+					{
+						Cart_RAM[i] = 0xFF;
+					}
+
+					Erase_All = false;
+				}
+				else
+				{
+					Cart_RAM[Access_Address] = Write_Value;
+				}
+
+				Next_Ready_Cycle = 0xFFFFFFFFFFFFFFFF;
+			}
+		}
+	};
+	#pragma endregion
+
 }
 
 #endif

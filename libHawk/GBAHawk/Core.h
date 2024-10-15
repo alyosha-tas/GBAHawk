@@ -125,7 +125,8 @@ namespace GBAHawk
 			}
 			else if (mapper == 7)
 			{
-				Mapper = new Mapper_FLASH();
+				if (flash_type_64_value == 0x3D1F) { Mapper = new Mapper_FLASH_Atmel(); }
+				else { Mapper = new Mapper_FLASH(); }
 			}
 			else if (mapper == 8)
 			{
