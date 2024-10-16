@@ -128,9 +128,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 						cart_RAM[i] = 0xFF;
 					}
 				}
-				// initialize Flash to 0x0;
-				// jsmolka test ROM says it should be 0xFF, but this doesn't work with ex. Mario vs Donkey Kong
-				// if the erase function takes a non-negligable amount of time
+				// initialize Flash to 0xFF;
 				if ((mapper == 7) || (mapper == 8))
 				{
 					for (int i = 0; i < cart_RAM.Length; i++)
@@ -143,7 +141,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			if (SyncSettings.Flash_Type_64 == GBA.GBAHawk.GBASyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value = 0x3D1F; }
 			if (SyncSettings.Flash_Type_64 == GBA.GBAHawk.GBASyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value = 0x1CC2; }
 			if (SyncSettings.Flash_Type_64 == GBA.GBAHawk.GBASyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value = 0x1B32; }
-			if (SyncSettings.Flash_Type_64 == GBA.GBAHawk.GBASyncSettings.FlashChipType64.SST) { Flash_Type_64_Value = 0xD48F; }
+			if (SyncSettings.Flash_Type_64 == GBA.GBAHawk.GBASyncSettings.FlashChipType64.SST) { Flash_Type_64_Value = 0xD4BF; }
 
 			if (SyncSettings.Flash_Type_128 == GBA.GBAHawk.GBASyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value = 0x09C2; }
 			if (SyncSettings.Flash_Type_128 == GBA.GBAHawk.GBASyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value = 0x1362; }

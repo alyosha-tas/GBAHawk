@@ -170,7 +170,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_L = 0x3D1F; }
 			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_L = 0x1CC2; }
 			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_L = 0x1B32; }
-			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_L = 0xD48F; }
+			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_L = 0xD4BF; }
 
 			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_L = 0x09C2; }
 			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_L = 0x1362; }
@@ -178,7 +178,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_R = 0x3D1F; }
 			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_R = 0x1CC2; }
 			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_R = 0x1B32; }
-			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_R = 0xD48F; }
+			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_R = 0xD4BF; }
 
 			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_R = 0x09C2; }
 			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_R = 0x1362; }
