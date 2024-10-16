@@ -120,7 +120,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			[DefaultValue(FlashChipType128.Sanyo)]
 			public FlashChipType128 Flash_Type_128 { get; set; }
 
-			[DisplayName("Flash Write Offset")]
+			[DisplayName("Flash Write Offset (Not used for Atmel)")]
 			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset
@@ -143,7 +143,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				}
 			}
 
-			[DisplayName("Flash Sector Erase Offset")]
+			[DisplayName("Flash Sector Erase (or Atmel erase/write) Offset / ")]
 			[Description("Set offset in Flash Sector Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashSectorEraseOffset

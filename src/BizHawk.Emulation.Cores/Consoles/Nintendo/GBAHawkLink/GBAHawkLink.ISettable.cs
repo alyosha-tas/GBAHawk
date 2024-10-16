@@ -199,7 +199,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DefaultValue(FlashChipType128.Sanyo)]
 			public FlashChipType128 Flash_Type_128_R { get; set; }
 
-			[DisplayName("Flash Write Offset L")]
+			[DisplayName("Flash Write Offset L (Not used for Atmel)")]
 			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset_L
@@ -222,7 +222,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				}
 			}
 
-			[DisplayName("Flash Write Offset R")]
+			[DisplayName("Flash Write Offset R (Not used for Atmel)")]
 			[Description("Set offset in Flash write timing (-512 to 511)")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset_R
@@ -245,7 +245,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				}
 			}
 
-			[DisplayName("Flash Sector Erase Offset L")]
+			[DisplayName("Flash Sector Erase (or Atmel erase/write) Offset L")]
 			[Description("Set offset in Flash Sector Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashSectorEraseOffset_L
@@ -254,7 +254,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				set => _Flash_Sector_Erase_Offset_L = value;
 			}
 
-			[DisplayName("Flash Sector Erase Offset R")]
+			[DisplayName("Flash Sector Erase (or Atmel erase/write) Offset R")]
 			[Description("Set offset in Flash Sector Erase timing (Int range)")]
 			[DefaultValue(0)]
 			public int FlashSectorEraseOffset_R

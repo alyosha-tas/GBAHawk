@@ -3712,7 +3712,7 @@ namespace GBAHawk
 
 					if (Write_Count == 128)
 					{
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 325 * 10 + (uint64_t)Flash_Write_Offset;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 40000 + (uint64_t)Flash_Sector_Erase_Offset;
 
 						Chip_Mode = 0;
 					}
