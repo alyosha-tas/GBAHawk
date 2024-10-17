@@ -3661,10 +3661,11 @@ namespace GBAHawk
 			// this is important to ex Sonic Advance
 			if (Next_Ready_Cycle != 0xFFFFFFFFFFFFFFFF)
 			{
-				// according to data sheet, upper bit returns 0 when an operation is in progress
+				// according to data sheet, upper bit returns complement of last written byte when an operation is in progress
 				// and the 6th bit alternates
-				// this is important to ex Sonic Advance
 				ret_value &= 0x7F;
+
+				ret_value |= ((~Write_Value) & 0x80);
 
 				ret_value &= 0xBF;
 
@@ -3712,7 +3713,7 @@ namespace GBAHawk
 
 					if (Write_Count == 128)
 					{
-						Next_Ready_Cycle = Core_Cycle_Count[0] + 40000 + (uint64_t)Flash_Sector_Erase_Offset;
+						Next_Ready_Cycle = Core_Cycle_Count[0] + 30000 + (uint64_t)Flash_Sector_Erase_Offset;
 
 						Chip_Mode = 0;
 					}
