@@ -2803,6 +2803,66 @@ namespace GBAHawk
 					}
 				}
 			}
+			else if (GBP_Mode_Enabled)
+			{
+				// GBP rumble feature
+				if (CycleCount >= ser_GBP_Next_Start_Time)
+				{
+					ser_GBP_Div_Count += 1;
+
+					if ((ser_GBP_Div_Count & 0xF) == 0)
+					{
+						ser_Bit_Count += 1;
+
+						if (ser_Bit_Count == ser_Bit_Total)
+						{
+							// reset start bit
+							ser_Start = false;
+							ser_CTRL &= 0xFF7F;
+
+							//Message_String = "Complete: " + to_string(ser_Data_0 | (ser_Data_1 << 16)) + " " + to_string(CycleCount);
+
+							//MessageCallback(Message_String.length());
+
+							if (ser_GBP_Transfer_Count == 15)
+							{
+								if ((ser_Data_0 & 0xFF) == 0x26)
+								{
+									RumbleCallback(true);
+
+									//Message_String = "Rumble On";
+
+									//MessageCallback(Message_String.length());
+								}
+								if ((ser_Data_0 & 0xFF) == 0x04)
+								{
+									RumbleCallback(false);
+
+									//Message_String = "Rumble Off";
+
+									//MessageCallback(Message_String.length());
+								}
+							}
+
+							ser_Data_0 = (uint16_t)GBP_TRansfer_List[ser_GBP_Transfer_Count];
+							ser_Data_1 = (uint16_t)(GBP_TRansfer_List[ser_GBP_Transfer_Count] >> 16);
+
+							ser_GBP_Transfer_Count += 1;
+
+							if (ser_GBP_Transfer_Count == 18)
+							{
+								ser_GBP_Transfer_Count = 0;
+							}
+
+							// trigger interrupt if needed
+							if ((ser_CTRL & 0x4000) == 0x4000)
+							{
+								Trigger_IRQ(7);
+							}
+						}
+					}
+				}
+			}
 		}
 		#pragma endregion
 

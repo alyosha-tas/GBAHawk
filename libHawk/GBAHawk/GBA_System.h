@@ -36,6 +36,9 @@ namespace GBAHawk
 
 		uint32_t video_buffer[240 * 160] = { };
 
+		uint32_t GBP_TRansfer_List[18] = { 0x0000494E, 0x0000494E, 0xB6B1494E, 0xB6B1544E, 0xABB1544E, 0xABB14E45, 0xB1BA4E45, 0xB1BA4F44, 0xB0BB4F44,
+										   0xB0BB8002, 0x10000010, 0x20000013, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x00000000 };
+
 		void Frame_Advance();
 		bool SubFrame_Advance(uint32_t reset_cycle);
 		inline void Single_Step();
@@ -9221,16 +9224,20 @@ namespace GBAHawk
 
 	#pragma region Serial port
 
-		bool ser_Internal_Clock, ser_Start;
 
-		uint8_t ser_Bit_Count, ser_Bit_Total;
-		
-		uint16_t ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
-		uint16_t ser_CTRL, ser_CTRL_J, ser_STAT_J, ser_Mode;
-		uint16_t key_CTRL;
+
+		// GBP external commands
+		uint64_t ser_GBP_Next_Start_Time;
+
+		uint32_t ser_GBP_Div_Count;
+		uint32_t ser_GBP_Transfer_Count;
 
 		uint32_t ser_RECV_J, ser_TRANS_J;
 		uint32_t ser_div_cnt, ser_Mask;
+
+		uint16_t ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
+		uint16_t ser_CTRL, ser_CTRL_J, ser_STAT_J, ser_Mode;
+		uint16_t key_CTRL;
 
 		uint8_t ser_SC, ser_SD, ser_SI, ser_SO;
 
@@ -9238,7 +9245,11 @@ namespace GBAHawk
 
 		uint8_t ser_Ext_Current_Console;
 
+		uint8_t ser_Bit_Count, ser_Bit_Total;
+
 		bool ser_Ext_Update, ser_Ext_Tick;
+
+		bool ser_Internal_Clock, ser_Start;
 
 		uint8_t ser_Read_Reg_8(uint32_t addr)
 		{
@@ -9548,6 +9559,13 @@ namespace GBAHawk
 					{
 						ser_CTRL |= (uint8_t)(ser_SI << 2);
 					}
+
+					// GBP features
+					if (!ser_Internal_Clock && GBP_Mode_Enabled && ser_Start && (ser_Bit_Total == 32))
+					{
+						ser_GBP_Next_Start_Time = CycleCount + 32;
+						ser_GBP_Div_Count = 0;
+					}
 				}
 			}
 		}
@@ -9588,6 +9606,12 @@ namespace GBAHawk
 			ser_Internal_Clock = ser_Start = false;
 
 			ser_Ext_Update = ser_Ext_Tick = false;
+
+			ser_GBP_Next_Start_Time = 0;
+
+			ser_GBP_Div_Count = 0;
+
+			ser_GBP_Transfer_Count = 0;
 		}
 
 		uint8_t* ser_SaveState(uint8_t* saver)
@@ -9623,6 +9647,11 @@ namespace GBAHawk
 			saver = int_saver(ser_TRANS_J, saver);
 			saver = int_saver(ser_div_cnt, saver);
 			saver = int_saver(ser_Mask, saver);
+
+			saver = int_saver(ser_GBP_Div_Count, saver);
+			saver = int_saver(ser_GBP_Transfer_Count, saver);
+
+			saver = long_saver(ser_GBP_Next_Start_Time, saver);
 
 			return saver;
 		}
@@ -9660,6 +9689,11 @@ namespace GBAHawk
 			loader = int_loader(&ser_TRANS_J, loader);
 			loader = int_loader(&ser_div_cnt, loader);
 			loader = int_loader(&ser_Mask, loader);
+
+			loader = int_loader(&ser_GBP_Div_Count, loader);
+			loader = int_loader(&ser_GBP_Transfer_Count, loader);
+
+			loader = long_loader(&ser_GBP_Next_Start_Time, loader);
 
 			return loader;
 		}

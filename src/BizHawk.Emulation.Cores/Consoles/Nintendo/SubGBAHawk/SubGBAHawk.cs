@@ -209,7 +209,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			Console.WriteLine("Mapper: " + mapper);
 			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset, Flash_Type_64_Value, Flash_Type_128_Value,
-								SyncSettings.FlashWriteOffset, SyncSettings.FlashSectorEraseOffset, SyncSettings.FlashChipEraseOffset, false); //SyncSettings.Use_GBP);
+								SyncSettings.FlashWriteOffset, SyncSettings.FlashSectorEraseOffset, SyncSettings.FlashChipEraseOffset, SyncSettings.Use_GBP);
 
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
