@@ -79,6 +79,7 @@ namespace GBAHawk
 		bool DMA_Any_Start, DMA_Any_IRQ;
 		bool Halt_Enter, Halt_Leave;
 		bool GBP_Mode_Enabled;
+		bool Rumble_State;
 
 		uint8_t Post_Boot, Halt_CTRL;
 
@@ -189,6 +190,8 @@ namespace GBAHawk
 			Halt_Enter =  Halt_Leave = false;
 
 			GBP_Mode_Enabled = false;
+
+			Rumble_State = false;
 
 			VRAM_32_Check = PALRAM_32_Check = false;
 
@@ -5071,6 +5074,7 @@ namespace GBAHawk
 
 			saver = long_saver(cpu_ALU_Long_Result, saver);
 			saver = long_saver(CycleCount, saver);
+			saver = long_saver(FrameCycle, saver);
 			saver = long_saver(Clock_Update_Cycle, saver);
 
 			saver = long_saver(cpu_ALU_Signed_Long_Result, saver);
@@ -5196,6 +5200,7 @@ namespace GBAHawk
 
 			loader = long_loader(&cpu_ALU_Long_Result, loader);
 			loader = long_loader(&CycleCount, loader);
+			loader = long_loader(&FrameCycle, loader);
 			loader = long_loader(&Clock_Update_Cycle, loader);
 
 			loader = slong_loader(&cpu_ALU_Signed_Long_Result, loader);
@@ -9224,8 +9229,6 @@ namespace GBAHawk
 
 	#pragma region Serial port
 
-
-
 		// GBP external commands
 		uint64_t ser_GBP_Next_Start_Time;
 
@@ -9563,9 +9566,29 @@ namespace GBAHawk
 					// GBP features
 					if (!ser_Internal_Clock && GBP_Mode_Enabled && ser_Start && (ser_Bit_Total == 32))
 					{
-						ser_GBP_Next_Start_Time = CycleCount + 32;
+						// start on scanline 16
+						if (ser_GBP_Transfer_Count == 0)
+						{
+							if (ppu_LY < 16)
+							{
+								ser_GBP_Next_Start_Time = CycleCount + 16 * 1232 - FrameCycle;
+							}
+							else
+							{
+								ser_GBP_Next_Start_Time = CycleCount + 16 * 1232 + 228 * 1232 - FrameCycle;
+							}
+						}
+						else
+						{
+							ser_GBP_Next_Start_Time = CycleCount + 32;
+						}
+
 						ser_GBP_Div_Count = 0;
 					}
+
+					Message_String = "ser: " + to_string(ser_CTRL) + " " + to_string(ser_Start) + " " + to_string(CycleCount);
+
+					MessageCallback(Message_String.length());
 				}
 			}
 		}
@@ -15551,6 +15574,7 @@ namespace GBAHawk
 			saver = bool_saver(Halt_Enter, saver);
 			saver = bool_saver(Halt_Leave, saver);
 			saver = bool_saver(GBP_Mode_Enabled, saver);
+			saver = bool_saver(Rumble_State, saver);
 
 			saver = byte_saver(Post_Boot, saver);
 			saver = byte_saver(Halt_CTRL, saver);
@@ -15659,6 +15683,7 @@ namespace GBAHawk
 			loader = bool_loader(&Halt_Enter, loader);
 			loader = bool_loader(&Halt_Leave, loader);
 			loader = bool_loader(&GBP_Mode_Enabled, loader);
+			loader = bool_loader(&Rumble_State, loader);
 
 			loader = byte_loader(&Post_Boot, loader);
 			loader = byte_loader(&Halt_CTRL, loader);
@@ -15736,6 +15761,8 @@ namespace GBAHawk
 			loader = ser_LoadState(loader);
 			loader = tim_LoadState(loader);
 			loader = cpu_LoadState(loader);
+
+			if (RumbleCallback) { RumbleCallback(Rumble_State); }
 
 			return loader;
 		}

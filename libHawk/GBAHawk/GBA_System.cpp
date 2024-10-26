@@ -1445,9 +1445,11 @@ namespace GBAHawk
 
 	void GBA_System::Frame_Advance()
 	{
+		FrameCycle = 0;
 		while (!VBlank_Rise)
 		{
 			Single_Step();
+			FrameCycle += 1;
 		}
 	}
 
@@ -2820,27 +2822,39 @@ namespace GBAHawk
 							ser_Start = false;
 							ser_CTRL &= 0xFF7F;
 
-							//Message_String = "Complete: " + to_string(ser_Data_0 | (ser_Data_1 << 16)) + " " + to_string(CycleCount);
-
-							//MessageCallback(Message_String.length());
-
-							if (ser_GBP_Transfer_Count == 15)
+							if (ser_GBP_Transfer_Count >= 12)
 							{
-								if ((ser_Data_0 & 0xFF) == 0x26)
+								if ((ser_Data_0 & 0xFF) != 0x04)
 								{
-									RumbleCallback(true);
-
-									//Message_String = "Rumble On";
+									//Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
 
 									//MessageCallback(Message_String.length());
 								}
+								if ((ser_Data_0 & 0xFF) == 0x26)
+								{
+									if (!Rumble_State)
+									{
+										if (RumbleCallback) { RumbleCallback(true); }
+
+										//Message_String = "Rumble On";
+
+										//MessageCallback(Message_String.length());
+
+										Rumble_State = true;
+									}
+								}
 								if ((ser_Data_0 & 0xFF) == 0x04)
 								{
-									RumbleCallback(false);
+									if (Rumble_State)
+									{
+										if (RumbleCallback) { RumbleCallback(false); }
 
-									//Message_String = "Rumble Off";
+										//Message_String = "Rumble Off";
 
-									//MessageCallback(Message_String.length());
+										//MessageCallback(Message_String.length());
+
+										Rumble_State = false;
+									}
 								}
 							}
 
@@ -2849,9 +2863,13 @@ namespace GBAHawk
 
 							ser_GBP_Transfer_Count += 1;
 
-							if (ser_GBP_Transfer_Count == 18)
+							if (ser_GBP_Transfer_Count == 16)
 							{
 								ser_GBP_Transfer_Count = 0;
+
+								//Message_String = "Complete";
+
+								//MessageCallback(Message_String.length());
 							}
 
 							// trigger interrupt if needed
