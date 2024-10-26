@@ -121,7 +121,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			public FlashChipType128 Flash_Type_128 { get; set; }
 
 			[DisplayName("Flash Write Offset (Not used for Atmel)")]
-			[Description("Set offset in Flash write timing (-512 to 511). Value of -325 represents instant writes. Value less than -325 results in write failure.")]
+			[Description("Set offset in Flash write timing (-512 to 511). Value less than or equal to -325 results in instant writes.")]
 			[DefaultValue(0)]
 			public short FlashWriteOffset
 			{
