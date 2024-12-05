@@ -370,7 +370,14 @@ namespace GBAHawk
 			// BIOS is protected against reading from memory beyond the BIOS range
 			if (cpu_Regs[15] > 0x4000)
 			{
-				ret = (uint16_t)(Last_BIOS_Read & 0xFFFF);
+				if ((addr & 2) == 0)
+				{
+					ret = (uint16_t)(Last_BIOS_Read & 0xFFFF);
+				}
+				else
+				{
+					ret = (uint16_t)((Last_BIOS_Read >> 16) & 0xFFFF);
+				}
 			}
 			else
 			{
