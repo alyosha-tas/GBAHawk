@@ -2797,6 +2797,10 @@ namespace GBAHawk
 						ser_CTRL &= 0xFF7F;
 						ser_Ext_Tick = true;
 
+						//Message_String = "Complete";
+
+						//MessageCallback(Message_String.length());
+
 						// trigger interrupt if needed
 						if ((ser_CTRL & 0x4000) == 0x4000)
 						{
@@ -4267,9 +4271,10 @@ namespace GBAHawk
 				{
 					cpu_LDM_Glitch_Mode = false;
 					
+					// note that reg 15 cannot be used if swapping out regs, so glitch mode can only be enterred in ARm mode
 					if (cpu_Multi_Swap)
 					{
-						//cpu_LDM_Glitch_Mode = true;
+						cpu_LDM_Glitch_Mode = true;
 						
 						cpu_Swap_Regs(cpu_Temp_Mode, false, false);
 					}

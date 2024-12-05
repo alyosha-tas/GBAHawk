@@ -5215,6 +5215,10 @@ namespace GBAHawk
 		#pragma endregion
 
 		#pragma region LDM^ Glitch
+		// LDM^ glitch details:
+		// If the next register access happens immediately following the completion of the LDM^/STM^ instruction,
+		// and this access is to one of the banked registers,
+		// then the returned value will be the banked register and user mode register OR'd together
 
 		void cpu_LDM_Glitch_Decode_ARM()
 		{
@@ -9586,9 +9590,9 @@ namespace GBAHawk
 						ser_GBP_Div_Count = 0;
 					}
 
-					Message_String = "ser: " + to_string(ser_CTRL) + " " + to_string(ser_Start) + " " + to_string(CycleCount);
+					//Message_String = "ser: " + to_string(ser_CTRL) + " " + to_string(ser_Start) + " " + to_string(CycleCount);
 
-					MessageCallback(Message_String.length());
+					//MessageCallback(Message_String.length());
 				}
 			}
 		}
@@ -9945,12 +9949,16 @@ namespace GBAHawk
 
 			if ((value & 0x80) == 0)
 			{
-				// timer ticks for one additional cycle when disabled
-				if (tim_Go[nbr])
+				// timer ticks for one additional cycle when disabled if currently running
+				if (tim_Go[nbr] || (tim_ST_Time[nbr] == 1))
 				{
 					tim_Disable[nbr] = true;
 
 					tim_Old_IRQ[nbr] = (tim_Control[nbr] & 0x40) == 0x40;
+				}
+				else if (tim_ST_Time[nbr] > 1)
+				{
+					tim_ST_Time[nbr] = 0;
 				}
 			}
 
