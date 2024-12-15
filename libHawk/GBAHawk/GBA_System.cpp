@@ -135,7 +135,7 @@ namespace GBAHawk
 				{
 					ret = Read_Registers_8(addr - 0x04000000);
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
 					switch (addr & 3)
 					{
@@ -322,7 +322,7 @@ namespace GBAHawk
 
 					ret = Read_Registers_16(addr - 0x04000000);
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
 					// Forced Align
 					addr &= 0xFFFFFFFE;
@@ -515,7 +515,7 @@ namespace GBAHawk
 
 					ret = Read_Registers_32(addr - 0x04000000);
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
 					// Forced Align
 					addr &= 0xFFFFFFFC;
@@ -585,7 +585,7 @@ namespace GBAHawk
 			{
 				Write_Registers_8(addr - 0x04000000, value);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				switch (addr & 3)
 				{
@@ -718,7 +718,7 @@ namespace GBAHawk
 			{
 				Write_Registers_16(addr - 0x04000000, value);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				switch (addr & 3)
 				{
@@ -827,7 +827,7 @@ namespace GBAHawk
 			{
 				Write_Registers_32(addr - 0x04000000, value);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				Update_Memory_CTRL(value);
 			}
@@ -976,7 +976,7 @@ namespace GBAHawk
 			{
 				return Peek_Registers_8(addr - 0x04000000);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				switch (addr & 3)
 				{
@@ -1109,12 +1109,20 @@ namespace GBAHawk
 				{
 					ret = Read_Registers_16(addr - 0x04000000);
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
 					switch (addr & 3)
 					{
 					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
 					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
+					}
+				}
+				else
+				{
+					switch (addr & 3)
+					{
+					case 0: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break;
+					default: ret = (uint16_t)((cpu_Last_Bus_Value >> 16) & 0xFFFF); break;
 					}
 				}
 			}
@@ -1229,9 +1237,13 @@ namespace GBAHawk
 				{
 					dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
 				}
-				else if ((addr & 0x0400FFFF) == 0x04000800)
+				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
 					dma_Last_Bus_Value[chan] = Memory_CTRL;
+				}
+				else
+				{
+					dma_Last_Bus_Value[chan] = cpu_Last_Bus_Value;
 				}
 			}
 		}
@@ -1269,7 +1281,7 @@ namespace GBAHawk
 			{
 				Write_Registers_16(addr - 0x04000000, value);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				switch (addr & 3)
 				{
@@ -1371,7 +1383,7 @@ namespace GBAHawk
 			{
 				Write_Registers_32(addr - 0x04000000, value);
 			}
-			else if ((addr & 0x0400FFFF) == 0x04000800)
+			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
 				Update_Memory_CTRL(value);
 			}
