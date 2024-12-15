@@ -292,14 +292,7 @@ namespace GBAHawk
 							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
 							if ((key_CTRL & 0x3FF) != 0)
 							{
-								if (stopped)
-								{
-									INT_Flags |= 0x1000;
-								}
-								else
-								{
-									Trigger_IRQ(12);
-								}
+								Trigger_IRQ(12);
 							}
 						}
 					}
@@ -307,14 +300,7 @@ namespace GBAHawk
 					{
 						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
 						{
-							if (stopped)
-							{
-								INT_Flags |= 0x1000;
-							}
-							else
-							{
-								Trigger_IRQ(12);
-							}
+							Trigger_IRQ(12);
 						}
 					}
 				}

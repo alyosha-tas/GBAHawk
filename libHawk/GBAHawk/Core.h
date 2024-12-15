@@ -261,7 +261,7 @@ namespace GBAHawk
 			}
 			else
 			{
-				if ((GBA.INT_EN & GBA.INT_Flags & 0x1000) == 0x1000)
+				if ((GBA.INT_EN & GBA.INT_Flags_Gather & 0x1000) == 0x1000)
 				{
 					GBA.stopped = false;
 				}
