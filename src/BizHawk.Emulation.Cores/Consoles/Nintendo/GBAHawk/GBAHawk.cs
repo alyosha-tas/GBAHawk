@@ -40,7 +40,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public ushort Flash_Type_128_Value = 0;
 		public byte[] cart_RAM;
 		public bool has_bat;
-		public bool use_sram;
 		int mapper;
 
 		[CoreConstructor(VSystemID.Raw.GBA)]
@@ -49,8 +48,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBASettings)settings ?? new GBASettings();
 			SyncSettings = (GBASyncSettings)syncSettings ?? new GBASyncSettings();
-
-			use_sram = SyncSettings.Use_SRAM;
 
 			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashMD5);

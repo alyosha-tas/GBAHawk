@@ -61,31 +61,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (use_sram)
+			if (cart_RAMS[0] != null && cart_RAMS[1] == null)
 			{
-				if (cart_RAMS[0] != null && cart_RAMS[1] == null)
-				{
-					Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
+				Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
 
-					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
-				}
-				else if (cart_RAMS[1] != null && cart_RAMS[0] == null)
-				{
-					Buffer.BlockCopy(data, 0, cart_RAMS[1], 0, cart_RAMS[1].Length);
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
+			}
+			else if (cart_RAMS[1] != null && cart_RAMS[0] == null)
+			{
+				Buffer.BlockCopy(data, 0, cart_RAMS[1], 0, cart_RAMS[1].Length);
 
-					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
-				}
-				else if (cart_RAMS[1] != null && cart_RAMS[0] != null)
-				{
-					Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
-					Buffer.BlockCopy(data, cart_RAMS[0].Length, cart_RAMS[1], 0, cart_RAMS[1].Length);
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
+			}
+			else if (cart_RAMS[1] != null && cart_RAMS[0] != null)
+			{
+				Buffer.BlockCopy(data, 0, cart_RAMS[0], 0, cart_RAMS[0].Length);
+				Buffer.BlockCopy(data, cart_RAMS[0].Length, cart_RAMS[1], 0, cart_RAMS[1].Length);
 
-					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
-					LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
-				}
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0);
+				LibGBAHawkLink.GBALink_load_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1);
 			}
 		}
 
-		public bool SaveRamModified => (has_bats[0] || has_bats[1]) && use_sram;
+		public bool SaveRamModified => (has_bats[0] || has_bats[1]);
 	}
 }

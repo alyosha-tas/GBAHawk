@@ -90,6 +90,8 @@ namespace BizHawk.Client.Common
 		public bool PauseWhenMenuActivated { get; set; } = true;
 		public bool SaveWindowPosition { get; set; } = true;
 		public bool StartPaused { get; set; }
+		public bool UseExistingSRAM { get; set; } = true;
+		public bool CurrentUseExistingSRAM { get; set; } = true;
 		public int MainWndx { get; set; } = -1; // Negative numbers will be ignored
 		public int MainWndy { get; set; } = -1;
 		public bool RunInBackground { get; set; } = true;

@@ -43,7 +43,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public byte[][] cart_RAMS = new byte[2][];
 		public bool[] has_bats = new bool[2];
-		public bool use_sram;
 
 		int[] mappers = new int[2];
 
@@ -61,8 +60,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBALinkSettings)lp.Settings ?? new GBALinkSettings();
 			SyncSettings = (GBALinkSyncSettings)lp.SyncSettings ?? new GBALinkSyncSettings();
-
-			use_sram = SyncSettings.Use_SRAM;
 
 			ROMS[0] = new byte[0x6000000];
 			ROMS[1] = new byte[0x6000000];

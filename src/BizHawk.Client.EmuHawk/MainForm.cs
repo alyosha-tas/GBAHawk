@@ -228,6 +228,8 @@ namespace BizHawk.Client.GBAHawk
 				}
 			}
 
+			Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
+
 			//do this threaded stuff early so it has plenty of time to run in background
 			Database.InitializeDatabase(Path.Combine(PathUtils.ExeDirectoryPath, "gamedb", "gamedb.txt"), silent: true);
 
@@ -1004,16 +1006,22 @@ namespace BizHawk.Client.GBAHawk
 
 		public bool RebootCore()
 		{
+			bool success = false;
+			
 			if (IsSlave && Master.WantsToControlReboot)
 			{
 				Master.RebootCore();
-				return true;
+				success = true;
 			}
 			else
 			{
-				if (CurrentlyOpenRomArgs == null) return true;
-				return LoadRom(CurrentlyOpenRomArgs.OpenAdvanced.SimplePath, CurrentlyOpenRomArgs);
+				if (CurrentlyOpenRomArgs == null) success = true;
+				success = LoadRom(CurrentlyOpenRomArgs.OpenAdvanced.SimplePath, CurrentlyOpenRomArgs);
 			}
+
+			Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
+
+			return success;
 		}
 
 		public void PauseEmulator()
@@ -2612,7 +2620,7 @@ namespace BizHawk.Client.GBAHawk
 
 				MovieSession.HandleFrameBefore();
 
-				if (Config.AutosaveSaveRAM)
+				if (Config.AutosaveSaveRAM && Config.CurrentUseExistingSRAM)
 				{
 					if (AutoFlushSaveRamIn-- <= 0)
 					{
@@ -3259,6 +3267,9 @@ namespace BizHawk.Client.GBAHawk
 				CommitCoreSettingsToConfig(); // adelikat: I Think by reordering things, this isn't necessary anymore
 				CloseGame();
 
+				// put this here so setting is updated after game closed but before new one is loaded
+				Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
+
 				var nextComm = CreateCoreComm();
 
 				IOpenAdvanced ioa = args.OpenAdvanced;
@@ -3333,7 +3344,11 @@ namespace BizHawk.Client.GBAHawk
 					{
 						if (File.Exists(Config.PathEntries.SaveRamAbsolutePath(loader.Game, MovieSession.Movie)))
 						{
-							LoadSaveRam();
+							// only load SRAm if autoload selected
+							if (Config.CurrentUseExistingSRAM)
+							{
+								LoadSaveRam();
+							}
 						}
 						else if (Config.AutosaveSaveRAM && File.Exists(Config.PathEntries.SaveRamAbsolutePath(loader.Game, MovieSession.Movie)))
 						{
@@ -3447,7 +3462,7 @@ namespace BizHawk.Client.GBAHawk
 					AddOnScreenMessage("SRAM cleared.");
 				}
 			}
-			else if (Emulator.HasSaveRam() && Emulator.AsSaveRam().SaveRamModified)
+			else if (Emulator.HasSaveRam() && Emulator.AsSaveRam().SaveRamModified && Config.CurrentUseExistingSRAM)
 			{
 				if (!FlushSaveRAM())
 				{

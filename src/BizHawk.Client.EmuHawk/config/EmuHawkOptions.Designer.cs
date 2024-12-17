@@ -49,7 +49,8 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.locLabelEx1 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.StartPausedCheckbox = new System.Windows.Forms.CheckBox();
-            this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.UseExistingSaveRAMCheckbox = new System.Windows.Forms.CheckBox();
+			this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.SingleInstanceModeCheckbox = new System.Windows.Forms.CheckBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -292,7 +293,8 @@
             // 
             this.groupBox1.Controls.Add(this.locLabelEx1);
             this.groupBox1.Controls.Add(this.StartPausedCheckbox);
-            this.groupBox1.Controls.Add(this.label14);
+			this.groupBox1.Controls.Add(this.UseExistingSaveRAMCheckbox);
+			this.groupBox1.Controls.Add(this.label14);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.SingleInstanceModeCheckbox);
             this.groupBox1.Location = new System.Drawing.Point(8, 252);
@@ -321,10 +323,21 @@
             this.StartPausedCheckbox.TabIndex = 2;
             this.StartPausedCheckbox.Text = "Start paused";
             this.StartPausedCheckbox.UseVisualStyleBackColor = true;
-            // 
-            // label14
-            // 
-            this.label14.Location = new System.Drawing.Point(35, 122);
+			// 
+			// Use existing save ram check box
+			// 
+			this.UseExistingSaveRAMCheckbox.AutoSize = true;
+			this.UseExistingSaveRAMCheckbox.Location = new System.Drawing.Point(8, 50);
+			this.UseExistingSaveRAMCheckbox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.UseExistingSaveRAMCheckbox.Name = "UseExistingSaveRAMCheckbox";
+			this.UseExistingSaveRAMCheckbox.Size = new System.Drawing.Size(105, 20);
+			this.UseExistingSaveRAMCheckbox.TabIndex = 2;
+			this.UseExistingSaveRAMCheckbox.Text = "Ese existing Save RAM when loading games (does not effect movies.)";
+			this.UseExistingSaveRAMCheckbox.UseVisualStyleBackColor = true;
+			// 
+			// label14
+			// 
+			this.label14.Location = new System.Drawing.Point(35, 122);
             this.label14.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label14.Name = "label14";
             this.label14.Text = "Note: Requires closing and reopening EmuHawk to take effect.";
@@ -664,6 +677,7 @@
 		private System.Windows.Forms.RadioButton rbInputMethodDirectInput;
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.CheckBox StartPausedCheckbox;
+		private System.Windows.Forms.CheckBox UseExistingSaveRAMCheckbox;
 		private BizHawk.WinForms.Controls.LocLabelEx label14;
 		private BizHawk.WinForms.Controls.LocLabelEx label3;
 		private System.Windows.Forms.CheckBox SingleInstanceModeCheckbox;

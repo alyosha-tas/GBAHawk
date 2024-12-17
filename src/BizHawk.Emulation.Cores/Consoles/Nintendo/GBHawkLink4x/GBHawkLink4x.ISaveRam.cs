@@ -81,37 +81,34 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (use_sram)
+			int temp = 0;
+
+			if (A.cart_RAM != null)
 			{
-				int temp = 0;
-
-				if (A.cart_RAM != null)
-				{
-					Buffer.BlockCopy(data, temp, A.cart_RAM, 0, A.cart_RAM.Length);
-					temp += A.cart_RAM.Length;
-				}
-
-				if (B.cart_RAM != null)
-				{
-					Buffer.BlockCopy(data, temp, B.cart_RAM, 0, B.cart_RAM.Length);
-					temp += B.cart_RAM.Length;
-				}
-
-				if (C.cart_RAM != null)
-				{
-					Buffer.BlockCopy(data, temp, C.cart_RAM, 0, C.cart_RAM.Length);
-					temp += C.cart_RAM.Length;
-				}
-
-				if (D.cart_RAM != null)
-				{
-					Buffer.BlockCopy(data, temp, D.cart_RAM, 0, D.cart_RAM.Length);
-				}
-
-				Console.WriteLine("loading SRAM here");
+				Buffer.BlockCopy(data, temp, A.cart_RAM, 0, A.cart_RAM.Length);
+				temp += A.cart_RAM.Length;
 			}
+
+			if (B.cart_RAM != null)
+			{
+				Buffer.BlockCopy(data, temp, B.cart_RAM, 0, B.cart_RAM.Length);
+				temp += B.cart_RAM.Length;
+			}
+
+			if (C.cart_RAM != null)
+			{
+				Buffer.BlockCopy(data, temp, C.cart_RAM, 0, C.cart_RAM.Length);
+				temp += C.cart_RAM.Length;
+			}
+
+			if (D.cart_RAM != null)
+			{
+				Buffer.BlockCopy(data, temp, D.cart_RAM, 0, D.cart_RAM.Length);
+			}
+
+			Console.WriteLine("loading SRAM here");
 		}
 
-		public bool SaveRamModified => (A.has_bat || B.has_bat || C.has_bat || D.has_bat) && use_sram;
+		public bool SaveRamModified => (A.has_bat || B.has_bat || C.has_bat || D.has_bat);
 	}
 }

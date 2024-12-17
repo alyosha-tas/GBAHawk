@@ -161,11 +161,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				set => _Flash_Chip_Erase_Offset = value;
 			}
 
-			[DisplayName("Use Existing SaveRAM")]
-			[Description("When true, existing SaveRAM will be loaded at boot up.")]
-			[DefaultValue(true)]
-			public bool Use_SRAM { get; set; }
-
 			[DisplayName("Use Gamerboy Player")]
 			[Description("Gameboy Player will be used and detected by supported games.")]
 			[DefaultValue(false)]

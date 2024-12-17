@@ -61,6 +61,7 @@ namespace BizHawk.Client.GBAHawk
 			rbInputMethodDirectInput.Enabled = HostCapabilityDetector.HasDirectX;
 
 			StartPausedCheckbox.Checked = _config.StartPaused;
+			UseExistingSaveRAMCheckbox.Checked = _config.UseExistingSRAM;
 			PauseWhenMenuActivatedCheckbox.Checked = _config.PauseWhenMenuActivated;
 			EnableContextMenuCheckbox.Checked = _config.ShowContextMenu;
 			SaveWindowPositionCheckbox.Checked = _config.SaveWindowPosition;
@@ -109,6 +110,7 @@ namespace BizHawk.Client.GBAHawk
 		private void OkBtn_Click(object sender, EventArgs e)
 		{
 			_config.StartPaused = StartPausedCheckbox.Checked;
+			_config.UseExistingSRAM = UseExistingSaveRAMCheckbox.Checked;
 			_config.PauseWhenMenuActivated = PauseWhenMenuActivatedCheckbox.Checked;
 			_config.ShowContextMenu = EnableContextMenuCheckbox.Checked;
 			_config.SaveWindowPosition = SaveWindowPositionCheckbox.Checked;

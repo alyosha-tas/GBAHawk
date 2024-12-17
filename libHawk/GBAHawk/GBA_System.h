@@ -10668,6 +10668,10 @@ namespace GBAHawk
 
 			ppu_Any_Window_On = ppu_WIN0_On || ppu_WIN1_On || ppu_OBJ_WIN;
 
+			//Message_String = "ctrl " + to_string(value) + " old: " + to_string(ppu_CTRL) + " LY: " + to_string(ppu_LY) + " Cyc: " + to_string(ppu_Cycle);
+
+			//if (MessageCallback) MessageCallback(Message_String.length());
+
 			ppu_CTRL = value;
 
 			// ensure BG controls match new mode

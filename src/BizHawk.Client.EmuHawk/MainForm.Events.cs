@@ -34,7 +34,7 @@ namespace BizHawk.Client.GBAHawk
 				!Emulator.IsNull();
 
 			var hasSaveRam = Emulator.HasSaveRam();
-			bool needBold = hasSaveRam && Emulator.AsSaveRam().SaveRamModified;
+			bool needBold = hasSaveRam && Emulator.AsSaveRam().SaveRamModified && Config.CurrentUseExistingSRAM;
 
 			SaveRAMSubMenu.Enabled = hasSaveRam;
 			SaveRAMSubMenu.SetStyle(needBold ? FontStyle.Bold : FontStyle.Regular);

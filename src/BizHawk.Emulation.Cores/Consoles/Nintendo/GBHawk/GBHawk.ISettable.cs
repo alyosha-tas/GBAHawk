@@ -102,11 +102,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				set => _RTCOffset = Math.Max(-127, Math.Min(127, value));
 			}
 
-			[DisplayName("Use Existing SaveRAM")]
-			[Description("When true, existing SaveRAM will be loaded at boot up.")]
-			[DefaultValue(true)]
-			public bool Use_SRAM { get; set; }
-
 			[JsonIgnore]
 			private int _RTCInitialTime;
 			[JsonIgnore]

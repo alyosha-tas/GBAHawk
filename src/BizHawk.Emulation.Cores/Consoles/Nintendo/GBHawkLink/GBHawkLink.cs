@@ -24,8 +24,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 
 		public bool do_frame_fill;
 
-		public bool use_sram;
-
 		[CoreConstructor(VSystemID.Raw.GBL)]
 		public GBHawkLink(CoreLoadParameters<GBHawkLink.GBLinkSettings, GBHawkLink.GBLinkSyncSettings> lp)
 		{
@@ -37,8 +35,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 
 			linkSettings = (GBLinkSettings)lp.Settings ?? new GBLinkSettings();
 			linkSyncSettings = (GBLinkSyncSettings)lp.SyncSettings ?? new GBLinkSyncSettings();
-
-			use_sram = linkSyncSettings.Use_SRAM;
 
 			_controllerDeck = new(
 				GBHawkControllerDeck.DefaultControllerName,
