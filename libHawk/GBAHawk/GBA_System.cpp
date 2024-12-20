@@ -2098,88 +2098,124 @@ namespace GBAHawk
 
 			if (ppu_Sprite_Delays)
 			{
-				ppu_Sprite_cd -= 1;
-
-				if (ppu_Sprite_cd == 0)
+				if (ppu_Sprite_Delay_SL)
 				{
-					ppu_Fetch_OAM_0 = true;
-					ppu_Fetch_OAM_2 = false;
-					ppu_Fetch_OAM_A_D = false;
-					ppu_Fetch_Sprite_VRAM = false;
+					ppu_Sprite_cd -= 1;
 
-					ppu_Sprite_Next_Fetch = 3;
-
-					ppu_Current_Sprite = 0;
-					ppu_New_Sprite = true;
-
-					if (ppu_Sprite_ofst_eval == 0)
+					if (ppu_Sprite_cd == 0)
 					{
-						ppu_Sprite_ofst_eval = 240;
-						ppu_Sprite_ofst_draw = 0;
-					}
-					else
-					{
-						ppu_Sprite_ofst_eval = 0;
-						ppu_Sprite_ofst_draw = 240;
-					}
+						ppu_Fetch_OAM_0 = true;
+						ppu_Fetch_OAM_2 = false;
+						ppu_Fetch_OAM_A_D = false;
+						ppu_Fetch_Sprite_VRAM = false;
 
-					ppu_Sprite_Eval_Finished = true;
+						ppu_Sprite_Next_Fetch = 3;
 
-					if ((ppu_LY < 159) || (ppu_LY == 227))
-					{
-						ppu_Sprite_Eval_Finished = !ppu_OBJ_On;
+						ppu_Current_Sprite = 0;
+						ppu_New_Sprite = true;
 
-						ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
-
-						if (ppu_LY == 227)
+						if (ppu_Sprite_ofst_eval == 0)
 						{
-							ppu_Sprite_LY_Check = 0;
-							ppu_Sprite_Mosaic_Y_Counter = 0;
-							ppu_Sprite_Mosaic_Y_Compare = 0;
+							ppu_Sprite_ofst_eval = 240;
+							ppu_Sprite_ofst_draw = 0;
 						}
 						else
 						{
-							ppu_Sprite_Mosaic_Y_Counter++;
+							ppu_Sprite_ofst_eval = 0;
+							ppu_Sprite_ofst_draw = 240;
+						}
 
-							if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
+						ppu_Sprite_Eval_Finished = true;
+						ppu_Render_Cycle_2_Go = false;
+
+						if ((ppu_LY < 159) || (ppu_LY == 227))
+						{
+							ppu_Sprite_Eval_Finished = !ppu_OBJ_On;
+
+							ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
+
+							if (ppu_LY == 227)
 							{
-								ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
+								ppu_Sprite_LY_Check = 0;
 								ppu_Sprite_Mosaic_Y_Counter = 0;
+								ppu_Sprite_Mosaic_Y_Compare = 0;
 							}
-							else if (ppu_Sprite_Mosaic_Y_Counter == 16)
+							else
 							{
-								ppu_Sprite_Mosaic_Y_Counter = 0;
+								ppu_Sprite_Mosaic_Y_Counter++;
+
+								if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
+								{
+									ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
+									ppu_Sprite_Mosaic_Y_Counter = 0;
+								}
+								else if (ppu_Sprite_Mosaic_Y_Counter == 16)
+								{
+									ppu_Sprite_Mosaic_Y_Counter = 0;
+								}
+							}
+						}
+
+						// reset obj window detection for the scanline
+						for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
+						{
+							ppu_Sprite_Pixels[i] = 0;
+							ppu_Sprite_Priority[i] = 3;
+							ppu_Sprite_Pixel_Occupied[i] = false;
+							ppu_Sprite_Semi_Transparent[i] = false;
+							ppu_Sprite_Object_Window[i] = false;
+							ppu_Sprite_Is_Mosaic[i] = false;
+						}
+
+						ppu_Sprite_Render_Cycle = 0;
+
+						ppu_Sprite_Delay_SL = false;
+
+						if (!ppu_Sprite_Delay_Disp)
+						{
+							ppu_Sprite_Delays = false;
+
+							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
+							}
+						}
+
+						// reset latches
+						ppu_Sprite_Pixel_Latch = 0;
+						ppu_Sprite_Priority_Latch = 0;
+
+						ppu_Sprite_Semi_Transparent_Latch = false;
+						ppu_Sprite_Mosaic_Latch = false;
+						ppu_Sprite_Pixel_Occupied_Latch = false;
+					}
+				}
+
+				if (ppu_Sprite_Delay_Disp)
+				{
+					ppu_Sprite_Disp_cd -= 1;
+
+					if (ppu_Sprite_Disp_cd == 1)
+					{
+						//ppu_OBJ_On = (ppu_CTRL & 0x1000) == 0x1000;
+					}
+					else if (ppu_Sprite_Disp_cd == 0)
+					{
+						//ppu_OBJ_On_Prev = ppu_OBJ_On;
+						ppu_OBJ_On_Prev = (ppu_CTRL & 0x1000) == 0x1000;
+
+						ppu_Sprite_Delay_Disp = false;
+
+						if (!ppu_Sprite_Delay_SL)
+						{
+							ppu_Sprite_Delays = false;
+
+							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
+							{
+								delays_to_process = false;
 							}
 						}
 					}
-
-					// reset obj window detection for the scanline
-					for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
-					{
-						ppu_Sprite_Pixels[i] = 0;
-						ppu_Sprite_Priority[i] = 3;
-						ppu_Sprite_Pixel_Occupied[i] = false;
-						ppu_Sprite_Semi_Transparent[i] = false;
-						ppu_Sprite_Object_Window[i] = false;
-						ppu_Sprite_Is_Mosaic[i] = false;
-					}
-
-					ppu_Sprite_Render_Cycle = 0;
-
-					ppu_Sprite_Delays = false;
-
-					if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
-					{
-						delays_to_process = false;
-					}
-
-					// reset latches
-					ppu_Sprite_Pixel_Latch = 0;
-					ppu_Sprite_Priority_Latch = 0;
-
-					ppu_Sprite_Semi_Transparent_Latch = false;
-					ppu_Sprite_Mosaic_Latch = false;
-					ppu_Sprite_Pixel_Occupied_Latch = false;
 				}
 			}
 		}
@@ -2703,6 +2739,7 @@ namespace GBAHawk
 			if ((ppu_LY == 227) || (ppu_LY <= 159))
 			{
 				ppu_Sprite_Delays = true;
+				ppu_Sprite_Delay_SL = true;
 				delays_to_process = true;
 				ppu_Sprite_cd = 40;
 			}
@@ -2728,6 +2765,7 @@ namespace GBAHawk
 				if (ppu_OBJ_On_Time == 0)
 				{
 					ppu_OBJ_On = true;
+					ppu_OBJ_On_Prev = true;
 				}
 			}
 
@@ -2770,7 +2808,18 @@ namespace GBAHawk
 
 					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
-						if (((ppu_Cycle & 1) == 1) && (ppu_Cycle >= 40)) { ppu_Render_Sprites(); }
+						if ((ppu_Cycle & 1) == 1)
+						{
+							if (ppu_Cycle >= 40)
+							{
+								ppu_Render_Sprites();
+							}
+						}
+						else if (ppu_Render_Cycle_2_Go)
+						{
+							ppu_Render_Sprites_Cycle_2();
+							ppu_Render_Cycle_2_Go = false;
+						}
 					}
 				}
 			}
@@ -2783,7 +2832,15 @@ namespace GBAHawk
 
 				if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 				{
-					if ((ppu_Cycle & 1) == 1) { ppu_Render_Sprites(); }
+					if ((ppu_Cycle & 1) == 1)
+					{
+						ppu_Render_Sprites();
+					}
+					else if (ppu_Render_Cycle_2_Go)
+					{
+						ppu_Render_Sprites_Cycle_2();
+						ppu_Render_Cycle_2_Go = false;
+					}
 				}
 
 				if (!ppu_Rendering_Complete)
