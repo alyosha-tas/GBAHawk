@@ -9945,6 +9945,16 @@ namespace GBAHawk
 				else if (tim_ST_Time[nbr] > 1)
 				{
 					tim_ST_Time[nbr] = 0;
+
+					tim_All_Off = true;
+
+					for (int k = 0; k < 4; k++)
+					{
+						tim_All_Off &= !tim_Go[k];
+						tim_All_Off &= (tim_ST_Time[k] == 0);
+					}
+
+					tim_Old_IRQ[nbr] = false;
 				}
 			}
 
