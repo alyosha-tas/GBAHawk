@@ -10170,19 +10170,6 @@ namespace GBAHawk
 		bool ppu_Sprite_Mosaic_Latch;
 		bool ppu_Sprite_Pixel_Occupied_Latch;
 
-		// sprite data used in second cycle of rendering
-		bool ppu_Render_Cycle_2_Go;
-		bool ppu_Sprite_Mosaic_Cycle_2;
-
-		uint16_t ppu_Sprite_Attr_2_Cycle_2;
-		
-		uint32_t ppu_Sprite_Mode_Cycle_2;
-		uint32_t ppu_Sprite_Tile_Cycle_2;
-		uint32_t ppu_Sprite_Pixel_Color_Cycle_2;
-		uint32_t ppu_Sprite_Palette_Scale_Cycle_2;
-		uint32_t ppu_Sprite_Ofst_Eval_Cycle_2;
-		uint32_t ppu_Cur_Sprite_X_Cycle_2;
-
 		// BG rendering
 		uint64_t ppu_Current_Ref_X_2, ppu_Current_Ref_Y_2;
 		uint64_t ppu_Current_Ref_X_3, ppu_Current_Ref_Y_3;
@@ -12980,55 +12967,6 @@ namespace GBAHawk
 			}
 		}
 
-		// moves data two the buffer for rotation / scaled sprites
-		// moves second pixel sprite data to the buffer for normal sprites
-		void ppu_Render_Sprites_Cycle_2()
-		{		
-			// sprite info not added on last possible cycle
-			// presumably this happens on the odd cycle that vram is not being read on
-			// and that is the cycle that processing is shut down
-			if (ppu_Sprite_Render_Cycle <= ppu_Sprite_Eval_Time_VRAM)
-			{
-				// only allow upper half of vram sprite tiles to be used in modes 3-5
-				if ((ppu_BG_Mode >= 3) && (ppu_Sprite_Tile_Cycle_2 < 0x4000))
-				{
-					ppu_Sprite_Pixel_Color_Cycle_2 = 0;
-				}
-
-				// mosaic state is updated even if pixel is transparent
-				ppu_Sprite_Is_Mosaic[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = ppu_Sprite_Mosaic_Cycle_2;
-
-				if ((ppu_Sprite_Pixel_Color_Cycle_2 & ppu_Sprite_Palette_Scale_Cycle_2) != 0)
-				{
-					if (ppu_Sprite_Mode_Cycle_2 < 2)
-					{
-						ppu_Sprite_Pixels[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = ppu_Sprite_Pixel_Color_Cycle_2 + 0x100;
-
-						ppu_Sprite_Priority[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = (ppu_Sprite_Attr_2_Cycle_2 >> 10) & 3;
-
-						ppu_Sprite_Pixel_Occupied[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = true;
-
-						ppu_Sprite_Semi_Transparent[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = ppu_Sprite_Mode_Cycle_2 == 1;
-					}
-					else if (ppu_Sprite_Mode_Cycle_2 == 2)
-					{
-						ppu_Sprite_Object_Window[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = true;
-					}
-				}
-				else
-				{
-					// glitchy update to priority, even though this does not happen on non-transparent pixels
-					if (ppu_Sprite_Mode_Cycle_2 == 2)
-					{
-						if (((ppu_Sprite_Attr_2_Cycle_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2])
-						{
-							ppu_Sprite_Priority[ppu_Sprite_Ofst_Eval_Cycle_2 + ppu_Cur_Sprite_X_Cycle_2] = (ppu_Sprite_Attr_2_Cycle_2 >> 10) & 3;
-						}
-					}
-				}
-			}
-		}
-
 		void ppu_Render_Sprites()
 		{
 			uint32_t pix_color;
@@ -13177,68 +13115,45 @@ namespace GBAHawk
 									// sprite info not added on last possible cycle
 									// presumably this happens on the odd cycle that vram is not being read on
 									// and that is the cycle that processing is shut down
-									if ((i == 0) && !ppu_Rot_Scale)
+									if (ppu_Sprite_Render_Cycle != ppu_Sprite_Eval_Time_VRAM)
 									{
-										if (ppu_Sprite_Render_Cycle != ppu_Sprite_Eval_Time_VRAM)
+										// only allow upper half of vram sprite tiles to be used in modes 3-5
+										if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
 										{
-											// only allow upper half of vram sprite tiles to be used in modes 3-5
-											if ((ppu_BG_Mode >= 3) && (spr_tile < 0x4000))
+											pix_color = 0;
+										}
+
+										// mosaic state is updated even if pixel is transparent
+										ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
+
+										if ((pix_color & pal_scale) != 0)
+										{
+											if (ppu_Sprite_Mode < 2)
 											{
-												pix_color = 0;
+												ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
+
+												ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
+
+												ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+
+												ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
 											}
-
-											// mosaic state is updated even if pixel is transparent
-											ppu_Sprite_Is_Mosaic[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mosaic;
-
-											if ((pix_color & pal_scale) != 0)
+											else if (ppu_Sprite_Mode == 2)
 											{
-												if (ppu_Sprite_Mode < 2)
+												ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
+											}
+										}
+										else
+										{
+											// glitchy update to priority, even though this does not happen on non-transparent pixels
+											if (ppu_Sprite_Mode == 2)
+											{
+												if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
 												{
-													ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
-
 													ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
-
-													ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-
-													ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = ppu_Sprite_Mode == 1;
-												}
-												else if (ppu_Sprite_Mode == 2)
-												{
-													ppu_Sprite_Object_Window[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = true;
-												}
-											}
-											else
-											{
-												// glitchy update to priority, even though this does not happen on non-transparent pixels
-												if (ppu_Sprite_Mode == 2)
-												{
-													if (((ppu_Sprite_Attr_2 >> 10) & 3) < ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X])
-													{
-														ppu_Sprite_Priority[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = (ppu_Sprite_Attr_2 >> 10) & 3;
-													}
 												}
 											}
 										}
-									}
-									else
-									{
-										ppu_Render_Cycle_2_Go = true;
-
-										ppu_Sprite_Tile_Cycle_2 = spr_tile;
-
-										ppu_Sprite_Pixel_Color_Cycle_2 = pix_color;
-
-										ppu_Sprite_Palette_Scale_Cycle_2 = pal_scale;
-
-										ppu_Sprite_Ofst_Eval_Cycle_2 = ppu_Sprite_ofst_eval;
-
-										ppu_Cur_Sprite_X_Cycle_2 = ppu_Cur_Sprite_X;
-
-										ppu_Sprite_Mosaic_Cycle_2 = ppu_Sprite_Mosaic;
-
-										ppu_Sprite_Attr_2_Cycle_2 = ppu_Sprite_Attr_2;
-
-										ppu_Sprite_Mode_Cycle_2 = ppu_Sprite_Mode;
 									}
 								}
 							}
@@ -13809,19 +13724,6 @@ namespace GBAHawk
 			ppu_Sprite_Mosaic_Latch = false;
 			ppu_Sprite_Pixel_Occupied_Latch = false;
 
-			// sprite data used in second cycle of rendering
-			ppu_Render_Cycle_2_Go = false;
-			ppu_Sprite_Mosaic_Cycle_2 = false;
-
-			ppu_Sprite_Attr_2_Cycle_2 = 0;
-
-			ppu_Sprite_Mode_Cycle_2 = 0;
-			ppu_Sprite_Tile_Cycle_2 = 0;
-			ppu_Sprite_Pixel_Color_Cycle_2 = 0;
-			ppu_Sprite_Palette_Scale_Cycle_2 = 0;
-			ppu_Sprite_Ofst_Eval_Cycle_2 = 0;
-			ppu_Cur_Sprite_X_Cycle_2 = 0;
-
 			// BG rendering
 			for (int i = 0; i < 4; i++)
 			{
@@ -14051,19 +13953,6 @@ namespace GBAHawk
 			saver = bool_saver(ppu_Sprite_Mosaic_Latch, saver);
 			saver = bool_saver(ppu_Sprite_Pixel_Occupied_Latch, saver);
 
-			// sprite data used in second cycle of rendering
-			saver = bool_saver(ppu_Render_Cycle_2_Go, saver);
-			saver = bool_saver(ppu_Sprite_Mosaic_Cycle_2, saver);
-
-			saver = short_saver(ppu_Sprite_Attr_2_Cycle_2, saver);
-
-			saver = int_saver(ppu_Sprite_Mode_Cycle_2, saver);
-			saver = int_saver(ppu_Sprite_Tile_Cycle_2, saver);
-			saver = int_saver(ppu_Sprite_Pixel_Color_Cycle_2, saver);
-			saver = int_saver(ppu_Sprite_Palette_Scale_Cycle_2, saver);
-			saver = int_saver(ppu_Sprite_Ofst_Eval_Cycle_2, saver);
-			saver = int_saver(ppu_Cur_Sprite_X_Cycle_2, saver);
-
 			// BG rendering
 			saver = int_array_saver(ppu_Fetch_Count, saver, 4);
 			saver = int_array_saver(ppu_Scroll_Cycle, saver, 4);
@@ -14277,19 +14166,6 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_Sprite_Semi_Transparent_Latch, loader);
 			loader = bool_loader(&ppu_Sprite_Mosaic_Latch, loader);
 			loader = bool_loader(&ppu_Sprite_Pixel_Occupied_Latch, loader);
-
-			// sprite data used in second cycle of rendering
-			loader = bool_loader(&ppu_Render_Cycle_2_Go, loader);
-			loader = bool_loader(&ppu_Sprite_Mosaic_Cycle_2, loader);
-
-			loader = short_loader(&ppu_Sprite_Attr_2_Cycle_2, loader);
-
-			loader = int_loader(&ppu_Sprite_Mode_Cycle_2, loader);
-			loader = int_loader(&ppu_Sprite_Tile_Cycle_2, loader);
-			loader = int_loader(&ppu_Sprite_Pixel_Color_Cycle_2, loader);
-			loader = int_loader(&ppu_Sprite_Palette_Scale_Cycle_2, loader);
-			loader = int_loader(&ppu_Sprite_Ofst_Eval_Cycle_2, loader);
-			loader = int_loader(&ppu_Cur_Sprite_X_Cycle_2, loader);
 
 			// BG rendering
 			loader = int_array_loader(ppu_Fetch_Count, loader, 4);

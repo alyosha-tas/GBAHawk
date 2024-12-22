@@ -2126,7 +2126,6 @@ namespace GBAHawk
 						}
 
 						ppu_Sprite_Eval_Finished = true;
-						ppu_Render_Cycle_2_Go = false;
 
 						if ((ppu_LY < 159) || (ppu_LY == 227))
 						{
@@ -2801,20 +2800,11 @@ namespace GBAHawk
 					ppu_VRAM_High_Access = false;
 					ppu_OAM_Access = false;
 
-					if (ppu_Render_Cycle_2_Go)
-					{
-						ppu_Render_Sprites_Cycle_2();
-						ppu_Render_Cycle_2_Go = false;
-					}
-
 					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 					{
-						if ((ppu_Cycle & 1) == 1)
+						if (ppu_Cycle >= 40)
 						{
-							if (ppu_Cycle >= 40)
-							{
-								ppu_Render_Sprites();
-							}
+							ppu_Render_Sprites();
 						}
 					}
 				}
@@ -2826,18 +2816,9 @@ namespace GBAHawk
 				ppu_PALRAM_Access = false;
 				ppu_OAM_Access = false;
 
-				if (ppu_Render_Cycle_2_Go)
-				{
-					ppu_Render_Sprites_Cycle_2();
-					ppu_Render_Cycle_2_Go = false;
-				}
-
 				if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 				{
-					if ((ppu_Cycle & 1) == 1)
-					{
-						ppu_Render_Sprites();
-					}
+					ppu_Render_Sprites();
 				}
 
 				if (!ppu_Rendering_Complete)
