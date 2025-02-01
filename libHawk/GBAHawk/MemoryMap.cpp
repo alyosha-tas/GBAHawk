@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <iomanip>
+#include <string>
+
 #include "Memory.h"
 #include "GBA_System.h"
 #include "Mappers.h"

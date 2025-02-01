@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <iomanip>
+#include <string>
+
 #include "GBA_System.h"
 
 namespace GBAHawk
