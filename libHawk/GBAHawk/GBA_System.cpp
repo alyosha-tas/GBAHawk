@@ -3179,6 +3179,10 @@ namespace GBAHawk
 
 							dma_Chan_Exec = i;
 
+							//Message_String = "dma : " + to_string(dma_Chan_Exec) + " ly " + to_string(ppu_LY) + " cyc " + to_string(ppu_Cycle);
+
+							//MessageCallback(Message_String.length());
+
 							// Is this correct for all cases?
 							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;
 

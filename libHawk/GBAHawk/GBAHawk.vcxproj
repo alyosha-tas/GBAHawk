@@ -29,8 +29,10 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CPU.cpp" />
     <ClCompile Include="GBAHawk.cpp" />
     <ClCompile Include="GBA_System.cpp" />
+    <ClCompile Include="PPU.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
