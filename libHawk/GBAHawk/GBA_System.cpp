@@ -1752,7 +1752,7 @@ namespace GBAHawk
 
 							dma_Chan_Exec = i;
 
-							//Message_String = "dma : " + to_string(dma_Chan_Exec) + " ly " + to_string(ppu_LY) + " cyc " + to_string(ppu_Cycle);
+							//Message_String = "dma : " + to_string(dma_Chan_Exec) + " ly " + to_string(ppu_LY) + " cyc " + to_string(ppu_Cycle) + " cpu cyc " + to_string(CycleCount);
 
 							//MessageCallback(Message_String.length());
 
@@ -2962,29 +2962,16 @@ namespace GBAHawk
 						}
 						else
 						{
+							// stm does not cause the glitch
+							cpu_LDM_Glitch_Mode = false;
+							
 							// when writing, there is no last internal cycle, proceed to the next instruction
 							// also check for interrupts
 							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-							if (cpu_LDM_Glitch_Mode)
-							{
-								if (cpu_IRQ_Input_Use && !cpu_FlagIget())
-								{
-									cpu_Instr_Type = cpu_Prefetch_IRQ;
-									cpu_LDM_Glitch_Mode = false;
-								}
-								else
-								{
-									cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
-									cpu_LDM_Glitch_Decode_ARM();
-								}
-							}
-							else
-							{
-								if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-								else { cpu_Decode_ARM(); }
-							}
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							else { cpu_Decode_ARM(); }
 
 							cpu_Seq_Access = false;
 						}

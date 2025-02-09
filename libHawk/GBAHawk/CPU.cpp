@@ -3283,10 +3283,6 @@ namespace GBAHawk
 					{
 						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
 					}
-
-					Message_String = "rld " + to_string(cpu_Temp_Addr) + " cyc " + to_string(CycleCount);
-
-					MessageCallback(Message_String.length());
 					break;
 
 				case cpu_ARM_Multi_1:
@@ -4100,29 +4096,16 @@ namespace GBAHawk
 					}
 					else
 					{
+						// stm does not cause the glitch
+						cpu_LDM_Glitch_Mode = false;
+						
 						// when writing, there is no last internal cycle, proceed to the next instruction
 						// also check for interrupts
 						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_LDM_Glitch_Mode)
-						{
-							if (cpu_IRQ_Input_Use && !cpu_FlagIget())
-							{
-								cpu_Instr_Type = cpu_Prefetch_IRQ;
-								cpu_LDM_Glitch_Mode = false;
-							}
-							else
-							{
-								cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
-								cpu_LDM_Glitch_Decode_ARM();
-							}
-						}
-						else
-						{
-							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-							else { cpu_Decode_ARM(); }
-						}
+						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+						else { cpu_Decode_ARM(); }
 
 						cpu_Seq_Access = false;
 					}
