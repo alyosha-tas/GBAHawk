@@ -1142,7 +1142,7 @@ namespace GBAHawk
 				// Branch and exchange mode (possibly)
 				cpu_Base_Reg = (uint32_t)(cpu_Instr_ARM_2 & 0xF);
 
-				cpu_Temp_Reg = (cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFE);
+				cpu_Temp_Reg = cpu_Regs[cpu_Base_Reg];
 				break;
 
 			case cpu_ARM_MUL:
@@ -2509,7 +2509,7 @@ namespace GBAHawk
 				cpu_ALU_Reg_Dest = ((cpu_Instr_ARM_2 >> 12) & 0xF);
 
 				cpu_ALU_Reg_Src = ((cpu_Instr_ARM_2 >> 16) & 0xF);
-				cpu_Temp_Reg = cpu_Regs[cpu_ALU_Reg_Src];
+				cpu_Temp_Reg = cpu_LDM_Glitch_Get_Reg(cpu_ALU_Reg_Src);
 
 				// slightly different code path for R15 as destination, since it's closer to a branch
 				cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
@@ -3012,7 +3012,7 @@ namespace GBAHawk
 					// Branch and exchange mode (possibly)
 					cpu_Base_Reg = (cpu_Instr_ARM_2 & 0xF);
 
-					cpu_Temp_Reg = (cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFE);
+					cpu_Temp_Reg = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 					break;
 
 				case cpu_ARM_MUL:
@@ -3128,8 +3128,8 @@ namespace GBAHawk
 					break;
 
 				case cpu_ARM_Swap:
+					cpu_Base_Reg = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 16) & 0xF);
 					cpu_Base_Reg_2 = ((cpu_Instr_ARM_2 >> 12) & 0xF);
-					cpu_Base_Reg = ((cpu_Instr_ARM_2 >> 16) & 0xF);
 					cpu_Temp_Reg_Ptr = (cpu_Instr_ARM_2 & 0xF);
 					break;
 
@@ -4220,11 +4220,11 @@ namespace GBAHawk
 
 				if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 				{
-					cpu_Fetch_Wait = Wait_State_Access_32(cpu_Regs[cpu_Base_Reg], cpu_Seq_Access);
+					cpu_Fetch_Wait = Wait_State_Access_32(cpu_Base_Reg, cpu_Seq_Access);
 				}
 				else
 				{
-					cpu_Fetch_Wait = Wait_State_Access_8(cpu_Regs[cpu_Base_Reg], cpu_Seq_Access);
+					cpu_Fetch_Wait = Wait_State_Access_8(cpu_Base_Reg, cpu_Seq_Access);
 				}
 			}
 
@@ -4236,11 +4236,11 @@ namespace GBAHawk
 				{
 					if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 					{
-						Write_Memory_8(cpu_Regs[cpu_Base_Reg], (uint8_t)cpu_Regs[cpu_Temp_Reg_Ptr]);
+						Write_Memory_8(cpu_Base_Reg, (uint8_t)cpu_Regs[cpu_Temp_Reg_Ptr]);
 					}
 					else
 					{
-						Write_Memory_32(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Temp_Reg_Ptr]);
+						Write_Memory_32(cpu_Base_Reg, cpu_Regs[cpu_Temp_Reg_Ptr]);
 					}
 
 					cpu_Regs[cpu_Base_Reg_2] = cpu_Temp_Data;
@@ -4256,12 +4256,12 @@ namespace GBAHawk
 				{
 					if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 					{
-						cpu_Temp_Data = Read_Memory_8(cpu_Regs[cpu_Base_Reg]);
+						cpu_Temp_Data = Read_Memory_8(cpu_Base_Reg);
 					}
 					else
 					{
 						// deal with misaligned accesses
-						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+						cpu_Temp_Addr = cpu_Base_Reg;
 
 						if ((cpu_Temp_Addr & 3) == 0)
 						{
@@ -4314,9 +4314,9 @@ namespace GBAHawk
 				{
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 
-					cpu_Regs[15] = cpu_Temp_Reg;
+					cpu_Regs[15] = cpu_Temp_Reg & 0xFFFFFFFE;
 
-					cpu_FlagTset((cpu_Regs[cpu_Base_Reg] & 1) == 1);
+					cpu_FlagTset((cpu_Temp_Reg & 1) == 1);
 					cpu_Thumb_Mode = cpu_FlagTget();
 
 					// Invalidate instruction pipeline
@@ -4630,6 +4630,4 @@ namespace GBAHawk
 			break;
 		}
 	}
-
-
 }
