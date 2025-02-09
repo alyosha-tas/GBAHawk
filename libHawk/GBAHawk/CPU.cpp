@@ -3145,17 +3145,17 @@ namespace GBAHawk
 						// increment first
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
-							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Addr_Offset);
+							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) + cpu_Addr_Offset);
 						}
 						else
 						{
-							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] - cpu_Addr_Offset);
+							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) - cpu_Addr_Offset);
 						}
 					}
 					else
 					{
 						// increment last
-						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 					}
 
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
@@ -3194,49 +3194,49 @@ namespace GBAHawk
 
 					cpu_Temp_Reg_Ptr = ((cpu_Instr_ARM_2 >> 12) & 0xF);
 
-					cpu_Temp_Data = cpu_Regs[cpu_Instr_ARM_2 & 0xF];
+					cpu_Temp_Data = cpu_LDM_Glitch_Get_Reg(cpu_Instr_ARM_2 & 0xF);
 
 					cpu_Shift_Imm = ((cpu_Instr_ARM_2 >> 7) & 0x1F);
 
 					switch ((cpu_Instr_ARM_2 >> 5) & 3)
 					{
-					case 0:         // LSL
-						cpu_Temp_Data = cpu_Temp_Data << cpu_Shift_Imm;
-						break;
+						case 0:         // LSL
+							cpu_Temp_Data = cpu_Temp_Data << cpu_Shift_Imm;
+							break;
 
-					case 1:         // LSR
-						if (cpu_Shift_Imm == 0) { cpu_Temp_Data = 0; }
-						else { cpu_Temp_Data = cpu_Temp_Data >> cpu_Shift_Imm; }
-						break;
+						case 1:         // LSR
+							if (cpu_Shift_Imm == 0) { cpu_Temp_Data = 0; }
+							else { cpu_Temp_Data = cpu_Temp_Data >> cpu_Shift_Imm; }
+							break;
 
-					case 2:         // ASR
-						if (cpu_Shift_Imm == 0) { cpu_Shift_Imm = 32; }
+						case 2:         // ASR
+							if (cpu_Shift_Imm == 0) { cpu_Shift_Imm = 32; }
 
-						cpu_ALU_Temp_S_Val = cpu_Temp_Data & cpu_Neg_Compare;
+							cpu_ALU_Temp_S_Val = cpu_Temp_Data & cpu_Neg_Compare;
 
-						for (int i = 1; i <= cpu_Shift_Imm; i++)
-						{
-							cpu_Temp_Data = (cpu_Temp_Data >> 1);
-							cpu_Temp_Data |= cpu_ALU_Temp_S_Val;
-						}
-						break;
-
-					case 3:         // RRX
-						if (cpu_Shift_Imm == 0)
-						{
-							cpu_Temp_Data = (cpu_Temp_Data >> 1);
-							cpu_Temp_Data |= cpu_FlagCget() ? 0x80000000 : 0;
-						}
-						else
-						{
 							for (int i = 1; i <= cpu_Shift_Imm; i++)
 							{
-								cpu_ALU_Temp_S_Val = (uint32_t)(cpu_Temp_Data & 1);
 								cpu_Temp_Data = (cpu_Temp_Data >> 1);
-								cpu_Temp_Data |= (cpu_ALU_Temp_S_Val << 31);
+								cpu_Temp_Data |= cpu_ALU_Temp_S_Val;
 							}
-						}
-						break;
+							break;
+
+						case 3:         // RRX
+							if (cpu_Shift_Imm == 0)
+							{
+								cpu_Temp_Data = (cpu_Temp_Data >> 1);
+								cpu_Temp_Data |= cpu_FlagCget() ? 0x80000000 : 0;
+							}
+							else
+							{
+								for (int i = 1; i <= cpu_Shift_Imm; i++)
+								{
+									cpu_ALU_Temp_S_Val = (uint32_t)(cpu_Temp_Data & 1);
+									cpu_Temp_Data = (cpu_Temp_Data >> 1);
+									cpu_Temp_Data |= (cpu_ALU_Temp_S_Val << 31);
+								}
+							}
+							break;
 					}
 
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
@@ -3244,17 +3244,17 @@ namespace GBAHawk
 						// increment first
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
-							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Temp_Data);
+							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) + cpu_Temp_Data);
 						}
 						else
 						{
-							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] - cpu_Temp_Data);
+							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) - cpu_Temp_Data);
 						}
 					}
 					else
 					{
 						// increment last
-						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 					}
 
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
@@ -3283,6 +3283,10 @@ namespace GBAHawk
 					{
 						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
 					}
+
+					Message_String = "rld " + to_string(cpu_Temp_Addr) + " cyc " + to_string(CycleCount);
+
+					MessageCallback(Message_String.length());
 					break;
 
 				case cpu_ARM_Multi_1:
@@ -3290,7 +3294,7 @@ namespace GBAHawk
 
 					cpu_Base_Reg = ((cpu_Instr_ARM_2 >> 16) & 0xF);
 
-					cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+					cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 
 					cpu_LS_First_Access = true;
 
@@ -4041,13 +4045,13 @@ namespace GBAHawk
 				// if done, the next cycle depends on whether or not Reg 15 was written to
 				if (cpu_Multi_List_Ptr == cpu_Multi_List_Size)
 				{
-					bool LDM_Glitch_Mode = false;
+					cpu_LDM_Glitch_Mode = false;
 
 					if (cpu_Multi_Swap)
 					{
 						cpu_Swap_Regs(cpu_Temp_Mode, false, false);
 
-						LDM_Glitch_Mode = true;
+						cpu_LDM_Glitch_Mode = true;
 					}
 
 					if (cpu_LS_Is_Load)
