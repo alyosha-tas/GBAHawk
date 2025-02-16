@@ -5781,6 +5781,10 @@ namespace GBAHawk
 
 		void ppu_Write_Reg_8(uint32_t addr, uint8_t value)
 		{
+			//Message_String = "wr 8 addr: " + to_string(addr) + " v: " + to_string(value) + " ly: " + to_string(ppu_LY) + " cyc: " + to_string(ppu_Cycle);
+
+			//MessageCallback(Message_String.length());
+			
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write((uint16_t)((ppu_CTRL & 0xFF00) | value)); break;
@@ -5800,20 +5804,20 @@ namespace GBAHawk
 				case 0x0E: ppu_BG_CTRL[3] = (uint16_t)((ppu_BG_CTRL[3] & 0xFF00) | value); ppu_BG_CTRL_Write(3); break;
 				case 0x0F: ppu_BG_CTRL[3] = (uint16_t)((ppu_BG_CTRL[3] & 0x00FF) | (value << 8)); ppu_BG_CTRL_Write(3); break;
 
-				case 0x10: ppu_BG_X[0] = (uint16_t)((ppu_BG_X[0] & 0xFF00) | value); break;
-				case 0x11: ppu_BG_X[0] = (uint16_t)((ppu_BG_X[0] & 0x00FF) | (value << 8)); break;
+				case 0x10: ppu_BG_X_Write((uint16_t)((ppu_BG_X[0] & 0xFF00) | value), 0); break;
+				case 0x11: ppu_BG_X_Write((uint16_t)((ppu_BG_X[0] & 0x00FF) | (value << 8)), 0); break;
 				case 0x12: ppu_BG_Y[0] = (uint16_t)((ppu_BG_Y[0] & 0xFF00) | value); break;
 				case 0x13: ppu_BG_Y[0] = (uint16_t)((ppu_BG_Y[0] & 0x00FF) | (value << 8)); break;
-				case 0x14: ppu_BG_X[1] = (uint16_t)((ppu_BG_X[1] & 0xFF00) | value); break;
-				case 0x15: ppu_BG_X[1] = (uint16_t)((ppu_BG_X[1] & 0x00FF) | (value << 8)); break;
+				case 0x14: ppu_BG_X_Write((uint16_t)((ppu_BG_X[1] & 0xFF00) | value), 1); break;
+				case 0x15: ppu_BG_X_Write((uint16_t)((ppu_BG_X[1] & 0x00FF) | (value << 8)), 1); break;
 				case 0x16: ppu_BG_Y[1] = (uint16_t)((ppu_BG_Y[1] & 0xFF00) | value); break;
 				case 0x17: ppu_BG_Y[1] = (uint16_t)((ppu_BG_Y[1] & 0x00FF) | (value << 8)); break;
-				case 0x18: ppu_BG_X[2] = (uint16_t)((ppu_BG_X[2] & 0xFF00) | value); break;
-				case 0x19: ppu_BG_X[2] = (uint16_t)((ppu_BG_X[2] & 0x00FF) | (value << 8)); break;
+				case 0x18: ppu_BG_X_Write((uint16_t)((ppu_BG_X[2] & 0xFF00) | value), 2); break;
+				case 0x19: ppu_BG_X_Write((uint16_t)((ppu_BG_X[2] & 0x00FF) | (value << 8)), 2); break;
 				case 0x1A: ppu_BG_Y[2] = (uint16_t)((ppu_BG_Y[2] & 0xFF00) | value); break;
 				case 0x1B: ppu_BG_Y[2] = (uint16_t)((ppu_BG_Y[2] & 0x00FF) | (value << 8)); break;
-				case 0x1C: ppu_BG_X[3] = (uint16_t)((ppu_BG_X[3] & 0xFF00) | value); break;
-				case 0x1D: ppu_BG_X[3] = (uint16_t)((ppu_BG_X[3] & 0x00FF) | (value << 8)); break;
+				case 0x1C: ppu_BG_X_Write((uint16_t)((ppu_BG_X[3] & 0xFF00) | value), 3); break;
+				case 0x1D: ppu_BG_X_Write((uint16_t)((ppu_BG_X[3] & 0x00FF) | (value << 8)), 3); break;
 				case 0x1E: ppu_BG_Y[3] = (uint16_t)((ppu_BG_Y[3] & 0xFF00) | value); break;
 				case 0x1F: ppu_BG_Y[3] = (uint16_t)((ppu_BG_Y[3] & 0x00FF) | (value << 8)); break;
 
@@ -5877,6 +5881,10 @@ namespace GBAHawk
 
 		void ppu_Write_Reg_16(uint32_t addr, uint16_t value)
 		{
+			//Message_String = "wr 16 addr: " + to_string(addr) + " v: " + to_string(value) + " ly: " + to_string(ppu_LY) + " cyc: " + to_string(ppu_Cycle);
+
+			//MessageCallback(Message_String.length());
+			
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write(value); break;
@@ -5888,13 +5896,13 @@ namespace GBAHawk
 				case 0x0C: ppu_BG_CTRL[2] = value; ppu_BG_CTRL_Write(2); break;
 				case 0x0E: ppu_BG_CTRL[3] = value; ppu_BG_CTRL_Write(3); break;
 
-				case 0x10: ppu_BG_X[0] = value; break;
+				case 0x10: ppu_BG_X_Write(value, 0); break;
 				case 0x12: ppu_BG_Y[0] = value; break;
-				case 0x14: ppu_BG_X[1] = value; break;
+				case 0x14: ppu_BG_X_Write(value, 1); break;
 				case 0x16: ppu_BG_Y[1] = value; break;
-				case 0x18: ppu_BG_X[2] = value; break;
+				case 0x18: ppu_BG_X_Write(value, 2); break;
 				case 0x1A: ppu_BG_Y[2] = value; break;
-				case 0x1C: ppu_BG_X[3] = value; break;
+				case 0x1C: ppu_BG_X_Write(value, 3); break;
 				case 0x1E: ppu_BG_Y[3] = value; break;
 
 				case 0x20: ppu_BG_Rot_A[2] = value; ppu_Convert_Rotation_to_ulong_AC(2); break;
@@ -5931,6 +5939,10 @@ namespace GBAHawk
 
 		void ppu_Write_Reg_32(uint32_t addr, uint32_t value)
 		{
+			//Message_String = "wr 32 addr: " + to_string(addr) + " v: " + to_string(value) + " ly: " + to_string(ppu_LY) + " cyc: " + to_string(ppu_Cycle);
+
+			//MessageCallback(Message_String.length());
+			
 			switch (addr)
 			{
 				case 0x00: ppu_CTRL_Write((uint16_t)(value & 0xFFFF));
@@ -5942,13 +5954,13 @@ namespace GBAHawk
 				case 0x0C: ppu_BG_CTRL[2] = (uint16_t)(value & 0xFFFF); ppu_BG_CTRL_Write(2);
 						   ppu_BG_CTRL[3] = (uint16_t)((value >> 16) & 0xFFFF); ppu_BG_CTRL_Write(3); break;
 
-				case 0x10: ppu_BG_X[0] = (uint16_t)(value & 0xFFFF);
+				case 0x10: ppu_BG_X_Write((uint16_t)(value & 0xFFFF), 0);
 						   ppu_BG_Y[0] = (uint16_t)((value >> 16) & 0xFFFF); break;
-				case 0x14: ppu_BG_X[1] = (uint16_t)(value & 0xFFFF);
+				case 0x14: ppu_BG_X_Write((uint16_t)(value & 0xFFFF), 1);
 						   ppu_BG_Y[1] = (uint16_t)((value >> 16) & 0xFFFF); break;
-				case 0x18: ppu_BG_X[2] = (uint16_t)(value & 0xFFFF);
+				case 0x18: ppu_BG_X_Write((uint16_t)(value & 0xFFFF), 2);
 						   ppu_BG_Y[2] = (uint16_t)((value >> 16) & 0xFFFF); break;
-				case 0x1C: ppu_BG_X[3] = (uint16_t)(value & 0xFFFF);
+				case 0x1C: ppu_BG_X_Write((uint16_t)(value & 0xFFFF), 3);
 						   ppu_BG_Y[3] = (uint16_t)((value >> 16) & 0xFFFF); break;
 
 				case 0x20: ppu_BG_Rot_A[2] = (uint16_t)(value & 0xFFFF);
@@ -5979,6 +5991,11 @@ namespace GBAHawk
 				case 0x54: ppu_Update_Bright((uint16_t)(value & 0xFFFF));
 						   /* no effect*/ break;
 			}
+		}
+
+		void ppu_BG_X_Write(uint16_t value, uint16_t num)
+		{
+			ppu_BG_X[num] = value;
 		}
 
 		void ppu_STAT_Write(uint8_t value)

@@ -24,8 +24,8 @@ namespace GBAHawk
 		for (int i = 0; i < 4; i++)
 		{
 			ppu_BG_CTRL[i] = 0;
-			ppu_BG_X[0] = 0;
-			ppu_BG_Y[0] = 0;
+			ppu_BG_X[i] = 0;
+			ppu_BG_Y[i] = 0;
 
 			ppu_BG_On_Update_Time[i] = 0;
 
