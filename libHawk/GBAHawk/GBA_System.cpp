@@ -1364,46 +1364,44 @@ namespace GBAHawk
 			delays_to_process = true;
 		}
 
-		if (!ppu_Forced_Blank)
+		if (ppu_In_VBlank)
 		{
-			if (ppu_In_VBlank)
-			{
-				if (ppu_LY == 227)
-				{
-					ppu_VRAM_High_Access = false;
-					ppu_OAM_Access = false;
-
-					if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
-					{
-						if ((ppu_Cycle & 1) == 1)
-						{
-							if (ppu_Cycle >= 40)
-							{
-								ppu_Render_Sprites();
-							}
-						}
-					}
-				}
-			}
-			else
+			if (ppu_LY == 227)
 			{
 				ppu_VRAM_High_Access = false;
-				ppu_VRAM_Access = false;
-				ppu_PALRAM_Access = false;
 				ppu_OAM_Access = false;
 
 				if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 				{
 					if ((ppu_Cycle & 1) == 1)
 					{
-						ppu_Render_Sprites();
+						if (ppu_Cycle >= 40)
+						{
+							ppu_Render_Sprites();
+						}
 					}
 				}
+			}
+		}
+		else
+		{
+			ppu_VRAM_High_Access = false;
+			ppu_VRAM_Access = false;
+			ppu_PALRAM_Access = false;
+			ppu_OAM_Access = false;
 
-				if (!ppu_Rendering_Complete)
+			if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
+			{
+				if ((ppu_Cycle & 1) == 1)
 				{
-					ppu_Render();
+					ppu_Render_Sprites();
 				}
+			}
+
+			// sprite vram fetching is uneffected by forced blank based on new ram access timing test
+			if (!ppu_Rendering_Complete && !ppu_Forced_Blank)
+			{
+				ppu_Render();
 			}
 		}
 

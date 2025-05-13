@@ -812,6 +812,14 @@ namespace GBAHawk
 				// Forced Align
 				WRAM_32[(addr & 0x3FFFC) >> 2] = value;
 			}
+			/*
+			if (addr == 0x02009860)
+			{
+				Message_String = to_string(value) + " " + to_string(CycleCount);
+
+				MessageCallback(Message_String.length());
+			}
+			*/
 		}
 		else if (addr < 0x04000000)
 		{

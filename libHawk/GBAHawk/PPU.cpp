@@ -1125,12 +1125,12 @@ namespace GBAHawk
 						if (ppu_BG_Mosaic[a0])
 						{
 							ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
-							ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[a0]) & 0x1FF);
+							ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a0]) & 0x1FF);
 						}
 						else
 						{
 							ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
-							ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[a0]) & 0x1FF);
+							ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a0]) & 0x1FF);
 						}
 
 						// always wrap around, this means pixels will always be in a valid range
@@ -1371,12 +1371,12 @@ namespace GBAHawk
 							if (ppu_BG_Mosaic[a1])
 							{
 								ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
-								ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y_Latch[a1]) & 0x1FF);
+								ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a1]) & 0x1FF);
 							}
 							else
 							{
 								ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
-								ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y_Latch[a1]) & 0x1FF);
+								ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a1]) & 0x1FF);
 							}
 
 							// always wrap around, so pixel is always in range
@@ -2359,7 +2359,7 @@ namespace GBAHawk
 
 									if ((pix_color & pal_scale) != 0)
 									{
-										if (ppu_Sprite_Mode < 2)
+										if (ppu_Sprite_Mode != 2)
 										{
 											ppu_Sprite_Pixels[ppu_Sprite_ofst_eval + ppu_Cur_Sprite_X] = pix_color + 0x100;
 
