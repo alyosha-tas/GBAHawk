@@ -6,6 +6,25 @@
 
 #include "GBA_System.h"
 
+// Note:
+
+/*	Enabling sprites through ppu ctrl starts evaluation immediately. However it takes an additional scanline for them to start displaying.
+*   It seems sprite evaluation always runs either way, but when sprites are not enabled they are declared invalid after the first oam read
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+*/
+
 namespace GBAHawk
 {
 	void GBA_System::ppu_Reset()
@@ -109,7 +128,7 @@ namespace GBAHawk
 
 		ppu_Rot_Scale = ppu_Rot_Scale_Temp = false;
 		ppu_Fetch_OAM_0 = ppu_Fetch_OAM_2 = ppu_Fetch_OAM_A_D = false;
-		ppu_Fetch_Sprite_VRAM = ppu_New_Sprite = ppu_Sprite_Eval_Finished = false;
+		ppu_Fetch_Sprite_VRAM = ppu_New_Sprite = false;
 		ppu_Sprite_Mosaic = false;
 
 		ppu_VRAM_High_Access = false;
@@ -175,7 +194,7 @@ namespace GBAHawk
 		// PPU power up
 		ppu_CTRL_Write(0);
 
-		ppu_OBJ_On_Prev = false;
+		ppu_OBJ_On_Disp = false;
 
 		// update derived values
 		ppu_Calc_Win0();
@@ -494,7 +513,7 @@ namespace GBAHawk
 						{
 							ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_MOS_OBJ_X[ppu_Display_Cycle]];
 
-							OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Prev;
+							OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Disp;
 
 							if (OBJ_Has_Pixel)
 							{
@@ -513,7 +532,7 @@ namespace GBAHawk
 						{
 							if (ppu_Sprite_Mosaic_Latch)
 							{
-								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Prev;
+								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Disp;
 								spr_pixel = ppu_Sprite_Pixel_Latch;
 								spr_priority = ppu_Sprite_Priority_Latch;
 								spr_semi_transparent = ppu_Sprite_Semi_Transparent_Latch;
@@ -522,7 +541,7 @@ namespace GBAHawk
 							{
 								ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
 
-								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Prev;
+								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Disp;
 
 								if (OBJ_Has_Pixel)
 								{
@@ -544,7 +563,7 @@ namespace GBAHawk
 					{
 						ppu_Sprite_Pixel_Occupied_Latch = ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
 
-						OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Prev;
+						OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Disp;
 
 						if (OBJ_Has_Pixel)
 						{
@@ -2424,11 +2443,20 @@ namespace GBAHawk
 
 		if (ppu_Fetch_OAM_0 && !ppu_Sprite_Eval_Finished)
 		{
-			ppu_OAM_Access = true;
-			ppu_New_Sprite = false;
-
-			spr_attr_0 = OAM_16[ppu_Current_Sprite * 4];
-			spr_attr_1 = OAM_16[ppu_Current_Sprite * 4 + 1];
+			if (ppu_OBJ_On)
+			{
+				ppu_OAM_Access = true;
+				spr_attr_0 = OAM_16[ppu_Current_Sprite * 4];
+				spr_attr_1 = OAM_16[ppu_Current_Sprite * 4 + 1];
+			}
+			else
+			{
+				ppu_OAM_Access = false;
+				spr_attr_0 = 0xFFFF;
+				spr_attr_1 = 0xFFFF;
+			}
+			
+			ppu_New_Sprite = false;	
 
 			spr_x_pos = spr_attr_1 & 0x1FF;
 			spr_y_pos = spr_attr_0 & 0xFF;
@@ -2525,6 +2553,11 @@ namespace GBAHawk
 				{
 					ppu_New_Sprite = true;
 				}
+			}
+
+			if (!ppu_OBJ_On)
+			{
+				ppu_New_Sprite = true;
 			}
 
 			if (ppu_New_Sprite)

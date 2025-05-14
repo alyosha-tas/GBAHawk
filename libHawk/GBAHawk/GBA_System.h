@@ -5485,7 +5485,7 @@ namespace GBAHawk
 		bool ppu_OAM_Access;
 
 		bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
-		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN, ppu_OBJ_On_Prev;
+		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN, ppu_OBJ_On_Disp;
 		bool ppu_WIN0_Active, ppu_WIN1_Active;
 
 		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
@@ -6049,6 +6049,7 @@ namespace GBAHawk
 				{
 					ppu_BG_On[i] = false;
 					ppu_BG_On_Update_Time[i] = 0;
+					ppu_BG_Rendering_Complete[i] = true;
 				}
 				else if (ppu_BG_On_Update_Time[i] == 0)
 				{
@@ -6066,21 +6067,27 @@ namespace GBAHawk
 			}
 
 			// sprites require one scanline to turn on
-			// latcjed value for display takes one cycle to update
+			// latched value for display takes one cycle to update
 			if ((value & 0x1000) == 0)
 			{
-				ppu_OBJ_On = false;
 				ppu_OBJ_On_Time = 0;
-
-				delays_to_process = true;
-				ppu_Sprite_Delays = true;
-				ppu_Sprite_Delay_Disp = true;
-				ppu_Sprite_Disp_cd = 3;
 			}
-			else
+			else if (ppu_OBJ_On_Time == 0)
 			{
-				ppu_OBJ_On_Time = 2;
+				if (ppu_Cycle < 40)
+				{
+					ppu_OBJ_On_Time = 2;
+				}
+				else
+				{
+					ppu_OBJ_On_Time = 3;
+				}
 			}
+
+			delays_to_process = true;
+			ppu_Sprite_Delays = true;
+			ppu_Sprite_Delay_Disp = true;
+			ppu_Sprite_Disp_cd = 3;
 
 			// forced blank timing is the same as BG enable
 			if ((value & 0x80) == 0x80)
@@ -6088,7 +6095,7 @@ namespace GBAHawk
 				ppu_Forced_Blank = true;
 				ppu_Forced_Blank_Time = 0;
 			}
-			else
+			else if (ppu_Forced_Blank_Time == 0)
 			{
 				if (ppu_Cycle < 40)
 				{
@@ -6129,7 +6136,7 @@ namespace GBAHawk
 			{
 				ppu_VRAM_Access = false;
 				ppu_PALRAM_Access = false;
-				ppu_OAM_Access = false;
+				//ppu_OAM_Access = false;
 			}
 		}
 
@@ -6580,7 +6587,7 @@ namespace GBAHawk
 			saver = bool_saver(ppu_OBJ_WIN, saver);
 			saver = bool_saver(ppu_WIN0_Active, saver);
 			saver = bool_saver(ppu_WIN1_Active, saver);
-			saver = bool_saver(ppu_OBJ_On_Prev, saver);
+			saver = bool_saver(ppu_OBJ_On_Disp, saver);
 
 			saver = byte_saver(ppu_STAT, saver);
 			saver = byte_saver(ppu_LY, saver);
@@ -6794,7 +6801,7 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_OBJ_WIN, loader);
 			loader = bool_loader(&ppu_WIN0_Active, loader);
 			loader = bool_loader(&ppu_WIN1_Active, loader);
-			loader = bool_loader(&ppu_OBJ_On_Prev, loader);
+			loader = bool_loader(&ppu_OBJ_On_Disp, loader);
 
 			loader = byte_loader(&ppu_STAT, loader);
 			loader = byte_loader(&ppu_LY, loader);

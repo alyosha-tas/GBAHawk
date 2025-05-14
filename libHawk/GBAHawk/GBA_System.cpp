@@ -698,12 +698,10 @@ namespace GBAHawk
 							ppu_Sprite_ofst_draw = 240;
 						}
 
-						ppu_Sprite_Eval_Finished = true;
+						ppu_Sprite_Eval_Finished = false;
 
 						if ((ppu_LY < 159) || (ppu_LY == 227))
 						{
-							ppu_Sprite_Eval_Finished = !ppu_OBJ_On;
-
 							ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
 
 							if (ppu_LY == 227)
@@ -769,7 +767,12 @@ namespace GBAHawk
 
 					if (ppu_Sprite_Disp_cd == 0)
 					{
-						ppu_OBJ_On_Prev = (ppu_CTRL & 0x1000) == 0x1000;
+						if ((ppu_CTRL & 0x1000) == 0)
+						{
+							ppu_OBJ_On_Disp = false;
+						}
+
+						ppu_OBJ_On = (ppu_CTRL & 0x1000) == 0x1000;
 
 						ppu_Sprite_Delay_Disp = false;
 
@@ -1331,8 +1334,7 @@ namespace GBAHawk
 
 				if (ppu_OBJ_On_Time == 0)
 				{
-					ppu_OBJ_On = true;
-					ppu_OBJ_On_Prev = true;
+					ppu_OBJ_On_Disp = true;
 				}
 			}
 
@@ -1392,9 +1394,25 @@ namespace GBAHawk
 
 			if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 			{
+				if (ppu_LY == 3)
+				{
+					Message_String = "rendering  " + to_string(CycleCount);
+
+					MessageCallback(Message_String.length());
+				}
+				
 				if ((ppu_Cycle & 1) == 1)
 				{
 					ppu_Render_Sprites();
+				}
+			}
+			else if ((ppu_LY == 3) && (ppu_Cycle < 100))
+			{
+				if (ppu_LY == 3)
+				{
+					Message_String = "not rendering  " + to_string(ppu_Sprite_Eval_Finished) + " " + to_string(ppu_OBJ_On);
+
+					MessageCallback(Message_String.length());
 				}
 			}
 
