@@ -116,7 +116,7 @@ namespace GBAHawk
 					{
 						IRQ_Delays = false;
 
-						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !IRQ_Delays)
+						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 						{
 							delays_to_process = false;
 						}
@@ -151,7 +151,7 @@ namespace GBAHawk
 							{
 								IRQ_Delays = false;
 
-								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
 								{
 									delays_to_process = false;
 								}
@@ -184,7 +184,7 @@ namespace GBAHawk
 							{
 								IRQ_Delays = false;
 
-								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays)
+								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
 								{
 									delays_to_process = false;
 								}
@@ -348,7 +348,7 @@ namespace GBAHawk
 					}
 				}
 
-				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
 				{
 					delays_to_process = false;
 				}
@@ -517,14 +517,15 @@ namespace GBAHawk
 
 								for (int i = 0; i < 4; i++)
 								{
-									ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
+									//ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
 									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
 
 									ppu_Fetch_Count[i] = 0;
 
-									ppu_Scroll_Cycle[i] = 0;
+									ppu_Scroll_Cycle[i] = 48; // indicates inactive before first fetch
 
-									ppu_Pixel_Color[i] = 0;
+									// do not reset pixel color, needed for fire emblem sacred stones
+									//ppu_Pixel_Color[i] = 0;
 
 									ppu_BG_Has_Pixel[i] = false;
 								}
@@ -662,7 +663,7 @@ namespace GBAHawk
 				// check if all delay sources are false
 				if (!ppu_Delays)
 				{
-					if (!Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+					if (!Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
 					{
 						delays_to_process = false;
 					}
@@ -745,7 +746,7 @@ namespace GBAHawk
 						{
 							ppu_Sprite_Delays = false;
 
-							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
+							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 							{
 								delays_to_process = false;
 							}
@@ -780,11 +781,43 @@ namespace GBAHawk
 						{
 							ppu_Sprite_Delays = false;
 
-							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
+							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 							{
 								delays_to_process = false;
 							}
 						}
+					}
+				}
+			}
+
+			if (ppu_Latch_Delays)
+			{
+				bool all_off = true;
+
+				for (int i = 0; i < 4; i++)
+				{
+					if (ppu_BG_X_Latch_Delays[i])
+					{
+						ppu_BG_X_Latch_cd[i]-=1;
+
+						if (ppu_BG_X_Latch_cd[i] == 0)
+						{
+							ppu_BG_X_Latch[i] = ppu_BG_X[i];
+
+							ppu_BG_X_Latch_Delays[i] = false;
+						}					
+					}
+
+					all_off &= !ppu_BG_X_Latch_Delays[i];
+				}
+
+				if (all_off)
+				{
+					ppu_Latch_Delays = false;
+
+					if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+					{
+						delays_to_process = false;
 					}
 				}
 			}
@@ -1394,25 +1427,9 @@ namespace GBAHawk
 
 			if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
 			{
-				if (ppu_LY == 3)
-				{
-					Message_String = "rendering  " + to_string(CycleCount);
-
-					MessageCallback(Message_String.length());
-				}
-				
 				if ((ppu_Cycle & 1) == 1)
 				{
 					ppu_Render_Sprites();
-				}
-			}
-			else if ((ppu_LY == 3) && (ppu_Cycle < 100))
-			{
-				if (ppu_LY == 3)
-				{
-					Message_String = "not rendering  " + to_string(ppu_Sprite_Eval_Finished) + " " + to_string(ppu_OBJ_On);
-
-					MessageCallback(Message_String.length());
 				}
 			}
 

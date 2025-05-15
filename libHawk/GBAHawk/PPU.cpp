@@ -11,8 +11,8 @@
 /*	Enabling sprites through ppu ctrl starts evaluation immediately. However it takes an additional scanline for them to start displaying.
 *   It seems sprite evaluation always runs either way, but when sprites are not enabled they are declared invalid after the first oam read
 * 
-* 
-* 
+*   Fire emblem sacred stones encounters a case where bg x scroll is written to in such a way that there is a gap between when the first pixels are rendered and
+*   when the first tile is fetched. For now assume old pixel color data is used from the prebvious scanline
 * 
 * 
 * 
@@ -50,6 +50,9 @@ namespace GBAHawk
 
 			ppu_BG_Ref_X_Change[i] = false;
 			ppu_BG_Ref_LY_Change[i] = false;
+
+			ppu_BG_X_Latch_cd[i] = 0;
+			ppu_BG_X_Latch_Delays[i] = 0;
 		}
 
 		ppu_Forced_Blank_Time = ppu_OBJ_On_Time = 0;
@@ -78,6 +81,7 @@ namespace GBAHawk
 		ppu_In_VBlank = true;
 
 		ppu_Delays = false;
+		ppu_Latch_Delays = false;
 		ppu_Sprite_Delays = false;
 		ppu_Sprite_Delay_SL = false;
 		ppu_Sprite_Delay_Disp = false;
@@ -1136,27 +1140,291 @@ namespace GBAHawk
 
 			if (!ppu_BG_Rendering_Complete[a0])
 			{
-				if ((ppu_Cycle >= ppu_BG_Start_Time[a0]))
+				if ((ppu_Cycle & 0x1C) == (((32 - 4 * (ppu_BG_X_Latch[a0] & 0x7)) & 0x1C)))
 				{
-					if ((ppu_Scroll_Cycle[a0] & 31) == 0)
+					if (ppu_Cycle >= 4)
 					{
-						// calculate scrolling
-						if (ppu_BG_Mosaic[a0])
+						ppu_Scroll_Cycle[a0] = 0;
+
+						// calculate fetch count
+						ppu_Fetch_Count[a0] = ((ppu_Cycle-4) >> 5);
+					}
+				}
+
+				if (ppu_Scroll_Cycle[a0] == 0)
+				{
+					// calculate scrolling
+					if (ppu_BG_Mosaic[a0])
+					{
+						ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
+						ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a0]) & 0x1FF);
+					}
+					else
+					{
+						ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
+						ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a0]) & 0x1FF);
+					}
+
+					// always wrap around, this means pixels will always be in a valid range
+					ppu_X_RS &= (BG_Scale_X[a0] - 1);
+					ppu_Y_RS &= (BG_Scale_Y[a0] - 1);
+
+					ppu_Y_Flip_Ofst[a0] = ppu_Y_RS & 7;
+
+					// this access will always be in bounds
+					ppu_Set_VRAM_Access_True();
+
+					VRAM_ofst_X = ppu_X_RS >> 3;
+					VRAM_ofst_Y = ppu_Y_RS >> 3;
+
+					Screen_Offset = 0;
+
+					if (VRAM_ofst_X > 31)
+					{
+						if (VRAM_ofst_Y > 31)
 						{
-							ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
-							ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a0]) & 0x1FF);
+							Screen_Offset = 6 * 1024;
 						}
 						else
 						{
-							ppu_X_RS = (int)(((ppu_Fetch_Count[a0] << 3) + ppu_BG_X_Latch[a0]) & 0x1FF);
-							ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a0]) & 0x1FF);
+							Screen_Offset = 2 * 1024;
+						}
+					}
+					else if (VRAM_ofst_Y > 31)
+					{
+						if (ppu_BG_Screen_Size[a0] == 2)
+						{
+							Screen_Offset = 2 * 1024;
+						}
+						else
+						{
+							Screen_Offset = 4 * 1024;
+						}
+					}
+
+					VRAM_ofst_X &= 31;
+					VRAM_ofst_Y &= 31;
+
+					ppu_Tile_Addr[a0] = ppu_BG_Screen_Base[a0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a0] * 2 + VRAM_ofst_X * 2;
+
+					ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a0] >> 1];
+
+					ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+
+					ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+				}
+				else if ((ppu_Scroll_Cycle[a0] == 4) || (ppu_Scroll_Cycle[a0] == 20))
+				{
+					// this update happens here so that rendering isn't effected further up
+					ppu_BG_Effect_Byte[a0] = ppu_BG_Effect_Byte_New[a0];
+
+					if (ppu_BG_Pal_Size[a0])
+					{
+						temp_addr = ppu_Tile_Addr[a0];
+
+						temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a0];
+
+						if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+						{
+							if (ppu_Scroll_Cycle[a0] == 4)
+							{
+								temp_addr += 0;
+							}
+							else
+							{
+								temp_addr += 4;
+							}
+						}
+						else
+						{
+							if (ppu_Scroll_Cycle[a0] == 4)
+							{
+								temp_addr += 6;
+							}
+							else
+							{
+								temp_addr += 2;
+							}
 						}
 
-						// always wrap around, this means pixels will always be in a valid range
-						ppu_X_RS &= (BG_Scale_X[a0] - 1);
-						ppu_Y_RS &= (BG_Scale_Y[a0] - 1);
+						if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+						{
+							temp_addr += ppu_Y_Flip_Ofst[a0] * 8;
+						}
+						else
+						{
+							temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
+						}
 
-						ppu_Y_Flip_Ofst[a0] = ppu_Y_RS & 7;
+						if (temp_addr < 0x10000)
+						{
+							ppu_Set_VRAM_Access_True();
+
+							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+						}
+
+						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+					}
+					else
+					{
+						temp_addr = ppu_Tile_Addr[a0];
+
+						temp_addr = temp_addr * 32 + ppu_BG_Char_Base[a0];
+
+						if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+						{
+							temp_addr += ppu_Y_Flip_Ofst[a0] * 4;
+						}
+						else
+						{
+							temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 4;
+						}
+
+						if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+						{
+							if (ppu_Scroll_Cycle[a0] == 4)
+							{
+								temp_addr += 0;
+							}
+							else
+							{
+								temp_addr += 2;
+							}
+						}
+						else
+						{
+							if (ppu_Scroll_Cycle[a0] == 4)
+							{
+								temp_addr += 2;
+							}
+							else
+							{
+								temp_addr += 0;
+							}
+						}
+
+						if (temp_addr < 0x10000)
+						{
+							ppu_Set_VRAM_Access_True();
+
+							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+						}
+
+						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+					}
+				}
+				else if ((ppu_Scroll_Cycle[a0] == 12) || (ppu_Scroll_Cycle[a0] == 28))
+				{
+					// this access will only occur in 256color mode
+					if (ppu_BG_Pal_Size[a0])
+					{
+						temp_addr = ppu_Tile_Addr[a0];
+
+						temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a0];
+
+						if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+						{
+							if (ppu_Scroll_Cycle[a0] == 12)
+							{
+								temp_addr += 2;
+							}
+							else
+							{
+								temp_addr += 6;
+							}
+						}
+						else
+						{
+							if (ppu_Scroll_Cycle[a0] == 12)
+							{
+								temp_addr += 4;
+							}
+							else
+							{
+								temp_addr += 0;
+							}
+						}
+
+						if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+						{
+							temp_addr += ppu_Y_Flip_Ofst[a0] * 8;
+						}
+						else
+						{
+							temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
+						}
+
+						if (temp_addr < 0x10000)
+						{
+							ppu_Set_VRAM_Access_True();
+
+							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+						}
+
+						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+					}
+
+					if (ppu_Scroll_Cycle[a0] == 28)
+					{
+						//ppu_Fetch_Count[a0] += 1;
+
+						if (ppu_Fetch_Count[a0] == 31)
+						{
+							ppu_BG_Rendering_Complete[a0] = true;
+
+							ppu_Rendering_Complete = true;
+
+							ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
+						}
+					}
+				}
+
+				ppu_Scroll_Cycle[a0] += 4;
+			}
+			break;
+
+		case 1:
+			a1 = ppu_Cycle & 3;
+
+			if (a1 < 2)
+			{
+				if (!ppu_BG_Rendering_Complete[a1])
+				{
+					if ((ppu_Cycle & 0x1C) == (((32 - 4 * (ppu_BG_X_Latch[a1] & 0x7)) & 0x1C)))
+					{
+						if (ppu_Cycle >= 4)
+						{
+							ppu_Scroll_Cycle[a1] = 0;
+
+							// calculate fetch count
+							ppu_Fetch_Count[a1] = ((ppu_Cycle - 4) >> 5);
+
+						}
+					}
+
+					if (ppu_Scroll_Cycle[a1] == 0)
+					{
+						// calculate scrolling
+						if (ppu_BG_Mosaic[a1])
+						{
+							ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
+							ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a1]) & 0x1FF);
+						}
+						else
+						{
+							ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
+							ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a1]) & 0x1FF);
+						}
+
+						// always wrap around, so pixel is always in range
+						ppu_X_RS &= (BG_Scale_X[a1] - 1);
+						ppu_Y_RS &= (BG_Scale_Y[a1] - 1);
+
+						ppu_Y_Flip_Ofst[a1] = ppu_Y_RS & 7;
 
 						// this access will always be in bounds
 						ppu_Set_VRAM_Access_True();
@@ -1179,7 +1447,7 @@ namespace GBAHawk
 						}
 						else if (VRAM_ofst_Y > 31)
 						{
-							if (ppu_BG_Screen_Size[a0] == 2)
+							if (ppu_BG_Screen_Size[a1] == 2)
 							{
 								Screen_Offset = 2 * 1024;
 							}
@@ -1192,28 +1460,28 @@ namespace GBAHawk
 						VRAM_ofst_X &= 31;
 						VRAM_ofst_Y &= 31;
 
-						ppu_Tile_Addr[a0] = ppu_BG_Screen_Base[a0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a0] * 2 + VRAM_ofst_X * 2;
+						ppu_Tile_Addr[a1] = ppu_BG_Screen_Base[a1] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a1] * 2 + VRAM_ofst_X * 2;
 
-						ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a0] >> 1];
+						ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a1] >> 1];
 
-						ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+						ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
 
-						ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+						ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
 					}
-					else if (((ppu_Scroll_Cycle[a0] & 31) == 4) || ((ppu_Scroll_Cycle[a0] & 31) == 20))
+					else if ((ppu_Scroll_Cycle[a1] == 4) || (ppu_Scroll_Cycle[a1] == 20))
 					{
 						// this update happens here so that rendering isn't effected further up
-						ppu_BG_Effect_Byte[a0] = ppu_BG_Effect_Byte_New[a0];
+						ppu_BG_Effect_Byte[a1] = ppu_BG_Effect_Byte_New[a1];
 
-						if (ppu_BG_Pal_Size[a0])
+						if (ppu_BG_Pal_Size[a1])
 						{
-							temp_addr = ppu_Tile_Addr[a0];
+							temp_addr = ppu_Tile_Addr[a1];
 
-							temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a0];
+							temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a1];
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 4)
+								if (ppu_Scroll_Cycle[a1] == 4)
 								{
 									temp_addr += 0;
 								}
@@ -1224,7 +1492,7 @@ namespace GBAHawk
 							}
 							else
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 4)
+								if (ppu_Scroll_Cycle[a1] == 4)
 								{
 									temp_addr += 6;
 								}
@@ -1234,13 +1502,13 @@ namespace GBAHawk
 								}
 							}
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
 							{
-								temp_addr += ppu_Y_Flip_Ofst[a0] * 8;
+								temp_addr += ppu_Y_Flip_Ofst[a1] * 8;
 							}
 							else
 							{
-								temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
+								temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 							}
 
 							if (temp_addr < 0x10000)
@@ -1250,26 +1518,26 @@ namespace GBAHawk
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}
 
-							ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 						}
 						else
 						{
-							temp_addr = ppu_Tile_Addr[a0];
+							temp_addr = ppu_Tile_Addr[a1];
 
-							temp_addr = temp_addr * 32 + ppu_BG_Char_Base[a0];
+							temp_addr = temp_addr * 32 + ppu_BG_Char_Base[a1];
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
 							{
-								temp_addr += ppu_Y_Flip_Ofst[a0] * 4;
+								temp_addr += ppu_Y_Flip_Ofst[a1] * 4;
 							}
 							else
 							{
-								temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 4;
+								temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 4;
 							}
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 4)
+								if (ppu_Scroll_Cycle[a1] == 4)
 								{
 									temp_addr += 0;
 								}
@@ -1280,7 +1548,7 @@ namespace GBAHawk
 							}
 							else
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 4)
+								if (ppu_Scroll_Cycle[a1] == 4)
 								{
 									temp_addr += 2;
 								}
@@ -1297,21 +1565,21 @@ namespace GBAHawk
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}
 
-							ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 						}
 					}
-					else if (((ppu_Scroll_Cycle[a0] & 31) == 12) || ((ppu_Scroll_Cycle[a0] & 31) == 28))
+					else if ((ppu_Scroll_Cycle[a1] == 12) || (ppu_Scroll_Cycle[a1] == 28))
 					{
 						// this access will only occur in 256color mode
-						if (ppu_BG_Pal_Size[a0])
+						if (ppu_BG_Pal_Size[a1])
 						{
-							temp_addr = ppu_Tile_Addr[a0];
+							temp_addr = ppu_Tile_Addr[a1];
 
-							temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a0];
+							temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a1];
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x4) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 12)
+								if (ppu_Scroll_Cycle[a1] == 12)
 								{
 									temp_addr += 2;
 								}
@@ -1322,7 +1590,7 @@ namespace GBAHawk
 							}
 							else
 							{
-								if ((ppu_Scroll_Cycle[a0] & 31) == 12)
+								if (ppu_Scroll_Cycle[a1] == 12)
 								{
 									temp_addr += 4;
 								}
@@ -1332,13 +1600,13 @@ namespace GBAHawk
 								}
 							}
 
-							if ((ppu_BG_Effect_Byte[a0] & 0x8) == 0x0)
+							if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
 							{
-								temp_addr += ppu_Y_Flip_Ofst[a0] * 8;
+								temp_addr += ppu_Y_Flip_Ofst[a1] * 8;
 							}
 							else
 							{
-								temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
+								temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 							}
 
 							if (temp_addr < 0x10000)
@@ -1348,16 +1616,16 @@ namespace GBAHawk
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}
 
-							ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
+							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
 						}
 
-						if ((ppu_Scroll_Cycle[a0] & 31) == 28)
+						if (ppu_Scroll_Cycle[a1] == 28)
 						{
-							ppu_Fetch_Count[a0] += 1;
+							//ppu_Fetch_Count[a1] += 1;
 
-							if (ppu_Fetch_Count[a0] == 31)
+							if (ppu_Fetch_Count[a1] == 31)
 							{
-								ppu_BG_Rendering_Complete[a0] = true;
+								ppu_BG_Rendering_Complete[a1] = true;
 
 								ppu_Rendering_Complete = true;
 
@@ -1370,254 +1638,7 @@ namespace GBAHawk
 						}
 					}
 
-					ppu_Scroll_Cycle[a0] += 4;
-				}
-			}
-			break;
-
-		case 1:
-			a1 = ppu_Cycle & 3;
-
-			if (a1 < 2)
-			{
-				if (!ppu_BG_Rendering_Complete[a1])
-				{
-					if (ppu_Cycle >= ppu_BG_Start_Time[a1])
-					{
-						if ((ppu_Scroll_Cycle[a1] & 31) == 0)
-						{
-							// calculate scrolling
-							if (ppu_BG_Mosaic[a1])
-							{
-								ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
-								ppu_Y_RS = (int)((ppu_MOS_BG_Y[ppu_LY] + ppu_BG_Y[a1]) & 0x1FF);
-							}
-							else
-							{
-								ppu_X_RS = (int)(((ppu_Fetch_Count[a1] << 3) + ppu_BG_X_Latch[a1]) & 0x1FF);
-								ppu_Y_RS = (int)((ppu_LY + ppu_BG_Y[a1]) & 0x1FF);
-							}
-
-							// always wrap around, so pixel is always in range
-							ppu_X_RS &= (BG_Scale_X[a1] - 1);
-							ppu_Y_RS &= (BG_Scale_Y[a1] - 1);
-
-							ppu_Y_Flip_Ofst[a1] = ppu_Y_RS & 7;
-
-							// this access will always be in bounds
-							ppu_Set_VRAM_Access_True();
-
-							VRAM_ofst_X = ppu_X_RS >> 3;
-							VRAM_ofst_Y = ppu_Y_RS >> 3;
-
-							Screen_Offset = 0;
-
-							if (VRAM_ofst_X > 31)
-							{
-								if (VRAM_ofst_Y > 31)
-								{
-									Screen_Offset = 6 * 1024;
-								}
-								else
-								{
-									Screen_Offset = 2 * 1024;
-								}
-							}
-							else if (VRAM_ofst_Y > 31)
-							{
-								if (ppu_BG_Screen_Size[a1] == 2)
-								{
-									Screen_Offset = 2 * 1024;
-								}
-								else
-								{
-									Screen_Offset = 4 * 1024;
-								}
-							}
-
-							VRAM_ofst_X &= 31;
-							VRAM_ofst_Y &= 31;
-
-							ppu_Tile_Addr[a1] = ppu_BG_Screen_Base[a1] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a1] * 2 + VRAM_ofst_X * 2;
-
-							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a1] >> 1];
-
-							ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
-
-							ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
-						}
-						else if (((ppu_Scroll_Cycle[a1] & 31) == 4) || ((ppu_Scroll_Cycle[a1] & 31) == 20))
-						{
-							// this update happens here so that rendering isn't effected further up
-							ppu_BG_Effect_Byte[a1] = ppu_BG_Effect_Byte_New[a1];
-
-							if (ppu_BG_Pal_Size[a1])
-							{
-								temp_addr = ppu_Tile_Addr[a1];
-
-								temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a1];
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 4)
-									{
-										temp_addr += 0;
-									}
-									else
-									{
-										temp_addr += 4;
-									}
-								}
-								else
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 4)
-									{
-										temp_addr += 6;
-									}
-									else
-									{
-										temp_addr += 2;
-									}
-								}
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
-								{
-									temp_addr += ppu_Y_Flip_Ofst[a1] * 8;
-								}
-								else
-								{
-									temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
-								}
-
-								if (temp_addr < 0x10000)
-								{
-									ppu_Set_VRAM_Access_True();
-
-									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
-								}
-
-								ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
-							}
-							else
-							{
-								temp_addr = ppu_Tile_Addr[a1];
-
-								temp_addr = temp_addr * 32 + ppu_BG_Char_Base[a1];
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
-								{
-									temp_addr += ppu_Y_Flip_Ofst[a1] * 4;
-								}
-								else
-								{
-									temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 4;
-								}
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 4)
-									{
-										temp_addr += 0;
-									}
-									else
-									{
-										temp_addr += 2;
-									}
-								}
-								else
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 4)
-									{
-										temp_addr += 2;
-									}
-									else
-									{
-										temp_addr += 0;
-									}
-								}
-
-								if (temp_addr < 0x10000)
-								{
-									ppu_Set_VRAM_Access_True();
-
-									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
-								}
-
-								ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
-							}
-						}
-						else if (((ppu_Scroll_Cycle[a1] & 31) == 12) || ((ppu_Scroll_Cycle[a1] & 31) == 28))
-						{
-							// this access will only occur in 256color mode
-							if (ppu_BG_Pal_Size[a1])
-							{
-								temp_addr = ppu_Tile_Addr[a1];
-
-								temp_addr = temp_addr * 64 + ppu_BG_Char_Base[a1];
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x4) == 0x0)
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 12)
-									{
-										temp_addr += 2;
-									}
-									else
-									{
-										temp_addr += 6;
-									}
-								}
-								else
-								{
-									if ((ppu_Scroll_Cycle[a1] & 31) == 12)
-									{
-										temp_addr += 4;
-									}
-									else
-									{
-										temp_addr += 0;
-									}
-								}
-
-								if ((ppu_BG_Effect_Byte[a1] & 0x8) == 0x0)
-								{
-									temp_addr += ppu_Y_Flip_Ofst[a1] * 8;
-								}
-								else
-								{
-									temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
-								}
-
-								if (temp_addr < 0x10000)
-								{
-									ppu_Set_VRAM_Access_True();
-
-									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
-								}
-
-								ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
-							}
-
-							if ((ppu_Scroll_Cycle[a1] & 31) == 28)
-							{
-								ppu_Fetch_Count[a1] += 1;
-
-								if (ppu_Fetch_Count[a1] == 31)
-								{
-									ppu_BG_Rendering_Complete[a1] = true;
-
-									ppu_Rendering_Complete = true;
-
-									ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
-									ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
-								}
-							}
-						}
-
-						ppu_Scroll_Cycle[a1] += 4;
-					}
+					ppu_Scroll_Cycle[a1] += 4;
 				}
 			}
 
