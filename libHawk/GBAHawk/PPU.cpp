@@ -60,6 +60,8 @@ namespace GBAHawk
 			ppu_BG_X_Latch_cd[i] = 0;
 
 			ppu_BG_X_Latch_Delays[i] = 0;
+			ppu_BG_Line_End[i] = false;
+			ppu_BG_Line_End_BGS5[i] = false;
 		}
 
 		ppu_Forced_Blank_Time = ppu_OBJ_On_Time = 0;
@@ -1157,6 +1159,19 @@ namespace GBAHawk
 
 						// calculate fetch count
 						ppu_Fetch_Count[a0] = ((ppu_Cycle-4) >> 5);
+
+						if ((ppu_Fetch_Count[a0] == 30) && ((ppu_BG_X_Latch[a0] & 0x7) <= 4))
+						{
+							ppu_BG_Line_End[a0] = true;
+						}
+						else if ((ppu_Fetch_Count[a0] == 31) && ((ppu_BG_X_Latch[a0] & 0x7) == 5) && (a0 < 3))
+						{
+							ppu_BG_Line_End_BGS5[a0] = true;
+						}
+						else if ((ppu_Fetch_Count[a0] == 31) && ((ppu_BG_X_Latch[a0] & 0x7) >= 5))
+						{
+							ppu_BG_Line_End[a0] = true;
+						}				
 					}
 				}
 
@@ -1222,6 +1237,19 @@ namespace GBAHawk
 						ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
 
 						ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+					}
+
+					if (ppu_BG_Line_End_BGS5[a0])
+					{
+						ppu_BG_Rendering_Complete[a0] = true;
+
+						ppu_Rendering_Complete = true;
+
+						ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+						ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+						ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+						ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+						ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
 					}
 				}
 				else if ((ppu_Scroll_Cycle[a0] == 4) || (ppu_Scroll_Cycle[a0] == 20))
@@ -1385,7 +1413,7 @@ namespace GBAHawk
 
 					if (ppu_Scroll_Cycle[a0] == 28)
 					{
-						if (ppu_Fetch_Count[a0] == 31)
+						if (ppu_BG_Line_End[a0])
 						{
 							ppu_BG_Rendering_Complete[a0] = true;
 
@@ -1420,6 +1448,18 @@ namespace GBAHawk
 							// calculate fetch count
 							ppu_Fetch_Count[a1] = ((ppu_Cycle - 4) >> 5);
 
+							if ((ppu_Fetch_Count[a1] == 30) && ((ppu_BG_X_Latch[a1] & 0x7) <= 4))
+							{
+								ppu_BG_Line_End[a1] = true;
+							}
+							else if ((ppu_Fetch_Count[a1] == 31) && ((ppu_BG_X_Latch[a1] & 0x7) == 5) && (a1 < 3))
+							{
+								ppu_BG_Line_End_BGS5[a1] = true;
+							}
+							else if ((ppu_Fetch_Count[a1] == 31) && ((ppu_BG_X_Latch[a1] & 0x7) >= 5))
+							{
+								ppu_BG_Line_End[a1] = true;
+							}
 						}
 					}
 
@@ -1486,6 +1526,19 @@ namespace GBAHawk
 							ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
 
 							ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+						}
+
+						if (ppu_BG_Line_End_BGS5[a1])
+						{
+							ppu_BG_Rendering_Complete[a1] = true;
+
+							ppu_Rendering_Complete = true;
+
+							ppu_Rendering_Complete &= ppu_PAL_Rendering_Complete;
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[0];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[1];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[2];
+							ppu_Rendering_Complete &= ppu_BG_Rendering_Complete[3];
 						}
 					}
 					else if ((ppu_Scroll_Cycle[a1] == 4) || (ppu_Scroll_Cycle[a1] == 20))
@@ -1650,9 +1703,7 @@ namespace GBAHawk
 
 						if (ppu_Scroll_Cycle[a1] == 28)
 						{
-							//ppu_Fetch_Count[a1] += 1;
-
-							if (ppu_Fetch_Count[a1] == 31)
+							if (ppu_BG_Line_End[a1])
 							{
 								ppu_BG_Rendering_Complete[a1] = true;
 

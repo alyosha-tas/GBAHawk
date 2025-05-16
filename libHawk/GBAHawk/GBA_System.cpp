@@ -527,6 +527,9 @@ namespace GBAHawk
 									//ppu_Pixel_Color[i] = 0;
 
 									ppu_BG_Has_Pixel[i] = false;
+
+									ppu_BG_Line_End[i] = false;
+									ppu_BG_Line_End_BGS5[i] = false;
 								}
 
 								ppu_BG_Start_Time[2] = 32;

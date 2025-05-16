@@ -5541,6 +5541,8 @@ namespace GBAHawk
 		bool ppu_BG_Ref_X_Change[4] = { };
 		bool ppu_BG_Ref_LY_Change[4] = { };
 		bool ppu_BG_X_Latch_Delays[4] = { };
+		bool ppu_BG_Line_End[4] = { };
+		bool ppu_BG_Line_End_BGS5[4] = { };
 
 		// Sprite Evaluation
 		bool ppu_Rot_Scale;
@@ -6639,6 +6641,8 @@ namespace GBAHawk
 			saver = bool_array_saver(ppu_BG_Ref_X_Change, saver, 4);
 			saver = bool_array_saver(ppu_BG_Ref_LY_Change, saver, 4);
 			saver = bool_array_saver(ppu_BG_X_Latch_Delays, saver, 4);
+			saver = bool_array_saver(ppu_BG_Line_End, saver, 4);
+			saver = bool_array_saver(ppu_BG_Line_End_BGS5, saver, 4);
 
 			saver = short_array_saver(ppu_BG_CTRL, saver, 4);
 			saver = short_array_saver(ppu_BG_X, saver, 4);
@@ -6859,6 +6863,8 @@ namespace GBAHawk
 			loader = bool_array_loader(ppu_BG_Ref_X_Change, loader, 4);
 			loader = bool_array_loader(ppu_BG_Ref_LY_Change, loader, 4);
 			loader = bool_array_loader(ppu_BG_X_Latch_Delays, loader, 4);
+			loader = bool_array_loader(ppu_BG_Line_End, loader, 4);
+			loader = bool_array_loader(ppu_BG_Line_End_BGS5, loader, 4);
 
 			loader = short_array_loader(ppu_BG_CTRL, loader, 4);
 			loader = short_array_loader(ppu_BG_X, loader, 4);
