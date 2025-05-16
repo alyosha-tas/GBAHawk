@@ -245,7 +245,7 @@ namespace GBAHawk
 			}
 			else
 			{
-				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+				ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
 			}
 
 			// ROM access complete, re-enable prefetcher
@@ -335,7 +335,7 @@ namespace GBAHawk
 				}
 				else
 				{
-					ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+					ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
 				}
 			}
 		}
@@ -344,7 +344,7 @@ namespace GBAHawk
 			// Forced Align
 			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
 
-			// in IWRAM area, upper bits in bus depend on alighnment
+			// in IWRAM area, upper bits in bus depend on alignment
 			if ((addr & 2) == 0)
 			{
 				cpu_Last_Bus_Value &= 0xFFFF0000;
@@ -401,7 +401,7 @@ namespace GBAHawk
 		}
 		else
 		{
-			ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+			ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
 		}
 
 		return ret;
