@@ -517,7 +517,6 @@ namespace GBAHawk
 
 								for (int i = 0; i < 4; i++)
 								{
-									//ppu_BG_X_Latch[i] = (uint16_t)(ppu_BG_X[i] & 0xFFF8);
 									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
 
 									ppu_Fetch_Count[i] = 0;
@@ -530,45 +529,39 @@ namespace GBAHawk
 									ppu_BG_Has_Pixel[i] = false;
 								}
 
-								if (ppu_BG_Mode <= 1)
+								ppu_BG_Start_Time[2] = 32;
+								ppu_BG_Start_Time[3] = 32;
+
+								if (ppu_BG_Mode < 2)
 								{
-									ppu_BG_Start_Time[0] = (uint16_t)(32 - 4 * (ppu_BG_X[0] & 0x7));
-									ppu_BG_Start_Time[1] = (uint16_t)(32 - 4 * (ppu_BG_X[1] & 0x7));
+									ppu_BG_Rendering_Complete[0] = false;
+									ppu_BG_Rendering_Complete[1] = false;
+									ppu_BG_Rendering_Complete[2] = false;
+									ppu_BG_Rendering_Complete[3] = false;
 
-									ppu_BG_Rendering_Complete[0] = !ppu_BG_On[0];
-									ppu_BG_Rendering_Complete[1] = !ppu_BG_On[1];
-
-									if (ppu_BG_Mode == 0)
+									if (ppu_BG_Mode == 1)
 									{
-										ppu_BG_Start_Time[2] = (uint16_t)(32 - 4 * (ppu_BG_X[2] & 0x7));
-										ppu_BG_Start_Time[3] = (uint16_t)(32 - 4 * (ppu_BG_X[3] & 0x7));
-
-										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
-										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
-									}
-									else
-									{
-										ppu_BG_Start_Time[2] = 32;
-
-										ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
 										ppu_BG_Rendering_Complete[3] = true;
+									}
+								}
+								else if (ppu_BG_Mode < 6)
+								{
+									ppu_BG_Rendering_Complete[0] = true;
+									ppu_BG_Rendering_Complete[1] = true;
+									ppu_BG_Rendering_Complete[2] = false;
+									ppu_BG_Rendering_Complete[3] = true;
+									
+									if (ppu_BG_Mode == 2)
+									{
+										ppu_BG_Rendering_Complete[3] = false;
 									}
 								}
 								else
 								{
 									ppu_BG_Rendering_Complete[0] = true;
 									ppu_BG_Rendering_Complete[1] = true;
-									ppu_BG_Rendering_Complete[2] = !ppu_BG_On[2];
+									ppu_BG_Rendering_Complete[2] = true;
 									ppu_BG_Rendering_Complete[3] = true;
-
-									ppu_BG_Start_Time[2] = 32;
-
-									if (ppu_BG_Mode == 2)
-									{
-										ppu_BG_Start_Time[3] = 32;
-
-										ppu_BG_Rendering_Complete[3] = !ppu_BG_On[3];
-									}
 								}
 							}
 						}
@@ -678,6 +671,13 @@ namespace GBAHawk
 
 					if (ppu_Sprite_cd == 0)
 					{
+						// also latch in new BG enables
+						for (int i = 0; i < 4; i++)
+						{
+							ppu_BG_On_Latch[i] = ppu_BG_On_Latch_2[i];
+							ppu_BG_On_Latch_2[i] = ppu_BG_On[i];
+						}				
+						
 						ppu_Fetch_OAM_0 = true;
 						ppu_Fetch_OAM_2 = false;
 						ppu_Fetch_OAM_A_D = false;
@@ -810,6 +810,23 @@ namespace GBAHawk
 
 					all_off &= !ppu_BG_X_Latch_Delays[i];
 				}
+
+				if (ppu_Ctrl_Latch_Delay)
+				{
+					ppu_Ctrl_Latch_cd -= 1;
+
+					if (ppu_Ctrl_Latch_cd == 0)
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							ppu_BG_On[i] = (ppu_CTRL & (0x100 << i)) == (0x100 << i);
+						}
+
+						ppu_Ctrl_Latch_Delay = false;
+					}
+				}
+
+				all_off &= !ppu_Ctrl_Latch_Delay;
 
 				if (all_off)
 				{
@@ -1347,19 +1364,10 @@ namespace GBAHawk
 				ppu_Sprite_cd = 40;
 			}
 
-			// update BG toggles
-			for (int i = 0; i < 4; i++)
-			{
-				if (ppu_BG_On_Update_Time[i] > 0)
-				{
-					ppu_BG_On_Update_Time[i]--;
-
-					if (ppu_BG_On_Update_Time[i] == 0)
-					{
-						ppu_BG_On[i] = true;
-					}
-				}
-			}
+			ppu_BG_On_Disp[0] = ppu_BG_On_Latch[0];
+			ppu_BG_On_Disp[1] = ppu_BG_On_Latch[1];
+			ppu_BG_On_Disp[2] = ppu_BG_On_Latch[2];
+			ppu_BG_On_Disp[3] = ppu_BG_On_Latch[3];
 
 			if (ppu_OBJ_On_Time > 0)
 			{

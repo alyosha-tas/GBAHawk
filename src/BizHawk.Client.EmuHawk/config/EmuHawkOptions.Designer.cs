@@ -332,7 +332,7 @@
 			this.UseExistingSaveRAMCheckbox.Name = "UseExistingSaveRAMCheckbox";
 			this.UseExistingSaveRAMCheckbox.Size = new System.Drawing.Size(105, 20);
 			this.UseExistingSaveRAMCheckbox.TabIndex = 2;
-			this.UseExistingSaveRAMCheckbox.Text = "Ese existing Save RAM when loading games (does not effect movies.)";
+			this.UseExistingSaveRAMCheckbox.Text = "Use existing Save RAM when loading games (does not effect movies.)";
 			this.UseExistingSaveRAMCheckbox.UseVisualStyleBackColor = true;
 			// 
 			// label14

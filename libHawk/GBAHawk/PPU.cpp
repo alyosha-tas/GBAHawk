@@ -39,6 +39,9 @@ namespace GBAHawk
 		ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = ppu_Sprite_cd = ppu_Sprite_Disp_cd = 0;
 
 		ppu_LYC_Vid_Check_cd = 0;
+		ppu_Ctrl_Latch_cd = 0;
+
+		ppu_Ctrl_Latch_Delay = false;
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -46,12 +49,16 @@ namespace GBAHawk
 			ppu_BG_X[i] = 0;
 			ppu_BG_Y[i] = 0;
 
-			ppu_BG_On_Update_Time[i] = 0;
+			ppu_BG_On[i] = false;
+			ppu_BG_On_Disp[i] = false;
+			ppu_BG_On_Latch[i] = false;
+			ppu_BG_On_Latch_2[i] = false;
 
 			ppu_BG_Ref_X_Change[i] = false;
 			ppu_BG_Ref_LY_Change[i] = false;
 
 			ppu_BG_X_Latch_cd[i] = 0;
+
 			ppu_BG_X_Latch_Delays[i] = 0;
 		}
 
@@ -248,10 +255,12 @@ namespace GBAHawk
 		uint32_t spr_priority = 0;
 		bool spr_semi_transparent = false;
 
+		/*
 		BG_Go[0] = ppu_BG_On[0];
 		BG_Go[1] = ppu_BG_On[1];
 		BG_Go[2] = ppu_BG_On[2];
 		BG_Go[3] = ppu_BG_On[3];
+		*/
 
 		if (!ppu_PAL_Rendering_Complete)
 		{
@@ -584,10 +593,10 @@ namespace GBAHawk
 						ppu_Sprite_Mosaic_Latch = false;
 					}
 
-					BG_Go_Disp[0] = ppu_BG_On[0];
-					BG_Go_Disp[1] = ppu_BG_On[1];
-					BG_Go_Disp[2] = ppu_BG_On[2];
-					BG_Go_Disp[3] = ppu_BG_On[3];
+					BG_Go_Disp[0] = ppu_BG_On[0] && ppu_BG_On_Disp[0];
+					BG_Go_Disp[1] = ppu_BG_On[1] && ppu_BG_On_Disp[1];
+					BG_Go_Disp[2] = ppu_BG_On[2] && ppu_BG_On_Disp[2];
+					BG_Go_Disp[3] = ppu_BG_On[3] && ppu_BG_On_Disp[3];
 
 					ppu_BG_Pixel_F = 0;
 					ppu_BG_Pixel_S = 0;
@@ -1171,9 +1180,6 @@ namespace GBAHawk
 
 					ppu_Y_Flip_Ofst[a0] = ppu_Y_RS & 7;
 
-					// this access will always be in bounds
-					ppu_Set_VRAM_Access_True();
-
 					VRAM_ofst_X = ppu_X_RS >> 3;
 					VRAM_ofst_Y = ppu_Y_RS >> 3;
 
@@ -1207,11 +1213,16 @@ namespace GBAHawk
 
 					ppu_Tile_Addr[a0] = ppu_BG_Screen_Base[a0] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a0] * 2 + VRAM_ofst_X * 2;
 
-					ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a0] >> 1];
+					// this access will always be in bounds
+					if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
+					{
+						ppu_Set_VRAM_Access_True();
+						ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a0] >> 1];
 
-					ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+						ppu_BG_Effect_Byte_New[a0] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
 
-					ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+						ppu_Tile_Addr[a0] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+					}
 				}
 				else if ((ppu_Scroll_Cycle[a0] == 4) || (ppu_Scroll_Cycle[a0] == 20))
 				{
@@ -1255,12 +1266,14 @@ namespace GBAHawk
 						{
 							temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
 						}
-
-						if (temp_addr < 0x10000)
+						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
-							ppu_Set_VRAM_Access_True();
+							if (temp_addr < 0x10000)
+							{
+								ppu_Set_VRAM_Access_True();
 
-							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+							}
 						}
 
 						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
@@ -1303,11 +1316,14 @@ namespace GBAHawk
 							}
 						}
 
-						if (temp_addr < 0x10000)
+						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
-							ppu_Set_VRAM_Access_True();
+							if (temp_addr < 0x10000)
+							{					
+								ppu_Set_VRAM_Access_True();
 
-							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+							}						
 						}
 
 						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
@@ -1354,11 +1370,14 @@ namespace GBAHawk
 							temp_addr += (7 - ppu_Y_Flip_Ofst[a0]) * 8;
 						}
 
-						if (temp_addr < 0x10000)
+						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
-							ppu_Set_VRAM_Access_True();
+							if (temp_addr < 0x10000)
+							{					
+								ppu_Set_VRAM_Access_True();
 
-							ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+							}						
 						}
 
 						ppu_Pixel_Color[a0] = ppu_VRAM_Open_Bus;
@@ -1366,8 +1385,6 @@ namespace GBAHawk
 
 					if (ppu_Scroll_Cycle[a0] == 28)
 					{
-						//ppu_Fetch_Count[a0] += 1;
-
 						if (ppu_Fetch_Count[a0] == 31)
 						{
 							ppu_BG_Rendering_Complete[a0] = true;
@@ -1426,9 +1443,6 @@ namespace GBAHawk
 
 						ppu_Y_Flip_Ofst[a1] = ppu_Y_RS & 7;
 
-						// this access will always be in bounds
-						ppu_Set_VRAM_Access_True();
-
 						VRAM_ofst_X = ppu_X_RS >> 3;
 						VRAM_ofst_Y = ppu_Y_RS >> 3;
 
@@ -1462,11 +1476,17 @@ namespace GBAHawk
 
 						ppu_Tile_Addr[a1] = ppu_BG_Screen_Base[a1] + Screen_Offset + VRAM_ofst_Y * BG_Num_Tiles[a1] * 2 + VRAM_ofst_X * 2;
 
-						ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a1] >> 1];
+						// this access will always be in bounds
+						if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
+						{
+							ppu_Set_VRAM_Access_True();
 
-						ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[a1] >> 1];
 
-						ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+							ppu_BG_Effect_Byte_New[a1] = (uint8_t)(ppu_VRAM_Open_Bus >> 8);
+
+							ppu_Tile_Addr[a1] = (uint16_t)(ppu_VRAM_Open_Bus & 0x3FF);
+						}
 					}
 					else if ((ppu_Scroll_Cycle[a1] == 4) || (ppu_Scroll_Cycle[a1] == 20))
 					{
@@ -1511,11 +1531,14 @@ namespace GBAHawk
 								temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 							}
 
-							if (temp_addr < 0x10000)
+							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
-								ppu_Set_VRAM_Access_True();
+								if (temp_addr < 0x10000)
+								{		
+									ppu_Set_VRAM_Access_True();
 
-								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}						
 							}
 
 							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
@@ -1558,11 +1581,14 @@ namespace GBAHawk
 								}
 							}
 
-							if (temp_addr < 0x10000)
+							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
-								ppu_Set_VRAM_Access_True();
+								if (temp_addr < 0x10000)
+								{						
+									ppu_Set_VRAM_Access_True();
 
-								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}					
 							}
 
 							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
@@ -1609,11 +1635,14 @@ namespace GBAHawk
 								temp_addr += (7 - ppu_Y_Flip_Ofst[a1]) * 8;
 							}
 
-							if (temp_addr < 0x10000)
+							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
-								ppu_Set_VRAM_Access_True();
+								if (temp_addr < 0x10000)
+								{						
+									ppu_Set_VRAM_Access_True();
 
-								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
+								}						
 							}
 
 							ppu_Pixel_Color[a1] = ppu_VRAM_Open_Bus;
@@ -1675,25 +1704,28 @@ namespace GBAHawk
 
 						uint32_t m1_2_ofst = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-						if (m1_2_ofst < 0x10000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Tile_Addr[2] = ((uint32_t)VRAM[m1_2_ofst] << 6);
-
-							m1_2_ofst &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[m1_2_ofst >> 1];
-						}
-						else
-						{
-							if ((m1_2_ofst & 1) == 1)
+							if (m1_2_ofst < 0x10000)
 							{
-								ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m1_2_ofst] << 6);
+
+								m1_2_ofst &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m1_2_ofst >> 1];
 							}
 							else
 							{
-								ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								if ((m1_2_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
 							}
 						}
 
@@ -1724,25 +1756,28 @@ namespace GBAHawk
 					{
 						ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-						if (ppu_Tile_Addr[2] < 0x10000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
-
-							ppu_Tile_Addr[2] &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
-						}
-						else
-						{
-							if ((ppu_Tile_Addr[2] & 1) == 1)
+							if (ppu_Tile_Addr[2] < 0x10000)
 							{
-								ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
+
+								ppu_Tile_Addr[2] &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
 							}
 							else
 							{
-								ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								if ((ppu_Tile_Addr[2] & 1) == 1)
+								{
+									ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								}
+								else
+								{
+									ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								}
 							}
 						}
 
@@ -1800,25 +1835,28 @@ namespace GBAHawk
 
 						uint32_t m2_2_ofst = ppu_BG_Screen_Base[2] + VRAM_ofst_Y * BG_Num_Tiles[2] + VRAM_ofst_X;
 
-						if (m2_2_ofst < 0x10000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Tile_Addr[2] = ((uint32_t)VRAM[m2_2_ofst] << 6);
-
-							m2_2_ofst &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[m2_2_ofst >> 1];
-						}
-						else
-						{
-							if ((m2_2_ofst & 1) == 1)
+							if (m2_2_ofst < 0x10000)
 							{
-								ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m2_2_ofst] << 6);
+
+								m2_2_ofst &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m2_2_ofst >> 1];
 							}
 							else
 							{
-								ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								if ((m2_2_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[2] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
 							}
 						}
 
@@ -1849,25 +1887,28 @@ namespace GBAHawk
 					{
 						ppu_Tile_Addr[2] += ppu_BG_Char_Base[2] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-						if (ppu_Tile_Addr[2] < 0x10000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
-
-							ppu_Tile_Addr[2] &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
-						}
-						else
-						{
-							if ((ppu_Tile_Addr[2] & 1) == 1)
+							if (ppu_Tile_Addr[2] < 0x10000)
 							{
-								ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
+
+								ppu_Tile_Addr[2] &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[2] >> 1];
 							}
 							else
 							{
-								ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								if ((ppu_Tile_Addr[2] & 1) == 1)
+								{
+									ppu_Pixel_Color[2] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								}
+								else
+								{
+									ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus & 0xFF;
+								}
 							}
 						}
 
@@ -1923,25 +1964,28 @@ namespace GBAHawk
 
 						uint32_t m2_3_ofst = ppu_BG_Screen_Base[3] + VRAM_ofst_Y * BG_Num_Tiles[3] + VRAM_ofst_X;
 
-						if (m2_3_ofst < 0x10000)
+						if (ppu_BG_On_Disp[3] && ppu_BG_On[3])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Tile_Addr[3] = ((uint32_t)VRAM[m2_3_ofst] << 6);
-
-							m2_3_ofst &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[m2_3_ofst >> 1];
-						}
-						else
-						{
-							if ((m2_3_ofst & 1) == 1)
+							if (m2_3_ofst < 0x10000)
 							{
-								ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Tile_Addr[3] = ((uint32_t)VRAM[m2_3_ofst] << 6);
+
+								m2_3_ofst &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m2_3_ofst >> 1];
 							}
 							else
 							{
-								ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								if ((m2_3_ofst & 1) == 1)
+								{
+									ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 2);
+								}
+								else
+								{
+									ppu_Tile_Addr[3] = ((ppu_VRAM_Open_Bus & 0xFF) << 6);
+								}
 							}
 						}
 
@@ -1959,25 +2003,28 @@ namespace GBAHawk
 					{
 						ppu_Tile_Addr[3] += ppu_BG_Char_Base[3] + (ppu_X_RS & 7) + (ppu_Y_RS & 7) * 8;
 
-						if (ppu_Tile_Addr[3] < 0x10000)
+						if (ppu_BG_On_Disp[3] && ppu_BG_On[3])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
-
-							ppu_Tile_Addr[3] &= 0xFFFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[3] >> 1];
-						}
-						else
-						{
-							if ((ppu_Tile_Addr[3] & 1) == 1)
+							if (ppu_Tile_Addr[3] < 0x10000)
 							{
-								ppu_Pixel_Color[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
+
+								ppu_Tile_Addr[3] &= 0xFFFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[ppu_Tile_Addr[3] >> 1];
 							}
 							else
 							{
-								ppu_Pixel_Color[3] = ppu_VRAM_Open_Bus & 0xFF;
+								if ((ppu_Tile_Addr[3] & 1) == 1)
+								{
+									ppu_Pixel_Color[3] = ((ppu_VRAM_Open_Bus & 0xFF00) >> 8);
+								}
+								else
+								{
+									ppu_Pixel_Color[3] = ppu_VRAM_Open_Bus & 0xFF;
+								}
 							}
 						}
 
@@ -2040,11 +2087,14 @@ namespace GBAHawk
 						// pixel color comes direct from VRAM
 						uint32_t m3_ofst = (ppu_X_RS + ppu_Y_RS * 240) * 2;
 
-						if (m3_ofst < 0x14000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
+							if (m3_ofst < 0x14000)
+							{
+								ppu_Set_VRAM_Access_True();
 
-							ppu_VRAM_Open_Bus = VRAM_16[m3_ofst >> 1];
+								ppu_VRAM_Open_Bus = VRAM_16[m3_ofst >> 1];
+							}
 						}
 
 						ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus;
@@ -2105,25 +2155,28 @@ namespace GBAHawk
 						// pixel color comes direct from VRAM
 						uint32_t m4_ofst = ppu_Display_Frame * 0xA000 + ppu_Y_RS * 240 + ppu_X_RS;
 
-						if (m4_ofst < 0x14000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
-
-							ppu_Pixel_Color[2] = VRAM[m4_ofst];
-
-							m4_ofst &= 0x13FFE;
-
-							ppu_VRAM_Open_Bus = VRAM_16[m4_ofst >> 1];
-						}
-						else
-						{
-							if ((m4_ofst & 1) == 1)
+							if (m4_ofst < 0x14000)
 							{
-								ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF00) >> 7;
+								ppu_Set_VRAM_Access_True();
+
+								ppu_Pixel_Color[2] = VRAM[m4_ofst];
+
+								m4_ofst &= 0x13FFE;
+
+								ppu_VRAM_Open_Bus = VRAM_16[m4_ofst >> 1];
 							}
 							else
 							{
-								ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF) << 1;
+								if ((m4_ofst & 1) == 1)
+								{
+									ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF00) >> 7;
+								}
+								else
+								{
+									ppu_Pixel_Color[2] = (ppu_VRAM_Open_Bus & 0xFF) << 1;
+								}
 							}
 						}
 
@@ -2189,11 +2242,14 @@ namespace GBAHawk
 						// pixel color comes direct from VRAM
 						uint32_t m5_ofst = ppu_Display_Frame * 0xA000 + ppu_X_RS * 2 + ppu_Y_RS * 160 * 2;
 
-						if (m5_ofst < 0x14000)
+						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
-							ppu_Set_VRAM_Access_True();
+							if (m5_ofst < 0x14000)
+							{
+								ppu_Set_VRAM_Access_True();
 
-							ppu_VRAM_Open_Bus = VRAM_16[m5_ofst >> 1];
+								ppu_VRAM_Open_Bus = VRAM_16[m5_ofst >> 1];
+							}
 						}
 
 						ppu_Pixel_Color[2] = ppu_VRAM_Open_Bus;

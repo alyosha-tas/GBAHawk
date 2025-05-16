@@ -735,6 +735,12 @@ namespace GBAHawk
 			pre_Reg_Write(value);
 
 			Wait_CTRL = (uint16_t)(value & 0x5FFF);
+
+			/*
+			Message_String = to_string(value) + " " + to_string(CycleCount);
+
+			MessageCallback(Message_String.length());
+			*/
 		}
 
 
@@ -5488,6 +5494,8 @@ namespace GBAHawk
 		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN, ppu_OBJ_On_Disp;
 		bool ppu_WIN0_Active, ppu_WIN1_Active;
 
+		bool ppu_Ctrl_Latch_Delay;
+
 		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
 
 		uint16_t ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle;
@@ -5502,6 +5510,8 @@ namespace GBAHawk
 		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_cd, ppu_Sprite_Disp_cd;
 
 		uint32_t ppu_LYC_Vid_Check_cd;
+
+		uint32_t ppu_Ctrl_Latch_cd;
 
 		uint32_t ppu_Forced_Blank_Time;
 		uint32_t ppu_OBJ_On_Time;
@@ -5522,11 +5532,12 @@ namespace GBAHawk
 		uint32_t ppu_BG_Ref_X[4] = { };
 		uint32_t ppu_BG_Ref_Y[4] = { };
 
-		uint32_t ppu_BG_On_Update_Time[4] = { };
 		uint32_t ppu_BG_X_Latch_cd[4] = { };
 
 		bool ppu_BG_On[4] = { };
-		bool ppu_BG_On_New[4] = { };
+		bool ppu_BG_On_Disp[4] = { };
+		bool ppu_BG_On_Latch[4] = { };
+		bool ppu_BG_On_Latch_2[4] = { };
 		bool ppu_BG_Ref_X_Change[4] = { };
 		bool ppu_BG_Ref_LY_Change[4] = { };
 		bool ppu_BG_X_Latch_Delays[4] = { };
@@ -6040,6 +6051,11 @@ namespace GBAHawk
 
 		void ppu_CTRL_Write(uint16_t value)
 		{
+			//delays_to_process = true;
+			//ppu_Latch_Delays = true;
+			//ppu_Ctrl_Latch_cd = 1;
+			//ppu_Ctrl_Latch_Delay = true;
+
 			ppu_BG_Mode = value & 7;
 			ppu_Display_Frame = (value >> 4) & 1;
 
@@ -6050,28 +6066,9 @@ namespace GBAHawk
 			ppu_WIN1_On = (value & 0x4000) == 0x4000;
 			ppu_OBJ_WIN = (value & 0x8000) == 0x8000;
 
-			// BG's don't turn on immediately, but do turn off immediately
 			for (int i = 0; i < 4; i++)
 			{
-				if ((value & (0x100 << i)) == 0)
-				{
-					ppu_BG_On[i] = false;
-					ppu_BG_On_Update_Time[i] = 0;
-					ppu_BG_Rendering_Complete[i] = true;
-				}
-				else if (ppu_BG_On_Update_Time[i] == 0)
-				{
-					// if the change happens before around cycle 40, then the delay is only 2 scanlines not 3
-					// see spyro season of ice, talking to the first fairy
-					if (ppu_Cycle < 40)
-					{
-						ppu_BG_On_Update_Time[i] = 2;
-					}
-					else
-					{
-						ppu_BG_On_Update_Time[i] = 3;
-					}
-				}
+				ppu_BG_On[i] = (value & (0x100 << i)) == (0x100 << i);
 			}
 
 			// sprites require one scanline to turn on
@@ -6144,7 +6141,6 @@ namespace GBAHawk
 			{
 				ppu_VRAM_Access = false;
 				ppu_PALRAM_Access = false;
-				//ppu_OAM_Access = false;
 			}
 		}
 
@@ -6597,6 +6593,7 @@ namespace GBAHawk
 			saver = bool_saver(ppu_WIN0_Active, saver);
 			saver = bool_saver(ppu_WIN1_Active, saver);
 			saver = bool_saver(ppu_OBJ_On_Disp, saver);
+			saver = bool_saver(ppu_Ctrl_Latch_Delay, saver);
 
 			saver = byte_saver(ppu_STAT, saver);
 			saver = byte_saver(ppu_LY, saver);
@@ -6633,9 +6630,12 @@ namespace GBAHawk
 			saver = int_saver(ppu_Sprite_Disp_cd, saver);
 
 			saver = int_saver(ppu_LYC_Vid_Check_cd, saver);
+			saver = int_saver(ppu_Ctrl_Latch_cd, saver);
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
-			saver = bool_array_saver(ppu_BG_On_New, saver, 4);
+			saver = bool_array_saver(ppu_BG_On_Disp, saver, 4);
+			saver = bool_array_saver(ppu_BG_On_Latch, saver, 4);
+			saver = bool_array_saver(ppu_BG_On_Latch_2, saver, 4);
 			saver = bool_array_saver(ppu_BG_Ref_X_Change, saver, 4);
 			saver = bool_array_saver(ppu_BG_Ref_LY_Change, saver, 4);
 			saver = bool_array_saver(ppu_BG_X_Latch_Delays, saver, 4);
@@ -6656,7 +6656,6 @@ namespace GBAHawk
 			saver = int_array_saver(ppu_BG_Ref_X, saver, 4);
 			saver = int_array_saver(ppu_BG_Ref_Y, saver, 4);
 
-			saver = int_array_saver(ppu_BG_On_Update_Time, saver, 4);
 			saver = int_array_saver(ppu_BG_X_Latch_cd, saver, 4);
 
 			// Sprite Evaluation
@@ -6814,6 +6813,7 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_WIN0_Active, loader);
 			loader = bool_loader(&ppu_WIN1_Active, loader);
 			loader = bool_loader(&ppu_OBJ_On_Disp, loader);
+			loader = bool_loader(&ppu_Ctrl_Latch_Delay, loader);
 
 			loader = byte_loader(&ppu_STAT, loader);
 			loader = byte_loader(&ppu_LY, loader);
@@ -6850,13 +6850,16 @@ namespace GBAHawk
 			loader = int_loader(&ppu_Sprite_Disp_cd, loader);
 
 			loader = int_loader(&ppu_LYC_Vid_Check_cd, loader);
+			loader = int_loader(&ppu_Ctrl_Latch_cd, loader);
 
 			loader = bool_array_loader(ppu_BG_On, loader, 4);
-			loader = bool_array_loader(ppu_BG_On_New, loader, 4);
+			loader = bool_array_loader(ppu_BG_On_Disp, loader, 4);
+			loader = bool_array_loader(ppu_BG_On_Latch, loader, 4);
+			loader = bool_array_loader(ppu_BG_On_Latch_2, loader, 4);
 			loader = bool_array_loader(ppu_BG_Ref_X_Change, loader, 4);
 			loader = bool_array_loader(ppu_BG_Ref_LY_Change, loader, 4);
 			loader = bool_array_loader(ppu_BG_X_Latch_Delays, loader, 4);
-			
+
 			loader = short_array_loader(ppu_BG_CTRL, loader, 4);
 			loader = short_array_loader(ppu_BG_X, loader, 4);
 			loader = short_array_loader(ppu_BG_Y, loader, 4);
@@ -6873,8 +6876,7 @@ namespace GBAHawk
 			loader = int_array_loader(ppu_BG_Ref_X, loader, 4);
 			loader = int_array_loader(ppu_BG_Ref_Y, loader, 4);
 
-			loader = int_array_saver(ppu_BG_On_Update_Time, loader, 4);
-			loader = int_array_saver(ppu_BG_X_Latch_cd, loader, 4);
+			loader = int_array_loader(ppu_BG_X_Latch_cd, loader, 4);
 
 			// Sprite Evaluation
 			loader = bool_loader(&ppu_Rot_Scale, loader);
