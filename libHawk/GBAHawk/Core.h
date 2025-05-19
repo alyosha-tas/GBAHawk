@@ -407,6 +407,11 @@ namespace GBAHawk
 			return GBA.PALRAM[addr & 0x3FF];
 		}
 
+		uint8_t GetRegisters(uint32_t addr)
+		{
+			return GBA.Get_Registers_Internal(addr);
+		}
+
 		uint8_t GetSRAM(uint32_t addr)
 		{
 			if (GBA.Cart_RAM_Length != 0) 

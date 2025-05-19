@@ -172,12 +172,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		public static extern byte GBA_getoam(IntPtr core, int addr);
 
 		/// <summary>
-		/// Read the OAM
+		/// Read the Palette Ram
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern byte GBA_getpalram(IntPtr core, int addr);
+
+		/// <summary>
+		/// Read the registers
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="addr">ram address</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern byte GBA_getregisters(IntPtr core, int addr);
 
 		/// <summary>
 		/// Read the WRAM

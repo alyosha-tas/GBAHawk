@@ -59,6 +59,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
+					"Registers",
+					0x400,
+					MemoryDomain.Endian.Little,
+					addr => LibGBAHawk.GBA_getregisters(GBA_Pntr, (int)(addr & 0x3FF)),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000000,
 					MemoryDomain.Endian.Little,

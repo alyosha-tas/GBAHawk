@@ -1027,8 +1027,14 @@ namespace GBAHawk
 
 						if (ppu_PALRAM_In_Use)
 						{
-							cpu_Fetch_Wait += 1;
-							dma_Access_Wait += 1;
+							if (cpu_Is_Paused)
+							{
+								dma_Access_Wait += 1;
+							}
+							else
+							{
+								cpu_Fetch_Wait += 1;
+							}
 						}
 					}
 				}
@@ -1042,8 +1048,14 @@ namespace GBAHawk
 
 						if (ppu_PALRAM_In_Use)
 						{
-							cpu_Fetch_Wait += 1;
-							dma_Access_Wait += 1;
+							if (cpu_Is_Paused)
+							{
+								dma_Access_Wait += 1;
+							}
+							else
+							{
+								cpu_Fetch_Wait += 1;
+							}
 						}
 					}
 
@@ -2379,15 +2391,21 @@ namespace GBAHawk
 
 		if (ppu_Fetch_Sprite_VRAM)
 		{
-			// no VRAM access after eval cycle 960 when H blank is free, even though one more OAM access amy still occur
+			// no VRAM access after eval cycle 960 when H blank is free, even though one more OAM access may still occur
 			if (ppu_Sprite_Render_Cycle <= ppu_Sprite_Eval_Time_VRAM)
 			{
 				ppu_VRAM_High_Access = true;
 
 				if (ppu_VRAM_High_In_Use)
 				{
-					cpu_Fetch_Wait += 1;
-					dma_Access_Wait += 1;
+					if (cpu_Is_Paused)
+					{
+						dma_Access_Wait += 1;
+					}
+					else
+					{
+						cpu_Fetch_Wait += 1;
+					}
 				}
 
 				for (int i = 0; i < 1 + (ppu_Rot_Scale ? 0 : 1); i++)
@@ -2583,7 +2601,7 @@ namespace GBAHawk
 				spr_attr_0 = 0xFFFF;
 				spr_attr_1 = 0xFFFF;
 			}
-			
+
 			ppu_New_Sprite = false;	
 
 			spr_x_pos = spr_attr_1 & 0x1FF;

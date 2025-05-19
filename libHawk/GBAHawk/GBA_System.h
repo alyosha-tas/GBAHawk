@@ -638,6 +638,279 @@ namespace GBAHawk
 			}
 		}
 
+		uint8_t Get_Registers_Internal(uint32_t addr)
+		{
+			uint8_t ret = 0;
+			
+			if (addr < 0x60)
+			{
+				switch (addr)
+				{
+					case 0x00: ret = (uint8_t)(ppu_CTRL & 0xFF); break;
+					case 0x01: ret = (uint8_t)((ppu_CTRL & 0xFF00) >> 8); break;
+					case 0x02: ret = (uint8_t)(ppu_Green_Swap & 0xFF); break;
+					case 0x03: ret = (uint8_t)((ppu_Green_Swap & 0xFF00) >> 8); break;
+					case 0x04: ret = ppu_STAT; break;
+					case 0x05: ret = ppu_LYC; break;
+					case 0x06: ret = ppu_LY; break;
+					case 0x07: ret = 0; break;
+
+					case 0x08: ret = (uint8_t)(ppu_BG_CTRL[0] & 0xFF); break;
+					case 0x09: ret = (uint8_t)((ppu_BG_CTRL[0] & 0xFF00) >> 8); break;
+					case 0x0A: ret = (uint8_t)(ppu_BG_CTRL[1] & 0xFF); break;
+					case 0x0B: ret = (uint8_t)((ppu_BG_CTRL[1] & 0xFF00) >> 8); break;
+					case 0x0C: ret = (uint8_t)(ppu_BG_CTRL[2] & 0xFF); break;
+					case 0x0D: ret = (uint8_t)((ppu_BG_CTRL[2] & 0xFF00) >> 8); break;
+					case 0x0E: ret = (uint8_t)(ppu_BG_CTRL[3] & 0xFF); break;
+					case 0x0F: ret = (uint8_t)((ppu_BG_CTRL[3] & 0xFF00) >> 8); break;
+
+					case 0x10: ret = (uint8_t)(ppu_BG_X[0] & 0xFF); break;
+					case 0x11: ret = (uint8_t)((ppu_BG_X[0] >> 8) & 0xFF); break;
+					case 0x12: ret = (uint8_t)(ppu_BG_Y[0] & 0xFF); break;
+					case 0x13: ret = (uint8_t)((ppu_BG_Y[0] >> 8) & 0xFF); break;
+					case 0x14: ret = (uint8_t)(ppu_BG_X[1] & 0xFF); break;
+					case 0x15: ret = (uint8_t)((ppu_BG_X[1] >> 8) & 0xFF); break;
+					case 0x16: ret = (uint8_t)(ppu_BG_Y[1] & 0xFF); break;
+					case 0x17: ret = (uint8_t)((ppu_BG_Y[1] >> 8) & 0xFF); break;
+					case 0x18: ret = (uint8_t)(ppu_BG_X[2] & 0xFF); break;
+					case 0x19: ret = (uint8_t)((ppu_BG_X[2] >> 8) & 0xFF); break;
+					case 0x1A: ret = (uint8_t)(ppu_BG_Y[2] & 0xFF); break;
+					case 0x1B: ret = (uint8_t)((ppu_BG_Y[2] >> 8) & 0xFF); break;
+					case 0x1C: ret = (uint8_t)(ppu_BG_X[3] & 0xFF); break;
+					case 0x1D: ret = (uint8_t)((ppu_BG_X[3] >> 8) & 0xFF); break;
+					case 0x1E: ret = (uint8_t)(ppu_BG_Y[3] & 0xFF); break;
+					case 0x1F: ret = (uint8_t)((ppu_BG_Y[3] >> 8) & 0xFF); break;
+
+					case 0x20: ret = (uint8_t)(ppu_BG_Rot_A[2] & 0xFF); break;
+					case 0x21: ret = (uint8_t)((ppu_BG_Rot_A[2] >> 8) & 0xFF); break;
+					case 0x22: ret = (uint8_t)(ppu_BG_Rot_B[2] & 0xFF); break;
+					case 0x23: ret = (uint8_t)((ppu_BG_Rot_B[2] >> 8) & 0xFF); break;
+					case 0x24: ret = (uint8_t)(ppu_BG_Rot_C[2] & 0xFF); break;
+					case 0x25: ret = (uint8_t)((ppu_BG_Rot_C[2] >> 8) & 0xFF); break;
+					case 0x26: ret = (uint8_t)(ppu_BG_Rot_D[2] & 0xFF); break;
+					case 0x27: ret = (uint8_t)((ppu_BG_Rot_D[2] >> 8) & 0xFF); break;
+					case 0x28: ret = (uint8_t)(ppu_BG_Ref_X[2] & 0xFF); break;
+					case 0x29: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 8) & 0xFF); break;
+					case 0x2A: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 16) & 0xFF); break;
+					case 0x2B: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 24) & 0xFF); break;
+					case 0x2C: ret = (uint8_t)(ppu_BG_Ref_Y[2] & 0xFF); break;
+					case 0x2D: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 8) & 0xFF); break;
+					case 0x2E: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 16) & 0xFF); break;
+					case 0x2F: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 24) & 0xFF); break;
+
+					case 0x30: ret = (uint8_t)(ppu_BG_Rot_A[3] & 0xFF); break;
+					case 0x31: ret = (uint8_t)((ppu_BG_Rot_A[3] >> 8) & 0xFF); break;
+					case 0x32: ret = (uint8_t)(ppu_BG_Rot_B[3] & 0xFF); break;
+					case 0x33: ret = (uint8_t)((ppu_BG_Rot_B[3] >> 8) & 0xFF); break;
+					case 0x34: ret = (uint8_t)(ppu_BG_Rot_C[3] & 0xFF); break;
+					case 0x35: ret = (uint8_t)((ppu_BG_Rot_C[3] >> 8) & 0xFF); break;
+					case 0x36: ret = (uint8_t)(ppu_BG_Rot_D[3] & 0xFF); break;
+					case 0x37: ret = (uint8_t)((ppu_BG_Rot_D[3] >> 8) & 0xFF); break;
+					case 0x38: ret = (uint8_t)(ppu_BG_Ref_X[3] & 0xFF); break;
+					case 0x39: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 8) & 0xFF); break;
+					case 0x3A: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 16) & 0xFF); break;
+					case 0x3B: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 24) & 0xFF); break;
+					case 0x3C: ret = (uint8_t)(ppu_BG_Ref_Y[3] & 0xFF); break;
+					case 0x3D: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 8) & 0xFF); break;
+					case 0x3E: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 16) & 0xFF); break;
+					case 0x3F: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 24) & 0xFF); break;
+
+					case 0x40: ret = (uint8_t)(ppu_WIN_Hor_0 & 0xFF); break;
+					case 0x41: ret = (uint8_t)((ppu_WIN_Hor_0 & 0xFF00) >> 8); break;
+					case 0x42: ret = (uint8_t)(ppu_WIN_Hor_1 & 0xFF); break;
+					case 0x43: ret = (uint8_t)((ppu_WIN_Hor_1 & 0xFF00) >> 8); break;
+					case 0x44: ret = (uint8_t)(ppu_WIN_Vert_0 & 0xFF); break;
+					case 0x45: ret = (uint8_t)((ppu_WIN_Vert_0 & 0xFF00) >> 8); break;
+					case 0x46: ret = (uint8_t)(ppu_WIN_Vert_1 & 0xFF); break;
+					case 0x47: ret = (uint8_t)((ppu_WIN_Vert_1 & 0xFF00) >> 8); break;
+
+					case 0x48: ret = (uint8_t)(ppu_WIN_In & 0xFF); break;
+					case 0x49: ret = (uint8_t)((ppu_WIN_In & 0xFF00) >> 8); break;
+					case 0x4A: ret = (uint8_t)(ppu_WIN_Out & 0xFF); break;
+					case 0x4B: ret = (uint8_t)((ppu_WIN_Out & 0xFF00) >> 8); break;
+					case 0x4C: ret = (uint8_t)(ppu_Mosaic & 0xFF); break;
+					case 0x4D: ret = (uint8_t)((ppu_Mosaic & 0xFF00) >> 8); break;
+
+					case 0x50: ret = (uint8_t)(ppu_Special_FX & 0xFF); break;
+					case 0x51: ret = (uint8_t)((ppu_Special_FX & 0xFF00) >> 8); break;
+					case 0x52: ret = (uint8_t)(ppu_Alpha & 0xFF); break;
+					case 0x53: ret = (uint8_t)((ppu_Alpha & 0xFF00) >> 8); break;
+					case 0x54: ret = (uint8_t)(ppu_Bright & 0xFF); break;
+					case 0x55: ret = (uint8_t)((ppu_Bright & 0xFF00) >> 8); break;
+
+					default: ret = 0;
+				}
+			}
+			else if (addr < 0xB0)
+			{
+				if (addr < 0x8C)
+				{
+					ret = snd_Audio_Regs[addr - 0x60];
+				}
+				else if ((addr < 0xA0) && (addr >= 0x90))
+				{
+					int ofst = (int)(snd_Wave_Bank + addr - 0x90);
+
+					ret = snd_Wave_RAM[ofst];
+				}
+				else if (addr < 0xA4)
+				{
+					ret = snd_FIFO_A_Data[(addr & 3)];
+				}
+				else if (addr < 0xA8)
+				{
+					ret = snd_FIFO_B_Data[(addr & 3)];
+				}
+
+				return ret;
+			}
+			else if (addr < 0x100)
+			{
+				switch (addr)
+				{
+					case 0xB0: ret = (uint8_t)(dma_SRC[0] & 0xFF); break;
+					case 0xB1: ret = (uint8_t)((dma_SRC[0] >> 8) & 0xFF); break;
+					case 0xB2: ret = (uint8_t)((dma_SRC[0] >> 16) & 0xFF); break;
+					case 0xB3: ret = (uint8_t)((dma_SRC[0] >> 24) & 0xFF); break;
+					case 0xB4: ret = (uint8_t)(dma_DST[0] & 0xFF); break;
+					case 0xB5: ret = (uint8_t)((dma_DST[0] >> 8) & 0xFF); break;
+					case 0xB6: ret = (uint8_t)((dma_DST[0] >> 16) & 0xFF); break;
+					case 0xB7: ret = (uint8_t)((dma_DST[0] >> 24) & 0xFF); break;
+					case 0xB8: ret = (uint8_t)(dma_CNT[0] & 0xFF); break;
+					case 0xB9: ret = (uint8_t)((dma_CNT[0] >> 8) & 0xFF); break;
+					case 0xBA: ret = (uint8_t)(dma_CTRL[0] & 0xFF); break;
+					case 0xBB: ret = (uint8_t)((dma_CTRL[0] >> 8) & 0xFF); break;
+
+					case 0xBC: ret = (uint8_t)(dma_SRC[1] & 0xFF); break;
+					case 0xBD: ret = (uint8_t)((dma_SRC[1] >> 8) & 0xFF); break;
+					case 0xBE: ret = (uint8_t)((dma_SRC[1] >> 16) & 0xFF); break;
+					case 0xBF: ret = (uint8_t)((dma_SRC[1] >> 24) & 0xFF); break;
+					case 0xC0: ret = (uint8_t)(dma_DST[1] & 0xFF); break;
+					case 0xC1: ret = (uint8_t)((dma_DST[1] >> 8) & 0xFF); break;
+					case 0xC2: ret = (uint8_t)((dma_DST[1] >> 16) & 0xFF); break;
+					case 0xC3: ret = (uint8_t)((dma_DST[1] >> 24) & 0xFF); break;
+					case 0xC4: ret = (uint8_t)(dma_CNT[1] & 0xFF); break;
+					case 0xC5: ret = (uint8_t)((dma_CNT[1] >> 8) & 0xFF); break;
+					case 0xC6: ret = (uint8_t)(dma_CTRL[1] & 0xFF); break;
+					case 0xC7: ret = (uint8_t)((dma_CTRL[1] >> 8) & 0xFF); break;
+
+					case 0xC8: ret = (uint8_t)(dma_SRC[2] & 0xFF); break;
+					case 0xC9: ret = (uint8_t)((dma_SRC[2] >> 8) & 0xFF); break;
+					case 0xCA: ret = (uint8_t)((dma_SRC[2] >> 16) & 0xFF); break;
+					case 0xCB: ret = (uint8_t)((dma_SRC[2] >> 24) & 0xFF); break;
+					case 0xCC: ret = (uint8_t)(dma_DST[2] & 0xFF); break;
+					case 0xCD: ret = (uint8_t)((dma_DST[2] >> 8) & 0xFF); break;
+					case 0xCE: ret = (uint8_t)((dma_DST[2] >> 16) & 0xFF); break;
+					case 0xCF: ret = (uint8_t)((dma_DST[2] >> 24) & 0xFF); break;
+					case 0xD0: ret = (uint8_t)(dma_CNT[2] & 0xFF); break;
+					case 0xD1: ret = (uint8_t)((dma_CNT[2] >> 8) & 0xFF); break;
+					case 0xD2: ret = (uint8_t)(dma_CTRL[2] & 0xFF); break;
+					case 0xD3: ret = (uint8_t)((dma_CTRL[2] >> 8) & 0xFF); break;
+
+					case 0xD4: ret = (uint8_t)(dma_SRC[3] & 0xFF); break;
+					case 0xD5: ret = (uint8_t)((dma_SRC[3] >> 8) & 0xFF); break;
+					case 0xD6: ret = (uint8_t)((dma_SRC[3] >> 16) & 0xFF); break;
+					case 0xD7: ret = (uint8_t)((dma_SRC[3] >> 24) & 0xFF); break;
+					case 0xD8: ret = (uint8_t)(dma_DST[3] & 0xFF); break;
+					case 0xD9: ret = (uint8_t)((dma_DST[3] >> 8) & 0xFF); break;
+					case 0xDA: ret = (uint8_t)((dma_DST[3] >> 16) & 0xFF); break;
+					case 0xDB: ret = (uint8_t)((dma_DST[3] >> 24) & 0xFF); break;
+					case 0xDC: ret = (uint8_t)(dma_CNT[3] & 0xFF); break;
+					case 0xDD: ret = (uint8_t)((dma_CNT[3] >> 8) & 0xFF); break;
+					case 0xDE: ret = (uint8_t)(dma_CTRL[3] & 0xFF); break;
+					case 0xDF: ret = (uint8_t)((dma_CTRL[3] >> 8) & 0xFF); break;
+
+					default: ret = 0;
+				}
+			}
+			else if (addr < 0x120)
+			{
+				if (addr < 0x110)
+				{
+					return tim_Read_Reg_8(addr);
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			else if (addr < 0x200)
+			{
+				switch (addr)
+				{
+					case 0x120: ret = (uint8_t)(ser_Data_0 & 0xFF); break;
+					case 0x121: ret = (uint8_t)((ser_Data_0 & 0xFF00) >> 8); break;
+					case 0x122: ret = (uint8_t)(ser_Data_1 & 0xFF); break;
+					case 0x123: ret = (uint8_t)((ser_Data_1 & 0xFF00) >> 8); break;
+					case 0x124: ret = (uint8_t)(ser_Data_2 & 0xFF); break;
+					case 0x125: ret = (uint8_t)((ser_Data_2 & 0xFF00) >> 8); break;
+					case 0x126: ret = (uint8_t)(ser_Data_3 & 0xFF); break;
+					case 0x127: ret = (uint8_t)((ser_Data_3 & 0xFF00) >> 8); break;
+					case 0x128: ret = (uint8_t)(ser_CTRL & 0xFF); break;
+					case 0x129: ret = (uint8_t)((ser_CTRL & 0xFF00) >> 8); break;
+					case 0x12A: ret = (uint8_t)(ser_Data_M & 0xFF); break;
+					case 0x12B: ret = (uint8_t)((ser_Data_M & 0xFF00) >> 8); break;
+
+					case 0x130: ret = (uint8_t)(controller_state & 0xFF); break;
+					case 0x131: ret = (uint8_t)((controller_state & 0xFF00) >> 8); break;
+					case 0x132: ret = (uint8_t)(key_CTRL & 0xFF); break;
+					case 0x133: ret = (uint8_t)((key_CTRL & 0xFF00) >> 8); break;
+
+					case 0x134: ret = (uint8_t)(ser_Mode & 0xFF); break;
+					case 0x135: ret = (uint8_t)((ser_Mode & 0xFF00) >> 8); break;
+					case 0x136: ret = 0; break;
+					case 0x137: ret = 0; break;
+
+					case 0x140: ret = (uint8_t)(ser_CTRL_J & 0xFF); break;
+					case 0x141: ret = (uint8_t)((ser_CTRL_J & 0xFF00) >> 8); break;
+					case 0x142: ret = 0; break;
+					case 0x143: ret = 0; break;
+
+					case 0x150: ret = (uint8_t)(ser_RECV_J & 0xFF); break;
+					case 0x151: ret = (uint8_t)((ser_RECV_J & 0xFF00) >> 8); break;
+					case 0x152: ret = (uint8_t)((ser_RECV_J & 0xFF0000) >> 16); break;
+					case 0x153: ret = (uint8_t)((ser_RECV_J & 0xFF000000) >> 24); break;
+					case 0x154: ret = (uint8_t)(ser_TRANS_J & 0xFF); break;
+					case 0x155: ret = (uint8_t)((ser_TRANS_J & 0xFF00) >> 8); break;
+					case 0x156: ret = (uint8_t)((ser_TRANS_J & 0xFF0000) >> 16); break;
+					case 0x157: ret = (uint8_t)((ser_TRANS_J & 0xFF000000) >> 24); break;
+					case 0x158: ret = (uint8_t)(ser_STAT_J & 0xFF); break;
+					case 0x159: ret = (uint8_t)((ser_STAT_J & 0xFF00) >> 8); break;
+					case 0x15A: ret = 0; break;
+					case 0x15B: ret = 0; break;
+
+					default: ret = 0;
+				}
+			}
+			else
+			{
+				switch (addr)
+				{
+					case 0x200: ret = (uint8_t)(INT_EN & 0xFF); break;
+					case 0x201: ret = (uint8_t)((INT_EN & 0xFF00) >> 8); break;
+					case 0x202: ret = (uint8_t)(INT_Flags & 0xFF); break;
+					case 0x203: ret = (uint8_t)((INT_Flags & 0xFF00) >> 8); break;
+					case 0x204: ret = (uint8_t)(Wait_CTRL & 0xFF); break;
+					case 0x205: ret = (uint8_t)((Wait_CTRL & 0xFF00) >> 8); break;
+					case 0x206: ret = 0; break;
+					case 0x207: ret = 0; break;
+					case 0x208: ret = (uint8_t)(INT_Master & 0xFF); break;
+					case 0x209: ret = (uint8_t)((INT_Master & 0xFF00) >> 8); break;
+					case 0x20A: ret = 0; break;
+					case 0x20B: ret = 0; break;
+
+					case 0x300: ret = Post_Boot; break;
+					case 0x301: ret = Halt_CTRL; break;
+					case 0x302: ret = 0; break;
+					case 0x303: ret = 0; break;
+
+					default: ret = 0;
+				}
+			}
+
+			return ret;
+		}
+
 		void Update_INT_EN(uint16_t value)
 		{
 			// changes to IRQ that happen due to writes should take place in 3 cycles
@@ -6411,8 +6684,14 @@ namespace GBAHawk
 
 			if (ppu_VRAM_In_Use)
 			{
-				cpu_Fetch_Wait += 1;
-				dma_Access_Wait += 1;
+				if (cpu_Is_Paused)
+				{
+					dma_Access_Wait += 1;
+				}
+				else
+				{
+					cpu_Fetch_Wait += 1;
+				}
 			}
 		}
 

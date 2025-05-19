@@ -134,6 +134,10 @@ GBAHawk_EXPORT uint8_t GBA_getpalram(GBACore* p, uint32_t addr) {
 	return p->GetPALRAM(addr);
 }
 
+GBAHawk_EXPORT uint8_t GBA_getregisters(GBACore* p, uint32_t addr) {
+	return p->GetRegisters(addr);
+}
+
 GBAHawk_EXPORT uint8_t GBA_getsram(GBACore* p, uint32_t addr) {
 	return p->GetSRAM(addr);
 }
