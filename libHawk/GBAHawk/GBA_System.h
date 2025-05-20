@@ -2083,6 +2083,7 @@ namespace GBAHawk
 		const char* UDF_event =  "                                 ====UDF====                                 ";
 		const char* IRQ_event =  "                                 ====IRQ====                                 ";
 		const char* HALT_event = "                                 ====HALT====                                ";
+		const char* DMA_event =  "                                 ====DMA====                                 ";
 		const char* No_Reg = 
 			"                                                                                                                                                                                                                                                                                          ";
 		const char* Reg_template = 
@@ -2096,6 +2097,47 @@ namespace GBAHawk
 
 		void (*TraceCallback)(int);
 		void (*RumbleCallback)(bool);
+
+		string CPUDMAState()
+		{
+			val_char_1 = replacer;
+
+			string reg_state = "CH:";
+
+			temp_reg = cpu_Regs[0];
+			sprintf_s(val_char_1, 9, "%08X", dma_Chan_Exec);
+			reg_state.append(val_char_1, 8);
+
+			reg_state.append(" SR:");
+			temp_reg = cpu_Regs[1];
+			sprintf_s(val_char_1, 9, "%08X", dma_SRC_intl[dma_Chan_Exec]);
+			reg_state.append(val_char_1, 8);
+
+			reg_state.append(" DT:");
+			temp_reg = cpu_Regs[2];
+			sprintf_s(val_char_1, 9, "%08X", dma_DST_intl[dma_Chan_Exec]);
+			reg_state.append(val_char_1, 8);
+
+			reg_state.append(" CR:");
+			temp_reg = cpu_Regs[3];
+			sprintf_s(val_char_1, 9, "%08X", dma_CTRL[dma_Chan_Exec]);
+			reg_state.append(val_char_1, 8);
+
+			reg_state.append(" CT:");
+			temp_reg = cpu_Regs[3];
+			sprintf_s(val_char_1, 9, "%08X", dma_CNT[dma_Chan_Exec]);
+			reg_state.append(val_char_1, 8);
+
+			reg_state.append(" Cy:");
+			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", CycleCount));
+
+			while (reg_state.length() < 282)
+			{
+				reg_state.append(" ");
+			}
+
+			return reg_state;
+		}
 
 		string CPURegisterState()
 		{		
@@ -3572,6 +3614,10 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
+
+						Message_String = "hit oam " + to_string(CycleCount);
+
+						MessageCallback(Message_String.length());
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5762,6 +5808,7 @@ namespace GBAHawk
 		bool ppu_VRAM_Access;
 		bool ppu_PALRAM_Access;
 		bool ppu_OAM_Access;
+		bool ppu_Continue_Fetch_OAM;
 
 		bool ppu_HBL_Free, ppu_OBJ_Dim, ppu_Forced_Blank, ppu_Any_Window_On;
 		bool ppu_OBJ_On, ppu_WIN0_On, ppu_WIN1_On, ppu_OBJ_WIN, ppu_OBJ_On_Disp;
@@ -6389,7 +6436,7 @@ namespace GBAHawk
 
 			if (ppu_HBL_Free)
 			{
-				ppu_Sprite_Eval_Time = 964;
+				ppu_Sprite_Eval_Time = 1232;
 				ppu_Sprite_Eval_Time_VRAM = 958;
 			}
 			else
@@ -6862,6 +6909,7 @@ namespace GBAHawk
 			saver = bool_saver(ppu_VRAM_Access, saver);
 			saver = bool_saver(ppu_PALRAM_Access, saver);
 			saver = bool_saver(ppu_OAM_Access, saver);
+			saver = bool_saver(ppu_Continue_Fetch_OAM, saver);
 
 			saver = bool_saver(ppu_HBL_Free, saver);
 			saver = bool_saver(ppu_OBJ_Dim, saver);
@@ -7084,6 +7132,7 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_VRAM_Access, loader);
 			loader = bool_loader(&ppu_PALRAM_Access, loader);
 			loader = bool_loader(&ppu_OAM_Access, loader);
+			loader = bool_loader(&ppu_Continue_Fetch_OAM, loader);
 
 			loader = bool_loader(&ppu_HBL_Free, loader);
 			loader = bool_loader(&ppu_OBJ_Dim, loader);

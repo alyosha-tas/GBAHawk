@@ -681,87 +681,91 @@ namespace GBAHawk
 							ppu_BG_On_Latch_2[i] = ppu_BG_On[i];
 						}				
 						
-						ppu_Fetch_OAM_0 = true;
-						ppu_Fetch_OAM_2 = false;
-						ppu_Fetch_OAM_A_D = false;
-						ppu_Fetch_Sprite_VRAM = false;
-
-						ppu_Sprite_Next_Fetch = 3;
-
-						ppu_Current_Sprite = 0;
-						ppu_New_Sprite = true;
-
-						if (ppu_Sprite_ofst_eval == 0)
+						if ((ppu_LY == 227) || (ppu_LY <= 159))
 						{
-							ppu_Sprite_ofst_eval = 240;
-							ppu_Sprite_ofst_draw = 0;
-						}
-						else
-						{
-							ppu_Sprite_ofst_eval = 0;
-							ppu_Sprite_ofst_draw = 240;
-						}
+							ppu_Continue_Fetch_OAM = true;
+							ppu_Fetch_OAM_0 = true;
+							ppu_Fetch_OAM_2 = false;
+							ppu_Fetch_OAM_A_D = false;
+							ppu_Fetch_Sprite_VRAM = false;
 
-						ppu_Sprite_Eval_Finished = false;
+							ppu_Sprite_Next_Fetch = 3;
 
-						if ((ppu_LY < 159) || (ppu_LY == 227))
-						{
-							ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
+							ppu_Current_Sprite = 0;
+							ppu_New_Sprite = true;
 
-							if (ppu_LY == 227)
+							if (ppu_Sprite_ofst_eval == 0)
 							{
-								ppu_Sprite_LY_Check = 0;
-								ppu_Sprite_Mosaic_Y_Counter = 0;
-								ppu_Sprite_Mosaic_Y_Compare = 0;
+								ppu_Sprite_ofst_eval = 240;
+								ppu_Sprite_ofst_draw = 0;
 							}
 							else
 							{
-								ppu_Sprite_Mosaic_Y_Counter++;
-
-								if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
-								{
-									ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
-									ppu_Sprite_Mosaic_Y_Counter = 0;
-								}
-								else if (ppu_Sprite_Mosaic_Y_Counter == 16)
-								{
-									ppu_Sprite_Mosaic_Y_Counter = 0;
-								}
+								ppu_Sprite_ofst_eval = 0;
+								ppu_Sprite_ofst_draw = 240;
 							}
-						}
 
-						// reset obj window detection for the scanline
-						for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
-						{
-							ppu_Sprite_Pixels[i] = 0;
-							ppu_Sprite_Priority[i] = 3;
-							ppu_Sprite_Pixel_Occupied[i] = false;
-							ppu_Sprite_Semi_Transparent[i] = false;
-							ppu_Sprite_Object_Window[i] = false;
-							ppu_Sprite_Is_Mosaic[i] = false;
-						}
+							ppu_Sprite_Eval_Finished = false;
 
-						ppu_Sprite_Render_Cycle = 0;
-
-						ppu_Sprite_Delay_SL = false;
-
-						if (!ppu_Sprite_Delay_Disp)
-						{
-							ppu_Sprite_Delays = false;
-
-							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
+							if ((ppu_LY < 159) || (ppu_LY == 227))
 							{
-								delays_to_process = false;
+								ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
+
+								if (ppu_LY == 227)
+								{
+									ppu_Sprite_LY_Check = 0;
+									ppu_Sprite_Mosaic_Y_Counter = 0;
+									ppu_Sprite_Mosaic_Y_Compare = 0;
+								}
+								else
+								{
+									ppu_Sprite_Mosaic_Y_Counter++;
+
+									if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
+									{
+										ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
+										ppu_Sprite_Mosaic_Y_Counter = 0;
+									}
+									else if (ppu_Sprite_Mosaic_Y_Counter == 16)
+									{
+										ppu_Sprite_Mosaic_Y_Counter = 0;
+									}
+								}
 							}
+
+							// reset obj window detection for the scanline
+							for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
+							{
+								ppu_Sprite_Pixels[i] = 0;
+								ppu_Sprite_Priority[i] = 3;
+								ppu_Sprite_Pixel_Occupied[i] = false;
+								ppu_Sprite_Semi_Transparent[i] = false;
+								ppu_Sprite_Object_Window[i] = false;
+								ppu_Sprite_Is_Mosaic[i] = false;
+							}
+
+							ppu_Sprite_Render_Cycle = 0;
+
+							ppu_Sprite_Delay_SL = false;
+
+							if (!ppu_Sprite_Delay_Disp)
+							{
+								ppu_Sprite_Delays = false;
+
+								if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
+								{
+									delays_to_process = false;
+								}
+							}
+
+							// reset latches
+							ppu_Sprite_Pixel_Latch = 0;
+							ppu_Sprite_Priority_Latch = 0;
+
+							ppu_Sprite_Semi_Transparent_Latch = false;
+							ppu_Sprite_Mosaic_Latch = false;
+							ppu_Sprite_Pixel_Occupied_Latch = false;
 						}
-
-						// reset latches
-						ppu_Sprite_Pixel_Latch = 0;
-						ppu_Sprite_Priority_Latch = 0;
-
-						ppu_Sprite_Semi_Transparent_Latch = false;
-						ppu_Sprite_Mosaic_Latch = false;
-						ppu_Sprite_Pixel_Occupied_Latch = false;
 					}
 				}
 
@@ -1358,14 +1362,11 @@ namespace GBAHawk
 				ppu_STAT &= 0xFE;
 			}
 
-			// reset sprite evaluation  in 40 cycles
-			if ((ppu_LY == 227) || (ppu_LY <= 159))
-			{
-				ppu_Sprite_Delays = true;
-				ppu_Sprite_Delay_SL = true;
-				delays_to_process = true;
-				ppu_Sprite_cd = 40;
-			}
+			// reset sprite evaluation  in 40 cycles		
+			ppu_Sprite_Delays = true;
+			ppu_Sprite_Delay_SL = true;
+			delays_to_process = true;
+			ppu_Sprite_cd = 40;
 
 			ppu_BG_On_Disp[0] = ppu_BG_On_Latch[0];
 			ppu_BG_On_Disp[1] = ppu_BG_On_Latch[1];
@@ -1799,6 +1800,8 @@ namespace GBAHawk
 							//Message_String = "dma : " + to_string(dma_Chan_Exec) + " ly " + to_string(ppu_LY) + " cyc " + to_string(ppu_Cycle) + " cpu cyc " + to_string(CycleCount);
 
 							//MessageCallback(Message_String.length());
+
+							if (TraceCallback) TraceCallback(5); // DMA
 
 							// Is this correct for all cases?
 							dma_Use_ROM_Addr_DST[dma_Chan_Exec] = dma_Use_ROM_Addr_SRC[dma_Chan_Exec] = false;

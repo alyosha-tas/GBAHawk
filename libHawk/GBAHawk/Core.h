@@ -463,9 +463,14 @@ namespace GBAHawk
 			{
 				std::memcpy(r, GBA.CPURegisterState().c_str(), l);
 			}
-			else
+			else if (t < 5)
 			{
 				std::memcpy(r, GBA.No_Reg, l);
+			}
+			else
+			{
+				// DMA info
+				std::memcpy(r, GBA.CPUDMAState().c_str(), l);
 			}
 		}
 
@@ -488,9 +493,13 @@ namespace GBAHawk
 			{
 				std::memcpy(d, GBA.IRQ_event, l);
 			}
-			else
+			else if (t == 4)
 			{
 				std::memcpy(d, GBA.HALT_event, l);
+			}
+			else
+			{
+				std::memcpy(d, GBA.DMA_event, l);
 			}
 		}
 

@@ -148,6 +148,7 @@ namespace GBAHawk
 		ppu_VRAM_Access = false;
 		ppu_PALRAM_Access = false;
 		ppu_OAM_Access = false;
+		ppu_Continue_Fetch_OAM = false;
 
 		ppu_VRAM_In_Use = ppu_VRAM_High_In_Use = ppu_PALRAM_In_Use = false;
 
@@ -2589,7 +2590,7 @@ namespace GBAHawk
 
 		if (ppu_Fetch_OAM_0 && !ppu_Sprite_Eval_Finished)
 		{
-			if (ppu_OBJ_On)
+			if (ppu_OBJ_On && ppu_Continue_Fetch_OAM)
 			{
 				ppu_OAM_Access = true;
 				spr_attr_0 = OAM_16[ppu_Current_Sprite * 4];
@@ -2706,9 +2707,20 @@ namespace GBAHawk
 				ppu_New_Sprite = true;
 			}
 
+			if (!ppu_Continue_Fetch_OAM)
+			{
+				ppu_New_Sprite = true;
+			}
+
 			if (ppu_New_Sprite)
 			{
 				ppu_Current_Sprite += 1;
+
+				// Turn off oam accesses if above the access time
+				if (ppu_Sprite_Render_Cycle >= ppu_Sprite_Eval_Time_VRAM)
+				{
+					ppu_Continue_Fetch_OAM = false;
+				}
 
 				if (ppu_Current_Sprite == 128)
 				{
@@ -2803,6 +2815,12 @@ namespace GBAHawk
 			}
 			else
 			{
+				// Turn off oam accesses if above the access time
+				if (ppu_Sprite_Render_Cycle >= ppu_Sprite_Eval_Time_VRAM)
+				{
+					ppu_Continue_Fetch_OAM = false;
+				}
+				
 				ppu_Fetch_Sprite_VRAM = true;
 
 				if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
@@ -2844,6 +2862,12 @@ namespace GBAHawk
 				ppu_Sprite_D_Latch = OAM_16[0xF + 0x10 * ppu_Param_Pick];
 
 				ppu_OAM_Access = true;
+
+				// Turn off oam accesses if above the access time
+				if (ppu_Sprite_Render_Cycle >= ppu_Sprite_Eval_Time_VRAM)
+				{
+					ppu_Continue_Fetch_OAM = false;
+				}
 
 				// next cycle will start evaluation of next sprite
 				if (ppu_Current_Sprite < 128) { ppu_Fetch_OAM_0 = true; }
