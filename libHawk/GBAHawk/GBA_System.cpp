@@ -1418,7 +1418,7 @@ namespace GBAHawk
 				ppu_VRAM_High_Access = false;
 				ppu_OAM_Access = false;
 
-				if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
+				if (!ppu_Sprite_Eval_Finished)
 				{
 					if ((ppu_Cycle & 1) == 1)
 					{
@@ -1437,7 +1437,7 @@ namespace GBAHawk
 			ppu_PALRAM_Access = false;
 			ppu_OAM_Access = false;
 
-			if (!ppu_Sprite_Eval_Finished && (ppu_Sprite_Render_Cycle < ppu_Sprite_Eval_Time))
+			if (!ppu_Sprite_Eval_Finished)
 			{
 				if ((ppu_Cycle & 1) == 1)
 				{

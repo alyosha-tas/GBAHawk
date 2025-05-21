@@ -3614,10 +3614,6 @@ namespace GBAHawk
 					if (ppu_OAM_Access)
 					{
 						wait_ret += 1;
-
-						Message_String = "hit oam " + to_string(CycleCount);
-
-						MessageCallback(Message_String.length());
 					}
 				}
 				else if (addr >= 0x06000000)
@@ -5819,7 +5815,7 @@ namespace GBAHawk
 		uint8_t ppu_STAT, ppu_LY, ppu_LYC;
 
 		uint16_t ppu_CTRL, ppu_Green_Swap, ppu_Cycle, ppu_Display_Cycle;
-		uint16_t ppu_Sprite_Eval_Time, ppu_Sprite_Eval_Time_VRAM;
+		uint16_t ppu_Sprite_Eval_Time_OAM, ppu_Sprite_Eval_Time_VRAM;
 		uint16_t ppu_WIN_Hor_0, ppu_WIN_Hor_1, ppu_WIN_Vert_0, ppu_WIN_Vert_1;
 		uint16_t ppu_WIN_In, ppu_WIN_Out, ppu_Mosaic, ppu_Special_FX, ppu_Alpha, ppu_Bright;
 
@@ -6436,13 +6432,13 @@ namespace GBAHawk
 
 			if (ppu_HBL_Free)
 			{
-				ppu_Sprite_Eval_Time = 1232;
+				ppu_Sprite_Eval_Time_OAM = 958;
 				ppu_Sprite_Eval_Time_VRAM = 958;
 			}
 			else
 			{
-				ppu_Sprite_Eval_Time = 1232;
-				ppu_Sprite_Eval_Time_VRAM = 1230;
+				ppu_Sprite_Eval_Time_OAM = 1232;
+				ppu_Sprite_Eval_Time_VRAM = 1232;
 			}
 
 			ppu_Any_Window_On = ppu_WIN0_On || ppu_WIN1_On || ppu_OBJ_WIN;
@@ -6932,7 +6928,7 @@ namespace GBAHawk
 			saver = short_saver(ppu_Green_Swap, saver);
 			saver = short_saver(ppu_Cycle, saver);
 			saver = short_saver(ppu_Display_Cycle, saver);
-			saver = short_saver(ppu_Sprite_Eval_Time, saver);
+			saver = short_saver(ppu_Sprite_Eval_Time_OAM, saver);
 			saver = short_saver(ppu_Sprite_Eval_Time_VRAM, saver);
 			saver = short_saver(ppu_WIN_Hor_0, saver);
 			saver = short_saver(ppu_WIN_Hor_1, saver);
@@ -7155,7 +7151,7 @@ namespace GBAHawk
 			loader = short_loader(&ppu_Green_Swap, loader);
 			loader = short_loader(&ppu_Cycle, loader);
 			loader = short_loader(&ppu_Display_Cycle, loader);
-			loader = short_loader(&ppu_Sprite_Eval_Time, loader);
+			loader = short_loader(&ppu_Sprite_Eval_Time_OAM, loader);
 			loader = short_loader(&ppu_Sprite_Eval_Time_VRAM, loader);
 			loader = short_loader(&ppu_WIN_Hor_0, loader);
 			loader = short_loader(&ppu_WIN_Hor_1, loader);
