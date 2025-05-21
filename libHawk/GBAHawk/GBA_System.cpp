@@ -451,7 +451,7 @@ namespace GBAHawk
 						// latch rotation and scaling XY here
 						if (ppu_LY < 160)
 						{
-							if ((ppu_LY == 0) || ppu_BG_Ref_LY_Change[2])
+							if (ppu_BG_On_Disp[2] && ppu_BG_Ref_LY_Change[2])
 							{
 								if (ppu_BG_Mosaic[2])
 								{
@@ -463,13 +463,16 @@ namespace GBAHawk
 								}
 
 								ppu_Current_Ref_Y_2 = ppu_BG_Ref_Y[2];
+
 								if ((ppu_Current_Ref_Y_2 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_Y_2 |= 0xFFFFFFFFF0000000;
 								}
+
+								ppu_BG_Ref_LY_Change[2] = false;
 							}
 
-							if ((ppu_LY == 0) || ppu_BG_Ref_LY_Change[3])
+							if (ppu_BG_On_Disp[3] && ppu_BG_Ref_LY_Change[3])
 							{
 								if (ppu_BG_Mosaic[3])
 								{
@@ -481,32 +484,38 @@ namespace GBAHawk
 								}
 
 								ppu_Current_Ref_Y_3 = ppu_BG_Ref_Y[3];
+
 								if ((ppu_Current_Ref_Y_3 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_Y_3 |= 0xFFFFFFFFF0000000;
 								}
+
+								ppu_BG_Ref_LY_Change[3] = false;
 							}
 
-							if ((ppu_LY == 0) || ppu_BG_Ref_X_Change[2])
+							if (ppu_BG_On_Disp[2] && ppu_BG_Ref_X_Change[2])
 							{
 								ppu_Current_Ref_X_2 = ppu_BG_Ref_X[2];
+
 								if ((ppu_Current_Ref_X_2 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_X_2 |= 0xFFFFFFFFF0000000;
 								}
+
+								ppu_BG_Ref_X_Change[2] = false;
 							}
 
-							if ((ppu_LY == 0) || ppu_BG_Ref_X_Change[3])
+							if (ppu_BG_On_Disp[3] && ppu_BG_Ref_X_Change[3])
 							{
 								ppu_Current_Ref_X_3 = ppu_BG_Ref_X[3];
+
 								if ((ppu_Current_Ref_X_3 & 0x8000000) != 0)
 								{
 									ppu_Current_Ref_X_3 |= 0xFFFFFFFFF0000000;
 								}
-							}
 
-							ppu_BG_Ref_X_Change[2] = ppu_BG_Ref_X_Change[3] = false;
-							ppu_BG_Ref_LY_Change[2] = ppu_BG_Ref_LY_Change[3] = false;
+								ppu_BG_Ref_X_Change[3] = false;
+							}
 
 							ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
 
@@ -584,42 +593,48 @@ namespace GBAHawk
 							if ((ppu_F_Rot_D_2 & 0x8000) != 0) { ppu_F_Rot_D_2 |= 0xFFFFFFFFFFFF0000; }
 							if ((ppu_F_Rot_D_3 & 0x8000) != 0) { ppu_F_Rot_D_3 |= 0xFFFFFFFFFFFF0000; }
 
-							if (ppu_BG_Mosaic[2])
+							if (ppu_BG_On_Disp[2])
 							{
-								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
+								if (ppu_BG_Mosaic[2])
 								{
-									for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+									if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
 									{
-										ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
-										ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
-									}
+										for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+										{
+											ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+											ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+										}
 
-									ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
+										ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
+									}
+								}
+								else if (ppu_LY != ppu_Base_LY_2)
+								{
+									ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+									ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
 								}
 							}
-							else if (ppu_LY != ppu_Base_LY_2)
-							{
-								ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
-								ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
-							}
 
-							if (ppu_BG_Mosaic[3])
+							if (ppu_BG_On_Disp[3])
 							{
-								if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
+								if (ppu_BG_Mosaic[3])
 								{
-									for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+									if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
 									{
-										ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
-										ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
-									}
+										for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+										{
+											ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+											ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+										}
 
-									ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
+										ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
+									}
 								}
-							}
-							else if (ppu_LY != ppu_Base_LY_3)
-							{
-								ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
-								ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+								else if (ppu_LY != ppu_Base_LY_3)
+								{
+									ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+									ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+								}
 							}
 						}
 							
@@ -1327,6 +1342,13 @@ namespace GBAHawk
 				// reset rotation and scaling offsetreference Y value
 				ppu_ROT_REF_LY[2] = 0;
 				ppu_ROT_REF_LY[3] = 0;
+
+				// always update rot scale latches
+				ppu_BG_Ref_LY_Change[2] = true;
+				ppu_BG_Ref_LY_Change[3] = true;
+
+				ppu_BG_Ref_X_Change[2] = true;
+				ppu_BG_Ref_X_Change[3] = true;
 			}
 
 			// exit HBlank

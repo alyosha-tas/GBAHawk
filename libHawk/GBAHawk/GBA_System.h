@@ -6438,7 +6438,7 @@ namespace GBAHawk
 			else
 			{
 				ppu_Sprite_Eval_Time_OAM = 1232;
-				ppu_Sprite_Eval_Time_VRAM = 1232;
+				ppu_Sprite_Eval_Time_VRAM = 1230;
 			}
 
 			ppu_Any_Window_On = ppu_WIN0_On || ppu_WIN1_On || ppu_OBJ_WIN;
