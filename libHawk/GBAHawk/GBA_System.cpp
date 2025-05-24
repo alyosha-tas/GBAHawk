@@ -2262,10 +2262,10 @@ namespace GBAHawk
 		{
 			cpu_IRQ_Input = cpu_Next_IRQ_Input;
 			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
-
-			cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
-			cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
 		}
+
+		cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
+		cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
 
 		cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
 		cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4;

@@ -2419,7 +2419,7 @@ namespace GBAHawk
 								ret.append(std::string(val_char_2));
 							}
 
-							sprintf_s(val_char_2, 40, "R%02d)", ((cpu_Instr_ARM_2 >> 12) & 0xF));
+							sprintf_s(val_char_2, 40, "R%02d", ((cpu_Instr_ARM_2 >> 12) & 0xF));
 							ret.append(std::string(val_char_2));
 						}
 
