@@ -720,7 +720,15 @@ namespace GBAHawk
 								ppu_Sprite_ofst_draw = 240;
 							}
 
-							ppu_Sprite_Eval_Finished = false;
+							// don't process sprites on scanline 159
+							if (ppu_LY != 159)
+							{
+								ppu_Sprite_Eval_Finished = false;
+							}
+							else
+							{
+								ppu_Sprite_Eval_Finished = true;
+							}
 
 							if ((ppu_LY < 159) || (ppu_LY == 227))
 							{
@@ -759,19 +767,8 @@ namespace GBAHawk
 								ppu_Sprite_Is_Mosaic[i] = false;
 							}
 
+
 							ppu_Sprite_Render_Cycle = 0;
-
-							ppu_Sprite_Delay_SL = false;
-
-							if (!ppu_Sprite_Delay_Disp)
-							{
-								ppu_Sprite_Delays = false;
-
-								if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
-								{
-									delays_to_process = false;
-								}
-							}
 
 							// reset latches
 							ppu_Sprite_Pixel_Latch = 0;
@@ -780,6 +777,18 @@ namespace GBAHawk
 							ppu_Sprite_Semi_Transparent_Latch = false;
 							ppu_Sprite_Mosaic_Latch = false;
 							ppu_Sprite_Pixel_Occupied_Latch = false;
+						}
+
+						ppu_Sprite_Delay_SL = false;
+
+						if (!ppu_Sprite_Delay_Disp)
+						{
+							ppu_Sprite_Delays = false;
+
+							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
+							{
+								delays_to_process = false;
+							}
 						}
 					}
 				}

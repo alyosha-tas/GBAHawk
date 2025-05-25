@@ -6432,12 +6432,12 @@ namespace GBAHawk
 
 			if (ppu_HBL_Free)
 			{
-				ppu_Sprite_Eval_Time_OAM = 958;
+				ppu_Sprite_Eval_Time_OAM = 960;
 				ppu_Sprite_Eval_Time_VRAM = 958;
 			}
 			else
 			{
-				ppu_Sprite_Eval_Time_OAM = 1232;
+				ppu_Sprite_Eval_Time_OAM = 1230;
 				ppu_Sprite_Eval_Time_VRAM = 1230;
 			}
 
