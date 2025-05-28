@@ -524,6 +524,10 @@ namespace GBAHawk
 
 		void Write_Registers_8(uint32_t addr, uint8_t value)
 		{
+			//Message_String = "wr8 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+
+			//MessageCallback(Message_String.length());
+			
 			if (addr < 0x60)
 			{
 				ppu_Write_Reg_8(addr, value);
@@ -566,6 +570,10 @@ namespace GBAHawk
 
 		void Write_Registers_16(uint32_t addr, uint16_t value)
 		{
+			//Message_String = "wr16 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+
+			//MessageCallback(Message_String.length());
+			
 			if (addr < 0x60)
 			{
 				ppu_Write_Reg_16(addr, value);
@@ -603,6 +611,10 @@ namespace GBAHawk
 
 		void Write_Registers_32(uint32_t addr, uint32_t value)
 		{
+			//Message_String = "wr32 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+
+			//MessageCallback(Message_String.length());
+			
 			if (addr < 0x60)
 			{
 				ppu_Write_Reg_32(addr, value);
@@ -827,7 +839,28 @@ namespace GBAHawk
 			{
 				if (addr < 0x110)
 				{
-					return tim_Read_Reg_8(addr);
+					switch (addr)
+					{
+						case 0x100: ret = (uint8_t)(tim_Reload[0] & 0xFF); break;
+						case 0x101: ret = (uint8_t)((tim_Reload[0] & 0xFF00) >> 8); break;
+						case 0x102: ret = (uint8_t)(tim_Control[0] & 0xFF); break;
+						case 0x103: ret = (uint8_t)((tim_Control[0] & 0xFF00) >> 8); break;
+
+						case 0x104: ret = (uint8_t)(tim_Reload[1] & 0xFF); break;
+						case 0x105: ret = (uint8_t)((tim_Reload[1] & 0xFF00) >> 8); break;
+						case 0x106: ret = (uint8_t)(tim_Control[1] & 0xFF); break;
+						case 0x107: ret = (uint8_t)((tim_Control[1] & 0xFF00) >> 8); break;
+
+						case 0x108: ret = (uint8_t)(tim_Reload[2] & 0xFF); break;
+						case 0x109: ret = (uint8_t)((tim_Reload[2] & 0xFF00) >> 8); break;
+						case 0x10A: ret = (uint8_t)(tim_Control[2] & 0xFF); break;
+						case 0x10B: ret = (uint8_t)((tim_Control[2] & 0xFF00) >> 8); break;
+
+						case 0x10C: ret = (uint8_t)(tim_Reload[3] & 0xFF); break;
+						case 0x10D: ret = (uint8_t)((tim_Reload[3] & 0xFF00) >> 8); break;
+						case 0x10E: ret = (uint8_t)(tim_Control[3] & 0xFF); break;
+						case 0x10F: ret = (uint8_t)((tim_Control[3] & 0xFF00) >> 8); break;
+					}
 				}
 				else
 				{

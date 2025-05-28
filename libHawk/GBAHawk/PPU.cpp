@@ -1770,10 +1770,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m1_2_ofst < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m1_2_ofst] << 6);
 
 								m1_2_ofst &= 0xFFFE;
@@ -1822,10 +1823,10 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							ppu_Set_VRAM_Access_True();
+							
 							if (ppu_Tile_Addr[2] < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
 
 								ppu_Tile_Addr[2] &= 0xFFFE;
@@ -1901,10 +1902,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m2_2_ofst < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Tile_Addr[2] = ((uint32_t)VRAM[m2_2_ofst] << 6);
 
 								m2_2_ofst &= 0xFFFE;
@@ -1953,10 +1955,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (ppu_Tile_Addr[2] < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Pixel_Color[2] = VRAM[ppu_Tile_Addr[2]];
 
 								ppu_Tile_Addr[2] &= 0xFFFE;
@@ -2030,10 +2033,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[3] && ppu_BG_On[3])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m2_3_ofst < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Tile_Addr[3] = ((uint32_t)VRAM[m2_3_ofst] << 6);
 
 								m2_3_ofst &= 0xFFFE;
@@ -2069,10 +2073,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[3] && ppu_BG_On[3])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (ppu_Tile_Addr[3] < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Pixel_Color[3] = VRAM[ppu_Tile_Addr[3]];
 
 								ppu_Tile_Addr[3] &= 0xFFFE;
@@ -2153,10 +2158,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m3_ofst < 0x14000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_VRAM_Open_Bus = VRAM_16[m3_ofst >> 1];
 							}
 						}
@@ -2221,10 +2227,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m4_ofst < 0x14000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_Pixel_Color[2] = VRAM[m4_ofst];
 
 								m4_ofst &= 0x13FFE;
@@ -2308,10 +2315,11 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[2] && ppu_BG_On[2])
 						{
+							// vram access true even if out of allowed range, cpu is stalled but data is not fetched
+							ppu_Set_VRAM_Access_True();
+							
 							if (m5_ofst < 0x14000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_VRAM_Open_Bus = VRAM_16[m5_ofst >> 1];
 							}
 						}
