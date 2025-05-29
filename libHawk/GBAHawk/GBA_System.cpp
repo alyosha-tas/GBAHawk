@@ -116,7 +116,7 @@ namespace GBAHawk
 					{
 						IRQ_Delays = false;
 
-						if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !IRQ_Delays && !ppu_Latch_Delays)
+						if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 						{
 							delays_to_process = false;
 						}
@@ -151,7 +151,7 @@ namespace GBAHawk
 							{
 								IRQ_Delays = false;
 
-								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
+								if (!ppu_Delays && !Misc_Delays && !ppu_Latch_Delays)
 								{
 									delays_to_process = false;
 								}
@@ -184,7 +184,7 @@ namespace GBAHawk
 							{
 								IRQ_Delays = false;
 
-								if (!ppu_Delays && !Misc_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
+								if (!ppu_Delays && !Misc_Delays && !ppu_Latch_Delays)
 								{
 									delays_to_process = false;
 								}
@@ -348,7 +348,7 @@ namespace GBAHawk
 					}
 				}
 
-				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
+				if (!Misc_Delays && !ppu_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 				{
 					delays_to_process = false;
 				}
@@ -375,7 +375,7 @@ namespace GBAHawk
 					else if (ppu_VBL_IRQ_cd == 0)
 					{
 						// check for any additional ppu delays
-						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
+						if ((ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -405,7 +405,7 @@ namespace GBAHawk
 					else if (ppu_HBL_IRQ_cd == 0)
 					{
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -423,248 +423,7 @@ namespace GBAHawk
 					else if (ppu_LYC_IRQ_cd == 0)
 					{
 						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_Vid_Check_cd == 0))
-						{
-							ppu_Delays = false;
-						}
-					}
-				}
-
-				if (ppu_LYC_Vid_Check_cd > 0)
-				{
-					ppu_LYC_Vid_Check_cd -= 1;
-
-					if (ppu_LYC_Vid_Check_cd == 5)
-					{
-						if (ppu_LY == ppu_LYC)
-						{
-							ppu_LYC_IRQ_cd = 4;
-							ppu_Delays = true;
-							delays_to_process = true;
-
-							// set the flag bit
-							ppu_STAT |= 4;
-						}
-					}
-					else if (ppu_LYC_Vid_Check_cd == 4)
-					{
-						// latch rotation and scaling XY here
-						if (ppu_LY < 160)
-						{
-							if (ppu_BG_On_Disp[2] && ppu_BG_Ref_LY_Change[2])
-							{
-								if (ppu_BG_Mosaic[2])
-								{
-									ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
-								}
-								else
-								{
-									ppu_Base_LY_2 = ppu_LY;
-								}
-
-								ppu_Current_Ref_Y_2 = ppu_BG_Ref_Y[2];
-
-								if ((ppu_Current_Ref_Y_2 & 0x8000000) != 0)
-								{
-									ppu_Current_Ref_Y_2 |= 0xFFFFFFFFF0000000;
-								}
-
-								ppu_BG_Ref_LY_Change[2] = false;
-							}
-
-							if (ppu_BG_On_Disp[3] && ppu_BG_Ref_LY_Change[3])
-							{
-								if (ppu_BG_Mosaic[3])
-								{
-									ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
-								}
-								else
-								{
-									ppu_Base_LY_3 = ppu_LY;
-								}
-
-								ppu_Current_Ref_Y_3 = ppu_BG_Ref_Y[3];
-
-								if ((ppu_Current_Ref_Y_3 & 0x8000000) != 0)
-								{
-									ppu_Current_Ref_Y_3 |= 0xFFFFFFFFF0000000;
-								}
-
-								ppu_BG_Ref_LY_Change[3] = false;
-							}
-
-							if (ppu_BG_On_Disp[2] && ppu_BG_Ref_X_Change[2])
-							{
-								ppu_Current_Ref_X_2 = ppu_BG_Ref_X[2];
-
-								if ((ppu_Current_Ref_X_2 & 0x8000000) != 0)
-								{
-									ppu_Current_Ref_X_2 |= 0xFFFFFFFFF0000000;
-								}
-
-								ppu_BG_Ref_X_Change[2] = false;
-							}
-
-							if (ppu_BG_On_Disp[3] && ppu_BG_Ref_X_Change[3])
-							{
-								ppu_Current_Ref_X_3 = ppu_BG_Ref_X[3];
-
-								if ((ppu_Current_Ref_X_3 & 0x8000000) != 0)
-								{
-									ppu_Current_Ref_X_3 |= 0xFFFFFFFFF0000000;
-								}
-
-								ppu_BG_Ref_X_Change[3] = false;
-							}
-
-							ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
-
-							if (!ppu_Forced_Blank)
-							{
-								ppu_Rendering_Complete = false;
-								ppu_PAL_Rendering_Complete = false;
-
-								for (int i = 0; i < 4; i++)
-								{
-									ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
-
-									ppu_Fetch_Count[i] = 0;
-
-									ppu_Scroll_Cycle[i] = 48; // indicates inactive before first fetch
-
-									// do not reset pixel color, needed for fire emblem sacred stones
-									//ppu_Pixel_Color[i] = 0;
-
-									ppu_BG_Has_Pixel[i] = false;
-
-									ppu_BG_Line_End[i] = false;
-									ppu_BG_Line_End_BGS5[i] = false;
-								}
-
-								ppu_BG_Start_Time[2] = 32;
-								ppu_BG_Start_Time[3] = 32;
-
-								if (ppu_BG_Mode < 2)
-								{
-									ppu_BG_Rendering_Complete[0] = false;
-									ppu_BG_Rendering_Complete[1] = false;
-									ppu_BG_Rendering_Complete[2] = false;
-									ppu_BG_Rendering_Complete[3] = false;
-
-									if (ppu_BG_Mode == 1)
-									{
-										ppu_BG_Rendering_Complete[3] = true;
-									}
-								}
-								else if (ppu_BG_Mode < 6)
-								{
-									ppu_BG_Rendering_Complete[0] = true;
-									ppu_BG_Rendering_Complete[1] = true;
-									ppu_BG_Rendering_Complete[2] = false;
-									ppu_BG_Rendering_Complete[3] = true;
-									
-									if (ppu_BG_Mode == 2)
-									{
-										ppu_BG_Rendering_Complete[3] = false;
-									}
-								}
-								else
-								{
-									ppu_BG_Rendering_Complete[0] = true;
-									ppu_BG_Rendering_Complete[1] = true;
-									ppu_BG_Rendering_Complete[2] = true;
-									ppu_BG_Rendering_Complete[3] = true;
-								}
-							}
-						}
-					}
-					else if (ppu_LYC_Vid_Check_cd == 0)
-					{
-						if (ppu_LY < 160)
-						{
-							// Latch B-D rotation scaling parameters here.
-							ppu_F_Rot_B_2 = ppu_BG_Rot_B[2];
-							ppu_F_Rot_B_3 = ppu_BG_Rot_B[3];
-							ppu_F_Rot_D_2 = ppu_BG_Rot_D[2];
-							ppu_F_Rot_D_3 = ppu_BG_Rot_D[3];
-
-							if ((ppu_F_Rot_B_2 & 0x8000) != 0) { ppu_F_Rot_B_2 |= 0xFFFFFFFFFFFF0000; }
-							if ((ppu_F_Rot_B_3 & 0x8000) != 0) { ppu_F_Rot_B_3 |= 0xFFFFFFFFFFFF0000; }
-							if ((ppu_F_Rot_D_2 & 0x8000) != 0) { ppu_F_Rot_D_2 |= 0xFFFFFFFFFFFF0000; }
-							if ((ppu_F_Rot_D_3 & 0x8000) != 0) { ppu_F_Rot_D_3 |= 0xFFFFFFFFFFFF0000; }
-
-							if (ppu_BG_On_Disp[2])
-							{
-								if (ppu_BG_Mosaic[2])
-								{
-									if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
-									{
-										for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
-										{
-											ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
-											ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
-										}
-
-										ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
-									}
-								}
-								else if (ppu_LY != ppu_Base_LY_2)
-								{
-									ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
-									ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
-								}
-							}
-
-							if (ppu_BG_On_Disp[3])
-							{
-								if (ppu_BG_Mosaic[3])
-								{
-									if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
-									{
-										for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
-										{
-											ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
-											ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
-										}
-
-										ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
-									}
-								}
-								else if (ppu_LY != ppu_Base_LY_3)
-								{
-									ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
-									ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
-								}
-							}
-						}
-							
-						// video capture DMA, check timing
-						if (dma_Go[3] && dma_Start_Snd_Vid[3])
-						{
-							// only starts on scanline 2
-							if (ppu_LY == 2)
-							{
-								if (!dma_Video_DMA_Delay)
-								{
-									dma_Video_DMA_Start = true;
-								}						
-							}
-
-							if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
-							{
-								dma_Run[3] = true;
-								dma_All_Off = false;
-							}
-
-							if (ppu_LY == 162)
-							{
-								dma_Video_DMA_Start = false;
-								dma_Video_DMA_Delay = false;
-							}
-						}
-
-						// check for any additional ppu delays
-						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0) && (ppu_LYC_IRQ_cd == 0))
+						if ((ppu_VBL_IRQ_cd == 0) && (ppu_HBL_IRQ_cd == 0))
 						{
 							ppu_Delays = false;
 						}
@@ -674,149 +433,9 @@ namespace GBAHawk
 				// check if all delay sources are false
 				if (!ppu_Delays)
 				{
-					if (!Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays && !ppu_Latch_Delays)
+					if (!Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
 					{
 						delays_to_process = false;
-					}
-				}
-			}
-
-			if (ppu_Sprite_Delays)
-			{
-				if (ppu_Sprite_Delay_SL)
-				{
-					ppu_Sprite_cd -= 1;
-
-					if (ppu_Sprite_cd == 0)
-					{
-						// also latch in new BG enables
-						for (int i = 0; i < 4; i++)
-						{
-							ppu_BG_On_Latch[i] = ppu_BG_On_Latch_2[i];
-							ppu_BG_On_Latch_2[i] = ppu_BG_On[i];
-						}				
-						
-						if ((ppu_LY == 227) || (ppu_LY <= 159))
-						{
-							ppu_Continue_Fetch_OAM = true;
-							ppu_Fetch_OAM_0 = true;
-							ppu_Fetch_OAM_2 = false;
-							ppu_Fetch_OAM_A_D = false;
-							ppu_Fetch_Sprite_VRAM = false;
-
-							ppu_Sprite_Next_Fetch = 3;
-
-							ppu_Current_Sprite = 0;
-							ppu_New_Sprite = true;
-
-							if (ppu_Sprite_ofst_eval == 0)
-							{
-								ppu_Sprite_ofst_eval = 240;
-								ppu_Sprite_ofst_draw = 0;
-							}
-							else
-							{
-								ppu_Sprite_ofst_eval = 0;
-								ppu_Sprite_ofst_draw = 240;
-							}
-
-							// don't process sprites on scanline 159
-							if (ppu_LY != 159)
-							{
-								ppu_Sprite_Eval_Finished = false;
-							}
-							else
-							{
-								ppu_Sprite_Eval_Finished = true;
-							}
-
-							if ((ppu_LY < 159) || (ppu_LY == 227))
-							{
-								ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
-
-								if (ppu_LY == 227)
-								{
-									ppu_Sprite_LY_Check = 0;
-									ppu_Sprite_Mosaic_Y_Counter = 0;
-									ppu_Sprite_Mosaic_Y_Compare = 0;
-								}
-								else
-								{
-									ppu_Sprite_Mosaic_Y_Counter++;
-
-									if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
-									{
-										ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
-										ppu_Sprite_Mosaic_Y_Counter = 0;
-									}
-									else if (ppu_Sprite_Mosaic_Y_Counter == 16)
-									{
-										ppu_Sprite_Mosaic_Y_Counter = 0;
-									}
-								}
-							}
-
-							// reset obj window detection for the scanline
-							for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
-							{
-								ppu_Sprite_Pixels[i] = 0;
-								ppu_Sprite_Priority[i] = 3;
-								ppu_Sprite_Pixel_Occupied[i] = false;
-								ppu_Sprite_Semi_Transparent[i] = false;
-								ppu_Sprite_Object_Window[i] = false;
-								ppu_Sprite_Is_Mosaic[i] = false;
-							}
-
-
-							ppu_Sprite_Render_Cycle = 0;
-
-							// reset latches
-							ppu_Sprite_Pixel_Latch = 0;
-							ppu_Sprite_Priority_Latch = 0;
-
-							ppu_Sprite_Semi_Transparent_Latch = false;
-							ppu_Sprite_Mosaic_Latch = false;
-							ppu_Sprite_Pixel_Occupied_Latch = false;
-						}
-
-						ppu_Sprite_Delay_SL = false;
-
-						if (!ppu_Sprite_Delay_Disp)
-						{
-							ppu_Sprite_Delays = false;
-
-							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
-							{
-								delays_to_process = false;
-							}
-						}
-					}
-				}
-
-				if (ppu_Sprite_Delay_Disp)
-				{
-					ppu_Sprite_Disp_cd -= 1;
-
-					if (ppu_Sprite_Disp_cd == 0)
-					{
-						if ((ppu_CTRL & 0x1000) == 0)
-						{
-							ppu_OBJ_On_Disp = false;
-						}
-
-						ppu_OBJ_On = (ppu_CTRL & 0x1000) == 0x1000;
-
-						ppu_Sprite_Delay_Disp = false;
-
-						if (!ppu_Sprite_Delay_SL)
-						{
-							ppu_Sprite_Delays = false;
-
-							if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Latch_Delays)
-							{
-								delays_to_process = false;
-							}
-						}
 					}
 				}
 			}
@@ -859,11 +478,30 @@ namespace GBAHawk
 
 				all_off &= !ppu_Ctrl_Latch_Delay;
 
+				if (ppu_Sprite_Delay_Disp)
+				{
+					ppu_Sprite_Disp_cd -= 1;
+
+					if (ppu_Sprite_Disp_cd == 0)
+					{
+						if ((ppu_CTRL & 0x1000) == 0)
+						{
+							ppu_OBJ_On_Disp = false;
+						}
+
+						ppu_OBJ_On = (ppu_CTRL & 0x1000) == 0x1000;
+
+						ppu_Sprite_Delay_Disp = false;
+					}
+				}
+
+				all_off &= !ppu_Sprite_Delay_Disp;
+
 				if (all_off)
 				{
 					ppu_Latch_Delays = false;
 
-					if (!ppu_Delays && !Misc_Delays && !IRQ_Delays && !ppu_Sprite_Delays)
+					if (!ppu_Delays && !Misc_Delays && !IRQ_Delays)
 					{
 						delays_to_process = false;
 					}
@@ -1325,11 +963,345 @@ namespace GBAHawk
 
 		#pragma region PPU Tick
 
-		// start the next scanline
-		if (ppu_Cycle == 1232)
-		{
-			// scanline callback
+		if (ppu_Cycle <= 40)
+		{			
+			if (ppu_Cycle == 1)
+			{
+				// Check LY = LYC
+				if (ppu_LY == ppu_LYC)
+				{
+					ppu_LYC_IRQ_cd = 4;
+					ppu_Delays = true;
+					delays_to_process = true;
 
+					// set the flag bit
+					ppu_STAT |= 4;
+				}
+			}
+			else if (ppu_Cycle == 2)
+			{
+				// latch rotation and scaling XY here
+				if (ppu_LY < 160)
+				{
+					if (ppu_BG_On_Disp[2] && ppu_BG_Ref_LY_Change[2])
+					{
+						if (ppu_BG_Mosaic[2])
+						{
+							ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
+						}
+						else
+						{
+							ppu_Base_LY_2 = ppu_LY;
+						}
+
+						ppu_Current_Ref_Y_2 = ppu_BG_Ref_Y[2];
+
+						if ((ppu_Current_Ref_Y_2 & 0x8000000) != 0)
+						{
+							ppu_Current_Ref_Y_2 |= 0xFFFFFFFFF0000000;
+						}
+
+						ppu_BG_Ref_LY_Change[2] = false;
+					}
+
+					if (ppu_BG_On_Disp[3] && ppu_BG_Ref_LY_Change[3])
+					{
+						if (ppu_BG_Mosaic[3])
+						{
+							ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
+						}
+						else
+						{
+							ppu_Base_LY_3 = ppu_LY;
+						}
+
+						ppu_Current_Ref_Y_3 = ppu_BG_Ref_Y[3];
+
+						if ((ppu_Current_Ref_Y_3 & 0x8000000) != 0)
+						{
+							ppu_Current_Ref_Y_3 |= 0xFFFFFFFFF0000000;
+						}
+
+						ppu_BG_Ref_LY_Change[3] = false;
+					}
+
+					if (ppu_BG_On_Disp[2] && ppu_BG_Ref_X_Change[2])
+					{
+						ppu_Current_Ref_X_2 = ppu_BG_Ref_X[2];
+
+						if ((ppu_Current_Ref_X_2 & 0x8000000) != 0)
+						{
+							ppu_Current_Ref_X_2 |= 0xFFFFFFFFF0000000;
+						}
+
+						ppu_BG_Ref_X_Change[2] = false;
+					}
+
+					if (ppu_BG_On_Disp[3] && ppu_BG_Ref_X_Change[3])
+					{
+						ppu_Current_Ref_X_3 = ppu_BG_Ref_X[3];
+
+						if ((ppu_Current_Ref_X_3 & 0x8000000) != 0)
+						{
+							ppu_Current_Ref_X_3 |= 0xFFFFFFFFF0000000;
+						}
+
+						ppu_BG_Ref_X_Change[3] = false;
+					}
+
+					ppu_BG_Mosaic_X_Mod = ppu_BG_Mosaic_X;
+
+					if (!ppu_Forced_Blank)
+					{
+						ppu_Rendering_Complete = false;
+						ppu_PAL_Rendering_Complete = false;
+
+						for (int i = 0; i < 4; i++)
+						{
+							ppu_BG_Y_Latch[i] = ppu_BG_Y[i];
+
+							ppu_Fetch_Count[i] = 0;
+
+							ppu_Scroll_Cycle[i] = 48; // indicates inactive before first fetch
+
+							// do not reset pixel color, needed for fire emblem sacred stones
+							//ppu_Pixel_Color[i] = 0;
+
+							ppu_BG_Has_Pixel[i] = false;
+
+							ppu_BG_Line_End[i] = false;
+							ppu_BG_Line_End_BGS5[i] = false;
+						}
+
+						ppu_BG_Start_Time[2] = 32;
+						ppu_BG_Start_Time[3] = 32;
+
+						if (ppu_BG_Mode < 2)
+						{
+							ppu_BG_Rendering_Complete[0] = false;
+							ppu_BG_Rendering_Complete[1] = false;
+							ppu_BG_Rendering_Complete[2] = false;
+							ppu_BG_Rendering_Complete[3] = false;
+
+							if (ppu_BG_Mode == 1)
+							{
+								ppu_BG_Rendering_Complete[3] = true;
+							}
+						}
+						else if (ppu_BG_Mode < 6)
+						{
+							ppu_BG_Rendering_Complete[0] = true;
+							ppu_BG_Rendering_Complete[1] = true;
+							ppu_BG_Rendering_Complete[2] = false;
+							ppu_BG_Rendering_Complete[3] = true;
+
+							if (ppu_BG_Mode == 2)
+							{
+								ppu_BG_Rendering_Complete[3] = false;
+							}
+						}
+						else
+						{
+							ppu_BG_Rendering_Complete[0] = true;
+							ppu_BG_Rendering_Complete[1] = true;
+							ppu_BG_Rendering_Complete[2] = true;
+							ppu_BG_Rendering_Complete[3] = true;
+						}
+					}
+				}
+			}
+			else if (ppu_Cycle == 6)
+			{
+				if (ppu_LY < 160)
+				{
+					// Latch B-D rotation scaling parameters here.
+					ppu_F_Rot_B_2 = ppu_BG_Rot_B[2];
+					ppu_F_Rot_B_3 = ppu_BG_Rot_B[3];
+					ppu_F_Rot_D_2 = ppu_BG_Rot_D[2];
+					ppu_F_Rot_D_3 = ppu_BG_Rot_D[3];
+
+					if ((ppu_F_Rot_B_2 & 0x8000) != 0) { ppu_F_Rot_B_2 |= 0xFFFFFFFFFFFF0000; }
+					if ((ppu_F_Rot_B_3 & 0x8000) != 0) { ppu_F_Rot_B_3 |= 0xFFFFFFFFFFFF0000; }
+					if ((ppu_F_Rot_D_2 & 0x8000) != 0) { ppu_F_Rot_D_2 |= 0xFFFFFFFFFFFF0000; }
+					if ((ppu_F_Rot_D_3 & 0x8000) != 0) { ppu_F_Rot_D_3 |= 0xFFFFFFFFFFFF0000; }
+
+					if (ppu_BG_On_Disp[2])
+					{
+						if (ppu_BG_Mosaic[2])
+						{
+							if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_2)
+							{
+								for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+								{
+									ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+									ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+								}
+
+								ppu_Base_LY_2 = ppu_MOS_BG_Y[ppu_LY];
+							}
+						}
+						else if (ppu_LY != ppu_Base_LY_2)
+						{
+							ppu_Current_Ref_X_2 += ppu_F_Rot_B_2;
+							ppu_Current_Ref_Y_2 += ppu_F_Rot_D_2;
+						}
+					}
+
+					if (ppu_BG_On_Disp[3])
+					{
+						if (ppu_BG_Mosaic[3])
+						{
+							if (ppu_MOS_BG_Y[ppu_LY] != ppu_Base_LY_3)
+							{
+								for (int i = 0; i < ppu_BG_Mosaic_Y; i++)
+								{
+									ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+									ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+								}
+
+								ppu_Base_LY_3 = ppu_MOS_BG_Y[ppu_LY];
+							}
+						}
+						else if (ppu_LY != ppu_Base_LY_3)
+						{
+							ppu_Current_Ref_X_3 += ppu_F_Rot_B_3;
+							ppu_Current_Ref_Y_3 += ppu_F_Rot_D_3;
+						}
+					}
+				}
+
+				// video capture DMA, check timing
+				if (dma_Go[3] && dma_Start_Snd_Vid[3])
+				{
+					// only starts on scanline 2
+					if (ppu_LY == 2)
+					{
+						if (!dma_Video_DMA_Delay)
+						{
+							dma_Video_DMA_Start = true;
+						}
+					}
+
+					if ((ppu_LY >= 2) && (ppu_LY < 162) && dma_Video_DMA_Start)
+					{
+						dma_Run[3] = true;
+						dma_All_Off = false;
+					}
+
+					if (ppu_LY == 162)
+					{
+						dma_Video_DMA_Start = false;
+						dma_Video_DMA_Delay = false;
+					}
+				}
+			}
+			else if (ppu_Cycle == 40)
+			{
+				// latch in new BG enables
+				for (int i = 0; i < 4; i++)
+				{
+					ppu_BG_On_Latch[i] = ppu_BG_On_Latch_2[i];
+					ppu_BG_On_Latch_2[i] = ppu_BG_On[i];
+				}
+
+				// reset sprites
+				if ((ppu_LY == 227) || (ppu_LY <= 159))
+				{
+					ppu_Continue_Fetch_OAM = true;
+					ppu_Fetch_OAM_0 = true;
+					ppu_Fetch_OAM_2 = false;
+					ppu_Fetch_OAM_A_D = false;
+					ppu_Fetch_Sprite_VRAM = false;
+
+					ppu_Sprite_Next_Fetch = 3;
+
+					ppu_Current_Sprite = 0;
+					ppu_New_Sprite = true;
+
+					if (ppu_Sprite_ofst_eval == 0)
+					{
+						ppu_Sprite_ofst_eval = 240;
+						ppu_Sprite_ofst_draw = 0;
+					}
+					else
+					{
+						ppu_Sprite_ofst_eval = 0;
+						ppu_Sprite_ofst_draw = 240;
+					}
+
+					// don't process sprites on scanline 159
+					if (ppu_LY != 159)
+					{
+						ppu_Sprite_Eval_Finished = false;
+					}
+					else
+					{
+						ppu_Sprite_Eval_Finished = true;
+					}
+
+					if ((ppu_LY < 159) || (ppu_LY == 227))
+					{
+						ppu_Sprite_LY_Check = (uint8_t)(ppu_LY + 1);
+
+						if (ppu_LY == 227)
+						{
+							ppu_Sprite_LY_Check = 0;
+							ppu_Sprite_Mosaic_Y_Counter = 0;
+							ppu_Sprite_Mosaic_Y_Compare = 0;
+						}
+						else
+						{
+							ppu_Sprite_Mosaic_Y_Counter++;
+
+							if (ppu_Sprite_Mosaic_Y_Counter == ppu_OBJ_Mosaic_Y)
+							{
+								ppu_Sprite_Mosaic_Y_Compare = (uint32_t)ppu_LY + 1;
+								ppu_Sprite_Mosaic_Y_Counter = 0;
+							}
+							else if (ppu_Sprite_Mosaic_Y_Counter == 16)
+							{
+								ppu_Sprite_Mosaic_Y_Counter = 0;
+							}
+						}
+					}
+
+					// reset obj window detection for the scanline
+					for (int i = ppu_Sprite_ofst_eval; i < (240 + ppu_Sprite_ofst_eval); i++)
+					{
+						ppu_Sprite_Pixels[i] = 0;
+						ppu_Sprite_Priority[i] = 3;
+						ppu_Sprite_Pixel_Occupied[i] = false;
+						ppu_Sprite_Semi_Transparent[i] = false;
+						ppu_Sprite_Object_Window[i] = false;
+						ppu_Sprite_Is_Mosaic[i] = false;
+					}
+
+					ppu_Sprite_Render_Cycle = 0;
+
+					// reset latches
+					ppu_Sprite_Pixel_Latch = 0;
+					ppu_Sprite_Priority_Latch = 0;
+
+					ppu_Sprite_Semi_Transparent_Latch = false;
+					ppu_Sprite_Mosaic_Latch = false;
+					ppu_Sprite_Pixel_Occupied_Latch = false;
+				}
+			}
+		}
+		else if (ppu_Cycle == 1007)
+		{
+			// Enter HBlank
+			ppu_STAT |= 2;
+
+			ppu_HBL_IRQ_cd = 4;
+			ppu_Delays = true;
+			delays_to_process = true;
+		}
+		else if (ppu_Cycle == 1232)
+		{
+			// start the next scanline
+			
+			// scanline callback
 			if ((ppu_LY + 1) == Callback_Scanline)
 			{
 				if (ScanlineCallback)
@@ -1366,12 +1338,6 @@ namespace GBAHawk
 			// clear the LYC flag bit
 			ppu_STAT &= 0xFB;
 
-			// Check LY = LYC in 1 cycle
-			// Check video DMA in 6 cycles
-			ppu_LYC_Vid_Check_cd = 6;
-			ppu_Delays = true;
-			delays_to_process = true;
-
 			if (ppu_LY == 160)
 			{
 				// vblank flag turns on on scanline 160
@@ -1392,12 +1358,6 @@ namespace GBAHawk
 				// vblank flag turns off on scanline 227
 				ppu_STAT &= 0xFE;
 			}
-
-			// reset sprite evaluation  in 40 cycles		
-			ppu_Sprite_Delays = true;
-			ppu_Sprite_Delay_SL = true;
-			delays_to_process = true;
-			ppu_Sprite_cd = 40;
 
 			ppu_BG_On_Disp[0] = ppu_BG_On_Latch[0];
 			ppu_BG_On_Disp[1] = ppu_BG_On_Latch[1];
@@ -1432,51 +1392,23 @@ namespace GBAHawk
 			if (ppu_LY == ppu_WIN1_Top) { ppu_WIN1_Active = true; }
 			if (ppu_LY == ppu_WIN1_Bot) { ppu_WIN1_Active = false; }
 		}
-		else if (ppu_Cycle == 1007)
-		{
-			// Enter HBlank
-			ppu_STAT |= 2;
-					
-			ppu_HBL_IRQ_cd = 4;
-			ppu_Delays = true;
-			delays_to_process = true;
-		}
 
-		if (ppu_In_VBlank)
+		ppu_VRAM_High_Access = false;
+		ppu_VRAM_Access = false;
+		ppu_PALRAM_Access = false;
+		ppu_OAM_Access = false;
+
+		// sprite vram fetching is uneffected by forced blank based on new ram access timing test
+		if (!ppu_Sprite_Eval_Finished)
 		{
-			if (ppu_LY == 227)
+			if ((ppu_Cycle & 1) == 1)
 			{
-				ppu_VRAM_High_Access = false;
-				ppu_OAM_Access = false;
-
-				if (!ppu_Sprite_Eval_Finished)
-				{
-					if ((ppu_Cycle & 1) == 1)
-					{
-						if (ppu_Cycle >= 40)
-						{
-							ppu_Render_Sprites();
-						}
-					}
-				}
+				ppu_Render_Sprites();
 			}
 		}
-		else
+
+		if (!ppu_In_VBlank)
 		{
-			ppu_VRAM_High_Access = false;
-			ppu_VRAM_Access = false;
-			ppu_PALRAM_Access = false;
-			ppu_OAM_Access = false;
-
-			if (!ppu_Sprite_Eval_Finished)
-			{
-				if ((ppu_Cycle & 1) == 1)
-				{
-					ppu_Render_Sprites();
-				}
-			}
-
-			// sprite vram fetching is uneffected by forced blank based on new ram access timing test
 			if (!ppu_Rendering_Complete && !ppu_Forced_Blank)
 			{
 				ppu_Render();

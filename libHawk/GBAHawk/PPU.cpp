@@ -36,9 +36,8 @@ namespace GBAHawk
 
 		ppu_CTRL = ppu_Green_Swap = 0;
 
-		ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = ppu_Sprite_cd = ppu_Sprite_Disp_cd = 0;
+		ppu_VBL_IRQ_cd = ppu_HBL_IRQ_cd = ppu_LYC_IRQ_cd = ppu_Sprite_Disp_cd = 0;
 
-		ppu_LYC_Vid_Check_cd = 0;
 		ppu_Ctrl_Latch_cd = 0;
 
 		ppu_Ctrl_Latch_Delay = false;
@@ -91,8 +90,6 @@ namespace GBAHawk
 
 		ppu_Delays = false;
 		ppu_Latch_Delays = false;
-		ppu_Sprite_Delays = false;
-		ppu_Sprite_Delay_SL = false;
 		ppu_Sprite_Delay_Disp = false;
 
 		// reset sprite evaluation variables

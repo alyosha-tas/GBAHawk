@@ -5826,8 +5826,6 @@ namespace GBAHawk
 
 		bool ppu_In_VBlank;
 		bool ppu_Delays, ppu_Latch_Delays;
-		bool ppu_Sprite_Delays;
-		bool ppu_Sprite_Delay_SL;
 		bool ppu_Sprite_Delay_Disp;
 		bool ppu_Do_Green_Swap;
 
@@ -5856,9 +5854,7 @@ namespace GBAHawk
 		
 		uint32_t ppu_X_RS, ppu_Y_RS;
 
-		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_cd, ppu_Sprite_Disp_cd;
-
-		uint32_t ppu_LYC_Vid_Check_cd;
+		uint32_t ppu_VBL_IRQ_cd, ppu_HBL_IRQ_cd, ppu_LYC_IRQ_cd, ppu_Sprite_Disp_cd;
 
 		uint32_t ppu_Ctrl_Latch_cd;
 
@@ -6441,7 +6437,7 @@ namespace GBAHawk
 			}
 
 			delays_to_process = true;
-			ppu_Sprite_Delays = true;
+			ppu_Latch_Delays = true;
 			ppu_Sprite_Delay_Disp = true;
 			ppu_Sprite_Disp_cd = 3;
 
@@ -6926,8 +6922,6 @@ namespace GBAHawk
 			saver = bool_saver(ppu_In_VBlank, saver);
 			saver = bool_saver(ppu_Delays, saver);
 			saver = bool_saver(ppu_Latch_Delays, saver);
-			saver = bool_saver(ppu_Sprite_Delays, saver);
-			saver = bool_saver(ppu_Sprite_Delay_SL, saver);
 			saver = bool_saver(ppu_Sprite_Delay_Disp, saver);
 			saver = bool_saver(ppu_Do_Green_Swap, saver);
 
@@ -6984,10 +6978,8 @@ namespace GBAHawk
 			saver = int_saver(ppu_VBL_IRQ_cd, saver);
 			saver = int_saver(ppu_HBL_IRQ_cd, saver);
 			saver = int_saver(ppu_LYC_IRQ_cd, saver);
-			saver = int_saver(ppu_Sprite_cd, saver);
 			saver = int_saver(ppu_Sprite_Disp_cd, saver);
 
-			saver = int_saver(ppu_LYC_Vid_Check_cd, saver);
 			saver = int_saver(ppu_Ctrl_Latch_cd, saver);
 
 			saver = bool_array_saver(ppu_BG_On, saver, 4);
@@ -7149,8 +7141,6 @@ namespace GBAHawk
 			loader = bool_loader(&ppu_In_VBlank, loader);
 			loader = bool_loader(&ppu_Delays, loader);
 			loader = bool_loader(&ppu_Latch_Delays, loader);
-			loader = bool_loader(&ppu_Sprite_Delays, loader);
-			loader = bool_loader(&ppu_Sprite_Delay_SL, loader);
 			loader = bool_loader(&ppu_Sprite_Delay_Disp, loader);
 			loader = bool_loader(&ppu_Do_Green_Swap, loader);
 
@@ -7207,10 +7197,8 @@ namespace GBAHawk
 			loader = int_loader(&ppu_VBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_HBL_IRQ_cd, loader);
 			loader = int_loader(&ppu_LYC_IRQ_cd, loader);
-			loader = int_loader(&ppu_Sprite_cd, loader);
 			loader = int_loader(&ppu_Sprite_Disp_cd, loader);
 
-			loader = int_loader(&ppu_LYC_Vid_Check_cd, loader);
 			loader = int_loader(&ppu_Ctrl_Latch_cd, loader);
 
 			loader = bool_array_loader(ppu_BG_On, loader, 4);
