@@ -1606,10 +1606,6 @@ namespace GBAHawk
 							if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 							{
 								Trigger_IRQ((uint16_t)(3 + i));
-
-								Message_String = " IRQ " + to_string(CycleCount);
-
-								MessageCallback(Message_String.length());
 							}
 
 							// reload the timer
@@ -1840,10 +1836,6 @@ namespace GBAHawk
 									dma_Access_Wait = 0;
 
 									cpu_Seq_Access = false;
-
-									Message_String = " DMA " + to_string(CycleCount);
-
-									MessageCallback(Message_String.length());
 								}
 								else
 								{

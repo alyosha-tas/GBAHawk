@@ -15,6 +15,28 @@
 
 using namespace std;
 
+// Todo:
+
+/*	Look into implementation of multiplication algorithm that implements carry flag
+*
+*   Fix multiplication cycle timing for LDM^ glitch cases
+*
+*	Fix cpy decodings that currently through an error
+*	Fix invalid BLX encodings
+*	Fix zero selected registers in multi load/store decodings
+*
+*	Fix details of ppu open bus implementation
+*
+*	Fix RTC tests
+*
+*	Redo SIO implementation
+* 
+*	Fix FIFO DMA shutdown bug
+* 
+* 
+* 
+*/
+
 namespace GBAHawk
 {
 	class MemoryManager;
