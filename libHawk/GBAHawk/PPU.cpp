@@ -1306,10 +1306,10 @@ namespace GBAHawk
 						}
 						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
+							ppu_Set_VRAM_Access_True();
+							
 							if (temp_addr < 0x10000)
 							{
-								ppu_Set_VRAM_Access_True();
-
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}
 						}
@@ -1356,10 +1356,10 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
+							ppu_Set_VRAM_Access_True();
+							
 							if (temp_addr < 0x10000)
 							{					
-								ppu_Set_VRAM_Access_True();
-
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}						
 						}
@@ -1410,10 +1410,10 @@ namespace GBAHawk
 
 						if (ppu_BG_On_Disp[a0] && ppu_BG_On[a0])
 						{
+							ppu_Set_VRAM_Access_True();
+							
 							if (temp_addr < 0x10000)
-							{					
-								ppu_Set_VRAM_Access_True();
-
+							{
 								ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 							}						
 						}
@@ -1596,10 +1596,10 @@ namespace GBAHawk
 
 							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
+								ppu_Set_VRAM_Access_True();
+								
 								if (temp_addr < 0x10000)
 								{		
-									ppu_Set_VRAM_Access_True();
-
 									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 								}						
 							}
@@ -1646,10 +1646,10 @@ namespace GBAHawk
 
 							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
+								ppu_Set_VRAM_Access_True();
+
 								if (temp_addr < 0x10000)
 								{						
-									ppu_Set_VRAM_Access_True();
-
 									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 								}					
 							}
@@ -1700,10 +1700,10 @@ namespace GBAHawk
 
 							if (ppu_BG_On_Disp[a1] && ppu_BG_On[a1])
 							{
+								ppu_Set_VRAM_Access_True();
+
 								if (temp_addr < 0x10000)
 								{						
-									ppu_Set_VRAM_Access_True();
-
 									ppu_VRAM_Open_Bus = VRAM_16[temp_addr >> 1];
 								}						
 							}

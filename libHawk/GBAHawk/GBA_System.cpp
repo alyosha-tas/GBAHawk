@@ -1606,6 +1606,10 @@ namespace GBAHawk
 							if (((tim_Control[i] & 0x40) == 0x40) || tim_Old_IRQ[i])
 							{
 								Trigger_IRQ((uint16_t)(3 + i));
+
+								Message_String = " IRQ " + to_string(CycleCount);
+
+								MessageCallback(Message_String.length());
 							}
 
 							// reload the timer
@@ -1806,6 +1810,8 @@ namespace GBAHawk
 								// with 1 cycle in between
 								cpu_Is_Paused = true;
 
+								cpu_No_IRQ_Clock = true;
+
 								cpu_Restore_IRQ_Clock = false;
 
 								dma_Seq_Access = false;
@@ -1822,10 +1828,9 @@ namespace GBAHawk
 									dma_Held_CPU_Instr = cpu_Instr_Type;
 									cpu_Instr_Type = cpu_Pause_For_DMA;
 
-									dma_Held_CPU_LDM_Glitch_Instr = cpu_LDM_Glitch_Instr_Type;
-									cpu_LDM_Glitch_Instr_Type = cpu_Pause_For_DMA;
-
 									cpu_Is_Paused = true;
+
+									cpu_No_IRQ_Clock = true;
 
 									cpu_Restore_IRQ_Clock = false;
 
@@ -1835,6 +1840,10 @@ namespace GBAHawk
 									dma_Access_Wait = 0;
 
 									cpu_Seq_Access = false;
+
+									Message_String = " DMA " + to_string(CycleCount);
+
+									MessageCallback(Message_String.length());
 								}
 								else
 								{
@@ -1846,6 +1855,8 @@ namespace GBAHawk
 						{
 							// we paused a dma for a higher priority one
 							cpu_Is_Paused = true;
+
+							cpu_No_IRQ_Clock = true;
 
 							cpu_Restore_IRQ_Clock = false;
 
@@ -2199,7 +2210,7 @@ namespace GBAHawk
 			cpu_Restore_IRQ_Clock = false;
 		}
 
-		if (!cpu_No_IRQ_Clock)
+		if (!cpu_No_IRQ_Clock || ((cpu_Instr_Type == cpu_Pause_For_DMA) && (dma_Held_CPU_Instr >= 42)))
 		{
 			cpu_IRQ_Input = cpu_Next_IRQ_Input;
 			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
@@ -2955,16 +2966,7 @@ namespace GBAHawk
 							else
 							{
 								// if the next cycle is a memory access, one cycle can be saved
-								if (cpu_LDM_Glitch_Mode)
-								{
-									cpu_Instr_Type = cpu_LDM_Glitch_Mode_Execute;
-
-									cpu_LDM_Glitch_Instr_Type = cpu_Internal_Can_Save_ARM;
-								}
-								else
-								{
-									cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-								}
+								cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 
 								cpu_Internal_Save_Access = true;
 								cpu_Seq_Access = false;
@@ -3083,11 +3085,11 @@ namespace GBAHawk
 					
 					if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 					{
-						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Regs[cpu_Base_Reg], cpu_Seq_Access);
+						cpu_Fetch_Wait = Wait_State_Access_32(cpu_Base_Reg, cpu_Seq_Access);
 					}
 					else
 					{
-						cpu_Fetch_Wait = Wait_State_Access_8(cpu_Regs[cpu_Base_Reg], cpu_Seq_Access);
+						cpu_Fetch_Wait = Wait_State_Access_8(cpu_Base_Reg, cpu_Seq_Access);
 					}
 				}
 
@@ -3099,11 +3101,11 @@ namespace GBAHawk
 					{
 						if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 						{
-							Write_Memory_8(cpu_Regs[cpu_Base_Reg], (uint8_t)cpu_Regs[cpu_Temp_Reg_Ptr]);
+							Write_Memory_8(cpu_Base_Reg, (uint8_t)cpu_Regs[cpu_Temp_Reg_Ptr]);
 						}
 						else
 						{
-							Write_Memory_32(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Temp_Reg_Ptr]);
+							Write_Memory_32(cpu_Base_Reg, cpu_Regs[cpu_Temp_Reg_Ptr]);
 						}
 
 						cpu_Regs[cpu_Base_Reg_2] = cpu_Temp_Data;
@@ -3119,12 +3121,12 @@ namespace GBAHawk
 					{
 						if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 						{
-							cpu_Temp_Data = Read_Memory_8(cpu_Regs[cpu_Base_Reg]);
+							cpu_Temp_Data = Read_Memory_8(cpu_Base_Reg);
 						}
 						else
 						{
 							// deal with misaligned accesses
-							cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+							cpu_Temp_Addr = cpu_Base_Reg;
 
 							if ((cpu_Temp_Addr & 3) == 0)
 							{
@@ -4065,8 +4067,16 @@ namespace GBAHawk
 					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-					else { cpu_Decode_ARM(); }
+					if (cpu_LDM_Glitch_Mode)
+					{
+						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; cpu_LDM_Glitch_Mode = false; }
+						else { cpu_LDM_Glitch_Decode_ARM(); }
+					}
+					else
+					{
+						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+						else { cpu_Decode_ARM(); }
+					}
 				}
 
 				cpu_Internal_Save_Access = false;
@@ -4099,10 +4109,6 @@ namespace GBAHawk
 
 				cpu_Internal_Save_Access = false;
 				cpu_Invalidate_Pipeline = false;
-				break;
-
-			case cpu_LDM_Glitch_Mode_Execute:
-				cpu_LDM_Glitch_Tick();
 				break;
 
 			case cpu_Internal_Halted:
@@ -4214,8 +4220,16 @@ namespace GBAHawk
 								cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 								cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-								if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-								else { cpu_Decode_ARM(); }
+								if (cpu_LDM_Glitch_Mode)
+								{
+									if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; cpu_LDM_Glitch_Mode = false; }
+									else { cpu_LDM_Glitch_Decode_ARM(); }
+								}
+								else
+								{
+									if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+									else { cpu_Decode_ARM(); }
+								}
 							}
 
 							cpu_Internal_Save_Access = false;
@@ -4248,10 +4262,6 @@ namespace GBAHawk
 
 							cpu_Internal_Save_Access = false;
 							cpu_Invalidate_Pipeline = false;
-							break;
-
-						case cpu_LDM_Glitch_Mode_Execute:
-							cpu_LDM_Glitch_Tick();
 							break;
 
 						case cpu_Internal_Halted:

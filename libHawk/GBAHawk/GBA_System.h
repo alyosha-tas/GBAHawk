@@ -524,7 +524,7 @@ namespace GBAHawk
 
 		void Write_Registers_8(uint32_t addr, uint8_t value)
 		{
-			//Message_String = "wr8 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+			//Message_String = "wr8 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
 
 			//MessageCallback(Message_String.length());
 			
@@ -570,7 +570,7 @@ namespace GBAHawk
 
 		void Write_Registers_16(uint32_t addr, uint16_t value)
 		{
-			//Message_String = "wr16 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+			//Message_String = "wr16 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
 
 			//MessageCallback(Message_String.length());
 			
@@ -611,7 +611,7 @@ namespace GBAHawk
 
 		void Write_Registers_32(uint32_t addr, uint32_t value)
 		{
-			//Message_String = "wr32 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(CycleCount);
+			//Message_String = "wr32 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
 
 			//MessageCallback(Message_String.length());
 			
@@ -1180,7 +1180,6 @@ namespace GBAHawk
 
 		uint16_t cpu_Instr_TMB_0, cpu_Instr_TMB_1, cpu_Instr_TMB_2;
 		uint16_t cpu_Instr_Type;
-		uint16_t cpu_LDM_Glitch_Instr_Type;
 		uint16_t cpu_Exception_Type;
 		uint16_t cpu_Next_Load_Store_Type;
 
@@ -1665,10 +1664,9 @@ namespace GBAHawk
 		const static uint16_t cpu_Internal_And_Branch_4_ARM = 42;
 		const static uint16_t cpu_Internal_Can_Save_ARM = 43;
 		const static uint16_t cpu_Internal_Can_Save_TMB = 44;
-		const static uint16_t cpu_LDM_Glitch_Mode_Execute = 45;
-		const static uint16_t cpu_Internal_Halted = 46;
-		const static uint16_t cpu_Multiply_Cycles = 47;
-		const static uint16_t cpu_Pause_For_DMA = 48;
+		const static uint16_t cpu_Internal_Halted = 45;
+		const static uint16_t cpu_Multiply_Cycles = 46;
+		const static uint16_t cpu_Pause_For_DMA = 47;
 		
 		// Instruction Operations ARM
 		const static uint16_t cpu_ARM_AND = 10;
@@ -1694,11 +1692,40 @@ namespace GBAHawk
 		const static uint16_t cpu_ARM_MUL_UL = 30;
 		const static uint16_t cpu_ARM_MUL_SL = 31;
 		const static uint16_t cpu_ARM_Swap = 32;
-		const static uint16_t cpu_ARM_Imm_LS = 70;
-		const static uint16_t cpu_ARM_Reg_LS = 80;
-		const static uint16_t cpu_ARM_Multi_1 = 90;
-		const static uint16_t cpu_ARM_Branch = 100;
-		const static uint16_t cpu_ARM_Cond_Check_Only = 110;
+		const static uint16_t cpu_ARM_Imm_LS = 33;
+		const static uint16_t cpu_ARM_Reg_LS = 34;
+		const static uint16_t cpu_ARM_Multi_1 = 35;
+		const static uint16_t cpu_ARM_Branch = 36;
+		const static uint16_t cpu_ARM_Cond_Check_Only = 37;
+
+		const static uint16_t cpu_ARM_AND_LDM = 110;
+		const static uint16_t cpu_ARM_EOR_LDM = 111;
+		const static uint16_t cpu_ARM_SUB_LDM = 112;
+		const static uint16_t cpu_ARM_RSB_LDM = 113;
+		const static uint16_t cpu_ARM_ADD_LDM = 114;
+		const static uint16_t cpu_ARM_ADC_LDM = 115;
+		const static uint16_t cpu_ARM_SBC_LDM = 116;
+		const static uint16_t cpu_ARM_RSC_LDM = 117;
+		const static uint16_t cpu_ARM_TST_LDM = 118;
+		const static uint16_t cpu_ARM_TEQ_LDM = 119;
+		const static uint16_t cpu_ARM_CMP_LDM = 120;
+		const static uint16_t cpu_ARM_CMN_LDM = 121;
+		const static uint16_t cpu_ARM_ORR_LDM = 122;
+		const static uint16_t cpu_ARM_MOV_LDM = 123;
+		const static uint16_t cpu_ARM_BIC_LDM = 124;
+		const static uint16_t cpu_ARM_MVN_LDM = 125;
+		const static uint16_t cpu_ARM_MSR_LDM = 126;
+		const static uint16_t cpu_ARM_MRS_LDM = 127;
+		const static uint16_t cpu_ARM_Bx_LDM = 128;
+		const static uint16_t cpu_ARM_MUL_LDM = 129;
+		const static uint16_t cpu_ARM_MUL_UL_LDM = 130;
+		const static uint16_t cpu_ARM_MUL_SL_LDM = 131;
+		const static uint16_t cpu_ARM_Swap_LDM = 132;
+		const static uint16_t cpu_ARM_Imm_LS_LDM = 133;
+		const static uint16_t cpu_ARM_Reg_LS_LDM = 134;
+		const static uint16_t cpu_ARM_Multi_1_LDM = 135;
+		const static uint16_t cpu_ARM_Branch_LDM = 136;
+		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 137;
 
 		// Instruction Operations Thumb
 		const static uint16_t cpu_Thumb_Shift = 5;
@@ -2009,12 +2036,7 @@ namespace GBAHawk
 		// If the next register access happens immediately following the completion of the LDM^/STM^ instruction,
 		// and this access is to one of the banked registers,
 		// then the returned value will be the banked register and user mode register OR'd together
-
 		void cpu_LDM_Glitch_Decode_ARM();
-
-		void cpu_LDM_Glitch_Execute_Internal_Only_ARM();
-
-		void cpu_LDM_Glitch_Tick();
 
 		uint32_t cpu_LDM_Glitch_Get_Reg(uint32_t reg_num)
 		{
@@ -2064,46 +2086,6 @@ namespace GBAHawk
 			}
 
 			return ret;
-		}
-
-		void cpu_LDM_Glitch_Set_Reg(uint32_t reg_num, uint32_t value)
-		{
-			cpu_Regs[reg_num] = value;
-
-			if (reg_num >= 8)
-			{
-				if (reg_num == 13)
-				{
-					cpu_user_R13 = value;
-				}
-				else if (reg_num == 14)
-				{
-					cpu_user_R14 = value;
-				}
-				else if ((cpu_Regs[16] & 0x1F) == 0x11)
-				{
-					if (reg_num == 8)
-					{
-						cpu_user_R8 = value;
-					}
-					else if (reg_num == 9)
-					{
-						cpu_user_R9 = value;
-					}
-					else if (reg_num == 10)
-					{
-						cpu_user_R10 = value;
-					}
-					else if (reg_num == 11)
-					{
-						cpu_user_R11 = value;
-					}
-					else if (reg_num == 12)
-					{
-						cpu_user_R12 = value;
-					}
-				}
-			}
 		}
 
 		#pragma endregion
@@ -3270,7 +3252,6 @@ namespace GBAHawk
 			saver = short_saver(cpu_Instr_TMB_1, saver);
 			saver = short_saver(cpu_Instr_TMB_2, saver);
 			saver = short_saver(cpu_Instr_Type, saver);
-			saver = short_saver(cpu_LDM_Glitch_Instr_Type, saver);
 			saver = short_saver(cpu_Exception_Type, saver);
 			saver = short_saver(cpu_Next_Load_Store_Type, saver);
 
@@ -3396,7 +3377,6 @@ namespace GBAHawk
 			loader = short_loader(&cpu_Instr_TMB_1, loader);
 			loader = short_loader(&cpu_Instr_TMB_2, loader);
 			loader = short_loader(&cpu_Instr_Type, loader);
-			loader = short_loader(&cpu_LDM_Glitch_Instr_Type, loader);
 			loader = short_loader(&cpu_Exception_Type, loader);
 			loader = short_loader(&cpu_Next_Load_Store_Type, loader);
 
@@ -4462,7 +4442,6 @@ namespace GBAHawk
 
 		uint16_t dma_TFR_HWord;
 		uint16_t dma_Held_CPU_Instr;
-		uint16_t dma_Held_CPU_LDM_Glitch_Instr;
 
 		uint32_t dma_TFR_Word;
 
@@ -4865,7 +4844,7 @@ namespace GBAHawk
 
 			dma_TFR_Word = 0;
 
-			dma_TFR_HWord = dma_Held_CPU_Instr = dma_Held_CPU_LDM_Glitch_Instr = 0;
+			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
 
 			dma_Seq_Access = false;
 			dma_Pausable = true;
@@ -4886,7 +4865,6 @@ namespace GBAHawk
 
 			saver = short_saver(dma_TFR_HWord, saver);
 			saver = short_saver(dma_Held_CPU_Instr, saver);
-			saver = short_saver(dma_Held_CPU_LDM_Glitch_Instr, saver);
 
 			saver = int_saver(dma_TFR_Word, saver);
 
@@ -4937,7 +4915,6 @@ namespace GBAHawk
 
 			loader = short_loader(&dma_TFR_HWord, loader);
 			loader = short_loader(&dma_Held_CPU_Instr, loader);
-			loader = short_loader(&dma_Held_CPU_LDM_Glitch_Instr, loader);
 
 			loader = int_loader(&dma_TFR_Word, loader);
 
