@@ -207,6 +207,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 
 			LibGBAHawk.GBA_setrumblecallback(GBA_Pntr, rumblecb);
 
+			GBA_message = GetMessage;
+
+			LibGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
+
 			Console.WriteLine("Mapper: " + mapper);
 
 			LibGBAHawk.GBA_load(GBA_Pntr, ROM, (uint)ROM_Length, mapper, date_time, rtc_working, SyncSettings.EEPROMOffset, Flash_Type_64_Value, Flash_Type_128_Value,
@@ -257,10 +261,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			Mem_Domains.oam = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 1);
 			Mem_Domains.palram = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 2);
 			Mem_Domains.mmio = LibGBAHawk.GBA_get_ppu_pntrs(GBA_Pntr, 3);
-
-			GBA_message = GetMessage;
-
-			LibGBAHawk.GBA_setmessagecallback(GBA_Pntr, GBA_message);
 		}
 
 		public byte To_BCD(byte in_byte)
@@ -358,7 +358,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				mppr = 2;
 			}
 
-			if (romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171")
+			if ((romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171") || // RTC Demo
+				(romHashSHA1 == "SHA1:B76A045B79B2C7EC73787A73CEEE8508355AF43E")) // RTC Tests
 			{
 				mppr = 1;
 			}
@@ -420,6 +421,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 					(romHashSHA1 == "SHA1:4DCD7CEE46D3A5E848A22EB371BEBBBC2FB8D488")) // Sennen Kozoku
 				{
 					cart_RAM = new byte[0x20000];
+
+					Console.WriteLine("Using RTC");
 
 					mppr = 8;
 				}

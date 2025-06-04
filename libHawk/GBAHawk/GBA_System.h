@@ -171,7 +171,7 @@ namespace GBAHawk
 		uint8_t New_Solar;
 
 		// Prefetcher
-		bool pre_Cycle_Glitch, pre_Cycle_Glitch_2;
+		bool pre_Cycle_Glitch;
 
 		bool pre_Run, pre_Enable;
 
@@ -388,7 +388,7 @@ namespace GBAHawk
 
 			pre_Fetch_Cnt = pre_Fetch_Wait = 0;
 
-			pre_Cycle_Glitch = pre_Cycle_Glitch_2 = false;
+			pre_Cycle_Glitch;
 
 			pre_Run = pre_Enable = false;
 
@@ -1063,12 +1063,10 @@ namespace GBAHawk
 			pre_Reg_Write(value);
 
 			Wait_CTRL = (uint16_t)(value & 0x5FFF);
+		
+			//Message_String = to_string(value) + " " + to_string(CycleCount);
 
-			/*
-			Message_String = to_string(value) + " " + to_string(CycleCount);
-
-			MessageCallback(Message_String.length());
-			*/
+			//MessageCallback(Message_String.length());			
 		}
 
 
@@ -3525,8 +3523,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -3638,8 +3634,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -3751,8 +3745,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -3897,8 +3889,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -4029,6 +4019,37 @@ namespace GBAHawk
 								if (!pre_Enable) { pre_Check_Addr = 0; }
 							}
 						}
+						else if ((addr & 0x1FFFE) == 0)
+						{
+							// we encountered a boundary, always use non-sequential timing						
+							if (addr < 0x0A000000)
+							{
+								wait_ret += ROM_Waits_0_N;
+							}
+							else if (addr < 0x0C000000)
+							{
+								wait_ret += ROM_Waits_1_N;
+							}
+							else
+							{
+								wait_ret += ROM_Waits_2_N;
+							}
+							
+							if (pre_Cycle_Glitch)
+							{
+								// lose 1 cycle if prefetcher is holding the bus
+								wait_ret += 1;
+							}
+
+							pre_Read_Addr += 2;
+							pre_Check_Addr += 2;
+							pre_Fetch_Cnt = 0;
+
+							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
+
+							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
+							pre_Inactive = true;
+						}
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
@@ -4087,7 +4108,7 @@ namespace GBAHawk
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
+						if (pre_Cycle_Glitch)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -4098,9 +4119,7 @@ namespace GBAHawk
 						pre_Fetch_Cnt = 0;
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
-						pre_Boundary_Reached = false;
 						pre_Following = false;
-						pre_Cycle_Glitch_2 = false;
 
 						pre_Inactive = true;
 
@@ -4121,8 +4140,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -4258,6 +4275,37 @@ namespace GBAHawk
 								}
 							}
 						}
+						else if ((addr & 0x1FFFC) == 0)
+						{
+							// we encountered a boundary, always use non-sequential timing						
+							if (addr < 0x0A000000)
+							{
+								wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1;
+							}
+							else if (addr < 0x0C000000)
+							{
+								wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1;
+							}
+							else
+							{
+								wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1;
+							}
+
+							if (pre_Cycle_Glitch)
+							{
+								// lose 1 cycle if prefetcher is holding the bus
+								wait_ret += 1;
+							}
+
+							pre_Read_Addr += 4;
+							pre_Check_Addr += 4;
+							pre_Fetch_Cnt = 0;
+
+							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
+
+							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
+							pre_Inactive = true;
+						}
 						else
 						{
 							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
@@ -4331,7 +4379,7 @@ namespace GBAHawk
 
 						pre_Force_Non_Seq = false;
 
-						if (pre_Cycle_Glitch || pre_Cycle_Glitch_2)
+						if (pre_Cycle_Glitch)
 						{
 							// lose 1 cycle if prefetcher is holding the bus
 							wait_ret += 1;
@@ -4342,9 +4390,7 @@ namespace GBAHawk
 						pre_Fetch_Cnt = 0;
 						pre_Run = pre_Enable;
 						pre_Buffer_Was_Full = false;
-						pre_Boundary_Reached = false;
 						pre_Following = false;
-						pre_Cycle_Glitch_2 = false;
 
 						pre_Inactive = true;
 
@@ -4365,8 +4411,6 @@ namespace GBAHawk
 					// abandon the prefetcher current fetch and reset
 					pre_Fetch_Cnt = 0;
 					pre_Check_Addr = 0;
-					pre_Cycle_Glitch_2 = false;
-					pre_Boundary_Reached = false;
 				}
 			}
 			else if (addr >= 0x05000000)
@@ -7696,7 +7740,10 @@ namespace GBAHawk
 		void snd_Update_Regs(uint32_t addr, uint8_t value)
 		{
 			// while power is on, everything is writable
-			//Console.WriteLine("write: " + (addr & 0xFF) + " " + value + " " + CycleCount);
+			//Message_String = to_string(addr) + " " + to_string(value) + " " + to_string(CycleCount);
+
+			//if (MessageCallback) { MessageCallback(Message_String.length()); }
+
 			if (snd_CTRL_power)
 			{
 				if (addr < 0x90)
@@ -8776,7 +8823,6 @@ namespace GBAHawk
 
 			// Prefetcher
 			saver = bool_saver(pre_Cycle_Glitch, saver);
-			saver = bool_saver(pre_Cycle_Glitch_2, saver);
 			saver = bool_saver(pre_Run, saver);
 			saver = bool_saver(pre_Enable, saver);
 			saver = bool_saver(pre_Force_Non_Seq, saver);
@@ -8885,7 +8931,6 @@ namespace GBAHawk
 
 			// Prefetcher
 			loader = bool_loader(&pre_Cycle_Glitch, loader);
-			loader = bool_loader(&pre_Cycle_Glitch_2, loader);
 			loader = bool_loader(&pre_Run, loader);
 			loader = bool_loader(&pre_Enable, loader);
 			loader = bool_loader(&pre_Force_Non_Seq, loader);

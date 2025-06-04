@@ -1664,30 +1664,15 @@ namespace GBAHawk
 		{
 			if (pre_Inactive || (pre_Check_Addr == 0) || pre_Buffer_Was_Full)
 			{
-				// if we reached an 0x20000 boundary, and haven't immediately encountered an instruction access, add a cycle glitch
-				if (pre_Boundary_Reached)
-				{
-					pre_Cycle_Glitch_2 = true;
-				}
+
 			}		
 			else if (pre_Fetch_Cnt == 0)
 			{
-				if (pre_Buffer_Cnt == 8) { pre_Buffer_Was_Full = true; } // don't start a read if buffer is full
-				else if ((pre_Read_Addr & 0x1FFFE) == 0)
-				{
-					pre_Boundary_Reached = true;
-
+				if (pre_Buffer_Cnt == 8)
+				{ 
+					// don't start a read if buffer is full
 					pre_Buffer_Was_Full = true;
-
-					pre_Fetch_Wait = 0;
-
-					pre_Inactive = true;
-
-					if (pre_Buffer_Cnt == 0)
-					{
-						pre_Check_Addr = 0;
-					}
-				}
+				} 
 				else
 				{
 					if (pre_Read_Addr < 0x0A000000)
@@ -1703,12 +1688,31 @@ namespace GBAHawk
 						pre_Fetch_Wait = ROM_Waits_2_S + 1; // ROM 2
 					}
 
+					if ((pre_Read_Addr & 0x1FFFE) == 0)
+					{
+						pre_Boundary_Reached = true;
+
+						Message_String = to_string(pre_Buffer_Cnt) + " boundary " + to_string(pre_Check_Addr) + " boundary " + to_string(CycleCount);
+
+						MessageCallback(Message_String.length());
+					}
+					else
+					{
+						pre_Boundary_Reached = false;
+					}
+
 					// NOTE: minimum time to fetch somethiung from cart is 2 cycles
 					pre_Fetch_Cnt = 1;
 				}
 			}
 			else
 			{
+				if (pre_Boundary_Reached)
+				{
+					Message_String = to_string(pre_Buffer_Cnt) + " " + to_string(pre_Check_Addr) + "  " + to_string(CycleCount);
+
+					MessageCallback(Message_String.length());
+				}
 
 				pre_Following = true;
 
@@ -1716,9 +1720,14 @@ namespace GBAHawk
 
 				if (pre_Fetch_Cnt == pre_Fetch_Wait)
 				{
-					pre_Buffer_Cnt += 1;
 					pre_Fetch_Cnt = 0;
-					pre_Read_Addr += 2;
+
+					// at the boundary, we always fail to read and advance the buffer, but continue to read anyway with sequential timing 
+					if (!pre_Boundary_Reached)
+					{
+						pre_Buffer_Cnt += 1;
+						pre_Read_Addr += 2;
+					}
 
 					pre_Cycle_Glitch = true;
 

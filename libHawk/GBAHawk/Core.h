@@ -21,6 +21,9 @@ namespace GBAHawk
 		GBACore() 
 		{
 			Mapper = nullptr;
+			GBA.MessageCallback = nullptr;
+			GBA.RumbleCallback = nullptr;
+			GBA.TraceCallback = nullptr;
 			GBA.System_Reset();
 		};
 

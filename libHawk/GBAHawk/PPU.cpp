@@ -2841,7 +2841,7 @@ namespace GBAHawk
 			else if (ppu_Fetch_OAM_A_D_Cnt == 1)
 			{
 				ppu_Sprite_A_Latch = OAM_16[0x03 + 0x10 * ppu_Param_Pick];
-
+				
 				ppu_OAM_Access = true;
 			}
 			else if (ppu_Fetch_OAM_A_D_Cnt == 2)
