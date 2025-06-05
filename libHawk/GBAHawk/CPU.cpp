@@ -30,8 +30,6 @@ namespace GBAHawk
 
 		cpu_Instr_Type = cpu_Internal_Reset_1; // 2 internal cycles pass after rest before instruction fetching begins
 
-		cpu_Instr_Type = 0;
-
 		cpu_Exception_Type = cpu_Next_Load_Store_Type = 0;
 
 		ResetRegisters();
