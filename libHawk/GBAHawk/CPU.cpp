@@ -69,49 +69,43 @@ namespace GBAHawk
 				{
 					switch ((cpu_Instr_ARM_2 >> 22) & 0x7)
 					{
-					case 0x0:
-						// Multiply
-						cpu_Instr_Type = cpu_Multiply_ARM;
-						cpu_Exec_ARM = cpu_ARM_MUL;
-						cpu_Calculate_Mul_Cycles();
-						break;
+						case 0x0:
+							// Multiply
+							cpu_Instr_Type = cpu_Multiply_ARM;
+							cpu_Exec_ARM = cpu_ARM_MUL;
+							cpu_Calculate_Mul_Cycles();
+							break;
 
-					case 0x1:
-						// Undefined Opcode Exception
-						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-						cpu_Exception_Type = cpu_Undef_Exc;
-						break;
+						case 0x1:
+							// still decodes as multiply
+							cpu_Instr_Type = cpu_Multiply_ARM;
+							cpu_Exec_ARM = cpu_ARM_MUL;
+							cpu_Calculate_Mul_Cycles();
+							break;
 
-					case 0x2:
-						// Multiply Long - Unsigned
-						cpu_Instr_Type = cpu_Multiply_ARM;
-						cpu_Exec_ARM = cpu_ARM_MUL_UL;
-						cpu_Calculate_Mul_Cycles_UL();
-						break;
-					case 0x3:
-						// Multiply Long - Signed
-						cpu_Instr_Type = cpu_Multiply_ARM;
-						cpu_Exec_ARM = cpu_ARM_MUL_SL;
-						cpu_Calculate_Mul_Cycles_SL();
-						break;
+						case 0x2:
+							// Multiply Long - Unsigned
+							cpu_Instr_Type = cpu_Multiply_ARM;
+							cpu_Exec_ARM = cpu_ARM_MUL_UL;
+							cpu_Calculate_Mul_Cycles_UL();
+							break;
+						case 0x3:
+							// Multiply Long - Signed
+							cpu_Instr_Type = cpu_Multiply_ARM;
+							cpu_Exec_ARM = cpu_ARM_MUL_SL;
+							cpu_Calculate_Mul_Cycles_SL();
+							break;
 
-					case 0x4:
-					case 0x5:
-						// Swap
-						cpu_Instr_Type = cpu_Prefetch_Swap_ARM;
-						cpu_Next_Load_Store_Type = cpu_Swap_ARM;
-						cpu_Exec_ARM = cpu_ARM_Swap;
-						cpu_Swap_Store = false;
-						break;
-
-					case 0x6:
-					case 0x7:
-						// Undefined Opcode Exception
-						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-						cpu_Exception_Type = cpu_Undef_Exc;
-						break;
+						case 0x4:
+						case 0x5:
+						case 0x6:
+						case 0x7:
+							// Swap
+							cpu_Instr_Type = cpu_Prefetch_Swap_ARM;
+							cpu_Next_Load_Store_Type = cpu_Swap_ARM;
+							cpu_Exec_ARM = cpu_ARM_Swap;
+							cpu_Swap_Store = false;
+							break;
 					}
 				}
 				else
@@ -123,22 +117,22 @@ namespace GBAHawk
 					switch ((cpu_Instr_ARM_2 >> 5) & 0x3)
 					{
 						// 0 case is not a load store instruction
-					case 0x1:
-						// Unsigned halfword
-						cpu_Next_Load_Store_Type = cpu_Load_Store_Half_ARM;
-						cpu_Sign_Extend_Load = false;
-						break;
+						case 0x1:
+							// Unsigned halfword
+							cpu_Next_Load_Store_Type = cpu_Load_Store_Half_ARM;
+							cpu_Sign_Extend_Load = false;
+							break;
 
-					case 0x2:
-						// Signed Byte
-						cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_ARM;
-						cpu_Sign_Extend_Load = true;
-						break;
-					case 0x3:
-						// Signed halfword
-						cpu_Next_Load_Store_Type = cpu_Load_Store_Half_ARM;
-						cpu_Sign_Extend_Load = true;
-						break;
+						case 0x2:
+							// Signed Byte
+							cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_ARM;
+							cpu_Sign_Extend_Load = true;
+							break;
+						case 0x3:
+							// Signed halfword
+							cpu_Next_Load_Store_Type = cpu_Load_Store_Half_ARM;
+							cpu_Sign_Extend_Load = true;
+							break;
 					}
 
 					if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
@@ -321,31 +315,31 @@ namespace GBAHawk
 				{
 					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 					{
-					case 0x8:
-						cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
-						cpu_Exec_ARM = cpu_ARM_MRS;
-						break;
-					case 0x9:
-						if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
-						{
-							// Branch and exchange
-							cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
-							cpu_Exec_ARM = cpu_ARM_Bx;
-						}
-						else
-						{
+						case 0x8:
+							cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
+							cpu_Exec_ARM = cpu_ARM_MRS;
+							break;
+						case 0x9:
+							if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
+							{
+								// Branch and exchange
+								cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
+								cpu_Exec_ARM = cpu_ARM_Bx;
+							}
+							else
+							{
+								cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+								cpu_Exec_ARM = cpu_ARM_MSR;
+							}
+							break;
+						case 0xA:
+							cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
+							cpu_Exec_ARM = cpu_ARM_MRS;
+							break;
+						case 0xB:
 							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
 							cpu_Exec_ARM = cpu_ARM_MSR;
-						}
-						break;
-					case 0xA:
-						cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
-						cpu_Exec_ARM = cpu_ARM_MRS;
-						break;
-					case 0xB:
-						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
-						cpu_Exec_ARM = cpu_ARM_MSR;
-						break;
+							break;
 					}
 				}
 			}
@@ -365,22 +359,22 @@ namespace GBAHawk
 
 			switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 			{
-			case 0x0: cpu_Exec_ARM = cpu_ARM_AND; cpu_Clear_Pipeline = true; break;
-			case 0x1: cpu_Exec_ARM = cpu_ARM_EOR; cpu_Clear_Pipeline = true; break;
-			case 0x2: cpu_Exec_ARM = cpu_ARM_SUB; cpu_Clear_Pipeline = true; break;
-			case 0x3: cpu_Exec_ARM = cpu_ARM_RSB; cpu_Clear_Pipeline = true; break;
-			case 0x4: cpu_Exec_ARM = cpu_ARM_ADD; cpu_Clear_Pipeline = true; break;
-			case 0x5: cpu_Exec_ARM = cpu_ARM_ADC; cpu_Clear_Pipeline = true; break;
-			case 0x6: cpu_Exec_ARM = cpu_ARM_SBC; cpu_Clear_Pipeline = true; break;
-			case 0x7: cpu_Exec_ARM = cpu_ARM_RSC; cpu_Clear_Pipeline = true; break;
-			case 0x8: cpu_Exec_ARM = cpu_ARM_TST; cpu_Clear_Pipeline = false; break;
-			case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ; cpu_Clear_Pipeline = false; break;
-			case 0xA: cpu_Exec_ARM = cpu_ARM_CMP; cpu_Clear_Pipeline = false; break;
-			case 0xB: cpu_Exec_ARM = cpu_ARM_CMN; cpu_Clear_Pipeline = false; break;
-			case 0xC: cpu_Exec_ARM = cpu_ARM_ORR; cpu_Clear_Pipeline = true; break;
-			case 0xD: cpu_Exec_ARM = cpu_ARM_MOV; cpu_Clear_Pipeline = true; break;
-			case 0xE: cpu_Exec_ARM = cpu_ARM_BIC; cpu_Clear_Pipeline = true; break;
-			case 0xF: cpu_Exec_ARM = cpu_ARM_MVN; cpu_Clear_Pipeline = true; break;
+				case 0x0: cpu_Exec_ARM = cpu_ARM_AND; cpu_Clear_Pipeline = true; break;
+				case 0x1: cpu_Exec_ARM = cpu_ARM_EOR; cpu_Clear_Pipeline = true; break;
+				case 0x2: cpu_Exec_ARM = cpu_ARM_SUB; cpu_Clear_Pipeline = true; break;
+				case 0x3: cpu_Exec_ARM = cpu_ARM_RSB; cpu_Clear_Pipeline = true; break;
+				case 0x4: cpu_Exec_ARM = cpu_ARM_ADD; cpu_Clear_Pipeline = true; break;
+				case 0x5: cpu_Exec_ARM = cpu_ARM_ADC; cpu_Clear_Pipeline = true; break;
+				case 0x6: cpu_Exec_ARM = cpu_ARM_SBC; cpu_Clear_Pipeline = true; break;
+				case 0x7: cpu_Exec_ARM = cpu_ARM_RSC; cpu_Clear_Pipeline = true; break;
+				case 0x8: cpu_Exec_ARM = cpu_ARM_TST; cpu_Clear_Pipeline = false; break;
+				case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ; cpu_Clear_Pipeline = false; break;
+				case 0xA: cpu_Exec_ARM = cpu_ARM_CMP; cpu_Clear_Pipeline = false; break;
+				case 0xB: cpu_Exec_ARM = cpu_ARM_CMN; cpu_Clear_Pipeline = false; break;
+				case 0xC: cpu_Exec_ARM = cpu_ARM_ORR; cpu_Clear_Pipeline = true; break;
+				case 0xD: cpu_Exec_ARM = cpu_ARM_MOV; cpu_Clear_Pipeline = true; break;
+				case 0xE: cpu_Exec_ARM = cpu_ARM_BIC; cpu_Clear_Pipeline = true; break;
+				case 0xF: cpu_Exec_ARM = cpu_ARM_MVN; cpu_Clear_Pipeline = true; break;
 			}
 
 			// even TST / TEQ / CMP / CMN take the branch path, but don't reset the pipeline
@@ -403,26 +397,26 @@ namespace GBAHawk
 			{
 				switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 				{
-				case 0x8:
-					// Undefined Opcode Exception
-					cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-					cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-					cpu_Exception_Type = cpu_Undef_Exc;
-					break;
-				case 0x9:
-					cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
-					cpu_Exec_ARM = cpu_ARM_MSR;
-					break;
-				case 0xA:
-					// Undefined Opcode Exception
-					cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-					cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-					cpu_Exception_Type = cpu_Undef_Exc;
-					break;
-				case 0xB:
-					cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
-					cpu_Exec_ARM = cpu_ARM_MSR;
-					break;
+					case 0x8:
+						// Undefined Opcode Exception
+						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
+						cpu_Exception_Type = cpu_Undef_Exc;
+						break;
+					case 0x9:
+						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+						cpu_Exec_ARM = cpu_ARM_MSR;
+						break;
+					case 0xA:
+						// Undefined Opcode Exception
+						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
+						cpu_Exception_Type = cpu_Undef_Exc;
+						break;
+					case 0xB:
+						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+						cpu_Exec_ARM = cpu_ARM_MSR;
+						break;
 				}
 			}
 			break;
@@ -556,22 +550,22 @@ namespace GBAHawk
 
 						switch ((cpu_Instr_TMB_2 >> 6) & 0xF)
 						{
-						case 0x0: cpu_Exec_TMB = cpu_Thumb_AND; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0x1: cpu_Exec_TMB = cpu_Thumb_EOR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0x2: cpu_Exec_TMB = cpu_Thumb_LSL; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-						case 0x3: cpu_Exec_TMB = cpu_Thumb_LSR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-						case 0x4: cpu_Exec_TMB = cpu_Thumb_ASR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-						case 0x5: cpu_Exec_TMB = cpu_Thumb_ADC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0x6: cpu_Exec_TMB = cpu_Thumb_SBC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0x7: cpu_Exec_TMB = cpu_Thumb_ROR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-						case 0x8: cpu_Exec_TMB = cpu_Thumb_TST; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0x9: cpu_Exec_TMB = cpu_Thumb_NEG; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xA: cpu_Exec_TMB = cpu_Thumb_CMP; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xB: cpu_Exec_TMB = cpu_Thumb_CMN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xC: cpu_Exec_TMB = cpu_Thumb_ORR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xD: cpu_Exec_TMB = cpu_Thumb_MUL; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xE: cpu_Exec_TMB = cpu_Thumb_BIC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-						case 0xF: cpu_Exec_TMB = cpu_Thumb_MVN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x0: cpu_Exec_TMB = cpu_Thumb_AND; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x1: cpu_Exec_TMB = cpu_Thumb_EOR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x2: cpu_Exec_TMB = cpu_Thumb_LSL; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
+							case 0x3: cpu_Exec_TMB = cpu_Thumb_LSR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
+							case 0x4: cpu_Exec_TMB = cpu_Thumb_ASR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
+							case 0x5: cpu_Exec_TMB = cpu_Thumb_ADC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x6: cpu_Exec_TMB = cpu_Thumb_SBC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x7: cpu_Exec_TMB = cpu_Thumb_ROR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
+							case 0x8: cpu_Exec_TMB = cpu_Thumb_TST; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0x9: cpu_Exec_TMB = cpu_Thumb_NEG; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xA: cpu_Exec_TMB = cpu_Thumb_CMP; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xB: cpu_Exec_TMB = cpu_Thumb_CMN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xC: cpu_Exec_TMB = cpu_Thumb_ORR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xD: cpu_Exec_TMB = cpu_Thumb_MUL; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xE: cpu_Exec_TMB = cpu_Thumb_BIC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
+							case 0xF: cpu_Exec_TMB = cpu_Thumb_MVN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
 						}
 
 						// special case for multiply
@@ -586,46 +580,46 @@ namespace GBAHawk
 						// High Regs / Branch and exchange
 						switch ((cpu_Instr_TMB_2 >> 8) & 3)
 						{
-						case 0:
-							cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-							cpu_Exec_TMB = cpu_Thumb_High_Add;
-							break;
-
-						case 1:
-							cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-							cpu_Exec_TMB = cpu_Thumb_High_Cmp;
-							break;
-
-						case 2:
-							if ((cpu_Instr_TMB_2 & 0xC0) == 0x0)
-							{
-								// copy only available in ARMv6 and above
-								throw new std::invalid_argument("undefined instruction (CPY) 01000110 " + to_string(cpu_Regs[15]));
-							}
-							if (((cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8)) == 0xF)
-							{
+							case 0:
 								cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-							}
-							else
-							{
+								cpu_Exec_TMB = cpu_Thumb_High_Add;
+								break;
+
+							case 1:
 								cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-							}
+								cpu_Exec_TMB = cpu_Thumb_High_Cmp;
+								break;
 
-							cpu_Exec_TMB = cpu_Thumb_High_MOV;
-							break;
+							case 2:
+								if ((cpu_Instr_TMB_2 & 0xC0) == 0x0)
+								{
+									// copy only available in ARMv6 and above
+									throw new std::invalid_argument("undefined instruction (CPY) 01000110 " + to_string(cpu_Regs[15]));
+								}
+								if (((cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8)) == 0xF)
+								{
+									cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
+								}
+								else
+								{
+									cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
+								}
 
-						case 3:
-							if ((cpu_Instr_TMB_2 & 0x80) == 0)
-							{
-								cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
-								cpu_Exec_TMB = cpu_Thumb_High_Bx;
-							}
-							else
-							{
-								// This version only available in ARM V5 and above
-								throw new std::invalid_argument("undefined instruction (BLX) 010001111 " + to_string(cpu_Regs[15]));
-							}
-							break;
+								cpu_Exec_TMB = cpu_Thumb_High_MOV;
+								break;
+
+							case 3:
+								if ((cpu_Instr_TMB_2 & 0x80) == 0)
+								{
+									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
+									cpu_Exec_TMB = cpu_Thumb_High_Bx;
+								}
+								else
+								{
+									// This version only available in ARM V5 and above
+									throw new std::invalid_argument("undefined instruction (BLX) 010001111 " + to_string(cpu_Regs[15]));
+								}
+								break;
 						}
 					}
 				}
@@ -644,14 +638,14 @@ namespace GBAHawk
 
 				switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 				{
-				case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-				case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
-				case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-				case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-				case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-				case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
-				case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-				case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+					case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
+					case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+					case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+					case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+					case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
+					case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+					case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
+					case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
 				}
 
 				cpu_Exec_TMB = cpu_Thumb_Rel_LS;
@@ -1160,7 +1154,11 @@ namespace GBAHawk
 						cpu_FlagZset(cpu_ALU_Long_Result == 0);
 					}
 
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
 					break;
 
 				case cpu_ARM_MUL_UL:
@@ -1266,6 +1264,8 @@ namespace GBAHawk
 						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
 					{
 						// write back
@@ -1286,6 +1286,9 @@ namespace GBAHawk
 						cpu_Overwrite_Base_Reg = true;
 						cpu_Write_Back_Addr = cpu_Temp_Addr;
 					}
+
+					// use incremented address
+					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
 
 					// don't write back a loaded register
 					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
@@ -1365,6 +1368,8 @@ namespace GBAHawk
 						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
 					{
 						// write back
@@ -1385,6 +1390,9 @@ namespace GBAHawk
 						cpu_Overwrite_Base_Reg = true;
 						cpu_Write_Back_Addr = cpu_Temp_Addr;
 					}
+
+					// use incremented address
+					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
 
 					// don't write back a loaded register
 					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
@@ -1830,8 +1838,11 @@ namespace GBAHawk
 						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
 						cpu_FlagZset(cpu_ALU_Long_Result == 0);
 					}
-
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
 					break;
 
 				case cpu_ARM_MUL_UL_LDM:
@@ -1952,6 +1963,8 @@ namespace GBAHawk
 						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
 					{
 						// write back
@@ -1972,6 +1985,9 @@ namespace GBAHawk
 						cpu_Overwrite_Base_Reg = true;
 						cpu_Write_Back_Addr = cpu_Temp_Addr;
 					}
+
+					// use incremented address
+					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
 
 					// don't write back a loaded register
 					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
@@ -2051,6 +2067,8 @@ namespace GBAHawk
 						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
 					{
 						// write back
@@ -2071,6 +2089,9 @@ namespace GBAHawk
 						cpu_Overwrite_Base_Reg = true;
 						cpu_Write_Back_Addr = cpu_Temp_Addr;
 					}
+
+					// use incremented address
+					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
 
 					// don't write back a loaded register
 					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
@@ -2198,57 +2219,57 @@ namespace GBAHawk
 
 			switch ((cpu_Instr_TMB_2 >> 11) & 0x3)
 			{
-			case 0:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
-				cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
+				case 0:
+					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+					cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
 
-				if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
 
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
+					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
 
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
+					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					break;
 
-			case 1:
-				if (cpu_ALU_Temp_Val != 0)
-				{
-					cpu_FlagCset(((cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
-					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)cpu_ALU_Temp_Val;
-				}
-				else
-				{
-					cpu_FlagCset((cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare) == cpu_Neg_Compare);
-					cpu_ALU_Long_Result = 0;
-				}
+				case 1:
+					if (cpu_ALU_Temp_Val != 0)
+					{
+						cpu_FlagCset(((cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)cpu_ALU_Temp_Val;
+					}
+					else
+					{
+						cpu_FlagCset((cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_ALU_Long_Result = 0;
+					}
 
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
 
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
+					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					break;
 
-			case 2:
-				cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare;
+				case 2:
+					cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare;
 
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
 
-				if (cpu_ALU_Temp_Val == 0) { cpu_ALU_Temp_Val = 32; }
+					if (cpu_ALU_Temp_Val == 0) { cpu_ALU_Temp_Val = 32; }
 
-				for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
-				{
-					cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
-					cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
-					cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
-				}
+					for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
+					{
+						cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
+						cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
+						cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
+					}
 
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
 
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
+					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					break;
 			}
 			break;
 
@@ -2582,59 +2603,61 @@ namespace GBAHawk
 
 			switch ((cpu_Instr_TMB_2 >> 11) & 3)
 			{
-			case 0:			// MOV
-				cpu_Regs[cpu_ALU_Reg_Dest] = cpu_ALU_Temp_Val;
-				cpu_FlagNset(false);
-				cpu_FlagZset(cpu_ALU_Temp_Val == 0);
-				break;
+				case 0:			// MOV
+					cpu_Regs[cpu_ALU_Reg_Dest] = cpu_ALU_Temp_Val;
+					cpu_FlagNset(false);
+					cpu_FlagZset(cpu_ALU_Temp_Val == 0);
+					break;
 
-			case 1:         // CMP
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
+				case 1:         // CMP
+					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+					cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
 
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+					cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
 
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
+					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-				break;
+					cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					break;
 
-			case 2:         // ADD
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
+				case 2:         // ADD
+					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+					cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
 
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
+					cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
 
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
+					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
-				cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
 
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
+					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					break;
 
-			case 3:         // SUB
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
+				case 3:         // SUB
+					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+					cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
 
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+					cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
 
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
+					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
+					cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+					cpu_FlagZset(cpu_ALU_Long_Result == 0);
 
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
+					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					break;
 			}
 			break;
 
 		case cpu_Thumb_PC_Rel_LS:
 			cpu_LS_Is_Load = true;
+
+			cpu_Overwrite_Base_Reg = false;
 
 			cpu_Base_Reg = 15;
 
@@ -2646,15 +2669,17 @@ namespace GBAHawk
 		case cpu_Thumb_Rel_LS:
 			switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 			{
-			case 0: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-			case 1: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-			case 2: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-			case 3: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
-			case 4: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-			case 5: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-			case 6: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-			case 7: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
+				case 0: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+				case 1: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+				case 2: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+				case 3: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
+				case 4: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+				case 5: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+				case 6: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+				case 7: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
 			}
+
+			cpu_Overwrite_Base_Reg = false;
 
 			cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
 			cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 6) & 7);
@@ -2667,6 +2692,8 @@ namespace GBAHawk
 		case cpu_Thumb_Imm_LS:
 			cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
 
+			cpu_Overwrite_Base_Reg = false;
+
 			cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
 
 			if ((cpu_Instr_TMB_2 & 0x1000) == 0x1000)
@@ -2678,12 +2705,13 @@ namespace GBAHawk
 				cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 4) & 0x7C));
 			}
 
-
 			cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
 			break;
 
 		case cpu_Thumb_Half_LS:
 			cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+			cpu_Overwrite_Base_Reg = false;
 
 			cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
 
@@ -2695,6 +2723,8 @@ namespace GBAHawk
 		case cpu_Thumb_SP_REL_LS:
 			cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
 
+			cpu_Overwrite_Base_Reg = false;
+
 			cpu_Temp_Addr = (uint32_t)(cpu_Regs[13] + ((cpu_Instr_TMB_2 & 0xFF) << 2));
 
 			cpu_Temp_Reg_Ptr = (cpu_Instr_TMB_2 >> 8) & 7;
@@ -2702,6 +2732,8 @@ namespace GBAHawk
 
 		case cpu_Thumb_Add_SP_PC:
 			cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 8) & 7);
+
+			cpu_Overwrite_Base_Reg = false;
 
 			if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
 			{
@@ -2905,10 +2937,10 @@ namespace GBAHawk
 								break;
 
 							case 0x1:
-								// Undefined Opcode Exception
-								cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-								cpu_Exec_ARM = cpu_ARM_Cond_Check_Only_LDM;
-								cpu_Exception_Type = cpu_Undef_Exc;
+								// still decodes as multiply
+								cpu_Instr_Type = cpu_Multiply_ARM;
+								cpu_Exec_ARM = cpu_ARM_MUL_LDM;
+								cpu_Calculate_Mul_Cycles();
 								break;
 
 							case 0x2:
@@ -2926,19 +2958,13 @@ namespace GBAHawk
 
 							case 0x4:
 							case 0x5:
+							case 0x6:
+							case 0x7:
 								// Swap
 								cpu_Instr_Type = cpu_Prefetch_Swap_ARM;
 								cpu_Next_Load_Store_Type = cpu_Swap_ARM;
 								cpu_Exec_ARM = cpu_ARM_Swap_LDM;
 								cpu_Swap_Store = false;
-								break;
-
-							case 0x6:
-							case 0x7:
-								// Undefined Opcode Exception
-								cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-								cpu_Exec_ARM = cpu_ARM_Cond_Check_Only_LDM;
-								cpu_Exception_Type = cpu_Undef_Exc;
 								break;
 						}
 					}

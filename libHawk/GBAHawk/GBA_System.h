@@ -33,7 +33,7 @@ using namespace std;
 * 
 *	Fix FIFO DMA shutdown bug
 * 
-* 
+*   Check multiplication with dest r15 for SL and UL
 * 
 */
 
@@ -2355,8 +2355,16 @@ namespace GBAHawk
 							return std::string(val_char_2);
 
 						case 0x1:
-							// Undefined Opcode Exception
-							return "Undefined";
+							// Unpredictable but still Multiply
+							if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+							{
+								sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
+							}
+							else
+							{
+								sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+							}
+							return std::string(val_char_2);
 
 						case 0x2:
 							// Multiply Long - Unsigned
@@ -2372,6 +2380,8 @@ namespace GBAHawk
 
 						case 0x4:
 						case 0x5:
+						case 0x6:
+						case 0x7:
 							// Swap
 							if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
 							{
@@ -2385,11 +2395,6 @@ namespace GBAHawk
 							}
 
 							return std::string(val_char_2);
-
-						case 0x6:
-						case 0x7:
-							// Undefined Opcode Exception
-							return "Undefined";
 						}
 					}
 					else
@@ -5766,6 +5771,18 @@ namespace GBAHawk
 			//Message_String = "rld " + to_string(nbr) + " v " + to_string(value) + " t " + to_string(tim_Timer[nbr]) + " sub " + to_string(tim_SubCnt) + " " + to_string(CycleCount);
 
 			//MessageCallback(Message_String.length());
+
+			// bits 3-5 always 0
+			// bit 2 always 0 for timer 0
+			if (nbr == 0)
+			{
+				value &= 0xFFC3;
+			}
+			else
+			{
+				value &= 0xFFC7;
+			}
+
 
 			tim_Control[nbr] = value;
 		}

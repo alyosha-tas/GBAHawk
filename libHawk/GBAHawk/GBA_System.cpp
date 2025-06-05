@@ -3112,7 +3112,7 @@ namespace GBAHawk
 						cpu_Regs[cpu_Base_Reg_2] = cpu_Temp_Data;
 
 						cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-						cpu_Invalidate_Pipeline = false;
+						cpu_Invalidate_Pipeline = (cpu_Base_Reg_2 == 15);
 						cpu_Internal_Save_Access = true;
 
 						// unlock the bus
