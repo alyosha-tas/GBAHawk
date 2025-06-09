@@ -19,12 +19,6 @@ using namespace std;
 
 /*	Look into implementation of multiplication algorithm that implements carry flag
 *
-*   Fix multiplication cycle timing for LDM^ glitch cases
-*
-*	Fix cpy decodings that currently through an error
-*	Fix invalid BLX encodings
-*	Fix zero selected registers in multi load/store decodings
-*
 *	Fix details of ppu open bus implementation
 *
 *	Fix RTC tests
@@ -1934,6 +1928,145 @@ namespace GBAHawk
 			}
 		}
 
+		void cpu_Calculate_Mul_Cycles_LDM()
+		{
+			uint32_t temp_calc = 0;
+
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
+			}
+			else
+			{
+				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
+			}
+
+			// all F's seems to be a special case
+			if ((temp_calc & 0xFF000000) == 0xFF000000)
+			{
+				cpu_Mul_Cycles = 3;
+
+				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
+				{
+					cpu_Mul_Cycles -= 1;
+
+					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
+					{
+						cpu_Mul_Cycles -= 1;
+					}
+				}
+			}
+			else if ((temp_calc & 0xFF000000) != 0)
+			{
+				cpu_Mul_Cycles = 4;
+			}
+			else if ((temp_calc & 0x00FF0000) != 0)
+			{
+				cpu_Mul_Cycles = 3;
+			}
+			else if ((temp_calc & 0x0000FF00) != 0)
+			{
+				cpu_Mul_Cycles = 2;
+			}
+			else
+			{
+				cpu_Mul_Cycles = 1;
+			}
+
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				cpu_Mul_Cycles += 1;
+			}
+		}
+
+		// seems to be based on the number of non-zero upper bits
+		void cpu_Calculate_Mul_Cycles_UL_LDM()
+		{
+			uint32_t temp_calc = 0;
+			
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
+			}
+			else
+			{
+				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
+			}
+
+			if ((temp_calc & 0xFF000000) != 0)
+			{
+				cpu_Mul_Cycles = 5;
+			}
+			else if ((temp_calc & 0x00FF0000) != 0)
+			{
+				cpu_Mul_Cycles = 4;
+			}
+			else if ((temp_calc & 0x0000FF00) != 0)
+			{
+				cpu_Mul_Cycles = 3;
+			}
+			else
+			{
+				cpu_Mul_Cycles = 2;
+			}
+
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				cpu_Mul_Cycles += 1;
+			}
+		}
+
+		void cpu_Calculate_Mul_Cycles_SL_LDM()
+		{
+			uint32_t temp_calc = 0;
+
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
+			}
+			else
+			{
+				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
+			}
+
+			// all F's seems to be a special case
+			if ((temp_calc & 0xFF000000) == 0xFF000000)
+			{
+				cpu_Mul_Cycles = 4;
+
+				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
+				{
+					cpu_Mul_Cycles -= 1;
+
+					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
+					{
+						cpu_Mul_Cycles -= 1;
+					}
+				}
+			}
+			else if ((temp_calc & 0xFF000000) != 0)
+			{
+				cpu_Mul_Cycles = 5;
+			}
+			else if ((temp_calc & 0x00FF0000) != 0)
+			{
+				cpu_Mul_Cycles = 4;
+			}
+			else if ((temp_calc & 0x0000FF00) != 0)
+			{
+				cpu_Mul_Cycles = 3;
+			}
+			else
+			{
+				cpu_Mul_Cycles = 2;
+			}
+
+			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			{
+				cpu_Mul_Cycles += 1;
+			}
+		}
+
 		void cpu_Execute_Internal_Only_ARM();
 
 		void cpu_Execute_Internal_Only_TMB();
@@ -2342,59 +2475,59 @@ namespace GBAHawk
 					{
 						switch ((cpu_Instr_ARM_2 >> 22) & 0x7)
 						{
-						case 0x0:
-							// Multiply
-							if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-							{
-								sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							}
-							return std::string(val_char_2);
+							case 0x0:
+								// Multiply
+								if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+								{
+									sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
+								}
+								else
+								{
+									sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								}
+								return std::string(val_char_2);
 
-						case 0x1:
-							// Unpredictable but still Multiply
-							if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-							{
-								sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							}
-							return std::string(val_char_2);
+							case 0x1:
+								// Unpredictable but still Multiply
+								if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+								{
+									sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
+								}
+								else
+								{
+									sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								}
+								return std::string(val_char_2);
 
-						case 0x2:
-							// Multiply Long - Unsigned
-							sprintf_s(val_char_2, 40, "MUL-LU R%02dH  R%02dL, R%02d * R%02d",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							return std::string(val_char_2);
+							case 0x2:
+								// Multiply Long - Unsigned
+								sprintf_s(val_char_2, 40, "MUL-LU R%02dH  R%02dL, R%02d * R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								return std::string(val_char_2);
 
-						case 0x3:
-							// Multiply Long - Signed
-							sprintf_s(val_char_2, 40, "MUL-LS R%02dH  R%02dL, R%02d * R%02d",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							return std::string(val_char_2);
+							case 0x3:
+								// Multiply Long - Signed
+								sprintf_s(val_char_2, 40, "MUL-LS R%02dH  R%02dL, R%02d * R%02d",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								return std::string(val_char_2);
 
-						case 0x4:
-						case 0x5:
-						case 0x6:
-						case 0x7:
-							// Swap
-							if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
-							{
-								sprintf_s(val_char_2, 40, "SWAPB R%02d, (R%02d), R%02d",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "SWAP R%02d, (R%02d), R%02d",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-							}
+							case 0x4:
+							case 0x5:
+							case 0x6:
+							case 0x7:
+								// Swap
+								if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
+								{
+									sprintf_s(val_char_2, 40, "SWAPB R%02d, (R%02d), R%02d",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								}
+								else
+								{
+									sprintf_s(val_char_2, 40, "SWAP R%02d, (R%02d), R%02d",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
+								}
 
-							return std::string(val_char_2);
+								return std::string(val_char_2);
 						}
 					}
 					else
@@ -2412,19 +2545,19 @@ namespace GBAHawk
 						switch ((cpu_Instr_ARM_2 >> 5) & 0x3)
 						{
 							// 0 case is not a load store instruction
-						case 0x1:
-							// Unsigned halfword
-							ret.append("H ");
-							break;
+							case 0x1:
+								// Unsigned halfword
+								ret.append("H ");
+								break;
 
-						case 0x2:
-							// Signed Byte
-							ret.append("SB ");
-							break;
-						case 0x3:
-							// Signed halfword
-							ret.append("SH ");
-							break;
+							case 0x2:
+								// Signed Byte
+								ret.append("SB ");
+								break;
+							case 0x3:
+								// Signed halfword
+								ret.append("SH ");
+								break;
 						}
 
 						if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
@@ -2474,22 +2607,22 @@ namespace GBAHawk
 						// update flags
 						switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 						{
-						case 0x0: ret.append("AND "); break;
-						case 0x1: ret.append("EOR "); break;
-						case 0x2: ret.append("SUB "); break;
-						case 0x3: ret.append("RSB "); break;
-						case 0x4: ret.append("ADD "); break;
-						case 0x5: ret.append("ADC "); break;
-						case 0x6: ret.append("SBC "); break;
-						case 0x7: ret.append("RSC "); break;
-						case 0x8: ret.append("TST "); break;
-						case 0x9: ret.append("TEQ "); break;
-						case 0xA: ret.append("CMP "); break;
-						case 0xB: ret.append("CMN "); break;
-						case 0xC: ret.append("ORR "); break;
-						case 0xD: ret.append("MOV "); break;
-						case 0xE: ret.append("BIC "); break;
-						case 0xF: ret.append("MVN "); break;
+							case 0x0: ret.append("AND "); break;
+							case 0x1: ret.append("EOR "); break;
+							case 0x2: ret.append("SUB "); break;
+							case 0x3: ret.append("RSB "); break;
+							case 0x4: ret.append("ADD "); break;
+							case 0x5: ret.append("ADC "); break;
+							case 0x6: ret.append("SBC "); break;
+							case 0x7: ret.append("RSC "); break;
+							case 0x8: ret.append("TST "); break;
+							case 0x9: ret.append("TEQ "); break;
+							case 0xA: ret.append("CMP "); break;
+							case 0xB: ret.append("CMN "); break;
+							case 0xC: ret.append("ORR "); break;
+							case 0xD: ret.append("MOV "); break;
+							case 0xE: ret.append("BIC "); break;
+							case 0xF: ret.append("MVN "); break;
 						}
 
 						sprintf_s(val_char_2, 40, "R%02d, R%02d, ", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF));
@@ -2500,35 +2633,35 @@ namespace GBAHawk
 						// don't update flags
 						switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 						{
-						case 0x0: ret.append("AND "); break;
-						case 0x1: ret.append("EOR "); break;
-						case 0x2: ret.append("SUB "); break;
-						case 0x3: ret.append("RSB "); break;
-						case 0x4: ret.append("ADD "); break;
-						case 0x5: ret.append("ADC "); break;
-						case 0x6: ret.append("SBC "); break;
-						case 0x7: ret.append("RSC "); break;
-						case 0x8: sprintf_s(val_char_2, 40, "MRS R%02d, CPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
-						case 0x9:
-							if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
-							{
-								sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
-								return std::string(val_char_2);
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-								ret.append(std::string(val_char_2)); break;
-							}
-						case 0xA: sprintf_s(val_char_2, 40, "MRS R%02d, SPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
-						case 0xB:
-							sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-							ret.append(std::string(val_char_2));
-							break;
-						case 0xC: ret.append("ORR "); break;
-						case 0xD: ret.append("MOV "); break;
-						case 0xE: ret.append("BIC "); break;
-						case 0xF: ret.append("MVN "); break;
+							case 0x0: ret.append("AND "); break;
+							case 0x1: ret.append("EOR "); break;
+							case 0x2: ret.append("SUB "); break;
+							case 0x3: ret.append("RSB "); break;
+							case 0x4: ret.append("ADD "); break;
+							case 0x5: ret.append("ADC "); break;
+							case 0x6: ret.append("SBC "); break;
+							case 0x7: ret.append("RSC "); break;
+							case 0x8: sprintf_s(val_char_2, 40, "MRS R%02d, CPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
+							case 0x9:
+								if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
+								{
+									sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
+									return std::string(val_char_2);
+								}
+								else
+								{
+									sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
+									ret.append(std::string(val_char_2)); break;
+								}
+							case 0xA: sprintf_s(val_char_2, 40, "MRS R%02d, SPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
+							case 0xB:
+								sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
+								ret.append(std::string(val_char_2));
+								break;
+							case 0xC: ret.append("ORR "); break;
+							case 0xD: ret.append("MOV "); break;
+							case 0xE: ret.append("BIC "); break;
+							case 0xF: ret.append("MVN "); break;
 						}
 
 						if ((((cpu_Instr_ARM_2 >> 21) & 0xF) == 0x9) || (((cpu_Instr_ARM_2 >> 21) & 0xF) == 0xB))
@@ -2548,20 +2681,20 @@ namespace GBAHawk
 
 					switch ((cpu_Instr_ARM_2 >> 5) & 3)
 					{
-					case 0:         // LSL
-						ret.append("<< ");
-						break;
+						case 0:         // LSL
+							ret.append("<< ");
+							break;
 
-					case 1:         // LSR
-						ret.append(">> ");
-						break;
+						case 1:         // LSR
+							ret.append(">> ");
+							break;
 
-					case 2:         // ASR
-						ret.append("ASR ");
-						break;
+						case 2:         // ASR
+							ret.append("ASR ");
+							break;
 
-					case 3:         // RRX
-						ret.append("RRX ");
+						case 3:         // RRX
+							ret.append("RRX ");
 						break;
 					}
 
@@ -2589,22 +2722,22 @@ namespace GBAHawk
 					// update flags
 					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 					{
-					case 0x0: ret.append("AND "); break;
-					case 0x1: ret.append("EOR "); break;
-					case 0x2: ret.append("SUB "); break;
-					case 0x3: ret.append("RSB "); break;
-					case 0x4: ret.append("ADD "); break;
-					case 0x5: ret.append("ADC "); break;
-					case 0x6: ret.append("SBC "); break;
-					case 0x7: ret.append("RSC "); break;
-					case 0x8: ret.append("TST "); break;
-					case 0x9: ret.append("TEQ "); break;
-					case 0xA: ret.append("CMP "); break;
-					case 0xB: ret.append("CMN "); break;
-					case 0xC: ret.append("ORR "); break;
-					case 0xD: ret.append("MOV "); break;
-					case 0xE: ret.append("BIC "); break;
-					case 0xF: ret.append("MVN "); break;
+						case 0x0: ret.append("AND "); break;
+						case 0x1: ret.append("EOR "); break;
+						case 0x2: ret.append("SUB "); break;
+						case 0x3: ret.append("RSB "); break;
+						case 0x4: ret.append("ADD "); break;
+						case 0x5: ret.append("ADC "); break;
+						case 0x6: ret.append("SBC "); break;
+						case 0x7: ret.append("RSC "); break;
+						case 0x8: ret.append("TST "); break;
+						case 0x9: ret.append("TEQ "); break;
+						case 0xA: ret.append("CMP "); break;
+						case 0xB: ret.append("CMN "); break;
+						case 0xC: ret.append("ORR "); break;
+						case 0xD: ret.append("MOV "); break;
+						case 0xE: ret.append("BIC "); break;
+						case 0xF: ret.append("MVN "); break;
 					}
 					sprintf_s(val_char_2, 40, "R%02d, R%02d, (%2X >> %2X)",
 							((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
@@ -2615,28 +2748,28 @@ namespace GBAHawk
 					// don't update flags
 					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 					{
-					case 0x0: ret.append("AND "); break;
-					case 0x1: ret.append("EOR "); break;
-					case 0x2: ret.append("SUB "); break;
-					case 0x3: ret.append("RSB "); break;
-					case 0x4: ret.append("ADD "); break;
-					case 0x5: ret.append("ADC "); break;
-					case 0x6: ret.append("SBC "); break;
-					case 0x7: ret.append("RSC "); break;
-					case 0x8: return "Undefined";
-					case 0x9:
-						sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, (%2X >> %2X)",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-						return std::string(val_char_2);
-					case 0xA: return "Undefined";
-					case 0xB:
-						sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, (%2X >> %2X)",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E)); 
-						return std::string(val_char_2);
-					case 0xC: ret.append("ORR "); break;
-					case 0xD: ret.append("MOV "); break;
-					case 0xE: ret.append("BIC "); break;
-					case 0xF: ret.append("MVN "); break;
+						case 0x0: ret.append("AND "); break;
+						case 0x1: ret.append("EOR "); break;
+						case 0x2: ret.append("SUB "); break;
+						case 0x3: ret.append("RSB "); break;
+						case 0x4: ret.append("ADD "); break;
+						case 0x5: ret.append("ADC "); break;
+						case 0x6: ret.append("SBC "); break;
+						case 0x7: ret.append("RSC "); break;
+						case 0x8: return "Undefined";
+						case 0x9:
+							sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, (%2X >> %2X)",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
+							return std::string(val_char_2);
+						case 0xA: return "Undefined";
+						case 0xB:
+							sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, (%2X >> %2X)",
+									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E)); 
+							return std::string(val_char_2);
+						case 0xC: ret.append("ORR "); break;
+						case 0xD: ret.append("MOV "); break;
+						case 0xE: ret.append("BIC "); break;
+						case 0xF: ret.append("MVN "); break;
 					}
 					ret.append("(no flags) ");
 					sprintf_s(val_char_2, 40, "R%02d, R%02d, (%2X >> %2X)",
@@ -2682,36 +2815,36 @@ namespace GBAHawk
 						{
 							switch ((cpu_Instr_ARM_2 >> 5) & 3)
 							{
-							case 0:         // LSL
-								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d << %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 1:         // LSR
-								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d >> %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 2:         // ASR
-								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d ASR %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 3:         // RRX
-								sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d RRX %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 0:         // LSL
+									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d << %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 1:         // LSR
+									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d >> %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 2:         // ASR
+									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d ASR %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 3:         // RRX
+									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d RRX %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
 							}
 						}
 						else
 						{
 							switch ((cpu_Instr_ARM_2 >> 5) & 3)
 							{
-							case 0:         // LSL
-								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d << %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 1:         // LSR
-								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d >> %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 2:         // ASR
-								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d ASR %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							case 3:         // RRX
-								sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d RRX %2X)",
-									((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 0:         // LSL
+									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d << %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 1:         // LSR
+									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d >> %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 2:         // ASR
+									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d ASR %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
+								case 3:         // RRX
+									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d RRX %2X)",
+										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
 							}
 						}
 					}
@@ -2721,36 +2854,36 @@ namespace GBAHawk
 						{
 							switch ((cpu_Instr_ARM_2 >> 5) & 3)
 							{
-							case 0:         // LSL
-								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d << %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 1:         // LSR
-								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d >> %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 2:         // ASR
-								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d ASR %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 3:         // RRX
-								sprintf_s(val_char_2, 40, "STB (R%02d, R%02d RRX %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 0:         // LSL
+									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d << %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 1:         // LSR
+									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d >> %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 2:         // ASR
+									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d ASR %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 3:         // RRX
+									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d RRX %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
 							}
 						}
 						else
 						{
 							switch ((cpu_Instr_ARM_2 >> 5) & 3)
 							{
-							case 0:         // LSL
-								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d << %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 1:         // LSR
-								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d >> %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 2:         // ASR
-								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d ASR %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							case 3:         // RRX
-								sprintf_s(val_char_2, 40, "ST (R%02d, R%02d RRX %2X), R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 0:         // LSL
+									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d << %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 1:         // LSR
+									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d >> %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 2:         // ASR
+									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d ASR %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
+								case 3:         // RRX
+									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d RRX %2X), R%02d",
+										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
 							}
 						}
 					}
@@ -2958,7 +3091,8 @@ namespace GBAHawk
 								case 2:
 									if ((cpu_Instr_TMB_2 & 0xC0) == 0x0)
 									{
-										return "CPY?";
+										sprintf_s(val_char_2, 40, "CPY R%02d, R%02d", (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8), ((cpu_Instr_TMB_2 >> 3) & 0xF));
+										return std::string(val_char_2);
 									}
 									else
 									{
@@ -2967,16 +3101,8 @@ namespace GBAHawk
 									}
 
 								case 3:
-									if ((cpu_Instr_TMB_2 & 0x80) == 0)
-									{
-										sprintf_s(val_char_2, 40, "Bx (R%02d)", ((cpu_Instr_TMB_2 >> 3) & 0xF));
-										return std::string(val_char_2);
-									}
-									else
-									{
-										// This version only available in ARM V5 and above
-										return "";
-									}
+									sprintf_s(val_char_2, 40, "Bx (R%02d)", ((cpu_Instr_TMB_2 >> 3) & 0xF));
+									return std::string(val_char_2);
 							}
 						}
 					}

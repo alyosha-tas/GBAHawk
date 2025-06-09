@@ -70,14 +70,8 @@ namespace GBAHawk
 					switch ((cpu_Instr_ARM_2 >> 22) & 0x7)
 					{
 						case 0x0:
-							// Multiply
-							cpu_Instr_Type = cpu_Multiply_ARM;
-							cpu_Exec_ARM = cpu_ARM_MUL;
-							cpu_Calculate_Mul_Cycles();
-							break;
-
 						case 0x1:
-							// still decodes as multiply
+							// Multiply
 							cpu_Instr_Type = cpu_Multiply_ARM;
 							cpu_Exec_ARM = cpu_ARM_MUL;
 							cpu_Calculate_Mul_Cycles();
@@ -591,11 +585,6 @@ namespace GBAHawk
 								break;
 
 							case 2:
-								if ((cpu_Instr_TMB_2 & 0xC0) == 0x0)
-								{
-									// copy only available in ARMv6 and above
-									throw new std::invalid_argument("undefined instruction (CPY) 01000110 " + to_string(cpu_Regs[15]));
-								}
 								if (((cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8)) == 0xF)
 								{
 									cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
@@ -609,16 +598,9 @@ namespace GBAHawk
 								break;
 
 							case 3:
-								if ((cpu_Instr_TMB_2 & 0x80) == 0)
-								{
-									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
-									cpu_Exec_TMB = cpu_Thumb_High_Bx;
-								}
-								else
-								{
-									// This version only available in ARM V5 and above
-									throw new std::invalid_argument("undefined instruction (BLX) 010001111 " + to_string(cpu_Regs[15]));
-								}
+								// Decodes correctly even if bit 7 is set
+								cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
+								cpu_Exec_TMB = cpu_Thumb_High_Bx;
 								break;
 						}
 					}
@@ -2808,6 +2790,8 @@ namespace GBAHawk
 				cpu_Multi_List_Size += 1;
 			}
 
+			cpu_Special_Inc = false;
+
 			// For Pop, start address is at the bottom
 			if (!cpu_Multi_Inc)
 			{
@@ -2819,7 +2803,9 @@ namespace GBAHawk
 			// No registers selected is unpredictable
 			if (cpu_Multi_List_Size == 0)
 			{
-				throw new std::invalid_argument("no registers selected in Multi Load/Store at " + to_string(cpu_Regs[15]));
+				cpu_Multi_List_Size = 1;
+				cpu_Regs_To_Access[0] = 15;
+				cpu_Special_Inc = true;
 			}
 			break;
 
@@ -2858,6 +2844,8 @@ namespace GBAHawk
 					if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
 				}
 			}
+
+			cpu_Special_Inc = false;
 
 			// No registers selected loads R15 instead
 			if (cpu_Multi_List_Size == 0)
@@ -2916,7 +2904,6 @@ namespace GBAHawk
 	// If the next register access happens immediately following the completion of the LDM^/STM^ instruction,
 	// and this access is to one of the banked registers,
 	// then the returned value will be the banked register and user mode register OR'd together
-
 	void GBA_System::cpu_LDM_Glitch_Decode_ARM()
 	{
 		switch ((cpu_Instr_ARM_2 >> 25) & 7)
@@ -2930,30 +2917,24 @@ namespace GBAHawk
 						switch ((cpu_Instr_ARM_2 >> 22) & 0x7)
 						{
 							case 0x0:
+							case 0x1:
 								// Multiply
 								cpu_Instr_Type = cpu_Multiply_ARM;
 								cpu_Exec_ARM = cpu_ARM_MUL_LDM;
-								cpu_Calculate_Mul_Cycles();
-								break;
-
-							case 0x1:
-								// still decodes as multiply
-								cpu_Instr_Type = cpu_Multiply_ARM;
-								cpu_Exec_ARM = cpu_ARM_MUL_LDM;
-								cpu_Calculate_Mul_Cycles();
+								cpu_Calculate_Mul_Cycles_LDM();
 								break;
 
 							case 0x2:
 								// Multiply Long - Unsigned
 								cpu_Instr_Type = cpu_Multiply_ARM;
 								cpu_Exec_ARM = cpu_ARM_MUL_UL_LDM;
-								cpu_Calculate_Mul_Cycles_UL();
+								cpu_Calculate_Mul_Cycles_UL_LDM();
 								break;
 							case 0x3:
 								// Multiply Long - Signed
 								cpu_Instr_Type = cpu_Multiply_ARM;
 								cpu_Exec_ARM = cpu_ARM_MUL_SL_LDM;
-								cpu_Calculate_Mul_Cycles_SL();
+								cpu_Calculate_Mul_Cycles_SL_LDM();
 								break;
 
 							case 0x4:

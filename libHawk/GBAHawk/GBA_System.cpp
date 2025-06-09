@@ -3728,7 +3728,6 @@ namespace GBAHawk
 							if (cpu_Regs_To_Access[cpu_Multi_List_Ptr - 1] == 15)
 							{
 								// Thumb mode has a special case of adding 0x40 to the base reg
-								// is it maybe 16 accesses all writing to PC? (effects timing)
 								cpu_Regs[15] &= 0xFFFFFFFE;
 
 								// Invalidate instruction pipeline
