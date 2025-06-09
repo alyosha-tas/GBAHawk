@@ -617,6 +617,7 @@ namespace GBAHawk
 			{
 				// Load / store Relative offset
 				cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
+				cpu_Sign_Extend_Load = false;
 
 				switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 				{
@@ -1420,6 +1421,8 @@ namespace GBAHawk
 						}
 					}
 
+					cpu_Special_Inc = false;
+
 					// No registers selected loads / stores R15 instead
 					if (cpu_Multi_List_Size == 0)
 					{
@@ -2119,6 +2122,8 @@ namespace GBAHawk
 							if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
 						}
 					}
+
+					cpu_Special_Inc = false;
 
 					// No registers selected loads / stores R15 instead
 					if (cpu_Multi_List_Size == 0)

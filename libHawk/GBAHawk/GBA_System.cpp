@@ -2644,7 +2644,6 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
 
 					if (cpu_LS_Is_Load)
@@ -2652,6 +2651,14 @@ namespace GBAHawk
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
+							cpu_Invalidate_Pipeline = true;
+							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+							cpu_Seq_Access = false;
+						}
+						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							// Invalidate instruction pipeline
+							// address uses pre-incremented value
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 							cpu_Seq_Access = false;
@@ -2666,15 +2673,23 @@ namespace GBAHawk
 					}
 					else
 					{
-						// when writing, there is no last internal cycle, proceed to the next instruction
-						// also check for interrupts
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
+						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
+							cpu_Seq_Access = false;
+						}
+						else
+						{
+							// when writing, there is no last internal cycle, proceed to the next instruction
+							// also check for interrupts
+							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							else { cpu_Decode_ARM(); }
 
-						cpu_Seq_Access = false;
+							cpu_Seq_Access = false;
+						}
 					}
 
 					cpu_Fetch_Cnt = 0;
@@ -2746,16 +2761,22 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
-
-					cpu_Sign_Extend_Load = false;
 
 					if (cpu_LS_Is_Load)
 					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
+							cpu_Invalidate_Pipeline = true;
+							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+							cpu_Seq_Access = false;
+						}
+						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							// Invalidate instruction pipeline
+							// address uses incremented value
+							cpu_Regs[15] += 4;
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 							cpu_Seq_Access = false;
@@ -2770,15 +2791,24 @@ namespace GBAHawk
 					}
 					else
 					{
-						// when writing, there is no last internal cycle, proceed to the next instruction
-						// also check for interrupts
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
+						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							cpu_Regs[15] += 4;
+							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
+							cpu_Seq_Access = false;
+						}
+						else
+						{
+							// when writing, there is no last internal cycle, proceed to the next instruction
+							// also check for interrupts
+							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							else { cpu_Decode_ARM(); }
 
-						cpu_Seq_Access = false;
+							cpu_Seq_Access = false;
+						}
 					}
 
 					cpu_Fetch_Cnt = 0;
@@ -2823,16 +2853,22 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
-
-					cpu_Sign_Extend_Load = false;
 
 					if (cpu_LS_Is_Load)
 					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
+							cpu_Invalidate_Pipeline = true;
+							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+							cpu_Seq_Access = false;
+						}
+						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							// Invalidate instruction pipeline
+							// address uses incremented value
+							cpu_Regs[15] += 4;
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 							cpu_Seq_Access = false;
@@ -2847,15 +2883,24 @@ namespace GBAHawk
 					}
 					else
 					{
-						// when writing, there is no last internal cycle, proceed to the next instruction
-						// also check for interrupts
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
+						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+						{
+							cpu_Regs[15] += 4;
+							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
+							cpu_Seq_Access = false;
+						}
+						else
+						{
+							// when writing, there is no last internal cycle, proceed to the next instruction
+							// also check for interrupts
+							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
+							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+							else { cpu_Decode_ARM(); }
 
-						cpu_Seq_Access = false;
+							cpu_Seq_Access = false;
+						}
 					}
 
 					cpu_Fetch_Cnt = 0;
@@ -2906,7 +2951,6 @@ namespace GBAHawk
 
 							if (cpu_Special_Inc)
 							{
-								cpu_Special_Inc = false;
 								cpu_Regs[cpu_Base_Reg] += 0x3C;
 							}
 						}
@@ -2916,7 +2960,6 @@ namespace GBAHawk
 						}
 
 						cpu_LS_First_Access = false;
-						cpu_Overwrite_Base_Reg = false;
 					}
 
 					// always incrementing since addresses always start at the lowest one
@@ -2930,7 +2973,7 @@ namespace GBAHawk
 					{
 						cpu_LDM_Glitch_Mode = false;
 					
-						// note that reg 15 cannot be used if swapping out regs, so glitch mode can only be enterred in ARm mode
+						// note that reg 15 cannot be used if swapping out regs, so glitch mode can only be enterred in ARM mode
 						if (cpu_Multi_Swap)
 						{
 							cpu_LDM_Glitch_Mode = true;
@@ -2940,7 +2983,7 @@ namespace GBAHawk
 
 						if (cpu_LS_Is_Load)
 						{
-							if (cpu_Regs_To_Access[cpu_Multi_List_Ptr - 1] == 15)
+							if ((cpu_Regs_To_Access[cpu_Multi_List_Ptr - 1] == 15) || (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15)))
 							{
 								// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
 								if (cpu_Multi_S_Bit)
@@ -2977,16 +3020,24 @@ namespace GBAHawk
 						{
 							// stm does not cause the glitch
 							cpu_LDM_Glitch_Mode = false;
-							
-							// when writing, there is no last internal cycle, proceed to the next instruction
-							// also check for interrupts
-							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-							else { cpu_Decode_ARM(); }
+							if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
+							{
+								cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
+								cpu_Seq_Access = false;
+							}
+							else
+							{
+								// when writing, there is no last internal cycle, proceed to the next instruction
+								// also check for interrupts
+								cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+								cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-							cpu_Seq_Access = false;
+								if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+								else { cpu_Decode_ARM(); }
+
+								cpu_Seq_Access = false;
+							}
 						}
 					}
 					else
@@ -3434,7 +3485,6 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
 
 					if (cpu_LS_Is_Load)
@@ -3536,10 +3586,7 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
-
-					cpu_Sign_Extend_Load = false;
 
 					if (cpu_LS_Is_Load)
 					{
@@ -3613,10 +3660,7 @@ namespace GBAHawk
 					if (cpu_Overwrite_Base_Reg)
 					{
 						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-						cpu_Overwrite_Base_Reg = false;
 					}
-
-					cpu_Sign_Extend_Load = false;
 
 					if (cpu_LS_Is_Load)
 					{
@@ -3696,7 +3740,6 @@ namespace GBAHawk
 
 							if (cpu_Special_Inc)
 							{
-								cpu_Special_Inc = false;
 								cpu_Regs[cpu_Base_Reg] += 0x3C;
 							}
 						}
@@ -3706,7 +3749,6 @@ namespace GBAHawk
 						}
 
 						cpu_LS_First_Access = false;
-						cpu_Overwrite_Base_Reg = false;
 					}
 
 					// always incrementing since addresses always start at the lowest one
