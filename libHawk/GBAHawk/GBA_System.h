@@ -1276,11 +1276,14 @@ namespace GBAHawk
 			// The processor starts in ARM, supervisor mode, with interrupts disabled
 			cpu_Regs[16] = 0x13;
 
+			// upper bit of spsr always set
+			cpu_Regs[17] = 0x10;
+
 			cpu_FlagIset(true);
 			cpu_FlagFset(true);
 		}
 
-		// NOTTE: system and user have same regs
+		// NOTE: system and user have same regs
 		void cpu_Swap_Regs(uint32_t New_State, bool C_to_S, bool S_to_C)
 		{
 			uint32_t cpu_s_to_c_reg = cpu_Regs[17];
@@ -1700,17 +1703,18 @@ namespace GBAHawk
 		const static uint16_t cpu_ARM_BIC = 24;
 		const static uint16_t cpu_ARM_MVN = 25;
 		const static uint16_t cpu_ARM_MSR = 26;
-		const static uint16_t cpu_ARM_MRS = 27;
-		const static uint16_t cpu_ARM_Bx = 28;
-		const static uint16_t cpu_ARM_MUL = 29;
-		const static uint16_t cpu_ARM_MUL_UL = 30;
-		const static uint16_t cpu_ARM_MUL_SL = 31;
-		const static uint16_t cpu_ARM_Swap = 32;
-		const static uint16_t cpu_ARM_Imm_LS = 33;
-		const static uint16_t cpu_ARM_Reg_LS = 34;
-		const static uint16_t cpu_ARM_Multi_1 = 35;
-		const static uint16_t cpu_ARM_Branch = 36;
-		const static uint16_t cpu_ARM_Cond_Check_Only = 37;
+		const static uint16_t cpu_ARM_MSR_Glitchy = 27;
+		const static uint16_t cpu_ARM_MRS = 28;
+		const static uint16_t cpu_ARM_Bx = 29;
+		const static uint16_t cpu_ARM_MUL = 30;
+		const static uint16_t cpu_ARM_MUL_UL = 31;
+		const static uint16_t cpu_ARM_MUL_SL = 32;
+		const static uint16_t cpu_ARM_Swap = 33;
+		const static uint16_t cpu_ARM_Imm_LS = 34;
+		const static uint16_t cpu_ARM_Reg_LS = 35;
+		const static uint16_t cpu_ARM_Multi_1 = 36;
+		const static uint16_t cpu_ARM_Branch = 37;
+		const static uint16_t cpu_ARM_Cond_Check_Only = 38;
 
 		const static uint16_t cpu_ARM_AND_LDM = 110;
 		const static uint16_t cpu_ARM_EOR_LDM = 111;
@@ -1729,17 +1733,18 @@ namespace GBAHawk
 		const static uint16_t cpu_ARM_BIC_LDM = 124;
 		const static uint16_t cpu_ARM_MVN_LDM = 125;
 		const static uint16_t cpu_ARM_MSR_LDM = 126;
-		const static uint16_t cpu_ARM_MRS_LDM = 127;
-		const static uint16_t cpu_ARM_Bx_LDM = 128;
-		const static uint16_t cpu_ARM_MUL_LDM = 129;
-		const static uint16_t cpu_ARM_MUL_UL_LDM = 130;
-		const static uint16_t cpu_ARM_MUL_SL_LDM = 131;
-		const static uint16_t cpu_ARM_Swap_LDM = 132;
-		const static uint16_t cpu_ARM_Imm_LS_LDM = 133;
-		const static uint16_t cpu_ARM_Reg_LS_LDM = 134;
-		const static uint16_t cpu_ARM_Multi_1_LDM = 135;
-		const static uint16_t cpu_ARM_Branch_LDM = 136;
-		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 137;
+		const static uint16_t cpu_ARM_MSR_LDM_Glitchy = 127;
+		const static uint16_t cpu_ARM_MRS_LDM = 128;
+		const static uint16_t cpu_ARM_Bx_LDM = 129;
+		const static uint16_t cpu_ARM_MUL_LDM = 130;
+		const static uint16_t cpu_ARM_MUL_UL_LDM = 131;
+		const static uint16_t cpu_ARM_MUL_SL_LDM = 132;
+		const static uint16_t cpu_ARM_Swap_LDM = 133;
+		const static uint16_t cpu_ARM_Imm_LS_LDM = 134;
+		const static uint16_t cpu_ARM_Reg_LS_LDM = 135;
+		const static uint16_t cpu_ARM_Multi_1_LDM = 136;
+		const static uint16_t cpu_ARM_Branch_LDM = 137;
+		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 138;
 
 		// Instruction Operations Thumb
 		const static uint16_t cpu_Thumb_Shift = 5;
@@ -2643,7 +2648,7 @@ namespace GBAHawk
 							case 0x7: ret.append("RSC "); break;
 							case 0x8: sprintf_s(val_char_2, 40, "MRS R%02d, CPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
 							case 0x9:
-								if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
+								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
 								{
 									sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
 									return std::string(val_char_2);
@@ -2655,8 +2660,16 @@ namespace GBAHawk
 								}
 							case 0xA: sprintf_s(val_char_2, 40, "MRS R%02d, SPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
 							case 0xB:
-								sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-								ret.append(std::string(val_char_2));
+								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
+								{
+									sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
+									return std::string(val_char_2);
+								}
+								else
+								{
+									sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
+									ret.append(std::string(val_char_2));
+								}
 								break;
 							case 0xC: ret.append("ORR "); break;
 							case 0xD: ret.append("MOV "); break;
@@ -2756,12 +2769,18 @@ namespace GBAHawk
 						case 0x5: ret.append("ADC "); break;
 						case 0x6: ret.append("SBC "); break;
 						case 0x7: ret.append("RSC "); break;
-						case 0x8: return "Undefined";
+						case 0x8:
+							sprintf_s(val_char_2, 40, "MSR GLCH, mask:%02d, (%2X >> %2X)",
+								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
+							return std::string(val_char_2);
 						case 0x9:
 							sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, (%2X >> %2X)",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
 							return std::string(val_char_2);
-						case 0xA: return "Undefined";
+						case 0xA:
+							sprintf_s(val_char_2, 40, "MSR GLCH, mask:%02d, (%2X >> %2X)",
+								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
+							return std::string(val_char_2);
 						case 0xB:
 							sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, (%2X >> %2X)",
 									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E)); 

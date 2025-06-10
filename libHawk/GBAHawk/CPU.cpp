@@ -314,7 +314,7 @@ namespace GBAHawk
 							cpu_Exec_ARM = cpu_ARM_MRS;
 							break;
 						case 0x9:
-							if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
+							if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
 							{
 								// Branch and exchange
 								cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
@@ -331,8 +331,17 @@ namespace GBAHawk
 							cpu_Exec_ARM = cpu_ARM_MRS;
 							break;
 						case 0xB:
-							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
-							cpu_Exec_ARM = cpu_ARM_MSR;
+							if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
+							{
+								// Branch and exchange
+								cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
+								cpu_Exec_ARM = cpu_ARM_Bx;
+							}
+							else
+							{
+								cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+								cpu_Exec_ARM = cpu_ARM_MSR;
+							}
 							break;
 					}
 				}
@@ -392,20 +401,18 @@ namespace GBAHawk
 				switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 				{
 					case 0x8:
-						// Undefined Opcode Exception
-						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-						cpu_Exception_Type = cpu_Undef_Exc;
+						// Gltiched version of MSR
+						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+						cpu_Exec_ARM = cpu_ARM_MSR_Glitchy;
 						break;
 					case 0x9:
 						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
 						cpu_Exec_ARM = cpu_ARM_MSR;
 						break;
 					case 0xA:
-						// Undefined Opcode Exception
-						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-						cpu_Exec_ARM = cpu_ARM_Cond_Check_Only;
-						cpu_Exception_Type = cpu_Undef_Exc;
+						// Gltiched version of MSR
+						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+						cpu_Exec_ARM = cpu_ARM_MSR_Glitchy;
 						break;
 					case 0xB:
 						cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
@@ -1081,6 +1088,59 @@ namespace GBAHawk
 					}
 					else
 					{
+						//upper bit of mode must always be set for spsr as well
+						cpu_ALU_Temp_Val |= 0x10;
+						
+						// user and system have no SPSR to write to
+						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+						{
+							// unpredictable
+						}
+						else
+						{
+							total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask | cpu_State_Mask);
+							cpu_Regs[17] = (cpu_Regs[17] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
+						}
+					}
+					break;
+
+				case cpu_ARM_MSR_Glitchy:
+					if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
+					if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
+					if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }
+					if ((cpu_Instr_ARM_2 & 0x80000) == 0x80000) { byte_mask |= 0xFF000000; }
+
+					if ((cpu_Instr_ARM_2 & 0x400000) == 0x0)
+					{
+						// user (unpriviliged)
+						if ((cpu_Regs[16] & 0x1F) == 0x10)
+						{
+							total_mask = byte_mask & cpu_User_Mask;
+						}
+						else
+						{
+							if ((cpu_ALU_Temp_Val & cpu_State_Mask) != 0)
+							{
+								// architecturally unpredictable, but on hardwarae has no ill effects (ex. feline.gba transparency when seen by lab rat.)
+								total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask);
+							}
+							else
+							{
+								total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask);
+							}
+						}
+
+						//upper bit of mode must always be set
+						cpu_ALU_Temp_Val |= 0x10;
+
+						cpu_Swap_Regs(((cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask)) & 0x1F, false, false);
+						cpu_Regs[16] = (cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
+					}
+					else
+					{
+						//upper bit of mode must always be set for spsr as well
+						cpu_ALU_Temp_Val |= 0x10;
+
 						// user and system have no SPSR to write to
 						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
 						{
@@ -1763,6 +1823,59 @@ namespace GBAHawk
 					}
 					else
 					{
+						//upper bit of mode must always be set
+						cpu_ALU_Temp_Val |= 0x10;
+						
+						// user and system have no SPSR to write to
+						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
+						{
+							// unpredictable
+						}
+						else
+						{
+							total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask | cpu_State_Mask);
+							cpu_Regs[17] = (cpu_Regs[17] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
+						}
+					}
+					break;
+
+				case cpu_ARM_MSR_LDM_Glitchy:
+					if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
+					if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
+					if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }
+					if ((cpu_Instr_ARM_2 & 0x80000) == 0x80000) { byte_mask |= 0xFF000000; }
+
+					if ((cpu_Instr_ARM_2 & 0x400000) == 0x0)
+					{
+						// user (unpriviliged)
+						if ((cpu_Regs[16] & 0x1F) == 0x10)
+						{
+							total_mask = byte_mask & cpu_User_Mask;
+						}
+						else
+						{
+							if ((cpu_ALU_Temp_Val & cpu_State_Mask) != 0)
+							{
+								// architecturally unpredictable, but on hardwarae has no ill effects (ex. feline.gba transparency when seen by lab rat.)
+								total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask);
+							}
+							else
+							{
+								total_mask = byte_mask & (cpu_User_Mask | cpu_Priv_Mask);
+							}
+						}
+
+						//upper bit of mode must always be set
+						cpu_ALU_Temp_Val |= 0x10;
+
+						cpu_Swap_Regs(((cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask)) & 0x1F, false, false);
+						cpu_Regs[16] = (cpu_Regs[16] & ~total_mask) | (cpu_ALU_Temp_Val & total_mask);
+					}
+					else
+					{
+						//upper bit of mode must always be set
+						cpu_ALU_Temp_Val |= 0x10;
+
 						// user and system have no SPSR to write to
 						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
 						{
@@ -3174,7 +3287,7 @@ namespace GBAHawk
 								cpu_Exec_ARM = cpu_ARM_MRS_LDM;
 								break;
 							case 0x9:
-								if ((cpu_Instr_ARM_2 & 0XFFFF0) == 0xFFF10)
+								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
 								{
 									// Branch and exchange
 									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
@@ -3191,8 +3304,17 @@ namespace GBAHawk
 								cpu_Exec_ARM = cpu_ARM_MRS_LDM;
 								break;
 							case 0xB:
-								cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
-								cpu_Exec_ARM = cpu_ARM_MSR_LDM;
+								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
+								{
+									// Branch and exchange
+									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_ARM;
+									cpu_Exec_ARM = cpu_ARM_Bx_LDM;
+								}
+								else
+								{
+									cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+									cpu_Exec_ARM = cpu_ARM_MSR_LDM;
+								}
 								break;
 						}
 					}
@@ -3254,20 +3376,18 @@ namespace GBAHawk
 					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
 					{
 						case 0x8:
-							// Undefined Opcode Exception
-							cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-							cpu_Exec_ARM = cpu_ARM_Cond_Check_Only_LDM;
-							cpu_Exception_Type = cpu_Undef_Exc;
+							// Gltiched version of MSR
+							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+							cpu_Exec_ARM = cpu_ARM_MSR_LDM_Glitchy;
 							break;
 						case 0x9:
 							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
 							cpu_Exec_ARM = cpu_ARM_MSR_LDM;
 							break;
 						case 0xA:
-							// Undefined Opcode Exception
-							cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-							cpu_Exec_ARM = cpu_ARM_Cond_Check_Only_LDM;
-							cpu_Exception_Type = cpu_Undef_Exc;
+							// Gltiched version of MSR
+							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
+							cpu_Exec_ARM = cpu_ARM_MSR_LDM_Glitchy;
 							break;
 						case 0xB:
 							cpu_Instr_Type = cpu_Internal_And_Prefetch_3_ARM;
