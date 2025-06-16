@@ -2667,7 +2667,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -2785,7 +2784,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -2877,7 +2875,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -3012,7 +3009,6 @@ namespace GBAHawk
 								// if the next cycle is a memory access, one cycle can be saved
 								cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 
-								cpu_Internal_Save_Access = true;
 								cpu_Seq_Access = false;
 							}
 						}
@@ -3164,7 +3160,6 @@ namespace GBAHawk
 
 						cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 						cpu_Invalidate_Pipeline = (cpu_Base_Reg_2 == 15);
-						cpu_Internal_Save_Access = true;
 
 						// unlock the bus
 						cpu_Swap_Lock = false;
@@ -3500,7 +3495,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -3601,7 +3595,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -3675,7 +3668,6 @@ namespace GBAHawk
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Internal_Save_Access = true;
 							cpu_Seq_Access = false;
 						}
 					}
@@ -3781,7 +3773,6 @@ namespace GBAHawk
 							{
 								// if the next cycle is a memory access, one cycle can be saved
 								cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-								cpu_Internal_Save_Access = true;
 								cpu_Seq_Access = false;
 							}
 						}
@@ -4103,8 +4094,6 @@ namespace GBAHawk
 				else
 				{
 					// A memory access cycle could be saved here, but the GBA does not seem to implement it
-					if (cpu_Internal_Save_Access) { }
-
 					// next instruction was already prefetched, decode it here
 					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
@@ -4121,7 +4110,6 @@ namespace GBAHawk
 					}
 				}
 
-				cpu_Internal_Save_Access = false;
 				cpu_Invalidate_Pipeline = false;
 				break;
 
@@ -4139,8 +4127,6 @@ namespace GBAHawk
 				else
 				{
 					// A memory access cycle could be saved here, but the GBA does not seem to implement it
-					if (cpu_Internal_Save_Access) { }
-
 					// next instruction was already prefetched, decode it here
 					cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
 					cpu_Instr_TMB_1 = cpu_Instr_TMB_0;
@@ -4149,7 +4135,6 @@ namespace GBAHawk
 					else { cpu_Decode_TMB(); }
 				}
 
-				cpu_Internal_Save_Access = false;
 				cpu_Invalidate_Pipeline = false;
 				break;
 
@@ -4256,8 +4241,6 @@ namespace GBAHawk
 							else
 							{
 								// A memory access cycle could be saved here, but the GBA does not seem to implement it
-								if (cpu_Internal_Save_Access) { }
-
 								// next instruction was already prefetched, decode it here
 								cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 								cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
@@ -4274,7 +4257,6 @@ namespace GBAHawk
 								}
 							}
 
-							cpu_Internal_Save_Access = false;
 							cpu_Invalidate_Pipeline = false;
 							break;
 
@@ -4292,8 +4274,6 @@ namespace GBAHawk
 							else
 							{
 								// A memory access cycle could be saved here, but the GBA does not seem to implement it
-								if (cpu_Internal_Save_Access) { }
-
 								// next instruction was already prefetched, decode it here
 								cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
 								cpu_Instr_TMB_1 = cpu_Instr_TMB_0;
@@ -4302,7 +4282,6 @@ namespace GBAHawk
 								else { cpu_Decode_TMB(); }
 							}
 
-							cpu_Internal_Save_Access = false;
 							cpu_Invalidate_Pipeline = false;
 							break;
 

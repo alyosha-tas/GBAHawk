@@ -42,7 +42,7 @@ namespace GBAHawk
 
 		cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3 = false;
 
-		cpu_LS_Is_Load = cpu_LS_First_Access = cpu_Internal_Save_Access = cpu_Invalidate_Pipeline = false;
+		cpu_LS_Is_Load = cpu_LS_First_Access = cpu_Invalidate_Pipeline = false;
 
 		cpu_Overwrite_Base_Reg = cpu_Multi_Before = cpu_Multi_Inc = cpu_Multi_S_Bit = cpu_Multi_Swap = false;
 
@@ -1239,8 +1239,15 @@ namespace GBAHawk
 						}
 					}
 
-					cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 12) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					}
 					break;
 
 				case cpu_ARM_MUL_SL:
@@ -1272,8 +1279,15 @@ namespace GBAHawk
 						}
 					}
 
-					cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 12) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					}
 					break;
 
 				case cpu_ARM_Swap:
@@ -1983,8 +1997,15 @@ namespace GBAHawk
 						}
 					}
 
-					cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 12) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					}
 					break;
 
 				case cpu_ARM_MUL_SL_LDM:
@@ -2026,8 +2047,15 @@ namespace GBAHawk
 						}
 					}
 
-					cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
-					cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					// mul does not effect R15
+					if (((cpu_Instr_ARM_2 >> 12) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 12) & 0xF] = (uint32_t)cpu_ALU_Long_Result;
+					}
+					if (((cpu_Instr_ARM_2 >> 16) & 0xF) != 0xF)
+					{
+						cpu_Regs[(cpu_Instr_ARM_2 >> 16) & 0xF] = (uint32_t)(cpu_ALU_Long_Result >> 32);
+					}
 					break;
 
 				case cpu_ARM_Swap_LDM:

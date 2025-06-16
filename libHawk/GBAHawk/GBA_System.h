@@ -27,8 +27,6 @@ using namespace std;
 * 
 *	Fix FIFO DMA shutdown bug
 * 
-*   Check multiplication with dest r15 for SL and UL
-* 
 */
 
 namespace GBAHawk
@@ -1161,7 +1159,6 @@ namespace GBAHawk
 		bool cpu_Take_Branch;
 		bool cpu_LS_Is_Load;
 		bool cpu_LS_First_Access;
-		bool cpu_Internal_Save_Access;
 		bool cpu_Invalidate_Pipeline;
 		bool cpu_Overwrite_Base_Reg;
 		bool cpu_Multi_Before;
@@ -3392,7 +3389,6 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Take_Branch, saver);
 			saver = bool_saver(cpu_LS_Is_Load, saver);
 			saver = bool_saver(cpu_LS_First_Access, saver);
-			saver = bool_saver(cpu_Internal_Save_Access, saver);
 			saver = bool_saver(cpu_Invalidate_Pipeline, saver);
 			saver = bool_saver(cpu_Overwrite_Base_Reg, saver);
 			saver = bool_saver(cpu_Multi_Before, saver);
@@ -3517,7 +3513,6 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Take_Branch, loader);
 			loader = bool_loader(&cpu_LS_Is_Load, loader);
 			loader = bool_loader(&cpu_LS_First_Access, loader);
-			loader = bool_loader(&cpu_Internal_Save_Access, loader);
 			loader = bool_loader(&cpu_Invalidate_Pipeline, loader);
 			loader = bool_loader(&cpu_Overwrite_Base_Reg, loader);
 			loader = bool_loader(&cpu_Multi_Before, loader);
@@ -6605,7 +6600,7 @@ namespace GBAHawk
 		{
 			//delays_to_process = true;
 			//ppu_Latch_Delays = true;
-			//ppu_Ctrl_Latch_cd = 1;
+			//ppu_Ctrl_Latch_cd = 2;
 			//ppu_Ctrl_Latch_Delay = true;
 
 			ppu_BG_Mode = value & 7;
