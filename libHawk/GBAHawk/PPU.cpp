@@ -499,7 +499,7 @@ namespace GBAHawk
 
 			// render
 			if (ppu_Cycle >= 46)
-			{
+			{				
 				// determine what BG pixels will actually be rendered
 				if (((ppu_Cycle - 2) & 3) == 0)
 				{
@@ -674,159 +674,158 @@ namespace GBAHawk
 
 					switch (ppu_BG_Mode)
 					{
-					case 0:
-						for (int c0 = 0; c0 < 4; c0++)
-						{
-							if (BG_Go_Disp[c0])
+						case 0:
+							for (int c0 = 0; c0 < 4; c0++)
 							{
-								if (ppu_BG_Has_Pixel_R[c0])
+								if (BG_Go_Disp[c0])
 								{
-									if (ppu_BG_Priority[c0] < cur_layer_priority)
+									if (ppu_BG_Has_Pixel_R[c0])
 									{
-										ppu_BG_Pixel_S = ppu_BG_Pixel_F;
-										second_BG_layer = cur_BG_layer;
-										second_layer_priority = cur_layer_priority;
+										if (ppu_BG_Priority[c0] < cur_layer_priority)
+										{
+											ppu_BG_Pixel_S = ppu_BG_Pixel_F;
+											second_BG_layer = cur_BG_layer;
+											second_layer_priority = cur_layer_priority;
 
-										ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c0];
-										cur_BG_layer = c0;
-										cur_layer_priority = ppu_BG_Priority[c0];
-									}
-									else if (ppu_BG_Priority[c0] < second_layer_priority)
-									{
-										ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c0];
-										second_BG_layer = c0;
-										second_layer_priority = ppu_BG_Priority[c0];
+											ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c0];
+											cur_BG_layer = c0;
+											cur_layer_priority = ppu_BG_Priority[c0];
+										}
+										else if (ppu_BG_Priority[c0] < second_layer_priority)
+										{
+											ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c0];
+											second_BG_layer = c0;
+											second_layer_priority = ppu_BG_Priority[c0];
+										}
 									}
 								}
 							}
-						}
-						break;
+							break;
 
-					case 1:
-						for (int c1 = 0; c1 < 2; c1++)
-						{
-							if (BG_Go_Disp[c1])
+						case 1:
+							for (int c1 = 0; c1 < 2; c1++)
 							{
-								if (ppu_BG_Has_Pixel_R[c1])
+								if (BG_Go_Disp[c1])
 								{
-									if (ppu_BG_Priority[c1] < cur_layer_priority)
+									if (ppu_BG_Has_Pixel_R[c1])
 									{
-										ppu_BG_Pixel_S = ppu_BG_Pixel_F;
-										second_BG_layer = cur_BG_layer;
-										second_layer_priority = cur_layer_priority;
+										if (ppu_BG_Priority[c1] < cur_layer_priority)
+										{
+											ppu_BG_Pixel_S = ppu_BG_Pixel_F;
+											second_BG_layer = cur_BG_layer;
+											second_layer_priority = cur_layer_priority;
 
-										ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c1];
-										cur_BG_layer = c1;
-										cur_layer_priority = ppu_BG_Priority[c1];
-									}
-									else if (ppu_BG_Priority[c1] < second_layer_priority)
-									{
-										ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c1];
-										second_BG_layer = c1;
-										second_layer_priority = ppu_BG_Priority[c1];
+											ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c1];
+											cur_BG_layer = c1;
+											cur_layer_priority = ppu_BG_Priority[c1];
+										}
+										else if (ppu_BG_Priority[c1] < second_layer_priority)
+										{
+											ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c1];
+											second_BG_layer = c1;
+											second_layer_priority = ppu_BG_Priority[c1];
+										}
 									}
 								}
 							}
-						}
 
-						if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
-						{
-							if (ppu_BG_Priority[2] < cur_layer_priority)
+							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
 							{
-								ppu_BG_Pixel_S = ppu_BG_Pixel_F;
-								second_BG_layer = cur_BG_layer;
-								second_layer_priority = cur_layer_priority;
-
-								ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
-								cur_BG_layer = 2;
-								cur_layer_priority = ppu_BG_Priority[2];
-							}
-							else if (ppu_BG_Priority[2] < second_layer_priority)
-							{
-								ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[2];
-								second_BG_layer = 2;
-								second_layer_priority = ppu_BG_Priority[2];
-							}
-						}
-						break;
-
-					case 2:
-						for (int c2 = 2; c2 < 4; c2++)
-						{
-							if (BG_Go_Disp[c2] && ppu_BG_Has_Pixel_R[c2])
-							{
-								if (ppu_BG_Priority[c2] < cur_layer_priority)
+								if (ppu_BG_Priority[2] < cur_layer_priority)
 								{
 									ppu_BG_Pixel_S = ppu_BG_Pixel_F;
 									second_BG_layer = cur_BG_layer;
 									second_layer_priority = cur_layer_priority;
 
-									ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c2];
-									cur_BG_layer = c2;
-									cur_layer_priority = ppu_BG_Priority[c2];
+									ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
+									cur_BG_layer = 2;
+									cur_layer_priority = ppu_BG_Priority[2];
 								}
-								else if (ppu_BG_Priority[c2] < second_layer_priority)
+								else if (ppu_BG_Priority[2] < second_layer_priority)
 								{
-									ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c2];
-									second_BG_layer = c2;
-									second_layer_priority = ppu_BG_Priority[c2];
+									ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[2];
+									second_BG_layer = 2;
+									second_layer_priority = ppu_BG_Priority[2];
 								}
 							}
-						}
-						break;
+							break;
 
-					case 3:
-						// Direct Bitmap only, BG2
-						if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
-						{
-							// no transparency possible
-							cur_BG_layer = 2;
-							cur_layer_priority = ppu_BG_Priority[2];
+						case 2:
+							for (int c2 = 2; c2 < 4; c2++)
+							{
+								if (BG_Go_Disp[c2] && ppu_BG_Has_Pixel_R[c2])
+								{
+									if (ppu_BG_Priority[c2] < cur_layer_priority)
+									{
+										ppu_BG_Pixel_S = ppu_BG_Pixel_F;
+										second_BG_layer = cur_BG_layer;
+										second_layer_priority = cur_layer_priority;
 
-							ppu_Fetch_BG = false;
+										ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[c2];
+										cur_BG_layer = c2;
+										cur_layer_priority = ppu_BG_Priority[c2];
+									}
+									else if (ppu_BG_Priority[c2] < second_layer_priority)
+									{
+										ppu_BG_Pixel_S = (uint32_t)ppu_Pixel_Color_R[c2];
+										second_BG_layer = c2;
+										second_layer_priority = ppu_BG_Priority[c2];
+									}
+								}
+							}
+							break;
 
-							ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
-						}
-						break;
+						case 3:
+							// Direct Bitmap only, BG2
+							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
+							{
+								// no transparency possible
+								cur_BG_layer = 2;
+								cur_layer_priority = ppu_BG_Priority[2];
 
-					case 4:
-						// bitmaps, only BG2
-						if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
-						{
-							// no transparency possible
-							cur_BG_layer = 2;
-							cur_layer_priority = ppu_BG_Priority[2];
-							ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
-						}
-						break;
+								ppu_Fetch_BG = false;
 
-					case 5:
-						// bitmaps, only BG2
-						if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
-						{
-							// no transparency possible
-							cur_BG_layer = 2;
-							cur_layer_priority = ppu_BG_Priority[2];
+								ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
+							}
+							break;
 
-							ppu_Fetch_BG = false;
+						case 4:
+							// bitmaps, only BG2
+							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
+							{
+								// no transparency possible
+								cur_BG_layer = 2;
+								cur_layer_priority = ppu_BG_Priority[2];
+								ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
+							}
+							break;
 
-							ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
-						}
-						break;
+						case 5:
+							// bitmaps, only BG2
+							if (BG_Go_Disp[2] && ppu_BG_Has_Pixel_R[2])
+							{
+								// no transparency possible
+								cur_BG_layer = 2;
+								cur_layer_priority = ppu_BG_Priority[2];
 
-					case 6:
-						// invalid
-						break;
+								ppu_Fetch_BG = false;
 
-					case 7:
-						// invalid
-						break;
+								ppu_BG_Pixel_F = (uint32_t)ppu_Pixel_Color_R[2];
+							}
+							break;
+
+						case 6:
+							// invalid
+							break;
+
+						case 7:
+							// invalid
+							break;
 					}
 
 					// determine final pixel color, based on sprites and special effects
 					if (OBJ_Go)
 					{
-						//Console.WriteLine(ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] + " " + cur_layer_priority + " " + cur_BG_layer + " " + ppu_LY);
 						// sprite pixel available, check ordering
 						if (spr_priority <= cur_layer_priority)
 						{
@@ -2574,7 +2573,7 @@ namespace GBAHawk
 			
 			if (ppu_Fetch_Sprite_VRAM_Cnt == (ppu_Sprite_X_Size + ppu_Sprite_Size_X_Ofst))
 			{
-				if (ppu_Process_Sprite == 127)
+				if ((ppu_Process_Sprite == 127) || (ppu_Current_Sprite == 128))
 				{
 					ppu_Sprite_Eval_Finished = true;
 				}
