@@ -494,13 +494,6 @@ namespace GBAHawk
 			// render
 			if (ppu_Cycle >= 46)
 			{				
-				if ((ppu_LY == 65) && (ppu_Display_Cycle < 100))
-				{
-					Message_String = "ctrl " + to_string(ppu_Display_Cycle) + " old: " + to_string(ppu_Cycle) + " LY: " + to_string(ppu_Pixel_Color_M[0]) + " LY: " + to_string(ppu_BG_On[0]) + " ctrl " + to_string(((ppu_Cycle - 2) & 3)) + " ctrl " + to_string(ppu_Cycle & 3);
-
-					if (MessageCallback) MessageCallback(Message_String.length());
-				}
-				
 				// determine what BG pixels will actually be rendered
 				if (((ppu_Cycle - 2) & 3) == 0)
 				{
