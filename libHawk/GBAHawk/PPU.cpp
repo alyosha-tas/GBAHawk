@@ -264,15 +264,13 @@ namespace GBAHawk
 
 		if (!ppu_PAL_Rendering_Complete)
 		{
-			// move pixel data up up the pipeline
+			// move pixel data up the pipeline
 			if (((ppu_Cycle & 3) == 0) && (ppu_Cycle >= 36))
 			{
 				switch (ppu_BG_Mode)
 				{
-				case 0:
-					for (int c0 = 0; c0 < 4; c0++)
-					{
-						if (ppu_BG_On[c0])
+					case 0:
+						for (int c0 = 0; c0 < 4; c0++)
 						{
 							temp_color = 0;
 
@@ -360,13 +358,10 @@ namespace GBAHawk
 								ppu_BG_Has_Pixel_1[c0] = ((temp_color & 0xF) != 0);
 							}
 						}
-					}
-					break;
+						break;
 
-				case 1:
-					for (int c1 = 0; c1 < 2; c1++)
-					{
-						if (ppu_BG_On[c1])
+					case 1:
+						for (int c1 = 0; c1 < 2; c1++)
 						{
 							temp_color = 0;
 
@@ -454,52 +449,58 @@ namespace GBAHawk
 								ppu_BG_Has_Pixel_1[c1] = ((temp_color & 0xF) != 0);
 							}
 						}
-					}
 
-					ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
-					ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-					ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-					ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
-					ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-					ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
-					break;
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+						break;
 
-				case 2:
-					ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
-					ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-					ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+					case 2:
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-					ppu_Pixel_Color_M[3] = ppu_Pixel_Color_1[3];
-					ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
-					ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
+						ppu_Pixel_Color_M[3] = ppu_Pixel_Color_1[3];
+						ppu_Pixel_Color_1[3] = ppu_Pixel_Color_2[3];
+						ppu_Pixel_Color_2[3] = ppu_Pixel_Color[3];
 
-					ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
-					ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-					ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
 
-					ppu_BG_Has_Pixel_M[3] = ppu_BG_Has_Pixel_1[3];
-					ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
-					ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
-					break;
+						ppu_BG_Has_Pixel_M[3] = ppu_BG_Has_Pixel_1[3];
+						ppu_BG_Has_Pixel_1[3] = ppu_BG_Has_Pixel_2[3];
+						ppu_BG_Has_Pixel_2[3] = ppu_BG_Has_Pixel[3];
+						break;
 
-				case 3:
-				case 4:
-				case 5:
-					ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
-					ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
-					ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
+					case 3:
+					case 4:
+					case 5:
+						ppu_Pixel_Color_M[2] = ppu_Pixel_Color_1[2];
+						ppu_Pixel_Color_1[2] = ppu_Pixel_Color_2[2];
+						ppu_Pixel_Color_2[2] = ppu_Pixel_Color[2];
 
-					ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
-					ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
-					ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
-					break;
+						ppu_BG_Has_Pixel_M[2] = ppu_BG_Has_Pixel_1[2];
+						ppu_BG_Has_Pixel_1[2] = ppu_BG_Has_Pixel_2[2];
+						ppu_BG_Has_Pixel_2[2] = ppu_BG_Has_Pixel[2];
+						break;
 				}
 			}
 
 			// render
 			if (ppu_Cycle >= 46)
 			{				
+				if ((ppu_LY == 65) && (ppu_Display_Cycle < 100))
+				{
+					Message_String = "ctrl " + to_string(ppu_Display_Cycle) + " old: " + to_string(ppu_Cycle) + " LY: " + to_string(ppu_Pixel_Color_M[0]) + " LY: " + to_string(ppu_BG_On[0]) + " ctrl " + to_string(((ppu_Cycle - 2) & 3)) + " ctrl " + to_string(ppu_Cycle & 3);
+
+					if (MessageCallback) MessageCallback(Message_String.length());
+				}
+				
 				// determine what BG pixels will actually be rendered
 				if (((ppu_Cycle - 2) & 3) == 0)
 				{
