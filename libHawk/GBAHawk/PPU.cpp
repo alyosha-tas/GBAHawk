@@ -2567,7 +2567,7 @@ namespace GBAHawk
 			
 			if (ppu_Fetch_Sprite_VRAM_Cnt == (ppu_Sprite_X_Size + ppu_Sprite_Size_X_Ofst))
 			{
-				if ((ppu_Process_Sprite == 127) || (ppu_Current_Sprite == 128))
+				if ((ppu_Process_Sprite == 127) || (ppu_Sprite_Next_Fetch == 4))
 				{
 					ppu_Sprite_Eval_Finished = true;
 				}
@@ -2727,6 +2727,11 @@ namespace GBAHawk
 					if (!ppu_Fetch_Sprite_VRAM && !ppu_Fetch_OAM_A_D)
 					{
 						ppu_Sprite_Eval_Finished = true;
+					}
+					else
+					{
+						// signal end of sprite evaluiation once vram fetches are finished
+						ppu_Sprite_Next_Fetch = 4;
 					}
 				}
 				else
