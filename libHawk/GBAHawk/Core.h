@@ -183,16 +183,18 @@ namespace GBAHawk
 			Mapper->Reg_Day = (uint8_t)(datetime >> 32);
 			Mapper->Reg_Month = (uint8_t)(datetime >> 40);
 			Mapper->Reg_Year = (uint8_t)(datetime >> 48);
-			Mapper->Reg_Ctrl = (uint8_t)(datetime >> 56);
+			Mapper->CTRL_Reg = (uint8_t)(datetime >> 56);
 
-			Mapper->RTC_24_Hour = (Mapper->Reg_Ctrl & 0x40) == 0x40;
+			Mapper->RTC_24_Hour = (Mapper->CTRL_Reg & 0x40) == 0x40;
 
 			Mapper->EEPROM_Offset = EEPROM_offset;
 			Mapper->Flash_Write_Offset = flash_write_offset;
 			Mapper->Flash_Sector_Erase_Offset = flash_sector_offset;
 			Mapper->Flash_Chip_Erase_Offset = flash_chip_offset;
 
+			Mapper->Core_Message_String = &GBA.Message_String;
 			Mapper->RumbleCallback = GBA.RumbleCallback;
+			Mapper->MessageCallback = GBA.MessageCallback;
 
 			// Only reset cycle count on initial power on, not power cycles
 			GBA.CycleCount = 0;
