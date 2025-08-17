@@ -7,6 +7,11 @@ using Newtonsoft.Json;
 
 namespace BizHawk.Client.Common
 {
+	public class LoadRomArgs
+	{
+		public IOpenAdvanced OpenAdvanced { get; set; }
+	}
+
 	public interface IOpenAdvanced
 	{
 		string TypeName { get; }

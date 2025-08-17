@@ -223,8 +223,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			HardReset();
 
 			_scanlineCallback = null;
-
-			DeterministicEmulation = true;
 		}
 
 		public ulong TotalExecutedCycles => _settings.cycle_return_setting == GBSettings.Cycle_Return.CPU ? cpu.TotalExecutedCycles : CycleCount;

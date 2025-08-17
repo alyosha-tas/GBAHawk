@@ -84,8 +84,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 		public string SystemId => VSystemID.Raw.GBA;
 
-		public bool DeterministicEmulation => true;
-
 		public void ResetCounters()
 		{
 			_frame = 0;

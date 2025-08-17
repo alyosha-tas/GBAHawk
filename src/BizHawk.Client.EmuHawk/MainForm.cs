@@ -1015,8 +1015,14 @@ namespace BizHawk.Client.GBAHawk
 			}
 			else
 			{
-				if (CurrentlyOpenRomArgs == null) success = true;
-				success = LoadRom(CurrentlyOpenRomArgs.OpenAdvanced.SimplePath, CurrentlyOpenRomArgs);
+				if (CurrentlyOpenRomArgs == null)
+				{
+					success = true;
+				}
+				else
+				{
+					success = LoadRom(CurrentlyOpenRomArgs.OpenAdvanced.SimplePath, CurrentlyOpenRomArgs);
+				}
 			}
 
 			Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
@@ -3237,11 +3243,6 @@ namespace BizHawk.Client.GBAHawk
 
 			try
 			{
-				// movies should require deterministic emulation in ALL cases
-				// if the core is managing its own DE through SyncSettings a 'deterministic' bool can be passed into the core's constructor
-				// it is then up to the core itself to override its own local DeterministicEmulation setting
-				bool deterministic = args.Deterministic ?? MovieSession.NewMovieQueued;
-
 				if (!Tools.AskSave())
 				{
 					failureIsFromAskSave = true;
@@ -3252,7 +3253,6 @@ namespace BizHawk.Client.GBAHawk
 				{
 					ChooseArchive = LoadArchiveChooser,
 					ChoosePlatform = ChoosePlatformForRom,
-					Deterministic = deterministic,
 					MessageCallback = AddOnScreenMessage,
 				};
 				FirmwareManager.RecentlyServed.Clear();

@@ -148,8 +148,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public string SystemId => VSystemID.Raw.GBAL;
 
-		public bool DeterministicEmulation => true;
-
 		public void ResetCounters()
 		{
 			_frame = 0;

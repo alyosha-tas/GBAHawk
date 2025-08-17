@@ -34,8 +34,6 @@ namespace BizHawk.Client.Common
 
 			public List<IRomAsset> Roms { get; set; } = new List<IRomAsset>();
 
-			public bool DeterministicEmulationRequested => _parent.Deterministic;
-
 			public object FetchSettings(Type emulatorType, Type settingsType)
 				=> _parent.GetCoreSettings(emulatorType, settingsType);
 
@@ -85,8 +83,6 @@ namespace BizHawk.Client.Common
 		public RomGame Rom { get; private set; }
 		public string CanonicalFullPath { get; private set; }
 
-		public bool Deterministic { get; set; }
-
 		public class RomErrorArgs : EventArgs
 		{
 			// TODO: think about naming here, what to pass, a lot of potential good information about what went wrong could go here!
@@ -97,17 +93,15 @@ namespace BizHawk.Client.Common
 				Type = type;
 			}
 
-			public RomErrorArgs(string message, string systemId, string path, bool? det, LoadErrorType type)
+			public RomErrorArgs(string message, string systemId, string path, LoadErrorType type)
 				: this(message, systemId, type)
 			{
-				Deterministic = det;
 				RomPath = path;
 			}
 
 			public string Message { get; }
 			public string AttemptedCoreLoad { get; }
 			public string RomPath { get; }
-			public bool? Deterministic { get; set; }
 			public bool Retry { get; set; }
 			public LoadErrorType Type { get; }
 		}
@@ -160,9 +154,9 @@ namespace BizHawk.Client.Common
 			OnLoadError?.Invoke(this, new RomErrorArgs(message, systemId, type));
 		}
 
-		private void DoLoadErrorCallback(string message, string systemId, string path, bool det, LoadErrorType type = LoadErrorType.Unknown)
+		private void DoLoadErrorCallback(string message, string systemId, string path, LoadErrorType type = LoadErrorType.Unknown)
 		{
-			OnLoadError?.Invoke(this, new RomErrorArgs(message, systemId, path, det, type));
+			OnLoadError?.Invoke(this, new RomErrorArgs(message, systemId, path, type));
 		}
 
 		private bool HandleArchiveBinding(HawkFile file)
@@ -427,7 +421,7 @@ namespace BizHawk.Client.Common
 
 			if (ex is MissingFirmwareException)
 			{
-				DoLoadErrorCallback(ex.Message, system, path, Deterministic, LoadErrorType.MissingFirmware);
+				DoLoadErrorCallback(ex.Message, system, path, LoadErrorType.MissingFirmware);
 			}
 			else if (ex is CGBNotSupportedException)
 			{

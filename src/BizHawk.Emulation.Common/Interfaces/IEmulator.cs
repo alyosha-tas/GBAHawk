@@ -51,17 +51,6 @@ namespace BizHawk.Emulation.Common
 		string SystemId { get; }
 
 		/// <summary>
-		/// Gets a value indicating whether the core is in deterministic mode.
-		/// This flag is a contract with the client.
-		/// If true, the core agrees to behave in a completely deterministic manner,
-		/// Features like movie recording depend on this.
-		/// It is the client's responsibility to manage this flag.
-		/// If a core wants to implement non-deterministic features (like speed hacks, frame-skipping), it must be done only when this flag is false
-		/// if you want to set this, look in the emulator's constructor or Load() method
-		/// </summary>
-		bool DeterministicEmulation { get; }
-
-		/// <summary>
 		/// Resets the Frame and Lag counters, and any other similar counters a core might implement
 		/// </summary>
 		void ResetCounters();

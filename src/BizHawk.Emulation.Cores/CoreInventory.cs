@@ -104,7 +104,6 @@ namespace BizHawk.Emulation.Cores
 				param.Settings = (dynamic)cip.FetchSettings(Type, SettingsType);
 				param.SyncSettings = (dynamic)cip.FetchSyncSettings(Type, SyncSettingsType);
 				param.Roms = cip.Roms;
-				param.DeterministicEmulationRequested = cip.DeterministicEmulationRequested;
 				return (IEmulator)CTor.Invoke(new object[] { param });
 			}
 
@@ -116,7 +115,6 @@ namespace BizHawk.Emulation.Cores
 				Bp(o, "game", cip.Game);
 				Bp(o, "rom", cip.Roms[0].RomData);
 				Bp(o, "file", cip.Roms[0].FileData);
-				Bp(o, "deterministic", cip.DeterministicEmulationRequested);
 				Bp(o, "settings", cip.FetchSettings(Type, SettingsType));
 				Bp(o, "syncsettings", cip.FetchSyncSettings(Type, SyncSettingsType));
 				Bp(o, "extension", cip.Roms[0].Extension);
@@ -246,7 +244,6 @@ namespace BizHawk.Emulation.Cores
 		CoreComm Comm { get; }
 		GameInfo Game { get; }
 		List<IRomAsset> Roms { get; }
-		bool DeterministicEmulationRequested { get; }
 		object FetchSettings(Type emulatorType, Type settingsType);
 		object FetchSyncSettings(Type emulatorType, Type syncSettingsType);
 	}

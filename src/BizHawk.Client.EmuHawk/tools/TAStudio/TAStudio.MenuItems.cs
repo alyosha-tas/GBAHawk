@@ -770,14 +770,6 @@ namespace BizHawk.Client.GBAHawk
 
 		private void StateHistoryIntegrityCheckMenuItem_Click(object sender, EventArgs e)
 		{
-			if (!Emulator.DeterministicEmulation)
-			{
-				if (!DialogController.ShowMessageBox2("The emulator is not deterministic. It might fail even if the difference isn't enough to cause a desync.\nContinue with check?", "Not Deterministic"))
-				{
-					return;
-				}
-			}
-
 			GoToFrame(0);
 			int lastState = 0;
 			int goToFrame = CurrentTasMovie.TasStateManager.Last;

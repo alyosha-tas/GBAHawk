@@ -34,7 +34,5 @@ namespace BizHawk.Emulation.Cores
 		/// Order may be significant.  Does not include firmwares or other general resources.
 		/// </summary>
 		public List<IRomAsset> Roms { get; set; } = new List<IRomAsset>();
-
-		public bool DeterministicEmulationRequested { get; set; }
 	}
 }
