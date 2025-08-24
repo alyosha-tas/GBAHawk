@@ -1610,8 +1610,8 @@ namespace GBAHawk
 
 		void Write_ROM_16(uint32_t addr, uint16_t value)
 		{
-			Write_ROM_8(addr, (uint16_t)value);
-			Write_ROM_8((addr + 1), (uint16_t)(value >> 8));
+			Write_ROM_8(addr, (uint8_t)value);
+			Write_ROM_8((addr + 1), (uint8_t)(value >> 8));
 		}
 
 		void Write_ROM_32(uint32_t addr, uint32_t value)
@@ -2053,8 +2053,8 @@ namespace GBAHawk
 
 		void Write_ROM_16(uint32_t addr, uint16_t value)
 		{
-			Write_ROM_8(addr, (uint16_t)value);
-			Write_ROM_8((addr + 1), (uint16_t)(value >> 8));
+			Write_ROM_8(addr, (uint8_t)value);
+			Write_ROM_8((addr + 1), (uint8_t)(value >> 8));
 		}
 
 		void Write_ROM_32(uint32_t addr, uint32_t value)
@@ -2476,8 +2476,8 @@ namespace GBAHawk
 
 		void Write_ROM_16(uint32_t addr, uint16_t value)
 		{
-			Write_ROM_8(addr, (uint16_t)value);
-			Write_ROM_8((addr + 1), (uint16_t)(value >> 8));
+			Write_ROM_8(addr, (uint8_t)value);
+			Write_ROM_8((addr + 1), (uint8_t)(value >> 8));
 		}
 
 		void Write_ROM_32(uint32_t addr, uint32_t value)
@@ -3501,8 +3501,8 @@ namespace GBAHawk
 
 		void Write_ROM_16(uint32_t addr, uint16_t value)
 		{
-			Write_ROM_8(addr, (uint16_t)value);
-			Write_ROM_8((addr + 1), (uint16_t)(value >> 8));
+			Write_ROM_8(addr, (uint8_t)value);
+			Write_ROM_8((addr + 1), (uint8_t)(value >> 8));
 		}
 
 		void Write_ROM_32(uint32_t addr, uint32_t value)

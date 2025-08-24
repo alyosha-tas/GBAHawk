@@ -1692,9 +1692,9 @@ namespace GBAHawk
 					{
 						pre_Boundary_Reached = true;
 
-						Message_String = to_string(pre_Buffer_Cnt) + " boundary " + to_string(pre_Check_Addr) + " boundary " + to_string(CycleCount);
+						//Message_String = to_string(pre_Buffer_Cnt) + " boundary " + to_string(pre_Check_Addr) + " boundary " + to_string(CycleCount);
 
-						MessageCallback(Message_String.length());
+						//MessageCallback(Message_String.length());
 					}
 					else
 					{
@@ -1707,12 +1707,14 @@ namespace GBAHawk
 			}
 			else
 			{
+				/*
 				if (pre_Boundary_Reached)
 				{
 					Message_String = to_string(pre_Buffer_Cnt) + " " + to_string(pre_Check_Addr) + "  " + to_string(CycleCount);
 
 					MessageCallback(Message_String.length());
 				}
+				*/
 
 				pre_Following = true;
 

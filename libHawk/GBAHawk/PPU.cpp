@@ -495,7 +495,7 @@ namespace GBAHawk
 			if (ppu_Cycle >= 46)
 			{				
 				// determine what BG pixels will actually be rendered
-				if (((ppu_Cycle - 2) & 3) == 0)
+				if ((ppu_Cycle & 3) == 2)
 				{
 					cur_layer_priority = 4;
 					second_layer_priority = 4;
@@ -1008,7 +1008,7 @@ namespace GBAHawk
 						}
 					}
 				}
-				else if (((ppu_Cycle - 2) & 3) == 1)
+				else if ((ppu_Cycle & 3) == 3)
 				{
 					if (ppu_Fetch_Target_1)
 					{
@@ -1029,7 +1029,7 @@ namespace GBAHawk
 						}
 					}
 				}
-				else if (((ppu_Cycle - 2) & 3) == 3)
+				else if ((ppu_Cycle & 3) == 1)
 				{
 					if (ppu_Fetch_Target_2)
 					{
@@ -1161,7 +1161,7 @@ namespace GBAHawk
 						ppu_Scroll_Cycle[a0] = 0;
 
 						// calculate fetch count
-						ppu_Fetch_Count[a0] = ((ppu_Cycle-4) >> 5);
+						ppu_Fetch_Count[a0] = ((ppu_Cycle - 4) >> 5);
 
 						if ((ppu_Fetch_Count[a0] == 30) && ((ppu_BG_X_Latch[a0] & 0x7) <= 4))
 						{
@@ -2367,7 +2367,7 @@ namespace GBAHawk
 		uint32_t tile_y_offset;
 
 		uint32_t actual_x_index, actual_y_index;
-		uint32_t rel_x_offset, rel_y_offset;
+		uint32_t rel_x_offset;
 
 		bool double_size;
 
@@ -2433,14 +2433,14 @@ namespace GBAHawk
 								{
 									if (ppu_OBJ_Dim)
 									{
-										spr_tile += (actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3);
+										spr_tile += (actual_x_index >> 3) + ppu_Sprite_X_Scale * (actual_y_index >> 3);
 									}
 									else
 									{
 										// large x values wrap around
-										spr_tile += (0x20) * (int)(actual_y_index >> 3);
+										spr_tile += 0x20 * (actual_y_index >> 3);
 
-										spr_tile_row = (int)(spr_tile & 0xFFFFFFE0);
+										spr_tile_row = spr_tile & 0xFFFFFFE0;
 
 										spr_tile += (actual_x_index >> 3);
 
@@ -2452,7 +2452,7 @@ namespace GBAHawk
 
 									// pick out the correct pixel from the tile
 									tile_x_offset = actual_x_index & 7;
-									tile_y_offset = (int)(actual_y_index & 7);
+									tile_y_offset = actual_y_index & 7;
 
 									spr_tile += (tile_x_offset >> 1) + tile_y_offset * 4;
 
@@ -2479,14 +2479,14 @@ namespace GBAHawk
 
 									if (ppu_OBJ_Dim)
 									{
-										spr_tile += ((actual_x_index >> 3) + (ppu_Sprite_X_Scale) * (int)(actual_y_index >> 3)) << 6;
+										spr_tile += ((actual_x_index >> 3) + ppu_Sprite_X_Scale * (actual_y_index >> 3)) << 6;
 									}
 									else
 									{
 										// large x values wrap around
-										spr_tile += ((0x20) * (int)(actual_y_index >> 3) << 5);
+										spr_tile += (0x20 * (actual_y_index >> 3) << 5);
 
-										spr_tile_row = (int)(spr_tile & 0xFFFFFC00);
+										spr_tile_row = spr_tile & 0xFFFFFC00;
 
 										spr_tile += ((actual_x_index >> 3) << 6);
 
@@ -2495,8 +2495,8 @@ namespace GBAHawk
 									}
 
 									// pick out the correct pixel from the tile
-									tile_x_offset = (actual_x_index & 7);
-									tile_y_offset = (int)(actual_y_index & 7);
+									tile_x_offset = actual_x_index & 7;
+									tile_y_offset = actual_y_index & 7;
 
 									spr_tile += tile_x_offset + tile_y_offset * 8;
 

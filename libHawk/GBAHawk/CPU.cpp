@@ -294,9 +294,9 @@ namespace GBAHawk
 					{
 						for (int i = 1; i <= cpu_Shift_Imm; i++)
 						{
-							cpu_ALU_Shift_Carry = (uint32_t)(cpu_ALU_Long_Result & 1);
+							cpu_ALU_Shift_Carry = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
 							cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
-							cpu_ALU_Long_Result |= (cpu_ALU_Shift_Carry << 31);
+							cpu_ALU_Long_Result |= cpu_ALU_Shift_Carry;
 						}
 					}
 					break;
@@ -1040,7 +1040,7 @@ namespace GBAHawk
 					break;
 
 				case cpu_ARM_MVN:
-					cpu_ALU_Long_Result = ~cpu_ALU_Temp_Val;
+					cpu_ALU_Long_Result = ~((uint64_t)cpu_ALU_Temp_Val);
 
 					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
@@ -1789,7 +1789,7 @@ namespace GBAHawk
 					break;
 
 				case cpu_ARM_MVN_LDM:
-					cpu_ALU_Long_Result = ~cpu_ALU_Temp_Val;
+					cpu_ALU_Long_Result = ~((uint64_t)cpu_ALU_Temp_Val);
 
 					cpu_ALU_Long_Result &= cpu_Cast_Int;
 
@@ -2558,9 +2558,9 @@ namespace GBAHawk
 
 			for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
 			{
-				cpu_ALU_Temp_S_Val = (uint32_t)(cpu_ALU_Long_Result & 1);
+				cpu_ALU_Temp_S_Val = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
 				cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
-				cpu_ALU_Long_Result |= (cpu_ALU_Temp_S_Val << 31);
+				cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
 			}
 
 			if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset(cpu_ALU_Temp_S_Val == 1); }
@@ -2651,7 +2651,7 @@ namespace GBAHawk
 			break;
 
 		case cpu_Thumb_MVN:
-			cpu_ALU_Long_Result = (~cpu_Regs[cpu_ALU_Reg_Src]);
+			cpu_ALU_Long_Result = ~(uint64_t)cpu_Regs[cpu_ALU_Reg_Src];
 
 			cpu_ALU_Long_Result &= cpu_Cast_Int;
 
@@ -3295,9 +3295,9 @@ namespace GBAHawk
 							{
 								for (int i = 1; i <= cpu_Shift_Imm; i++)
 								{
-									cpu_ALU_Shift_Carry = (uint32_t)(cpu_ALU_Long_Result & 1);
+									cpu_ALU_Shift_Carry = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
 									cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
-									cpu_ALU_Long_Result |= (cpu_ALU_Shift_Carry << 31);
+									cpu_ALU_Long_Result |= cpu_ALU_Shift_Carry;
 								}
 							}
 							break;
