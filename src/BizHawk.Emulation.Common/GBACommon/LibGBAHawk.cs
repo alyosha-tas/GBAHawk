@@ -109,6 +109,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// <param name="reset_cycle">Mapper number to load core with</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public static extern bool GBA_subframe_advance(IntPtr core, ushort ctrl1, ushort accx, ushort accy, byte solar, bool render, bool sound, bool do_reset, uint reset_cycle);
 
 
@@ -118,6 +119,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="videobuf">where to send video to</param>
 		[DllImport(lib, CallingConvention = cc)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public static extern void GBA_get_video(IntPtr core, int[] videobuf);
 
 		/// <summary>

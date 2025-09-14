@@ -515,7 +515,7 @@ namespace GBAHawk
 			GBA.MessageCallback = callback;
 		}
 
-		void GetMessage(char* d, int l)
+		void GetMessage(char* d)
 		{
 			std::memcpy(d, GBA.Message_String.c_str(), GBA.Message_String.length() + 1);
 		}

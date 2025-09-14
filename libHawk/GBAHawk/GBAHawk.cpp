@@ -191,8 +191,8 @@ GBAHawk_EXPORT void GBA_setmessagecallback(GBACore* p, void (*callback)(int)) {
 }
 
 // get message
-GBAHawk_EXPORT void GBA_getmessage(GBACore* p, char* d, int l) {
-	p->GetMessage(d, l);
+GBAHawk_EXPORT void GBA_getmessage(GBACore* p, char* d) {
+	p->GetMessage(d);
 }
 
 #pragma endregion
