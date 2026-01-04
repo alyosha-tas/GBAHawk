@@ -400,7 +400,8 @@ float4 psmain(PS_INPUT src) : COLOR
 ";
 
 		public readonly string DefaultVertexShader_gl = @"
-#version 110 //opengl 2.0 ~ 2004
+//opengl 2.0 ~ 2004
+#version 110
 uniform mat4 um44Modelview, um44Projection;
 uniform vec4 uModulateColor;
 
@@ -423,7 +424,8 @@ void main()
 }";
 
 		public readonly string DefaultPixelShader_gl = @"
-#version 110 //opengl 2.0 ~ 2004
+//opengl 2.0 ~ 2004
+#version 110 
 uniform bool uSamplerEnable;
 uniform sampler2D uSampler0;
 
