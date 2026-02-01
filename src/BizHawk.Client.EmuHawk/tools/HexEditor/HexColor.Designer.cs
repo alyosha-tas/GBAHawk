@@ -30,9 +30,7 @@
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.HexFreezeHL = new System.Windows.Forms.Panel();
             this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.HexFreeze = new System.Windows.Forms.Panel();
             this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.HexHighlight = new System.Windows.Forms.Panel();
             this.HexForegrnd = new System.Windows.Forms.Panel();
@@ -48,9 +46,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.label6);
-            this.groupBox1.Controls.Add(this.HexFreezeHL);
             this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.HexFreeze);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.HexHighlight);
             this.groupBox1.Controls.Add(this.HexForegrnd);
@@ -64,6 +60,16 @@
             this.groupBox1.Size = new System.Drawing.Size(144, 192);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
+            // 
+            // label6
+            // 
+            this.label6.Location = new System.Drawing.Point(0, 0);
+            this.label6.Name = "label6";
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(0, 0);
+            this.label5.Name = "label5";
             // 
             // label4
             // 
@@ -125,7 +131,7 @@
             this.HexBackgrnd.TabIndex = 6;
             this.HexBackgrnd.MouseClick += new System.Windows.Forms.MouseEventHandler(this.HexBackground_Click);
             // 
-            // HexColors_Form
+            // HexColorsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -155,9 +161,7 @@
         private System.Windows.Forms.ColorDialog colorDialog1;
 		private System.Windows.Forms.Panel HexMenubar;
 		private BizHawk.WinForms.Controls.LocLabelEx label6;
-		private System.Windows.Forms.Panel HexFreezeHL;
 		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private System.Windows.Forms.Panel HexFreeze;
 		private BizHawk.WinForms.Controls.LocLabelEx label4;
 		private System.Windows.Forms.Panel HexHighlight;
 
