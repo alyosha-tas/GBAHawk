@@ -5483,7 +5483,9 @@ namespace GBAHawk
 
 						ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
 
-						ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0xF);
+						ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0x3F);
+
+						ser_div_cnt = 6;
 
 						ser_Internal_Clock = (value & 0x1) == 0x1;
 

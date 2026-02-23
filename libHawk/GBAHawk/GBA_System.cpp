@@ -1420,7 +1420,7 @@ namespace GBAHawk
 		#pragma endregion
 
 		#pragma region Serial Port
-		ser_div_cnt += 1;
+		ser_div_cnt -= 1;
 
 		if (ser_Start)
 		{
@@ -1431,7 +1431,16 @@ namespace GBAHawk
 				{
 					ser_Bit_Count += 1;
 
-					if (ser_Bit_Count == ser_Bit_Total)
+					if (ser_Mask == 0x7)
+					{
+						ser_div_cnt = 8;
+					}
+					else
+					{
+						ser_div_cnt = 64;
+					}
+
+					if (ser_Bit_Count == (ser_Bit_Total + 1))
 					{
 						// reset start bit
 						ser_Start = false;
