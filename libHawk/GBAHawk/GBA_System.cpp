@@ -1440,7 +1440,7 @@ namespace GBAHawk
 						ser_div_cnt = 64;
 					}
 
-					if (ser_Bit_Count == (ser_Bit_Total + 1))
+					if (ser_Bit_Count == (ser_Bit_Total_Send + 1))
 					{
 						// reset start bit
 						ser_Start = false;

@@ -5188,7 +5188,7 @@ namespace GBAHawk
 
 		uint8_t ser_Ext_Current_Console;
 
-		uint8_t ser_Bit_Count, ser_Bit_Total;
+		uint8_t ser_Bit_Count, ser_Bit_Total, ser_Bit_Total_Send;
 
 		bool ser_Ext_Update, ser_Ext_Tick;
 
@@ -5311,93 +5311,149 @@ namespace GBAHawk
 
 		void ser_Write_Reg_8(uint32_t addr, uint8_t value)
 		{
-			switch (addr)
+			bool writable = ser_Check_Write(addr);
+
+			if (writable)
 			{
-				case 0x120: ser_Data_0 = (uint16_t)((ser_Data_0 & 0xFF00) | value); break;
-				case 0x121: ser_Data_0 = (uint16_t)((ser_Data_0 & 0x00FF) | (value << 8)); break;
-				case 0x122: ser_Data_1 = (uint16_t)((ser_Data_1 & 0xFF00) | value); break;
-				case 0x123: ser_Data_1 = (uint16_t)((ser_Data_1 & 0x00FF) | (value << 8)); break;
-				case 0x124: ser_Data_2 = (uint16_t)((ser_Data_2 & 0xFF00) | value); break;
-				case 0x125: ser_Data_2 = (uint16_t)((ser_Data_2 & 0x00FF) | (value << 8)); break;
-				case 0x126: ser_Data_3 = (uint16_t)((ser_Data_3 & 0xFF00) | value); break;
-				case 0x127: ser_Data_3 = (uint16_t)((ser_Data_3 & 0x00FF) | (value << 8)); break;
-				case 0x128: ser_CTRL_Update((uint16_t)((ser_CTRL & 0xFF00) | value)); break;
-				case 0x129: ser_CTRL_Update((uint16_t)((ser_CTRL & 0x00FF) | (value << 8))); break;
-				case 0x12A: ser_Data_M = (uint16_t)((ser_Data_M & 0xFF00) | value); break;
-				case 0x12B: ser_Data_M = (uint16_t)((ser_Data_M & 0x00FF) | (value << 8)); break;
+				switch (addr)
+				{
+					case 0x120: ser_Data_0 = (uint16_t)((ser_Data_0 & 0xFF00) | value); break;
+					case 0x121: ser_Data_0 = (uint16_t)((ser_Data_0 & 0x00FF) | (value << 8)); break;
+					case 0x122: ser_Data_1 = (uint16_t)((ser_Data_1 & 0xFF00) | value); break;
+					case 0x123: ser_Data_1 = (uint16_t)((ser_Data_1 & 0x00FF) | (value << 8)); break;
+					case 0x124: ser_Data_2 = (uint16_t)((ser_Data_2 & 0xFF00) | value); break;
+					case 0x125: ser_Data_2 = (uint16_t)((ser_Data_2 & 0x00FF) | (value << 8)); break;
+					case 0x126: ser_Data_3 = (uint16_t)((ser_Data_3 & 0xFF00) | value); break;
+					case 0x127: ser_Data_3 = (uint16_t)((ser_Data_3 & 0x00FF) | (value << 8)); break;
+					case 0x128: ser_CTRL_Update((uint16_t)((ser_CTRL & 0xFF00) | value)); break;
+					case 0x129: ser_CTRL_Update((uint16_t)((ser_CTRL & 0x00FF) | (value << 8))); break;
+					case 0x12A: ser_Data_M = (uint16_t)((ser_Data_M & 0xFF00) | value); break;
+					case 0x12B: ser_Data_M = (uint16_t)((ser_Data_M & 0x00FF) | (value << 8)); break;
 
-				case 0x130: // no effect
-				case 0x131: // no effect
-				case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(true); do_controller_check_glitch(); break;
-				// note no check here, does not seem to trigger onhardware, see joypad.gba
-				case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
+					case 0x130: // no effect
+					case 0x131: // no effect
+					case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(true); do_controller_check_glitch(); break;
+						// note no check here, does not seem to trigger onhardware, see joypad.gba
+					case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
 
-				case 0x134: ser_Mode_Update((uint16_t)((ser_Mode & 0xFF00) | value)); break;
-				case 0x135: ser_Mode_Update((uint16_t)((ser_Mode & 0x00FF) | (value << 8))); break;
+					case 0x134: ser_Mode_Update((uint16_t)((ser_Mode & 0xFF00) | value)); break;
+					case 0x135: ser_Mode_Update((uint16_t)((ser_Mode & 0x00FF) | (value << 8))); break;
 
-				case 0x140: ser_CTRL_J = (uint16_t)((ser_CTRL_J & 0xFF00) | value); break;
-				case 0x141: ser_CTRL_J = (uint16_t)((ser_CTRL_J & 0x00FF) | (value << 8)); break;
+					case 0x140: ser_JoyCnt_Update((uint16_t)((ser_CTRL_J & 0xFF00) | value)); break;
+					case 0x141: ser_JoyCnt_Update((uint16_t)((ser_CTRL_J & 0x00FF) | (value << 8))); break;
 
-				case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFFFF00) | value); break;
-				case 0x151: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF00FF) | (value << 8)); break;
-				case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFF00FFFF) | (value << 16)); break;
-				case 0x153: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x00FFFFFF) | (value << 24)); break;
-				case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFFFF00) | value); break;
-				case 0x155: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF00FF) | (value << 8)); break;
-				case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFF00FFFF) | (value << 16)); break;
-				case 0x157: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x00FFFFFF) | (value << 24)); break;
-				case 0x158: ser_STAT_J = (uint16_t)((ser_STAT_J & 0xFF00) | value); break;
-				case 0x159: ser_STAT_J = (uint16_t)((ser_STAT_J & 0x00FF) | (value << 8)); break;
+					case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFFFF00) | value); break;
+					case 0x151: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF00FF) | (value << 8)); break;
+					case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFF00FFFF) | (value << 16)); break;
+					case 0x153: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x00FFFFFF) | (value << 24)); break;
+					case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFFFF00) | value); break;
+					case 0x155: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF00FF) | (value << 8)); break;
+					case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFF00FFFF) | (value << 16)); break;
+					case 0x157: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x00FFFFFF) | (value << 24)); break;
+					case 0x158: ser_STAT_J = (uint16_t)((ser_STAT_J & 0xFF00) | value); break;
+					case 0x159: ser_STAT_J = (uint16_t)((ser_STAT_J & 0x00FF) | (value << 8)); break;
+				}
 			}
 		}
 
 		void ser_Write_Reg_16(uint32_t addr, uint16_t value)
 		{
-			switch (addr)
+			bool writable = ser_Check_Write(addr);
+
+			if (writable)
 			{
-				case 0x120: ser_Data_0 = value; break;
-				case 0x122: ser_Data_1 = value; break;
-				case 0x124: ser_Data_2 = value; break;
-				case 0x126: ser_Data_3 = value; break;
-				case 0x128: ser_CTRL_Update(value); break;
-				case 0x12A: ser_Data_M = value; break;
+				switch (addr)
+				{
+					case 0x120: ser_Data_0 = value; break;
+					case 0x122: ser_Data_1 = value; break;
+					case 0x124: ser_Data_2 = value; break;
+					case 0x126: ser_Data_3 = value; break;
+					case 0x128: ser_CTRL_Update(value); break;
+					case 0x12A: ser_Data_M = value; break;
 
-				case 0x130: // no effect
-				case 0x132: key_CTRL = value; do_controller_check(true); do_controller_check_glitch(); break;
+					case 0x130: // no effect
+					case 0x132: key_CTRL = value; do_controller_check(true); do_controller_check_glitch(); break;
 
-				case 0x134: ser_Mode_Update(value); break;
+					case 0x134: ser_Mode_Update(value); break;
 
-				case 0x140: ser_CTRL_J = value; break;
+					case 0x140: ser_JoyCnt_Update(value); break;
 
-				case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF0000) | value); break;
-				case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x0000FFFF) | (value << 16)); break;
-				case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF0000) | value); break;
-				case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x0000FFFF) | (value << 16)); break;
-				case 0x158: ser_STAT_J = value; break;
+					case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF0000) | value); break;
+					case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x0000FFFF) | (value << 16)); break;
+					case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF0000) | value); break;
+					case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x0000FFFF) | (value << 16)); break;
+					case 0x158: ser_STAT_J = value; break;
+				}
 			}
 		}
 
 		void ser_Write_Reg_32(uint32_t addr, uint32_t value)
 		{
+			bool writable = ser_Check_Write(addr);
+
+			if (writable)
+			{
+				switch (addr)
+				{
+					case 0x120: ser_Data_0 = (uint16_t)(value & 0xFFFF);
+						ser_Data_1 = (uint16_t)((value >> 16) & 0xFFFF); break;
+					case 0x124: ser_Data_2 = (uint16_t)(value & 0xFFFF);
+						ser_Data_3 = (uint16_t)((value >> 16) & 0xFFFF); break;
+					case 0x128: ser_CTRL_Update((uint16_t)(value & 0xFFFF));
+						// need seperate case here
+						if (ser_Check_Write(0x12A)) { ser_Data_M = (uint16_t)((value >> 16) & 0xFFFF); }
+						break;
+
+					case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(true); do_controller_check_glitch(); break;
+
+					case 0x134: ser_Mode_Update((uint16_t)(value & 0xFFFF)); break;
+
+					case 0x140: ser_JoyCnt_Update((uint16_t)(value & 0xFFFF)); break;
+
+					case 0x150: ser_RECV_J = value; break;
+					case 0x154: ser_TRANS_J = value; break;
+					case 0x158: ser_STAT_J = (uint16_t)(value & 0xFFFF); break;
+				}
+			}
+		}
+
+		bool ser_Check_Write(uint16_t addr)
+		{
+			addr &= 0xFFFE;
+
 			switch (addr)
 			{
-				case 0x120: ser_Data_0 = (uint16_t)(value & 0xFFFF);
-					ser_Data_1 = (uint16_t)((value >> 16) & 0xFFFF); break;
-				case 0x124: ser_Data_2 = (uint16_t)(value & 0xFFFF);
-					ser_Data_3 = (uint16_t)((value >> 16) & 0xFFFF); break;
-				case 0x128: ser_CTRL_Update((uint16_t)(value & 0xFFFF));
-					ser_Data_M = (uint16_t)((value >> 16) & 0xFFFF); break;
+				case 0x120: 
+					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State < 2) && (ser_Bit_Total == 32)) { return true; }
+					return false;
 
-				case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(true); do_controller_check_glitch(); break;
+				case 0x122:
+					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State < 2) && (ser_Bit_Total == 32)) { return true; }
+					return false;
 
-				case 0x134: ser_Mode_Update((uint16_t)(value & 0xFFFF)); break;
+				case 0x124: return false;
 
-				case 0x140: ser_CTRL_J = (uint16_t)(value & 0xFFFF); break;
+				case 0x126: return false;
 
-				case 0x150: ser_RECV_J = value; break;
-				case 0x154: ser_TRANS_J = value; break;
-				case 0x158: ser_STAT_J = (uint16_t)(value & 0xFFFF); break;
+				case 0x128: return true;
+
+				case 0x12A:
+					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State == 3)) { return false; }
+					
+					return true;
+
+				case 0x150: return false;
+
+				case 0x152: return false;
+
+				case 0x154: return false;
+
+				case 0x156: return false;
+
+				case 0x158: return false;
 			}
+					
+			return true;
 		}
 
 		void ser_CTRL_Update(uint16_t value)
@@ -5476,12 +5532,15 @@ namespace GBAHawk
 				else
 				{
 					// normal
+
+					ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
+
 					// actiavte the port
 					if (!ser_Start && ((value & 0x80) == 0x80))
 					{
 						ser_Bit_Count = 0;
 
-						ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
+						ser_Bit_Total_Send = ser_Bit_Total;
 
 						ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0x3F);
 
@@ -5533,6 +5592,9 @@ namespace GBAHawk
 					//MessageCallback(Message_String.length());
 				}
 			}
+
+			ser_CTRL &= 0x7FFF;
+
 		}
 
 		void ser_Mode_Update(uint16_t value)
@@ -5542,6 +5604,11 @@ namespace GBAHawk
 			ser_Mode_State = (uint8_t)((value & 0xC000) >> 14);
 
 			ser_Ext_Update = true;
+		}
+
+		void ser_JoyCnt_Update(uint16_t value)
+		{
+			ser_CTRL_J = value & 0x40;
 		}
 
 		void ser_Reset()
@@ -5564,7 +5631,9 @@ namespace GBAHawk
 
 			ser_Mask = 0xF;
 
-			ser_Bit_Count = ser_Bit_Total = 0;
+			ser_Bit_Count = 0;
+
+			ser_Bit_Total = ser_Bit_Total_Send = 8;
 
 			ser_Ext_Current_Console = 0;
 
@@ -5588,6 +5657,7 @@ namespace GBAHawk
 
 			saver = byte_saver(ser_Bit_Count, saver);
 			saver = byte_saver(ser_Bit_Total, saver);
+			saver = byte_saver(ser_Bit_Total_Send, saver);
 
 			saver = byte_saver(ser_SC, saver);
 			saver = byte_saver(ser_SD, saver);
@@ -5630,6 +5700,7 @@ namespace GBAHawk
 
 			loader = byte_loader(&ser_Bit_Count, loader);
 			loader = byte_loader(&ser_Bit_Total, loader);
+			loader = byte_loader(&ser_Bit_Total_Send, loader);
 
 			loader = byte_loader(&ser_SC, loader);
 			loader = byte_loader(&ser_SD, loader);
