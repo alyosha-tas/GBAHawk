@@ -1427,18 +1427,11 @@ namespace GBAHawk
 			if (ser_Internal_Clock)
 			{
 				// transfer 1 bit
-				if ((ser_div_cnt & ser_Mask) == 0)
+				if (ser_div_cnt == 0)
 				{
 					ser_Bit_Count += 1;
 
-					if (ser_Mask == 0x7)
-					{
-						ser_div_cnt = 8;
-					}
-					else
-					{
-						ser_div_cnt = 64;
-					}
+					ser_div_cnt = ser_Reload;
 
 					if (ser_Bit_Count == (ser_Bit_Total_Send + 1))
 					{

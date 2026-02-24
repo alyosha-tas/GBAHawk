@@ -29,6 +29,10 @@ using namespace std;
 * 
 */
 
+//Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
+
+//MessageCallback(Message_String.length());
+
 namespace GBAHawk
 {
 	class MemoryManager;
@@ -5176,7 +5180,7 @@ namespace GBAHawk
 		uint32_t ser_GBP_Transfer_Count;
 
 		uint32_t ser_RECV_J, ser_TRANS_J;
-		uint32_t ser_div_cnt, ser_Mask;
+		uint32_t ser_div_cnt, ser_Reload;
 
 		uint16_t ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
 		uint16_t ser_CTRL, ser_CTRL_J, ser_STAT_J, ser_Mode;
@@ -5494,24 +5498,26 @@ namespace GBAHawk
 						{
 							ser_Bit_Count = 0;
 
-							ser_Bit_Total = 36;
+							ser_Bit_Total_Send = 36;
 
 							if ((value & 3) == 0)
 							{
-								ser_Mask = 0x7FF;
+								ser_Reload = 0x378;
 							}
 							else if ((value & 3) == 1)
 							{
-								ser_Mask = 0x1FF;
+								ser_Reload = 0xE9;
 							}
 							else if ((value & 3) == 2)
 							{
-								ser_Mask = 0xFF;
+								ser_Reload = 0xA0;
 							}
 							else if ((value & 3) == 3)
 							{
-								ser_Mask = 0x7F;
+								ser_Reload = 0x57;
 							}
+
+							ser_div_cnt = 6;
 
 							ser_Internal_Clock = true;
 
@@ -5527,6 +5533,8 @@ namespace GBAHawk
 					else
 					{
 						ser_CTRL |= 4;
+
+						if ((value & 0x80) != 0x80) { ser_Start = false; }
 					}
 				}
 				else
@@ -5542,7 +5550,7 @@ namespace GBAHawk
 
 						ser_Bit_Total_Send = ser_Bit_Total;
 
-						ser_Mask = (uint8_t)((value & 0x2) == 0x2 ? 0x7 : 0x3F);
+						ser_Reload = (uint8_t)((value & 0x2) == 0x2 ? 0x8 : 0x40);
 
 						ser_div_cnt = 6;
 
@@ -5629,7 +5637,7 @@ namespace GBAHawk
 
 			ser_div_cnt = 0;
 
-			ser_Mask = 0xF;
+			ser_Reload = 0xF;
 
 			ser_Bit_Count = 0;
 
@@ -5681,7 +5689,7 @@ namespace GBAHawk
 			saver = int_saver(ser_RECV_J, saver);
 			saver = int_saver(ser_TRANS_J, saver);
 			saver = int_saver(ser_div_cnt, saver);
-			saver = int_saver(ser_Mask, saver);
+			saver = int_saver(ser_Reload, saver);
 
 			saver = int_saver(ser_GBP_Div_Count, saver);
 			saver = int_saver(ser_GBP_Transfer_Count, saver);
@@ -5724,7 +5732,7 @@ namespace GBAHawk
 			loader = int_loader(&ser_RECV_J, loader);
 			loader = int_loader(&ser_TRANS_J, loader);
 			loader = int_loader(&ser_div_cnt, loader);
-			loader = int_loader(&ser_Mask, loader);
+			loader = int_loader(&ser_Reload, loader);
 
 			loader = int_loader(&ser_GBP_Div_Count, loader);
 			loader = int_loader(&ser_GBP_Transfer_Count, loader);
