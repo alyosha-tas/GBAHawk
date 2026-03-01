@@ -5212,8 +5212,8 @@ namespace GBAHawk
 				case 0x125: ret = (uint8_t)((ser_Data_2 & 0xFF00) >> 8); break;
 				case 0x126: ret = (uint8_t)(ser_Data_3 & 0xFF); break;
 				case 0x127: ret = (uint8_t)((ser_Data_3 & 0xFF00) >> 8); break;
-				case 0x128: ret = (uint8_t)(ser_CTRL & 0xFF); break;
-				case 0x129: ret = (uint8_t)((ser_CTRL & 0xFF00) >> 8); break;
+				case 0x128: ret = (uint8_t)(ser_Read_Ctrl() & 0xFF); break;
+				case 0x129: ret = (uint8_t)((ser_Read_Ctrl() & 0xFF00) >> 8); break;
 				case 0x12A: ret = (uint8_t)(ser_Data_M & 0xFF); break;
 				case 0x12B: ret = (uint8_t)((ser_Data_M & 0xFF00) >> 8); break;
 
@@ -5222,8 +5222,8 @@ namespace GBAHawk
 				case 0x132: ret = (uint8_t)(key_CTRL & 0xFF); break;
 				case 0x133: ret = (uint8_t)((key_CTRL & 0xFF00) >> 8); break;
 
-				case 0x134: ret = (uint8_t)(ser_Mode & 0xFF); break;
-				case 0x135: ret = (uint8_t)((ser_Mode & 0xFF00) >> 8); break;
+				case 0x134: ret = (uint8_t)(ser_Read_Mode() & 0xFF); break;
+				case 0x135: ret = (uint8_t)((ser_Read_Mode() & 0xFF00) >> 8); break;
 				case 0x136: ret = 0; break;
 				case 0x137: ret = 0; break;
 
@@ -5261,13 +5261,13 @@ namespace GBAHawk
 				case 0x122: ret = ser_Data_1; break;
 				case 0x124: ret = ser_Data_2; break;
 				case 0x126: ret = ser_Data_3; break;
-				case 0x128: ret = ser_CTRL; break;
+				case 0x128: ret = ser_Read_Ctrl(); break;
 				case 0x12A: ret = ser_Data_M; break;
 
 				case 0x130: ret = controller_state; Is_Lag = false; break;
 				case 0x132: ret = key_CTRL; break;
 
-				case 0x134: ret = ser_Mode; break;
+				case 0x134: ret = ser_Read_Mode(); break;
 				case 0x136: ret = 0; break;
 
 				case 0x140: ret = ser_CTRL_J; break;
@@ -5295,11 +5295,11 @@ namespace GBAHawk
 			{
 				case 0x120: ret = (uint32_t)((ser_Data_1 << 16) | ser_Data_0); break;
 				case 0x124: ret = (uint32_t)((ser_Data_3 << 16) | ser_Data_2); break;
-				case 0x128: ret = (uint32_t)((ser_Data_M << 16) | ser_CTRL); break;
+				case 0x128: ret = (uint32_t)((ser_Data_M << 16) | ser_Read_Ctrl()); break;
 
 				case 0x130: ret = (uint32_t)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
 
-				case 0x134: ret = (uint32_t)((0x00000000) | ser_Mode); break;
+				case 0x134: ret = (uint32_t)((0x00000000) | ser_Read_Mode()); break;
 
 				case 0x140: ret = (uint32_t)((0x00000000) | ser_CTRL_J); break;
 
@@ -5443,7 +5443,7 @@ namespace GBAHawk
 
 				case 0x12A:
 					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State == 3)) { return false; }
-					
+
 					return true;
 
 				case 0x150: return false;
@@ -5607,7 +5607,7 @@ namespace GBAHawk
 
 		void ser_Mode_Update(uint16_t value)
 		{
-			ser_Mode = value;
+			ser_Mode = value & 0xC1FF;
 
 			ser_Mode_State = (uint8_t)((value & 0xC000) >> 14);
 
@@ -5617,6 +5617,17 @@ namespace GBAHawk
 		void ser_JoyCnt_Update(uint16_t value)
 		{
 			ser_CTRL_J = value & 0x40;
+		}
+
+		uint16_t ser_Read_Mode()
+		{
+			return ser_Mode;
+		}
+
+		uint16_t ser_Read_Ctrl()
+		{
+
+			return ser_CTRL;
 		}
 
 		void ser_Reset()

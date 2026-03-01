@@ -1440,6 +1440,27 @@ namespace GBAHawk
 						ser_CTRL &= 0xFF7F;
 						ser_Ext_Tick = true;
 
+						if (ext_num == 0)
+						{
+							if (ser_Mode_State < 2)
+							{
+								if (ser_Ctrl_Mode_State < 2)
+								{
+
+									if (ser_Bit_Total == 32)
+									{
+										ser_Data_0 = 0xFFFF;
+										ser_Data_1 = 0xFFFF;
+									}
+									else
+									{
+										ser_Data_M &= 0xFF00;
+										ser_Data_M |= 0xFF;
+									}
+								}
+							}
+						}
+
 						//Message_String = "Complete";
 
 						//MessageCallback(Message_String.length());
