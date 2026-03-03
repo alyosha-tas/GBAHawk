@@ -205,6 +205,7 @@ namespace BizHawk.Client.Common
 			else
 			{
 				_config.PreferredCores.TryGetValue(cip.Game.System, out var preferredCore);
+
 				var dbForcedCoreName = cip.Game.ForcedCore;
 				cores = CoreInventory.Instance.GetCores(cip.Game.System)
 					.OrderBy(c =>
@@ -222,6 +223,7 @@ namespace BizHawk.Client.Common
 						return (int)c.Priority;
 					})
 					.ToList();
+
 				if (cores.Count == 0) throw new InvalidOperationException("No core was found to try on the game");
 			}
 			var exceptions = new List<Exception>();
@@ -291,6 +293,7 @@ namespace BizHawk.Client.Common
 					}
 				},
 			};
+
 			nextEmulator = MakeCoreFromCoreInventory(cip, forcedCoreName);
 		}
 
@@ -446,9 +449,12 @@ namespace BizHawk.Client.Common
 
 			public static readonly IReadOnlyCollection<string> GBA = new[] { "gba" };
 
+			public static readonly IReadOnlyCollection<string> NES = new[] { "nes" };
+
 			public static readonly IReadOnlyCollection<string> AutoloadFromArchive = Array.Empty<string>()
 				.Concat(GB)
 				.Concat(GBA)
+				.Concat(NES)
 				.Select(static s => $".{s}") // this is what's expected at call-site
 				.ToArray();
 		}
@@ -457,6 +463,7 @@ namespace BizHawk.Client.Common
 		private static readonly FilesystemFilterSet RomFSFilterSet = new FilesystemFilterSet(
 			new FilesystemFilter("Gameboy", RomFileExtensions.GB, addArchiveExts: true),
 			new FilesystemFilter("Gameboy Advance", RomFileExtensions.GBA, addArchiveExts: true),
+			new FilesystemFilter("Nintendo Entertainment System", RomFileExtensions.NES, addArchiveExts: true),
 			FilesystemFilter.Archives,
 			FilesystemFilter.EmuHawkSaveStates
 		);

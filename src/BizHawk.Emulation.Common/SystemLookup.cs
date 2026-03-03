@@ -9,7 +9,8 @@ namespace BizHawk.Emulation.Common
 		private readonly List<SystemInfo> _systems = new List<SystemInfo>
 		{
 			new(VSystemID.Raw.GB, "Gameboy"),
-			new(VSystemID.Raw.GBA, "Gameboy Advance")
+			new(VSystemID.Raw.GBA, "Gameboy Advance"),
+			new(VSystemID.Raw.NES, "Nintendo Entertainment System")
 		};
 
 		public IEnumerable<SystemInfo> AllSystems => _systems;
@@ -37,6 +38,7 @@ namespace BizHawk.Emulation.Common
 			public const string GBAL = "GBAL";
 			public const string GBC = "GBC";
 			public const string GBL = "GBL";
+			public const string NES = "NES";
 			public const string NULL = "NULL";
 		}
 	}

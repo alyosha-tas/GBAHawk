@@ -85,6 +85,18 @@ namespace BizHawk.Client.GBAHawk
 		{
 			return tabControl.TabPages.Cast<TabPage>();
 		}
+
+		public static Control? InnermostControlAt(this Form form, Point pos, GetChildAtPointSkip flags = GetChildAtPointSkip.None)
+		{
+			Control? top = form;
+			Control? found;
+			do
+			{
+				found = top!.GetChildAtPoint(top.PointToClient(pos), flags);
+				top = found;
+			} while (found is { HasChildren: true });
+			return found;
+		}
 	}
 
 	public static class ListViewExtensions

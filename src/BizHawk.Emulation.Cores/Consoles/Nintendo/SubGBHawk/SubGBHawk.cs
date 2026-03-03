@@ -45,9 +45,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 		public GBHawk.GBHawk _GBCore;
 
 		// needed for movies to accurately calculate timing
-		private long _cycleCount;
+		private ulong _cycleCount;
 
-		public long CycleCount => _cycleCount;
+		public ulong CycleCount => _cycleCount;
 
 		public double ClockRate => 4194304;
 

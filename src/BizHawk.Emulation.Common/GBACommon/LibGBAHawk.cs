@@ -310,7 +310,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="h">pointer to const char *</param>
-		/// <param name="l">copy length, must be obtained from appropriate get legnth function</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBA_getmessage(IntPtr core, StringBuilder h);
 

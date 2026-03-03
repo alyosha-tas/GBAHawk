@@ -5,7 +5,7 @@
 		/// <summary>
 		/// Total elapsed emulation time relative to <see cref="ClockRate"/>
 		/// </summary>
-		long CycleCount { get; }
+		ulong CycleCount { get; }
 
 		/// <summary>
 		/// Clock Rate in hz for <see cref="CycleCount"/>

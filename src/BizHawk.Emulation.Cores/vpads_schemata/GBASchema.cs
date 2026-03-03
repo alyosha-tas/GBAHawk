@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBA;
 
 namespace BizHawk.Emulation.Cores
 {

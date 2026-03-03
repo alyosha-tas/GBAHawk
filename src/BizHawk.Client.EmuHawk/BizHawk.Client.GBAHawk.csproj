@@ -395,6 +395,17 @@
 		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.cs" SubType="UserControl" />
 		<Compile Update="tools/MultiDiskBundler/MultiDiskFileSelector.Designer.cs" DependentUpon="MultiDiskFileSelector.cs" />
 		<EmbeddedResource Update="tools/MultiDiskBundler/MultiDiskFileSelector.resx" DependentUpon="MultiDiskFileSelector.cs" />
+		<Compile Update="tools/NES/NameTableViewer.cs" SubType="Component" />
+		<Compile Update="tools/NES/NESNameTableViewer.cs" SubType="Form" />
+		<Compile Update="tools/NES/NESNameTableViewer.Designer.cs" DependentUpon="NESNameTableViewer.cs" />
+		<EmbeddedResource Update="tools/NES/NESNameTableViewer.resx" DependentUpon="NESNameTableViewer.cs" />
+		<Compile Update="tools/NES/NESPPU.cs" SubType="Form" />
+		<Compile Update="tools/NES/NESPPU.Designer.cs" DependentUpon="NESPPU.cs" />
+		<EmbeddedResource Update="tools/NES/NESPPU.resx" DependentUpon="NESPPU.cs" SubType="Designer" />
+		<Compile Update="tools/NES/PaletteViewer.cs" SubType="Component" />
+		<Compile Update="tools/NES/PatternViewer.cs" SubType="Component" />
+		<EmbeddedResource Update="tools/NES/PatternViewer.resx" DependentUpon="PatternViewer.cs" />
+		<Compile Update="tools/NES/SpriteViewer.cs" SubType="Component" />
 		<Compile Update="tools/TAStudio/BookmarksBranchesBox.cs" SubType="UserControl" />
 		<Compile Update="tools/TAStudio/BookmarksBranchesBox.Designer.cs" DependentUpon="BookmarksBranchesBox.cs" />
 		<EmbeddedResource Update="tools/TAStudio/BookmarksBranchesBox.resx" DependentUpon="BookmarksBranchesBox.cs" SubType="Designer" />

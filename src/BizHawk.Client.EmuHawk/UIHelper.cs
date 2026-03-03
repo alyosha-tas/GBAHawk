@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using BizHawk.Common.NumberExtensions;
 
 namespace BizHawk.Client.GBAHawk
 {
@@ -42,6 +43,11 @@ namespace BizHawk.Client.GBAHawk
 		{
 			using var form = new Form { AutoScaleMode = autoScaleMode };
 			return form.CurrentAutoScaleDimensions;
+		}
+
+		public static Point Unscale(Point p)
+		{
+			return new Point((p.X / AutoScaleFactorX).RoundToInt(), (p.Y / AutoScaleFactorY).RoundToInt());
 		}
 
 		public static int UnscaleX(int size)

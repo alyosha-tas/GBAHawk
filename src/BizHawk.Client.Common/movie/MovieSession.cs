@@ -344,10 +344,10 @@ namespace BizHawk.Client.Common
 		{
 			if (Movie.IsAtEnd() && (Movie.Emulator is ICycleTiming cycleCore))
 			{
-				long coreValue = cycleCore.CycleCount;
+				ulong coreValue = cycleCore.CycleCount;
 				bool movieHasValue = Movie.HeaderEntries.TryGetValue(HeaderKeys.CycleCount, out string movieValueStr);
 
-				long movieValue = movieHasValue ? Convert.ToInt64(movieValueStr) : 0;
+				ulong movieValue = movieHasValue ? Convert.ToUInt64(movieValueStr) : 0;
 				var valuesMatch = movieValue == coreValue;
 
 				if (!movieHasValue || !valuesMatch)

@@ -72,8 +72,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				if ((romHashSHA1 == "SHA1:676357A271981699D97CFE1730F0AB3D07CE1F69") || // gba ldm-stm
 					(romHashSHA1 == "SHA1:D336E8B65FBC4DE054FCEDE16CFE1B1978EAAEE4"))   // armfuck
 				{
-					
-					
 					for (int i = 0; i < rom.Length; i++)
 					{
 						ROM[i + 0x1000000] = rom[i];
