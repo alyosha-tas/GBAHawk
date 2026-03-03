@@ -79,7 +79,6 @@ namespace BizHawk.Client.GBAHawk
 			AutosaveSaveRAMSeconds = _config.FlushSaveRamFrames / 60;
 			FrameAdvSkipLagCheckbox.Checked = _config.SkipLagFrame;
 			LuaDuringTurboCheckbox.Checked = _config.RunLuaDuringTurbo;
-			cbMoviesOnDisk.Checked = _config.Movies.MoviesOnDisk;
 			NoMixedKeyPriorityCheckBox.Checked = _config.NoMixedInputHokeyOverride;
 
 			switch (_config.HostInputMethod)
@@ -130,7 +129,6 @@ namespace BizHawk.Client.GBAHawk
 
 			_config.SkipLagFrame = FrameAdvSkipLagCheckbox.Checked;
 			_config.RunLuaDuringTurbo = LuaDuringTurboCheckbox.Checked;
-			_config.Movies.MoviesOnDisk = cbMoviesOnDisk.Checked;
 			_config.NoMixedInputHokeyOverride = NoMixedKeyPriorityCheckBox.Checked;
 
 			if (LuaInterfaceRadio.Checked)

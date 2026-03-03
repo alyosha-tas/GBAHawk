@@ -38,14 +38,6 @@
 		/// Specifies if the rewinder should accept states that are given out of order.
 		/// </summary>
 		bool AllowOutOfOrderStates { get; }
-
-		public enum BackingStoreType
-		{
-			Memory,
-			TempFile,
-		}
-
-		public BackingStoreType BackingStore { get; }
 	}
 
 	public class RewindConfig : IRewindSettings
@@ -58,7 +50,5 @@
 		public int TargetFrameLength { get; set; } = 600;
 		public int TargetRewindInterval { get; set; } = 5;
 		public bool AllowOutOfOrderStates { get; set; } = true;
-
-		public IRewindSettings.BackingStoreType BackingStore { get; set; } = IRewindSettings.BackingStoreType.Memory;
 	}
 }

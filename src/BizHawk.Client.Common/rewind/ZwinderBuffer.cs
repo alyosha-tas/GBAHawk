@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using BizHawk.BizInvoke;
 using BizHawk.Common;
 
 namespace BizHawk.Client.Common
@@ -31,30 +30,13 @@ namespace BizHawk.Client.Common
 
 			Size = 1L << (int)Math.Floor(Math.Log(targetSize, 2));
 			_sizeMask = Size - 1;
-			_backingStoreType = settings.BackingStore;
-			switch (settings.BackingStore)
-			{
-				case IRewindSettings.BackingStoreType.Memory:
-				{
-					var buffer = new MemoryBlock((ulong)Size);
-					buffer.Protect(buffer.Start, buffer.Size, MemoryBlock.Protection.RW);
-					_disposables.Add(buffer);
-					_backingStore = new MemoryViewStream(true, true, (long)buffer.Start, (long)buffer.Size);
-					_disposables.Add(_backingStore);
-					break;
-				}
-				case IRewindSettings.BackingStoreType.TempFile:
-				{
-					var filename = TempFileManager.GetTempFilename("ZwinderBuffer");
-					var filestream = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
-					filestream.SetLength(Size);
-					_backingStore = filestream;
-					_disposables.Add(filestream);
-					break;
-				}
-				default:
-					throw new ArgumentException("Unsupported store type for ZwinderBuffer.");
-			}
+
+			var filename = TempFileManager.GetTempFilename("ZwinderBuffer");
+			var filestream = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
+			filestream.SetLength(Size);
+			_backingStore = filestream;
+			_disposables.Add(filestream);
+
 			if (settings.UseFixedRewindInterval)
 			{
 				_fixedRewindInterval = true;
@@ -122,8 +104,6 @@ namespace BizHawk.Client.Common
 		}
 
 		private readonly Stream _backingStore;
-		// this is only used to compare settings with a RewindConfig
-		private readonly IRewindSettings.BackingStoreType _backingStoreType;
 
 		private readonly StateInfo[] _states;
 		private int _firstStateIndex;
@@ -165,8 +145,7 @@ namespace BizHawk.Client.Common
 				_useCompression == settings.UseCompression &&
 				_fixedRewindInterval == settings.UseFixedRewindInterval &&
 				(_fixedRewindInterval ? _targetRewindInterval == settings.TargetRewindInterval : _targetFrameLength == settings.TargetFrameLength) &&
-				_allowOutOfOrderStates == settings.AllowOutOfOrderStates &&
-				_backingStoreType == settings.BackingStore;
+				_allowOutOfOrderStates == settings.AllowOutOfOrderStates;
 		}
 
 		private bool ShouldCaptureForFrameDiff(int frameDiff)
@@ -326,12 +305,12 @@ namespace BizHawk.Client.Common
 				if (startByte > endByte)
 				{
 					_backingStore.Position = startByte;
-					WaterboxUtils.CopySome(_backingStore, writer.BaseStream, Size - startByte);
+					CopySome(_backingStore, writer.BaseStream, Size - startByte);
 					startByte = 0;
 				}
 				{
 					_backingStore.Position = startByte;
-					WaterboxUtils.CopySome(_backingStore, writer.BaseStream, endByte - startByte);
+					CopySome(_backingStore, writer.BaseStream, endByte - startByte);
 				}
 			}
 		}
@@ -349,7 +328,20 @@ namespace BizHawk.Client.Common
 				nextByte += _states[i].Size;
 			}
 			_backingStore.Position = 0;
-			WaterboxUtils.CopySome(reader.BaseStream, _backingStore, nextByte);
+			CopySome(reader.BaseStream, _backingStore, nextByte);
+		}
+
+		public static void CopySome(Stream src, Stream dst, long len)
+		{
+			var buff = new byte[65536];
+			while (len > 0)
+			{
+				int r = src.Read(buff, 0, (int)Math.Min(len, 65536));
+				if (r == 0)
+					throw new InvalidOperationException($"End of source stream was reached with {len} bytes left to copy!");
+				dst.Write(buff, 0, r);
+				len -= r;
+			}
 		}
 
 		public static ZwinderBuffer Create(BinaryReader reader, RewindConfig rewindConfig, bool hackyV0 = false)

@@ -4,7 +4,6 @@
 	{
 		public MovieEndAction MovieEndAction { get; }
 		public bool EnableBackupMovies { get; }
-		public bool MoviesOnDisk { get; }
 		public int MovieCompressionLevel { get; }
 		public bool VBAStyleMovieLoadState { get; }
 		ZwinderStateManagerSettings DefaultTasStateManagerSettings { get; }
@@ -14,7 +13,6 @@
 	{
 		public MovieEndAction MovieEndAction { get; set; } = MovieEndAction.Finish;
 		public bool EnableBackupMovies { get; set; } = true;
-		public bool MoviesOnDisk { get; set; }
 		public int MovieCompressionLevel { get; set; } = 2;
 		public bool VBAStyleMovieLoadState { get; set; }
 

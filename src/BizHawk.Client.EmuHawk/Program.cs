@@ -86,7 +86,6 @@ namespace BizHawk.Client.GBAHawk
 			var thisAsmVer = GBAHawk.ReflectionCache.AsmVersion;
 			foreach (var asmVer in new[]
 			{
-				BizInvoke.ReflectionCache.AsmVersion,
 				Bizware.BizwareGL.ReflectionCache.AsmVersion,
 				Bizware.DirectX.ReflectionCache.AsmVersion,
 				Bizware.OpenTK3.ReflectionCache.AsmVersion,
@@ -143,7 +142,7 @@ namespace BizHawk.Client.GBAHawk
 			initialConfig.ResolveDefaults();
 			// initialConfig should really be globalConfig as it's mutable
 
-			StringLogUtil.DefaultToDisk = initialConfig.Movies.MoviesOnDisk;
+			StringLogUtil.DefaultToDisk = true;
 
 			IGL TryInitIGL(EDispMethod dispMethod)
 			{

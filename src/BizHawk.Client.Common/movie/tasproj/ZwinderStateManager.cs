@@ -79,7 +79,8 @@ namespace BizHawk.Client.Common
 
 		public void UpdateSettings(ZwinderStateManagerSettings settings, bool keepOldStates = false)
 		{
-			bool makeNewReserved = Settings?.AncientStoreType != settings.AncientStoreType;
+			bool makeNewReserved = Settings != null;
+
 			Settings = settings;
 
 			_current = UpdateBuffer(_current, settings.Current(), keepOldStates);
@@ -122,8 +123,7 @@ namespace BizHawk.Client.Common
 				}
 			}
 
-			if (makeNewReserved)
-				RebuildReserved();
+			RebuildReserved();
 
 			_ancientInterval = settings.AncientStateInterval;
 			RebuildStateCache();
@@ -132,17 +132,9 @@ namespace BizHawk.Client.Common
 		private void RebuildReserved()
 		{
 			IDictionary<int, byte[]> newReserved;
-			switch (Settings.AncientStoreType)
-			{
-				case IRewindSettings.BackingStoreType.Memory:
-					newReserved = new Dictionary<int, byte[]>();
-					break;
-				case IRewindSettings.BackingStoreType.TempFile:
-					newReserved = new TempFileStateDictionary();
-					break;
-				default:
-					throw new ArgumentException("Unsupported store type for reserved states.");
-			}
+
+			newReserved = new TempFileStateDictionary();
+
 			if (_reserved != null)
 			{
 				foreach (var (f, data) in _reserved) newReserved.Add(f, data);
