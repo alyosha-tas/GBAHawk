@@ -5,8 +5,6 @@ using System.Drawing;
 using BizHawk.Client.Common;
 using BizHawk.Emulation.Common;
 
-using PcxFileTypePlugin.Quantize;
-
 namespace BizHawk.Client.GBAHawk
 {
 	[VideoWriter("gif", "GIF writer", "Creates an animated .gif")]
@@ -173,9 +171,8 @@ namespace BizHawk.Client.GBAHawk
 			System.Runtime.InteropServices.Marshal.Copy(source.GetVideoBuffer(), 0, data.Scan0, bmp.Width * bmp.Height);
 			bmp.UnlockBits(data);
 
-			using var qBmp = new OctreeQuantizer(255, 8).Quantize(bmp);
 			MemoryStream ms = new MemoryStream();
-			qBmp.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
+			bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
 			byte[] b = ms.GetBuffer();
 			if (!_firstDone)
 			{
