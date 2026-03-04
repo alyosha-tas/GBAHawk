@@ -100,7 +100,6 @@ namespace BizHawk.Client.Common
 		public bool AcceptBackgroundInput { get; set; }
 		public bool AcceptBackgroundInputControllerOnly { get; set; }
 		public bool HandleAlternateKeyboardLayouts { get; set; }
-		public bool SingleInstanceMode { get; set; }
 		public bool AllowUdlr { get; set; }
 		public bool ShowContextMenu { get; set; } = true;
 		public bool HotkeyConfigAutoTab { get; set; } = true;

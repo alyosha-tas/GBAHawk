@@ -192,15 +192,6 @@ namespace BizHawk.Client.GBAHawk
 
 			_getGlobalConfig = getGlobalConfig;
 
-			if (Config.SingleInstanceMode)
-			{
-				if (SingleInstanceInit(args))
-				{
-					exitEarly = true;
-					return;
-				}
-			}
-
 			Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
 
 			//do this threaded stuff early so it has plenty of time to run in background
@@ -482,18 +473,6 @@ namespace BizHawk.Client.GBAHawk
 				}
 			}
 
-			// set up networking before Lua
-			byte[] NetworkingTakeScreenshot() => (byte[]) new ImageConverter().ConvertTo(MakeScreenshotImage().ToSysdrawingBitmap(), typeof(byte[]));
-			NetworkingHelpers = (
-				_argParser.HTTPAddresses == null
-					? null
-					: new HttpCommunication(NetworkingTakeScreenshot, _argParser.HTTPAddresses.Value.UrlGet, _argParser.HTTPAddresses.Value.UrlPost),
-				new MemoryMappedFiles(NetworkingTakeScreenshot, _argParser.MMFFilename),
-				_argParser.SocketAddress == null
-					? null
-					: new SocketServer(NetworkingTakeScreenshot, _argParser.SocketAddress.Value.IP, _argParser.SocketAddress.Value.Port)
-			);
-
 			//start Lua Console if requested in the command line arguments
 			if (_argParser.luaConsole)
 			{
@@ -653,7 +632,6 @@ namespace BizHawk.Client.GBAHawk
 			if (disposing)
 			{
 				components?.Dispose();
-				SingleInstanceDispose();
 			}
 
 			base.Dispose(disposing);
@@ -814,8 +792,6 @@ namespace BizHawk.Client.GBAHawk
 			get => _sound;
 			set => _updateGlobalSound(_sound = value);
 		}
-
-		public (HttpCommunication HTTP, MemoryMappedFiles MMF, SocketServer Sockets) NetworkingHelpers { get; }
 
 		public IRewinder Rewinder { get; private set; }
 
@@ -1809,17 +1785,6 @@ namespace BizHawk.Client.GBAHawk
 				}
 				PathsFromDragDrop = null;
 			});
-
-			List<string[]> todo = new();
-			lock (_singleInstanceForwardedArgs)
-			{
-				if (_singleInstanceForwardedArgs.Count > 0)
-				{
-					todo = new List<string[]>(_singleInstanceForwardedArgs);
-					_singleInstanceForwardedArgs.Clear();
-				}
-			}
-			foreach (var args in todo) SingleInstanceProcessArgs(args);
 		}
 
 		private void AutohideCursor(bool hide)
@@ -4051,148 +4016,6 @@ namespace BizHawk.Client.GBAHawk
 
 		public void StartSound() => Sound.StartSound();
 		public void StopSound() => Sound.StopSound();
-
-		private Mutex _singleInstanceMutex;
-		private NamedPipeServerStream _singleInstanceServer;
-		private readonly List<string[]> _singleInstanceForwardedArgs = new();
-
-		private bool SingleInstanceInit(string[] args)
-		{
-			//note: this isn't 100% reliable, it's just a user convenience
-			_singleInstanceMutex = new Mutex(true, "mutex-{84125ACB-F570-4458-9748-321F887FE795}", out bool createdNew);
-			if (createdNew)
-			{
-				StartSingleInstanceServer();
-				return false;
-			}
-			else
-			{
-				ForwardSingleInstanceStartup(args);
-				return true;
-			}
-		}
-
-		private void SingleInstanceDispose()
-		{
-			_singleInstanceServer?.Dispose();
-		}
-
-		private void ForwardSingleInstanceStartup(string[] args)
-		{
-			using var namedPipeClientStream = new NamedPipeClientStream(".", "pipe-{84125ACB-F570-4458-9748-321F887FE795}", PipeDirection.Out);
-			try
-			{
-				namedPipeClientStream.Connect(0);
-				//do this a bit cryptically to avoid loading up another big assembly (especially ones as frail as http and/or web ones)
-				var payloadString = string.Join("|", args.Select(a => Encoding.UTF8.GetBytes(a).BytesToHexString()));
-				var payloadBytes = Encoding.ASCII.GetBytes(payloadString);
-				namedPipeClientStream.Write(payloadBytes, 0, payloadBytes.Length);
-			}
-			catch
-			{
-				Console.WriteLine("Failed forwarding args to already-running single instance");
-			}
-		}
-
-		private void StartSingleInstanceServer()
-		{
-			//MIT LICENSE - https://www.autoitconsulting.com/site/development/single-instance-winform-app-csharp-mutex-named-pipes/
-
-			// Create a new pipe accessible by local authenticated users, disallow network
-			var sidNetworkService = new SecurityIdentifier(WellKnownSidType.NetworkServiceSid, null);
-			var sidWorld = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
-
-			var pipeSecurity = new PipeSecurity();
-
-			// Deny network access to the pipe
-			var accessRule = new PipeAccessRule(sidNetworkService, PipeAccessRights.ReadWrite, AccessControlType.Deny);
-			pipeSecurity.AddAccessRule(accessRule);
-
-			// Alow Everyone to read/write
-			accessRule = new PipeAccessRule(sidWorld, PipeAccessRights.ReadWrite, AccessControlType.Allow);
-			pipeSecurity.AddAccessRule(accessRule);
-
-			// Current user is the owner
-			SecurityIdentifier sidOwner = WindowsIdentity.GetCurrent().Owner;
-			if (sidOwner != null)
-			{
-				accessRule = new PipeAccessRule(sidOwner, PipeAccessRights.FullControl, AccessControlType.Allow);
-				pipeSecurity.AddAccessRule(accessRule);
-			}
-
-			// Create pipe and start the async connection wait
-			_singleInstanceServer = new NamedPipeServerStream(
-					"pipe-{84125ACB-F570-4458-9748-321F887FE795}",
-					PipeDirection.In,
-					1,
-					PipeTransmissionMode.Message,
-					PipeOptions.Asynchronous,
-					0,
-					0,
-					pipeSecurity);
-
-			// Begin async wait for connections
-			_singleInstanceServer.BeginWaitForConnection(SingleInstanceServerPipeCallback, null);
-		}
-
-		//Note: This method is called on a non-UI thread.
-		//Note: this seems really frail. I don't think it's industrial strength. Pipes are weak compared to sockets.
-		//It was probably frail in the first place with the old vbnet impl
-		private void SingleInstanceServerPipeCallback(IAsyncResult iAsyncResult)
-		{
-			try
-			{
-				_singleInstanceServer.EndWaitForConnection(iAsyncResult);
-
-				//a bit over-engineered in case someone wants to send a script or a rom or something
-				//buffer size is set to something tiny so that we are continually testing it
-				var payloadBytes = new MemoryStream();
-				while (true)
-				{
-					var bytes = new byte[16];
-					int did = _singleInstanceServer.Read(bytes, 0, bytes.Length);
-					payloadBytes.Write(bytes, 0, did);
-					if (_singleInstanceServer.IsMessageComplete) break;
-				}
-
-				var payloadString = System.Text.Encoding.ASCII.GetString(payloadBytes.GetBuffer(), 0, (int)payloadBytes.Length);
-				var args = payloadString.Split('|').Select(a => Encoding.UTF8.GetString(a.HexStringToBytes())).ToArray();
-
-				Console.WriteLine("RECEIVED SINGLE INSTANCE FORWARDED ARGS:");
-				lock (_singleInstanceForwardedArgs)
-					_singleInstanceForwardedArgs.Add(args);
-			}
-			catch (ObjectDisposedException)
-			{
-				// EndWaitForConnection will exception when someone calls closes the pipe before connection made
-				// In that case we dont create any more pipes and just return
-				// This will happen when app is closing and our pipe is closed/disposed
-				return;
-			}
-			catch (Exception)
-			{
-				// ignored
-			}
-			finally
-			{
-				// Close the original pipe (we will create a new one each time)
-				_singleInstanceServer.Dispose();
-			}
-
-			// Create a new pipe for next connection
-			StartSingleInstanceServer();
-		}
-
-		private void SingleInstanceProcessArgs(string[] args)
-		{
-			//ulp. it's not clear how to handle these.
-			//we only have a legacy case where we can tell the form to load a rom, if it's in a sensible condition for that.
-			//er.. let's assume it's always in a sensible condition
-			//in case this all sounds insanely sketchy to you, remember, the main 99% use case is double clicking roms in explorer
-
-			//BANZAIIIIIIIIIIIIIIIIIIIIIIIIIII
-			LoadRom(args[0]);
-		}
 
 		public IQuickBmpFile QuickBmpFile { get; } = GBAHawk.QuickBmpFile.INSTANCE;
 	}

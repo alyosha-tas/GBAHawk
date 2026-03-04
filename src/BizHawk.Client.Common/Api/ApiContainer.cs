@@ -9,7 +9,6 @@ namespace BizHawk.Client.Common
 	{
 		public readonly IReadOnlyDictionary<Type, IExternalApi> Libraries;
 
-		public ICommApi Comm => (ICommApi) Libraries[typeof(ICommApi)];
 		public IEmuClientApi EmuClient => (IEmuClientApi) Libraries[typeof(IEmuClientApi)];
 		public IEmulationApi Emulation => (IEmulationApi) Libraries[typeof(IEmulationApi)];
 

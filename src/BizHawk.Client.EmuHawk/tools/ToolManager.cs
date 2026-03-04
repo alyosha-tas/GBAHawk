@@ -98,10 +98,9 @@ namespace BizHawk.Client.GBAHawk
 		/// Loads the tool dialog T (T must implement <see cref="IToolForm"/>) , if it does not exist it will be created, if it is already open, it will be focused
 		/// </summary>
 		/// <param name="focus">Define if the tool form has to get the focus or not (Default is true)</param>
-		/// <param name="toolPath">Path to the .dll of the external tool</param>
 		/// <typeparam name="T">Type of tool you want to load</typeparam>
 		/// <returns>An instantiated <see cref="IToolForm"/></returns>
-		public T Load<T>(bool focus = true, string toolPath = "")
+		public T Load<T>(bool focus = true)
 			where T : class, IToolForm
 		{
 			if (!IsAvailable<T>()) return null;
@@ -123,7 +122,7 @@ namespace BizHawk.Client.GBAHawk
 				_tools.Remove(existingTool);
 			}
 
-			if (!(CreateInstance<T>(toolPath) is T newTool)) return null;
+			if (!(CreateInstance<T>() is T newTool)) return null;
 
 			if (newTool is Form form) form.Owner = _owner;
 			ServiceInjector.UpdateServices(_emulator.ServiceProvider, newTool);
@@ -147,57 +146,6 @@ namespace BizHawk.Client.GBAHawk
 					_config.CustomToolSettings.TryGetValue(toolTypeName, out var settings)
 						? settings
 						: (_config.CustomToolSettings[toolTypeName] = new Dictionary<string, object>())
-				);
-			}
-
-			newTool.Restart();
-			newTool.Show();
-			return newTool;
-		}
-
-		/// <summary>Loads the external tool's entry form.</summary>
-		public IExternalToolForm LoadExternalToolForm(string toolPath, string customFormTypeName, bool focus = true, bool skipExtToolWarning = false)
-		{
-			var existingTool = _tools.OfType<IExternalToolForm>().FirstOrDefault(t => t.GetType().Assembly.Location == toolPath);
-			if (existingTool != null)
-			{
-				if (existingTool.IsActive)
-				{
-					if (focus)
-					{
-						existingTool.Show();
-						existingTool.Focus();
-					}
-					return existingTool;
-				}
-
-				_tools.Remove(existingTool);
-			}
-
-			var newTool = (IExternalToolForm) CreateInstance(typeof(IExternalToolForm), toolPath, customFormTypeName, skipExtToolWarning: skipExtToolWarning);
-			if (newTool == null) return null;
-			if (newTool is Form form) form.Owner = _owner;
-			ApiInjector.UpdateApis(ApiProvider, newTool);
-			ServiceInjector.UpdateServices(_emulator.ServiceProvider, newTool);
-			SetBaseProperties(newTool);
-			// auto settings
-			if (newTool is IToolFormAutoConfig autoConfigTool)
-			{
-				AttachSettingHooks(
-					autoConfigTool,
-					_config.CommonToolSettings.TryGetValue(customFormTypeName, out var settings)
-						? settings
-						: (_config.CommonToolSettings[customFormTypeName] = new ToolDialogSettings())
-				);
-			}
-			// custom settings
-			if (HasCustomConfig(newTool))
-			{
-				InstallCustomConfig(
-					newTool,
-					_config.CustomToolSettings.TryGetValue(customFormTypeName, out var settings)
-						? settings
-						: (_config.CustomToolSettings[customFormTypeName] = new Dictionary<string, object>())
 				);
 			}
 
@@ -525,11 +473,6 @@ namespace BizHawk.Client.GBAHawk
 					
 					if (tool.IsActive)
 					{
-						if (tool is IExternalToolForm)
-						{
-							ApiInjector.UpdateApis(ApiProvider, tool);
-						}
-
 						tool.Restart();
 					}
 				}
@@ -607,65 +550,23 @@ namespace BizHawk.Client.GBAHawk
 		/// Create a new instance of an IToolForm and return it
 		/// </summary>
 		/// <typeparam name="T">Type of tool you want to create</typeparam>
-		/// <param name="dllPath">Path .dll for an external tool</param>
 		/// <returns>New instance of an IToolForm</returns>
-		private IToolForm CreateInstance<T>(string dllPath)
+		private IToolForm CreateInstance<T>()
 			where T : IToolForm
 		{
-			return CreateInstance(typeof(T), dllPath);
+			return CreateInstance(typeof(T));
 		}
 
 		/// <summary>
 		/// Create a new instance of an IToolForm and return it
 		/// </summary>
 		/// <param name="toolType">Type of tool you want to create</param>
-		/// <param name="dllPath">Path dll for an external tool</param>
-		/// <param name="toolTypeName">For external tools, <see cref="Type.FullName"/> of the entry form's type (<paramref name="toolType"/> will be <see cref="IExternalToolForm"/>)</param>
 		/// <returns>New instance of an IToolForm</returns>
-		private IToolForm CreateInstance(Type toolType, string dllPath, string toolTypeName = null, bool skipExtToolWarning = false)
+		private IToolForm CreateInstance(Type toolType)
 		{
 			IToolForm tool;
 
-			// Specific case for custom tools
-			// TODO: Use AppDomain in order to be able to unload the assembly
-			// Hard stuff as we need a proxy object that inherit from MarshalByRefObject.
-			if (toolType == typeof(IExternalToolForm))
-			{
-				if (!skipExtToolWarning)
-				{
-					if (!_owner.ShowMessageBox2(
-						"Are you sure want to load this external tool?\r\nAccept ONLY if you trust the source and if you know what you're doing. In any other case, choose no.",
-						"Confirm loading",
-						EMsgBoxIcon.Question))
-					{
-						return null;
-					}
-				}
-
-				try
-				{
-					tool = Activator.CreateInstanceFrom(dllPath, toolTypeName ?? "BizHawk.Client.EmuHawk.CustomMainForm").Unwrap() as IExternalToolForm;
-					if (tool == null)
-					{
-						_owner.ShowMessageBox($"It seems that the object CustomMainForm does not implement {nameof(IExternalToolForm)}. Please review the code.", "No, no, no. Wrong Way !", EMsgBoxIcon.Warning);
-						return null;
-					}
-				}
-				catch (MissingMethodException)
-				{
-					_owner.ShowMessageBox("It seems that the object CustomMainForm does not have a public default constructor. Please review the code.", "No, no, no. Wrong Way !", EMsgBoxIcon.Warning);
-					return null;
-				}
-				catch (TypeLoadException)
-				{
-					_owner.ShowMessageBox("It seems that the object CustomMainForm does not exists. Please review the code.", "No, no, no. Wrong Way !", EMsgBoxIcon.Warning);
-					return null;
-				}
-			}
-			else
-			{
-				tool = (IToolForm)Activator.CreateInstance(toolType);
-			}
+			tool = (IToolForm)Activator.CreateInstance(toolType);
 
 			// Add to our list of tools
 			_tools.Add(tool);

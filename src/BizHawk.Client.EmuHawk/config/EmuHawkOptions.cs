@@ -70,8 +70,6 @@ namespace BizHawk.Client.GBAHawk
 			AcceptBackgroundInputControllerOnlyCheckBox.Checked = _config.AcceptBackgroundInputControllerOnly;
 			HandleAlternateKeyboardLayoutsCheckBox.Checked = _config.HandleAlternateKeyboardLayouts;
 			NeverAskSaveCheckbox.Checked = _config.SuppressAskSave;
-			SingleInstanceModeCheckbox.Checked = _config.SingleInstanceMode;
-			SingleInstanceModeCheckbox.Enabled = true;
 
 			BackupSRamCheckbox.Checked = _config.BackupSaveram;
 			AutosaveSRAMCheckbox.Checked = _config.AutosaveSaveRAM;
@@ -118,7 +116,6 @@ namespace BizHawk.Client.GBAHawk
 			_config.AcceptBackgroundInputControllerOnly = AcceptBackgroundInputControllerOnlyCheckBox.Checked;
 			_config.HandleAlternateKeyboardLayouts = HandleAlternateKeyboardLayoutsCheckBox.Checked;
 			_config.SuppressAskSave = NeverAskSaveCheckbox.Checked;
-			_config.SingleInstanceMode = SingleInstanceModeCheckbox.Checked;
 			if(rbInputMethodDirectInput.Checked) _config.HostInputMethod =  EHostInputMethod.DirectInput;
 			if(rbInputMethodOpenTK.Checked) _config.HostInputMethod = EHostInputMethod.OpenTK;
 

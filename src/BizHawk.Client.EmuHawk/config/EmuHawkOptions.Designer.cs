@@ -47,12 +47,8 @@
             this.rbInputMethodOpenTK = new System.Windows.Forms.RadioButton();
             this.rbInputMethodDirectInput = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.locLabelEx1 = new BizHawk.WinForms.Controls.LocLabelEx();
             this.StartPausedCheckbox = new System.Windows.Forms.CheckBox();
             this.UseExistingSaveRAMCheckbox = new System.Windows.Forms.CheckBox();
-            this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.SingleInstanceModeCheckbox = new System.Windows.Forms.CheckBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.NoMixedKeyPriorityCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -87,7 +83,7 @@
             // OkBtn
             // 
             this.OkBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.OkBtn.Location = new System.Drawing.Point(280, 440);
+            this.OkBtn.Location = new System.Drawing.Point(280, 346);
             this.OkBtn.Name = "OkBtn";
             this.OkBtn.Size = new System.Drawing.Size(60, 23);
             this.OkBtn.TabIndex = 0;
@@ -99,7 +95,7 @@
             // 
             this.CancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.CancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CancelBtn.Location = new System.Drawing.Point(346, 440);
+            this.CancelBtn.Location = new System.Drawing.Point(346, 346);
             this.CancelBtn.Name = "CancelBtn";
             this.CancelBtn.Size = new System.Drawing.Size(60, 23);
             this.CancelBtn.TabIndex = 1;
@@ -117,7 +113,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(394, 417);
+            this.tabControl1.Size = new System.Drawing.Size(394, 323);
             this.tabControl1.TabIndex = 2;
             // 
             // tabPage1
@@ -136,8 +132,8 @@
             this.tabPage1.Controls.Add(this.groupBox1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabPage1.Size = new System.Drawing.Size(386, 391);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(386, 297);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "General";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -271,24 +267,14 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.locLabelEx1);
             this.groupBox1.Controls.Add(this.StartPausedCheckbox);
             this.groupBox1.Controls.Add(this.UseExistingSaveRAMCheckbox);
-            this.groupBox1.Controls.Add(this.label14);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.SingleInstanceModeCheckbox);
             this.groupBox1.Location = new System.Drawing.Point(6, 205);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(369, 133);
+            this.groupBox1.Size = new System.Drawing.Size(369, 80);
             this.groupBox1.TabIndex = 15;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Startup Options";
-            // 
-            // locLabelEx1
-            // 
-            this.locLabelEx1.Location = new System.Drawing.Point(26, 112);
-            this.locLabelEx1.Name = "locLabelEx1";
-            this.locLabelEx1.Text = "Note: Only a tiny subset of commandline args work (incl. rom path)";
             // 
             // StartPausedCheckbox
             // 
@@ -310,28 +296,6 @@
             this.UseExistingSaveRAMCheckbox.Text = "Use existing Save RAM when loading games (does not effect movies.)";
             this.UseExistingSaveRAMCheckbox.UseVisualStyleBackColor = true;
             // 
-            // label14
-            // 
-            this.label14.Location = new System.Drawing.Point(26, 99);
-            this.label14.Name = "label14";
-            this.label14.Text = "Note: Requires closing and reopening EmuHawk to take effect.";
-            // 
-            // label3
-            // 
-            this.label3.Location = new System.Drawing.Point(26, 85);
-            this.label3.Name = "label3";
-            this.label3.Text = "Enable to force only one instance of EmuHawk at a time.";
-            // 
-            // SingleInstanceModeCheckbox
-            // 
-            this.SingleInstanceModeCheckbox.AutoSize = true;
-            this.SingleInstanceModeCheckbox.Location = new System.Drawing.Point(6, 65);
-            this.SingleInstanceModeCheckbox.Name = "SingleInstanceModeCheckbox";
-            this.SingleInstanceModeCheckbox.Size = new System.Drawing.Size(127, 17);
-            this.SingleInstanceModeCheckbox.TabIndex = 10;
-            this.SingleInstanceModeCheckbox.Text = "Single instance mode";
-            this.SingleInstanceModeCheckbox.UseVisualStyleBackColor = true;
-            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.NoMixedKeyPriorityCheckBox);
@@ -345,7 +309,7 @@
             this.tabPage3.Controls.Add(this.BackupSRamCheckbox);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(386, 391);
+            this.tabPage3.Size = new System.Drawing.Size(386, 297);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Advanced";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -353,7 +317,7 @@
             // NoMixedKeyPriorityCheckBox
             // 
             this.NoMixedKeyPriorityCheckBox.AutoSize = true;
-            this.NoMixedKeyPriorityCheckBox.Location = new System.Drawing.Point(6, 232);
+            this.NoMixedKeyPriorityCheckBox.Location = new System.Drawing.Point(4, 199);
             this.NoMixedKeyPriorityCheckBox.Name = "NoMixedKeyPriorityCheckBox";
             this.NoMixedKeyPriorityCheckBox.Size = new System.Drawing.Size(288, 17);
             this.NoMixedKeyPriorityCheckBox.TabIndex = 25;
@@ -456,7 +420,7 @@
             this.panel1.Controls.Add(this.label7);
             this.panel1.Controls.Add(this.LuaInterfaceRadio);
             this.panel1.Controls.Add(this.NLuaRadio);
-            this.panel1.Location = new System.Drawing.Point(6, 327);
+            this.panel1.Location = new System.Drawing.Point(6, 233);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(377, 61);
             this.panel1.TabIndex = 20;
@@ -492,7 +456,7 @@
             // LuaDuringTurboCheckbox
             // 
             this.LuaDuringTurboCheckbox.AutoSize = true;
-            this.LuaDuringTurboCheckbox.Location = new System.Drawing.Point(6, 177);
+            this.LuaDuringTurboCheckbox.Location = new System.Drawing.Point(6, 162);
             this.LuaDuringTurboCheckbox.Name = "LuaDuringTurboCheckbox";
             this.LuaDuringTurboCheckbox.Size = new System.Drawing.Size(166, 17);
             this.LuaDuringTurboCheckbox.TabIndex = 15;
@@ -537,7 +501,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.CancelBtn;
-            this.ClientSize = new System.Drawing.Size(418, 470);
+            this.ClientSize = new System.Drawing.Size(418, 376);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.CancelBtn);
             this.Controls.Add(this.OkBtn);
@@ -606,10 +570,6 @@
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.CheckBox StartPausedCheckbox;
 		private System.Windows.Forms.CheckBox UseExistingSaveRAMCheckbox;
-		private BizHawk.WinForms.Controls.LocLabelEx label14;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private System.Windows.Forms.CheckBox SingleInstanceModeCheckbox;
 		private System.Windows.Forms.CheckBox NoMixedKeyPriorityCheckBox;
-		private WinForms.Controls.LocLabelEx locLabelEx1;
 	}
 }
