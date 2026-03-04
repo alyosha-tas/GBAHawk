@@ -306,7 +306,7 @@
 		<EmbeddedResource Update="LogWindow.resx" DependentUpon="LogWindow.cs" />
 		<Compile Update="MainForm.cs" SubType="Form" />
 		<Compile Update="MainForm.Designer.cs" DependentUpon="MainForm.cs" />
-		<Compile Update="MainForm.Events.cs" DependentUpon="MainForm.cs" SubType="Form" />
+		<Compile Update="MainForm.Events.cs" DependentUpon="MainForm.cs" />
 		<Compile Update="MainForm.FileLoader.cs" DependentUpon="MainForm.cs" SubType="Form" />
 		<Compile Update="MainForm.Hotkey.cs" DependentUpon="MainForm.cs" SubType="Form" />
 		<Compile Update="MainForm.Movie.cs" DependentUpon="MainForm.cs" SubType="Form" />
