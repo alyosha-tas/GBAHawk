@@ -40,8 +40,6 @@ namespace BizHawk.Client.Common
 
 		public readonly bool? audiosync;
 
-		public readonly string? openExtToolDll;
-
 		public readonly string? cmdRom;
 
 		public ParsedCLIFlags(string? cmdLoadSlot,
@@ -81,7 +79,6 @@ namespace BizHawk.Client.Common
 			MMFFilename = mmfFilename;
 			HTTPAddresses = httpAddresses;
 			this.audiosync = audiosync;
-			this.openExtToolDll = openExtToolDll;
 			this.cmdRom = cmdRom;
 		}
 	}

@@ -21,7 +21,6 @@ namespace BizHawk.Client.GBAHawk
 		private readonly MainForm _owner;
 		private Config _config;
 		private readonly DisplayManager _displayManager;
-		private readonly ExternalToolManager _extToolManager;
 		private readonly InputManager _inputManager;
 		private IExternalApiProvider _apiProvider;
 		private IEmulator _emulator;
@@ -46,7 +45,6 @@ namespace BizHawk.Client.GBAHawk
 			MainForm owner,
 			Config config,
 			DisplayManager displayManager,
-			ExternalToolManager extToolManager,
 			InputManager inputManager,
 			IEmulator emulator,
 			IMovieSession movieSession,
@@ -55,7 +53,6 @@ namespace BizHawk.Client.GBAHawk
 			_owner = owner;
 			_config = config;
 			_displayManager = displayManager;
-			_extToolManager = extToolManager;
 			_inputManager = inputManager;
 			_emulator = emulator;
 			_movieSession = movieSession;
@@ -724,7 +721,7 @@ namespace BizHawk.Client.GBAHawk
 		public bool IsAvailable(Type tool)
 		{
 			if (!ServiceInjector.IsAvailable(_emulator.ServiceProvider, tool)) return false;
-			if (!PossibleToolTypeNames.Contains(tool.AssemblyQualifiedName) && !_extToolManager.PossibleExtToolTypeNames.Contains(tool.AssemblyQualifiedName)) return false; // not a tool
+			if (!PossibleToolTypeNames.Contains(tool.AssemblyQualifiedName)) return false; // not a tool
 
 			ToolAttribute attr = tool.GetCustomAttributes(false).OfType<ToolAttribute>().SingleOrDefault();
 			if (attr == null)

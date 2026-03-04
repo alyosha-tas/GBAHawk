@@ -199,7 +199,6 @@ namespace BizHawk.Client.GBAHawk
 			this.BasicBotMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator29 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.MultiDiskBundlerFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.ExternalToolMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.dummyExternalTool = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.KeypadMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.LoadTIFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -1220,8 +1219,7 @@ namespace BizHawk.Client.GBAHawk
 			this.VirtualPadMenuItem,
 			this.BasicBotMenuItem,
 			this.toolStripSeparator29,
-			this.MultiDiskBundlerFileMenuItem,
-			this.ExternalToolMenuItem});
+			this.MultiDiskBundlerFileMenuItem});
 			this.ToolsSubMenu.Text = "&Tools";
 			this.ToolsSubMenu.DropDownOpened += new System.EventHandler(this.ToolsSubMenu_DropDownOpened);
 			// 
@@ -1279,13 +1277,6 @@ namespace BizHawk.Client.GBAHawk
 			// 
 			this.MultiDiskBundlerFileMenuItem.Text = "Multi-disk Bundler";
 			this.MultiDiskBundlerFileMenuItem.Click += new System.EventHandler(this.MultidiskBundlerMenuItem_Click);
-			// 
-			// ExternalToolMenuItem
-			// 
-			this.ExternalToolMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.dummyExternalTool});
-			this.ExternalToolMenuItem.Text = "External Tool";
-			this.ExternalToolMenuItem.DropDownOpening += new System.EventHandler(this.ExternalToolMenuItem_DropDownOpening);
 			// 
 			// dummyExternalTool
 			// 
@@ -1984,7 +1975,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx Speed400MenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BasicBotMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayMessagesMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ExternalToolMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx dummyExternalTool;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RecordAVMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveConfigAsMenuItem;

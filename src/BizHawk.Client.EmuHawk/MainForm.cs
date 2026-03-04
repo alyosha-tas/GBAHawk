@@ -74,33 +74,6 @@ namespace BizHawk.Client.GBAHawk
 			HandleToggleLightAndLink();
 			SetStatusBar();
 			_stateSlots.Update(Emulator, MovieSession.Movie, SaveStatePrefix());
-
-			// open requested ext. tool
-			var requestedExtToolDll = _argParser.openExtToolDll;
-			if (requestedExtToolDll != null)
-			{
-				IExternalToolForm loaded = null;
-
-				var enabled = ExtToolManager.ToolStripMenu.Where(item => item.Enabled)
-					.Select(item => ((string, string)) item.Tag)
-					.ToList();
-				try
-				{
-					int foundIndex = enabled.FindIndex(tuple =>
-						tuple.Item1 == requestedExtToolDll
-						|| Path.GetFileName(tuple.Item1) == requestedExtToolDll
-						|| Path.GetFileNameWithoutExtension(tuple.Item1) == requestedExtToolDll);
-
-					if(foundIndex != -1)
-						loaded = Tools.LoadExternalToolForm(enabled[foundIndex].Item1, enabled[foundIndex].Item2, skipExtToolWarning: true);
-				}
-				catch
-				{
-				}
-
-				if(loaded == null)
-					Console.WriteLine($"requested ext. tool dll {requestedExtToolDll} could not be loaded");
-			}
 		}
 
 		static MainForm()
@@ -308,8 +281,7 @@ namespace BizHawk.Client.GBAHawk
 			Controls.Add(_presentationPanel);
 			Controls.SetChildIndex(_presentationPanel, 0);
 
-			ExtToolManager = new ExternalToolManager(Config.PathEntries, () => (EmuClientApi.SystemIdConverter.Convert(Emulator.SystemId), Game.Hash));
-			Tools = new ToolManager(this, Config, DisplayManager, ExtToolManager, InputManager, Emulator, MovieSession, Game);
+			Tools = new ToolManager(this, Config, DisplayManager, InputManager, Emulator, MovieSession, Game);
 
 			// TODO GL - move these event handlers somewhere less obnoxious line in the On* overrides
 			Load += (o, e) =>
@@ -821,8 +793,6 @@ namespace BizHawk.Client.GBAHawk
 		private readonly Func<string> _getConfigPath;
 
 		private readonly IGL GL;
-
-		private readonly ExternalToolManager ExtToolManager;
 
 		public readonly ToolManager Tools;
 
@@ -2478,7 +2448,6 @@ namespace BizHawk.Client.GBAHawk
 			InitControls(); // rebind hotkeys
 			InputManager.SyncControls(Emulator, MovieSession, Config);
 			Tools.Restart(Config, Emulator, Game);
-			ExtToolManager.Restart(Config.PathEntries);
 			Sound.Config = Config;
 			DisplayManager.UpdateGlobals(Config, Emulator);
 			AddOnScreenMessage($"Config file loaded: {iniPath}");
@@ -3385,8 +3354,6 @@ namespace BizHawk.Client.GBAHawk
 						}
 					}
 
-					ExtToolManager.BuildToolStrip();
-
 					EmuClient.OnRomLoaded();
 					return true;
 				}
@@ -3394,7 +3361,6 @@ namespace BizHawk.Client.GBAHawk
 				{
 					// This shows up if there's a problem
 					Tools.Restart(Config, Emulator, Game);
-					ExtToolManager.BuildToolStrip();
 					OnRomChanged();
 					return false;
 				}
@@ -3517,7 +3483,6 @@ namespace BizHawk.Client.GBAHawk
 				DisplayManager.UpdateGlobals(Config, Emulator);
 				InputManager.SyncControls(Emulator, MovieSession, Config);
 				Tools.UpdateMemoryRelatedTools(null);
-				ExtToolManager.BuildToolStrip();
 				PauseOnFrame = null;
 				CurrentlyOpenRom = null;
 				CurrentlyOpenRomArgs = null;

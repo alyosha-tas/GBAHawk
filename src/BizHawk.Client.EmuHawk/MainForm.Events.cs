@@ -1047,33 +1047,6 @@ namespace BizHawk.Client.GBAHawk
 			VirtualPadMenuItem.Enabled = Emulator.ControllerDefinition.Any();
 		}
 
-		private void ExternalToolMenuItem_DropDownOpening(object sender, EventArgs e)
-		{
-			ExternalToolMenuItem.DropDownItems.Clear();
-
-			foreach (var item in ExtToolManager.ToolStripMenu)
-			{
-				if (item.Tag is ValueTuple<string, string> tuple)
-				{
-					if (item.Enabled)
-					{
-						item.Click += (clickEventSender, clickEventArgs) => Tools.LoadExternalToolForm(tuple.Item1, tuple.Item2);
-					}
-				}
-				else
-				{
-					item.Image = Properties.Resources.ExclamationRed;
-				}
-
-				ExternalToolMenuItem.DropDownItems.Add(item);
-			}
-
-			if (ExternalToolMenuItem.DropDownItems.Count == 0)
-			{
-				ExternalToolMenuItem.DropDownItems.Add("None");
-			}
-		}
-
 		private void AboutSubMenu_Click(object sender, EventArgs e)
 		{
 			ShowMessageBox(owner: null, "Current GBAHawk version: " + VersionInfo.MainVersion);
