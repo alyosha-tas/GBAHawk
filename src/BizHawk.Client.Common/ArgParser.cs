@@ -118,37 +118,13 @@ namespace BizHawk.Client.Common
 				{
 					luaConsole = true;
 				}
-				else if (argDowncased.StartsWith("--socket_port="))
-				{
-					var port = int.TryParse(argDowncased.Substring(argDowncased.IndexOf('=') + 1), out var i1) ? i1 : default;
-					if (port > 0) socketPort = port;
-				}
-				else if (argDowncased.StartsWith("--socket_ip="))
-				{
-					socketIP = argDowncased.Substring(argDowncased.IndexOf('=') + 1);
-				}
 				else if (argDowncased.StartsWith("--mmf="))
 				{
 					mmfFilename = arg.Substring(arg.IndexOf('=') + 1);
 				}
-				else if (argDowncased.StartsWith("--url_get="))
-				{
-					urlGet = arg.Substring(arg.IndexOf('=') + 1);
-				}
-				else if (argDowncased.StartsWith("--url_post="))
-				{
-					urlPost = arg.Substring(arg.IndexOf('=') + 1);
-				}
 				else if (argDowncased.StartsWith("--audiosync="))
 				{
 					audiosync = argDowncased.Substring(argDowncased.IndexOf('=') + 1) == "true";
-				}
-				else if (argDowncased.StartsWith("--open-ext-tool-dll="))
-				{
-					// the first ext. tool from ExternalToolManager.ToolStripMenu which satisfies both of these will be opened:
-					// - available (no load errors, correct system/rom, etc.)
-					// - dll path matches given string; or dll filename matches given string with or without `.dll`
-					openExtToolDll = arg.Substring(20);
 				}
 				else
 				{
@@ -187,11 +163,8 @@ namespace BizHawk.Client.Common
 				chromeless: chromeless ?? false,
 				luaScript: luaScript,
 				luaConsole: luaConsole ?? false,
-				socketAddress: socketAddress,
 				mmfFilename: mmfFilename,
-				httpAddresses: httpAddresses,
 				audiosync: audiosync,
-				openExtToolDll: openExtToolDll,
 				cmdRom: cmdRom
 			);
 		}

@@ -32,11 +32,7 @@ namespace BizHawk.Client.Common
 
 		public readonly bool luaConsole;
 
-		public readonly (string IP, int Port)? SocketAddress;
-
 		public readonly string? MMFFilename;
-
-		public readonly (string? UrlGet, string? UrlPost)? HTTPAddresses;
 
 		public readonly bool? audiosync;
 
@@ -55,11 +51,8 @@ namespace BizHawk.Client.Common
 			bool chromeless,
 			string? luaScript,
 			bool luaConsole,
-			(string IP, int Port)? socketAddress,
 			string? mmfFilename,
-			(string? UrlGet, string? UrlPost)? httpAddresses,
 			bool? audiosync,
-			string? openExtToolDll,
 			string? cmdRom)
 		{
 			this.cmdLoadSlot = cmdLoadSlot;
@@ -75,9 +68,7 @@ namespace BizHawk.Client.Common
 			_chromeless = chromeless;
 			this.luaScript = luaScript;
 			this.luaConsole = luaConsole;
-			SocketAddress = socketAddress;
 			MMFFilename = mmfFilename;
-			HTTPAddresses = httpAddresses;
 			this.audiosync = audiosync;
 			this.cmdRom = cmdRom;
 		}

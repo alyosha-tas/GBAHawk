@@ -23,53 +23,18 @@ namespace BizHawk.Common
 			}
 		}
 
-		/// <summary>equivalent to <see cref="Console.WriteLine()">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
-		[Conditional("DEBUG")]
-		public static void DebugWriteLine() => Console.WriteLine();
-
 		/// <summary>equivalent to <see cref="Console.WriteLine(string)">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
 		[Conditional("DEBUG")]
 		public static void DebugWriteLine(string value) => Console.WriteLine(value);
-
-		/// <summary>equivalent to <see cref="Console.WriteLine(object)">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
-		[Conditional("DEBUG")]
-		public static void DebugWriteLine(object value) => Console.WriteLine(value);
 
 		/// <summary>equivalent to <see cref="Console.WriteLine(string, object[])">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
 		[Conditional("DEBUG")]
 		public static void DebugWriteLine(string format, params object[] arg) => Console.WriteLine(format, arg);
 
-		/// <exception cref="InvalidOperationException">issues with parsing <paramref name="src"/></exception>
-		/// <remarks>TODO use <see cref="MemoryStream(int)"/> and <see cref="MemoryStream.ToArray"/> instead of using <see cref="MemoryStream(byte[])"/> and keeping a reference to the array? --yoshi</remarks>
-		public static byte[] DecompressGzipFile(Stream src)
-		{
-			var tmp = new byte[4];
-			if (src.Read(tmp, 0, 2) != 2) throw new InvalidOperationException("Unexpected end of stream");
-			if (tmp[0] != 0x1F || tmp[1] != 0x8B) throw new InvalidOperationException("GZIP header not present");
-			src.Seek(-4, SeekOrigin.End);
-			src.Read(tmp, 0, 4);
-			src.Seek(0, SeekOrigin.Begin);
-			using var gs = new GZipStream(src, CompressionMode.Decompress, true);
-			var data = new byte[BitConverter.ToInt32(tmp, 0)];
-			using var ms = new MemoryStream(data);
-			gs.CopyTo(ms);
-			return data;
-		}
-
 		public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> kvp, out TKey key, out TValue value)
 		{
 			key = kvp.Key;
 			value = kvp.Value;
-		}
-
-		/// <remarks>adapted from https://stackoverflow.com/a/3928856/7467292, values are compared using <see cref="EqualityComparer{T}.Default">EqualityComparer.Default</see></remarks>
-		public static bool DictionaryEqual<TKey, TValue>(IDictionary<TKey, TValue> a, IDictionary<TKey, TValue> b)
-			where TKey : notnull
-		{
-			if (a == b) return true;
-			if (a.Count != b.Count) return false;
-			var comparer = EqualityComparer<TValue>.Default;
-			return a.All(kvp => b.TryGetValue(kvp.Key, out var bVal) && comparer.Equals(kvp.Value, bVal));
 		}
 
 		/// <param name="filesize">in bytes</param>
@@ -99,36 +64,6 @@ namespace BizHawk.Common
 			{
 				return e.Types.Where(t => t != null);
 			}
-		}
-
-		/// <exception cref="ArgumentException"><paramref name="str"/> has an odd number of chars or contains a char not in <c>[0-9A-Fa-f]</c></exception>
-		public static byte[] HexStringToBytes(this string str)
-		{
-			if (str.Length % 2 != 0) throw new ArgumentException();
-			static int CharToNybble(char c)
-			{
-				if ('0' <= c && c <= '9') return c - 0x30;
-				if ('A' <= c && c <= 'F') return c - 0x37;
-				if ('a' <= c && c <= 'f') return c - 0x57;
-				throw new ArgumentException();
-			}
-			using var ms = new MemoryStream();
-			for (int i = 0, l = str.Length / 2; i != l; i++) ms.WriteByte((byte) ((CharToNybble(str[2 * i]) << 4) + CharToNybble(str[2 * i + 1])));
-			return ms.ToArray();
-		}
-
-		public static int Memcmp(void* a, void* b, int len)
-		{
-			var ba = (byte*) a;
-			var bb = (byte*) b;
-			for (var i = 0; i != len; i++)
-			{
-				var _a = ba[i];
-				var _b = bb[i];
-				var c = _a - _b;
-				if (c != 0) return c;
-			}
-			return 0;
 		}
 
 		public static void Memset(void* ptr, int val, int len)
