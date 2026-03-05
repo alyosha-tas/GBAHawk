@@ -8,13 +8,6 @@
 		bool UseCompression { get; }
 
 		/// <summary>
-		/// Gets a value indicating whether or not to delta compress savestates before storing them
-		/// </summary>
-		/// <value></value>
-		// TODO: This is in here for frontend reasons, but the buffer itself doesn't interact with this.
-		bool UseDelta { get; }
-
-		/// <summary>
 		/// Buffer space to use in MB
 		/// </summary>
 		long BufferSize { get; }
@@ -43,7 +36,6 @@
 	public class RewindConfig : IRewindSettings
 	{
 		public bool UseCompression { get; set; }
-		public bool UseDelta { get; set; }
 		public bool Enabled { get; set; } = true;
 		public long BufferSize { get; set; } = 512; // in mb
 		public bool UseFixedRewindInterval { get; set; } = false;

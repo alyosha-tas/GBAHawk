@@ -198,9 +198,6 @@
 		<Compile Update="AVOut/GifWriterForm.cs" SubType="Form" />
 		<Compile Update="AVOut/GifWriterForm.Designer.cs" DependentUpon="GifWriterForm.cs" />
 		<EmbeddedResource Update="AVOut/GifWriterForm.resx" DependentUpon="GifWriterForm.cs" />
-		<Compile Update="AVOut/JMDForm.cs" SubType="Form" />
-		<Compile Update="AVOut/JMDForm.Designer.cs" DependentUpon="JMDForm.cs" />
-		<EmbeddedResource Update="AVOut/JMDForm.resx" DependentUpon="JMDForm.cs" />
 		<Compile Update="AVOut/NumericTextBox.cs" SubType="Component" />
 		<Compile Update="AVOut/SynclessRecordingTools.cs" SubType="Form" />
 		<Compile Update="AVOut/SynclessRecordingTools.Designer.cs" DependentUpon="SynclessRecordingTools.cs" />

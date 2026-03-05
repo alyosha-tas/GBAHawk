@@ -23,7 +23,7 @@ namespace BizHawk.Client.GBAHawk
 				{
 					MovieSession.QueueNewMovie(movie, record, Emulator.SystemId, Config.PreferredCores);
 				}
-				catch (MoviePlatformMismatchException ex)
+				catch (InvalidOperationException ex)
 				{
 					using var ownerForm = new Form { TopMost = true };
 					MessageBox.Show(ownerForm, ex.Message, "Movie/Platform Mismatch", MessageBoxButtons.OK, MessageBoxIcon.Error);

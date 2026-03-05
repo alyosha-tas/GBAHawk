@@ -188,7 +188,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 		private readonly IPort Port1;
 		private readonly IPort Port2;
 
-		private static IReadOnlyDictionary<string, Func<int, IPort>> _controllerCtors;
+		private static IReadOnlyDictionary<string, Func<int, IPort>>? _controllerCtors;
 
 		public static IReadOnlyDictionary<string, Func<int, IPort>> ControllerCtors => _controllerCtors
 			??= new Dictionary<string, Func<int, IPort>>

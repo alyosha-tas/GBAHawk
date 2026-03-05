@@ -10,7 +10,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 	{
 		private MemoryDomainList MemoryDomains;
 		private readonly Dictionary<string, MemoryDomainByteArray> _byteArrayDomains = new Dictionary<string, MemoryDomainByteArray>();
-		private bool _memoryDomainsInit = false;
 
 		private void SetupMemoryDomains()
 		{
@@ -81,8 +80,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			MemoryDomains = new MemoryDomainList(_byteArrayDomains.Values.Concat(domains).ToList());
 			(ServiceProvider as BasicServiceProvider).Register<IMemoryDomains>(MemoryDomains);
-
-			_memoryDomainsInit = true;
 		}
 	}
 }

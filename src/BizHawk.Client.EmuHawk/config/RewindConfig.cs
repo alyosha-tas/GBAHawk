@@ -47,7 +47,6 @@ namespace BizHawk.Client.GBAHawk
 
 			RewindEnabledBox.Checked = _config.Rewind.Enabled;
 			UseCompression.Checked = _config.Rewind.UseCompression;
-			cbDeltaCompression.Checked = _config.Rewind.UseDelta;
 			BufferSizeUpDown.Value = Math.Max((decimal) Math.Log(_config.Rewind.BufferSize, 2), BufferSizeUpDown.Minimum);
 			TargetFrameLengthRadioButton.Checked = !_config.Rewind.UseFixedRewindInterval;
 			TargetRewindIntervalRadioButton.Checked = _config.Rewind.UseFixedRewindInterval;
@@ -114,7 +113,6 @@ namespace BizHawk.Client.GBAHawk
 			_config.Rewind.UseFixedRewindInterval = PutRewindSetting(_config.Rewind.UseFixedRewindInterval, TargetRewindIntervalRadioButton.Checked);
 			_config.Rewind.TargetFrameLength = PutRewindSetting(_config.Rewind.TargetFrameLength, (int)TargetFrameLengthNumeric.Value);
 			_config.Rewind.TargetRewindInterval = PutRewindSetting(_config.Rewind.TargetRewindInterval, (int)TargetRewindIntervalNumeric.Value);
-			_config.Rewind.UseDelta = PutRewindSetting(_config.Rewind.UseDelta, cbDeltaCompression.Checked);
 
 			// These settings are not used by DoRewindSettings
 			_config.Savestates.CompressionLevelNormal = (int)nudCompression.Value;

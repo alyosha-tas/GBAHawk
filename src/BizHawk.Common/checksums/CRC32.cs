@@ -93,42 +93,5 @@ namespace BizHawk.Common
 				_current = CRC32Table[(_current ^ b) & 0xFF] ^ (_current >> 8);
 			}
 		}
-
-		/// <summary>
-		/// Incorporates a pre-calculated CRC with the given length by combining crcs<br/>
-		/// It's a bit flaky, so be careful, but it works
-		/// </summary>
-		/// <remarks>algorithm from zlib's crc32_combine. read http://www.leapsecond.com/tools/crcomb.c for more</remarks>
-		public void Incorporate(uint crc, int len)
-		{
-			if (len == 0) return; // degenerate case
-
-			Span<uint> combinerState = stackalloc uint[64];
-			COMBINER_INIT_STATE.CopyTo(combinerState);
-			var even = combinerState.Slice(start: 0, length: 32);
-			var odd = combinerState.Slice(start: 32, length: 32);
-
-			// apply len zeros to crc1 (first square will put the operator for one zero byte, eight zero bits, in even)
-			do
-			{
-				// apply zeros operator for this bit of len
-				gf2_matrix_square(even, odd);
-				if ((len & 1U) != 0U) _current = gf2_matrix_times(even, _current);
-				len >>= 1;
-
-				// if no more bits set, then done
-				if (len == 0U) break;
-
-				// another iteration of the loop with odd and even swapped
-				gf2_matrix_square(odd, even);
-				if ((len & 1U) != 0U) _current = gf2_matrix_times(odd, _current);
-				len >>= 1;
-
-				// if no more bits set, then done
-			} while (len != 0U);
-
-			// finally, combine and return
-			_current ^= crc;
-		}
 	}
 }

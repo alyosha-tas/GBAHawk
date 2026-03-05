@@ -47,7 +47,6 @@
             this.labelEx3 = new BizHawk.WinForms.Controls.LabelEx();
             this.labelEx2 = new BizHawk.WinForms.Controls.LabelEx();
             this.labelEx1 = new BizHawk.WinForms.Controls.LabelEx();
-            this.cbDeltaCompression = new System.Windows.Forms.CheckBox();
             this.TargetFrameLengthNumeric = new System.Windows.Forms.NumericUpDown();
             this.TargetRewindIntervalNumeric = new System.Windows.Forms.NumericUpDown();
             this.EstTimeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
@@ -191,7 +190,6 @@
             this.groupBox4.Controls.Add(this.TargetRewindIntervalRadioButton);
             this.groupBox4.Controls.Add(this.TargetFrameLengthRadioButton);
             this.groupBox4.Controls.Add(this.locSingleRowFLP1);
-            this.groupBox4.Controls.Add(this.cbDeltaCompression);
             this.groupBox4.Controls.Add(this.TargetFrameLengthNumeric);
             this.groupBox4.Controls.Add(this.TargetRewindIntervalNumeric);
             this.groupBox4.Controls.Add(this.UseCompression);
@@ -263,16 +261,6 @@
             this.labelEx1.Margin = new System.Windows.Forms.Padding(0);
             this.labelEx1.Name = "labelEx1";
             this.labelEx1.Text = "512";
-            // 
-            // cbDeltaCompression
-            // 
-            this.cbDeltaCompression.AutoSize = true;
-            this.cbDeltaCompression.Location = new System.Drawing.Point(15, 217);
-            this.cbDeltaCompression.Name = "cbDeltaCompression";
-            this.cbDeltaCompression.Size = new System.Drawing.Size(332, 17);
-            this.cbDeltaCompression.TabIndex = 35;
-            this.cbDeltaCompression.Text = "Use delta compression (economizes buffer usage at cost of CPU)";
-            this.cbDeltaCompression.UseVisualStyleBackColor = true;
             // 
             // TargetFrameLengthNumeric
             // 
@@ -585,7 +573,6 @@
 				private BizHawk.WinForms.Controls.LocLabelEx label20;
 		private System.Windows.Forms.NumericUpDown TargetFrameLengthNumeric;
 		private System.Windows.Forms.NumericUpDown TargetRewindIntervalNumeric;
-		private System.Windows.Forms.CheckBox cbDeltaCompression;
 		private WinForms.Controls.LocSingleRowFLP locSingleRowFLP1;
 		private WinForms.Controls.LabelEx labelEx3;
 		private WinForms.Controls.LabelEx labelEx2;

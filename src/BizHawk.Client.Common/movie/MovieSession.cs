@@ -188,7 +188,7 @@ namespace BizHawk.Client.Common
 			return true;
 		}
 
-		/// <exception cref="MoviePlatformMismatchException"><paramref name="record"/> is <see langword="false"/> and <paramref name="movie"/>.<see cref="IMovie.SystemID"/> does not match <paramref name="systemId"/>.<see cref="IEmulator.SystemId"/></exception>
+		/// <exception cref="InvalidOperationException"><paramref name="record"/> is <see langword="false"/> and <paramref name="movie"/>.<see cref="IMovie.SystemID"/> does not match <paramref name="systemId"/>.<see cref="IEmulator.SystemId"/></exception>
 		public void QueueNewMovie(IMovie movie, bool record, string systemId, IDictionary<string, string> preferredCores)
 		{
 			if (movie.IsActive() && movie.Changes)
@@ -202,7 +202,7 @@ namespace BizHawk.Client.Common
 				
 				if (movie.SystemID != systemId)
 				{
-					throw new MoviePlatformMismatchException(
+					throw new InvalidOperationException(
 						$"Movie system Id ({movie.SystemID}) does not match the currently loaded platform ({systemId}), unable to load");
 				}
 			}
