@@ -46,7 +46,6 @@ namespace BizHawk.Client.Common
 			bool printVersion,
 			string? cmdDumpName,
 			bool autoCloseOnDump,
-			bool chromeless,
 			string? luaScript,
 			bool luaConsole,
 			string? mmfFilename,

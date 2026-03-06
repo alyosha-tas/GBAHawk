@@ -18,11 +18,6 @@ namespace BizHawk.Client.GBAHawk
 			TogbmvMenuItem.Enabled =
 				!string.IsNullOrWhiteSpace(CurrentTasMovie.Filename) &&
 				(CurrentTasMovie.Filename != DefaultTasProjName());
-
-			saveSelectionToMacroToolStripMenuItem.Enabled =
-				placeMacroAtSelectionToolStripMenuItem.Enabled =
-				recentMacrosToolStripMenuItem.Enabled =
-				TasView.AnyRowsSelected;
 		}
 
 		private void NewFromSubMenu_DropDownOpened(object sender, EventArgs e)
@@ -215,65 +210,6 @@ namespace BizHawk.Client.GBAHawk
 
 			MessageStatusLabel.Text = "Backup .gbmv saved to \"Movie backups\" path.";
 			Cursor = Cursors.Default;
-		}
-
-		private void SaveSelectionToMacroMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!TasView.Focused && TasView.AnyRowsSelected)
-			{
-				return;
-			}
-
-			if (TasView.LastSelectedIndex == CurrentTasMovie.InputLogLength)
-			{
-				TasView.SelectRow(CurrentTasMovie.InputLogLength, false);
-			}
-
-			var file = SaveFileDialog(
-				null,
-				MacroInputTool.SuggestedFolder(Config, Game),
-				MacroInputTool.MacrosFSFilterSet,
-				this
-			);
-
-			if (file != null)
-			{
-				new MovieZone(
-					Emulator,
-					Tools,
-					MovieSession,
-					TasView.FirstSelectedIndex.Value,
-					TasView.LastSelectedIndex.Value - TasView.FirstSelectedIndex.Value + 1)
-					.Save(file.FullName);
-
-				Config.RecentMacros.Add(file.FullName);
-			}
-		}
-
-		private void PlaceMacroAtSelectionMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!TasView.Focused && TasView.AnyRowsSelected)
-			{
-				return;
-			}
-
-			var file = OpenFileDialog(
-				null,
-				MacroInputTool.SuggestedFolder(Config, Game),
-				MacroInputTool.MacrosFSFilterSet
-			);
-
-			if (file != null)
-			{
-				DummyLoadMacro(file.FullName);
-				Config.RecentMacros.Add(file.FullName);
-			}
-		}
-
-		private void RecentMacrosMenuItem_DropDownOpened(object sender, EventArgs e)
-		{
-			recentMacrosToolStripMenuItem.DropDownItems.Clear();
-			recentMacrosToolStripMenuItem.DropDownItems.AddRange(Config.RecentMacros.RecentMenu(MainForm, DummyLoadMacro, "Macro", noAutoload: true));
 		}
 
 		private void TogbmvMenuItem_Click(object sender, EventArgs e)

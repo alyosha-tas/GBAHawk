@@ -193,7 +193,6 @@ namespace BizHawk.Client.GBAHawk
 			this.TAStudioMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.HexEditorMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.TraceLoggerMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.MacroToolMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.VirtualPadMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.BasicBotMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator29 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
@@ -1208,7 +1207,6 @@ namespace BizHawk.Client.GBAHawk
 			this.TAStudioMenuItem,
 			this.HexEditorMenuItem,
 			this.TraceLoggerMenuItem,
-			this.MacroToolMenuItem,
 			this.VirtualPadMenuItem,
 			this.BasicBotMenuItem,
 			this.toolStripSeparator29,
@@ -1250,11 +1248,6 @@ namespace BizHawk.Client.GBAHawk
 			// 
 			this.TraceLoggerMenuItem.Text = "Trace &Logger";
 			this.TraceLoggerMenuItem.Click += new System.EventHandler(this.TraceLoggerMenuItem_Click);
-			// 
-			// MacroToolMenuItem
-			// 
-			this.MacroToolMenuItem.Text = "&Macro Tool";
-			this.MacroToolMenuItem.Click += new System.EventHandler(this.MacroToolMenuItem_Click);
 			// 
 			// VirtualPadMenuItem
 			// 
@@ -1950,7 +1943,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.StatusLabelEx LinkConnectStatusBarButton;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveRAMSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FlushSaveRAMMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MacroToolMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MultiDiskBundlerFileMenuItem;
 		private System.Windows.Forms.Timer timerMouseIdle;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx miUnthrottled;

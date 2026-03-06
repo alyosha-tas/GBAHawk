@@ -120,7 +120,6 @@ namespace BizHawk.Client.GBAHawk
 			InitializeComponent();
 
 			RecentSubMenu.Image = Resources.Recent;
-			recentMacrosToolStripMenuItem.Image = Resources.Recent;
 			TASEditorManualOnlineMenuItem.Image = Resources.Help;
 			ForumThreadMenuItem.Image = Resources.TAStudio;
 			Icon = Resources.TAStudioIcon;
@@ -654,20 +653,6 @@ namespace BizHawk.Client.GBAHawk
 				StartNewTasMovie();
 				_engaged = true;
 			}
-		}
-
-		private void DummyLoadMacro(string path)
-		{
-			if (!TasView.AnyRowsSelected)
-			{
-				return;
-			}
-
-			var loadZone = new MovieZone(path, MainForm, Emulator, MovieSession, Tools)
-			{
-				Start = TasView.FirstSelectedIndex.Value
-			};
-			loadZone.PlaceZone(CurrentTasMovie, Config);
 		}
 
 		private void TastudioPlayMode()

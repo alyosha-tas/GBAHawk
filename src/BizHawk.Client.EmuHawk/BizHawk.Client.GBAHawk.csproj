@@ -381,10 +381,6 @@
 		<EmbeddedResource Update="tools/Lua/LuaWinform.resx" DependentUpon="LuaWinform.cs" />
 		<Compile Update="tools/Lua/UnixLuaLibraries.cs" DependentUpon="LuaLibraries.cs" />
 		<Compile Update="tools/Lua/Win32LuaLibraries.cs" DependentUpon="LuaLibraries.cs" />
-		<Compile Update="tools/Macros/MacroInput.ButtonSelect.cs" SubType="Form" />
-		<Compile Update="tools/Macros/MacroInput.cs" SubType="Form" />
-		<Compile Update="tools/Macros/MacroInput.Designer.cs" DependentUpon="MacroInput.cs" />
-		<EmbeddedResource Update="tools/Macros/MacroInput.resx" DependentUpon="MacroInput.cs" />
 		<Compile Update="tools/MultiDiskBundler/MultiDiskBundler.cs" SubType="Form" />
 		<Compile Update="tools/MultiDiskBundler/MultiDiskBundler.Designer.cs" DependentUpon="MultiDiskBundler.cs" />
 		<EmbeddedResource Update="tools/MultiDiskBundler/MultiDiskBundler.resx" DependentUpon="MultiDiskBundler.cs" />

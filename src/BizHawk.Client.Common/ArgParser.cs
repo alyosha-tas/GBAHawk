@@ -29,16 +29,10 @@ namespace BizHawk.Client.Common
 			bool? printVersion = null;
 			string? cmdDumpName = null;
 			bool? autoCloseOnDump = null;
-			bool? chromeless = null;
 			string? luaScript = null;
 			bool? luaConsole = null;
-			int? socketPort = null;
-			string? socketIP = null;
 			string? mmfFilename = null;
-			string? urlGet = null;
-			string? urlPost = null;
 			bool? audiosync = null;
-			string? openExtToolDll = null;
 			string? cmdRom = null;
 
 			for (var i = 0; i < args.Length; i++)
@@ -104,11 +98,6 @@ namespace BizHawk.Client.Common
 				{
 					autoCloseOnDump = true;
 				}
-				else if (argDowncased.StartsWith("--chromeless"))
-				{
-					// chrome is never shown, even in windowed mode
-					chromeless = true;
-				}
 				else if (argDowncased.StartsWith("--lua="))
 				{
 					luaScript = arg.Substring(arg.IndexOf('=') + 1);
@@ -132,23 +121,6 @@ namespace BizHawk.Client.Common
 				}
 			}
 
-			var httpAddresses = urlGet == null && urlPost == null
-				? ((string?, string?)?) null // don't bother
-				: (urlGet, urlPost);
-			(string, int)? socketAddress;
-			if (socketIP == null && socketPort == null)
-			{
-				socketAddress = null; // don't bother
-			}
-			else if (socketIP == null || socketPort == null)
-			{
-				throw new ArgParserException("Socket server needs both --socket_ip and --socket_port. Socket server was not started");
-			}
-			else
-			{
-				socketAddress = (socketIP, socketPort.Value);
-			}
-
 			parsed = new ParsedCLIFlags(
 				cmdLoadSlot: cmdLoadSlot,
 				cmdLoadState: cmdLoadState,
@@ -160,7 +132,6 @@ namespace BizHawk.Client.Common
 				printVersion: printVersion ?? false,
 				cmdDumpName: cmdDumpName,
 				autoCloseOnDump: autoCloseOnDump ?? false,
-				chromeless: chromeless ?? false,
 				luaScript: luaScript,
 				luaConsole: luaConsole ?? false,
 				mmfFilename: mmfFilename,

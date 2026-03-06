@@ -44,10 +44,6 @@ namespace BizHawk.Client.GBAHawk
 			this.SavegbmvBackupMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.RecentSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator3 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.toolStripSeparator1 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.saveSelectionToMacroToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.placeMacroAtSelectionToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.recentMacrosToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator22 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.toolStripSeparator20 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.TogbmvMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -231,10 +227,6 @@ namespace BizHawk.Client.GBAHawk
             this.SaveBackupMenuItem,
             this.SavegbmvBackupMenuItem,
             this.RecentSubMenu,
-            this.toolStripSeparator1,
-            this.saveSelectionToMacroToolStripMenuItem,
-            this.placeMacroAtSelectionToolStripMenuItem,
-            this.recentMacrosToolStripMenuItem,
             this.toolStripSeparator20,
             this.TogbmvMenuItem});
 			this.FileSubMenu.Text = "&File";
@@ -300,23 +292,6 @@ namespace BizHawk.Client.GBAHawk
             this.toolStripSeparator3});
 			this.RecentSubMenu.Text = "Recent";
 			this.RecentSubMenu.DropDownOpened += new System.EventHandler(this.RecentSubMenu_DropDownOpened);
-			// 
-			// saveSelectionToMacroToolStripMenuItem
-			// 
-			this.saveSelectionToMacroToolStripMenuItem.Text = "Save Selection to Macro";
-			this.saveSelectionToMacroToolStripMenuItem.Click += new System.EventHandler(this.SaveSelectionToMacroMenuItem_Click);
-			// 
-			// placeMacroAtSelectionToolStripMenuItem
-			// 
-			this.placeMacroAtSelectionToolStripMenuItem.Text = "Place Macro at Selection";
-			this.placeMacroAtSelectionToolStripMenuItem.Click += new System.EventHandler(this.PlaceMacroAtSelectionMenuItem_Click);
-			// 
-			// recentMacrosToolStripMenuItem
-			// 
-			this.recentMacrosToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripSeparator22});
-			this.recentMacrosToolStripMenuItem.Text = "Recent Macros";
-			this.recentMacrosToolStripMenuItem.DropDownOpened += new System.EventHandler(this.RecentMacrosMenuItem_DropDownOpened);
 			// 
 			// TogbmvMenuItem
 			// 
@@ -1234,7 +1209,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OpenTASMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveTASMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveAsTASMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx EditSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ConfigSubMenu;
 		private InputRoll TasView;
@@ -1341,11 +1315,8 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx setCustomsToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator12;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx hideWasLagFramesToolStripMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx saveSelectionToMacroToolStripMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx placeMacroAtSelectionToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator20;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TogbmvMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx recentMacrosToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator22;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator23;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx followCursorToolStripMenuItem;

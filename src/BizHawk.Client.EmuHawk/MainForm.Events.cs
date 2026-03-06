@@ -1036,7 +1036,6 @@ namespace BizHawk.Client.GBAHawk
 
 			BasicBotMenuItem.Enabled = Tools.IsAvailable<BasicBot>();
 
-			MacroToolMenuItem.Enabled = MovieSession.Movie.IsActive() && Tools.IsAvailable<MacroInputTool>();
 			VirtualPadMenuItem.Enabled = Emulator.ControllerDefinition.Any();
 		}
 
@@ -1081,11 +1080,6 @@ namespace BizHawk.Client.GBAHawk
 		private void TraceLoggerMenuItem_Click(object sender, EventArgs e)
 		{
 			Tools.Load<TraceLogger>();
-		}
-
-		private void MacroToolMenuItem_Click(object sender, EventArgs e)
-		{
-			Tools.Load<MacroInputTool>();
 		}
 
 		private void VirtualPadMenuItem_Click(object sender, EventArgs e)
