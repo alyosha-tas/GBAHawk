@@ -133,7 +133,6 @@ namespace BizHawk.Client.GBAHawk
 			this.DisplayRerecordCountMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.DisplaySubtitlesMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripMenuItem4 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.DisplayStatusBarMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.DisplayMessagesMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.DisplayLogWindowMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.ConfigSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -842,7 +841,6 @@ namespace BizHawk.Client.GBAHawk
 			this.DisplayRerecordCountMenuItem,
 			this.DisplaySubtitlesMenuItem,
 			this.toolStripMenuItem4,
-			this.DisplayStatusBarMenuItem,
 			this.DisplayMessagesMenuItem,
 			this.toolStripSeparator8,
 			this.DisplayLogWindowMenuItem});
@@ -914,11 +912,6 @@ namespace BizHawk.Client.GBAHawk
 			// 
 			this.DisplaySubtitlesMenuItem.Text = "Display Subtitles";
 			this.DisplaySubtitlesMenuItem.Click += new System.EventHandler(this.DisplaySubtitlesMenuItem_Click);
-			// 
-			// DisplayStatusBarMenuItem
-			// 
-			this.DisplayStatusBarMenuItem.Text = "Display Status Bar";
-			this.DisplayStatusBarMenuItem.Click += new System.EventHandler(this.DisplayStatusBarMenuItem_Click);
 			// 
 			// DisplayMessagesMenuItem
 			// 
@@ -1842,7 +1835,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ScreenshotAsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TAStudioMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripMenuItem4;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayStatusBarMenuItem;
 		private System.Windows.Forms.ContextMenuStrip MainFormContextMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OpenRomContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadLastRomContextMenuItem;

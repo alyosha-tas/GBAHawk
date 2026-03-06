@@ -86,7 +86,6 @@ namespace BizHawk.Client.Common
 		// choose between 0 and 256
 		public int TargetScanlineFilterIntensity { get; set; } = 128;
 		public int TargetDisplayFilter { get; set; }
-		public int DispFinalFilter { get; set; } = 0; // None
 		public string DispUserFilterPath { get; set; } = "";
 		public RecentFiles RecentRoms { get; set; } = new RecentFiles(10);
 		public bool PauseWhenMenuActivated { get; set; } = true;
@@ -178,8 +177,6 @@ namespace BizHawk.Client.Common
 
 		public bool DispFixAspectRatio { get; set; } = true;
 		public bool DispFixScaleInteger { get; set; }
-		public bool DispAutoPrescale { get; set; }
-		public int DispSpeedupFeatures { get; set; } = 2;
 
 		public MessagePosition Fps { get; set; } = DefaultMessagePositions.Fps.Clone();
 		public MessagePosition FrameCounter { get; set; } = DefaultMessagePositions.FrameCounter.Clone();
@@ -198,11 +195,6 @@ namespace BizHawk.Client.Common
 		public int DispPrescale { get; set; } = 1;
 
 		public EDispMethod DispMethod { get; set; } = HostCapabilityDetector.HasDirectX ? EDispMethod.SlimDX9 : EDispMethod.OpenGL;
-
-		public int DispChromeFrameWindowed { get; set; } = 2;
-		public bool DispChromeStatusBarWindowed { get; set; } = true;
-		public bool DispChromeCaptionWindowed { get; set; } = true;
-		public bool DispChromeMenuWindowed { get; set; } = true;
 
 		public EDispManagerAR DispManagerAR { get; set; } = EDispManagerAR.System;
 

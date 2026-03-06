@@ -350,13 +350,6 @@ namespace BizHawk.Client.Common.Filters
 
 	public class FinalPresentation : BaseFilter
 	{
-		public enum eFilterOption
-		{
-			None, Bilinear, Bicubic
-		}
-
-		public eFilterOption FilterOption = eFilterOption.None;
-
 		public FinalPresentation(Size size)
 		{
 			OutputSize = size;
@@ -365,7 +358,6 @@ namespace BizHawk.Client.Common.Filters
 		private Size OutputSize, InputSize;
 		public Size TextureSize, VirtualTextureSize;
 		public int BackgroundColor;
-		public bool AutoPrescale;
 		public IGuiRenderer GuiRenderer;
 		public bool Flip;
 		public IGL GL;
@@ -388,42 +380,17 @@ namespace BizHawk.Client.Common.Filters
 
 		public override Size PresizeOutput(string channel, Size size)
 		{
-			if (FilterOption == eFilterOption.Bicubic)
-			{
-				size.Width = LL.vw;
-				size.Height = LL.vh;
-				return size;
-			}
 			return base.PresizeOutput(channel, size);
 		}
 
 		public override Size PresizeInput(string channel, Size size)
 		{
-			if (FilterOption != eFilterOption.Bicubic)
-				return size;
-
-			if (Config_PadOnly)
-			{
-				//TODO - redundant fix
-				LL = new LetterboxingLogic();
-				LL.vx += Padding.Left;
-				LL.vy += Padding.Top;
-				LL.vw = size.Width;
-				LL.vh = size.Height;
-			}
-			else
-			{
-				LL = new LetterboxingLogic(Config_FixAspectRatio, Config_FixScaleInteger, OutputSize.Width, OutputSize.Height, size.Width, size.Height, TextureSize, VirtualTextureSize);
-				LL.vx += Padding.Left;
-				LL.vy += Padding.Top;
-			}
-
 			return size;
 		}
 
 		public override void SetInputFormat(string channel, SurfaceState state)
 		{
-			bool need = state.SurfaceFormat.Size != OutputSize || FilterOption != eFilterOption.None || Flip;
+			bool need = state.SurfaceFormat.Size != OutputSize || Flip;
 
 			if (!need)
 			{
@@ -497,15 +464,7 @@ namespace BizHawk.Client.Common.Filters
 			GuiRenderer.Begin(OutputSize.Width, OutputSize.Height);
 			GuiRenderer.SetBlendState(GL.BlendNoneCopy);
 
-			if(FilterOption != eFilterOption.None)
-				InputTexture.SetFilterLinear();
-			else
-				InputTexture.SetFilterNearest();
-
-			if (FilterOption == eFilterOption.Bicubic)
-			{
-				//this was handled earlier by another filter
-			}
+			InputTexture.SetFilterNearest();
 
 			GuiRenderer.Modelview.Translate(LL.vx, LL.vy);
 			if (Flip)

@@ -606,10 +606,8 @@ namespace BizHawk.Client.GBAHawk
 					break;
 				}
 
-				if (Config.DispSpeedupFeatures != 0)
-				{
-					Thread.Sleep(0);
-				}
+				// why?
+				Thread.Sleep(0);
 			}
 
 			Shutdown();
@@ -1115,21 +1113,11 @@ namespace BizHawk.Client.GBAHawk
 
 		private void SynchChrome()
 		{
-			MainStatusBar.Visible = Config.DispChromeStatusBarWindowed && !_argParser._chromeless;
-			MainMenuStrip.Visible = Config.DispChromeMenuWindowed && !_argParser._chromeless;
-			MaximizeBox = MinimizeBox = Config.DispChromeCaptionWindowed && !_argParser._chromeless;
-			if (Config.DispChromeFrameWindowed == 0 || _argParser._chromeless)
-			{
-				FormBorderStyle = FormBorderStyle.None;
-			}
-			else if (Config.DispChromeFrameWindowed == 1)
-			{
-				FormBorderStyle = FormBorderStyle.SizableToolWindow;
-			}
-			else if (Config.DispChromeFrameWindowed == 2)
-			{
-				FormBorderStyle = FormBorderStyle.Sizable;
-			}
+			MainStatusBar.Visible = true;
+			MainMenuStrip.Visible = true;
+			MaximizeBox = MinimizeBox = true;
+			
+			FormBorderStyle = FormBorderStyle.Sizable;
 		}
 
 		private void OpenLuaConsole()
@@ -1257,7 +1245,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void SetStatusBar()
 		{
-			MainStatusBar.Visible = Config.DispChromeStatusBarWindowed;
+			MainStatusBar.Visible = true;
 			PerformLayout();
 			FrameBufferResized();
 		}
@@ -1266,20 +1254,12 @@ namespace BizHawk.Client.GBAHawk
 		{
 			get
 			{
-				if (!Config.DispChromeCaptionWindowed || _argParser._chromeless) return string.Empty; //TODO why would you want this? was this a previous attempt at static window titles?
-
 				var sb = new StringBuilder();
 
 				if (_inResizeLoop)
 				{
 					var size = _presentationPanel.NativeSize;
 					sb.Append($"({size.Width}x{size.Height})={(float) size.Width / size.Height} - ");
-				}
-
-				if (Config.DispSpeedupFeatures == 0)
-				{
-					// we need to display FPS somewhere, in this case
-					sb.Append($"({_lastFps:0} fps) - ");
 				}
 
 				if (!Emulator.IsNull())
@@ -1818,11 +1798,6 @@ namespace BizHawk.Client.GBAHawk
 
 		/*internal*/public void Render()
 		{
-			if (Config.DispSpeedupFeatures == 0)
-			{
-				return;
-			}
-
 			var video = _currentVideoProvider;
 			Size currVideoSize = new Size(video.BufferWidth, video.BufferHeight);
 			Size currVirtualSize = new Size(video.VirtualWidth, video.VirtualHeight);
@@ -2697,12 +2672,6 @@ namespace BizHawk.Client.GBAHawk
 			}
 
 			OSD.Fps = fpsString;
-
-			// need to refresh window caption in this case
-			if (Config.DispSpeedupFeatures == 0)
-			{
-				SetWindowText();
-			}
 		}
 
 		private void InitializeFpsData()

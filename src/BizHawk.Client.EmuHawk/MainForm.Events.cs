@@ -570,7 +570,6 @@ namespace BizHawk.Client.GBAHawk
 			DisplayLagCounterMenuItem.ShortcutKeyDisplayString = Config.HotkeyBindings["Lag Counter"].Bindings;
 			DisplayInputMenuItem.ShortcutKeyDisplayString = Config.HotkeyBindings["Input Display"].Bindings;
 
-			DisplayStatusBarMenuItem.Checked = Config.DispChromeStatusBarWindowed;
 			DisplayLogWindowMenuItem.Checked = Tools.IsLoaded<LogWindow>();
 
 			DisplayLagCounterMenuItem.Enabled = Emulator.CanPollInput();
@@ -645,12 +644,6 @@ namespace BizHawk.Client.GBAHawk
 		private void DisplaySubtitlesMenuItem_Click(object sender, EventArgs e)
 		{
 			Config.DisplaySubtitles ^= true;
-		}
-
-		private void DisplayStatusBarMenuItem_Click(object sender, EventArgs e)
-		{
-			Config.DispChromeStatusBarWindowed ^= true;
-			SetStatusBar();
 		}
 
 		private void DisplayMessagesMenuItem_Click(object sender, EventArgs e)
@@ -1141,11 +1134,6 @@ namespace BizHawk.Client.GBAHawk
 			OpenRomContextMenuItem.Visible = Emulator.IsNull();
 
 			bool showMenuVisible = !MainMenuStrip.Visible; // need to always be able to restore this as an emergency measure
-
-			if (_argParser._chromeless)
-			{
-				showMenuVisible = true; // I decided this was always possible in chrome-less mode, we'll see what they think
-			}
 
 			var movieIsActive = MovieSession.Movie.IsActive();
 

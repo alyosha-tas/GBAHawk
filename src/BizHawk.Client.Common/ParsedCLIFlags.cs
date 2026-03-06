@@ -26,8 +26,6 @@ namespace BizHawk.Client.Common
 
 		public readonly bool _autoCloseOnDump;
 
-		public readonly bool _chromeless;
-
 		public readonly string? luaScript;
 
 		public readonly bool luaConsole;
@@ -65,7 +63,6 @@ namespace BizHawk.Client.Common
 			this.printVersion = printVersion;
 			this.cmdDumpName = cmdDumpName;
 			_autoCloseOnDump = autoCloseOnDump;
-			_chromeless = chromeless;
 			this.luaScript = luaScript;
 			this.luaConsole = luaConsole;
 			MMFFilename = mmfFilename;

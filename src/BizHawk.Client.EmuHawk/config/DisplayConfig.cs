@@ -34,32 +34,17 @@ namespace BizHawk.Client.GBAHawk
 			_pathSelection = _config.DispUserFilterPath ?? "";
 			RefreshState();
 
-			rbFinalFilterNone.Checked = _config.DispFinalFilter == 0;
-			rbFinalFilterBilinear.Checked = _config.DispFinalFilter == 1;
-			rbFinalFilterBicubic.Checked = _config.DispFinalFilter == 2;
-
 			tbScanlineIntensity.Value = _config.TargetScanlineFilterIntensity;
 			checkLetterbox.Checked = _config.DispFixAspectRatio;
 			checkPadInteger.Checked = _config.DispFixScaleInteger;
-			cbAutoPrescale.Checked = _config.DispAutoPrescale;
 
 			cbAlternateVsync.Checked = _config.DispAlternateVsync;
-
-			if (_config.DispSpeedupFeatures == 2) rbDisplayFull.Checked = true;
-			if (_config.DispSpeedupFeatures == 1) rbDisplayMinimal.Checked = true;
-			if (_config.DispSpeedupFeatures == 0) rbDisplayAbsoluteZero.Checked = true;
 
 			cbStaticWindowTitles.Checked = _config.UseStaticWindowTitles;
 
 			rbOpenGL.Checked = _config.DispMethod == EDispMethod.OpenGL;
 			rbGDIPlus.Checked = _config.DispMethod == EDispMethod.GdiPlus;
 			rbD3D9.Checked = _config.DispMethod == EDispMethod.SlimDX9;
-
-			cbStatusBarWindowed.Checked = _config.DispChromeStatusBarWindowed;
-			cbCaptionWindowed.Checked = _config.DispChromeCaptionWindowed;
-			cbMenuWindowed.Checked = _config.DispChromeMenuWindowed;
-			trackbarFrameSizeWindowed.Value = _config.DispChromeFrameWindowed;
-			SyncTrackBar();
 
 			nudPrescale.Value = _config.DispPrescale;
 
@@ -109,30 +94,13 @@ namespace BizHawk.Client.GBAHawk
 			if (rbUser.Checked)
 				_config.TargetDisplayFilter = 3;
 
-			if (rbFinalFilterNone.Checked)
-				_config.DispFinalFilter = 0;
-			if (rbFinalFilterBilinear.Checked)
-				_config.DispFinalFilter = 1;
-			if (rbFinalFilterBicubic.Checked)
-				_config.DispFinalFilter = 2;
-
 			_config.DispPrescale = (int)nudPrescale.Value;
 
 			_config.TargetScanlineFilterIntensity = tbScanlineIntensity.Value;
 			_config.DispFixAspectRatio = checkLetterbox.Checked;
 			_config.DispFixScaleInteger = checkPadInteger.Checked;
-			_config.DispAutoPrescale = cbAutoPrescale.Checked;
-			
+
 			_config.DispAlternateVsync = cbAlternateVsync.Checked;
-
-			_config.DispChromeStatusBarWindowed = cbStatusBarWindowed.Checked;
-			_config.DispChromeCaptionWindowed = cbCaptionWindowed.Checked;
-			_config.DispChromeMenuWindowed = cbMenuWindowed.Checked;
-			_config.DispChromeFrameWindowed = trackbarFrameSizeWindowed.Value;
-
-			if (rbDisplayFull.Checked) _config.DispSpeedupFeatures = 2;
-			if (rbDisplayMinimal.Checked) _config.DispSpeedupFeatures = 1;
-			if (rbDisplayAbsoluteZero.Checked) _config.DispSpeedupFeatures = 0;
 
 			_config.UseStaticWindowTitles = cbStaticWindowTitles.Checked;
 
@@ -309,29 +277,6 @@ namespace BizHawk.Client.GBAHawk
 			lblScanlines.Text = $"{_config.TargetScanlineFilterIntensity / 256.0:P2}";
 		}
 
-		private void TrackBarFrameSizeWindowed_ValueChanged(object sender, EventArgs e)
-		{
-			SyncTrackBar();
-		}
-
-		private void SyncTrackBar()
-		{
-			if (trackbarFrameSizeWindowed.Value == 0)
-			{
-				lblFrameTypeWindowed.Text = "None";
-			}
-
-			if (trackbarFrameSizeWindowed.Value == 1)
-			{
-				lblFrameTypeWindowed.Text = "Thin";
-			}
-
-			if (trackbarFrameSizeWindowed.Value == 2)
-			{
-				lblFrameTypeWindowed.Text = "Thick";
-			}
-		}
-
 		private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			System.Diagnostics.Process.Start("https://tasvideos.org/Bizhawk/DisplayConfig");
@@ -346,8 +291,6 @@ namespace BizHawk.Client.GBAHawk
 		{
 			nudPrescale.Value = 1;
 			rbNone.Checked = true;
-			cbAutoPrescale.Checked = true;
-			rbFinalFilterBilinear.Checked = true;
 			checkLetterbox.Checked = true;
 			rbUseSystem.Checked = true;
 		}

@@ -327,42 +327,6 @@ namespace BizHawk.Client.Common
 			if (selectedChain != null)
 				AppendRetroShaderChain(chain, "retroShader", selectedChain, selectedChainProperties);
 
-			// AutoPrescale makes no sense for a None final filter
-			if (GlobalConfig.DispAutoPrescale && GlobalConfig.DispFinalFilter != (int)FinalPresentation.eFilterOption.None)
-			{
-				var apf = new AutoPrescaleFilter();
-				chain.AddFilter(apf, "auto_prescale");
-			}
-
-			//choose final filter
-			var finalFilter = FinalPresentation.eFilterOption.None;
-			if (GlobalConfig.DispFinalFilter == 1)
-			{
-				finalFilter = FinalPresentation.eFilterOption.Bilinear;
-			}
-
-			if (GlobalConfig.DispFinalFilter == 2)
-			{
-				finalFilter = FinalPresentation.eFilterOption.Bicubic;
-			}
-
-			//if bicubic is selected and unavailable, don't use it. use bilinear instead I guess
-			if (finalFilter == FinalPresentation.eFilterOption.Bicubic)
-			{
-				if (_shaderChainBicubic == null || !_shaderChainBicubic.Available)
-				{
-					finalFilter = FinalPresentation.eFilterOption.Bilinear;
-				}
-			}
-
-			fPresent.FilterOption = finalFilter;
-
-			// now if bicubic is chosen, insert it
-			if (finalFilter == FinalPresentation.eFilterOption.Bicubic)
-			{
-				AppendRetroShaderChain(chain, "bicubic", _shaderChainBicubic, null);
-			}
-
 			// add final presentation
 			if (includeUserFilters)
 				chain.AddFilter(fPresent, "presentation");
@@ -462,7 +426,7 @@ namespace BizHawk.Client.Common
 		/// </summary>
 		public void UpdateSource(IVideoProvider videoProvider)
 		{
-			bool displayNothing = GlobalConfig.DispSpeedupFeatures == 0;
+			bool displayNothing = false;
 			var job = new JobInfo
 			{
 				VideoProvider = videoProvider,
@@ -865,7 +829,6 @@ namespace BizHawk.Client.Common
 				fPresent.Config_FixAspectRatio = GlobalConfig.DispFixAspectRatio;
 				fPresent.Config_FixScaleInteger = GlobalConfig.DispFixScaleInteger;
 				fPresent.Padding = (ClientExtraPadding.Left, ClientExtraPadding.Top, ClientExtraPadding.Right, ClientExtraPadding.Bottom);
-				fPresent.AutoPrescale = GlobalConfig.DispAutoPrescale;
 
 				fPresent.GL = _gl;
 			}
