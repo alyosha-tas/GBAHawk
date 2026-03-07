@@ -15,24 +15,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		bool IsCGBMode();
 
 		/// <summary>
-		/// Acquire GPU memory for inspection.  The returned object must be disposed as soon as the frontend
-		/// tool is done inspecting it, and the pointers become invalid once it is disposed.
+		/// get the 32 byte BG palette ram
 		/// </summary>
-		/// <returns></returns>
-		IGBGPUMemoryAreas LockGPU();
+		IntPtr GetBGPalRam();
+
+
+		/// <summary>
+		/// get the 32 byte Sprite palette ram
+		/// </summary>
+		IntPtr GetSPRPalRam();
+
+		/// <summary>
+		/// returns the object attribute memory
+		/// </summary>
+		IntPtr GetOAM();
+
+		/// <summary>
+		/// returns the VRAM
+		/// </summary>
+		IntPtr GetVRAM();
 
 		/// <summary>
 		/// set up callback
 		/// </summary>
 		/// <param name="line">scanline. -1 = end of frame, -2 = RIGHT NOW</param>
 		void SetScanlineCallback(ScanlineCallback callback, int line);
-	}
-
-	public interface IGBGPUMemoryAreas : IDisposable
-	{
-		IntPtr Vram { get; }
-		IntPtr Oam { get; }
-		IntPtr Sppal { get; }
-		IntPtr Bgpal { get; }
 	}
 }

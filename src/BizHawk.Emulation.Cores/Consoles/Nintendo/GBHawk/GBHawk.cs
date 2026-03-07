@@ -2,10 +2,10 @@
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using BizHawk.Emulation.Cores.Nintendo.NES.Common;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using static BizHawk.Emulation.Cores.Nintendo.NESHawk.NESHawk;
 
 // TODO: mode1_disableint_gbc.gbc behaves differently between GBC and GBA, why?
 // TODO: Window Position A6 behaves differently
@@ -20,8 +20,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
 	[Core(CoreNames.GBHawk, "")]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGameboyCommon,
-	ISettable<GBHawk.GBSettings, GBHawkOld.GBSyncSettings>
+	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGBPPUViewable,
+	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
 		public bool Is_GBC = false;
 
@@ -107,14 +107,41 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		[CoreConstructor(VSystemID.Raw.GB)]
 		[CoreConstructor(VSystemID.Raw.GBC)]
-		public GBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBSettings settings, GBSyncSettings syncSettings, bool subframe = false)
+		public GBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBHawkSettings settings, GBHawkSyncSettings syncSettings, bool subframe = false)
 		{
 			ServiceProvider = new BasicServiceProvider(this);
-			Settings = (NESHawkSettings)settings ?? new NESHawkSettings();
-			SyncSettings = (NESHawkSyncSettings)syncSettings ?? new NESHawkSyncSettings();
-
+			Settings = (GBHawkSettings)settings ?? new GBHawkSettings();
+			SyncSettings = (GBHawkSyncSettings)syncSettings ?? new GBHawkSyncSettings();
 
 			is_subframe_core = subframe;
+
+			Is_GBC = SyncSettings.ConsoleMode != GBHawkSyncSettings.ConsoleModeType.GB;
+
+			if (Is_GBC)
+			{
+				
+				
+				_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
+
+				// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
+				if (SyncSettings.GBACGB)
+				{
+					for (int i = 0; i < 13; i++)
+					{
+						_bios[i + 0xF3] = (byte)((GBA_override[i] + _bios[i + 0xF3]) & 0xFF);
+					}
+
+					IR_mask = 2;
+				}
+			}
+			else
+			{
+				
+				
+				_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
+			}
+
+
 
 			cpu = new LR35902
 			{
@@ -132,26 +159,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			audio = new Audio();
 			serialport = new SerialPort();
 
-			_ = PutSettings(settings ?? new GBSettings());
-			_syncSettings = (GBSyncSettings)syncSettings ?? new GBSyncSettings();
-
 			// Load up a BIOS and initialize the correct PPU
-			_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
+			
 			ppu = new GBC_PPU();
 
 			// set up IR register to off state
 			IR_mask = 0; IR_reg = 0x3E; IR_receive = 2; IR_self = 2; IR_signal = 2;
-
-			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-			if ( _syncSettings.GBACGB)
-			{
-				for (int i = 0; i < 13; i++)
-				{
-					_bios[i + 0xF3] = (byte)((GBA_override[i] + _bios[i + 0xF3]) & 0xFF);
-				}
-
-				IR_mask = 2;
-			}
 
 			Buffer.BlockCopy(rom, 0x100, header, 0, 0x50);
 
@@ -183,8 +196,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			ser.Register<ISoundProvider>(audio);
 			ServiceProvider = ser;
 
-			_ = PutSettings(settings ?? new GBSettings());
-			_syncSettings = (GBSyncSettings)syncSettings ?? new GBSyncSettings();
+			_ = PutSettings(settings ?? new GBHawkSettings());
+			_syncSettings = (GBHawkSyncSettings)syncSettings ?? new GBHawkSyncSettings();
 
 			_tracer = new TraceBuffer(cpu.TraceHeader);
 			ser.Register<ITraceable>(_tracer);
@@ -199,102 +212,86 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		public IntPtr GB_Pntr { get; set; } = IntPtr.Zero;
 
-		public ulong TotalExecutedCycles => _settings.cycle_return_setting == GBSettings.Cycle_Return.CPU ? cpu.TotalExecutedCycles : CycleCount;
+		public ulong TotalExecutedCycles => Settings.cycle_return_setting == GBHawkSettings.Cycle_Return.CPU ? cpu.TotalExecutedCycles : CycleCount;
 
-		public bool IsCGBMode() => true;
+		public bool IsCGBMode() => Is_GBC;
 
 		public bool IsCGBDMGMode() => is_GB_in_GBC;
 
-		/// <summary>
-		/// Produces a palette in the form that certain frontend inspection tools.
-		/// May or may not return a reference to the core's own palette, so please don't mutate.
-		/// </summary>
-		private uint[] SynthesizeFrontendBGPal()
+		public IntPtr GetBGPalRam()
 		{
-			return ppu.BG_palette;
+			IntPtr temp_ptr = IntPtr.Zero;
+
+			if (GB_Pntr != IntPtr.Zero)
+			{
+				if (Is_GBC)
+				{
+					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
+				}
+				else
+				{
+					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
+				}
+			}
+
+			return temp_ptr;
 		}
 
-		/// <summary>
-		/// Produces a palette in the form that certain frontend inspection tools.
-		/// May or may not return a reference to the core's own palette, so please don't mutate.
-		/// </summary>
-		private uint[] SynthesizeFrontendSPPal()
+		public IntPtr GetSPRPalRam()
 		{
-			return ppu.OBJ_palette;
+			IntPtr temp_ptr = IntPtr.Zero;
+
+			if (GB_Pntr != IntPtr.Zero)
+			{
+				if (Is_GBC)
+				{
+					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
+				}
+				else
+				{
+					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
+				}
+			}
+
+			return temp_ptr;
 		}
 
-		// let the PPUViewer have a local copy of the memory domains
-		public byte[] VRAM_Local = new byte[0x4000];
-		public byte[] OAM_Local = new byte[0xA0];
-		public byte[] SPR_PAL_Local = new byte[32];
-		public byte[] BG_PAL_Local = new byte[32];
-
-
-
-		public IGBGPUMemoryAreas LockGPU()
+		public IntPtr GetOAM()
 		{
-			IntPtr temp_vram = IntPtr.Zero;
-			IntPtr temp_oam = IntPtr.Zero;
-			IntPtr temp_spr = IntPtr.Zero;
-			IntPtr temp_bg = IntPtr.Zero;
-
-			if (Is_GBC)
-			{
-				temp_vram = LibNESHawk.NES_get_ppu_pntrs(GB_Pntr, 1);
-			}
-			else
-			{
-
-			}
-			byte[] oam_ram_ret = new byte[0x100];
-
-			Int_Ptr 
-
-			Marshal.Copy(Mem_Domains.oam, oam_ram_ret, 0, 0x100);
-
-			return oam_ram_ret;
+			IntPtr temp_ptr = IntPtr.Zero;
 			
-			return new GPUMemoryAreas(
-				VRAM,
-				OAM,
-				SynthesizeFrontendSPPal(),
-				SynthesizeFrontendBGPal()
-			);
+			if (GB_Pntr != IntPtr.Zero)
+			{
+				if (Is_GBC)
+				{
+					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
+				}
+				else
+				{
+					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
+				}
+			}
+
+			return temp_ptr;
 		}
 
-		private class GPUMemoryAreas : IGPUMemoryAreas
+		public IntPtr GetVRAM()
 		{
-			public IntPtr Vram { get; }
+			IntPtr temp_ptr = IntPtr.Zero;
 
-			public IntPtr Oam { get; }
-
-			public IntPtr Sppal { get; }
-
-			public IntPtr Bgpal { get; }
-
-			private readonly List<GCHandle> _handles = new();
-
-			public GPUMemoryAreas(byte[] vram, byte[] oam, uint[] sppal, uint[] bgpal)
+			if (GB_Pntr != IntPtr.Zero)
 			{
-				Vram = AddHandle(vram);
-				Oam = AddHandle(oam);
-				Sppal = AddHandle(sppal);
-				Bgpal = AddHandle(bgpal);
+				if (Is_GBC)
+				{
+					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 2);
+				}
+				else
+				{
+					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 2);
+				}
 			}
 
-			private IntPtr AddHandle(object target)
-			{
-				var handle = GCHandle.Alloc(target, GCHandleType.Pinned);
-				_handles.Add(handle);
-				return handle.AddrOfPinnedObject();
-			}
-
-			public void Dispose()
-			{
-				foreach (var h in _handles)
-					h.Free();
-				_handles.Clear();
-			}
+			return temp_ptr;
 		}
 
 		/// <param name="image">The image data</param>

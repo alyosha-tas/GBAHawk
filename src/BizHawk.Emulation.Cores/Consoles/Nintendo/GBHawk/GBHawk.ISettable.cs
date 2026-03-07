@@ -8,35 +8,35 @@ using BizHawk.Emulation.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
-	public partial class GBHawk : IEmulator, ISettable<GBHawk.GBSettings, GBHawk.GBSyncSettings>
+	public partial class GBHawk : IEmulator, ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
-		public GBSettings GetSettings()
+		public GBHawkSettings GetSettings()
 		{
-			return _settings.Clone();
+			return Settings.Clone();
 		}
 
-		public GBSyncSettings GetSyncSettings()
+		public GBHawkSyncSettings GetSyncSettings()
 		{
-			return _syncSettings.Clone();
+			return SyncSettings.Clone();
 		}
 
-		public PutSettingsDirtyBits PutSettings(GBSettings o)
+		public PutSettingsDirtyBits PutSettings(GBHawkSettings o)
 		{
-			_settings = o;
+			Settings = o;
 			return PutSettingsDirtyBits.None;
 		}
 
-		public PutSettingsDirtyBits PutSyncSettings(GBSyncSettings o)
+		public PutSettingsDirtyBits PutSyncSettings(GBHawkSyncSettings o)
 		{
-			bool ret = GBSyncSettings.NeedsReboot(_syncSettings, o);
-			_syncSettings = o;
+			bool ret = GBHawkSyncSettings.NeedsReboot(SyncSettings, o);
+			SyncSettings = o;
 			return ret ? PutSettingsDirtyBits.RebootCore : PutSettingsDirtyBits.None;
 		}
 
-		public GBSettings _settings = new GBSettings();
-		public GBSyncSettings _syncSettings = new GBSyncSettings();
+		public GBHawkSettings Settings = new GBHawkSettings();
+		public GBHawkSyncSettings SyncSettings = new GBHawkSyncSettings();
 
-		public class GBSettings
+		public class GBHawkSettings
 		{
 			public enum Cycle_Return
 			{
@@ -54,29 +54,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			[DefaultValue(Cycle_Return.CPU)]
 			public Cycle_Return cycle_return_setting { get; set; }
 
-			public GBSettings Clone()
+			public GBHawkSettings Clone()
 			{
-				return (GBSettings)MemberwiseClone();
+				return (GBHawkSettings)MemberwiseClone();
 			}
 
-			public GBSettings()
+			public GBHawkSettings()
 			{
 				SettingsUtil.SetDefaultValues(this);
 			}
 		}
 
-		public class GBSyncSettings
+		public class GBHawkSyncSettings
 		{
 			public enum ConsoleModeType
 			{
-				Auto,
 				GB,
 				GBC
 			}
 
 			[DisplayName("Console Mode")]
 			[Description("Deprecated, only left for compatibility")]
-			[DefaultValue(ConsoleModeType.Auto)]
+			[DefaultValue(ConsoleModeType.GBC)]
 			public ConsoleModeType ConsoleMode { get; set; }
 
 			[DisplayName("CGB in GBA")]
@@ -109,17 +108,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			[JsonIgnore]
 			public ushort _DivInitialTime = 8;
 
-			public GBSyncSettings Clone()
+			public GBHawkSyncSettings Clone()
 			{
-				return (GBSyncSettings)MemberwiseClone();
+				return (GBHawkSyncSettings)MemberwiseClone();
 			}
 
-			public GBSyncSettings()
+			public GBHawkSyncSettings()
 			{
 				SettingsUtil.SetDefaultValues(this);
 			}
 
-			public static bool NeedsReboot(GBSyncSettings x, GBSyncSettings y)
+			public static bool NeedsReboot(GBHawkSyncSettings x, GBHawkSyncSettings y)
 			{
 				return !DeepEquality.DeepEquals(x, y);
 			}
