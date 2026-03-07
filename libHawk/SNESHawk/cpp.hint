@@ -1,0 +1,2 @@
+#define NESHawk_API __declspec(dllexport)
+#define NESHawk_API __declspec(dllimport)
