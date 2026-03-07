@@ -5,7 +5,7 @@ using System.Linq;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 {
 	/// <summary>
 	/// Represents a GB add on

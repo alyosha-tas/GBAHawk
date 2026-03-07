@@ -15,13 +15,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			if (ser.IsReader)
 			{
-				ser.Sync(nameof(NES_core), ref NES_core, false);
-				LibSNESHawk.SNES_load_state(NES_Pntr, NES_core);
+				ser.Sync(nameof(SNES_core), ref SNES_core, false);
+				LibSNESHawk.SNES_load_state(SNES_Pntr, SNES_core);
 			}
 			else
 			{
-				LibSNESHawk.SNES_save_state(NES_Pntr, NES_core);
-				ser.Sync(nameof(NES_core), ref NES_core, false);
+				LibSNESHawk.SNES_save_state(SNES_Pntr, SNES_core);
+				ser.Sync(nameof(SNES_core), ref SNES_core, false);
 			}
 		}
 	}

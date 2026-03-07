@@ -94,11 +94,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			[DefaultValue(false)]
 			public bool Use_APU_Test_Regs { get; set; }
 
-			[DisplayName("Set CPU Zero Flag at Reset")]
-			[Description("Revision / console dependent")]
-			[DefaultValue(true)]
-			public bool CPU_Zero_Reset { get; set; }
-
 			public SNESHawkSyncSettings Clone()
 			{
 				return (SNESHawkSyncSettings)MemberwiseClone();

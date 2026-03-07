@@ -1,20 +1,20 @@
-﻿using System;
+﻿using BizHawk.Client.Common;
+using BizHawk.Common.NumberExtensions;
+using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
-
-using BizHawk.Client.Common;
-using BizHawk.Common.NumberExtensions;
-using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
 
 namespace BizHawk.Client.GBAHawk
 {
 	public partial class GbGpuView : ToolFormBase, IToolFormAutoConfig
 	{
 		[RequiredService]
-		public IGameboyCommon Gb { get; private set; }
+		public IGBPPUViewable Gb { get; private set; }
 
 		// TODO: freeze semantics are a bit weird: details for a mouseover or freeze are taken from the current
 		// state, not the state at the last callback (and so can be quite different when update is set to manual).
@@ -439,23 +439,6 @@ namespace BizHawk.Client.GBAHawk
 				var tilesPal = ComputeTilesPalFromMemory(memory);
 
 				_lcdc = lcdc;
-				// set alpha on all pixels
-#if false
-				// TODO: This probably shouldn't be done on any cores at all.  Let the tool make a separate copy of palettes if it needs alpha,
-				// or compel the cores to send data with alpha already set.  What was this actually solving?
-				unsafe
-				{
-					int* p = (int*)_bgpal;
-					for (int i = 0; i < 32; i++)
-						p[i] |= unchecked((int)0xff000000);
-					p = (int*)_sppal;
-					for (int i = 0; i < 32; i++)
-						p[i] |= unchecked((int)0xff000000);
-					int c = Spriteback.ToArgb();
-					for (int i = 0; i < 32; i += 4)
-						p[i] = c;
-				}
-#endif
 
 				// bg maps
 				if (!_cgb)

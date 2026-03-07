@@ -26,13 +26,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="romdata">the rom data, can be disposed of once this function returns</param>
 		/// <param name="length">length of romdata in bytes</param>
-		/// <param name="headerdata">header</param>
-		/// <param name="bus_conflicts">mapper bus conflicts</param>
-		/// <param name="apu_test_regs">activate apu test regs</param>
-		/// <param name="cpu_zero">set cpu zero flag at reset</param>
+		/// <param name="En_RAM_pack">mapper bus conflicts</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int N64_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool bus_conflicts, bool apu_test_regs, bool cpu_zero);
+		public static extern int N64_load(IntPtr core, byte[] romdata, uint length, bool En_RAM_pack);
 
 		/// <summary>
 		/// Create SRAM image.
@@ -341,60 +338,5 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 		/// <param name="callback">null to clear</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void N64_setinputpollcallback(IntPtr core, InputPollCallback callback);
-
-		#region PPU_Viewer
-
-		/// <summary>
-		/// Get variousa ppu states from the core
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="sel">value to get</param>
-		[DllImport(lib, CallingConvention = cc)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern bool N64_get_ppu_vals(IntPtr core, int sel);
-
-		/// <summary>
-		/// Get variousa ppu states from the core
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">ppu address to peek</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte N64_get_ppu_bus(IntPtr core, uint addr);
-
-		/// <summary>
-		/// Get ppu bus as seen by the board
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">ppu address to peek</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte N64_get_board_peek_ppu(IntPtr core, uint addr);
-
-		/// <summary>
-		/// Get PPU Pointers
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="sel">region to get</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern IntPtr N64_get_ppu_pntrs(IntPtr core, int sel);
-
-		/// <summary>
-		/// callback for nametable viewer
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="callback">null to clear</param>
-		/// <param name="sl">0-153 inclusive</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void N64_setntvcallback(IntPtr core, Action callback, int sl);
-
-		/// <summary>
-		/// callback for ppu viewer
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="callback">null to clear</param>
-		/// <param name="sl">0-153 inclusive</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void N64_setppucallback(IntPtr core, Action callback, int sl);
-
-		#endregion
 	}
 }

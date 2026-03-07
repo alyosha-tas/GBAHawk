@@ -70,7 +70,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			public enum ConsoleModeType
 			{
 				Auto,
-				DEP,
+				GB,
 				GBC
 			}
 

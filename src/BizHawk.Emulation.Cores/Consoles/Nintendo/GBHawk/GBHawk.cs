@@ -1,13 +1,11 @@
-﻿using System;
-
-using BizHawk.Common;
-using BizHawk.Emulation.Common;
-
-using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
-using System.Runtime.InteropServices;
-using System.Collections.Generic;
-
+﻿using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
+using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using static BizHawk.Emulation.Cores.Nintendo.NESHawk.NESHawk;
 
 // TODO: mode1_disableint_gbc.gbc behaves differently between GBC and GBA, why?
 // TODO: Window Position A6 behaves differently
@@ -23,38 +21,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 	[Core(CoreNames.GBHawk, "")]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGameboyCommon,
-	ISettable<GBHawk.GBSettings, GBHawk.GBSyncSettings>
+	ISettable<GBHawk.GBSettings, GBHawkOld.GBSyncSettings>
 	{
-		internal static class RomChecksums
-		{
-			public const string BombermanCollection = "SHA1:385F8FAFA53A83F8F65E1E619FE124BBF7DB4A98";
-
-			public const string BombermanSelectionKORNotInGameDB = "SHA1:52451464A9F4DD5FAEFE4594954CBCE03BFF0D05";
-
-			public const string MortalKombatIAndIIUSAEU = "SHA1:E337489255B33367CE26194FC4038346D3388BD9";
-
-			public const string PirateRockMan8 = "MD5:CAE0998A899DF2EE6ABA8E7695C2A096";
-
-			public const string PirateSachen1 = "MD5:D3C1924D847BC5D125BF54C2076BE27A";
-
-			public const string UnknownRomA = "MD5:97122B9B183AAB4079C8D36A4CE6E9C1";
-
-			public const string WisdomTreeExodus = "SHA1:685D5A47A1FC386D7B451C8B2733E654B7779B71";
-
-			public const string WisdomTreeJoshua = "SHA1:019B4B0E76336E2613AE6E8B415B5C65F6D465A5";
-
-			public const string WisdomTreeKJVBible = "SHA1:6362FDE9DCB08242A64F2FBEA33DE93D1776A6E0";
-
-			public const string WisdomTreeNIVBible = "SHA1:136CF97A8C3560EC9DB3D8F354D91B7DE27E0743";
-
-			public const string WisdomTreeSpiritualWarfare = "SHA1:6E6AE5DBD8FF8B8F41B8411EF119E96E4ECF763F";
-
-			public const string TaitoVarietyPack = "SHA1:53995F1B9C8A0BF8545414BD5E5DEFEF617B7A55";
-
-			public const string MomotaroCollection2 = "SHA1:0D6BD573AE696B337D107EFF2AEE502BB240A40C";
-
-
-		}
+		public bool Is_GBC = false;
 
 		// this register controls whether or not the GB BIOS is mapped into memory
 		public byte GB_bios_register;
@@ -140,7 +109,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		[CoreConstructor(VSystemID.Raw.GBC)]
 		public GBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBSettings settings, GBSyncSettings syncSettings, bool subframe = false)
 		{
-			var ser = new BasicServiceProvider(this);
+			ServiceProvider = new BasicServiceProvider(this);
+			Settings = (NESHawkSettings)settings ?? new NESHawkSettings();
+			SyncSettings = (NESHawkSyncSettings)syncSettings ?? new NESHawkSyncSettings();
+
 
 			is_subframe_core = subframe;
 
@@ -225,6 +197,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			_scanlineCallback = null;
 		}
 
+		public IntPtr GB_Pntr { get; set; } = IntPtr.Zero;
+
 		public ulong TotalExecutedCycles => _settings.cycle_return_setting == GBSettings.Cycle_Return.CPU ? cpu.TotalExecutedCycles : CycleCount;
 
 		public bool IsCGBMode() => true;
@@ -249,8 +223,37 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			return ppu.OBJ_palette;
 		}
 
-		public IGPUMemoryAreas LockGPU()
+		// let the PPUViewer have a local copy of the memory domains
+		public byte[] VRAM_Local = new byte[0x4000];
+		public byte[] OAM_Local = new byte[0xA0];
+		public byte[] SPR_PAL_Local = new byte[32];
+		public byte[] BG_PAL_Local = new byte[32];
+
+
+
+		public IGBGPUMemoryAreas LockGPU()
 		{
+			IntPtr temp_vram = IntPtr.Zero;
+			IntPtr temp_oam = IntPtr.Zero;
+			IntPtr temp_spr = IntPtr.Zero;
+			IntPtr temp_bg = IntPtr.Zero;
+
+			if (Is_GBC)
+			{
+				temp_vram = LibNESHawk.NES_get_ppu_pntrs(GB_Pntr, 1);
+			}
+			else
+			{
+
+			}
+			byte[] oam_ram_ret = new byte[0x100];
+
+			Int_Ptr 
+
+			Marshal.Copy(Mem_Domains.oam, oam_ram_ret, 0, 0x100);
+
+			return oam_ram_ret;
+			
 			return new GPUMemoryAreas(
 				VRAM,
 				OAM,
@@ -293,6 +296,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				_handles.Clear();
 			}
 		}
+
+		/// <param name="image">The image data</param>
+		/// <param name="height">How tall an image is, in pixels. Image is only valid up to that height and must be assumed to be garbage below that.</param>
+		/// <param name="top_margin">The top margin of blank pixels. Just form feeds the printer a certain amount at the top.</param>
+		/// <param name="bottom_margin">The bottom margin of blank pixels. Just form feeds the printer a certain amount at the bottom.</param>
+		/// <param name="exposure">The darkness/intensity of the print job. What the exact values mean is somewhat subjective but 127 is the most exposed/darkest value.</param>
+		public delegate void PrinterCallback(IntPtr image, byte height, byte top_margin, byte bottom_margin, byte exposure);
+
 
 		public ScanlineCallback _scanlineCallback;
 		public int _scanlineCallbackLine = 0;

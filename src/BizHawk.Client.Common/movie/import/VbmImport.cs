@@ -2,7 +2,7 @@
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores;
 using BizHawk.Emulation.Cores.Nintendo.GBA;
-using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBHawkOld;
 
 namespace BizHawk.Client.Common.movie.import
 {
@@ -271,9 +271,9 @@ namespace BizHawk.Client.Common.movie.import
 				{
 					case CoreNames.GBHawk:
 					case CoreNames.SubGBHawk:
-						Result.Movie.SyncSettingsJson = ConfigService.SaveWithType(new GBHawk.GBSyncSettings
+						Result.Movie.SyncSettingsJson = ConfigService.SaveWithType(new GBHawkOld.GBSyncSettings
 						{
-							ConsoleMode = GBHawk.GBSyncSettings.ConsoleModeType.GBC,
+							ConsoleMode = GBHawkOld.GBSyncSettings.ConsoleModeType.GBC,
 						});
 						break;
 				}

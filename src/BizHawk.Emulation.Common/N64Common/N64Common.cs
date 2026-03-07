@@ -8,14 +8,6 @@ using System.Linq;
 
 namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 {
-	public class N64GPUMemoryAreas
-	{
-		public IntPtr vram;
-		public IntPtr oam;
-		public IntPtr mmio;
-		public IntPtr palram;
-	}
-
 	public class N64CommonFunctions
 	{
 		public int[] Palette_Compiled = new int[64 * 8];
@@ -101,7 +93,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 
 	public class N64_ControllerDeck
 	{
-		public N64_ControllerDeck(string controller1Name, string controller2Name, bool is_subrame = false)
+		public N64_ControllerDeck(string controller1Name, string controller2Name, string controller3Name, string controller4Name, bool is_subrame = false)
 		{
 			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
 				? ctor1(1)
@@ -109,6 +101,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 			Port2 = ControllerCtors.TryGetValue(controller2Name, out var ctor2)
 				? ctor2(2)
 				: throw new InvalidOperationException($"Invalid controller type: {controller2Name}");
+			Port3 = ControllerCtors.TryGetValue(controller1Name, out var ctor3)
+				? ctor3(3)
+				: throw new InvalidOperationException($"Invalid controller type: {controller3Name}");
+			Port4 = ControllerCtors.TryGetValue(controller2Name, out var ctor4)
+				? ctor4(4)
+				: throw new InvalidOperationException($"Invalid controller type: {controller4Name}");
 
 			if (Port2 is UnpluggedN64)
 			{
@@ -134,6 +132,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 
 			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
 			foreach (var kvp in Port2.Definition.Axes) Definition.Axes.Add(kvp);
+			foreach (var kvp in Port3.Definition.Axes) Definition.Axes.Add(kvp);
+			foreach (var kvp in Port4.Definition.Axes) Definition.Axes.Add(kvp);
 
 			if (is_subrame)
 			{
@@ -153,10 +153,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 			return Port2.Read(c);
 		}
 
+		public byte ReadPort3(IController c)
+		{
+			return Port3.Read(c);
+		}
+
+		public byte ReadPort4(IController c)
+		{
+			return Port4.Read(c);
+		}
+
 		public void Strobe(StrobeInfo s, IController c)
 		{
 			Port1.Strobe(s, c);
 			Port2.Strobe(s, c);
+			Port3.Strobe(s, c);
+			Port4.Strobe(s, c);
 		}
 
 		public ControllerDefinition Definition { get; }
@@ -164,12 +176,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64.Common
 		public void SyncState(Serializer ser)
 		{
 			Port1.SyncState(ser);
-
 			Port2.SyncState(ser);
+			Port3.SyncState(ser);
+			Port4.SyncState(ser);
 		}
 
 		private readonly IPort Port1;
 		private readonly IPort Port2;
+		private readonly IPort Port3;
+		private readonly IPort Port4;
 
 		private static IReadOnlyDictionary<string, Func<int, IPort>>? _controllerCtors;
 

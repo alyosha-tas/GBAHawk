@@ -19,42 +19,42 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					"RAM",
 					0x800,
 					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getram(NES_Pntr, (int)(addr & 0x7FF)),
+					(addr) => LibN64Hawk.N64_getram(N64_Pntr, (int)(addr & 0x7FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"ROM",
 					ROM_Length,
 					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_getrom(NES_Pntr, (int)(addr & (ROM_Length - 1))),
+					addr => LibN64Hawk.N64_getrom(N64_Pntr, (int)(addr & (ROM_Length - 1))),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"OAM",
 					0x400,
 					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_getoam(NES_Pntr, (int)(addr & 0x3FF)),
+					addr => LibN64Hawk.N64_getoam(N64_Pntr, (int)(addr & 0x3FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PALRAM",
 					0x20,
 					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_getpalram(NES_Pntr, (int)(addr & 0x1F)),
+					addr => LibN64Hawk.N64_getpalram(N64_Pntr, (int)(addr & 0x1F)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PPU Bus",
 					0x4000,
 					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_get_ppu_bus(NES_Pntr, (uint)(addr & 0x3FFF)),
+					addr => LibN64Hawk.N64_get_ppu_bus(N64_Pntr, (uint)(addr & 0x3FFF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getsysbus(NES_Pntr, (int)(addr & 0xFFFF)),
+					(addr) => LibN64Hawk.N64_getsysbus(N64_Pntr, (int)(addr & 0xFFFF)),
 					(addr, value) => { },
 					1)
 			};
@@ -65,7 +65,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					"CHR ROM",
 					CHR_ROM_Length,
 					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getchrrom(NES_Pntr, (int)(addr & (CHR_ROM_Length - 1))),
+					(addr) => LibN64Hawk.N64_getchrrom(N64_Pntr, (int)(addr & (CHR_ROM_Length - 1))),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRom);
@@ -76,7 +76,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					"CHR RAM",
 					0x8000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getvram(NES_Pntr, (int)(addr & 0x7FFF)),
+					(addr) => LibN64Hawk.N64_getvram(N64_Pntr, (int)(addr & 0x7FFF)),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRam);
@@ -87,7 +87,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					"CHR RAM",
 					0x2000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getvram(NES_Pntr, (int)(addr & 0x1FFF)),
+					(addr) => LibN64Hawk.N64_getvram(N64_Pntr, (int)(addr & 0x1FFF)),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRam);
@@ -99,7 +99,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					"CartRAM",
 					cart_RAM.Length,
 					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_getsram(NES_Pntr, (int)(addr & (cart_RAM.Length - 1))),
+					addr => LibN64Hawk.N64_getsram(N64_Pntr, (int)(addr & (cart_RAM.Length - 1))),
 					(addr, value) => cart_RAM[addr] = value,
 					1);
 				domains.Add(CartRam);

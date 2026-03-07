@@ -13,7 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				for (int i = 0; i < cart_RAM.Length; i++)
 				{
-					cart_RAM[i] = LibSNESHawk.SNES_getsram(NES_Pntr, i);
+					cart_RAM[i] = LibSNESHawk.SNES_getsram(SNES_Pntr, i);
 				}
 
 				return cart_RAM;
@@ -26,7 +26,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		{
 			Buffer.BlockCopy(data, 0, cart_RAM, 0, data.Length);
 			Console.WriteLine("loading SRAM here");
-			LibSNESHawk.SNES_load_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length);
+			LibSNESHawk.SNES_load_SRAM(SNES_Pntr, cart_RAM, (uint)cart_RAM.Length);
 		}
 
 		public bool SaveRamModified => has_bat;

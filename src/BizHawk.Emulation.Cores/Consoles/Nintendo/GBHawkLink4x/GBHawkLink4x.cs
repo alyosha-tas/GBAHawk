@@ -1,6 +1,6 @@
 ﻿using System;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBHawkOld;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 {
@@ -10,10 +10,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 	ISettable<GBHawkLink4x.GBLink4xSettings, GBHawkLink4x.GBLink4xSyncSettings>
 	{
 		// we want to create two GBHawk instances that we will run concurrently
-		public GBHawk.GBHawk A;
-		public GBHawk.GBHawk B;
-		public GBHawk.GBHawk C;
-		public GBHawk.GBHawk D;
+		public GBHawkOld.GBHawkOld A;
+		public GBHawkOld.GBHawkOld B;
+		public GBHawkOld.GBHawkOld C;
+		public GBHawkOld.GBHawkOld D;
 
 		// if true, the link cable is currently connected
 		private bool _cableconnected_LR = false;
@@ -74,15 +74,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 				GBHawkControllerDeck.DefaultControllerName,
 				only_3_roms);
 
-			var tempSetA = new GBHawk.GBHawk.GBSettings();
-			var tempSetB = new GBHawk.GBHawk.GBSettings();
-			var tempSetC = new GBHawk.GBHawk.GBSettings();
-			var tempSetD = new GBHawk.GBHawk.GBSettings();
+			var tempSetA = new GBHawkOld.GBHawkOld.GBSettings();
+			var tempSetB = new GBHawkOld.GBHawkOld.GBSettings();
+			var tempSetC = new GBHawkOld.GBHawkOld.GBSettings();
+			var tempSetD = new GBHawkOld.GBHawkOld.GBSettings();
 
-			var tempSyncA = new GBHawk.GBHawk.GBSyncSettings();
-			var tempSyncB = new GBHawk.GBHawk.GBSyncSettings();
-			var tempSyncC = new GBHawk.GBHawk.GBSyncSettings();
-			var tempSyncD = new GBHawk.GBHawk.GBSyncSettings();
+			var tempSyncA = new GBHawkOld.GBHawkOld.GBSyncSettings();
+			var tempSyncB = new GBHawkOld.GBHawkOld.GBSyncSettings();
+			var tempSyncC = new GBHawkOld.GBHawkOld.GBSyncSettings();
+			var tempSyncD = new GBHawkOld.GBHawkOld.GBSyncSettings();
 
 			tempSyncA.ConsoleMode = Link4xSyncSettings.ConsoleMode_A;
 			tempSyncB.ConsoleMode = Link4xSyncSettings.ConsoleMode_B;
@@ -103,18 +103,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 			tempSyncC.RTCOffset = Link4xSyncSettings.RTCOffset_C;
 			tempSyncD.RTCOffset = Link4xSyncSettings.RTCOffset_D;
 
-			A = new GBHawk.GBHawk(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, tempSetA, tempSyncA);
-			B = new GBHawk.GBHawk(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, tempSetB, tempSyncB);
-			C = new GBHawk.GBHawk(lp.Comm, lp.Roms[2].Game, lp.Roms[2].RomData, tempSetC, tempSyncC);
+			A = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, tempSetA, tempSyncA);
+			B = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, tempSetB, tempSyncB);
+			C = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[2].Game, lp.Roms[2].RomData, tempSetC, tempSyncC);
 
 			// if only 3 games, send third game to fourth instance as well
 			if (only_3_roms)
 			{
-				D = new GBHawk.GBHawk(lp.Comm, lp.Roms[2].Game, lp.Roms[2].RomData, tempSetD, tempSyncD);
+				D = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[2].Game, lp.Roms[2].RomData, tempSetD, tempSyncD);
 			}
 			else
 			{
-				D = new GBHawk.GBHawk(lp.Comm, lp.Roms[3].Game, lp.Roms[3].RomData, tempSetD, tempSyncD);
+				D = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[3].Game, lp.Roms[3].RomData, tempSetD, tempSyncD);
 			}
 
 			A.is_multi_core = true;

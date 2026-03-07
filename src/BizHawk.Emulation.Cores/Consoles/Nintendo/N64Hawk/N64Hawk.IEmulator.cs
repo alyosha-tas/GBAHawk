@@ -23,7 +23,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 				tracecb = null;
 			}
 			
-			LibN64Hawk.N64_settracecallback(NES_Pntr, tracecb);
+			LibN64Hawk.N64_settracecallback(N64_Pntr, tracecb);
 
 			if (controller.IsPressed("Power"))
 			{
@@ -35,9 +35,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 				SoftReset();
 			}
 
-			Is_Lag = LibN64Hawk.N64_frame_advance(NES_Pntr, true, true);
+			Is_Lag = LibN64Hawk.N64_frame_advance(N64_Pntr, true, true);
 
-			LibN64Hawk.N64_get_video(NES_Pntr, _vidbuffer);
+			LibN64Hawk.N64_get_video(N64_Pntr, _vidbuffer);
 
 			if (Is_Lag) { Lag_Count++; }
 
@@ -59,10 +59,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 
 		public void Dispose()
 		{
-			if (NES_Pntr != IntPtr.Zero)
+			if (N64_Pntr != IntPtr.Zero)
 			{
-				LibN64Hawk.N64_destroy(NES_Pntr);
-				NES_Pntr = IntPtr.Zero;
+				LibN64Hawk.N64_destroy(N64_Pntr);
+				N64_Pntr = IntPtr.Zero;
 			}
 
 			DisposeSound();
@@ -94,7 +94,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibN64Hawk.N64_get_audio(NES_Pntr, Aud, ref num_samp);
+			uint f_clock = LibN64Hawk.N64_get_audio(N64_Pntr, Aud, ref num_samp);
 
 			for (int i = 0; i < num_samp; i++)
 			{

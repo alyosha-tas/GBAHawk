@@ -1,13 +1,16 @@
-﻿using BizHawk.Emulation.Common;
+﻿using BizHawk.Common;
+using BizHawk.Emulation.Common;
+using BizHawk.Common.ReflectionExtensions;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
-// This RAM state has been verified by TiKevin83 and CasualPokeplayer on various GBA consoles
-
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 {
-	public partial class GBHawk
+	public class GBCommonFunctions
 	{
-		static byte[] GBA_Init_RAM = 
+		static byte[] GBA_Init_RAM =
 		{
 		0xCA, 0x2F, 0x9B, 0xEE, 0x95, 0xCF, 0x1E, 0x5F, 0xE2, 0x7D, 0x59, 0xFE, 0xBE, 0x5D, 0xFA, 0x9D,
 		0x6A, 0x85, 0xA7, 0x33, 0x33, 0x5C, 0x4F, 0x7D, 0x7F, 0xEC, 0xBF, 0x6E, 0xFF, 0xE1, 0xC2, 0x7D,
@@ -2058,5 +2061,312 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		0x00, 0x96, 0x40, 0xE0, 0x35, 0x26, 0x46, 0xCB, 0x10, 0x40, 0x4A, 0x82, 0x3C, 0x10, 0x08, 0x44,
 		0x88, 0x0A, 0x02, 0x20, 0x0B, 0x18, 0x00, 0x8D, 0x69, 0x84, 0x58, 0x00, 0xC1, 0xA0, 0x09, 0x98
 		};
+
+		public int[] Palette_Compiled = new int[64 * 8];
+
+		/// <summary>
+		/// Sets the provided palette as current.
+		/// Applies the current deemph settings if needed to expand a 64-entry palette to 512
+		/// </summary>
+		public static void SetPalette(byte[,] pal, int[] comp_pal)
+		{
+			int nColors = pal.GetLength(0);
+
+			if (nColors == 512)
+			{
+				//just copy the palette directly
+				for (int c = 0; c < 64 * 8; c++)
+				{
+					int r = pal[c, 0];
+					int g = pal[c, 1];
+					int b = pal[c, 2];
+					comp_pal[c] = (int)unchecked((int)0xFF000000 | (r << 16) | (g << 8) | b);
+				}
+			}
+			else
+			{
+				//expand using deemph
+				for (int i = 0; i < 64 * 8; i++)
+				{
+					int d = i >> 6;
+					int c = i & 63;
+					int r = pal[c, 0];
+					int g = pal[c, 1];
+					int b = pal[c, 2];
+					Palettes.ApplyDeemphasis(ref r, ref g, ref b, d);
+					comp_pal[i] = (int)unchecked((int)0xFF000000 | (r << 16) | (g << 8) | b);
+				}
+			}
+		}
+	}
+
+	internal static class RomChecksums
+	{
+		public const string BombermanCollection = "SHA1:385F8FAFA53A83F8F65E1E619FE124BBF7DB4A98";
+
+		public const string BombermanSelectionKORNotInGameDB = "SHA1:52451464A9F4DD5FAEFE4594954CBCE03BFF0D05";
+
+		public const string MortalKombatIAndIIUSAEU = "SHA1:E337489255B33367CE26194FC4038346D3388BD9";
+
+		public const string PirateRockMan8 = "MD5:CAE0998A899DF2EE6ABA8E7695C2A096";
+
+		public const string PirateSachen1 = "MD5:D3C1924D847BC5D125BF54C2076BE27A";
+
+		public const string UnknownRomA = "MD5:97122B9B183AAB4079C8D36A4CE6E9C1";
+
+		public const string WisdomTreeExodus = "SHA1:685D5A47A1FC386D7B451C8B2733E654B7779B71";
+
+		public const string WisdomTreeJoshua = "SHA1:019B4B0E76336E2613AE6E8B415B5C65F6D465A5";
+
+		public const string WisdomTreeKJVBible = "SHA1:6362FDE9DCB08242A64F2FBEA33DE93D1776A6E0";
+
+		public const string WisdomTreeNIVBible = "SHA1:136CF97A8C3560EC9DB3D8F354D91B7DE27E0743";
+
+		public const string WisdomTreeSpiritualWarfare = "SHA1:6E6AE5DBD8FF8B8F41B8411EF119E96E4ECF763F";
+
+		public const string TaitoVarietyPack = "SHA1:53995F1B9C8A0BF8545414BD5E5DEFEF617B7A55";
+
+		public const string MomotaroCollection2 = "SHA1:0D6BD573AE696B337D107EFF2AEE502BB240A40C";
+	}
+
+	public class GBHawkControllerDeck
+	{
+		public GBHawkControllerDeck(string controller1Name, bool subframe)
+		{
+			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
+				? ctor1(1)
+				: throw new InvalidOperationException($"Invalid controller type: {controller1Name}");
+
+			Definition = new(Port1.Definition.Name)
+			{
+				BoolButtons = Port1.Definition.BoolButtons
+					.ToList()
+			};
+
+			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
+
+			if (subframe)
+			{
+				Definition.AddAxis("Input Cycle", 0.RangeTo(70224), 70224);
+			}
+
+			Definition.MakeImmutable();
+		}
+
+		public byte ReadPort1(IController c)
+		{
+			return Port1.Read(c);
+		}
+
+		public (ushort X, ushort Y) ReadAcc1(IController c)
+			=> Port1.ReadAcc(c);
+
+		public ControllerDefinition Definition { get; }
+
+		public void SyncState(Serializer ser)
+		{
+			Port1.SyncState(ser);
+		}
+
+		private readonly IPort Port1;
+
+		private static IReadOnlyDictionary<string, Func<int, IPort>> _controllerCtors;
+
+		public static IReadOnlyDictionary<string, Func<int, IPort>> ControllerCtors => _controllerCtors
+			??= new Dictionary<string, Func<int, IPort>>
+			{
+				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
+				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum)
+			};
+
+		public static string DefaultControllerName => typeof(StandardControls).DisplayName();
+	}
+
+	/// <summary>
+	/// Represents a GB add on
+	/// </summary>
+	public interface IPort
+	{
+		byte Read(IController c);
+
+		(ushort X, ushort Y) ReadAcc(IController c);
+
+		ControllerDefinition Definition { get; }
+
+		void SyncState(Serializer ser);
+
+		int PortNum { get; }
+	}
+
+	[DisplayName("Gameboy Controller")]
+	public class StandardControls : IPort
+	{
+		public StandardControls(int portNum)
+		{
+			PortNum = portNum;
+			Definition = new("Gameboy Controller H")
+			{
+				BoolButtons = BaseDefinition
+				.Select(b => "P" + PortNum + " " + b)
+				.ToList()
+			};
+		}
+
+		public int PortNum { get; }
+
+		public ControllerDefinition Definition { get; }
+
+		public byte Read(IController c)
+		{
+			byte result = 0xFF;
+
+			if (c.IsPressed(Definition.BoolButtons[0]))
+			{
+				result -= 4;
+			}
+			if (c.IsPressed(Definition.BoolButtons[1]))
+			{
+				result -= 8;
+			}
+			if (c.IsPressed(Definition.BoolButtons[2]))
+			{
+				result -= 2;
+			}
+			if (c.IsPressed(Definition.BoolButtons[3]))
+			{
+				result -= 1;
+			}
+			if (c.IsPressed(Definition.BoolButtons[4]))
+			{
+				result -= 128;
+			}
+			if (c.IsPressed(Definition.BoolButtons[5]))
+			{
+				result -= 64;
+			}
+			if (c.IsPressed(Definition.BoolButtons[6]))
+			{
+				result -= 32;
+			}
+			if (c.IsPressed(Definition.BoolButtons[7]))
+			{
+				result -= 16;
+			}
+
+			return result;
+		}
+
+		public (ushort X, ushort Y) ReadAcc(IController c)
+			=> (0, 0);
+
+		private static readonly string[] BaseDefinition =
+		{
+			"Up", "Down", "Left", "Right", "Start", "Select", "B", "A", "Power"
+		};
+
+		public void SyncState(Serializer ser)
+		{
+			//nothing
+		}
+	}
+
+	[DisplayName("Gameboy Controller + Tilt")]
+	public class StandardTilt : IPort
+	{
+		public StandardTilt(int portNum)
+		{
+			PortNum = portNum;
+			Definition = new ControllerDefinition("Gameboy Controller + Tilt")
+			{
+				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
+			}.AddXYPair($"P{PortNum} Tilt {{0}}", AxisPairOrientation.RightAndUp, (-90).RangeTo(90), 0); //TODO verify direction against hardware
+		}
+
+		public int PortNum { get; }
+
+		public float theta, phi, theta_prev, phi_prev, phi_prev_2;
+
+		public ControllerDefinition Definition { get; }
+
+		public byte Read(IController c)
+		{
+			byte result = 0xFF;
+
+			if (c.IsPressed(Definition.BoolButtons[0]))
+			{
+				result -= 4;
+			}
+			if (c.IsPressed(Definition.BoolButtons[1]))
+			{
+				result -= 8;
+			}
+			if (c.IsPressed(Definition.BoolButtons[2]))
+			{
+				result -= 2;
+			}
+			if (c.IsPressed(Definition.BoolButtons[3]))
+			{
+				result -= 1;
+			}
+			if (c.IsPressed(Definition.BoolButtons[4]))
+			{
+				result -= 128;
+			}
+			if (c.IsPressed(Definition.BoolButtons[5]))
+			{
+				result -= 64;
+			}
+			if (c.IsPressed(Definition.BoolButtons[6]))
+			{
+				result -= 32;
+			}
+			if (c.IsPressed(Definition.BoolButtons[7]))
+			{
+				result -= 16;
+			}
+
+			return result;
+		}
+
+		public (ushort X, ushort Y) ReadAcc(IController c)
+		{
+			theta_prev = theta;
+			phi_prev_2 = phi_prev;
+			phi_prev = phi;
+
+			theta = (float)(c.AxisValue(Definition.Axes[1]) * Math.PI / 180.0);
+			phi = (float)(c.AxisValue(Definition.Axes[0]) * Math.PI / 180.0);
+
+			// acc x is the result of rotating around body y AFTER rotating around body x
+			// therefore this control scheme gives decreasing sensitivity in X as Y rotation increases
+			var temp = (float)(Math.Cos(theta) * Math.Sin(phi));
+			// additional acceleration components are dominated by axial components due to off axis rotation.
+			// They vary widely based on physical hand movements, but this roughly matches what I observe in a real GBP
+			var temp2 = (float)((phi - 2 * phi_prev + phi_prev_2) * 59.7275 * 59.7275 * 0.1);
+			var accX = (ushort)(0x8370 - Math.Floor(temp * 216) - temp2);
+
+			// acc y is just the sine of the angle
+			var temp3 = (float)Math.Sin(theta);
+			// here we add in the acceleration generated by the point of rotation being far away from the accelerometer
+			// this term dominates other facators due to the cartridge being far from the players hands in whatever system is being used.
+			// It roughly matches what I observe in a real GBP
+			var temp4 = (float)(Math.Pow((theta - theta_prev) * 59.7275, 2) * 0.15);
+			var accY = (ushort)(0x8370 - Math.Floor(temp3 * 216) + temp4);
+
+			return (accX, accY);
+		}
+
+		private static readonly string[] BaseDefinition =
+		{
+			"Up", "Down", "Left", "Right", "Start", "Select", "B", "A", "Power"
+		};
+
+		public void SyncState(Serializer ser)
+		{
+			// since we need rate of change of angle, need to savestate them
+			ser.Sync(nameof(theta), ref theta);
+			ser.Sync(nameof(phi), ref phi);
+			ser.Sync(nameof(phi_prev), ref phi_prev);
+		}
 	}
 }

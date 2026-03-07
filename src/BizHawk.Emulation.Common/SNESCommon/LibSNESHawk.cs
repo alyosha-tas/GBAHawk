@@ -29,10 +29,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		/// <param name="headerdata">header</param>
 		/// <param name="bus_conflicts">mapper bus conflicts</param>
 		/// <param name="apu_test_regs">activate apu test regs</param>
-		/// <param name="cpu_zero">set cpu zero flag at reset</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool bus_conflicts, bool apu_test_regs, bool cpu_zero);
+		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool bus_conflicts, bool apu_test_regs);
 
 		/// <summary>
 		/// Create SRAM image.

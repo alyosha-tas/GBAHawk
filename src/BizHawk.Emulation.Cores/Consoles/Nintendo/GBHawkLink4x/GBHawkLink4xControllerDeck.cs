@@ -3,7 +3,7 @@ using System.Linq;
 
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBHawkOld;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 {

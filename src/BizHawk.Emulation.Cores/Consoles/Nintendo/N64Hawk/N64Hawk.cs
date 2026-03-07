@@ -25,9 +25,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 
 		public byte[] cart_RAM;
 		public bool has_bat;
-		int mapper;
-
-		bool vram_32;
 
 		[CoreConstructor(VSystemID.Raw.N64)]
 		public N64Hawk(CoreComm comm, GameInfo game, byte[] rom, N64Hawk.N64HawkSettings settings, N64Hawk.N64HawkSyncSettings syncSettings, bool subframe = false)
@@ -36,128 +33,42 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 			Settings = (N64HawkSettings)settings ?? new N64HawkSettings();
 			SyncSettings = (N64HawkSyncSettings)syncSettings ?? new N64HawkSyncSettings();
 
-			LeftController = SyncSettings.LeftController;
-			RightController = SyncSettings.RightController;
+			P1Controller = SyncSettings.P1Controller;
+			P2Controller = SyncSettings.P2Controller;
+			P3Controller = SyncSettings.P3Controller;
+			P4Controller = SyncSettings.P4Controller;
 
 			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 
-			// only 16 byte header size supported
-			if ((rom.Length & 0xFF) == 0x0)
-			{
-				// can only load if the game is in the db
-				Build_Header(romHashMD5, romHashSHA1);
+			N64_Pntr = LibN64Hawk.N64_create();
 
-				GamePack = new byte[rom.Length];
-				Buffer.BlockCopy(rom, 0, GamePack, 0, rom.Length);
-			}
-			else if ((rom.Length & 0xFF) == 0x10)
-			{
-				Console.WriteLine("ines header detected");
+			N64_message = GetMessage;
 
-				if (rom.Length > 16)
-				{
-					GamePack = new byte[rom.Length - 0x10];
-				}
-				else
-				{
-					throw new Exception("ROM too small");
-				}
+			LibN64Hawk.N64_setmessagecallback(N64_Pntr, N64_message);
 
-				Buffer.BlockCopy(rom, 0x10, GamePack, 0, rom.Length - 0x10);
-				Buffer.BlockCopy(rom, 0, Header, 0, 0x10);
-			}
-			else
-			{
-				throw new Exception("Header size not supported");
-			}
+			LibN64Hawk.N64_load(N64_Pntr, GamePack, (uint)GamePack.Length, SyncSettings.Enable_RAM_Pack);
 
-			has_bat = ((Header[6] & 0x04) == 0x04);
-
-			// now we have a header and rom file to send to the core
-			// still need to deal with save ram
-			if (Header[8] != 0)
-			{
-				cart_RAM = new byte[(int)(Header[8])*0x2000];
-			}
-
-			if (cart_RAM != null)
-			{
-				for (int i = 0; i < cart_RAM.Length; i++)
-				{
-					cart_RAM[i] = 0xFF;
-				}
-			}
-
-			ROM_Length = (uint)Header[4] * 0x4000;
-
-			CHR_ROM_Length = (uint)Header[5] * 0x2000;
-
-			if (GamePack.Length != (CHR_ROM_Length + ROM_Length))
-			{
-				throw new Exception("Mismatch between file length and header info.");
-			}
-
-			NES_Pntr = LibN64Hawk.N64_create();
-
-			NES_message = GetMessage;
-
-			LibN64Hawk.N64_setmessagecallback(NES_Pntr, NES_message);
-
-			mapper = (Header[6] >> 4);
-
-			mapper |= (Header[7] & 0xF0);
-
-			Console.WriteLine("Mapper: (ines) " + mapper);
-
-			if (mapper == 9)
-			{
-				if (ROM_Length != 128 * 1024)
-				{
-					throw new Exception("Unsupported PRG ROM Size");
-				}
-
-				if (CHR_ROM_Length != 128 * 1024)
-				{
-					throw new Exception("Unsupported CHR ROM Size");
-				}
-			}
-
-			bool bus_conflicts = SyncSettings.Mapper_Bus_Conflicts == true;
-			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
-			bool cpu_zero = SyncSettings.CPU_Zero_Reset == true;
-
-			LibN64Hawk.N64_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, bus_conflicts, apu_test_regs, cpu_zero);
-
-			if (cart_RAM != null) { LibN64Hawk.N64_create_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
+			if (cart_RAM != null) { LibN64Hawk.N64_create_SRAM(N64_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			// set up initial palette
 			N64CommonFunctions.SetPalette((byte[,])Palettes.QuickNESPalette.Clone(), Compiled_Palette);
-			LibN64Hawk.N64_load_Palette(NES_Pntr, Compiled_Palette);
+			LibN64Hawk.N64_load_Palette(N64_Pntr, Compiled_Palette);
 
 			blip_buff.SetRates(1789773, 44100);
 
 			(ServiceProvider as BasicServiceProvider).Register<ISoundProvider>(this);
 
-			if (mapper == 30)
-			{
-				vram_32 = true;
-			}
-			else
-			{
-				vram_32 = false;
-			}
-
 			SetupMemoryDomains();
 
-			Header_Length = LibN64Hawk.N64_getheaderlength(NES_Pntr);
-			Disasm_Length = LibN64Hawk.N64_getdisasmlength(NES_Pntr);
-			Reg_String_Length = LibN64Hawk.N64_getregstringlength(NES_Pntr);
+			Header_Length = LibN64Hawk.N64_getheaderlength(N64_Pntr);
+			Disasm_Length = LibN64Hawk.N64_getdisasmlength(N64_Pntr);
+			Reg_String_Length = LibN64Hawk.N64_getregstringlength(N64_Pntr);
 
 			var newHeader = new StringBuilder(Header_Length);
-			LibN64Hawk.N64_getheader(NES_Pntr, newHeader, Header_Length);
+			LibN64Hawk.N64_getheader(N64_Pntr, newHeader, Header_Length);
 
 			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
 
@@ -167,28 +78,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			Mem_Domains.vram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 0);
-			Mem_Domains.oam = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 1);
-			Mem_Domains.palram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 2);
-			Mem_Domains.mmio = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 3);
-
 			ResetControllerDefinition(subframe);
 
-			NES_Controller_Read = Read_Controller;
+			N64_Controller_Read = Read_Controller;
 
-			LibN64Hawk.N64_setcontrollercallback(NES_Pntr, NES_Controller_Read);
+			LibN64Hawk.N64_setcontrollercallback(N64_Pntr, N64_Controller_Read);
 
-			NES_Controller_Strobe = Strobe_Controller;
+			N64_Controller_Strobe = Strobe_Controller;
 
-			LibN64Hawk.N64_setstrobecallback(NES_Pntr, NES_Controller_Strobe);
+			LibN64Hawk.N64_setstrobecallback(N64_Pntr, N64_Controller_Strobe);
 
-			NES_InputPoll = Send_Input_Callback;
+			N64_InputPoll = Send_Input_Callback;
 
-			LibN64Hawk.N64_setinputpollcallback(NES_Pntr, NES_InputPoll);
+			LibN64Hawk.N64_setinputpollcallback(N64_Pntr, N64_InputPoll);
 		}
 
-		public N64HawkSyncSettings.ControllerType LeftController;
-		public N64HawkSyncSettings.ControllerType RightController;
+		public N64HawkSyncSettings.ControllerType P1Controller;
+		public N64HawkSyncSettings.ControllerType P2Controller;
+		public N64HawkSyncSettings.ControllerType P3Controller;
+		public N64HawkSyncSettings.ControllerType P4Controller;
 
 		private N64_ControllerDeck ControllerDeck;
 
@@ -204,41 +112,61 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 
 		public N64_ControllerDeck Controller_Instantiate(bool subframe)
 		{
-			string left = N64_ControllerDeck.DefaultControllerName;
-			string right = N64_ControllerDeck.DefaultControllerName;
+			string P1 = N64_ControllerDeck.DefaultControllerName;
+			string P2 = N64_ControllerDeck.DefaultControllerName;
+			string P3 = N64_ControllerDeck.DefaultControllerName;
+			string P4 = N64_ControllerDeck.DefaultControllerName;
 
-			if (LeftController == N64HawkSyncSettings.ControllerType.N64)
+			if (P1Controller == N64HawkSyncSettings.ControllerType.N64)
 			{
-				left = typeof(N64Controller).DisplayName();
+				P1 = typeof(N64Controller).DisplayName();
 			}
 			else
 			{
-				left = typeof(UnpluggedN64).DisplayName();
+				P1 = typeof(UnpluggedN64).DisplayName();
 			}
 
-			if (RightController == N64HawkSyncSettings.ControllerType.N64)
+			if (P2Controller == N64HawkSyncSettings.ControllerType.N64)
 			{
-				right = typeof(N64Controller).DisplayName();
+				P2 = typeof(N64Controller).DisplayName();
 			}
 			else
 			{
-				right = typeof(UnpluggedN64).DisplayName();
+				P2 = typeof(UnpluggedN64).DisplayName();
+			}
+
+			if (P3Controller == N64HawkSyncSettings.ControllerType.N64)
+			{
+				P3 = typeof(N64Controller).DisplayName();
+			}
+			else
+			{
+				P3 = typeof(UnpluggedN64).DisplayName();
+			}
+
+			if (P4Controller == N64HawkSyncSettings.ControllerType.N64)
+			{
+				P4 = typeof(N64Controller).DisplayName();
+			}
+			else
+			{
+				P4 = typeof(UnpluggedN64).DisplayName();
 			}
 
 
-			N64_ControllerDeck ret = new N64_ControllerDeck(left, right, subframe);
+			N64_ControllerDeck ret = new N64_ControllerDeck(P1, P2, P3, P4, subframe);
 
 			return ret;
 		}
 
-		public LibN64Hawk.ControllerReadCallback NES_Controller_Read;
+		public LibN64Hawk.ControllerReadCallback N64_Controller_Read;
 
 		public byte Read_Controller(bool addr_4016)
 		{
 			return addr_4016 ? ControllerDeck.ReadPort1(Controller) : ControllerDeck.ReadPort2(Controller);
 		}
 
-		public LibN64Hawk.ControllerStrobeCallback NES_Controller_Strobe;
+		public LibN64Hawk.ControllerStrobeCallback N64_Controller_Strobe;
 
 		public void Strobe_Controller(byte latched_4016, byte new_val)
 		{
@@ -246,28 +174,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 			ControllerDeck.Strobe(si, Controller);
 		}
 
-		public int Build_Header(string romHashMD5, string romHashSHA1)
-		{
-			int mppr = 0;
-			has_bat = false;
-
-			return mppr;
-		}
-
 		public ulong TotalExecutedCycles => 0;
 
 		public void HardReset()
 		{
-			LibN64Hawk.N64_Hard_Reset(NES_Pntr);
+			LibN64Hawk.N64_Hard_Reset(N64_Pntr);
 		}
 
 		public void SoftReset()
 		{
-			LibN64Hawk.N64_Soft_Reset(NES_Pntr);
+			LibN64Hawk.N64_Soft_Reset(N64_Pntr);
 		}
 
-		public IntPtr NES_Pntr { get; set; } = IntPtr.Zero;
-		public byte[] NES_core = new byte[0xA0000];
+		public IntPtr N64_Pntr { get; set; } = IntPtr.Zero;
+		public byte[] N64_core = new byte[0xA0000];
 
 		private int _frame = 0;
 
@@ -287,122 +207,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibN64Hawk.N64_getdisassembly(NES_Pntr, new_d, t, Disasm_Length);
-			LibN64Hawk.N64_getregisterstate(NES_Pntr, new_r, t, Reg_String_Length);
+			LibN64Hawk.N64_getdisassembly(N64_Pntr, new_d, t, Disasm_Length);
+			LibN64Hawk.N64_getregisterstate(N64_Pntr, new_r, t, Reg_String_Length);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(40), registerInfo: new_r.ToString()));
 		}
 
-		// NES PPU Viewer
-		public Action _NTVCallback;
-		public int _NTVCallbackLine = 0;
-
-		public void SetNTVCallback(Action callback, int line)
-		{
-			_NTVCallback = callback;
-			_NTVCallbackLine = line;
-
-			LibN64Hawk.N64_setntvcallback(NES_Pntr, _NTVCallback, _NTVCallbackLine);
-		}
-
-		public Action _PPUViewCallback;
-		public int _PPUViewCallbackLine = 0;
-
-		public void SetPPUViewCallback(Action callback, int line)
-		{
-			_PPUViewCallback = callback;
-			_PPUViewCallbackLine = line;
-
-			LibN64Hawk.N64_setppucallback(NES_Pntr, _PPUViewCallback, _PPUViewCallbackLine);
-		}
-
-		N64GPUMemoryAreas Mem_Domains = new N64GPUMemoryAreas();
-
-		public N64GPUMemoryAreas GetMemoryAreas()
-		{
-			Mem_Domains.vram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 0);
-			Mem_Domains.oam = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 1);
-			Mem_Domains.palram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 2);
-			Mem_Domains.mmio = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 3);
-
-			return Mem_Domains;
-		}
-
-		private LibN64Hawk.MessageCallback NES_message;
+		private LibN64Hawk.MessageCallback N64_message;
 
 		private void GetMessage(int str_length)
 		{
 			StringBuilder new_m = new StringBuilder(str_length+1);
 
-			LibN64Hawk.N64_getmessage(NES_Pntr, new_m);
+			LibN64Hawk.N64_getmessage(N64_Pntr, new_m);
 
 			Console.WriteLine(new_m);
 		}
 
-		private LibN64Hawk.InputPollCallback NES_InputPoll;
+		private LibN64Hawk.InputPollCallback N64_InputPoll;
 
 		public IInputCallbackSystem InputCallbacksSystem => InputCallbacks;
 
 		public void Send_Input_Callback()
 		{
 			InputCallbacks.Call();
-		}
-
-		public byte[] Get_Core_Pal_RAM()
-		{
-			byte[] pal_ram_ret = new byte[0x20];
-
-			Mem_Domains.palram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 2);
-
-			Marshal.Copy(Mem_Domains.palram, pal_ram_ret, 0, 0x20);
-
-			return pal_ram_ret;
-		}
-
-		public byte[] Get_Core_OAM_RAM()
-		{
-			byte[] oam_ram_ret = new byte[0x100];
-
-			Mem_Domains.oam = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 1);
-
-			Marshal.Copy(Mem_Domains.oam, oam_ram_ret, 0, 0x100);
-
-			return oam_ram_ret;
-		}
-
-		public byte[] Get_Core_EX_RAM()
-		{
-			byte[] ex_ram_ret = new byte[0x100];
-
-			Mem_Domains.oam = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 3);
-
-			Marshal.Copy(Mem_Domains.oam, ex_ram_ret, 0, 0x400);
-
-			return ex_ram_ret;
-		}
-
-		public byte[] Get_Core_EX_CHR()
-		{
-			byte[] ex_chr_ret;
-
-			if (CHR_ROM_Length != 0)
-			{
-				ex_chr_ret = new byte[CHR_ROM_Length];
-
-				Mem_Domains.vram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 0);
-
-				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, (int)CHR_ROM_Length);
-			}
-			else
-			{
-				ex_chr_ret = new byte[0x400];
-
-				Mem_Domains.vram = LibN64Hawk.N64_get_ppu_pntrs(NES_Pntr, 4);
-
-				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, 0x400);
-			}
-
-			return ex_chr_ret;
 		}
 	}
 }

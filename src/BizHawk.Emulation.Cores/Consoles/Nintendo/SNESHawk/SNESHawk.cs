@@ -14,14 +14,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 								ISettable<SNESHawk.SNESHawkSettings, SNESHawk.SNESHawkSyncSettings>
 	{
 		public byte[] GamePack;
-		public readonly byte[] Header = new byte[0x10];
+		public readonly byte[] Header = new byte[0x20];
 
 		public uint ROM_Length;
 		public uint CHR_ROM_Length;
 
 		public ushort controller_state;
-
-		public int[] Compiled_Palette = new int[64 * 8];
 
 		public byte[] cart_RAM;
 		public bool has_bat;
@@ -100,11 +98,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				throw new Exception("Mismatch between file length and header info.");
 			}
 
-			NES_Pntr = LibSNESHawk.SNES_create();
+			SNES_Pntr = LibSNESHawk.SNES_create();
 
-			NES_message = GetMessage;
+			SNES_message = GetMessage;
 
-			LibSNESHawk.SNES_setmessagecallback(NES_Pntr, NES_message);
+			LibSNESHawk.SNES_setmessagecallback(SNES_Pntr, SNES_message);
 
 			mapper = (Header[6] >> 4);
 
@@ -127,15 +125,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			bool bus_conflicts = SyncSettings.Mapper_Bus_Conflicts == true;
 			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
-			bool cpu_zero = SyncSettings.CPU_Zero_Reset == true;
 
-			LibSNESHawk.SNES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, bus_conflicts, apu_test_regs, cpu_zero);
+			LibSNESHawk.SNES_load(SNES_Pntr, GamePack, (uint)GamePack.Length, Header, bus_conflicts, apu_test_regs);
 
-			if (cart_RAM != null) { LibSNESHawk.SNES_create_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
-
-			// set up initial palette
-			SNESCommonFunctions.SetPalette((byte[,])Palettes.QuickNESPalette.Clone(), Compiled_Palette);
-			LibSNESHawk.SNES_load_Palette(NES_Pntr, Compiled_Palette);
+			if (cart_RAM != null) { LibSNESHawk.SNES_create_SRAM(SNES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			blip_buff.SetRates(1789773, 44100);
 
@@ -152,12 +145,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			SetupMemoryDomains();
 
-			Header_Length = LibSNESHawk.SNES_getheaderlength(NES_Pntr);
-			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(NES_Pntr);
-			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(NES_Pntr);
+			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
 
 			var newHeader = new StringBuilder(Header_Length);
-			LibSNESHawk.SNES_getheader(NES_Pntr, newHeader, Header_Length);
+			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, Header_Length);
 
 			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
 
@@ -167,24 +160,24 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 0);
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 1);
-			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 2);
-			Mem_Domains.mmio = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 3);
+			Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 0);
+			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 1);
+			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 2);
+			Mem_Domains.mmio = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 3);
 
 			ResetControllerDefinition(subframe);
 
-			NES_Controller_Read = Read_Controller;
+			SNES_Controller_Read = Read_Controller;
 
-			LibSNESHawk.SNES_setcontrollercallback(NES_Pntr, NES_Controller_Read);
+			LibSNESHawk.SNES_setcontrollercallback(SNES_Pntr, SNES_Controller_Read);
 
-			NES_Controller_Strobe = Strobe_Controller;
+			SNES_Controller_Strobe = Strobe_Controller;
 
-			LibSNESHawk.SNES_setstrobecallback(NES_Pntr, NES_Controller_Strobe);
+			LibSNESHawk.SNES_setstrobecallback(SNES_Pntr, SNES_Controller_Strobe);
 
-			NES_InputPoll = Send_Input_Callback;
+			SNES_InputPoll = Send_Input_Callback;
 
-			LibSNESHawk.SNES_setinputpollcallback(NES_Pntr, NES_InputPoll);
+			LibSNESHawk.SNES_setinputpollcallback(SNES_Pntr, SNES_InputPoll);
 		}
 
 		public SNESHawkSyncSettings.ControllerType LeftController;
@@ -231,14 +224,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			return ret;
 		}
 
-		public LibSNESHawk.ControllerReadCallback NES_Controller_Read;
+		public LibSNESHawk.ControllerReadCallback SNES_Controller_Read;
 
 		public byte Read_Controller(bool addr_4016)
 		{
 			return addr_4016 ? ControllerDeck.ReadPort1(Controller) : ControllerDeck.ReadPort2(Controller);
 		}
 
-		public LibSNESHawk.ControllerStrobeCallback NES_Controller_Strobe;
+		public LibSNESHawk.ControllerStrobeCallback SNES_Controller_Strobe;
 
 		public void Strobe_Controller(byte latched_4016, byte new_val)
 		{
@@ -258,16 +251,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public void HardReset()
 		{
-			LibSNESHawk.SNES_Hard_Reset(NES_Pntr);
+			LibSNESHawk.SNES_Hard_Reset(SNES_Pntr);
 		}
 
 		public void SoftReset()
 		{
-			LibSNESHawk.SNES_Soft_Reset(NES_Pntr);
+			LibSNESHawk.SNES_Soft_Reset(SNES_Pntr);
 		}
 
-		public IntPtr NES_Pntr { get; set; } = IntPtr.Zero;
-		public byte[] NES_core = new byte[0xA0000];
+		public IntPtr SNES_Pntr { get; set; } = IntPtr.Zero;
+		public byte[] SNES_core = new byte[0xA0000];
 
 		private int _frame = 0;
 
@@ -287,8 +280,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibSNESHawk.SNES_getdisassembly(NES_Pntr, new_d, t, Disasm_Length);
-			LibSNESHawk.SNES_getregisterstate(NES_Pntr, new_r, t, Reg_String_Length);
+			LibSNESHawk.SNES_getdisassembly(SNES_Pntr, new_d, t, Disasm_Length);
+			LibSNESHawk.SNES_getregisterstate(SNES_Pntr, new_r, t, Reg_String_Length);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(40), registerInfo: new_r.ToString()));
 		}
@@ -302,7 +295,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			_NTVCallback = callback;
 			_NTVCallbackLine = line;
 
-			LibSNESHawk.SNES_setntvcallback(NES_Pntr, _NTVCallback, _NTVCallbackLine);
+			LibSNESHawk.SNES_setntvcallback(SNES_Pntr, _NTVCallback, _NTVCallbackLine);
 		}
 
 		public Action _PPUViewCallback;
@@ -313,33 +306,33 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			_PPUViewCallback = callback;
 			_PPUViewCallbackLine = line;
 
-			LibSNESHawk.SNES_setppucallback(NES_Pntr, _PPUViewCallback, _PPUViewCallbackLine);
+			LibSNESHawk.SNES_setppucallback(SNES_Pntr, _PPUViewCallback, _PPUViewCallbackLine);
 		}
 
 		SNESGPUMemoryAreas Mem_Domains = new SNESGPUMemoryAreas();
 
 		public SNESGPUMemoryAreas GetMemoryAreas()
 		{
-			Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 0);
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 1);
-			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 2);
-			Mem_Domains.mmio = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 3);
+			Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 0);
+			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 1);
+			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 2);
+			Mem_Domains.mmio = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 3);
 
 			return Mem_Domains;
 		}
 
-		private LibSNESHawk.MessageCallback NES_message;
+		private LibSNESHawk.MessageCallback SNES_message;
 
 		private void GetMessage(int str_length)
 		{
 			StringBuilder new_m = new StringBuilder(str_length+1);
 
-			LibSNESHawk.SNES_getmessage(NES_Pntr, new_m);
+			LibSNESHawk.SNES_getmessage(SNES_Pntr, new_m);
 
 			Console.WriteLine(new_m);
 		}
 
-		private LibSNESHawk.InputPollCallback NES_InputPoll;
+		private LibSNESHawk.InputPollCallback SNES_InputPoll;
 
 		public IInputCallbackSystem InputCallbacksSystem => InputCallbacks;
 
@@ -352,7 +345,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		{
 			byte[] pal_ram_ret = new byte[0x20];
 
-			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 2);
+			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 2);
 
 			Marshal.Copy(Mem_Domains.palram, pal_ram_ret, 0, 0x20);
 
@@ -363,7 +356,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		{
 			byte[] oam_ram_ret = new byte[0x100];
 
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 1);
+			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 1);
 
 			Marshal.Copy(Mem_Domains.oam, oam_ram_ret, 0, 0x100);
 
@@ -374,7 +367,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		{
 			byte[] ex_ram_ret = new byte[0x100];
 
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 3);
+			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 3);
 
 			Marshal.Copy(Mem_Domains.oam, ex_ram_ret, 0, 0x400);
 
@@ -389,7 +382,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				ex_chr_ret = new byte[CHR_ROM_Length];
 
-				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 0);
+				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 0);
 
 				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, (int)CHR_ROM_Length);
 			}
@@ -397,7 +390,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				ex_chr_ret = new byte[0x400];
 
-				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(NES_Pntr, 4);
+				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 4);
 
 				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, 0x400);
 			}

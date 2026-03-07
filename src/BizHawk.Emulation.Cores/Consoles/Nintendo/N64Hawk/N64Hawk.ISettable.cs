@@ -67,37 +67,64 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 
 		public class N64HawkSyncSettings
 		{
+			[DisplayName("Enable RAM Expansion Pack")]
+			[Description("Adds 4MB RAM to the Console")]
+			[DefaultValue(true)]
+			public bool Enable_RAM_Pack { get; set; }
+
 			public enum ControllerType
 			{
 				N64,
 				Unplugged
 			}
 
-			[DisplayName("Left Controller Port")]
+			[DisplayName("Player 1 Controller Port")]
 			[Description("Player 1")]
 			[DefaultValue(ControllerType.N64)]
-			public ControllerType LeftController { get; set; }
+			public ControllerType P1Controller { get; set; }
 
-			[DisplayName("Right Controller Port")]
+			[DisplayName("Player 2 Controller Port")]
 			[Description("Player 2")]
 			[DefaultValue(ControllerType.N64)]
-			public ControllerType RightController { get; set; }
+			public ControllerType P2Controller { get; set; }
 
+			[DisplayName("Player 3 Controller Port")]
+			[Description("Player 3")]
+			[DefaultValue(ControllerType.N64)]
+			public ControllerType P3Controller { get; set; }
 
-			[DisplayName("Emulate Mapper Bus Conflicts")]
-			[Description("Effects CNROM, AxROM, UxROM")]
-			[DefaultValue(true)]
-			public bool Mapper_Bus_Conflicts { get; set; }
+			[DisplayName("Player 4 Controller Port")]
+			[Description("Player 4")]
+			[DefaultValue(ControllerType.N64)]
+			public ControllerType P4Controller { get; set; }
 
-			[DisplayName("Activate APU Test Registers")]
-			[Description("See NESDev documentation")]
-			[DefaultValue(false)]
-			public bool Use_APU_Test_Regs { get; set; }
+			public enum AddOnType
+			{
+				CntrPak,
+				RumblePak,
+				GBExp,
+				Empty
+			}
 
-			[DisplayName("Set CPU Zero Flag at Reset")]
-			[Description("Revision / console dependent")]
-			[DefaultValue(true)]
-			public bool CPU_Zero_Reset { get; set; }
+			[DisplayName("Player 1 Controller Add on")]
+			[Description("Player 1")]
+			[DefaultValue(AddOnType.Empty)]
+			public AddOnType P1AddOn { get; set; }
+
+			[DisplayName("Player 2 Controller Add on")]
+			[Description("Player 2 Add on")]
+			[DefaultValue(AddOnType.Empty)]
+			public AddOnType P2AddOn { get; set; }
+
+			[DisplayName("Player 3 Controller Add on")]
+			[Description("Player 3 Add on")]
+			[DefaultValue(AddOnType.Empty)]
+			public AddOnType P3AddOn { get; set; }
+
+			[DisplayName("Player 4 Controller Add on")]
+			[Description("Player 4 Add on")]
+			[DefaultValue(AddOnType.Empty)]
+			public AddOnType P4AddOn { get; set; }
 
 			public N64HawkSyncSettings Clone()
 			{

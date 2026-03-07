@@ -55,23 +55,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink4x
 		{
 			[DisplayName("Console Mode A")]
 			[Description("Deprecated")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_A { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_A { get; set; }
 
 			[DisplayName("Console Mode B")]
 			[Description("Deprecated")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_B { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_B { get; set; }
 
 			[DisplayName("Console Mode C")]
 			[Description("Deprecated")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_C { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_C { get; set; }
 
 			[DisplayName("Console Mode D")]
 			[Description("Deprecated")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_D { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_D { get; set; }
 
 			[DisplayName("CGB in GBA")]
 			[Description("Deprecated")]

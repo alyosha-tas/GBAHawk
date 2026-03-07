@@ -23,7 +23,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				tracecb = null;
 			}
 			
-			LibSNESHawk.SNES_settracecallback(NES_Pntr, tracecb);
+			LibSNESHawk.SNES_settracecallback(SNES_Pntr, tracecb);
 
 			if (controller.IsPressed("Power"))
 			{
@@ -35,9 +35,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				SoftReset();
 			}
 
-			Is_Lag = LibSNESHawk.SNES_frame_advance(NES_Pntr, true, true);
+			Is_Lag = LibSNESHawk.SNES_frame_advance(SNES_Pntr, true, true);
 
-			LibSNESHawk.SNES_get_video(NES_Pntr, _vidbuffer);
+			LibSNESHawk.SNES_get_video(SNES_Pntr, _vidbuffer);
 
 			if (Is_Lag) { Lag_Count++; }
 
@@ -59,10 +59,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public void Dispose()
 		{
-			if (NES_Pntr != IntPtr.Zero)
+			if (SNES_Pntr != IntPtr.Zero)
 			{
-				LibSNESHawk.SNES_destroy(NES_Pntr);
-				NES_Pntr = IntPtr.Zero;
+				LibSNESHawk.SNES_destroy(SNES_Pntr);
+				SNES_Pntr = IntPtr.Zero;
 			}
 
 			DisposeSound();
@@ -94,7 +94,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint f_clock = LibSNESHawk.SNES_get_audio(NES_Pntr, Aud, ref num_samp);
+			uint f_clock = LibSNESHawk.SNES_get_audio(SNES_Pntr, Aud, ref num_samp);
 
 			for (int i = 0; i < num_samp; i++)
 			{

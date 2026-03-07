@@ -1,6 +1,6 @@
 ﻿using System;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBHawkOld;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 {
@@ -11,8 +11,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 	{
 		// we want to create two GBHawk instances that we will run concurrently
 		// maybe up to 4 eventually?
-		public GBHawk.GBHawk L;
-		public GBHawk.GBHawk R;
+		public GBHawkOld.GBHawkOld L;
+		public GBHawkOld.GBHawkOld R;
 
 		// if true, the link cable is currently connected
 		private bool _cableconnected = true;
@@ -40,11 +40,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 				GBHawkControllerDeck.DefaultControllerName,
 				GBHawkControllerDeck.DefaultControllerName);
 
-			var temp_set_L = new GBHawk.GBHawk.GBSettings();
-			var temp_set_R = new GBHawk.GBHawk.GBSettings();
+			var temp_set_L = new GBHawkOld.GBHawkOld.GBSettings();
+			var temp_set_R = new GBHawkOld.GBHawkOld.GBSettings();
 
-			var temp_sync_L = new GBHawk.GBHawk.GBSyncSettings();
-			var temp_sync_R = new GBHawk.GBHawk.GBSyncSettings();
+			var temp_sync_L = new GBHawkOld.GBHawkOld.GBSyncSettings();
+			var temp_sync_R = new GBHawkOld.GBHawkOld.GBSyncSettings();
 
 			temp_sync_L.ConsoleMode = linkSyncSettings.ConsoleMode_L;
 			temp_sync_R.ConsoleMode = linkSyncSettings.ConsoleMode_R;
@@ -57,8 +57,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 			temp_sync_L.RTCOffset = linkSyncSettings.RTCOffset_L;
 			temp_sync_R.RTCOffset = linkSyncSettings.RTCOffset_R;
 
-			L = new GBHawk.GBHawk(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, temp_set_L, temp_sync_L);
-			R = new GBHawk.GBHawk(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, temp_set_R, temp_sync_R);
+			L = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[0].Game, lp.Roms[0].RomData, temp_set_L, temp_sync_L);
+			R = new GBHawkOld.GBHawkOld(lp.Comm, lp.Roms[1].Game, lp.Roms[1].RomData, temp_set_R, temp_sync_R);
 
 			L.is_multi_core = true;
 			R.is_multi_core = true;

@@ -13,7 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 			{
 				for (int i = 0; i < cart_RAM.Length; i++)
 				{
-					cart_RAM[i] = LibN64Hawk.N64_getsram(NES_Pntr, i);
+					cart_RAM[i] = LibN64Hawk.N64_getsram(N64_Pntr, i);
 				}
 
 				return cart_RAM;
@@ -26,7 +26,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 		{
 			Buffer.BlockCopy(data, 0, cart_RAM, 0, data.Length);
 			Console.WriteLine("loading SRAM here");
-			LibN64Hawk.N64_load_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length);
+			LibN64Hawk.N64_load_SRAM(N64_Pntr, cart_RAM, (uint)cart_RAM.Length);
 		}
 
 		public bool SaveRamModified => has_bat;

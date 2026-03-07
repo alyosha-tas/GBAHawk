@@ -16,46 +16,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public IntPtr palram;
 	}
 
-	public class SNESCommonFunctions
-	{
-		public int[] Palette_Compiled = new int[64 * 8];
-
-		/// <summary>
-		/// Sets the provided palette as current.
-		/// Applies the current deemph settings if needed to expand a 64-entry palette to 512
-		/// </summary>
-		public static void SetPalette(byte[,] pal, int[] comp_pal)
-		{
-			int nColors = pal.GetLength(0);
-
-			if (nColors == 512)
-			{
-				//just copy the palette directly
-				for (int c = 0; c < 64 * 8; c++)
-				{
-					int r = pal[c, 0];
-					int g = pal[c, 1];
-					int b = pal[c, 2];
-					comp_pal[c] = (int)unchecked((int)0xFF000000 | (r << 16) | (g << 8) | b);
-				}
-			}
-			else
-			{
-				//expand using deemph
-				for (int i = 0; i < 64 * 8; i++)
-				{
-					int d = i >> 6;
-					int c = i & 63;
-					int r = pal[c, 0];
-					int g = pal[c, 1];
-					int b = pal[c, 2];
-					Palettes.ApplyDeemphasis(ref r, ref g, ref b, d);
-					comp_pal[i] = (int)unchecked((int)0xFF000000 | (r << 16) | (g << 8) | b);
-				}
-			}
-		}
-	}
-
 	/// <summary>
 	/// stores information about the strobe lines controlled by $4016
 	/// </summary>

@@ -65,13 +65,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkLink
 		{
 			[DisplayName("Console Mode L")]
 			[Description("Pick which console to run, 'Auto' chooses from ROM extension, 'GB' and 'GBC' chooses the respective system")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_L { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_L { get; set; }
 
 			[DisplayName("Console Mode R")]
 			[Description("Pick which console to run, 'Auto' chooses from ROM extension, 'GB' and 'GBC' chooses the respective system")]
-			[DefaultValue(GBHawk.GBHawk.GBSyncSettings.ConsoleModeType.Auto)]
-			public GBHawk.GBHawk.GBSyncSettings.ConsoleModeType ConsoleMode_R { get; set; }
+			[DefaultValue(GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType.Auto)]
+			public GBHawkOld.GBHawkOld.GBSyncSettings.ConsoleModeType ConsoleMode_R { get; set; }
 
 			[DisplayName("CGB in GBA")]
 			[Description("Emulate GBA hardware running a CGB game, instead of CGB hardware.  Relevant only for titles that detect the presense of a GBA, such as Shantae.")]

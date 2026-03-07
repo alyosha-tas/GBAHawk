@@ -19,42 +19,42 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"RAM",
 					0x800,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getram(NES_Pntr, (int)(addr & 0x7FF)),
+					(addr) => LibSNESHawk.SNES_getram(SNES_Pntr, (int)(addr & 0x7FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"ROM",
 					ROM_Length,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getrom(NES_Pntr, (int)(addr & (ROM_Length - 1))),
+					addr => LibSNESHawk.SNES_getrom(SNES_Pntr, (int)(addr & (ROM_Length - 1))),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"OAM",
 					0x400,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getoam(NES_Pntr, (int)(addr & 0x3FF)),
+					addr => LibSNESHawk.SNES_getoam(SNES_Pntr, (int)(addr & 0x3FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PALRAM",
 					0x20,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getpalram(NES_Pntr, (int)(addr & 0x1F)),
+					addr => LibSNESHawk.SNES_getpalram(SNES_Pntr, (int)(addr & 0x1F)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PPU Bus",
 					0x4000,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_get_ppu_bus(NES_Pntr, (uint)(addr & 0x3FFF)),
+					addr => LibSNESHawk.SNES_get_ppu_bus(SNES_Pntr, (uint)(addr & 0x3FFF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getsysbus(NES_Pntr, (int)(addr & 0xFFFF)),
+					(addr) => LibSNESHawk.SNES_getsysbus(SNES_Pntr, (int)(addr & 0xFFFF)),
 					(addr, value) => { },
 					1)
 			};
@@ -65,7 +65,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"CHR ROM",
 					CHR_ROM_Length,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getchrrom(NES_Pntr, (int)(addr & (CHR_ROM_Length - 1))),
+					(addr) => LibSNESHawk.SNES_getchrrom(SNES_Pntr, (int)(addr & (CHR_ROM_Length - 1))),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRom);
@@ -76,7 +76,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"CHR RAM",
 					0x8000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getvram(NES_Pntr, (int)(addr & 0x7FFF)),
+					(addr) => LibSNESHawk.SNES_getvram(SNES_Pntr, (int)(addr & 0x7FFF)),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRam);
@@ -87,7 +87,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"CHR RAM",
 					0x2000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getvram(NES_Pntr, (int)(addr & 0x1FFF)),
+					(addr) => LibSNESHawk.SNES_getvram(SNES_Pntr, (int)(addr & 0x1FFF)),
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRam);
@@ -99,7 +99,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"CartRAM",
 					cart_RAM.Length,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getsram(NES_Pntr, (int)(addr & (cart_RAM.Length - 1))),
+					addr => LibSNESHawk.SNES_getsram(SNES_Pntr, (int)(addr & (cart_RAM.Length - 1))),
 					(addr, value) => cart_RAM[addr] = value,
 					1);
 				domains.Add(CartRam);

@@ -16,29 +16,14 @@ namespace BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy
 
 	public interface IGameboyCommon : ISpecializedEmulatorService
 	{
-		bool IsCGBMode();
+
 
 		bool IsCGBDMGMode();
 
-		/// <summary>
-		/// Acquire GPU memory for inspection.  The returned object must be disposed as soon as the frontend
-		/// tool is done inspecting it, and the pointers become invalid once it is disposed.
-		/// </summary>
-		/// <returns></returns>
-		IGPUMemoryAreas LockGPU();
 
-		/// <summary>
-		/// set up callback
-		/// </summary>
-		/// <param name="line">scanline. -1 = end of frame, -2 = RIGHT NOW</param>
-		void SetScanlineCallback(ScanlineCallback callback, int line);
+
+
 	}
 
-	public interface IGPUMemoryAreas : IDisposable
-	{
-		IntPtr Vram { get; }
-		IntPtr Oam { get; }
-		IntPtr Sppal { get; }
-		IntPtr Bgpal { get; }
-	}
+
 }

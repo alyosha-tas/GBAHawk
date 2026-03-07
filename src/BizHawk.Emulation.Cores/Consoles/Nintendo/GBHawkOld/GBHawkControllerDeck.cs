@@ -6,7 +6,7 @@ using BizHawk.Common;
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
+namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 {
 	public class GBHawkControllerDeck
 	{
