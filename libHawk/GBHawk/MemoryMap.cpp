@@ -529,7 +529,7 @@ namespace GBHawk
 				// in GBA mode, it returns a reflection of the address somehow
 				if (ppu.OAM_access_read)
 				{
-					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
 
 				return 0xFF;

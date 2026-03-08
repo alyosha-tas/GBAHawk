@@ -39,10 +39,7 @@ namespace GBHawk
 
 	# pragma region General System and Prefetch
 
-		uint32_t video_buffer[240 * 160] = { };
-
-		uint32_t GBP_TRansfer_List[18] = { 0x0000494E, 0x0000494E, 0xB6B1494E, 0xB6B1544E, 0xABB1544E, 0xABB14E45, 0xB1BA4E45, 0xB1BA4F44, 0xB0BB4F44,
-										   0xB0BB8002, 0x10000010, 0x20000013, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x30000003, 0x00000000 };
+		uint32_t video_buffer[160 * 144] = { };
 
 		void Frame_Advance();
 		bool SubFrame_Advance(uint32_t reset_cycle);
@@ -63,60 +60,46 @@ namespace GBHawk
 		// General Variables
 		bool Is_Lag;
 		bool VBlank_Rise;
-		bool All_RAM_Disable, WRAM_Enable;
-
-		bool INT_Master_On;
-		bool Cart_RAM_Present;
-		bool Is_EEPROM;
-		bool EEPROM_Wiring; // when true, can access anywhere in 0xDxxxxxx range, otheriwse only 0xDFFFFE0
-
-		bool delays_to_process;
-		bool IRQ_Write_Delay;
-
-		bool VRAM_32_Check, PALRAM_32_Check;
-		bool VRAM_32_Delay, PALRAM_32_Delay;
-		bool IRQ_Delays, Misc_Delays;
-		bool FIFO_DMA_A_Delay, FIFO_DMA_B_Delay;
-		bool DMA_Any_Start, DMA_Any_IRQ;
-		bool Halt_Enter, Halt_Leave;
-		bool GBP_Mode_Enabled;
-		bool Rumble_State;
-
-		uint8_t Post_Boot, Halt_CTRL;
 
 		uint8_t ext_num = 0; // zero here means disconnected
 
-		bool is_linked_system = false;
+		// this register controls whether or not the GB BIOS is mapped into memory
+		uint8_t GB_bios_register;
 
-		bool Is_GBP = false;
+		uint8_t input_register;
 
-		uint16_t INT_EN, INT_Flags, INT_Master, Wait_CTRL;
-		uint16_t INT_Flags_Gather, INT_Flags_Use;
-		uint16_t controller_state, controller_state_old;
-		uint16_t PALRAM_32W_Value, VRAM_32W_Value;
-		uint16_t FIFO_DMA_A_cd, FIFO_DMA_B_cd;
-		uint16_t Halt_Enter_cd, Halt_Leave_cd;
-		uint16_t Halt_Held_CPU_Instr;
+		// The unused bits in this register are still read/writable
+		uint8_t REG_FFFF;
+		// The unused bits in this register (interrupt flags) are always set
+		uint8_t REG_FF0F = 0xE0;
+		// Updating reg FF0F seems to be delayed by one cycle,needs more testing
+		uint8_t REG_FF0F_OLD = 0xE0;
+		
+		// several undocumented GBC Registers
+		uint8_t undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
 
-		uint32_t PALRAM_32W_Addr, VRAM_32W_Addr;
-		uint32_t Memory_CTRL, ROM_Length;
-		uint32_t Last_BIOS_Read;
-		uint32_t WRAM_Waits, SRAM_Waits;
-
-		uint32_t ROM_Waits_0_N, ROM_Waits_1_N, ROM_Waits_2_N, ROM_Waits_0_S, ROM_Waits_1_S, ROM_Waits_2_S;
-
-		bool DMA_Start_Delay[4] = { };
-		bool DMA_IRQ_Delay[4] = { };
-
-		uint8_t WRAM[0x40000] = { };
-		uint8_t IWRAM[0x8000] = { };
+		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
+		uint8_t ZP_RAM[0x80] = { };
 		uint8_t PALRAM[0x400] = { };
-		uint8_t VRAM[0x18000] = { };
-		uint8_t OAM[0x400] = { };
+		/*
+		 * VRAM is arranged as:
+		 * 0x1800 Tiles
+		 * 0x400 BG Map 1
+		 * 0x400 BG Map 2
+		 * 0x1800 Tiles
+		 * 0x400 CA Map 1
+		 * 0x400 CA Map 2
+		 * Only the top set is available in GB (i.e. VRAM_Bank = 0)
+		 */
+		uint8_t VRAM[0x4000] = { };
+		uint8_t OAM[0xA0] = { };
 
-		// not stated
+		// not stated, controlled on system load
 		uint8_t BIOS[0x4000] = { };
 		uint8_t ROM[0x6000000] = { };
+
+		bool is_linked_system = false;
+		bool Is_GBC = false;
 
 		// Most memory accesses from the cpu / dma are force aligned to word / half wod boundaries, 
 		// so use some pointers of the appropriate memory size to simplify accesses
@@ -149,26 +132,6 @@ namespace GBHawk
 
 		uint8_t New_Solar;
 
-		// Prefetcher
-		bool pre_Cycle_Glitch;
-
-		bool pre_Run, pre_Enable;
-
-		bool pre_Force_Non_Seq;
-
-		bool pre_Buffer_Was_Full;
-
-		bool pre_Boundary_Reached;
-
-		bool pre_Following;
-
-		bool pre_Inactive;
-
-		uint32_t pre_Read_Addr, pre_Check_Addr;
-		uint32_t pre_Buffer_Cnt;
-
-		uint32_t pre_Fetch_Cnt, pre_Fetch_Wait;
-
 		GB_System()
 		{
 			System_Reset();
@@ -176,56 +139,26 @@ namespace GBHawk
 
 		void System_Reset() 
 		{
-			delays_to_process = false;
+			GB_bios_register = 0; // bios enable
+			input_register = 0xCF; // not reading any input
 
-			IRQ_Write_Delay = false;
+			REG_FFFF = 0;
+			REG_FF0F = 0xE0;
+			REG_FF0F_OLD = 0xE0;
 
-			IRQ_Delays = Misc_Delays = VRAM_32_Delay = PALRAM_32_Delay = false;
+			//undocumented registers
+			undoc_6C = 0xFE;
+			undoc_72 = 0;
+			undoc_73 = 0;
+			undoc_74 = 0;
+			undoc_75 = 0x8F;
+			undoc_76 = 0;
+			undoc_77 = 0;
 
-			FIFO_DMA_A_Delay = FIFO_DMA_B_Delay = false;
-
-			DMA_Any_Start = DMA_Any_IRQ = false;
-
-			for (int i = 0; i < 4; i++) { DMA_IRQ_Delay[i] = false; DMA_Start_Delay[i] = false; }
-
-			Halt_Enter =  Halt_Leave = false;
-
-			GBP_Mode_Enabled = false;
-
-			Rumble_State = false;
-
-			VRAM_32_Check = PALRAM_32_Check = false;
-
-			controller_state = 0x3FF;
-
-			Memory_CTRL = 0;
-
-			Last_BIOS_Read = 0;
-
-			WRAM_Waits = SRAM_Waits = 0;
-
-			ROM_Waits_0_N = ROM_Waits_1_N = ROM_Waits_2_N = ROM_Waits_0_S = ROM_Waits_1_S = ROM_Waits_2_S = 0;
-
-			INT_EN = INT_Flags = INT_Master = Wait_CTRL = 0;
-
-			INT_Flags_Gather = INT_Flags_Use = 0;
-
-			Post_Boot = Halt_CTRL = 0;
-
-			PALRAM_32W_Value = VRAM_32W_Value = 0;
-			
-			FIFO_DMA_A_cd = FIFO_DMA_B_cd = 0;
-
-			Halt_Enter_cd = Halt_Leave_cd = Halt_Held_CPU_Instr = 0;
-
-			All_RAM_Disable = WRAM_Enable = false;
-
-			INT_Master_On = false;
 
 			snd_Reset();
 			ppu_Reset();
 			dma_Reset();
-			pre_Reset();
 			ser_Reset();
 			tim_Reset();
 			cpu_Reset();
@@ -249,17 +182,6 @@ namespace GBHawk
 			{
 				WRAM[i] = 0;
 			}
-		}
-
-		void Update_Memory_CTRL(uint32_t value)
-		{
-			All_RAM_Disable = (value & 1) == 1;
-
-			WRAM_Enable = (value & 0x20) == 0x20;
-
-			WRAM_Waits = (uint32_t)(((~value) >> 24) & 0xF);
-
-			Memory_CTRL = value;
 		}
 
 		void do_controller_check(bool from_reg)
@@ -329,57 +251,6 @@ namespace GBHawk
 			IRQ_Delays = true;
 		}
 
-		void pre_Reg_Write(uint16_t value)
-		{
-			if (!pre_Enable && ((value & 0x4000) == 0x4000))
-			{
-				// set read address to current cpu address
-				pre_Check_Addr = 0;
-				pre_Buffer_Cnt = 0;
-				pre_Fetch_Cnt = 0;
-				pre_Inactive = true;
-				pre_Run = true;
-			}
-
-			if (pre_Enable && ((value & 0x4000) != 0x4000))
-			{
-				pre_Force_Non_Seq = true;
-
-				if (pre_Fetch_Cnt == 0)
-				{
-					// if in ARM mode finish the 32 bit access
-					if ((pre_Buffer_Cnt & 1) == 0) { pre_Run = false; }
-					else if (cpu_Thumb_Mode) { pre_Run = false; }
-
-					if (pre_Buffer_Cnt == 0) { pre_Check_Addr = 0; }
-				}
-			}
-
-			pre_Enable = (value & 0x4000) == 0x4000;
-		}
-
-		void pre_Reset()
-		{
-			VBlank_Rise = false;
-
-			pre_Read_Addr = pre_Check_Addr = 0;
-			pre_Buffer_Cnt = 0;
-
-			pre_Fetch_Cnt = pre_Fetch_Wait = 0;
-
-			pre_Cycle_Glitch;
-
-			pre_Run = pre_Enable = false;
-
-			pre_Force_Non_Seq = false;
-
-			pre_Buffer_Was_Full = pre_Boundary_Reached = false;
-
-			pre_Following = false;
-
-			pre_Inactive = true;
-		}
-
 		void On_VBlank()
 		{
 			// things to do on vblank
@@ -389,741 +260,523 @@ namespace GBHawk
 
 	#pragma region HW Registers
 
-		uint8_t Read_Registers_8(uint32_t addr)
-		{
-			if (addr < 0x60)
-			{
-				return ppu_Read_Reg_8(addr);
-			}
-			else if (addr < 0xB0)
-			{
-				return snd_Read_Reg_8(addr);
-			}
-			else if (addr < 0x100)
-			{
-				return dma_Read_Reg_8(addr);
-			}
-			else if (addr < 0x120)
-			{
-				return tim_Read_Reg_8(addr);
-			}
-			else if (addr < 0x200)
-			{
-				return ser_Read_Reg_8(addr);
-			}
-
-			uint8_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x200: ret = (uint8_t)(INT_EN & 0xFF); break;
-				case 0x201: ret = (uint8_t)((INT_EN & 0xFF00) >> 8); break;
-				case 0x202: ret = (uint8_t)(INT_Flags & 0xFF); break;
-				case 0x203: ret = (uint8_t)((INT_Flags & 0xFF00) >> 8); break;
-				case 0x204: ret = (uint8_t)(Wait_CTRL & 0xFF); break;
-				case 0x205: ret = (uint8_t)((Wait_CTRL & 0xFF00) >> 8); break;
-				case 0x206: ret = 0; break;
-				case 0x207: ret = 0; break;
-				case 0x208: ret = (uint8_t)(INT_Master & 0xFF); break;
-				case 0x209: ret = (uint8_t)((INT_Master & 0xFF00) >> 8); break;
-				case 0x20A: ret = 0; break;
-				case 0x20B: ret = 0; break;
-
-				case 0x300: ret = Post_Boot; break;
-				case 0x301: ret = Halt_CTRL; break;
-				case 0x302: ret = 0; break;
-				case 0x303: ret = 0; break;
-
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
-			}
-
-			return ret;
-		}
-
-		uint16_t Read_Registers_16(uint32_t addr)
-		{
-			if (addr < 0x60)
-			{
-				return ppu_Read_Reg_16(addr);
-			}
-			else if (addr < 0xB0)
-			{
-				return snd_Read_Reg_16(addr);
-			}
-			else if (addr < 0x100)
-			{
-				return dma_Read_Reg_16(addr);
-			}
-			else if (addr < 0x120)
-			{
-				return tim_Read_Reg_16(addr);
-			}
-			else if (addr < 0x200)
-			{
-				return ser_Read_Reg_16(addr);
-			}
-
-			uint16_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x200: ret = INT_EN; break;
-				case 0x202: ret = INT_Flags; break;
-				case 0x204: ret = Wait_CTRL; break;
-				case 0x206: ret = 0; break;
-				case 0x208: ret = INT_Master; break;
-				case 0x20A: ret = 0; break;
-
-				case 0x300: ret = (uint16_t)((Halt_CTRL << 8) | Post_Boot); break;
-				case 0x302: ret = 0; break;
-
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
-			}
-
-			return ret;
-		}
-
-		uint32_t Read_Registers_32(uint32_t addr)
-		{
-			if (addr < 0x60)
-			{
-				return ppu_Read_Reg_32(addr);
-			}
-			else if (addr < 0xB0)
-			{
-				return snd_Read_Reg_32(addr);
-			}
-			else if (addr < 0x100)
-			{
-				return dma_Read_Reg_32(addr);
-			}
-			else if (addr < 0x120)
-			{
-				return tim_Read_Reg_32(addr);
-			}
-			else if (addr < 0x200)
-			{
-				return ser_Read_Reg_32(addr);
-			}
-
-			uint32_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x200: ret = (uint32_t)((INT_Flags << 16) | INT_EN); break;
-				case 0x204: ret = (uint32_t)(0x00000000 | Wait_CTRL); break;
-
-				case 0x208: ret = (uint32_t)(0x00000000 | INT_Master); break;
-
-				case 0x300: ret = (uint32_t)(0x00000000 | (Halt_CTRL << 8) | Post_Boot); break;
-
-				default: ret = cpu_Last_Bus_Value; break;
-			}
-
-			return ret;
-		}
-
-		void Write_Registers_8(uint32_t addr, uint8_t value)
-		{
-			//Message_String = "wr8 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
-
-			//MessageCallback(Message_String.length());
-			
-			if (addr < 0x60)
-			{
-				ppu_Write_Reg_8(addr, value);
-			}
-			else if (addr < 0xB0)
-			{
-				snd_Write_Reg_8(addr, value);
-			}
-			else if (addr < 0x100)
-			{
-				dma_Write_Reg_8(addr, value);
-			}
-			else if (addr < 0x120)
-			{
-				tim_Write_Reg_8(addr, value);
-			}
-			else if (addr < 0x200)
-			{
-				ser_Write_Reg_8(addr, value);
-			}
-			else
-			{
-				switch (addr)
-				{
-					case 0x200: Update_INT_EN((uint16_t)((INT_EN & 0xFF00) | value)); break;
-					case 0x201: Update_INT_EN((uint16_t)((INT_EN & 0x00FF) | (value << 8))); break;
-					case 0x202: Update_INT_Flags((uint16_t)((INT_Flags & 0xFF00) | value)); break;
-					case 0x203: Update_INT_Flags((uint16_t)((INT_Flags & 0x00FF) | (value << 8))); break;
-					case 0x204: Update_Wait_CTRL((uint16_t)((Wait_CTRL & 0xFF00) | value)); break;
-					case 0x205: Update_Wait_CTRL((uint16_t)((Wait_CTRL & 0x00FF) | (value << 8))); break;
-
-					case 0x208: Update_INT_Master((uint16_t)((INT_Master & 0xFF00) | value)); break;
-					case 0x209: Update_INT_Master((uint16_t)((INT_Master & 0x00FF) | (value << 8))); break;
-
-					case 0x300: Update_Post_Boot(value); break;
-					case 0x301: Update_Halt_CTRL(value); break;
-				}
-			}
-		}
-
-		void Write_Registers_16(uint32_t addr, uint16_t value)
-		{
-			//Message_String = "wr16 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
-
-			//MessageCallback(Message_String.length());
-			
-			if (addr < 0x60)
-			{
-				ppu_Write_Reg_16(addr, value);
-			}
-			else if (addr < 0xB0)
-			{
-				snd_Write_Reg_16(addr, value);
-			}
-			else if (addr < 0x100)
-			{
-				dma_Write_Reg_16(addr, value);
-			}
-			else if (addr < 0x120)
-			{
-				tim_Write_Reg_16(addr, value);
-			}
-			else if (addr < 0x200)
-			{
-				ser_Write_Reg_16(addr, value);
-			}
-			else
-			{
-				switch (addr)
-				{
-					case 0x200: Update_INT_EN(value); break;
-					case 0x202: Update_INT_Flags(value); break;
-					case 0x204: Update_Wait_CTRL(value); break;
-
-					case 0x208: Update_INT_Master(value); break;
-
-					case 0x300: Update_Post_Boot((uint8_t)(value & 0xFF)); Update_Halt_CTRL((uint8_t)((value >> 8) & 0xFF)); break;
-				}
-			}
-		}
-
-		void Write_Registers_32(uint32_t addr, uint32_t value)
-		{
-			//Message_String = "wr32 " + to_string(addr) + " " + to_string(value) + " " + to_string(ppu_LY) + " " + to_string(ppu_Cycle) + " " + to_string(CycleCount);
-
-			//MessageCallback(Message_String.length());
-			
-			if (addr < 0x60)
-			{
-				ppu_Write_Reg_32(addr, value);
-			}
-			else if (addr < 0xB0)
-			{
-				snd_Write_Reg_32(addr, value);
-			}
-			else if (addr < 0x100)
-			{
-				dma_Write_Reg_32(addr, value);
-			}
-			else if (addr < 0x120)
-			{
-				tim_Write_Reg_32(addr, value);
-			}
-			else if (addr < 0x200)
-			{
-				ser_Write_Reg_32(addr, value);
-			}
-			else
-			{
-				switch (addr)
-				{
-					case 0x200: Update_INT_EN((uint16_t)(value & 0xFFFF));
-								Update_INT_Flags((uint16_t)((value >> 16) & 0xFFFF)); break;
-					case 0x204: Update_Wait_CTRL((uint16_t)(value & 0xFFFF)); break;
-
-					case 0x208: Update_INT_Master((uint16_t)(value & 0xFFFF)); break;
-
-					case 0x300: Update_Post_Boot((uint8_t)(value & 0xFF)); Update_Halt_CTRL((uint8_t)((value >> 8) & 0xFF)); break;
-				}
-			}
-		}
-
-		uint8_t Get_Registers_Internal(uint32_t addr)
+		uint8_t Read_Registers(uint16_t addr)
 		{
 			uint8_t ret = 0;
-			
-			if (addr < 0x60)
+
+			switch (addr)
 			{
-				switch (addr)
-				{
-					case 0x00: ret = (uint8_t)(ppu_CTRL & 0xFF); break;
-					case 0x01: ret = (uint8_t)((ppu_CTRL & 0xFF00) >> 8); break;
-					case 0x02: ret = (uint8_t)(ppu_Green_Swap & 0xFF); break;
-					case 0x03: ret = (uint8_t)((ppu_Green_Swap & 0xFF00) >> 8); break;
-					case 0x04: ret = ppu_STAT; break;
-					case 0x05: ret = ppu_LYC; break;
-					case 0x06: ret = ppu_LY; break;
-					case 0x07: ret = 0; break;
+				// Read Input
+				case 0xFF00:
+					Is_Lag = false;
+					ret = input_register;
+					break;
 
-					case 0x08: ret = (uint8_t)(ppu_BG_CTRL[0] & 0xFF); break;
-					case 0x09: ret = (uint8_t)((ppu_BG_CTRL[0] & 0xFF00) >> 8); break;
-					case 0x0A: ret = (uint8_t)(ppu_BG_CTRL[1] & 0xFF); break;
-					case 0x0B: ret = (uint8_t)((ppu_BG_CTRL[1] & 0xFF00) >> 8); break;
-					case 0x0C: ret = (uint8_t)(ppu_BG_CTRL[2] & 0xFF); break;
-					case 0x0D: ret = (uint8_t)((ppu_BG_CTRL[2] & 0xFF00) >> 8); break;
-					case 0x0E: ret = (uint8_t)(ppu_BG_CTRL[3] & 0xFF); break;
-					case 0x0F: ret = (uint8_t)((ppu_BG_CTRL[3] & 0xFF00) >> 8); break;
+					// Serial data port
+				case 0xFF01:
+					ret = ser_Read_Reg(addr);
+					break;
 
-					case 0x10: ret = (uint8_t)(ppu_BG_X[0] & 0xFF); break;
-					case 0x11: ret = (uint8_t)((ppu_BG_X[0] >> 8) & 0xFF); break;
-					case 0x12: ret = (uint8_t)(ppu_BG_Y[0] & 0xFF); break;
-					case 0x13: ret = (uint8_t)((ppu_BG_Y[0] >> 8) & 0xFF); break;
-					case 0x14: ret = (uint8_t)(ppu_BG_X[1] & 0xFF); break;
-					case 0x15: ret = (uint8_t)((ppu_BG_X[1] >> 8) & 0xFF); break;
-					case 0x16: ret = (uint8_t)(ppu_BG_Y[1] & 0xFF); break;
-					case 0x17: ret = (uint8_t)((ppu_BG_Y[1] >> 8) & 0xFF); break;
-					case 0x18: ret = (uint8_t)(ppu_BG_X[2] & 0xFF); break;
-					case 0x19: ret = (uint8_t)((ppu_BG_X[2] >> 8) & 0xFF); break;
-					case 0x1A: ret = (uint8_t)(ppu_BG_Y[2] & 0xFF); break;
-					case 0x1B: ret = (uint8_t)((ppu_BG_Y[2] >> 8) & 0xFF); break;
-					case 0x1C: ret = (uint8_t)(ppu_BG_X[3] & 0xFF); break;
-					case 0x1D: ret = (uint8_t)((ppu_BG_X[3] >> 8) & 0xFF); break;
-					case 0x1E: ret = (uint8_t)(ppu_BG_Y[3] & 0xFF); break;
-					case 0x1F: ret = (uint8_t)((ppu_BG_Y[3] >> 8) & 0xFF); break;
+					// Serial port control
+				case 0xFF02:
+					ret = ser_Read_Reg(addr);
+					break;
 
-					case 0x20: ret = (uint8_t)(ppu_BG_Rot_A[2] & 0xFF); break;
-					case 0x21: ret = (uint8_t)((ppu_BG_Rot_A[2] >> 8) & 0xFF); break;
-					case 0x22: ret = (uint8_t)(ppu_BG_Rot_B[2] & 0xFF); break;
-					case 0x23: ret = (uint8_t)((ppu_BG_Rot_B[2] >> 8) & 0xFF); break;
-					case 0x24: ret = (uint8_t)(ppu_BG_Rot_C[2] & 0xFF); break;
-					case 0x25: ret = (uint8_t)((ppu_BG_Rot_C[2] >> 8) & 0xFF); break;
-					case 0x26: ret = (uint8_t)(ppu_BG_Rot_D[2] & 0xFF); break;
-					case 0x27: ret = (uint8_t)((ppu_BG_Rot_D[2] >> 8) & 0xFF); break;
-					case 0x28: ret = (uint8_t)(ppu_BG_Ref_X[2] & 0xFF); break;
-					case 0x29: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 8) & 0xFF); break;
-					case 0x2A: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 16) & 0xFF); break;
-					case 0x2B: ret = (uint8_t)((ppu_BG_Ref_X[2] >> 24) & 0xFF); break;
-					case 0x2C: ret = (uint8_t)(ppu_BG_Ref_Y[2] & 0xFF); break;
-					case 0x2D: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 8) & 0xFF); break;
-					case 0x2E: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 16) & 0xFF); break;
-					case 0x2F: ret = (uint8_t)((ppu_BG_Ref_Y[2] >> 24) & 0xFF); break;
+					// Timer Registers
+				case 0xFF04:
+				case 0xFF05:
+				case 0xFF06:
+				case 0xFF07:
+					ret = tim_Read_Reg(addr);
+					break;
 
-					case 0x30: ret = (uint8_t)(ppu_BG_Rot_A[3] & 0xFF); break;
-					case 0x31: ret = (uint8_t)((ppu_BG_Rot_A[3] >> 8) & 0xFF); break;
-					case 0x32: ret = (uint8_t)(ppu_BG_Rot_B[3] & 0xFF); break;
-					case 0x33: ret = (uint8_t)((ppu_BG_Rot_B[3] >> 8) & 0xFF); break;
-					case 0x34: ret = (uint8_t)(ppu_BG_Rot_C[3] & 0xFF); break;
-					case 0x35: ret = (uint8_t)((ppu_BG_Rot_C[3] >> 8) & 0xFF); break;
-					case 0x36: ret = (uint8_t)(ppu_BG_Rot_D[3] & 0xFF); break;
-					case 0x37: ret = (uint8_t)((ppu_BG_Rot_D[3] >> 8) & 0xFF); break;
-					case 0x38: ret = (uint8_t)(ppu_BG_Ref_X[3] & 0xFF); break;
-					case 0x39: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 8) & 0xFF); break;
-					case 0x3A: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 16) & 0xFF); break;
-					case 0x3B: ret = (uint8_t)((ppu_BG_Ref_X[3] >> 24) & 0xFF); break;
-					case 0x3C: ret = (uint8_t)(ppu_BG_Ref_Y[3] & 0xFF); break;
-					case 0x3D: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 8) & 0xFF); break;
-					case 0x3E: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 16) & 0xFF); break;
-					case 0x3F: ret = (uint8_t)((ppu_BG_Ref_Y[3] >> 24) & 0xFF); break;
+					// Interrupt flags
+				case 0xFF0F:
+					//Console.WriteLine("FF0F " + cpu.TotalExecutedCycles);
+					ret = REG_FF0F_OLD;
+					break;
 
-					case 0x40: ret = (uint8_t)(ppu_WIN_Hor_0 & 0xFF); break;
-					case 0x41: ret = (uint8_t)((ppu_WIN_Hor_0 & 0xFF00) >> 8); break;
-					case 0x42: ret = (uint8_t)(ppu_WIN_Hor_1 & 0xFF); break;
-					case 0x43: ret = (uint8_t)((ppu_WIN_Hor_1 & 0xFF00) >> 8); break;
-					case 0x44: ret = (uint8_t)(ppu_WIN_Vert_0 & 0xFF); break;
-					case 0x45: ret = (uint8_t)((ppu_WIN_Vert_0 & 0xFF00) >> 8); break;
-					case 0x46: ret = (uint8_t)(ppu_WIN_Vert_1 & 0xFF); break;
-					case 0x47: ret = (uint8_t)((ppu_WIN_Vert_1 & 0xFF00) >> 8); break;
+					// audio regs
+				case 0xFF10:
+				case 0xFF11:
+				case 0xFF12:
+				case 0xFF13:
+				case 0xFF14:
+				case 0xFF16:
+				case 0xFF17:
+				case 0xFF18:
+				case 0xFF19:
+				case 0xFF1A:
+				case 0xFF1B:
+				case 0xFF1C:
+				case 0xFF1D:
+				case 0xFF1E:
+				case 0xFF20:
+				case 0xFF21:
+				case 0xFF22:
+				case 0xFF23:
+				case 0xFF24:
+				case 0xFF25:
+				case 0xFF26:
+				case 0xFF30:
+				case 0xFF31:
+				case 0xFF32:
+				case 0xFF33:
+				case 0xFF34:
+				case 0xFF35:
+				case 0xFF36:
+				case 0xFF37:
+				case 0xFF38:
+				case 0xFF39:
+				case 0xFF3A:
+				case 0xFF3B:
+				case 0xFF3C:
+				case 0xFF3D:
+				case 0xFF3E:
+				case 0xFF3F:
+					ret = audio.ReadReg(addr);
+					break;
 
-					case 0x48: ret = (uint8_t)(ppu_WIN_In & 0xFF); break;
-					case 0x49: ret = (uint8_t)((ppu_WIN_In & 0xFF00) >> 8); break;
-					case 0x4A: ret = (uint8_t)(ppu_WIN_Out & 0xFF); break;
-					case 0x4B: ret = (uint8_t)((ppu_WIN_Out & 0xFF00) >> 8); break;
-					case 0x4C: ret = (uint8_t)(ppu_Mosaic & 0xFF); break;
-					case 0x4D: ret = (uint8_t)((ppu_Mosaic & 0xFF00) >> 8); break;
+					// PPU Regs
+				case 0xFF40:
+				case 0xFF41:
+				case 0xFF42:
+				case 0xFF43:
+				case 0xFF44:
+				case 0xFF45:
+				case 0xFF46:
+				case 0xFF47:
+				case 0xFF48:
+				case 0xFF49:
+				case 0xFF4A:
+				case 0xFF4B:
+					ret = ppu.ReadReg(addr);
+					break;
 
-					case 0x50: ret = (uint8_t)(ppu_Special_FX & 0xFF); break;
-					case 0x51: ret = (uint8_t)((ppu_Special_FX & 0xFF00) >> 8); break;
-					case 0x52: ret = (uint8_t)(ppu_Alpha & 0xFF); break;
-					case 0x53: ret = (uint8_t)((ppu_Alpha & 0xFF00) >> 8); break;
-					case 0x54: ret = (uint8_t)(ppu_Bright & 0xFF); break;
-					case 0x55: ret = (uint8_t)((ppu_Bright & 0xFF00) >> 8); break;
-
-					default: ret = 0;
-				}
-			}
-			else if (addr < 0xB0)
-			{
-				if (addr < 0x8C)
-				{
-					ret = snd_Audio_Regs[addr - 0x60];
-				}
-				else if ((addr < 0xA0) && (addr >= 0x90))
-				{
-					int ofst = (int)(snd_Wave_Bank + addr - 0x90);
-
-					ret = snd_Wave_RAM[ofst];
-				}
-				else if (addr < 0xA4)
-				{
-					ret = snd_FIFO_A_Data[(addr & 3)];
-				}
-				else if (addr < 0xA8)
-				{
-					ret = snd_FIFO_B_Data[(addr & 3)];
-				}
-
-				return ret;
-			}
-			else if (addr < 0x100)
-			{
-				switch (addr)
-				{
-					case 0xB0: ret = (uint8_t)(dma_SRC[0] & 0xFF); break;
-					case 0xB1: ret = (uint8_t)((dma_SRC[0] >> 8) & 0xFF); break;
-					case 0xB2: ret = (uint8_t)((dma_SRC[0] >> 16) & 0xFF); break;
-					case 0xB3: ret = (uint8_t)((dma_SRC[0] >> 24) & 0xFF); break;
-					case 0xB4: ret = (uint8_t)(dma_DST[0] & 0xFF); break;
-					case 0xB5: ret = (uint8_t)((dma_DST[0] >> 8) & 0xFF); break;
-					case 0xB6: ret = (uint8_t)((dma_DST[0] >> 16) & 0xFF); break;
-					case 0xB7: ret = (uint8_t)((dma_DST[0] >> 24) & 0xFF); break;
-					case 0xB8: ret = (uint8_t)(dma_CNT[0] & 0xFF); break;
-					case 0xB9: ret = (uint8_t)((dma_CNT[0] >> 8) & 0xFF); break;
-					case 0xBA: ret = (uint8_t)(dma_CTRL[0] & 0xFF); break;
-					case 0xBB: ret = (uint8_t)((dma_CTRL[0] >> 8) & 0xFF); break;
-
-					case 0xBC: ret = (uint8_t)(dma_SRC[1] & 0xFF); break;
-					case 0xBD: ret = (uint8_t)((dma_SRC[1] >> 8) & 0xFF); break;
-					case 0xBE: ret = (uint8_t)((dma_SRC[1] >> 16) & 0xFF); break;
-					case 0xBF: ret = (uint8_t)((dma_SRC[1] >> 24) & 0xFF); break;
-					case 0xC0: ret = (uint8_t)(dma_DST[1] & 0xFF); break;
-					case 0xC1: ret = (uint8_t)((dma_DST[1] >> 8) & 0xFF); break;
-					case 0xC2: ret = (uint8_t)((dma_DST[1] >> 16) & 0xFF); break;
-					case 0xC3: ret = (uint8_t)((dma_DST[1] >> 24) & 0xFF); break;
-					case 0xC4: ret = (uint8_t)(dma_CNT[1] & 0xFF); break;
-					case 0xC5: ret = (uint8_t)((dma_CNT[1] >> 8) & 0xFF); break;
-					case 0xC6: ret = (uint8_t)(dma_CTRL[1] & 0xFF); break;
-					case 0xC7: ret = (uint8_t)((dma_CTRL[1] >> 8) & 0xFF); break;
-
-					case 0xC8: ret = (uint8_t)(dma_SRC[2] & 0xFF); break;
-					case 0xC9: ret = (uint8_t)((dma_SRC[2] >> 8) & 0xFF); break;
-					case 0xCA: ret = (uint8_t)((dma_SRC[2] >> 16) & 0xFF); break;
-					case 0xCB: ret = (uint8_t)((dma_SRC[2] >> 24) & 0xFF); break;
-					case 0xCC: ret = (uint8_t)(dma_DST[2] & 0xFF); break;
-					case 0xCD: ret = (uint8_t)((dma_DST[2] >> 8) & 0xFF); break;
-					case 0xCE: ret = (uint8_t)((dma_DST[2] >> 16) & 0xFF); break;
-					case 0xCF: ret = (uint8_t)((dma_DST[2] >> 24) & 0xFF); break;
-					case 0xD0: ret = (uint8_t)(dma_CNT[2] & 0xFF); break;
-					case 0xD1: ret = (uint8_t)((dma_CNT[2] >> 8) & 0xFF); break;
-					case 0xD2: ret = (uint8_t)(dma_CTRL[2] & 0xFF); break;
-					case 0xD3: ret = (uint8_t)((dma_CTRL[2] >> 8) & 0xFF); break;
-
-					case 0xD4: ret = (uint8_t)(dma_SRC[3] & 0xFF); break;
-					case 0xD5: ret = (uint8_t)((dma_SRC[3] >> 8) & 0xFF); break;
-					case 0xD6: ret = (uint8_t)((dma_SRC[3] >> 16) & 0xFF); break;
-					case 0xD7: ret = (uint8_t)((dma_SRC[3] >> 24) & 0xFF); break;
-					case 0xD8: ret = (uint8_t)(dma_DST[3] & 0xFF); break;
-					case 0xD9: ret = (uint8_t)((dma_DST[3] >> 8) & 0xFF); break;
-					case 0xDA: ret = (uint8_t)((dma_DST[3] >> 16) & 0xFF); break;
-					case 0xDB: ret = (uint8_t)((dma_DST[3] >> 24) & 0xFF); break;
-					case 0xDC: ret = (uint8_t)(dma_CNT[3] & 0xFF); break;
-					case 0xDD: ret = (uint8_t)((dma_CNT[3] >> 8) & 0xFF); break;
-					case 0xDE: ret = (uint8_t)(dma_CTRL[3] & 0xFF); break;
-					case 0xDF: ret = (uint8_t)((dma_CTRL[3] >> 8) & 0xFF); break;
-
-					default: ret = 0;
-				}
-			}
-			else if (addr < 0x120)
-			{
-				if (addr < 0x110)
-				{
-					switch (addr)
+					// Speed Control for GBC
+				case 0xFF4D:
+					if (GBC_compat)
 					{
-						case 0x100: ret = (uint8_t)(tim_Reload[0] & 0xFF); break;
-						case 0x101: ret = (uint8_t)((tim_Reload[0] & 0xFF00) >> 8); break;
-						case 0x102: ret = (uint8_t)(tim_Control[0] & 0xFF); break;
-						case 0x103: ret = (uint8_t)((tim_Control[0] & 0xFF00) >> 8); break;
-
-						case 0x104: ret = (uint8_t)(tim_Reload[1] & 0xFF); break;
-						case 0x105: ret = (uint8_t)((tim_Reload[1] & 0xFF00) >> 8); break;
-						case 0x106: ret = (uint8_t)(tim_Control[1] & 0xFF); break;
-						case 0x107: ret = (uint8_t)((tim_Control[1] & 0xFF00) >> 8); break;
-
-						case 0x108: ret = (uint8_t)(tim_Reload[2] & 0xFF); break;
-						case 0x109: ret = (uint8_t)((tim_Reload[2] & 0xFF00) >> 8); break;
-						case 0x10A: ret = (uint8_t)(tim_Control[2] & 0xFF); break;
-						case 0x10B: ret = (uint8_t)((tim_Control[2] & 0xFF00) >> 8); break;
-
-						case 0x10C: ret = (uint8_t)(tim_Reload[3] & 0xFF); break;
-						case 0x10D: ret = (uint8_t)((tim_Reload[3] & 0xFF00) >> 8); break;
-						case 0x10E: ret = (uint8_t)(tim_Control[3] & 0xFF); break;
-						case 0x10F: ret = (uint8_t)((tim_Control[3] & 0xFF00) >> 8); break;
+						ret = (uint8_t)(((double_speed ? 1 : 0) << 7) | (speed_switch ? 1 : 0) | 0x7E);
 					}
-				}
-				else
-				{
-					return 0;
-				}
+					else
+					{
+						ret = 0xFF;
+					}
+					break;
+
+				case 0xFF4F: // VBK
+					ret = (uint8_t)(0xFE | VRAM_Bank);
+					break;
+
+					// Bios control register. Not sure if it is readable
+				case 0xFF50:
+					ret = 0xFF;
+					break;
+
+					// PPU Regs for GBC
+				case 0xFF51:
+				case 0xFF52:
+				case 0xFF53:
+				case 0xFF54:
+				case 0xFF55:
+					if (GBC_compat)
+					{
+						ret = ppu.ReadReg(addr);
+					}
+					else
+					{
+						ret = 0xFF;
+					}
+					break;
+
+				case 0xFF56:
+					if (GBC_compat)
+					{
+						// can receive data
+						if ((IR_reg & 0xC0) == 0xC0)
+						{
+							ret = IR_reg;
+						}
+						else
+						{
+							ret = (byte)(IR_reg | 2);
+						}
+					}
+					else
+					{
+						ret = 0xFF;
+					}
+					break;
+
+				case 0xFF68:
+				case 0xFF69:
+				case 0xFF6A:
+				case 0xFF6B:
+					ret = ppu.ReadReg(addr);
+					break;
+
+					// Ram bank for GBC
+				case 0xFF70:
+					if (GBC_compat)
+					{
+						ret = (uint8_t)(0xF8 | RAM_Bank_ret);
+					}
+					else
+					{
+						ret = 0xFF;
+					}
+					break;
+
+				case 0xFF6C:
+					if (GBC_compat) { ret = undoc_6C; }
+					else { ret = 0xFF; }
+					break;
+
+				case 0xFF72:
+					ret = undoc_72;
+					break;
+
+				case 0xFF73:
+					ret = undoc_73;
+					break;
+
+				case 0xFF74:
+					if (GBC_compat) { ret = undoc_74; }
+					else { ret = 0xFF; }
+					break;
+
+				case 0xFF75:
+					ret = undoc_75;
+					break;
+
+				case 0xFF76:
+					uint8_t ret1 = audio.SQ1_output >= Audio.DAC_OFST
+						? (byte)(audio.SQ1_output - Audio.DAC_OFST)
+						: (byte)0;
+					uint8_t ret2 = audio.SQ2_output >= Audio.DAC_OFST
+						? (byte)(audio.SQ2_output - Audio.DAC_OFST)
+						: (byte)0;
+					ret = (byte)(ret1 | (ret2 << 4));
+					break;
+
+				case 0xFF77:
+					uint8_t retN = audio.NOISE_output >= Audio.DAC_OFST
+						? (byte)(audio.NOISE_output - Audio.DAC_OFST)
+						: (byte)0;
+					uint8_t retW = audio.WAVE_output >= Audio.DAC_OFST
+						? (byte)(audio.WAVE_output - Audio.DAC_OFST)
+						: (byte)0;
+					ret = (byte)(retN | (retW << 4));
+					break;
+
+					// interrupt control register
+				case 0xFFFF:
+					ret = REG_FFFF;
+					break;
+
+				default:
+					ret = 0xFF;
+					break;
+
 			}
-			else if (addr < 0x200)
+			return ret;
+		}
+
+		void Write_Registers(uint16_t addr, uint8_t value)
+		{
+			switch (addr)
 			{
-				switch (addr)
-				{
-					case 0x120: ret = (uint8_t)(ser_Data_0 & 0xFF); break;
-					case 0x121: ret = (uint8_t)((ser_Data_0 & 0xFF00) >> 8); break;
-					case 0x122: ret = (uint8_t)(ser_Data_1 & 0xFF); break;
-					case 0x123: ret = (uint8_t)((ser_Data_1 & 0xFF00) >> 8); break;
-					case 0x124: ret = (uint8_t)(ser_Data_2 & 0xFF); break;
-					case 0x125: ret = (uint8_t)((ser_Data_2 & 0xFF00) >> 8); break;
-					case 0x126: ret = (uint8_t)(ser_Data_3 & 0xFF); break;
-					case 0x127: ret = (uint8_t)((ser_Data_3 & 0xFF00) >> 8); break;
-					case 0x128: ret = (uint8_t)(ser_CTRL & 0xFF); break;
-					case 0x129: ret = (uint8_t)((ser_CTRL & 0xFF00) >> 8); break;
-					case 0x12A: ret = (uint8_t)(ser_Data_M & 0xFF); break;
-					case 0x12B: ret = (uint8_t)((ser_Data_M & 0xFF00) >> 8); break;
+				// select input
+				case 0xFF00:
+					input_register &= 0xCF;
+					input_register |= (uint8_t)(value & 0x30); // top 2 bits always 1
 
-					case 0x130: ret = (uint8_t)(controller_state & 0xFF); break;
-					case 0x131: ret = (uint8_t)((controller_state & 0xFF00) >> 8); break;
-					case 0x132: ret = (uint8_t)(key_CTRL & 0xFF); break;
-					case 0x133: ret = (uint8_t)((key_CTRL & 0xFF00) >> 8); break;
+					// check for high to low transitions that trigger IRQs
+					uint8_t contr_prev = input_register;
 
-					case 0x134: ret = (uint8_t)(ser_Mode & 0xFF); break;
-					case 0x135: ret = (uint8_t)((ser_Mode & 0xFF00) >> 8); break;
-					case 0x136: ret = 0; break;
-					case 0x137: ret = 0; break;
+					input_register &= 0xF0;
+					if ((input_register & 0x30) == 0x20)
+					{
+						input_register |= (uint8_t)(controller_state & 0xF);
+					}
+					else if ((input_register & 0x30) == 0x10)
+					{
+						input_register |= (uint8_t)((controller_state & 0xF0) >> 4);
+					}
+					else if ((input_register & 0x30) == 0x00)
+					{
+						// if both polls are set, then a bit is zero if either or both pins are zero
+						uint8_t temp = (uint8_t)((controller_state & 0xF) & ((controller_state & 0xF0) >> 4));
+						input_register |= temp;
+					}
+					else
+					{
+						input_register |= 0xF;
+					}
 
-					case 0x140: ret = (uint8_t)(ser_CTRL_J & 0xFF); break;
-					case 0x141: ret = (uint8_t)((ser_CTRL_J & 0xFF00) >> 8); break;
-					case 0x142: ret = 0; break;
-					case 0x143: ret = 0; break;
+					// check for interrupts
+					// if an interrupt is triggered, it is delayed by 4 cycles
+					if (((contr_prev & 8) > 0) && ((input_register & 8) == 0) ||
+						((contr_prev & 4) > 0) && ((input_register & 4) == 0) ||
+						((contr_prev & 2) > 0) && ((input_register & 2) == 0) ||
+						((contr_prev & 1) > 0) && ((input_register & 1) == 0))
+					{
+						controller_delay_cd = 4; delays_to_process = true;
+					}
 
-					case 0x150: ret = (uint8_t)(ser_RECV_J & 0xFF); break;
-					case 0x151: ret = (uint8_t)((ser_RECV_J & 0xFF00) >> 8); break;
-					case 0x152: ret = (uint8_t)((ser_RECV_J & 0xFF0000) >> 16); break;
-					case 0x153: ret = (uint8_t)((ser_RECV_J & 0xFF000000) >> 24); break;
-					case 0x154: ret = (uint8_t)(ser_TRANS_J & 0xFF); break;
-					case 0x155: ret = (uint8_t)((ser_TRANS_J & 0xFF00) >> 8); break;
-					case 0x156: ret = (uint8_t)((ser_TRANS_J & 0xFF0000) >> 16); break;
-					case 0x157: ret = (uint8_t)((ser_TRANS_J & 0xFF000000) >> 24); break;
-					case 0x158: ret = (uint8_t)(ser_STAT_J & 0xFF); break;
-					case 0x159: ret = (uint8_t)((ser_STAT_J & 0xFF00) >> 8); break;
-					case 0x15A: ret = 0; break;
-					case 0x15B: ret = 0; break;
+					break;
 
-					default: ret = 0;
-				}
+					// Serial data port
+				case 0xFF01:
+					ser_Write_Reg(addr, value);
+					break;
+
+					// Serial port control
+				case 0xFF02:
+					ser_Write_Reg(addr, value);
+					break;
+
+					// Timer Registers
+				case 0xFF04:
+				case 0xFF05:
+				case 0xFF06:
+				case 0xFF07:
+					tim_Write_Reg(addr, value);
+					break;
+
+					// Interrupt flags
+				case 0xFF0F:
+					REG_FF0F = (uint8_t)(0xE0 | value);
+
+					// check if enabling any of the bits triggered an IRQ
+					for (int i = 0; i < 5; i++)
+					{
+						if (REG_FFFF.Bit(i) && REG_FF0F.Bit(i))
+						{
+							cpu.FlagI = true;
+						}
+					}
+
+					// if no bits are in common between flags and enables, de-assert the IRQ
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu.FlagI = false; }
+					break;
+
+					// audio regs
+				case 0xFF10:
+				case 0xFF11:
+				case 0xFF12:
+				case 0xFF13:
+				case 0xFF14:
+				case 0xFF16:
+				case 0xFF17:
+				case 0xFF18:
+				case 0xFF19:
+				case 0xFF1A:
+				case 0xFF1B:
+				case 0xFF1C:
+				case 0xFF1D:
+				case 0xFF1E:
+				case 0xFF20:
+				case 0xFF21:
+				case 0xFF22:
+				case 0xFF23:
+				case 0xFF24:
+				case 0xFF25:
+				case 0xFF26:
+				case 0xFF30:
+				case 0xFF31:
+				case 0xFF32:
+				case 0xFF33:
+				case 0xFF34:
+				case 0xFF35:
+				case 0xFF36:
+				case 0xFF37:
+				case 0xFF38:
+				case 0xFF39:
+				case 0xFF3A:
+				case 0xFF3B:
+				case 0xFF3C:
+				case 0xFF3D:
+				case 0xFF3E:
+				case 0xFF3F:
+					audio.WriteReg(addr, value);
+					break;
+
+					// PPU Regs
+				case 0xFF40:
+				case 0xFF41:
+				case 0xFF42:
+				case 0xFF43:
+				case 0xFF44:
+				case 0xFF45:
+				case 0xFF46:
+				case 0xFF47:
+				case 0xFF48:
+				case 0xFF49:
+				case 0xFF4A:
+				case 0xFF4B:
+					ppu.WriteReg(addr, value);
+					break;
+
+					// GBC compatibility register (I think)
+				case 0xFF4C:
+					if ((value != 0xC0) && (value != 0x80) && (GB_bios_register == 0))// && (value != 0xFF) && (value != 0x04))
+					{
+						GBC_compat = false;
+					}
+					Console.Write("GBC Compatibility? ");
+					Console.WriteLine(value);
+					break;
+
+					// Speed Control for GBC
+				case 0xFF4D:
+					if (GBC_compat)
+					{
+						speed_switch = (value & 1) > 0;
+					}
+					break;
+
+					// VBK
+				case 0xFF4F:
+					if (GBC_compat)
+					{
+						VRAM_Bank = (uint8_t)(value & 1);
+					}
+					break;
+
+					// Bios control register. Writing 1 permanently disables BIOS until a power cycle occurs
+				case 0xFF50:
+					// Console.WriteLine(value);
+					if (GB_bios_register == 0)
+					{
+						GB_bios_register = value;
+						if (!GBC_compat) { ppu.pal_change_blocked = true; RAM_Bank = 1; RAM_Bank_ret = 0; }
+					}
+					break;
+
+					// PPU Regs for GBC
+				case 0xFF51:
+				case 0xFF52:
+				case 0xFF53:
+				case 0xFF54:
+				case 0xFF55:
+					if (GBC_compat)
+					{
+						ppu.WriteReg(addr, value);
+					}
+					break;
+
+				case 0xFF56:
+					IR_reg = (uint8_t)((value & 0xC1) | (IR_reg & 0x3E));
+
+					// send IR signal out
+					if ((IR_reg & 0x1) == 0x1) { IR_signal = (byte)(0 | IR_mask); }
+					else { IR_signal = 2; }
+
+					// receive own signal if IR on and receive on
+					if ((IR_reg & 0xC1) == 0xC1) { IR_self = (byte)(0 | IR_mask); }
+					else { IR_self = 2; }
+
+					IR_write = 8;
+					break;
+
+				case 0xFF68:
+				case 0xFF69:
+				case 0xFF6A:
+				case 0xFF6B:
+					ppu.WriteReg(addr, value);
+					break;
+
+					// RAM Bank in GBC mode
+				case 0xFF70:
+					if (GBC_compat)
+					{
+						RAM_Bank = value & 7;
+						RAM_Bank_ret = RAM_Bank;
+						if (RAM_Bank == 0) { RAM_Bank = 1; }
+					}
+					break;
+
+				case 0xFF6C:
+					if (GBC_compat) { undoc_6C |= (uint8_t)(value & 1); }
+					break;
+
+				case 0xFF72:
+					undoc_72 = value;
+					break;
+
+				case 0xFF73:
+					undoc_73 = value;
+					break;
+
+				case 0xFF74:
+					if (GBC_compat) { undoc_74 = value; }
+					break;
+
+				case 0xFF75:
+					undoc_75 |= (uint8_t)(value & 0x70);
+					break;
+
+				case 0xFF76:
+					// read only
+					break;
+
+				case 0xFF77:
+					// read only
+					break;
+
+					// interrupt control register
+				case 0xFFFF:
+					REG_FFFF = value;
+
+					// check if enabling any of the bits triggered an IRQ
+					for (int i = 0; i < 5; i++)
+					{
+						if (REG_FFFF.Bit(i) && REG_FF0F.Bit(i))
+						{
+							cpu.FlagI = true;
+						}
+					}
+
+					// if no bits are in common between flags and enables, de-assert the IRQ
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu.FlagI = false; }
+					break;
+
+				default:
+					//Console.WriteLine(addr + " " + value);
+					break;
 			}
-			else
-			{
-				switch (addr)
-				{
-					case 0x200: ret = (uint8_t)(INT_EN & 0xFF); break;
-					case 0x201: ret = (uint8_t)((INT_EN & 0xFF00) >> 8); break;
-					case 0x202: ret = (uint8_t)(INT_Flags & 0xFF); break;
-					case 0x203: ret = (uint8_t)((INT_Flags & 0xFF00) >> 8); break;
-					case 0x204: ret = (uint8_t)(Wait_CTRL & 0xFF); break;
-					case 0x205: ret = (uint8_t)((Wait_CTRL & 0xFF00) >> 8); break;
-					case 0x206: ret = 0; break;
-					case 0x207: ret = 0; break;
-					case 0x208: ret = (uint8_t)(INT_Master & 0xFF); break;
-					case 0x209: ret = (uint8_t)((INT_Master & 0xFF00) >> 8); break;
-					case 0x20A: ret = 0; break;
-					case 0x20B: ret = 0; break;
+		}
 
-					case 0x300: ret = Post_Boot; break;
-					case 0x301: ret = Halt_CTRL; break;
-					case 0x302: ret = 0; break;
-					case 0x303: ret = 0; break;
+		void Register_Reset()
+		{
+			input_register = 0xCF; // not reading any input
 
-					default: ret = 0;
-				}
-			}
+			REG_FFFF = 0;
+			REG_FF0F = 0xE0;
+			REG_FF0F_OLD = 0xE0;
+
+			//undocumented registers
+			undoc_6C = 0xFE;
+			undoc_72 = 0;
+			undoc_73 = 0;
+			undoc_74 = 0;
+			undoc_75 = 0x8F;
+			undoc_76 = 0;
+			undoc_77 = 0;
+		}
+
+		uint8_t Get_Registers_Internal(uint16_t addr)
+		{
+			uint8_t ret = 0;
 
 			return ret;
 		}
 
-		void Update_INT_EN(uint16_t value)
+		uint8_t Peek_Registers_8(uint16_t addr)
 		{
-			// changes to IRQ that happen due to writes should take place in 3 cycles
-			delays_to_process = true;
-			IRQ_Write_Delay = true;
-			IRQ_Delays = true;
-
-			INT_EN = value;
-		}
-
-		void Update_INT_Flags(uint16_t value)
-		{
-			// writing one acknowledges interrupt at that bit
-			for (int i = 0; i < 14; i++)
-			{
-				if ((value & (1 << i)) == (1 << i))
-				{
-					INT_Flags &= (uint16_t)(~(1 << i));
-
-					// if a flag is set on the same cycle a write occurs, it is cleared
-					INT_Flags_Gather &= (uint16_t)(~(1 << i));
-				}
-			}
-
-			// changes to IRQ that happen due to writes should take place in 3 cycles
-			delays_to_process = true;
-			IRQ_Write_Delay = true;
-			IRQ_Delays = true;
-		}
-
-		void Update_INT_Master(uint16_t value)
-		{
-			INT_Master_On = (value & 1) == 1;
-
-			// changes to IRQ that happen due to writes should take place in 3 cycles
-			delays_to_process = true;
-			IRQ_Write_Delay = true;
-			IRQ_Delays = true;
-
-			INT_Master = value;
-		}
-
-		void Update_Wait_CTRL(uint16_t value)
-		{
-			switch (value & 3)
-			{
-				case 0: SRAM_Waits = 4; break;
-				case 1: SRAM_Waits = 3; break;
-				case 2: SRAM_Waits = 2; break;
-				case 3: SRAM_Waits = 8; break;
-			}
-
-			switch ((value >> 2) & 3)
-			{
-				case 0: ROM_Waits_0_N = 4; break;
-				case 1: ROM_Waits_0_N = 3; break;
-				case 2: ROM_Waits_0_N = 2; break;
-				case 3: ROM_Waits_0_N = 8; break;
-			}
-
-			switch ((value >> 4) & 1)
-			{
-				case 0: ROM_Waits_0_S = 2; break;
-				case 1: ROM_Waits_0_S = 1; break;
-			}
-
-			switch ((value >> 5) & 3)
-			{
-				case 0: ROM_Waits_1_N = 4; break;
-				case 1: ROM_Waits_1_N = 3; break;
-				case 2: ROM_Waits_1_N = 2; break;
-				case 3: ROM_Waits_1_N = 8; break;
-			}
-
-			switch ((value >> 7) & 1)
-			{
-				case 0: ROM_Waits_1_S = 4; break;
-				case 1: ROM_Waits_1_S = 1; break;
-			}
-
-			switch ((value >> 8) & 3)
-			{
-				case 0: ROM_Waits_2_N = 4; break;
-				case 1: ROM_Waits_2_N = 3; break;
-				case 2: ROM_Waits_2_N = 2; break;
-				case 3: ROM_Waits_2_N = 8; break;
-			}
-
-			switch ((value >> 10) & 1)
-			{
-				case 0: ROM_Waits_2_S = 8; break;
-				case 1: ROM_Waits_2_S = 1; break;
-			}
-
-			pre_Reg_Write(value);
-
-			Wait_CTRL = (uint16_t)(value & 0x5FFF);
-		
-			//Message_String = to_string(value) + " " + to_string(CycleCount);
-
-			//MessageCallback(Message_String.length());			
-		}
-
-
-		void Update_Post_Boot(uint8_t value)
-		{
-			if (Post_Boot == 0)
-			{
-				Post_Boot = value;
-			}
-		}
-
-		void Update_Halt_CTRL(uint8_t value)
-		{
-			// appears to only be addressable from BIOS, see haltcnt.gba, timing of first test indicates no halting, which is written from outside BIOS
-			if (cpu_Regs[15] <= 0x3FFF)
-			{
-				if ((value & 0x80) == 0)
-				{
-					Halt_Enter = true;
-					Halt_Enter_cd = 2;
-					IRQ_Delays = true;
-					delays_to_process = true;
-				}
-				else
-				{
-					if (!is_linked_system && !Is_GBP)
-					{
-						stopped = true;
-						// use this to end the frame
-						VBlank_Rise = true;
-					}
-				}
-			}
-		}
-
-
-		uint8_t Peek_Registers_8(uint8_t addr)
-		{
-			if (addr < 0x60)
-			{
-				return ppu_Read_Reg_8(addr);
-			}
-			else if (addr < 0xB0)
-			{
-				return snd_Read_Reg_8(addr);
-			}
-			else if (addr < 0x100)
-			{
-				return dma_Read_Reg_8(addr);
-			}
-			else if (addr < 0x120)
-			{
-				return tim_Read_Reg_8(addr);
-			}
-			else if (addr < 0x200)
-			{
-				return ser_Read_Reg_8(addr);
-			}
-
 			uint8_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x200: ret = (uint8_t)(INT_EN & 0xFF); break;
-				case 0x201: ret = (uint8_t)((INT_EN & 0xFF00) >> 8); break;
-				case 0x202: ret = (uint8_t)(INT_Flags & 0xFF); break;
-				case 0x203: ret = (uint8_t)((INT_Flags & 0xFF00) >> 8); break;
-				case 0x204: ret = (uint8_t)(Wait_CTRL & 0xFF); break;
-				case 0x205: ret = (uint8_t)((Wait_CTRL & 0xFF00) >> 8); break;
-
-				case 0x208: ret = (uint8_t)(INT_Master & 0xFF); break;
-				case 0x209: ret = (uint8_t)((INT_Master & 0xFF00) >> 8); break;
-
-				case 0x300: ret = Post_Boot; break;
-				case 0x301: ret = Halt_CTRL; break;
-
-				default: ret = 0xFF; break;
-			}
 
 			return ret;
 		}
@@ -5545,7 +5198,7 @@ namespace GBHawk
 			}
 		}
 
-		void Reset()
+		void tim_Reset()
 		{
 			divider_reg = 0xFFFE;
 			timer_reload = 0;
@@ -8489,99 +8142,34 @@ namespace GBHawk
 
 	#pragma endregion
 
+
 	#pragma region State Save / Load for System
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(Is_Lag, saver);
 			saver = bool_saver(VBlank_Rise, saver);
-			saver = bool_saver(All_RAM_Disable, saver);
-			saver = bool_saver(WRAM_Enable, saver);
-			saver = bool_saver(INT_Master_On, saver);
-			saver = bool_saver(Cart_RAM_Present, saver);
-			saver = bool_saver(Is_EEPROM, saver);
-			saver = bool_saver(EEPROM_Wiring, saver);
 
-			saver = bool_saver(delays_to_process, saver);
-			saver = bool_saver(IRQ_Write_Delay, saver);
-
-			saver = bool_saver(VRAM_32_Check, saver);
-			saver = bool_saver(PALRAM_32_Check, saver);
-			saver = bool_saver(VRAM_32_Delay, saver);
-			saver = bool_saver(PALRAM_32_Delay, saver);
-			saver = bool_saver(IRQ_Delays, saver);
-			saver = bool_saver(Misc_Delays, saver);
-			saver = bool_saver(FIFO_DMA_A_Delay, saver);
-			saver = bool_saver(FIFO_DMA_B_Delay, saver);
-			saver = bool_saver(DMA_Any_Start, saver);
-			saver = bool_saver(DMA_Any_IRQ, saver);
-			saver = bool_saver(Halt_Enter, saver);
-			saver = bool_saver(Halt_Leave, saver);
-			saver = bool_saver(GBP_Mode_Enabled, saver);
-			saver = bool_saver(Rumble_State, saver);
-
-			saver = byte_saver(Post_Boot, saver);
-			saver = byte_saver(Halt_CTRL, saver);
 			saver = byte_saver(ext_num, saver);
 
-			saver = short_saver(INT_EN, saver);
-			saver = short_saver(INT_Flags, saver);
-			saver = short_saver(INT_Master, saver);
-			saver = short_saver(Wait_CTRL, saver);
-			saver = short_saver(INT_Flags_Gather, saver);
-			saver = short_saver(INT_Flags_Use, saver);
+			saver = byte_saver(GB_bios_register, saver);
+			saver = byte_saver(input_register, saver);
+			saver = byte_saver(REG_FFFF, saver);
+			saver = byte_saver(REG_FF0F, saver);
+			saver = byte_saver(REG_FF0F_OLD, saver);
 
-			saver = short_saver(controller_state, saver);
-			saver = short_saver(controller_state_old, saver);
-			saver = short_saver(PALRAM_32W_Value, saver);
-			saver = short_saver(VRAM_32W_Value, saver);
-			saver = short_saver(FIFO_DMA_A_cd, saver);
-			saver = short_saver(FIFO_DMA_B_cd, saver);
-			saver = short_saver(Halt_Enter_cd, saver);
-			saver = short_saver(Halt_Leave_cd, saver);
-			saver = short_saver(Halt_Held_CPU_Instr, saver);
+			saver = byte_saver(undoc_6C, saver);
+			saver = byte_saver(undoc_72, saver);
+			saver = byte_saver(undoc_73, saver);
+			saver = byte_saver(undoc_74, saver);
+			saver = byte_saver(undoc_75, saver);
+			saver = byte_saver(undoc_76, saver);
+			saver = byte_saver(undoc_77, saver);
 
-			saver = int_saver(PALRAM_32W_Addr, saver);
-			saver = int_saver(VRAM_32W_Addr, saver);
-			saver = int_saver(Memory_CTRL, saver);
-			saver = int_saver(ROM_Length, saver);
-
-			saver = int_saver(Last_BIOS_Read, saver);
-
-			saver = int_saver(WRAM_Waits, saver);
-			saver = int_saver(SRAM_Waits, saver);
-
-			saver = int_saver(ROM_Waits_0_N, saver);
-			saver = int_saver(ROM_Waits_1_N, saver);
-			saver = int_saver(ROM_Waits_2_N, saver);
-			saver = int_saver(ROM_Waits_0_S, saver);
-			saver = int_saver(ROM_Waits_1_S, saver);
-			saver = int_saver(ROM_Waits_2_S, saver);
-
-			saver = bool_array_saver(DMA_Start_Delay, saver, 4);
-			saver = bool_array_saver(DMA_IRQ_Delay, saver, 4);
-			
-			saver = byte_array_saver(WRAM, saver, 0x40000);
-			saver = byte_array_saver(IWRAM, saver, 0x8000);
+			saver = byte_array_saver(RAM, saver, 0x8000);
+			saver = byte_array_saver(ZP_RAM, saver, 0x80);
 			saver = byte_array_saver(PALRAM, saver, 0x400);
-			saver = byte_array_saver(VRAM, saver, 0x18000);
-			saver = byte_array_saver(OAM, saver, 0x400);
-
-			// Prefetcher
-			saver = bool_saver(pre_Cycle_Glitch, saver);
-			saver = bool_saver(pre_Run, saver);
-			saver = bool_saver(pre_Enable, saver);
-			saver = bool_saver(pre_Force_Non_Seq, saver);
-			saver = bool_saver(pre_Buffer_Was_Full, saver);
-			saver = bool_saver(pre_Boundary_Reached, saver);
-			saver = bool_saver(pre_Following, saver);
-			saver = bool_saver(pre_Inactive, saver);
-
-			saver = int_saver(pre_Read_Addr, saver);
-			saver = int_saver(pre_Check_Addr, saver);
-			saver = int_saver(pre_Buffer_Cnt, saver);
-
-			saver = int_saver(pre_Fetch_Cnt, saver);
-			saver = int_saver(pre_Fetch_Wait, saver);
+			saver = byte_array_saver(VRAM, saver, 0x4000);
+			saver = byte_array_saver(OAM, saver, 0xA0);
 
 			if (Cart_RAM_Length != 0)
 			{
@@ -8602,94 +8190,28 @@ namespace GBHawk
 		{
 			loader = bool_loader(&Is_Lag, loader);
 			loader = bool_loader(&VBlank_Rise, loader);
-			loader = bool_loader(&All_RAM_Disable, loader);
-			loader = bool_loader(&WRAM_Enable, loader);
-			loader = bool_loader(&INT_Master_On, loader);
-			loader = bool_loader(&Cart_RAM_Present, loader);
-			loader = bool_saver(&Is_EEPROM, loader);
-			loader = bool_saver(&EEPROM_Wiring, loader);
 
-			loader = bool_loader(&delays_to_process, loader);
-			loader = bool_loader(&IRQ_Write_Delay, loader);
-
-			loader = bool_loader(&VRAM_32_Check, loader);
-			loader = bool_loader(&PALRAM_32_Check, loader);
-			loader = bool_loader(&VRAM_32_Delay, loader);
-			loader = bool_loader(&PALRAM_32_Delay, loader);
-			loader = bool_loader(&IRQ_Delays, loader);
-			loader = bool_loader(&Misc_Delays, loader);
-			loader = bool_loader(&FIFO_DMA_A_Delay, loader);
-			loader = bool_loader(&FIFO_DMA_B_Delay, loader);
-			loader = bool_loader(&DMA_Any_Start, loader);
-			loader = bool_loader(&DMA_Any_IRQ, loader);
-			loader = bool_loader(&Halt_Enter, loader);
-			loader = bool_loader(&Halt_Leave, loader);
-			loader = bool_loader(&GBP_Mode_Enabled, loader);
-			loader = bool_loader(&Rumble_State, loader);
-
-			loader = byte_loader(&Post_Boot, loader);
-			loader = byte_loader(&Halt_CTRL, loader);
 			loader = byte_loader(&ext_num, loader);
 
-			loader = short_loader(&INT_EN, loader);
-			loader = short_loader(&INT_Flags, loader);
-			loader = short_loader(&INT_Master, loader);
-			loader = short_loader(&Wait_CTRL, loader);
-			loader = short_loader(&INT_Flags_Gather, loader);
-			loader = short_loader(&INT_Flags_Use, loader);
+			loader = byte_loader(&GB_bios_register, loader);
+			loader = byte_loader(&input_register, loader);
+			loader = byte_loader(&REG_FFFF, loader);
+			loader = byte_loader(&REG_FF0F, loader);
+			loader = byte_loader(&REG_FF0F_OLD, loader);
 
-			loader = short_loader(&controller_state, loader);
-			loader = short_loader(&controller_state_old, loader);
-			loader = short_loader(&PALRAM_32W_Value, loader);
-			loader = short_loader(&VRAM_32W_Value, loader);
-			loader = short_loader(&FIFO_DMA_A_cd, loader);
-			loader = short_loader(&FIFO_DMA_B_cd, loader);
-			loader = short_loader(&Halt_Enter_cd, loader);
-			loader = short_loader(&Halt_Leave_cd, loader);
-			loader = short_loader(&Halt_Held_CPU_Instr, loader);
-
-			loader = int_loader(&PALRAM_32W_Addr, loader);
-			loader = int_loader(&VRAM_32W_Addr, loader);
-			loader = int_loader(&Memory_CTRL, loader);
-			loader = int_loader(&ROM_Length, loader);
-
-			loader = int_loader(&Last_BIOS_Read, loader);
-
-			loader = int_loader(&WRAM_Waits, loader);
-			loader = int_loader(&SRAM_Waits, loader);
-
-			loader = int_loader(&ROM_Waits_0_N, loader);
-			loader = int_loader(&ROM_Waits_1_N, loader);
-			loader = int_loader(&ROM_Waits_2_N, loader);
-			loader = int_loader(&ROM_Waits_0_S, loader);
-			loader = int_loader(&ROM_Waits_1_S, loader);
-			loader = int_loader(&ROM_Waits_2_S, loader);
-
-			loader = bool_array_loader(DMA_Start_Delay, loader, 4);
-			loader = bool_array_loader(DMA_IRQ_Delay, loader, 4);
+			loader = byte_loader(&undoc_6C, loader);
+			loader = byte_loader(&undoc_72, loader);
+			loader = byte_loader(&undoc_73, loader);
+			loader = byte_loader(&undoc_74, loader);
+			loader = byte_loader(&undoc_75, loader);
+			loader = byte_loader(&undoc_76, loader);
+			loader = byte_loader(&undoc_77, loader);
 			
-			loader = byte_array_loader(WRAM, loader, 0x40000);
-			loader = byte_array_loader(IWRAM, loader, 0x8000);
+			loader = byte_array_loader(RAM, loader, 0x8000);
+			loader = byte_array_loader(ZP_RAM, loader, 0x80);
 			loader = byte_array_loader(PALRAM, loader, 0x400);
-			loader = byte_array_loader(VRAM, loader, 0x18000);
-			loader = byte_array_loader(OAM, loader, 0x400);
-
-			// Prefetcher
-			loader = bool_loader(&pre_Cycle_Glitch, loader);
-			loader = bool_loader(&pre_Run, loader);
-			loader = bool_loader(&pre_Enable, loader);
-			loader = bool_loader(&pre_Force_Non_Seq, loader);
-			loader = bool_loader(&pre_Buffer_Was_Full, loader);
-			loader = bool_loader(&pre_Boundary_Reached, loader);
-			loader = bool_loader(&pre_Following, loader);
-			loader = bool_loader(&pre_Inactive, loader);
-
-			loader = int_loader(&pre_Read_Addr, loader);
-			loader = int_loader(&pre_Check_Addr, loader);
-			loader = int_loader(&pre_Buffer_Cnt, loader);
-
-			loader = int_loader(&pre_Fetch_Cnt, loader);
-			loader = int_loader(&pre_Fetch_Wait, loader);
+			loader = byte_array_loader(VRAM, loader, 0x4000);
+			loader = byte_array_loader(OAM, loader, 0xA0);
 
 			if (Cart_RAM_Length != 0)
 			{	
@@ -8702,8 +8224,6 @@ namespace GBHawk
 			loader = ser_LoadState(loader);
 			loader = tim_LoadState(loader);
 			loader = cpu_LoadState(loader);
-
-			if (RumbleCallback) { RumbleCallback(Rumble_State); }
 
 			return loader;
 		}
