@@ -15,19 +15,6 @@
 
 using namespace std;
 
-// Todo:
-
-/*	Look into implementation of multiplication algorithm that implements carry flag
-*
-*	Fix details of ppu open bus implementation
-*
-*	Fix RTC tests
-*
-*	Redo SIO implementation
-* 
-*	Fix FIFO DMA shutdown bug
-* 
-*/
 
 //Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
 
@@ -61,13 +48,9 @@ namespace GBHawk
 		bool SubFrame_Advance(uint32_t reset_cycle);
 		inline void Single_Step();
 
-		uint8_t Read_Memory_8(uint32_t addr);
-		uint16_t Read_Memory_16(uint32_t addr);
-		uint32_t Read_Memory_32(uint32_t addr);
+		uint8_t Read_Memory(uint16_t addr);
 
-		void Write_Memory_8(uint32_t addr, uint8_t value);
-		void Write_Memory_16(uint32_t addr, uint16_t value);
-		void Write_Memory_32(uint32_t addr, uint32_t value);
+		void Write_Memory(uint16_t addr, uint8_t value);
 
 		void Read_Memory_16_DMA(uint32_t addr, uint32_t chan);
 		void Read_Memory_32_DMA(uint32_t addr, uint32_t chan);
@@ -75,7 +58,7 @@ namespace GBHawk
 		void Write_Memory_16_DMA(uint32_t addr, uint16_t value, uint32_t chan);
 		void Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
 
-		uint8_t Peek_Memory_8(uint32_t addr);
+		uint8_t Peek_Memory(uint16_t addr);
 
 		// General Variables
 		bool Is_Lag;
@@ -5173,582 +5156,179 @@ namespace GBHawk
 
 	#pragma region Serial port
 
-		// GBP external commands
-		uint64_t ser_GBP_Next_Start_Time;
+		bool can_pulse;
+		bool IRQ_block;
 
-		uint32_t ser_GBP_Div_Count;
-		uint32_t ser_GBP_Transfer_Count;
+		uint8_t serial_control;
+		uint8_t serial_data;
+		uint8_t going_out;
+		uint8_t coming_in;
 
-		uint32_t ser_RECV_J, ser_TRANS_J;
-		uint32_t ser_div_cnt, ser_Reload;
+		uint32_t serial_clock;
+		uint32_t serial_bits;
+		uint32_t clk_rate;
 
-		uint16_t ser_Data_0, ser_Data_1, ser_Data_2, ser_Data_3, ser_Data_M;
-		uint16_t ser_CTRL, ser_CTRL_J, ser_STAT_J, ser_Mode;
-		uint16_t key_CTRL;
-
-		uint8_t ser_SC, ser_SD, ser_SI, ser_SO;
-
-		uint8_t ser_Mode_State, ser_Ctrl_Mode_State;
-
-		uint8_t ser_Ext_Current_Console;
-
-		uint8_t ser_Bit_Count, ser_Bit_Total, ser_Bit_Total_Send;
-
-		bool ser_Ext_Update, ser_Ext_Tick;
-
-		bool ser_Internal_Clock, ser_Start;
-
-		uint8_t ser_Read_Reg_8(uint32_t addr)
+		uint8_t ser_Read_Reg(int addr)
 		{
-			uint8_t ret = 0;
-
 			switch (addr)
 			{
-				case 0x120: ret = (uint8_t)(ser_Data_0 & 0xFF); break;
-				case 0x121: ret = (uint8_t)((ser_Data_0 & 0xFF00) >> 8); break;
-				case 0x122: ret = (uint8_t)(ser_Data_1 & 0xFF); break;
-				case 0x123: ret = (uint8_t)((ser_Data_1 & 0xFF00) >> 8); break;
-				case 0x124: ret = (uint8_t)(ser_Data_2 & 0xFF); break;
-				case 0x125: ret = (uint8_t)((ser_Data_2 & 0xFF00) >> 8); break;
-				case 0x126: ret = (uint8_t)(ser_Data_3 & 0xFF); break;
-				case 0x127: ret = (uint8_t)((ser_Data_3 & 0xFF00) >> 8); break;
-				case 0x128: ret = (uint8_t)(ser_Read_Ctrl() & 0xFF); break;
-				case 0x129: ret = (uint8_t)((ser_Read_Ctrl() & 0xFF00) >> 8); break;
-				case 0x12A: ret = (uint8_t)(ser_Data_M & 0xFF); break;
-				case 0x12B: ret = (uint8_t)((ser_Data_M & 0xFF00) >> 8); break;
-
-				case 0x130: ret = (uint8_t)(controller_state & 0xFF); Is_Lag = false; break;
-				case 0x131: ret = (uint8_t)((controller_state & 0xFF00) >> 8); Is_Lag = false; break;
-				case 0x132: ret = (uint8_t)(key_CTRL & 0xFF); break;
-				case 0x133: ret = (uint8_t)((key_CTRL & 0xFF00) >> 8); break;
-
-				case 0x134: ret = (uint8_t)(ser_Read_Mode() & 0xFF); break;
-				case 0x135: ret = (uint8_t)((ser_Read_Mode() & 0xFF00) >> 8); break;
-				case 0x136: ret = 0; break;
-				case 0x137: ret = 0; break;
-
-				case 0x140: ret = (uint8_t)(ser_CTRL_J & 0xFF); break;
-				case 0x141: ret = (uint8_t)((ser_CTRL_J & 0xFF00) >> 8); break;
-				case 0x142: ret = 0; break;
-				case 0x143: ret = 0; break;
-
-				case 0x150: ret = (uint8_t)(ser_RECV_J & 0xFF); break;
-				case 0x151: ret = (uint8_t)((ser_RECV_J & 0xFF00) >> 8); break;
-				case 0x152: ret = (uint8_t)((ser_RECV_J & 0xFF0000) >> 16); break;
-				case 0x153: ret = (uint8_t)((ser_RECV_J & 0xFF000000) >> 24); break;
-				case 0x154: ret = (uint8_t)(ser_TRANS_J & 0xFF); break;
-				case 0x155: ret = (uint8_t)((ser_TRANS_J & 0xFF00) >> 8); break;
-				case 0x156: ret = (uint8_t)((ser_TRANS_J & 0xFF0000) >> 16); break;
-				case 0x157: ret = (uint8_t)((ser_TRANS_J & 0xFF000000) >> 24); break;
-				case 0x158: ret = (uint8_t)(ser_STAT_J & 0xFF); break;
-				case 0x159: ret = (uint8_t)((ser_STAT_J & 0xFF00) >> 8); break;
-				case 0x15A: ret = 0; break;
-				case 0x15B: ret = 0; break;
-
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				case 0xFF01:
+					return serial_data;
+				case 0xFF02:
+					return serial_control;
 			}
 
-			return ret;
+			return 0xFF;
 		}
 
-		uint16_t ser_Read_Reg_16(uint32_t addr)
+		void ser_Write_Reg(int addr, uint8_t value)
 		{
-			uint16_t ret = 0;
-
 			switch (addr)
 			{
-				case 0x120: ret = ser_Data_0; break;
-				case 0x122: ret = ser_Data_1; break;
-				case 0x124: ret = ser_Data_2; break;
-				case 0x126: ret = ser_Data_3; break;
-				case 0x128: ret = ser_Read_Ctrl(); break;
-				case 0x12A: ret = ser_Data_M; break;
+			case 0xFF01:
+				serial_data = value;
+				break;
 
-				case 0x130: ret = controller_state; Is_Lag = false; break;
-				case 0x132: ret = key_CTRL; break;
-
-				case 0x134: ret = ser_Read_Mode(); break;
-				case 0x136: ret = 0; break;
-
-				case 0x140: ret = ser_CTRL_J; break;
-				case 0x142: ret = 0; break;
-
-				case 0x150: ret = (uint16_t)(ser_RECV_J & 0xFFFF); break;
-				case 0x152: ret = (uint16_t)((ser_RECV_J & 0xFFFF0000) >> 16); break;
-				case 0x154: ret = (uint16_t)(ser_TRANS_J & 0xFFFF); break;
-				case 0x156: ret = (uint16_t)((ser_TRANS_J & 0xFFFF0000) >> 16); break;
-				case 0x158: ret = ser_STAT_J; break;
-				case 0x15A: ret = 0; break;
-
-
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
-			}
-
-			return ret;
-		}
-
-		uint32_t ser_Read_Reg_32(uint32_t addr)
-		{
-			uint32_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x120: ret = (uint32_t)((ser_Data_1 << 16) | ser_Data_0); break;
-				case 0x124: ret = (uint32_t)((ser_Data_3 << 16) | ser_Data_2); break;
-				case 0x128: ret = (uint32_t)((ser_Data_M << 16) | ser_Read_Ctrl()); break;
-
-				case 0x130: ret = (uint32_t)((key_CTRL << 16) | controller_state); Is_Lag = false; break;
-
-				case 0x134: ret = (uint32_t)((0x00000000) | ser_Read_Mode()); break;
-
-				case 0x140: ret = (uint32_t)((0x00000000) | ser_CTRL_J); break;
-
-				case 0x150: ret = ser_RECV_J; break;
-				case 0x154: ret = ser_TRANS_J; break;
-				case 0x158: ret = (uint32_t)((0x00000000) | ser_STAT_J); break;
-
-				default: ret = cpu_Last_Bus_Value; break;
-			}
-
-			return ret;
-		}
-
-		void ser_Write_Reg_8(uint32_t addr, uint8_t value)
-		{
-			bool writable = ser_Check_Write(addr);
-
-			if (writable)
-			{
-				switch (addr)
+			case 0xFF02:
+				if ((value & 0x80) == 0x80)
 				{
-					case 0x120: ser_Data_0 = (uint16_t)((ser_Data_0 & 0xFF00) | value); break;
-					case 0x121: ser_Data_0 = (uint16_t)((ser_Data_0 & 0x00FF) | (value << 8)); break;
-					case 0x122: ser_Data_1 = (uint16_t)((ser_Data_1 & 0xFF00) | value); break;
-					case 0x123: ser_Data_1 = (uint16_t)((ser_Data_1 & 0x00FF) | (value << 8)); break;
-					case 0x124: ser_Data_2 = (uint16_t)((ser_Data_2 & 0xFF00) | value); break;
-					case 0x125: ser_Data_2 = (uint16_t)((ser_Data_2 & 0x00FF) | (value << 8)); break;
-					case 0x126: ser_Data_3 = (uint16_t)((ser_Data_3 & 0xFF00) | value); break;
-					case 0x127: ser_Data_3 = (uint16_t)((ser_Data_3 & 0x00FF) | (value << 8)); break;
-					case 0x128: ser_CTRL_Update((uint16_t)((ser_CTRL & 0xFF00) | value)); break;
-					case 0x129: ser_CTRL_Update((uint16_t)((ser_CTRL & 0x00FF) | (value << 8))); break;
-					case 0x12A: ser_Data_M = (uint16_t)((ser_Data_M & 0xFF00) | value); break;
-					case 0x12B: ser_Data_M = (uint16_t)((ser_Data_M & 0x00FF) | (value << 8)); break;
-
-					case 0x130: // no effect
-					case 0x131: // no effect
-					case 0x132: key_CTRL = (uint16_t)((key_CTRL & 0xFF00) | value); do_controller_check(true); do_controller_check_glitch(); break;
-						// note no check here, does not seem to trigger onhardware, see joypad.gba
-					case 0x133: key_CTRL = (uint16_t)((key_CTRL & 0x00FF) | (value << 8)); /*do_controller_check(); do_controller_check_glitch(); */ break;
-
-					case 0x134: ser_Mode_Update((uint16_t)((ser_Mode & 0xFF00) | value)); break;
-					case 0x135: ser_Mode_Update((uint16_t)((ser_Mode & 0x00FF) | (value << 8))); break;
-
-					case 0x140: ser_JoyCnt_Update((uint16_t)((ser_CTRL_J & 0xFF00) | value)); break;
-					case 0x141: ser_JoyCnt_Update((uint16_t)((ser_CTRL_J & 0x00FF) | (value << 8))); break;
-
-					case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFFFF00) | value); break;
-					case 0x151: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF00FF) | (value << 8)); break;
-					case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFF00FFFF) | (value << 16)); break;
-					case 0x153: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x00FFFFFF) | (value << 24)); break;
-					case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFFFF00) | value); break;
-					case 0x155: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF00FF) | (value << 8)); break;
-					case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFF00FFFF) | (value << 16)); break;
-					case 0x157: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x00FFFFFF) | (value << 24)); break;
-					case 0x158: ser_STAT_J = (uint16_t)((ser_STAT_J & 0xFF00) | value); break;
-					case 0x159: ser_STAT_J = (uint16_t)((ser_STAT_J & 0x00FF) | (value << 8)); break;
-				}
-			}
-		}
-
-		void ser_Write_Reg_16(uint32_t addr, uint16_t value)
-		{
-			bool writable = ser_Check_Write(addr);
-
-			if (writable)
-			{
-				switch (addr)
-				{
-					case 0x120: ser_Data_0 = value; break;
-					case 0x122: ser_Data_1 = value; break;
-					case 0x124: ser_Data_2 = value; break;
-					case 0x126: ser_Data_3 = value; break;
-					case 0x128: ser_CTRL_Update(value); break;
-					case 0x12A: ser_Data_M = value; break;
-
-					case 0x130: // no effect
-					case 0x132: key_CTRL = value; do_controller_check(true); do_controller_check_glitch(); break;
-
-					case 0x134: ser_Mode_Update(value); break;
-
-					case 0x140: ser_JoyCnt_Update(value); break;
-
-					case 0x150: ser_RECV_J = (uint32_t)((ser_RECV_J & 0xFFFF0000) | value); break;
-					case 0x152: ser_RECV_J = (uint32_t)((ser_RECV_J & 0x0000FFFF) | (value << 16)); break;
-					case 0x154: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0xFFFF0000) | value); break;
-					case 0x156: ser_TRANS_J = (uint32_t)((ser_TRANS_J & 0x0000FFFF) | (value << 16)); break;
-					case 0x158: ser_STAT_J = value; break;
-				}
-			}
-		}
-
-		void ser_Write_Reg_32(uint32_t addr, uint32_t value)
-		{
-			bool writable = ser_Check_Write(addr);
-
-			if (writable)
-			{
-				switch (addr)
-				{
-					case 0x120: ser_Data_0 = (uint16_t)(value & 0xFFFF);
-						ser_Data_1 = (uint16_t)((value >> 16) & 0xFFFF); break;
-					case 0x124: ser_Data_2 = (uint16_t)(value & 0xFFFF);
-						ser_Data_3 = (uint16_t)((value >> 16) & 0xFFFF); break;
-					case 0x128: ser_CTRL_Update((uint16_t)(value & 0xFFFF));
-						// need seperate case here
-						if (ser_Check_Write(0x12A)) { ser_Data_M = (uint16_t)((value >> 16) & 0xFFFF); }
-						break;
-
-					case 0x130: key_CTRL = (uint16_t)((value >> 16) & 0xFFFF); do_controller_check(true); do_controller_check_glitch(); break;
-
-					case 0x134: ser_Mode_Update((uint16_t)(value & 0xFFFF)); break;
-
-					case 0x140: ser_JoyCnt_Update((uint16_t)(value & 0xFFFF)); break;
-
-					case 0x150: ser_RECV_J = value; break;
-					case 0x154: ser_TRANS_J = value; break;
-					case 0x158: ser_STAT_J = (uint16_t)(value & 0xFFFF); break;
-				}
-			}
-		}
-
-		bool ser_Check_Write(uint16_t addr)
-		{
-			addr &= 0xFFFE;
-
-			switch (addr)
-			{
-				case 0x120: 
-					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State < 2) && (ser_Bit_Total == 32)) { return true; }
-					return false;
-
-				case 0x122:
-					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State < 2) && (ser_Bit_Total == 32)) { return true; }
-					return false;
-
-				case 0x124: return false;
-
-				case 0x126: return false;
-
-				case 0x128: return true;
-
-				case 0x12A:
-					if ((ser_Mode_State < 2) && (ser_Ctrl_Mode_State == 3)) { return false; }
-
-					return true;
-
-				case 0x150: return false;
-
-				case 0x152: return false;
-
-				case 0x154: return false;
-
-				case 0x156: return false;
-
-				case 0x158: return false;
-			}
-					
-			return true;
-		}
-
-		void ser_CTRL_Update(uint16_t value)
-		{
-			ser_Ctrl_Mode_State = (uint8_t)((value & 0x3000) >> 12);
-
-			ser_Ext_Update = true;
-
-			if (ser_Mode_State == 3)
-			{
-
-			}
-			else if (ser_Mode_State == 2)
-			{
-
-			}
-			else
-			{
-				if (ser_Ctrl_Mode_State == 3)
-				{
-					// uart
-
-				}
-				else if (ser_Ctrl_Mode_State == 2)
-				{
-					// multiplayer
-					ser_CTRL = (uint16_t)((value & 0x7F83) | (ser_CTRL & 0x70));
-
-					// status bit will be set extrenally
-					ser_CTRL &= 0xFFF7;
-
-					if (ext_num == 1)
+					if ((value & 0x01) == 0x01)
 					{
-						ser_CTRL &= 0xFFFB;
-
-						// actiavte the port
-						if (!ser_Start && ((value & 0x80) == 0x80))
+						if (((value & 2) > 0) && Core.GBC_compat)
 						{
-							ser_Bit_Count = 0;
+							clk_rate = 16;
+							serial_clock = 16 - (int)(Core.timer.divider_reg % 8) - 1;
 
-							ser_Bit_Total_Send = 36;
+							// if the clock rate is changing and it's on a GBA/C, the parity of (cpu.totalexecutedcycles & 512) effects the first bit
+							// Not sure exactly how yet
+						}
+						else
+						{
+							clk_rate = 512;
+							serial_clock = 512 - (int)(Core.timer.divider_reg % 256) - 1;
 
-							if ((value & 3) == 0)
+							// there seems to be some clock inverting happening on some transfers
+							// not sure of the exact nature of it, here is one method that gives correct result on one test rom but not others
+							/*
+							if (Core._syncSettings.GBACGB && Core.is_GBC)
 							{
-								ser_Reload = 0x378;
+								if ((Core.TotalExecutedCycles % 256) > 127)
+								{
+									serial_clock = (8 - (int)(Core.cpu.TotalExecutedCycles % 8)) + 1;
+								}
 							}
-							else if ((value & 3) == 1)
-							{
-								ser_Reload = 0xE9;
-							}
-							else if ((value & 3) == 2)
-							{
-								ser_Reload = 0xA0;
-							}
-							else if ((value & 3) == 3)
-							{
-								ser_Reload = 0x57;
-							}
-
-							ser_div_cnt = 6;
-
-							ser_Internal_Clock = true;
-
-							ser_Start = true;
-
-							ser_Ext_Current_Console = 1;
-
-							ser_CTRL |= 0x80;
+							*/
 						}
 
-						if ((value & 0x80) != 0x80) { ser_Start = false; }
+						can_pulse = true;
+						serial_bits = 8;
 					}
 					else
 					{
-						ser_CTRL |= 4;
-
-						if ((value & 0x80) != 0x80) { ser_Start = false; }
+						clk_rate = -1;
+						can_pulse = false;
+						serial_bits = 8;
 					}
 				}
 				else
 				{
-					// normal
+					serial_bits = 8;
+					clk_rate = -1;
+					serial_clock = clk_rate;
+					can_pulse = false;
+				}
 
-					ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
+				if (Core.GBC_compat)
+				{
+					serial_control = (uint8_t)(0x7C | (value & 0x83)); // extra CGB bit
+				}
+				else
+				{
+					serial_control = (uint8_t)(0x7E | (value & 0x81)); // middle six bits always 1
+				}
 
-					// actiavte the port
-					if (!ser_Start && ((value & 0x80) == 0x80))
+				break;
+			}
+		}
+
+		void ser_Tick()
+		{
+			IRQ_block = false;
+
+			if (serial_clock > 0)
+			{
+				serial_clock--;
+
+				if (serial_clock == 0)
+				{
+					if (serial_bits > 0)
 					{
-						ser_Bit_Count = 0;
+						serial_data = (byte)((serial_data << 1) | coming_in);
 
-						ser_Bit_Total_Send = ser_Bit_Total;
+						serial_bits--;
 
-						ser_Reload = (uint8_t)((value & 0x2) == 0x2 ? 0x8 : 0x40);
-
-						ser_div_cnt = 6;
-
-						ser_Internal_Clock = (value & 0x1) == 0x1;
-
-						ser_Start = true;
-					}
-
-					if ((value & 0x80) != 0x80) { ser_Start = false; }
-
-					ser_CTRL = value;
-
-					if (ext_num == 0)
-					{
-						ser_CTRL |= 4; // open, no connection
-					}
-					else
-					{
-						ser_CTRL |= (uint8_t)(ser_SI << 2);
-					}
-
-					// GBP features
-					if (!ser_Internal_Clock && GBP_Mode_Enabled && ser_Start && (ser_Bit_Total == 32))
-					{
-						// start on scanline 16
-						if (ser_GBP_Transfer_Count == 0)
+						if (serial_bits == 0)
 						{
-							if (ppu_LY < 16)
-							{
-								ser_GBP_Next_Start_Time = CycleCount + 16 * 1232 - FrameCycle;
-							}
-							else
-							{
-								ser_GBP_Next_Start_Time = CycleCount + 16 * 1232 + 228 * 1232 - FrameCycle;
-							}
+							serial_control &= 0x7F;
+
+							if (Core.REG_FFFF.Bit(3)) { Core.cpu.FlagI = true; }
+							Core.REG_FF0F |= 0x08;
+							//Console.WriteLine("SIRQ " + Core.cpu.TotalExecutedCycles);
+							IRQ_block = true;
 						}
 						else
 						{
-							ser_GBP_Next_Start_Time = CycleCount + 32;
+							serial_clock = clk_rate;
+							if (clk_rate > 0) { can_pulse = true; }
 						}
-
-						ser_GBP_Div_Count = 0;
 					}
-
-					//Message_String = "ser: " + to_string(ser_CTRL) + " " + to_string(ser_Start) + " " + to_string(CycleCount);
-
-					//MessageCallback(Message_String.length());
 				}
 			}
-
-			ser_CTRL &= 0x7FFF;
-
-		}
-
-		void ser_Mode_Update(uint16_t value)
-		{
-			ser_Mode = value & 0xC1FF;
-
-			ser_Mode_State = (uint8_t)((value & 0xC000) >> 14);
-
-			ser_Ext_Update = true;
-		}
-
-		void ser_JoyCnt_Update(uint16_t value)
-		{
-			ser_CTRL_J = value & 0x40;
-		}
-
-		uint16_t ser_Read_Mode()
-		{
-			return ser_Mode;
-		}
-
-		uint16_t ser_Read_Ctrl()
-		{
-
-			return ser_CTRL;
 		}
 
 		void ser_Reset()
 		{
-			ser_RECV_J = ser_TRANS_J = 0;
-
-			ser_Data_0 = ser_Data_1 = ser_Data_2 = ser_Data_3 = ser_Data_M = 0;
-
-			ser_CTRL = 4; // assuming no connection
-
-			ser_SC = ser_SD = ser_SI = ser_SO = 0;
-
-			ser_Mode_State = ser_Ctrl_Mode_State = 0;
-
-			ser_CTRL_J = ser_STAT_J = ser_Mode = 0;
-
-			key_CTRL = 0;
-
-			ser_div_cnt = 0;
-
-			ser_Reload = 0xF;
-
-			ser_Bit_Count = 0;
-
-			ser_Bit_Total = ser_Bit_Total_Send = 8;
-
-			ser_Ext_Current_Console = 0;
-
-			ser_Internal_Clock = ser_Start = false;
-
-			ser_Ext_Update = ser_Ext_Tick = false;
-
-			ser_GBP_Next_Start_Time = 0;
-
-			ser_GBP_Div_Count = 0;
-
-			ser_GBP_Transfer_Count = 0;
+			serial_control = 0x7E;
+			serial_data = 0x00;
+			serial_clock = -1;
+			serial_bits = 8;
+			clk_rate = -1;
+			going_out = 0;
+			coming_in = 1;
+			can_pulse = false;
+			IRQ_block = false;
 		}
 
 		uint8_t* ser_SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(ser_Internal_Clock, saver);
-			saver = bool_saver(ser_Start, saver);
-			saver = bool_saver(ser_Ext_Update, saver);
-			saver = bool_saver(ser_Ext_Tick, saver);
+			saver = bool_saver(can_pulse, saver);
+			saver = bool_saver(IRQ_block, saver);
 
-			saver = byte_saver(ser_Bit_Count, saver);
-			saver = byte_saver(ser_Bit_Total, saver);
-			saver = byte_saver(ser_Bit_Total_Send, saver);
+			saver = byte_saver(serial_control, saver);
+			saver = byte_saver(serial_data, saver);
+			saver = byte_saver(going_out, saver);
+			saver = byte_saver(coming_in, saver);
 
-			saver = byte_saver(ser_SC, saver);
-			saver = byte_saver(ser_SD, saver);
-			saver = byte_saver(ser_SI, saver);
-			saver = byte_saver(ser_SO, saver);
-			saver = byte_saver(ser_Mode_State, saver);
-			saver = byte_saver(ser_Ctrl_Mode_State, saver);
-			saver = byte_saver(ser_Ext_Current_Console, saver);
-
-			saver = short_saver(ser_Data_0, saver);
-			saver = short_saver(ser_Data_1, saver);
-			saver = short_saver(ser_Data_2, saver);
-			saver = short_saver(ser_Data_3, saver);
-			saver = short_saver(ser_Data_M, saver);
-			saver = short_saver(ser_CTRL, saver);
-			saver = short_saver(ser_CTRL_J, saver);
-			saver = short_saver(ser_STAT_J, saver);
-			saver = short_saver(ser_Mode, saver);
-			saver = short_saver(key_CTRL, saver);
-
-			saver = int_saver(ser_RECV_J, saver);
-			saver = int_saver(ser_TRANS_J, saver);
-			saver = int_saver(ser_div_cnt, saver);
-			saver = int_saver(ser_Reload, saver);
-
-			saver = int_saver(ser_GBP_Div_Count, saver);
-			saver = int_saver(ser_GBP_Transfer_Count, saver);
-
-			saver = long_saver(ser_GBP_Next_Start_Time, saver);
+			saver = int_saver(serial_clock, saver);
+			saver = int_saver(serial_bits, saver);
+			saver = int_saver(clk_rate, saver);
 
 			return saver;
 		}
 
 		uint8_t* ser_LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&ser_Internal_Clock, loader);
-			loader = bool_loader(&ser_Start, loader);
-			loader = bool_loader(&ser_Ext_Update, loader);
-			loader = bool_loader(&ser_Ext_Tick, loader);
+			loader = bool_loader(&can_pulse, loader);
+			loader = bool_loader(&IRQ_block, loader);
 
-			loader = byte_loader(&ser_Bit_Count, loader);
-			loader = byte_loader(&ser_Bit_Total, loader);
-			loader = byte_loader(&ser_Bit_Total_Send, loader);
+			loader = byte_loader(&serial_control, loader);
+			loader = byte_loader(&serial_data, loader);
+			loader = byte_loader(&going_out, loader);
+			loader = byte_loader(&coming_in, loader);
 
-			loader = byte_loader(&ser_SC, loader);
-			loader = byte_loader(&ser_SD, loader);
-			loader = byte_loader(&ser_SI, loader);
-			loader = byte_loader(&ser_SO, loader);
-			loader = byte_loader(&ser_Mode_State, loader);
-			loader = byte_loader(&ser_Ctrl_Mode_State, loader);
-			loader = byte_loader(&ser_Ext_Current_Console, loader);
-
-			loader = short_loader(&ser_Data_0, loader);
-			loader = short_loader(&ser_Data_1, loader);
-			loader = short_loader(&ser_Data_2, loader);
-			loader = short_loader(&ser_Data_3, loader);
-			loader = short_loader(&ser_Data_M, loader);
-			loader = short_loader(&ser_CTRL, loader);
-			loader = short_loader(&ser_CTRL_J, loader);
-			loader = short_loader(&ser_STAT_J, loader);
-			loader = short_loader(&ser_Mode, loader);
-			loader = short_loader(&key_CTRL, loader);
-
-			loader = int_loader(&ser_RECV_J, loader);
-			loader = int_loader(&ser_TRANS_J, loader);
-			loader = int_loader(&ser_div_cnt, loader);
-			loader = int_loader(&ser_Reload, loader);
-
-			loader = int_loader(&ser_GBP_Div_Count, loader);
-			loader = int_loader(&ser_GBP_Transfer_Count, loader);
-
-			loader = long_loader(&ser_GBP_Next_Start_Time, loader);
+			loader = int_loader(&serial_clock, loader);
+			loader = int_loader(&serial_bits, loader);
+			loader = int_loader(&clk_rate, loader);
 
 			return loader;
 		}
@@ -5757,347 +5337,263 @@ namespace GBHawk
 
 	#pragma region Timer
 		
-		bool tim_All_Off;
+		// Timer Emulation
+		// NOTES: 
+		//
+		// Currently, a starting value of 0xFFFE passes all tests. GBA is not explicitly tested but for now is set to 0xFFFE as well.
+		//
+		// Some additional glitches happen on GBC, but they are non-deterministic and not emulated here
+		//
+		// TODO: On GBA models, there is a race condition when enabling with a change in bit check
+		// that would result in a state change that is not consistent in all models, see tac_set_disabled.gbc
+		//
+		// TODO: On GBA only, there is a glitch where if the current timer control is 7 and the written value is 7 and
+		// there is a coincident timer increment, there will be an additional increment along with this write.
+		// not sure it effects all models or of exact details, see test tac_set_timer_disabled.gbc
 
-		uint16_t tim_SubCnt;
+		bool IRQ_block; // if the timer IRQ happens on the same cycle as a previous one was cleared, the IRQ is set
+		bool old_state;
+		bool state;
+		bool reload_block;
+		uint8_t timer_reload;
+		uint8_t timer;
+		uint8_t timer_old;
+		uint8_t timer_control;
+		uint8_t pending_reload;
+		uint16_t divider_reg;
+		uint64_t next_free_cycle;
 
-		uint16_t tim_Old_Reload;
-
-		uint32_t tim_Just_Reloaded;
-
-		bool tim_Go[4] = { };
-		bool tim_Tick_By_Prev[4] = { };
-		bool tim_Prev_Tick[5] = { };
-		bool tim_Disable[4] = { };
-		bool tim_Old_IRQ[4] = { };
-		bool tim_Glitch_Tick[4] = { };
-		bool tim_Enable_Not_Update[4] = { };
-
-		uint16_t tim_Timer[4] = { };
-		uint16_t tim_Reload[4] = { };
-		uint16_t tim_Control[4] = { };
-		uint16_t tim_PreSc[4] = { };
-		uint16_t tim_PreSc_En[4] = { };
-		uint16_t tim_ST_Time[4] = { };
-
-		uint16_t PreScales[4] = {0, 0x3F, 0xFF, 0x3FF};
-
-		uint8_t tim_Read_Reg_8(uint32_t addr)
+		uint8_t tim_Read_Reg(uint16_t addr)
 		{
 			uint8_t ret = 0;
 
 			switch (addr)
 			{
-				case 0x100: ret = (uint8_t)(tim_Timer[0] & 0xFF); break;
-				case 0x101: ret = (uint8_t)((tim_Timer[0] & 0xFF00) >> 8); break;
-				case 0x102: ret = (uint8_t)(tim_Control[0] & 0xFF); break;
-				case 0x103: ret = (uint8_t)((tim_Control[0] & 0xFF00) >> 8); break;
-
-				case 0x104: ret = (uint8_t)(tim_Timer[1] & 0xFF); break;
-				case 0x105: ret = (uint8_t)((tim_Timer[1] & 0xFF00) >> 8); break;
-				case 0x106: ret = (uint8_t)(tim_Control[1] & 0xFF); break;
-				case 0x107: ret = (uint8_t)((tim_Control[1] & 0xFF00) >> 8); break;
-
-				case 0x108: ret = (uint8_t)(tim_Timer[2] & 0xFF); break;
-				case 0x109: ret = (uint8_t)((tim_Timer[2] & 0xFF00) >> 8); break;
-				case 0x10A: ret = (uint8_t)(tim_Control[2] & 0xFF); break;
-				case 0x10B: ret = (uint8_t)((tim_Control[2] & 0xFF00) >> 8); break;
-
-				case 0x10C: ret = (uint8_t)(tim_Timer[3] & 0xFF); break;
-				case 0x10D: ret = (uint8_t)((tim_Timer[3] & 0xFF00) >> 8); break;
-				case 0x10E: ret = (uint8_t)(tim_Control[3] & 0xFF); break;
-				case 0x10F: ret = (uint8_t)((tim_Control[3] & 0xFF00) >> 8); break;
-
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				case 0xFF04: ret = (uint8_t)(divider_reg >> 8); 	break; // DIV register
+				case 0xFF05: ret = timer;							break; // TIMA (Timer Counter)
+				case 0xFF06: ret = timer_reload;					break; // TMA (Timer Modulo)
+				case 0xFF07: ret = timer_control;					break; // TAC (Timer Control)
 			}
 
 			return ret;
 		}
 
-		uint16_t tim_Read_Reg_16(uint32_t addr)
-		{
-			uint16_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x100: ret = tim_Timer[0]; break;
-				case 0x102: ret = tim_Control[0]; break;
-
-				case 0x104: ret = tim_Timer[1]; break;
-				case 0x106: ret = tim_Control[1]; break;
-
-				case 0x108: ret = tim_Timer[2]; break;
-				case 0x10A: ret = tim_Control[2]; break;
-
-				case 0x10C: ret = tim_Timer[3]; break;
-				case 0x10E: ret = tim_Control[3]; break;
-
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
-			}
-
-			return ret;
-		}
-
-		uint32_t tim_Read_Reg_32(uint32_t addr)
-		{
-			uint32_t ret = 0;
-
-			switch (addr)
-			{
-				case 0x100: ret = (uint32_t)((tim_Control[0] << 16) | tim_Timer[0]); break;
-
-				case 0x104: ret = (uint32_t)((tim_Control[1] << 16) | tim_Timer[1]); break;
-
-				case 0x108: ret = (uint32_t)((tim_Control[2] << 16) | tim_Timer[2]); break;
-
-				case 0x10C: ret = (uint32_t)((tim_Control[3] << 16) | tim_Timer[3]); break;
-
-				default: ret = cpu_Last_Bus_Value; break;
-			}
-
-			return ret;
-		}
-
-		void tim_Write_Reg_8(uint32_t addr, uint8_t value)
+		void tim_Write_Reg(uint16_t addr, uint8_t value)
 		{
 			switch (addr)
 			{
-				case 0x100: tim_rld_upd((uint16_t)((tim_Reload[0] & 0xFF00) | value), 0); break;
-				case 0x101: tim_rld_upd((uint16_t)((tim_Reload[0] & 0x00FF) | (value << 8)), 0); break;
-				case 0x102: tim_upd((uint16_t)((tim_Control[0] & 0xFF00) | value), 0); break;
-				case 0x103: tim_Control[0] = (uint16_t)((tim_Control[0] & 0x00FF) | (value << 8)); break;
+				// DIV register
+				case 0xFF04:
+					// NOTE: even though there is an automatic increment directly after the CPU loop, 
+					// it is still expected that 0 is written here
+					divider_reg = 0;
+					break;
 
-				case 0x104: tim_rld_upd((uint16_t)((tim_Reload[1] & 0xFF00) | value), 1); break;
-				case 0x105: tim_rld_upd((uint16_t)((tim_Reload[1] & 0x00FF) | (value << 8)), 1); break;
-				case 0x106: tim_upd((uint16_t)((tim_Control[1] & 0xFF00) | value), 1); break;
-				case 0x107: tim_Control[1] = (uint16_t)((tim_Control[1] & 0x00FF) | (value << 8)); break;
-
-				case 0x108: tim_rld_upd((uint16_t)((tim_Reload[2] & 0xFF00) | value), 2); break;
-				case 0x109: tim_rld_upd((uint16_t)((tim_Reload[2] & 0x00FF) | (value << 8)), 2); break;
-				case 0x10A: tim_upd((uint16_t)((tim_Control[2] & 0xFF00) | value), 2); break;
-				case 0x10B: tim_Control[2] = (uint16_t)((tim_Control[2] & 0x00FF) | (value << 8)); break;
-
-				case 0x10C: tim_rld_upd((uint16_t)((tim_Reload[3] & 0xFF00) | value), 3); break;
-				case 0x10D: tim_rld_upd((uint16_t)((tim_Reload[3] & 0x00FF) | (value << 8)), 3); break;
-				case 0x10E: tim_upd((uint16_t)((tim_Control[3] & 0xFF00) | value), 3); break;
-				case 0x10F: tim_Control[3] = (uint16_t)((tim_Control[3] & 0x00FF) | (value << 8)); break;
-			}
-		}
-
-		void tim_Write_Reg_16(uint32_t addr, uint16_t value)
-		{
-			switch (addr)
-			{
-				case 0x100: tim_rld_upd(value, 0); break;
-				case 0x102: tim_upd(value, 0); break;
-
-				case 0x104: tim_rld_upd(value, 1); break;
-				case 0x106: tim_upd(value, 1); break;
-
-				case 0x108: tim_rld_upd(value, 2); break;
-				case 0x10A: tim_upd(value, 2); break;
-
-				case 0x10C: tim_rld_upd(value, 3); break;
-				case 0x10E: tim_upd(value, 3); break;
-			}
-		}
-
-		// Note that in case of 32 bit write, new reload value is used when enabling the timer
-		void tim_Write_Reg_32(uint32_t addr, uint32_t value)
-		{
-			switch (addr)
-			{
-				case 0x100: tim_rld_upd((uint16_t)(value & 0xFFFF), 0);
-					tim_upd((uint16_t)((value >> 16) & 0xFFFF), 0); break;
-
-				case 0x104: tim_rld_upd((uint16_t)(value & 0xFFFF), 1);
-					tim_upd((uint16_t)((value >> 16) & 0xFFFF), 1); break;
-
-				case 0x108: tim_rld_upd((uint16_t)(value & 0xFFFF), 2);
-					tim_upd((uint16_t)((value >> 16) & 0xFFFF), 2); break;
-
-				case 0x10C: tim_rld_upd((uint16_t)(value & 0xFFFF), 3);
-					tim_upd((uint16_t)((value >> 16) & 0xFFFF), 3); break;
-			}
-		}
-
-		void tim_rld_upd(uint16_t value, uint32_t nbr)
-		{
-			tim_Old_Reload = tim_Reload[nbr];
-
-			tim_Reload[nbr] = value;
-
-			tim_Just_Reloaded = nbr;
-		}
-
-		void tim_upd(uint16_t value, uint32_t nbr)
-		{
-			if (((tim_Control[nbr] & 0x80) == 0) && ((value & 0x80) != 0))
-			{
-				// if enabling when internal timer value is 0xFFFF, an extra tick cycle occurs before resetting
-				// so it may trigger an interrupt
-				tim_Glitch_Tick[nbr] = false;
-
-				if (tim_Timer[nbr] == 0xFFFF)
-				{
-					// TODO: check cases of ticking by previous timer
-					if ((nbr == 0) || ((value & 0x4) == 0))
+					// TIMA (Timer Counter)
+				case 0xFF05:
+					if (CycleCount >= next_free_cycle)
 					{
-						tim_Glitch_Tick[nbr] = true;
+						timer_old = timer;
+						timer = value;
+						reload_block = true;
 					}
-				}
+					break;
 
-				tim_ST_Time[nbr] = 3;
-
-				tim_PreSc_En[nbr] = PreScales[value & 3];
-
-				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
-
-				tim_All_Off = false;
-
-				tim_Enable_Not_Update[nbr] = true;
-			}
-			else if (((tim_Control[nbr] & 0x80) != 0) && ((value & 0x80) != 0))
-			{		
-				// some settings can be updated even while the timer is running (which ones?)
-				// what happens if these changes happen very close together? (The cpu could change them within 2 clocks, but takes 3 to start channel)
-				// for now use the new value
-				tim_PreSc_En[nbr] = PreScales[value & 3];
-
-				// TODO: check exact changeover timing
-				if (nbr != 0) { tim_Tick_By_Prev[nbr] = ((value & 0x4) == 0x4); }
-
-				if (tim_ST_Time[nbr] == 0)
-				{
-					tim_ST_Time[nbr] = 2;
-				}
-
-				tim_Enable_Not_Update[nbr] = false;
-			}
-
-			if ((value & 0x80) == 0)
-			{
-				// timer ticks for one additional cycle when disabled if currently running
-				if (tim_Go[nbr] || (tim_ST_Time[nbr] == 1))
-				{
-					tim_Disable[nbr] = true;
-
-					tim_Old_IRQ[nbr] = (tim_Control[nbr] & 0x40) == 0x40;
-				}
-				else if (tim_ST_Time[nbr] > 1)
-				{
-					tim_ST_Time[nbr] = 0;
-
-					tim_All_Off = true;
-
-					for (int k = 0; k < 4; k++)
+					// TMA (Timer Modulo)
+				case 0xFF06:
+					timer_reload = value;
+					if (Core.cpu.TotalExecutedCycles < next_free_cycle)
 					{
-						tim_All_Off &= !tim_Go[k];
-						tim_All_Off &= (tim_ST_Time[k] == 0);
+						timer = timer_reload;
+						timer_old = timer;
+					}
+					break;
+
+					// TAC (Timer Control)
+				case 0xFF07:
+					uint8_t timer_control_old = timer_control;
+
+					// Console.WriteLine("tac: " + timer_control + " " + value + " " + timer + " " + divider_reg);
+					timer_control = (uint8_t)((timer_control & 0xf8) | (value & 0x7)); // only bottom 3 bits function
+
+					if (!((timer_control_old & 4) == 4) && ((timer_control & 4) == 4) && Core._syncSettings.GBACGB)
+					{
+						bool temp_check_old = false;
+						bool temp_check = false;
+
+						switch (timer_control_old & 3)
+						{
+						case 0:
+							temp_check_old = divider_reg.Bit(9);
+							break;
+						case 1:
+							temp_check_old = divider_reg.Bit(3);
+							break;
+						case 2:
+							temp_check_old = divider_reg.Bit(5);
+							break;
+						case 3:
+							temp_check_old = divider_reg.Bit(7);
+							break;
+						}
+
+						switch (timer_control & 3)
+						{
+						case 0:
+							temp_check = divider_reg.Bit(9);
+							break;
+						case 1:
+							temp_check = divider_reg.Bit(3);
+							break;
+						case 2:
+							temp_check = divider_reg.Bit(5);
+							break;
+						case 3:
+							temp_check = divider_reg.Bit(7);
+							break;
+						}
+
+						if (temp_check_old && !temp_check)
+						{
+							timer_old = timer;
+							timer++;
+
+
+							Message_String = "Timer glitch.";
+
+							MessageCallback(Message_String.length());
+
+
+							// if overflow happens, set the interrupt flag and reload the timer (if applicable)
+							if (timer < timer_old)
+							{
+								pending_reload = 4;
+								reload_block = false;
+							}
+						}
 					}
 
-					tim_Old_IRQ[nbr] = false;
+					break;
+			}
+		}
+
+		void tick()
+		{
+			IRQ_block = false;
+
+			// pick a bit to test based on the current value of timer control
+			switch (timer_control & 3)
+			{
+			case 0:
+				state = divider_reg.Bit(9);
+				break;
+			case 1:
+				state = divider_reg.Bit(3);
+				break;
+			case 2:
+				state = divider_reg.Bit(5);
+				break;
+			case 3:
+				state = divider_reg.Bit(7);
+				break;
+			}
+
+			// And it with the state of the timer on/off bit
+			state &= ((timer_control & 4) == 4);
+
+			// this procedure allows several glitchy timer ticks, since it only measures falling edge of the state
+			// so things like turning the timer off and resetting the divider will tick the timer
+			if (old_state && !state)
+			{
+				timer_old = timer;
+				timer++;
+
+				// if overflow happens, set the interrupt flag and reload the timer (if applicable)
+				if (timer < timer_old)
+				{
+					if (((timer_control & 4) == 4))
+					{
+						pending_reload = 4;
+						reload_block = false;
+					}
+					else
+					{
+						pending_reload = 3;
+						reload_block = false;
+					}
 				}
 			}
 
-			//Message_String = "rld " + to_string(nbr) + " v " + to_string(value) + " t " + to_string(tim_Timer[nbr]) + " sub " + to_string(tim_SubCnt) + " " + to_string(CycleCount);
+			old_state = state;
 
-			//MessageCallback(Message_String.length());
-
-			// bits 3-5 always 0
-			// bit 2 always 0 for timer 0
-			if (nbr == 0)
+			if (pending_reload > 0)
 			{
-				value &= 0xFFC3;
-			}
-			else
-			{
-				value &= 0xFFC7;
-			}
+				pending_reload--;
+				if (pending_reload == 0 && !reload_block)
+				{
+					timer = timer_reload;
+					timer_old = timer;
 
+					next_free_cycle = 4 + CycleCount;
 
-			tim_Control[nbr] = value;
+					// set interrupts
+					if (Core.REG_FFFF.Bit(2)) { Core.cpu.FlagI = true; }
+					//Console.WriteLine("timer " + Core.cpu.TotalExecutedCycles);
+					Core.REG_FF0F |= 0x04;
+					IRQ_block = true;
+				}
+			}
 		}
 
-		void tim_Reset()
+		void Reset()
 		{
-			for (int i = 0; i < 4; i++)
-			{
-				tim_Timer[i] = 0;
-				tim_Reload[i] = 0;
-				tim_Control[i] = 0;
-				tim_PreSc[i] = 0;
-				tim_PreSc_En[i] = 0;
-				tim_ST_Time[i] = 0;
-
-				tim_Go[i] = false;
-				tim_Tick_By_Prev[i] = false;
-				tim_Prev_Tick[i] = false;
-				tim_Disable[i] = false;
-				tim_Old_IRQ[i] = false;
-				tim_Glitch_Tick[i] = false;
-				tim_Enable_Not_Update[i] = false;
-			}
-
-			tim_Just_Reloaded = 5;
-
-			tim_SubCnt = 0xFFFF;
-
-			tim_Old_Reload = 0;
-
-			tim_All_Off = true;
+			divider_reg = 0xFFFE;
+			timer_reload = 0;
+			timer = 0;
+			timer_old = 0;
+			timer_control = 0xF8;
+			pending_reload = 0;
+			IRQ_block = false;
+			old_state = false;
+			state = false;
+			reload_block = false;
+			next_free_cycle = 0;
 		}
 
 		uint8_t* tim_SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(tim_All_Off, saver);
+			saver = bool_saver(IRQ_block, saver);
+			saver = bool_saver(old_state, saver);
+			saver = bool_saver(state, saver);
+			saver = bool_saver(reload_block, saver);
 
-			saver = short_saver(tim_SubCnt, saver);
-			saver = short_saver(tim_Old_Reload, saver);
+			saver = byte_saver(timer_reload, saver);
+			saver = byte_saver(timer, saver);
+			saver = byte_saver(timer_old, saver);
+			saver = byte_saver(timer_control, saver);
+			saver = byte_saver(pending_reload, saver);
 
-			saver = int_saver(tim_Just_Reloaded, saver);
-
-			saver = bool_array_saver(tim_Go, saver, 4);
-			saver = bool_array_saver(tim_Tick_By_Prev, saver, 4);
-			saver = bool_array_saver(tim_Prev_Tick, saver, 5);
-			saver = bool_array_saver(tim_Disable, saver, 4);
-			saver = bool_array_saver(tim_Old_IRQ, saver, 4);
-			saver = bool_array_saver(tim_Glitch_Tick, saver, 4);
-			saver = bool_array_saver(tim_Enable_Not_Update, saver, 4);
-
-			saver = short_array_saver(tim_Timer, saver, 4);
-			saver = short_array_saver(tim_Reload, saver, 4);
-			saver = short_array_saver(tim_Control, saver, 4);
-			saver = short_array_saver(tim_PreSc, saver, 4);
-			saver = short_array_saver(tim_PreSc_En, saver, 4);
-			saver = short_array_saver(tim_ST_Time, saver, 4);
+			saver = long_saver(divider_reg, saver);
+			saver = long_saver(next_free_cycle, saver);
 
 			return saver;
 		}
 
 		uint8_t* tim_LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&tim_All_Off, loader);
+			loader = bool_loader(&IRQ_block, loader);
+			loader = bool_loader(&old_state, loader);
+			loader = bool_loader(&state, loader);
+			loader = bool_loader(&reload_block, loader);
 
-			loader = short_loader(&tim_SubCnt, loader);
-			loader = short_loader(&tim_Old_Reload, loader);
+			loader = byte_loader(&timer_reload, loader);
+			loader = byte_loader(&timer, loader);
+			loader = byte_loader(&timer_old, loader);
+			loader = byte_loader(&timer_control, loader);
+			loader = byte_loader(&pending_reload, loader);
 
-			loader = int_loader(&tim_Just_Reloaded, loader);
-
-			loader = bool_array_loader(tim_Go, loader, 4);
-			loader = bool_array_loader(tim_Tick_By_Prev, loader, 4);
-			loader = bool_array_loader(tim_Prev_Tick, loader, 5);
-			loader = bool_array_loader(tim_Disable, loader, 4);
-			loader = bool_array_loader(tim_Old_IRQ, loader, 4);
-			loader = bool_array_loader(tim_Glitch_Tick, loader, 4);
-			loader = bool_array_loader(tim_Enable_Not_Update, loader, 4);
-
-			loader = short_array_loader(tim_Timer, loader, 4);
-			loader = short_array_loader(tim_Reload, loader, 4);
-			loader = short_array_loader(tim_Control, loader, 4);
-			loader = short_array_loader(tim_PreSc, loader, 4);
-			loader = short_array_loader(tim_PreSc_En, loader, 4);
-			loader = short_array_loader(tim_ST_Time, loader, 4);
+			loader = long_loader(&divider_reg, loader);
+			loader = long_loader(&next_free_cycle, loader);
 
 			return loader;
 		}

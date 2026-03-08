@@ -9,1009 +9,554 @@
 #include "Mappers.h"
 
 /*
-	$10000000-$FFFFFFFF    Unmapped
-	$0E010000-$0FFFFFFF    Unmapped
-	$0E000000-$0E00FFFF    SRAM
-	$0C000000-$0DFFFFFF    ROM - Wait State 2
-	$0A000000-$0BFFFFFF    ROM - Wait State 1
-	$08000000-$09FFFFFF    ROM - Wait State 0
-	$07000400-$07FFFFFF    Unmapped
-	$07000000-$070003FF    OAM
-	$06018000-$06FFFFFF    Unmapped
-	$06000000-$06017FFF    VRAM
-	$05000400-$05FFFFFF    Unmapped
-	$05000000-$050003FF    Palette RAM
-	$04XX0800-$04XX0800    Mem Control
-	$04000000-$040007FF    I/O Regs
-	$03008000-$03FFFFFF    Unmapped
-	$03000000-$03007FFF    IWRAM
-	$02040000-$02FFFFFF    Unmapped
-	$02000000-$0203FFFF    WRAM
-	$00004000-$01FFFFFF    Unmapped
-	$00000000-$00003FFF    BIOS
+	$FFFF          Interrupt Enable Flag
+	$FF80-$FFFE    Zero Page - 127 bytes
+	$FF00-$FF7F    Hardware I/O Registers
+	$FEA0-$FEFF    Unusable Memory
+	$FE00-$FE9F    OAM - Object Attribute Memory
+	$E000-$FDFF    Echo RAM - Reserved, Do Not Use
+	$D000-$DFFF    Internal RAM - Bank 1-7 (switchable - CGB only)
+	$C000-$CFFF    Internal RAM - Bank 0 (fixed)
+	$A000-$BFFF    Cartridge RAM (If Available)
+	$9C00-$9FFF    BG Map Data 2
+	$9800-$9BFF    BG Map Data 1
+	$8000-$97FF    Character RAM
+	$4000-$7FFF    Cartridge ROM - Switchable Banks 1-xx
+	$0150-$3FFF    Cartridge ROM - Bank 0 (fixed)
+	$0100-$014F    Cartridge Header Area
+	$0000-$00FF    Restart and Interrupt Vectors
 */
 
 namespace GBHawk
 {
 	#pragma region Memory Map
 
-	uint8_t GB_System::Read_Memory_8(uint32_t addr)
+	uint8_t GB_System::Read_Memory(uint16_t addr)
 	{
-		uint8_t ret = 0;
+		addr_access = addr;
 
-		if (addr >= 0x08000000)
+		if (ppu.DMA_bus_control)
 		{
-			if (addr < 0x0D000000)
+			// some of gekkio's tests require these to be accessible during DMA
+			if (addr < 0x8000)
 			{
-				addr -= 0x08000000;
-
-				ret = ROM[addr];
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (!Is_EEPROM)
+				if (ppu.DMA_addr < 0x80)
 				{
-					addr -= 0x08000000;
+					return ppu.DMA_byte;
+				}
 
-					ret = ROM[addr];
+				bus_value = mapper.ReadMemoryLow(addr);
+				bus_access_time = cpu.TotalExecutedCycles;
+				return bus_value;
+			}
+
+			if (addr >= 0xA000 && addr < 0xC000)
+			{
+				// on GBC only, cart is accessible during DMA
+				bus_value = mapper.ReadMemoryHigh(addr);
+				bus_access_time = cpu.TotalExecutedCycles;
+				return bus_value;
+			}
+
+			if (addr >= 0xE000 && addr < 0xF000)
+			{
+				return RAM[addr - 0xE000];
+			}
+
+			if (addr >= 0xF000 && addr < 0xFE00)
+			{
+				//if (RAM_read[(RAM_Bank * 0x1000) + (addr - 0xF000)] == 0) { Console.WriteLine("RAM: " + addr + " " + cpu.TotalExecutedCycles); }
+				return RAM[(RAM_Bank * 0x1000) + (addr - 0xF000)];
+			}
+
+			if (addr >= 0xFE00 && addr < 0xFEA0)
+			{
+				if (ppu.DMA_OAM_access)
+				{
+					return OAM[addr - 0xFE00];
 				}
 				else
 				{
-					if (EEPROM_Wiring)
-					{
-						ret = (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
-					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							ret = (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
-						}
-						else
-						{
-							addr -= 0x08000000;
-
-							ret = ROM[addr];
-						}
-					}
+					return 0xFF;
 				}
 			}
-			else if (addr < 0x10000000)
+
+			if (addr >= 0xFF00 && addr < 0xFF80) // The game GOAL! Requires Hardware Regs to be accessible
 			{
-				ret = mapper_pntr->Read_Memory_8(addr - 0x0E000000);
-			}
-			else
-			{
-				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); // open bus
+				return Read_Registers(addr);
 			}
 
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr >= 0x07000000)
+			if (addr >= 0xFF80)
 			{
-				ret = OAM[addr & 0x3FF];
-			}
-			else if (addr >= 0x06000000)
-			{
-				if ((addr & 0x00010000) == 0x00010000)
+				if (addr != 0xFFFF)
 				{
-					// mirrors behave differently depending on mode
-					if ((addr & 0x00008000) == 0x00008000)
-					{
-						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-						{
-							ret = VRAM[addr & 0x17FFF];
-						}
-						else
-						{
-							ret = 0;
-						}
-					}
-					else
-					{
-						ret = VRAM[addr & 0x17FFF];
-					}
+					//if (ZP_RAM_read[addr - 0xFF80] == 0) { Console.WriteLine("ZP: " + (addr - 0xFF80) + " " + cpu.TotalExecutedCycles); }
+					return ZP_RAM[addr - 0xFF80];
 				}
 				else
 				{
-					ret = VRAM[addr & 0xFFFF];
+					return Read_Registers(addr);
+				}
+			}
+
+			return ppu.DMA_byte;
+		}
+
+		if (addr < 0x8000)
+		{
+			if (addr >= 0x900)
+			{
+				bus_value = mapper.ReadMemoryLow(addr);
+				bus_access_time = cpu.TotalExecutedCycles;
+				return bus_value;
+			}
+
+			if (addr < 0x100)
+			{
+				// return Either BIOS ROM or Game ROM
+				if ((GB_bios_register & 0x1) == 0)
+				{
+					return _bios[addr]; // Return BIOS
 				}
 
-				ppu_VRAM_High_In_Use = false;
-				ppu_VRAM_In_Use = false;
+				bus_value = mapper.ReadMemoryLow(addr);
+				bus_access_time = cpu.TotalExecutedCycles;
+				return bus_value;
 			}
-			else if (addr >= 0x05000000)
-			{
-				ret = PALRAM[addr & 0x3FF];
 
-				ppu_PALRAM_In_Use = false;
+			if (addr >= 0x200)
+			{
+				// return Either BIOS ROM or Game ROM
+				if ((GB_bios_register & 0x1) == 0)
+				{
+					return _bios[addr]; // Return BIOS
+				}
+
+				bus_value = mapper.ReadMemoryLow(addr);
+				bus_access_time = cpu.TotalExecutedCycles;
+				return bus_value;
+			}
+
+			bus_value = mapper.ReadMemoryLow(addr);
+			bus_access_time = cpu.TotalExecutedCycles;
+			return bus_value;
+		}
+
+		if (addr < 0xA000)
+		{
+			if (ppu.VRAM_access_read)
+			{
+				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+			}
+
+			if (!HDMA_transfer)
+			{
+				if (ppu.pixel_counter == 160)
+				{
+					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + ppu.bus_address + " " +
+						VRAM[ppu.bus_address] + " " + ppu.read_case_prev + " " + (ppu.internal_cycle & 1) + " " +
+						(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);
+
+					// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
+					if ((ppu.read_case_prev == 0) || (ppu.read_case_prev == 4))
+					{
+						if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
+						{
+							return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+						}
+						return VRAM[ppu.bus_address];
+					}
+
+					// TODO: What is returned when the ppu isn't accessing VRAM?
+					//if ((ppu.read_case_prev == 3) || (ppu.read_case_prev == 7))
+					//{
+					//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+					//}
+					return VRAM[ppu.bus_address];
+				}
+				return 0xFF;
 			}
 			else
 			{
-				if (addr < 0x04000800)
+				return 0xFF;
+			}
+		}
+
+		if (addr < 0xC000)
+		{
+			bus_value = mapper.ReadMemoryHigh(addr);
+			bus_access_time = cpu.TotalExecutedCycles;
+			return bus_value;
+		}
+
+		if (addr < 0xFE00)
+		{
+			addr = (uint16_t)(RAM_Bank * (addr & 0x1000) + (addr & 0xFFF));
+			//if (RAM_read[addr] == 0) { Console.WriteLine("RAM: " + addr + " " + cpu.TotalExecutedCycles); }
+			return RAM[addr];
+		}
+
+		if (addr < 0xFF00)
+		{
+			if (addr < 0xFEA0)
+			{
+				if (ppu.OAM_access_read)
 				{
-					ret = Read_Registers_8(addr - 0x04000000);
+					return OAM[addr - 0xFE00];
 				}
-				else if ((addr & 0x0400FFFC) == 0x04000800)
+
+				return 0xFF;
+			}
+
+			// unmapped memory, return depends on console and rendering
+			if (_syncSettings.GBACGB)
+			{
+				// in GBA mode, it returns a reflection of the address somehow
+				if (ppu.OAM_access_read)
 				{
-					switch (addr & 3)
-					{
-					case 0: ret = (uint8_t)(Memory_CTRL & 0xFF); break;
-					case 1: ret = (uint8_t)((Memory_CTRL >> 8) & 0xFF); break;
-					case 2: ret = (uint8_t)((Memory_CTRL >> 16) & 0xFF); break;
-					default: ret = (uint8_t)((Memory_CTRL >> 24) & 0xFF); break;
-					}
+					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+				}
+
+				return 0xFF;
+			}
+			else
+			{
+				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
+				if (ppu.OAM_access_read)
+				{
+					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+				}
+
+				return 0xFF;
+			}
+		}
+
+		if (addr < 0xFF80)
+		{
+			return Read_Registers(addr);
+		}
+
+		if (addr < 0xFFFF)
+		{
+			//if (ZP_RAM_read[addr - 0xFF80] == 0) { Console.WriteLine("ZP: " + (addr - 0xFF80) + " " + cpu.TotalExecutedCycles); }
+			return ZP_RAM[addr - 0xFF80];
+		}
+
+		return Read_Registers(addr);
+	}
+
+	void GB_System::Write_Memory(uint16_t addr, uint8_t value)
+	{
+		addr_access = addr;
+
+		if (ppu.DMA_bus_control)
+		{
+			// some of gekkio's tests require this to be accessible during DMA
+			if (addr >= 0xA000 && addr < 0xC000)
+			{
+				// on GBC only, cart is accessible during DMA
+				bus_value = value;
+				bus_access_time = cpu.TotalExecutedCycles;
+				mapper.WriteMemory(addr, value);
+			}
+
+			if (addr >= 0xE000 && addr < 0xF000)
+			{
+				//RAM_read[addr - 0xE000] = 1;
+				RAM[addr - 0xE000] = value;
+			}
+			else if (addr >= 0xF000 && addr < 0xFE00)
+			{
+				//RAM_read[RAM_Bank * 0x1000 + (addr - 0xF000)] = 1;
+				RAM[RAM_Bank * 0x1000 + (addr - 0xF000)] = value;
+			}
+			else if (addr >= 0xFE00 && addr < 0xFEA0 && ppu.DMA_OAM_access)
+			{
+				OAM[addr - 0xFE00] = value;
+			}
+			else if (addr >= 0xFF00 && addr < 0xFF80) // The game GOAL! Requires Hardware Regs to be accessible
+			{
+				Write_Registers(addr, value);
+			}
+			else if (addr >= 0xFF80)
+			{
+				if (addr != 0xFFFF)
+				{
+					//ZP_RAM_read[addr - 0xFF80] = 1;
+					ZP_RAM[addr - 0xFF80] = value;
 				}
 				else
 				{
-					ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+					Write_Registers(addr, value);
 				}
 			}
+
+			return;
 		}
-		else if (addr >= 0x03000000)
+
+		// Writes are more likely from the top down
+		if (addr >= 0xFF00)
 		{
-			ret = IWRAM[addr & 0x7FFF];
-		}
-		else if (addr >= 0x02000000)
-		{
-			ret = WRAM[addr & 0x3FFFF];
-		}
-		else if (addr < 0x4000)
-		{
-			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
+			if (addr < 0xFF80)
 			{
-				ret = (uint8_t)((Last_BIOS_Read >> (8 * (int)(addr & 3))) & 0xFF);
+				Write_Registers(addr, value);
+			}
+			else if (addr < 0xFFFF)
+			{
+				//ZP_RAM_read[addr - 0xFF80] = 1;
+				ZP_RAM[addr - 0xFF80] = value;
 			}
 			else
 			{
-				ret = BIOS[addr];
+				Write_Registers(addr, value);
+			}
+		}
+		else if (addr >= 0xFE00)
+		{
+			if (addr < 0xFEA0)
+			{
+				if (ppu.OAM_access_write) { OAM[addr - 0xFE00] = value; }
+			}
+			// unmapped memory writes depend on console		
+			else
+			{
+				if (_syncSettings.GBACGB)
+				{
+					// in GBA mode, writes have no effect as far as tested, might need more thorough tests
+				}
+				else
+				{
+					// otherwise it's revision dependent. Assume CGB-E is same as GBA mode consoles for now
+				}
+			}
+		}
+		else if (addr >= 0xC000)
+		{
+			addr = (ushort)(RAM_Bank * (addr & 0x1000) + (addr & 0xFFF));
+			//RAM_read[addr] = 1;
+			RAM[addr] = value;
+		}
+		else if (addr >= 0xA000)
+		{
+			bus_value = value;
+			bus_access_time = cpu.TotalExecutedCycles;
+			mapper.WriteMemory(addr, value);
+		}
+		else if (addr >= 0x8000)
+		{
+			if (ppu.VRAM_access_write)
+			{
+				VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)] = value;
 			}
 		}
 		else
 		{
-			ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus	
-		}
-
-		cpu_Last_Bus_Value &= (uint32_t)~(0xFF << (((int)addr & 3) * 8));
-		cpu_Last_Bus_Value |= (uint32_t)ret << (((int)addr & 3) * 8);
-
-		return ret;
-	}
-
-	uint16_t GB_System::Read_Memory_16(uint32_t addr)
-	{
-		uint16_t ret = 0;
-
-		if (addr >= 0x08000000)
-		{
-			if (addr < 0x0D000000)
+			if (addr >= 0x900)
 			{
-				addr -= 0x08000000;
-				// Forced Align
-				ret = ROM_16[addr >> 1];
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
+				bus_value = value;
+				bus_access_time = cpu.TotalExecutedCycles;
+				mapper.WriteMemory(addr, value);
 			}
-			else if (addr < 0x0E000000)
+			else
 			{
-				if (!Is_EEPROM)
+				if (addr < 0x100)
 				{
-					addr -= 0x08000000;
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					ret = ROM_16[addr >> 1];
-				}
-				else
-				{
-					if (EEPROM_Wiring)
+					if ((GB_bios_register & 0x1) == 0)
 					{
-						ret = (uint16_t)((cpu_Last_Bus_Value & 0xFFFE) | mapper_pntr->Mapper_EEPROM_Read());
+						// No Writing to BIOS
 					}
 					else
 					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							ret = (uint16_t)((cpu_Last_Bus_Value & 0xFFFE) | mapper_pntr->Mapper_EEPROM_Read());
-						}
-						else
-						{
-							addr -= 0x08000000;
-							// Forced Align
-							addr &= 0xFFFFFFFE;
-
-							ret = ROM_16[addr >> 1];
-						}
+						bus_value = value;
+						bus_access_time = cpu.TotalExecutedCycles;
+						mapper.WriteMemory(addr, value);
 					}
 				}
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
-			}
-			else if (addr < 0x10000000)
-			{
-				ret = mapper_pntr->Read_Memory_16(addr - 0x0E000000);
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
-			}
-			else
-			{
-				ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
-			}
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr >= 0x04000000)
-		{
-			// Forced Align
-			if (addr >= 0x07000000)
-			{
-				ret = OAM_16[(addr & 0x3FE) >> 1];
-
-				// in OAM area, upper bits in bus depend on alignment
-				if ((addr & 2) == 0)
+				else if (addr >= 0x200)
 				{
-					cpu_Last_Bus_Value = (uint32_t)(OAM_16[((addr & 0x3FE) >> 1) + 1] << 16);
-					cpu_Last_Bus_Value |= ret;
-				}
-				else
-				{
-					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-					cpu_Last_Bus_Value |= OAM_16[((addr & 0x3FE) >> 1) - 1];
-				}
-			}
-			else if (addr >= 0x06000000)
-			{
-				if ((addr & 0x00010000) == 0x00010000)
-				{
-					// mirrors behave differently depending on mode
-					if ((addr & 0x00008000) == 0x00008000)
+					if ((GB_bios_register & 0x1) == 0)
 					{
-						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-						{
-							ret = VRAM_16[(addr & 0x17FFE) >> 1];
-						}
-						else
-						{
-							ret = 0;
-						}
+						// No Writing to BIOS
 					}
 					else
 					{
-						ret = VRAM_16[(addr & 0x17FFE) >> 1];
+						bus_value = value;
+						bus_access_time = cpu.TotalExecutedCycles;
+						mapper.WriteMemory(addr, value);
 					}
 				}
 				else
 				{
-					ret = VRAM_16[(addr & 0xFFFE) >> 1];
-				}
-
-				ppu_VRAM_High_In_Use = false;
-				ppu_VRAM_In_Use = false;
-
-				// in VRAM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
-			}
-			else if (addr >= 0x05000000)
-			{
-				ret = PALRAM_16[(addr & 0x3FE) >> 1];
-
-				ppu_PALRAM_In_Use = false;
-
-				// in PALRAM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
-			}
-			else
-			{
-				if (addr < 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					ret = Read_Registers_16(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFC) == 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					switch (addr & 3)
-					{
-					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
-					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
-					}
-				}
-				else
-				{
-					ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
+					bus_value = value;
+					bus_access_time = cpu.TotalExecutedCycles;
+					mapper.WriteMemory(addr, value);
 				}
 			}
-		}
-		else if (addr >= 0x03000000)
-		{
-			// Forced Align
-			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
-
-			// in IWRAM area, upper bits in bus depend on alignment
-			if ((addr & 2) == 0)
-			{
-				cpu_Last_Bus_Value &= 0xFFFF0000;
-				cpu_Last_Bus_Value |= ret;
-			}
-			else
-			{
-				cpu_Last_Bus_Value &= 0xFFFF;
-				cpu_Last_Bus_Value |= (uint32_t)(ret << 16);
-			}
-		}
-		else if (addr >= 0x02000000)
-		{
-			// Forced Align
-			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
-
-			// in WRAM area, upper bits in bus are set same as return value
-			cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-			cpu_Last_Bus_Value |= ret;
-		}
-		else if (addr < 0x4000)
-		{
-			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
-			{
-				if ((addr & 2) == 0)
-				{
-					ret = (uint16_t)(Last_BIOS_Read & 0xFFFF);
-				}
-				else
-				{
-					ret = (uint16_t)((Last_BIOS_Read >> 16) & 0xFFFF);
-				}
-			}
-			else
-			{
-				// Forced Align
-				ret = BIOS_16[addr >> 1];
-
-				// in BIOS area, upper bits in bus depend on alignment
-				if ((addr & 2) == 0)
-				{
-					cpu_Last_Bus_Value = (uint32_t)(BIOS_16[(addr >> 1) + 1] << 16);
-					cpu_Last_Bus_Value |= ret;
-				}
-				else
-				{
-					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-					cpu_Last_Bus_Value |= BIOS_16[(addr >> 1) - 1];
-				}
-
-				Last_BIOS_Read = cpu_Last_Bus_Value;
-			}
-		}
-		else
-		{
-			ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
-		}
-
-		return ret;
-	}
-
-	uint32_t GB_System::Read_Memory_32(uint32_t addr)
-	{
-		uint32_t ret = 0;
-
-		if (addr >= 0x08000000)
-		{
-			if (addr < 0x0D000000)
-			{
-				addr -= 0x08000000;
-				// Forced Align
-				ret = ROM_32[addr >> 2];
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (!Is_EEPROM)
-				{
-					addr -= 0x08000000;
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = ROM_32[addr >> 2];
-				}
-				else
-				{
-					if (EEPROM_Wiring)
-					{
-						ret = (uint32_t)((cpu_Last_Bus_Value & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
-					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							ret = (uint32_t)((cpu_Last_Bus_Value & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
-						}
-						else
-						{
-							addr -= 0x08000000;
-							// Forced Align
-							addr &= 0xFFFFFFFC;
-
-							ret = ROM_32[addr >> 2];
-						}
-					}
-				}
-			}
-			else if (addr < 0x10000000)
-			{
-				ret = mapper_pntr->Read_Memory_32(addr - 0x0E000000);
-			}
-			else
-			{
-				ret = cpu_Last_Bus_Value; // open bus			
-			}
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr >= 0x04000000)
-		{
-			// Forced Align
-			if (addr >= 0x07000000)
-			{
-				ret = OAM_32[(addr & 0x3FC) >> 2];
-			}
-			else if (addr >= 0x06000000)
-			{
-				if ((addr & 0x00010000) == 0x00010000)
-				{
-					// mirrors behave differently depending on mode
-					if ((addr & 0x00008000) == 0x00008000)
-					{
-						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-						{
-							ret = VRAM_32[(addr & 0x17FFC) >> 2];
-						}
-						else
-						{
-							ret = 0;
-						}
-					}
-					else
-					{
-						ret = VRAM_32[(addr & 0x17FFC) >> 2];
-					}
-				}
-				else
-				{
-					ret = VRAM_32[(addr & 0xFFFC) >> 2];
-				}
-
-				ppu_VRAM_High_In_Use = false;
-				ppu_VRAM_In_Use = false;
-			}
-			else if (addr >= 0x05000000)
-			{
-				ret = PALRAM_32[(addr & 0x3FC) >> 2];
-
-				ppu_PALRAM_In_Use = false;
-			}
-			else
-			{
-				if (addr < 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = Read_Registers_32(addr - 0x04000000);
-				}
-				else if ((addr & 0x0400FFFC) == 0x04000800)
-				{
-					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = Memory_CTRL;
-				}
-				else
-				{
-					ret = cpu_Last_Bus_Value; // open bus
-				}
-			}
-		}
-		else if (addr >= 0x03000000)
-		{
-			// Forced Align
-			ret = IWRAM_32[(addr & 0x7FFC) >> 2];
-		}
-		else if (addr >= 0x02000000)
-		{
-			// Forced Align
-			ret = WRAM_32[(addr & 0x3FFFC) >> 2];
-		}
-		else if (addr < 0x4000)
-		{
-			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
-			{
-				ret = Last_BIOS_Read;
-			}
-			else
-			{
-				// Forced Align
-				Last_BIOS_Read = BIOS_32[addr >> 2];
-
-				ret = Last_BIOS_Read;
-			}
-		}
-		else
-		{
-			ret = cpu_Last_Bus_Value; // open bus
-		}
-
-		cpu_Last_Bus_Value = ret;
-
-		return ret;
-	}
-
-	void GB_System::Write_Memory_8(uint32_t addr, uint8_t value)
-	{
-		cpu_Last_Bus_Value &= 0xFFFFFF00;
-		cpu_Last_Bus_Value |= value;
-
-		if (addr < 0x03000000)
-		{
-			if (addr >= 0x02000000)
-			{
-				WRAM[addr & 0x3FFFF] = value;
-			}
-		}
-		else if (addr < 0x04000000)
-		{
-			IWRAM[addr & 0x7FFF] = value;
-		}
-		else if (addr < 0x05000000)
-		{
-			if (addr < 0x04000800)
-			{
-				Write_Registers_8(addr - 0x04000000, value);
-			}
-			else if ((addr & 0x0400FFFC) == 0x04000800)
-			{
-				switch (addr & 3)
-				{
-				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFFFF00) | value)); break;
-				case 0x01: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
-				case 0x02: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
-				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
-				}
-			}
-		}
-		else if (addr < 0x06000000)
-		{
-			// 8 bit writes to PALRAM stored as halfword
-			PALRAM[addr & 0x3FF] = value;
-			PALRAM[(addr + 1) & 0x3FF] = value;
-
-			ppu_PALRAM_In_Use = false;
-		}
-		else if (addr < 0x07000000)
-		{
-			if ((addr & 0x00010000) == 0x00010000)
-			{
-				// 8 bit writes ignored depending on mode
-				// Seems like it has to do with what region is also used by sprites
-				// bitmap modes (3-5) allow writes up to 0x14000, as this is reserved for BGs
-				// other modes do not allow writes above 0x10000, as all of this is reserved for sprites
-				// This effects the Quake demo
-
-				// mirrors behave differently depending on mode
-				if ((addr & 0x00008000) == 0x00008000)
-				{
-					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-					{
-						if ((addr & 0x17FFF) < 0x14000)
-						{
-							// 8 bit writes stored as halfword (needs more research)
-							VRAM[addr & 0x17FFF] = value;
-							VRAM[(addr + 1) & 0x17FFF] = value;
-						}
-					}
-				}
-				else
-				{
-					if (ppu_BG_Mode >= 3)
-					{
-						if ((addr & 0x17FFF) < 0x14000)
-						{
-							// 8 bit writes stored as halfword (needs more research)
-							VRAM[addr & 0x17FFF] = value;
-							VRAM[(addr + 1) & 0x17FFF] = value;
-						}
-					}
-				}
-			}
-			else
-			{
-				// 8 bit writes stored as halfword (needs more research)
-				VRAM[addr & 0xFFFF] = value;
-				VRAM[(addr + 1) & 0xFFFF] = value;
-			}
-
-			ppu_VRAM_High_In_Use = false;
-			ppu_VRAM_In_Use = false;
-		}
-		else if (addr < 0x08000000)
-		{
-			// 8 bit writes to OAM ignored
-			// OAM[addr & 0x3FF] = value;
-		}
-		else if (addr < 0x0D000000)
-		{
-			mapper_pntr->Write_ROM_8(addr, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr < 0x0E000000)
-		{
-			if (Is_EEPROM)
-			{
-				if (EEPROM_Wiring)
-				{
-					mapper_pntr->Mapper_EEPROM_Write(value);
-				}
-				else
-				{
-					if ((addr & 0xDFFFE00) == 0xDFFFE00)
-					{
-						mapper_pntr->Mapper_EEPROM_Write(value);
-					}
-				}
-			}
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-		{
-			mapper_pntr->Write_Memory_8(addr - 0x0E000000, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
 		}
 	}
 
-	void GB_System::Write_Memory_16(uint32_t addr, uint16_t value)
+	uint8_t GB_System::Peek_Memory(uint16_t addr)
 	{
-		cpu_Last_Bus_Value &= 0xFFFF0000;
-		cpu_Last_Bus_Value |= value;
-
-		if (addr < 0x03000000)
+		if (ppu.DMA_bus_control)
 		{
-			if (addr >= 0x02000000)
+			// some of gekkio's tests require these to be accessible during DMA
+			if (addr < 0x8000)
 			{
-				// Forced Align
-				WRAM_16[(addr & 0x3FFFE) >> 1] = value;
-			}
-		}
-		else if (addr < 0x04000000)
-		{
-			// Forced Align
-			IWRAM_16[(addr & 0x7FFE) >> 1] = value;
-		}
-		else if (addr < 0x05000000)
-		{
-			// Forced Align
-			addr &= 0xFFFFFFFE;
-
-			if (addr < 0x04000800)
-			{
-				Write_Registers_16(addr - 0x04000000, value);
-			}
-			else if ((addr & 0x0400FFFC) == 0x04000800)
-			{
-				switch (addr & 3)
+				if (ppu.DMA_addr < 0x80)
 				{
-				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
-				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
+					return ppu.DMA_byte;
 				}
-			}
-		}
-		else if (addr < 0x06000000)
-		{
-			// Forced Align
-			PALRAM_16[(addr & 0x3FE) >> 1] = value;
 
-			ppu_PALRAM_In_Use = false;
-		}
-		else if (addr < 0x07000000)
-		{
-			// Forced Align
-			if ((addr & 0x00010000) == 0x00010000)
+				return mapper.PeekMemoryLow(addr);
+			}
+
+			if ((addr >= 0xA000) && (addr < 0xC000))
 			{
-				// mirrors behave differently depending on mode
-				if ((addr & 0x00008000) == 0x00008000)
+				// on GBC only, cart is accessible during DMA
+				return mapper.PeekMemoryHigh(addr);
+			}
+
+			if (addr >= 0xE000 && addr < 0xF000)
+			{
+				return RAM[addr - 0xE000];
+			}
+
+			if (addr >= 0xF000 && addr < 0xFE00)
+			{
+				return RAM[(RAM_Bank * 0x1000) + (addr - 0xF000)];
+			}
+
+			if (addr >= 0xFE00 && addr < 0xFEA0)
+			{
+				if (ppu.DMA_OAM_access)
 				{
-					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-					{
-						VRAM_16[(addr & 0x17FFE) >> 1] = value;
-					}
+					return OAM[addr - 0xFE00];
 				}
 				else
 				{
-					VRAM_16[(addr & 0x17FFE) >> 1] = value;
+					return 0xFF;
 				}
+			}
+
+			if (addr >= 0xFF00 && addr < 0xFF80) // The game GOAL! Requires Hardware Regs to be accessible
+			{
+				return Read_Registers(addr);
+			}
+
+			if (addr >= 0xFF80)
+			{
+				if (addr != 0xFFFF)
+				{
+					return ZP_RAM[addr - 0xFF80];
+				}
+				else
+				{
+					return Read_Registers(addr);
+				}
+			}
+
+			return ppu.DMA_byte;
+		}
+
+		if (addr < 0x8000)
+		{
+			if (addr >= 0x900)
+			{
+				return mapper.PeekMemoryLow(addr);
+			}
+
+			if (addr < 0x100)
+			{
+				// return Either BIOS ROM or Game ROM
+				if ((GB_bios_register & 0x1) == 0)
+				{
+					return _bios[addr]; // Return BIOS
+				}
+
+				return mapper.PeekMemoryLow(addr);
+			}
+
+			if (addr >= 0x200)
+			{
+				// return Either BIOS ROM or Game ROM
+				if ((GB_bios_register & 0x1) == 0)
+				{
+					return _bios[addr]; // Return BIOS
+				}
+
+				return mapper.PeekMemoryLow(addr);
+			}
+
+			return mapper.PeekMemoryLow(addr);
+		}
+
+		if (addr < 0xA000)
+		{
+			if (ppu.VRAM_access_read)
+			{
+				return VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)];
+			}
+
+			return 0xFF;
+		}
+
+		if (addr < 0xC000)
+		{
+			return mapper.PeekMemoryHigh(addr);
+		}
+
+		if (addr < 0xFE00)
+		{
+			addr = (uint16_t)(RAM_Bank * (addr & 0x1000) + (addr & 0xFFF));
+			return RAM[addr];
+		}
+
+		if (addr < 0xFF00)
+		{
+			if (addr < 0xFEA0)
+			{
+				if (ppu.OAM_access_read)
+				{
+					return OAM[addr - 0xFE00];
+				}
+
+				return 0xFF;
+			}
+
+			// unmapped memory, return depends on console and rendering
+			if (_syncSettings.GBACGB)
+			{
+				// in GBA mode, it returns a reflection of the address somehow
+				if (ppu.OAM_access_read)
+				{
+					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+				}
+
+				return 0xFF;
 			}
 			else
 			{
-				VRAM_16[(addr & 0xFFFE) >> 1] = value;
-			}
-
-			ppu_VRAM_High_In_Use = false;
-			ppu_VRAM_In_Use = false;
-		}
-		else if (addr < 0x08000000)
-		{
-			// Forced Align
-			OAM_16[(addr & 0x3FE) >> 1] = value;
-		}
-		else if (addr < 0x0D000000)
-		{
-			mapper_pntr->Write_ROM_16(addr, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr < 0x0E000000)
-		{
-			if (Is_EEPROM)
-			{
-				if (EEPROM_Wiring)
+				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
+				if (ppu.OAM_access_read)
 				{
-					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
+					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
-				else
-				{
-					if ((addr & 0xDFFFE00) == 0xDFFFE00)
-					{
-						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-					}
-				}
-			}
 
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-		{
-			mapper_pntr->Write_Memory_16(addr - 0x0E000000, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-	}
-
-	void GB_System::Write_Memory_32(uint32_t addr, uint32_t value)
-	{
-		cpu_Last_Bus_Value = value;
-
-		if (addr < 0x03000000)
-		{
-			if (addr >= 0x02000000)
-			{
-				// Forced Align
-				WRAM_32[(addr & 0x3FFFC) >> 2] = value;
-			}
-			/*
-			if (addr == 0x02009860)
-			{
-				Message_String = to_string(value) + " " + to_string(CycleCount);
-
-				MessageCallback(Message_String.length());
-			}
-			*/
-		}
-		else if (addr < 0x04000000)
-		{
-			// Forced Align
-			IWRAM_32[(addr & 0x7FFC) >> 2] = value;
-		}
-		else if (addr < 0x05000000)
-		{
-			// Forced Align
-			addr &= 0xFFFFFFFC;
-
-			if (addr < 0x04000800)
-			{
-				Write_Registers_32(addr - 0x04000000, value);
-			}
-			else if ((addr & 0x0400FFFC) == 0x04000800)
-			{
-				Update_Memory_CTRL(value);
+				return 0xFF;
 			}
 		}
-		else if (addr < 0x06000000)
-		{
-			// Forced Align
-			PALRAM_32[(addr & 0x3FC) >> 2] = value;
 
-			ppu_PALRAM_In_Use = false;
-			PALRAM_32_Check = false;
-		}
-		else if (addr < 0x07000000)
+		if (addr < 0xFF80)
 		{
-			// Forced Align
-			if ((addr & 0x00010000) == 0x00010000)
-			{
-				// mirrors behave differently depending on mode
-				if ((addr & 0x00008000) == 0x00008000)
-				{
-					if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
-					{
-						VRAM_32[(addr & 0x17FFC) >> 2] = value;
-					}
-				}
-				else
-				{
-					VRAM_32[(addr & 0x17FFC) >> 2] = value;
-				}
-			}
-			else
-			{
-				VRAM_32[(addr & 0xFFFC) >> 2] = value;
-			}
-
-			ppu_VRAM_High_In_Use = false;
-			ppu_VRAM_In_Use = false;
-			VRAM_32_Check = false;
-		}
-		else if (addr < 0x08000000)
-		{
-			// Forced Align
-			OAM_32[(addr & 0x3FC) >> 2] = value;
-		}
-		else if (addr < 0x0D000000)
-		{
-			mapper_pntr->Write_ROM_32(addr, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if (addr < 0x0E000000)
-		{
-			if (Is_EEPROM)
-			{
-				if (EEPROM_Wiring)
-				{
-					mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-				}
-				else
-				{
-					if ((addr & 0xDFFFE00) == 0xDFFFE00)
-					{
-						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
-					}
-				}
-			}
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-		else if ((addr >= 0x0E000000) && (addr < 0x10000000))
-		{
-			mapper_pntr->Write_Memory_32(addr - 0x0E000000, value);
-
-			// ROM access complete, re-enable prefetcher
-			pre_Inactive = false;
-		}
-	}
-
-	uint8_t GB_System::Peek_Memory_8(uint32_t addr)
-	{
-		if (addr >= 0x08000000)
-		{
-			if (addr < 0x0D000000)
-			{
-				return ROM[addr - 0x08000000];
-			}
-			else if (addr < 0x0E000000)
-			{
-				if (!Is_EEPROM)
-				{
-					return ROM[addr - 0x08000000];
-				}
-				else
-				{
-					if (EEPROM_Wiring)
-					{
-						return (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
-					}
-					else
-					{
-						if ((addr & 0xDFFFE00) == 0xDFFFE00)
-						{
-							return (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
-						}
-						else
-						{
-							return ROM[addr - 0x08000000];
-						}
-					}
-				}
-			}
-			else if (addr < 0x10000000)
-			{
-				return mapper_pntr->Peek_Memory(addr - 0x0E000000);
-			}
-
-			return (uint8_t)(cpu_Last_Bus_Value & 0xFF); // open bus
-		}
-		else if (addr >= 0x05000000)
-		{
-			if (addr >= 0x07000000)
-			{
-				return OAM[addr & 0x3FF];
-			}
-			else if (addr >= 0x06000000)
-			{
-				if ((addr & 0x00010000) == 0x00010000)
-				{
-					return VRAM[addr & 0x17FFF];
-				}
-				else
-				{
-					return VRAM[addr & 0xFFFF];
-				}
-			}
-			else
-			{
-				return PALRAM[addr & 0x3FF];
-			}
-		}
-		else if (addr >= 0x04000000)
-		{
-			if (addr < 0x04000800)
-			{
-				return Peek_Registers_8(addr - 0x04000000);
-			}
-			else if ((addr & 0x0400FFFC) == 0x04000800)
-			{
-				switch (addr & 3)
-				{
-				case 0: return (uint8_t)(Memory_CTRL & 0xFF);
-				case 1: return (uint8_t)((Memory_CTRL >> 8) & 0xFF);
-				case 2: return (uint8_t)((Memory_CTRL >> 16) & 0xFF);
-				default: return (uint8_t)((Memory_CTRL >> 24) & 0xFF);
-				}
-			}
-
-			return (uint8_t)(cpu_Last_Bus_Value & 0xFF); // open bus
-		}
-		else if (addr >= 0x03000000)
-		{
-			return IWRAM[addr & 0x7FFF];
-		}
-		else if (addr >= 0x02000000)
-		{
-			return WRAM[addr & 0x3FFFF];
+			return Read_Registers(addr);
 		}
 
-		if (addr < 0x4000)
+		if (addr < 0xFFFF)
 		{
-			return BIOS[addr];
+			return ZP_RAM[addr - 0xFF80];
 		}
 
-		return (uint8_t)(cpu_Last_Bus_Value & 0xFF); // open bus
+		return Read_Registers(addr);
 	}
 
 	#pragma endregion
