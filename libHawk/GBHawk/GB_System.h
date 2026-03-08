@@ -15,6 +15,16 @@
 
 using namespace std;
 
+/*
+ * VRAM is arranged as:
+ * 0x1800 Tiles
+ * 0x400 BG Map 1
+ * 0x400 BG Map 2
+ * 0x1800 Tiles
+ * 0x400 CA Map 1
+ * 0x400 CA Map 2
+ * Only the top set is available in GB (i.e. VRAM_Bank = 0)
+ */
 
 //Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
 
@@ -60,6 +70,7 @@ namespace GBHawk
 		// General Variables
 		bool Is_Lag;
 		bool VBlank_Rise;
+		bool GBC_Compat;
 
 		uint8_t ext_num = 0; // zero here means disconnected
 
@@ -78,21 +89,47 @@ namespace GBHawk
 		// several undocumented GBC Registers
 		uint8_t undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
 
+
+
+
+		// other system state
+		bool controller_was_checked;
+		bool delays_to_process;
+		bool DIV_falling_edge, DIV_edge_old;
+		bool double_speed;
+		bool speed_switch;
+		bool HDMA_transfer; // stalls CPU when in progress
+
+		uint8_t bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
+		uint8_t VRAM_Bank;
+		uint8_t IR_reg, IR_mask, IR_signal, IR_receive, IR_self;
+		uint8_t controller_state;
+		uint8_t multi_core_controller_byte;
+
+		uint16_t addr_access;
+		uint16_t Acc_X_state;
+		uint16_t Acc_Y_state;
+
+		uint32_t IR_write;
+		uint32_t RAM_Bank;
+		uint32_t RAM_Bank_ret;
+		uint32_t controller_delay_cd;
+		uint32_t cpu_state_hold;
+		uint32_t clear_counter;
+
+		uint64_t bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
+
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
 		uint8_t ZP_RAM[0x80] = { };
 		uint8_t PALRAM[0x400] = { };
-		/*
-		 * VRAM is arranged as:
-		 * 0x1800 Tiles
-		 * 0x400 BG Map 1
-		 * 0x400 BG Map 2
-		 * 0x1800 Tiles
-		 * 0x400 CA Map 1
-		 * 0x400 CA Map 2
-		 * Only the top set is available in GB (i.e. VRAM_Bank = 0)
-		 */
 		uint8_t VRAM[0x4000] = { };
 		uint8_t OAM[0xA0] = { };
+
+		uint8_t RAM_vbls[0x8000] = { };
+		uint8_t ZP_RAM_vbls[0x80] = { };
+		uint8_t PALRAM_vbls[0x400] = { };
+		uint8_t VRAM_vbls[0x4000] = { };
+		uint8_t OAM_vbls[0xA0] = { };
 
 		// not stated, controlled on system load
 		uint8_t BIOS[0x4000] = { };
@@ -139,7 +176,33 @@ namespace GBHawk
 
 		void System_Reset() 
 		{
+			controller_was_checked = false;
+			DIV_falling_edge = DIV_edge_old = false;
+			speed_switch = false;
+			HDMA_transfer = false;
+
+			bus_value = 0;
+			IR_reg = IR_mask = IR_signal = IR_receive = IR_self = 0;
+			controller_state = 0;
+			multi_core_controller_byte = 0;
+
+			addr_access = 0;
+			Acc_X_state = 0;
+			Acc_Y_state = 0;
+
+			IR_write = 0;
+			cpu_state_hold = 0;
+
 			GB_bios_register = 0; // bios enable
+			GBC_Compat = true;
+			double_speed = false;
+			VRAM_Bank = 0;
+			RAM_Bank = 1; // RAM bank always starts as 1 (even writing zero still sets 1)
+			RAM_Bank_ret = 0; // return value can still be zero even though the bank itself cannot be
+			delays_to_process = false;
+			controller_delay_cd = 0;
+			clear_counter = 0;
+
 			input_register = 0xCF; // not reading any input
 
 			REG_FFFF = 0;
@@ -163,12 +226,9 @@ namespace GBHawk
 			tim_Reset();
 			cpu_Reset();
 
-			// default memory config hardware initialized
-			Update_Memory_CTRL(0x0D000020);
-
 			uint32_t startup_color = 0xFFF8F8F8;
 
-			for (int i = 0; i < 240*160; i++)
+			for (int i = 0; i < 160*144; i++)
 			{
 				video_buffer[i] = startup_color;
 			}
@@ -355,7 +415,7 @@ namespace GBHawk
 
 					// Speed Control for GBC
 				case 0xFF4D:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						ret = (uint8_t)(((double_speed ? 1 : 0) << 7) | (speed_switch ? 1 : 0) | 0x7E);
 					}
@@ -366,7 +426,14 @@ namespace GBHawk
 					break;
 
 				case 0xFF4F: // VBK
-					ret = (uint8_t)(0xFE | VRAM_Bank);
+					if (is_GBC)
+					{
+						ret = (uint8_t)(0xFE | VRAM_Bank);
+					}
+					else
+					{
+						ret = 0xFF;
+					}
 					break;
 
 					// Bios control register. Not sure if it is readable
@@ -380,7 +447,7 @@ namespace GBHawk
 				case 0xFF53:
 				case 0xFF54:
 				case 0xFF55:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						ret = ppu.ReadReg(addr);
 					}
@@ -391,7 +458,7 @@ namespace GBHawk
 					break;
 
 				case 0xFF56:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						// can receive data
 						if ((IR_reg & 0xC0) == 0xC0)
@@ -400,7 +467,7 @@ namespace GBHawk
 						}
 						else
 						{
-							ret = (byte)(IR_reg | 2);
+							ret = (uint8_t)(IR_reg | 2);
 						}
 					}
 					else
@@ -413,12 +480,19 @@ namespace GBHawk
 				case 0xFF69:
 				case 0xFF6A:
 				case 0xFF6B:
-					ret = ppu.ReadReg(addr);
+					if (is_GBC)
+					{
+						ret = ppu.ReadReg(addr);
+					}
+					else
+					{
+						ret = 0xFF;
+					}
 					break;
 
 					// Ram bank for GBC
 				case 0xFF70:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						ret = (uint8_t)(0xF8 | RAM_Bank_ret);
 					}
@@ -429,7 +503,7 @@ namespace GBHawk
 					break;
 
 				case 0xFF6C:
-					if (GBC_compat) { ret = undoc_6C; }
+					if (GBC_Compat) { ret = undoc_6C; }
 					else { ret = 0xFF; }
 					break;
 
@@ -442,7 +516,7 @@ namespace GBHawk
 					break;
 
 				case 0xFF74:
-					if (GBC_compat) { ret = undoc_74; }
+					if (GBC_Compat) { ret = undoc_74; }
 					else { ret = 0xFF; }
 					break;
 
@@ -623,7 +697,7 @@ namespace GBHawk
 				case 0xFF4C:
 					if ((value != 0xC0) && (value != 0x80) && (GB_bios_register == 0))// && (value != 0xFF) && (value != 0x04))
 					{
-						GBC_compat = false;
+						GBC_Compat = false;
 					}
 					Console.Write("GBC Compatibility? ");
 					Console.WriteLine(value);
@@ -631,7 +705,7 @@ namespace GBHawk
 
 					// Speed Control for GBC
 				case 0xFF4D:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						speed_switch = (value & 1) > 0;
 					}
@@ -639,7 +713,7 @@ namespace GBHawk
 
 					// VBK
 				case 0xFF4F:
-					if (GBC_compat)
+					if (is_GBC/* && !ppu.HDMA_active*/)
 					{
 						VRAM_Bank = (uint8_t)(value & 1);
 					}
@@ -651,7 +725,7 @@ namespace GBHawk
 					if (GB_bios_register == 0)
 					{
 						GB_bios_register = value;
-						if (!GBC_compat) { ppu.pal_change_blocked = true; RAM_Bank = 1; RAM_Bank_ret = 0; }
+						if (!GBC_Compat) { ppu.pal_change_blocked = true; RAM_Bank = 1; RAM_Bank_ret = 0; }
 					}
 					break;
 
@@ -661,7 +735,7 @@ namespace GBHawk
 				case 0xFF53:
 				case 0xFF54:
 				case 0xFF55:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						ppu.WriteReg(addr, value);
 					}
@@ -671,11 +745,11 @@ namespace GBHawk
 					IR_reg = (uint8_t)((value & 0xC1) | (IR_reg & 0x3E));
 
 					// send IR signal out
-					if ((IR_reg & 0x1) == 0x1) { IR_signal = (byte)(0 | IR_mask); }
+					if ((IR_reg & 0x1) == 0x1) { IR_signal = (uint8_t)(0 | IR_mask); }
 					else { IR_signal = 2; }
 
 					// receive own signal if IR on and receive on
-					if ((IR_reg & 0xC1) == 0xC1) { IR_self = (byte)(0 | IR_mask); }
+					if ((IR_reg & 0xC1) == 0xC1) { IR_self = (uint8_t)(0 | IR_mask); }
 					else { IR_self = 2; }
 
 					IR_write = 8;
@@ -685,12 +759,15 @@ namespace GBHawk
 				case 0xFF69:
 				case 0xFF6A:
 				case 0xFF6B:
-					ppu.WriteReg(addr, value);
+					if (is_GBC)
+					{
+						ppu.WriteReg(addr, value);
+					}
 					break;
 
 					// RAM Bank in GBC mode
 				case 0xFF70:
-					if (GBC_compat)
+					if (GBC_Compat)
 					{
 						RAM_Bank = value & 7;
 						RAM_Bank_ret = RAM_Bank;
@@ -699,23 +776,23 @@ namespace GBHawk
 					break;
 
 				case 0xFF6C:
-					if (GBC_compat) { undoc_6C |= (uint8_t)(value & 1); }
+					if (GBC_Compat) { undoc_6C |= (uint8_t)(value & 1); }
 					break;
 
 				case 0xFF72:
-					undoc_72 = value;
+					if (is_GBC) { undoc_72 = value; }
 					break;
 
 				case 0xFF73:
-					undoc_73 = value;
+					if (is_GBC) { undoc_73 = value; }
 					break;
 
 				case 0xFF74:
-					if (GBC_compat) { undoc_74 = value; }
+					if (GBC_Compat) { undoc_74 = value; }
 					break;
 
 				case 0xFF75:
-					undoc_75 |= (uint8_t)(value & 0x70);
+					if (is_GBC) { undoc_75 |= (uint8_t)(value & 0x70); }
 					break;
 
 				case 0xFF76:
@@ -4847,7 +4924,7 @@ namespace GBHawk
 				{
 					if ((value & 0x01) == 0x01)
 					{
-						if (((value & 2) > 0) && Core.GBC_compat)
+						if (((value & 2) > 0) && Core.Is_GBC)
 						{
 							clk_rate = 16;
 							serial_clock = 16 - (int)(Core.timer.divider_reg % 8) - 1;
@@ -4891,7 +4968,7 @@ namespace GBHawk
 					can_pulse = false;
 				}
 
-				if (Core.GBC_compat)
+				if (Core.Is_GBC)
 				{
 					serial_control = (uint8_t)(0x7C | (value & 0x83)); // extra CGB bit
 				}
@@ -8142,12 +8219,12 @@ namespace GBHawk
 
 	#pragma endregion
 
-
 	#pragma region State Save / Load for System
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(Is_Lag, saver);
 			saver = bool_saver(VBlank_Rise, saver);
+			saver = bool_saver(GBC_Compat, saver);
 
 			saver = byte_saver(ext_num, saver);
 
@@ -8165,11 +8242,48 @@ namespace GBHawk
 			saver = byte_saver(undoc_76, saver);
 			saver = byte_saver(undoc_77, saver);
 
+			saver = bool_saver(controller_was_checked, saver);
+			saver = bool_saver(delays_to_process, saver);
+			saver = bool_saver(DIV_falling_edge, saver);
+			saver = bool_saver(DIV_edge_old, saver);
+			saver = bool_saver(double_speed, saver);
+			saver = bool_saver(speed_switch, saver);
+			saver = bool_saver(HDMA_transfer, saver);
+
+			saver = byte_saver(controller_state, saver);
+			saver = byte_saver(multi_core_controller_byte, saver);
+			saver = byte_saver(bus_value, saver);
+			saver = byte_saver(VRAM_Bank, saver);
+			saver = byte_saver(IR_reg, saver);
+			saver = byte_saver(IR_mask, saver);
+			saver = byte_saver(IR_signal, saver);
+			saver = byte_saver(IR_receive, saver);
+			saver = byte_saver(IR_self, saver);
+
+			saver = short_saver(Acc_X_state, saver);
+			saver = short_saver(Acc_Y_state, saver);
+			saver = short_saver(addr_access, saver);
+
+			saver = int_saver(controller_delay_cd, saver);
+			saver = int_saver(cpu_state_hold, saver);
+			saver = int_saver(clear_counter, saver);
+			saver = int_saver(IR_write, saver);
+			saver = int_saver(RAM_Bank, saver);
+			saver = int_saver(RAM_Bank_ret, saver);
+
+			saver = long_saver(bus_access_time, saver);
+
 			saver = byte_array_saver(RAM, saver, 0x8000);
 			saver = byte_array_saver(ZP_RAM, saver, 0x80);
 			saver = byte_array_saver(PALRAM, saver, 0x400);
 			saver = byte_array_saver(VRAM, saver, 0x4000);
 			saver = byte_array_saver(OAM, saver, 0xA0);
+
+			saver = byte_array_saver(RAM_vbls, saver, 0x8000);
+			saver = byte_array_saver(ZP_RAM_vbls, saver, 0x80);
+			saver = byte_array_saver(PALRAM_vbls, saver, 0x400);
+			saver = byte_array_saver(VRAM_vbls, saver, 0x4000);
+			saver = byte_array_saver(OAM_vbls, saver, 0xA0);
 
 			if (Cart_RAM_Length != 0)
 			{
@@ -8190,6 +8304,7 @@ namespace GBHawk
 		{
 			loader = bool_loader(&Is_Lag, loader);
 			loader = bool_loader(&VBlank_Rise, loader);
+			loader = bool_loader(&GBC_Compat, loader);
 
 			loader = byte_loader(&ext_num, loader);
 
@@ -8206,12 +8321,49 @@ namespace GBHawk
 			loader = byte_loader(&undoc_75, loader);
 			loader = byte_loader(&undoc_76, loader);
 			loader = byte_loader(&undoc_77, loader);
+
+			loader = bool_loader(&controller_was_checked, loader);
+			loader = bool_loader(&delays_to_process, loader);
+			loader = bool_loader(&DIV_falling_edge, loader);
+			loader = bool_loader(&DIV_edge_old, loader);
+			loader = bool_loader(&double_speed, loader);
+			loader = bool_loader(&speed_switch, loader);
+			loader = bool_loader(&HDMA_transfer, loader);
+
+			loader = byte_loader(&controller_state, loader);
+			loader = byte_loader(&multi_core_controller_byte, loader);
+			loader = byte_loader(&bus_value, loader);
+			loader = byte_loader(&VRAM_Bank, loader);
+			loader = byte_loader(&IR_reg, loader);
+			loader = byte_loader(&IR_mask, loader);
+			loader = byte_loader(&IR_signal, loader);
+			loader = byte_loader(&IR_receive, loader);
+			loader = byte_loader(&IR_self, loader);
+
+			loader = short_loader(&Acc_X_state, loader);
+			loader = short_loader(&Acc_Y_state, loader);
+			loader = short_loader(&addr_access, loader);
+
+			loader = int_loader(&controller_delay_cd, loader);
+			loader = int_loader(&cpu_state_hold, loader);
+			loader = int_loader(&clear_counter, loader);
+			loader = int_loader(&IR_write, loader);
+			loader = int_loader(&RAM_Bank, loader);
+			loader = int_loader(&RAM_Bank_ret, loader);
+
+			loader = long_loader(&bus_access_time, loader);
 			
 			loader = byte_array_loader(RAM, loader, 0x8000);
 			loader = byte_array_loader(ZP_RAM, loader, 0x80);
 			loader = byte_array_loader(PALRAM, loader, 0x400);
 			loader = byte_array_loader(VRAM, loader, 0x4000);
 			loader = byte_array_loader(OAM, loader, 0xA0);
+
+			loader = byte_array_loader(RAM_vbls, loader, 0x8000);
+			loader = byte_array_loader(ZP_RAM_vbls, loader, 0x80);
+			loader = byte_array_loader(PALRAM_vbls, loader, 0x400);
+			loader = byte_array_loader(VRAM_vbls, loader, 0x4000);
+			loader = byte_array_loader(OAM_vbls, loader, 0xA0);
 
 			if (Cart_RAM_Length != 0)
 			{	
