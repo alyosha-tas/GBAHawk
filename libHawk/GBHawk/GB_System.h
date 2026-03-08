@@ -359,13 +359,122 @@ namespace GBHawk
 			}
 		}
 
-		void Trigger_IRQ(uint16_t bit)
+		void HDMA_start_stop(bool hdma_start)
 		{
-			INT_Flags_Gather |= (uint16_t)(1 << bit);
+			// put the cpu into a wait state when HDMA starts
+			// restore it when HDMA ends
+			HDMA_transfer = hdma_start;
 
-			delays_to_process = true;
-			IRQ_Write_Delay = true;
-			IRQ_Delays = true;
+			if (hdma_start)
+			{
+				cpu_state_hold = cpu.instr_pntr;
+				cpu.instr_pntr = 256 * 60 * 2 + 60 * 8;
+			}
+			else
+			{
+				cpu.instr_pntr = cpu_state_hold;
+			}
+		}
+
+		void process_delays()
+		{
+			// triggering an interrupt with a write to the control register takes 4 cycles to trigger interrupt
+			controller_delay_cd--;
+			if (controller_delay_cd == 0)
+			{
+				if ((REG_FFFF & 0x10) == 0x10) { cpu_FlagIset(true); }
+				REG_FF0F |= 0x10;
+				delays_to_process = false;
+			}
+		}
+
+		int SpeedFunc(int temp)
+		{
+			if (temp == 0)
+			{
+				if (speed_switch)
+				{
+					speed_switch = false;
+
+					Message_String = "Speed Switch: " + to_string(CycleCount);
+
+					MessageCallback(Message_String.length());
+
+					int ret = double_speed ? 32770 : 32770; // actual time needs checking
+					return ret;
+				}
+
+				// if we are not switching speed, return 0
+				return 0;
+			}
+			else if (temp == 1)
+			{
+				// reset the divider (only way for speed_change_timing_fine.gbc and speed_change_cancel.gbc to both work)
+				// Console.WriteLine("at stop " + timer.divider_reg + " " + timer.timer_control);
+
+				// only if the timer mode is 1, an extra tick of the timer is counted before the reset
+				// this varies between console revisions
+				if ((tim_Control & 7) == 5)
+				{
+					if ((tim_Divider_Reg & 0x7) == 7)
+					{
+						tim_Old_State = true;
+					}
+				}
+
+				tim_Divider_Reg = 0xFFFF;
+
+				double_speed = !double_speed;
+
+				ppu.LYC_offset = double_speed ? 1 : 2;
+
+				ppu.LY_153_change = double_speed ? 8 : 10;
+
+				return 0;
+			}
+			else
+			{
+
+				return 0;
+			}
+		}
+
+		uint8_t GetButtons(uint16_t r)
+		{
+			return input_register;
+		}
+
+		uint8_t GetIntRegs(uint16_t r)
+		{
+			if (r == 0)
+			{
+				return REG_FF0F;
+			}
+			else
+			{
+				return REG_FFFF;
+			}
+		}
+
+		void clear_screen_func()
+		{
+			for (int j = 0; j < frame_buffer.Length; j++) { frame_buffer[j] = (int)(frame_buffer[j] | (0x30303 << (clear_counter * 2))); }
+
+			clear_counter++;
+			if (clear_counter == 4)
+			{
+				ppu.clear_screen = false;
+			}
+		}
+
+		void SetIntRegs(uint8_t r)
+		{
+			// For timer interrupts or serial interrupts that occur on the same cycle as the IRQ clear
+			// the clear wins on GB and GBA (tested on GBP.) Assuming true for GBC E too.
+			// but only in single speed
+			if (((REG_FF0F & 4) == 4) && ((r & 4) == 0) && tim_IRQ_Block && !double_speed) { r |= 4; }
+			if (((REG_FF0F & 8) == 8) && ((r & 8) == 0) && ser_IRQ_Block && !double_speed) { r |= 8; }
+			REG_FF0F = r;
 		}
 
 		void On_VBlank()
@@ -683,14 +792,14 @@ namespace GBHawk
 					// check if enabling any of the bits triggered an IRQ
 					for (int i = 0; i < 5; i++)
 					{
-						if (REG_FFFF.Bit(i) && REG_FF0F.Bit(i))
+						if (((REG_FFFF >> i) & (REG_FF0F >> i) & 1) == 1)
 						{
-							cpu.FlagI = true;
+							cpu_FlagIset(true);
 						}
 					}
 
 					// if no bits are in common between flags and enables, de-assert the IRQ
-					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu.FlagI = false; }
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagIset(false); }
 					break;
 
 					// audio regs
@@ -770,7 +879,7 @@ namespace GBHawk
 
 					// VBK
 				case 0xFF4F:
-					if (is_GBC/* && !ppu.HDMA_active*/)
+					if (Is_GBC/* && !ppu.HDMA_active*/)
 					{
 						VRAM_Bank = (uint8_t)(value & 1);
 					}
@@ -816,7 +925,7 @@ namespace GBHawk
 				case 0xFF69:
 				case 0xFF6A:
 				case 0xFF6B:
-					if (is_GBC)
+					if (Is_GBC)
 					{
 						ppu.WriteReg(addr, value);
 					}
@@ -837,11 +946,11 @@ namespace GBHawk
 					break;
 
 				case 0xFF72:
-					if (is_GBC) { undoc_72 = value; }
+					if (Is_GBC) { undoc_72 = value; }
 					break;
 
 				case 0xFF73:
-					if (is_GBC) { undoc_73 = value; }
+					if (Is_GBC) { undoc_73 = value; }
 					break;
 
 				case 0xFF74:
@@ -849,7 +958,7 @@ namespace GBHawk
 					break;
 
 				case 0xFF75:
-					if (is_GBC) { undoc_75 |= (uint8_t)(value & 0x70); }
+					if (Is_GBC) { undoc_75 |= (uint8_t)(value & 0x70); }
 					break;
 
 				case 0xFF76:
@@ -867,7 +976,7 @@ namespace GBHawk
 					// check if enabling any of the bits triggered an IRQ
 					for (int i = 0; i < 5; i++)
 					{
-						if (REG_FFFF.Bit(i) && REG_FF0F.Bit(i))
+						if (((REG_FFFF >> i) & (REG_FF0F >> i) & 1) == 1)
 						{
 							cpu_FlagIset(true);
 						}
@@ -916,1106 +1025,89 @@ namespace GBHawk
 		}
 	# pragma endregion
 
-	#pragma region ARM7_TDMI
+	#pragma region LR 35902
+		// TODO: STOP for second byte nonzero
+
 		#pragma region Variables
 		// General Execution
-		bool cpu_Thumb_Mode;
-		bool cpu_ARM_Cond_Passed;
-		bool cpu_Seq_Access;
-		bool cpu_IRQ_Input;
-		bool cpu_IRQ_Input_Use;
-		bool cpu_Next_IRQ_Input;
-		bool cpu_Next_IRQ_Input_2;
-		bool cpu_Next_IRQ_Input_3;
-		bool cpu_Is_Paused;
-		bool cpu_No_IRQ_Clock;
-		bool cpu_Restore_IRQ_Clock;
-		bool cpu_Take_Branch;
-		bool cpu_LS_Is_Load;
-		bool cpu_LS_First_Access;
-		bool cpu_Invalidate_Pipeline;
-		bool cpu_Overwrite_Base_Reg;
-		bool cpu_Multi_Before;
-		bool cpu_Multi_Inc;
-		bool cpu_Multi_S_Bit;
-		bool cpu_ALU_S_Bit;
-		bool cpu_Multi_Swap;
-		bool cpu_Sign_Extend_Load;
-		bool cpu_Dest_Is_R15;
-		bool cpu_Swap_Store;
-		bool cpu_Swap_Lock;
-		bool cpu_Clear_Pipeline;
-		bool cpu_Special_Inc;
-		bool cpu_FlagI_Old;
-		bool cpu_LDM_Glitch_Mode;
-		bool cpu_LDM_Glitch_Store;
+		bool cpu_was_FlagI, cpu_FlagI;
 
-		bool stopped;
+		uint16_t cpu_Opcode, cpu_Instr_Cycle;
 
-		bool cpu_Trigger_Unhalt;
-		bool cpu_Trigger_Unhalt_2;
-		bool cpu_Trigger_Unhalt_3;
-		bool cpu_Trigger_Unhalt_4;
+		uint8_t cpu_Regs[14] = { };
 
-		// ARM Related Variables
-		uint16_t cpu_Exec_ARM;
+		inline bool cpu_FlagCget() { return (cpu_Regs[5] & 0x10) != 0; }
+		inline void cpu_FlagCset(bool value) { cpu_Regs[5] = (uint16_t)((cpu_Regs[5] & ~0x10) | (value ? 0x10 : 0x00)); }
 
-		// Thumb related Variables
-		uint16_t cpu_Exec_TMB;
+		inline bool cpu_FlagHget() { return (cpu_Regs[5] & 0x20) != 0; }
+		inline void cpu_FlagHset(bool value) { cpu_Regs[5] = (uint16_t)((cpu_Regs[5] & ~0x20) | (value ? 0x20 : 0x00)); }
 
-		uint16_t cpu_Instr_TMB_0, cpu_Instr_TMB_1, cpu_Instr_TMB_2;
-		uint16_t cpu_Instr_Type;
-		uint16_t cpu_Exception_Type;
-		uint16_t cpu_Next_Load_Store_Type;
+		inline bool cpu_FlagNget() { return (cpu_Regs[5] & 0x40) != 0; }
+		inline void cpu_FlagNset(bool value) { cpu_Regs[5] = (uint16_t)((cpu_Regs[5] & ~0x40) | (value ? 0x40 : 0x00)); }
 
-		// register contents are saved and copied out during mode switches
-		uint32_t cpu_user_R8, cpu_user_R9, cpu_user_R10, cpu_user_R11, cpu_user_R12, cpu_user_R13, cpu_user_R14;
-		uint32_t cpu_spr_R13, cpu_spr_R14, cpu_spr_S;
-		uint32_t cpu_abort_R13, cpu_abort_R14, cpu_abort_S;
-		uint32_t cpu_undf_R13, cpu_undf_R14, cpu_undf_S;
-		uint32_t cpu_intr_R13, cpu_intr_R14, cpu_intr_S;
-		uint32_t cpu_fiq_R8, cpu_fiq_R9, cpu_fiq_R10, cpu_fiq_R11, cpu_fiq_R12, cpu_fiq_R13, cpu_fiq_R14, cpu_fiq_S;
+		inline bool cpu_FlagZget() { return (cpu_Regs[5] & 0x80) != 0; }
+		inline void cpu_FlagZset(bool value) { cpu_Regs[5] = (uint16_t)((cpu_Regs[5] & ~0x80) | (value ? 0x80 : 0x00)); }
 
-		uint32_t cpu_Instr_ARM_0, cpu_Instr_ARM_1, cpu_Instr_ARM_2;
-		uint32_t cpu_Temp_Reg;
-		uint32_t cpu_Temp_Addr;
-		uint32_t cpu_Temp_Data;
-		uint32_t cpu_Temp_Mode;
-		uint32_t cpu_Bit_To_Check;
-		uint32_t cpu_Write_Back_Addr;
-		uint32_t cpu_Addr_Offset;
-		uint32_t cpu_Last_Bus_Value;
-		uint32_t cpu_Last_Bus_Value_Old;
+		inline uint16_t cpu_RegPCget() { return ((uint16_t)(cpu_Regs[0] | (cpu_Regs[1] << 8))); }
+		inline void cpu_RegPCset(uint16_t value) { cpu_Regs[0] = (uint16_t)(value & 0xFF); cpu_Regs[1] = (uint16_t)((value >> 8) & 0xFF); }
 
-		uint32_t cpu_ALU_Temp_Val, cpu_ALU_Temp_S_Val, cpu_ALU_Shift_Carry;
+		inline uint16_t cpu_RegBCget() { return ((uint16_t)(cpu_Regs[cpu_C] | (cpu_Regs[cpu_B] << 8))); }
+		inline void cpu_RegBCset(uint16_t value) { cpu_Regs[cpu_C] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_B] = (uint16_t)((value >> 8) & 0xFF); }
 
-		int cpu_Fetch_Cnt, cpu_Fetch_Wait;
 
-		int cpu_Multi_List_Ptr, cpu_Multi_List_Size, cpu_Temp_Reg_Ptr, cpu_Base_Reg, cpu_Base_Reg_2;
-
-		int cpu_ALU_Reg_Dest, cpu_ALU_Reg_Src;
-
-		int cpu_Mul_Cycles, cpu_Mul_Cycles_Cnt;
-
-		int cpu_Shift_Imm;
-
-		uint64_t cpu_ALU_Long_Result;
-		uint64_t CycleCount;
-		uint64_t Clock_Update_Cycle;
-		uint64_t FrameCycle;
-
-		int64_t cpu_ALU_Signed_Long_Result;
-
-		uint32_t cpu_Regs_To_Access[16] = { };
-		uint32_t cpu_Regs[18] = { };
-
-		inline bool cpu_FlagNget() { return (cpu_Regs[16] & 0x80000000) != 0; }
-		inline void cpu_FlagNset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x80000000) | (value ? 0x80000000 : 0x00000000)); }
-
-		inline bool cpu_FlagZget() { return (cpu_Regs[16] & 0x40000000) != 0; }
-		inline void cpu_FlagZset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x40000000) | (value ? 0x40000000 : 0x00000000)); }
-
-		inline bool cpu_FlagCget() { return (cpu_Regs[16] & 0x20000000) != 0; }
-		inline void cpu_FlagCset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x20000000) | (value ? 0x20000000 : 0x00000000)); }
-
-		inline bool cpu_FlagVget() { return (cpu_Regs[16] & 0x10000000) != 0; }
-		inline void cpu_FlagVset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x10000000) | (value ? 0x10000000 : 0x00000000)); }
-
-		inline bool cpu_FlagIget() { return (cpu_Regs[16] & 0x00000080) != 0; }
-		inline void cpu_FlagIset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x00000080) | (value ? 0x00000080 : 0x00000000)); }
-
-		inline bool cpu_FlagFget() { return (cpu_Regs[16] & 0x00000040) != 0; }
-		inline void cpu_FlagFset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x00000040) | (value ? 0x00000040 : 0x00000000)); }
-
-		inline bool cpu_FlagTget() { return (cpu_Regs[16] & 0x00000020) != 0; }
-		inline void cpu_FlagTset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x00000020) | (value ? 0x00000020 : 0x00000000)); }
-
-		void ResetRegisters()
-		{
-			cpu_user_R8 = cpu_user_R9 = cpu_user_R10 = cpu_user_R11 = cpu_user_R12 = cpu_user_R13 = cpu_user_R14 = 0;
-			cpu_spr_R13 = cpu_spr_R14 = cpu_spr_S = 0;
-			cpu_abort_R13 = cpu_abort_R14 = cpu_abort_S = 0;
-			cpu_undf_R13 = cpu_undf_R14 = cpu_undf_S = 0;
-			cpu_intr_R13 = cpu_intr_R14 = cpu_intr_S = 0;
-			cpu_fiq_R8 = cpu_fiq_R9 = cpu_fiq_R10 = cpu_fiq_R11 = cpu_fiq_R12 = cpu_fiq_R13 = cpu_fiq_R14 = cpu_fiq_S = 0;
-
-			for (int i = 0; i < 18; i++)
-			{
-				cpu_Regs[i] = 0;
-			}
-
-			// The processor starts in ARM, supervisor mode, with interrupts disabled
-			cpu_Regs[16] = 0x13;
-
-			// upper bit of spsr always set
-			cpu_Regs[17] = 0x10;
-
-			cpu_FlagIset(true);
-			cpu_FlagFset(true);
-		}
-
-		// NOTE: system and user have same regs
-		void cpu_Swap_Regs(uint32_t New_State, bool C_to_S, bool S_to_C)
-		{
-			uint32_t cpu_s_to_c_reg = cpu_Regs[17];
-			
-			// user and system
-			if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
-			{
-				cpu_user_R13 = cpu_Regs[13];
-				cpu_user_R14 = cpu_Regs[14];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))     // user and system
-				{
-					// nothing to do
-				}
-				else if (New_State == 0x11)		// FIQ
-				{
-					cpu_user_R8 = cpu_Regs[8];
-					cpu_user_R9 = cpu_Regs[9];
-					cpu_user_R10 = cpu_Regs[10];
-					cpu_user_R11 = cpu_Regs[11];
-					cpu_user_R12 = cpu_Regs[12];
-
-					cpu_Regs[8] = cpu_fiq_R8;
-					cpu_Regs[9] = cpu_fiq_R9;
-					cpu_Regs[10] = cpu_fiq_R10;
-					cpu_Regs[11] = cpu_fiq_R11;
-					cpu_Regs[12] = cpu_fiq_R12;
-					cpu_Regs[13] = cpu_fiq_R13;
-					cpu_Regs[14] = cpu_fiq_R14;
-					cpu_Regs[17] = cpu_fiq_S;
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					cpu_Regs[13] = cpu_intr_R13;
-					cpu_Regs[14] = cpu_intr_R14;
-					cpu_Regs[17] = cpu_intr_S;
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					cpu_Regs[13] = cpu_spr_R13;
-					cpu_Regs[14] = cpu_spr_R14;
-					cpu_Regs[17] = cpu_spr_S;
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					cpu_Regs[13] = cpu_abort_R13;
-					cpu_Regs[14] = cpu_abort_R14;
-					cpu_Regs[17] = cpu_abort_S;
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					cpu_Regs[13] = cpu_undf_R13;
-					cpu_Regs[14] = cpu_undf_R14;
-					cpu_Regs[17] = cpu_undf_S;
-				}
-			}
-
-			// FIQ
-			if ((cpu_Regs[16] & 0x1F) == 0x11)
-			{
-				cpu_fiq_R8 = cpu_Regs[8];
-				cpu_fiq_R9 = cpu_Regs[9];
-				cpu_fiq_R10 = cpu_Regs[10];
-				cpu_fiq_R11 = cpu_Regs[11];
-				cpu_fiq_R12 = cpu_Regs[12];
-				cpu_fiq_R13 = cpu_Regs[13];
-				cpu_fiq_R14 = cpu_Regs[14];
-				cpu_fiq_S = cpu_Regs[17];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))     // user and system
-				{
-					cpu_Regs[8] = cpu_user_R8;
-					cpu_Regs[9] = cpu_user_R9;
-					cpu_Regs[10] = cpu_user_R10;
-					cpu_Regs[11] = cpu_user_R11;
-					cpu_Regs[12] = cpu_user_R12;
-					cpu_Regs[13] = cpu_user_R13;
-					cpu_Regs[14] = cpu_user_R14;
-				}
-				else if (New_State == 0x11)     // FIQ
-				{
-					// nothing to do
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					cpu_Regs[8] = cpu_user_R8;
-					cpu_Regs[9] = cpu_user_R9;
-					cpu_Regs[10] = cpu_user_R10;
-					cpu_Regs[11] = cpu_user_R11;
-					cpu_Regs[12] = cpu_user_R12;
-
-					cpu_Regs[13] = cpu_intr_R13;
-					cpu_Regs[14] = cpu_intr_R14;
-					cpu_Regs[17] = cpu_intr_S;
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					cpu_Regs[8] = cpu_user_R8;
-					cpu_Regs[9] = cpu_user_R9;
-					cpu_Regs[10] = cpu_user_R10;
-					cpu_Regs[11] = cpu_user_R11;
-					cpu_Regs[12] = cpu_user_R12;
-
-					cpu_Regs[13] = cpu_spr_R13;
-					cpu_Regs[14] = cpu_spr_R14;
-					cpu_Regs[17] = cpu_spr_S;
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					cpu_Regs[8] = cpu_user_R8;
-					cpu_Regs[9] = cpu_user_R9;
-					cpu_Regs[10] = cpu_user_R10;
-					cpu_Regs[11] = cpu_user_R11;
-					cpu_Regs[12] = cpu_user_R12;
-
-					cpu_Regs[13] = cpu_abort_R13;
-					cpu_Regs[14] = cpu_abort_R14;
-					cpu_Regs[17] = cpu_abort_S;
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					cpu_Regs[8] = cpu_user_R8;
-					cpu_Regs[9] = cpu_user_R9;
-					cpu_Regs[10] = cpu_user_R10;
-					cpu_Regs[11] = cpu_user_R11;
-					cpu_Regs[12] = cpu_user_R12;
-
-					cpu_Regs[13] = cpu_undf_R13;
-					cpu_Regs[14] = cpu_undf_R14;
-					cpu_Regs[17] = cpu_undf_S;
-				}
-			}
-
-			// IRQ
-			if ((cpu_Regs[16] & 0x1F) == 0x12)
-			{
-				cpu_intr_R13 = cpu_Regs[13];
-				cpu_intr_R14 = cpu_Regs[14];
-				cpu_intr_S = cpu_Regs[17];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))		// user and system
-				{
-					cpu_Regs[13] = cpu_user_R13;
-					cpu_Regs[14] = cpu_user_R14;
-				}
-				else if (New_State == 0x11)		// FIQ
-				{
-					cpu_user_R8 = cpu_Regs[8];
-					cpu_user_R9 = cpu_Regs[9];
-					cpu_user_R10 = cpu_Regs[10];
-					cpu_user_R11 = cpu_Regs[11];
-					cpu_user_R12 = cpu_Regs[12];
-
-					cpu_Regs[8] = cpu_fiq_R8;
-					cpu_Regs[9] = cpu_fiq_R9;
-					cpu_Regs[10] = cpu_fiq_R10;
-					cpu_Regs[11] = cpu_fiq_R11;
-					cpu_Regs[12] = cpu_fiq_R12;
-					cpu_Regs[13] = cpu_fiq_R13;
-					cpu_Regs[14] = cpu_fiq_R14;
-					cpu_Regs[17] = cpu_fiq_S;
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					// nothing to do
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					cpu_Regs[13] = cpu_spr_R13;
-					cpu_Regs[14] = cpu_spr_R14;
-					cpu_Regs[17] = cpu_spr_S;
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					cpu_Regs[13] = cpu_abort_R13;
-					cpu_Regs[14] = cpu_abort_R14;
-					cpu_Regs[17] = cpu_abort_S;
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					cpu_Regs[13] = cpu_undf_R13;
-					cpu_Regs[14] = cpu_undf_R14;
-					cpu_Regs[17] = cpu_undf_S;
-				}
-			}
-
-			// Supervisor
-			if ((cpu_Regs[16] & 0x1F) == 0x13)
-			{
-				cpu_spr_R13 = cpu_Regs[13];
-				cpu_spr_R14 = cpu_Regs[14];
-				cpu_spr_S = cpu_Regs[17];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))     // user and system
-				{
-					cpu_Regs[13] = cpu_user_R13;
-					cpu_Regs[14] = cpu_user_R14;
-				}
-				else if (New_State == 0x11)     // FIQ
-				{
-					cpu_user_R8 = cpu_Regs[8];
-					cpu_user_R9 = cpu_Regs[9];
-					cpu_user_R10 = cpu_Regs[10];
-					cpu_user_R11 = cpu_Regs[11];
-					cpu_user_R12 = cpu_Regs[12];
-
-					cpu_Regs[8] = cpu_fiq_R8;
-					cpu_Regs[9] = cpu_fiq_R9;
-					cpu_Regs[10] = cpu_fiq_R10;
-					cpu_Regs[11] = cpu_fiq_R11;
-					cpu_Regs[12] = cpu_fiq_R12;
-					cpu_Regs[13] = cpu_fiq_R13;
-					cpu_Regs[14] = cpu_fiq_R14;
-					cpu_Regs[17] = cpu_fiq_S;
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					cpu_Regs[13] = cpu_intr_R13;
-					cpu_Regs[14] = cpu_intr_R14;
-					cpu_Regs[17] = cpu_intr_S;
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					// nothing to so
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					cpu_Regs[13] = cpu_abort_R13;
-					cpu_Regs[14] = cpu_abort_R14;
-					cpu_Regs[17] = cpu_abort_S;
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					cpu_Regs[13] = cpu_undf_R13;
-					cpu_Regs[14] = cpu_undf_R14;
-					cpu_Regs[17] = cpu_undf_S;
-				}
-			}
-
-			// Abort
-			if ((cpu_Regs[16] & 0x1F) == 0x17)
-			{
-				cpu_abort_R13 = cpu_Regs[13];
-				cpu_abort_R14 = cpu_Regs[14];
-				cpu_abort_S = cpu_Regs[17];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))     // user and system
-				{
-					cpu_Regs[13] = cpu_user_R13;
-					cpu_Regs[14] = cpu_user_R14;
-				}
-				else if (New_State == 0x11)     // FIQ
-				{
-					cpu_user_R8 = cpu_Regs[8];
-					cpu_user_R9 = cpu_Regs[9];
-					cpu_user_R10 = cpu_Regs[10];
-					cpu_user_R11 = cpu_Regs[11];
-					cpu_user_R12 = cpu_Regs[12];
-
-					cpu_Regs[8] = cpu_fiq_R8;
-					cpu_Regs[9] = cpu_fiq_R9;
-					cpu_Regs[10] = cpu_fiq_R10;
-					cpu_Regs[11] = cpu_fiq_R11;
-					cpu_Regs[12] = cpu_fiq_R12;
-					cpu_Regs[13] = cpu_fiq_R13;
-					cpu_Regs[14] = cpu_fiq_R14;
-					cpu_Regs[17] = cpu_fiq_S;
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					cpu_Regs[13] = cpu_intr_R13;
-					cpu_Regs[14] = cpu_intr_R14;
-					cpu_Regs[17] = cpu_intr_S;
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					cpu_Regs[13] = cpu_spr_R13;
-					cpu_Regs[14] = cpu_spr_R14;
-					cpu_Regs[17] = cpu_spr_S;
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					// nothing to so
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					cpu_Regs[13] = cpu_undf_R13;
-					cpu_Regs[14] = cpu_undf_R14;
-					cpu_Regs[17] = cpu_undf_S;
-				}
-			}
-
-			// Undefined Instruction
-			if ((cpu_Regs[16] & 0x1F) == 0x1B)
-			{
-				cpu_undf_R13 = cpu_Regs[13];
-				cpu_undf_R14 = cpu_Regs[14];
-				cpu_undf_S = cpu_Regs[17];
-
-				if ((New_State == 0x10) || (New_State == 0x1F))     // user and system
-				{
-					cpu_Regs[13] = cpu_user_R13;
-					cpu_Regs[14] = cpu_user_R14;
-				}
-				else if (New_State == 0x11)     // FIQ
-				{
-					cpu_user_R8 = cpu_Regs[8];
-					cpu_user_R9 = cpu_Regs[9];
-					cpu_user_R10 = cpu_Regs[10];
-					cpu_user_R11 = cpu_Regs[11];
-					cpu_user_R12 = cpu_Regs[12];
-
-					cpu_Regs[8] = cpu_fiq_R8;
-					cpu_Regs[9] = cpu_fiq_R9;
-					cpu_Regs[10] = cpu_fiq_R10;
-					cpu_Regs[11] = cpu_fiq_R11;
-					cpu_Regs[12] = cpu_fiq_R12;
-					cpu_Regs[13] = cpu_fiq_R13;
-					cpu_Regs[14] = cpu_fiq_R14;
-					cpu_Regs[17] = cpu_fiq_S;
-				}
-				else if (New_State == 0x12)     // IRQ
-				{
-					cpu_Regs[13] = cpu_intr_R13;
-					cpu_Regs[14] = cpu_intr_R14;
-					cpu_Regs[17] = cpu_intr_S;
-				}
-				else if (New_State == 0x13)     // Supervisor
-				{
-					cpu_Regs[13] = cpu_spr_R13;
-					cpu_Regs[14] = cpu_spr_R14;
-					cpu_Regs[17] = cpu_spr_S;
-				}
-				else if (New_State == 0x17)     // Abort
-				{
-					cpu_Regs[13] = cpu_abort_R13;
-					cpu_Regs[14] = cpu_abort_R14;
-					cpu_Regs[17] = cpu_abort_S;
-				}
-				else if (New_State == 0x1B)     // Undefined Instruction
-				{
-					// nothing to so
-				}
-			}
-
-			if (C_to_S) { cpu_Regs[17] = cpu_Regs[16]; }
-
-			if (S_to_C) { cpu_Regs[16] = cpu_s_to_c_reg; }
-
-			cpu_Regs[16] &= 0xFFFFFFE0;
-			cpu_Regs[16] |= New_State;
-		}
+		// local variables for operations, not stated
+		uint32_t cpu_Reg16_dt, cpu_Reg16_st, cpu_ct;
+		uint16_t cpu_ans, cpu_ans_l, cpu_ans_h, cpu_temp;
+		uint8_t cpu_a_d;
+		bool cpu_imm;
 		#pragma endregion
 
 		#pragma region Constant Declarations
-		// Instruction types
-		const static uint16_t cpu_Internal_And_Prefetch_ARM = 0;
-		const static uint16_t cpu_Internal_And_Prefetch_2_ARM = 1;
-		const static uint16_t cpu_Internal_And_Prefetch_3_ARM = 2;
-		const static uint16_t cpu_Internal_And_Branch_1_ARM = 3;
-		const static uint16_t cpu_Internal_And_Branch_2_ARM = 4;
-		const static uint16_t cpu_Internal_And_Branch_3_ARM = 5;
-		const static uint16_t cpu_Prefetch_Only_1_ARM = 6;
-		const static uint16_t cpu_Prefetch_Only_2_ARM = 7;
-		const static uint16_t cpu_Prefetch_And_Load_Store_ARM = 8;
-		const static uint16_t cpu_Load_Store_Word_ARM = 9;
-		const static uint16_t cpu_Load_Store_Half_ARM = 10;
-		const static uint16_t cpu_Load_Store_Byte_ARM = 11;
-		const static uint16_t cpu_Multi_Load_Store_ARM = 12;
-		const static uint16_t cpu_Multiply_ARM = 13;
-		const static uint16_t cpu_Prefetch_Swap_ARM = 14;
-		const static uint16_t cpu_Swap_ARM = 15;
-		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 16;
+		// registers
+		const static uint16_t cpu_PCl = 0;
+		const static uint16_t cpu_PCh = 1;
+		const static uint16_t cpu_SPl = 2;
+		const static uint16_t cpu_SPh = 3;
+		const static uint16_t cpu_A = 4;
+		const static uint16_t cpu_F = 5;
+		const static uint16_t cpu_B = 6;
+		const static uint16_t cpu_C = 7;
+		const static uint16_t cpu_D = 8;
+		const static uint16_t cpu_E = 9;
+		const static uint16_t cpu_H = 10;
+		const static uint16_t cpu_L = 11;
+		const static uint16_t cpu_W = 12;
+		const static uint16_t cpu_Z = 13;
+		const static uint16_t cpu_Aim = 14; // use this indicator for RLCA etc., since the Z flag is reset on those
 
-		const static uint16_t cpu_Internal_And_Prefetch_TMB = 20;
-		const static uint16_t cpu_Internal_And_Prefetch_2_TMB = 21;
-		const static uint16_t cpu_Internal_And_Branch_1_TMB = 22;
-		const static uint16_t cpu_Prefetch_Only_1_TMB = 23;
-		const static uint16_t cpu_Prefetch_Only_2_TMB = 24;
-		const static uint16_t cpu_Prefetch_And_Load_Store_TMB = 25;
-		const static uint16_t cpu_Load_Store_Word_TMB = 26;
-		const static uint16_t cpu_Load_Store_Half_TMB = 27;
-		const static uint16_t cpu_Load_Store_Byte_TMB = 28;
-		const static uint16_t cpu_Multi_Load_Store_TMB = 29;
-		const static uint16_t cpu_Multiply_TMB = 30;
-		const static uint16_t cpu_Prefetch_And_Branch_Ex_TMB = 31;
-
-		// SWI and undefined opcode cycles, same for both Thumb and ARM
-		const static uint16_t cpu_Prefetch_And_SWI_Undef = 38;
-		const static uint16_t cpu_Prefetch_IRQ = 39;
-		const static uint16_t cpu_Internal_Reset_1 = 40;
-		const static uint16_t cpu_Internal_Reset_2 = 41;
-
-		// These operations are all internal cycles, they can take place whilea DMA is occuring
-		const static uint16_t cpu_Internal_And_Branch_4_ARM = 42;
-		const static uint16_t cpu_Internal_Can_Save_ARM = 43;
-		const static uint16_t cpu_Internal_Can_Save_TMB = 44;
-		const static uint16_t cpu_Internal_Halted = 45;
-		const static uint16_t cpu_Multiply_Cycles = 46;
-		const static uint16_t cpu_Pause_For_DMA = 47;
-		
-		// Instruction Operations ARM
-		const static uint16_t cpu_ARM_AND = 10;
-		const static uint16_t cpu_ARM_EOR = 11;
-		const static uint16_t cpu_ARM_SUB = 12;
-		const static uint16_t cpu_ARM_RSB = 13;
-		const static uint16_t cpu_ARM_ADD = 14;
-		const static uint16_t cpu_ARM_ADC = 15;
-		const static uint16_t cpu_ARM_SBC = 16;
-		const static uint16_t cpu_ARM_RSC = 17;
-		const static uint16_t cpu_ARM_TST = 18;
-		const static uint16_t cpu_ARM_TEQ = 19;
-		const static uint16_t cpu_ARM_CMP = 20;
-		const static uint16_t cpu_ARM_CMN = 21;
-		const static uint16_t cpu_ARM_ORR = 22;
-		const static uint16_t cpu_ARM_MOV = 23;
-		const static uint16_t cpu_ARM_BIC = 24;
-		const static uint16_t cpu_ARM_MVN = 25;
-		const static uint16_t cpu_ARM_MSR = 26;
-		const static uint16_t cpu_ARM_MSR_Glitchy = 27;
-		const static uint16_t cpu_ARM_MRS = 28;
-		const static uint16_t cpu_ARM_Bx = 29;
-		const static uint16_t cpu_ARM_MUL = 30;
-		const static uint16_t cpu_ARM_MUL_UL = 31;
-		const static uint16_t cpu_ARM_MUL_SL = 32;
-		const static uint16_t cpu_ARM_Swap = 33;
-		const static uint16_t cpu_ARM_Imm_LS = 34;
-		const static uint16_t cpu_ARM_Reg_LS = 35;
-		const static uint16_t cpu_ARM_Multi_1 = 36;
-		const static uint16_t cpu_ARM_Branch = 37;
-		const static uint16_t cpu_ARM_Cond_Check_Only = 38;
-
-		const static uint16_t cpu_ARM_AND_LDM = 110;
-		const static uint16_t cpu_ARM_EOR_LDM = 111;
-		const static uint16_t cpu_ARM_SUB_LDM = 112;
-		const static uint16_t cpu_ARM_RSB_LDM = 113;
-		const static uint16_t cpu_ARM_ADD_LDM = 114;
-		const static uint16_t cpu_ARM_ADC_LDM = 115;
-		const static uint16_t cpu_ARM_SBC_LDM = 116;
-		const static uint16_t cpu_ARM_RSC_LDM = 117;
-		const static uint16_t cpu_ARM_TST_LDM = 118;
-		const static uint16_t cpu_ARM_TEQ_LDM = 119;
-		const static uint16_t cpu_ARM_CMP_LDM = 120;
-		const static uint16_t cpu_ARM_CMN_LDM = 121;
-		const static uint16_t cpu_ARM_ORR_LDM = 122;
-		const static uint16_t cpu_ARM_MOV_LDM = 123;
-		const static uint16_t cpu_ARM_BIC_LDM = 124;
-		const static uint16_t cpu_ARM_MVN_LDM = 125;
-		const static uint16_t cpu_ARM_MSR_LDM = 126;
-		const static uint16_t cpu_ARM_MSR_LDM_Glitchy = 127;
-		const static uint16_t cpu_ARM_MRS_LDM = 128;
-		const static uint16_t cpu_ARM_Bx_LDM = 129;
-		const static uint16_t cpu_ARM_MUL_LDM = 130;
-		const static uint16_t cpu_ARM_MUL_UL_LDM = 131;
-		const static uint16_t cpu_ARM_MUL_SL_LDM = 132;
-		const static uint16_t cpu_ARM_Swap_LDM = 133;
-		const static uint16_t cpu_ARM_Imm_LS_LDM = 134;
-		const static uint16_t cpu_ARM_Reg_LS_LDM = 135;
-		const static uint16_t cpu_ARM_Multi_1_LDM = 136;
-		const static uint16_t cpu_ARM_Branch_LDM = 137;
-		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 138;
-
-		// Instruction Operations Thumb
-		const static uint16_t cpu_Thumb_Shift = 5;
-		const static uint16_t cpu_Thumb_Add_Sub_Reg = 6;
-		const static uint16_t cpu_Thumb_AND = 10;
-		const static uint16_t cpu_Thumb_EOR = 11;
-		const static uint16_t cpu_Thumb_LSL = 12;
-		const static uint16_t cpu_Thumb_LSR = 13;
-		const static uint16_t cpu_Thumb_ASR = 14;
-		const static uint16_t cpu_Thumb_ADC = 15;
-		const static uint16_t cpu_Thumb_SBC = 16;
-		const static uint16_t cpu_Thumb_ROR = 17;
-		const static uint16_t cpu_Thumb_TST = 18;
-		const static uint16_t cpu_Thumb_NEG = 19;
-		const static uint16_t cpu_Thumb_CMP = 20;
-		const static uint16_t cpu_Thumb_CMN = 21;
-		const static uint16_t cpu_Thumb_ORR = 22;
-		const static uint16_t cpu_Thumb_MUL = 23;
-		const static uint16_t cpu_Thumb_BIC = 24;
-		const static uint16_t cpu_Thumb_MVN = 25;
-
-		const static uint16_t cpu_Thumb_High_Add = 30;
-		const static uint16_t cpu_Thumb_High_Cmp = 31;
-		const static uint16_t cpu_Thumb_High_Bx = 32;
-		const static uint16_t cpu_Thumb_High_MOV = 33;
-		const static uint16_t cpu_Thumb_ALU_Imm = 34;
-		const static uint16_t cpu_Thumb_PC_Rel_LS = 35;
-		const static uint16_t cpu_Thumb_Rel_LS = 36;
-		const static uint16_t cpu_Thumb_Imm_LS = 37;
-		const static uint16_t cpu_Thumb_Half_LS = 38;
-		const static uint16_t cpu_Thumb_SP_REL_LS = 39;
-		const static uint16_t cpu_Thumb_Add_SP_PC = 40;
-		const static uint16_t cpu_Thumb_Add_Sub_Stack = 41;
-		const static uint16_t cpu_Thumb_Push_Pop = 50;
-		const static uint16_t cpu_Thumb_Multi_1 = 60;
-		const static uint16_t cpu_Thumb_Branch = 100;
-		const static uint16_t cpu_Thumb_Branch_Cond = 101;
-		const static uint16_t cpu_Thumb_Branch_Link_1 = 102;
-		const static uint16_t cpu_Thumb_Branch_Link_2 = 103;
-
-		// Exception Types
-		const static uint16_t cpu_IRQ_Exc = 0;
-		const static uint16_t cpu_SWI_Exc = 1;
-		const static uint16_t cpu_Undef_Exc = 2;
-		const static uint16_t cpu_Reset_Exc = 3;
-
-		// ALU related
-		const static uint64_t cpu_Carry_Compare = 0x100000000;
-		const static uint64_t cpu_Long_Neg_Compare = 0x8000000000000000;
-
-		const static uint32_t cpu_Neg_Compare = 0x80000000;
-		const static uint32_t cpu_Cast_Int = 0xFFFFFFFF;
-
-		// Masks
-		const static uint32_t cpu_Unalloc_Mask = 0x0FFFFF00;
-		const static uint32_t cpu_User_Mask = 0xF0000000;
-		const static uint32_t cpu_Priv_Mask = 0x000000DF;
-		const static uint32_t cpu_State_Mask = 0x00000020;
 		#pragma endregion
 
 		#pragma region ARM7_TDMI functions
 
-		void cpu_Reset();
-
-		void cpu_Decode_ARM();
-
-		void cpu_Decode_TMB();
-
-		void cpu_Calculate_Mul_Cycles()
+		void cpu_Reset()
 		{
-			uint32_t temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
+			cpu_was_FlagI = cpu_FlagI = false;
 
-			if (cpu_Thumb_Mode)
-			{
-				temp_calc = cpu_Regs[cpu_ALU_Reg_Dest];
-			}
-
-			// all F's seems to be a special case
-			if ((temp_calc & 0xFF000000) == 0xFF000000)
-			{
-				cpu_Mul_Cycles = 3;
-
-				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
-				{
-					cpu_Mul_Cycles -= 1;
-
-					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
-					{
-						cpu_Mul_Cycles -= 1;
-					}
-				}
-			}
-			else if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 2;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 1;
-			}
-
-			if (!cpu_Thumb_Mode)
-			{
-				if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-				{
-					cpu_Mul_Cycles += 1;
-				}
-			}
-		}
-
-		// seems to be based on the number of non-zero upper bits
-		void cpu_Calculate_Mul_Cycles_UL()
-		{
-			uint32_t temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
-
-			if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 5;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 2;
-			}
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				cpu_Mul_Cycles += 1;
-			}
-		}
-
-		void cpu_Calculate_Mul_Cycles_SL()
-		{
-			uint32_t temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
-
-			// all F's seems to be a special case
-			if ((temp_calc & 0xFF000000) == 0xFF000000)
-			{
-				cpu_Mul_Cycles = 4;
-
-				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
-				{
-					cpu_Mul_Cycles -= 1;
-
-					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
-					{
-						cpu_Mul_Cycles -= 1;
-					}
-				}
-			}
-			else if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 5;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 2;
-			}
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				cpu_Mul_Cycles += 1;
-			}
-		}
-
-		void cpu_Calculate_Mul_Cycles_LDM()
-		{
-			uint32_t temp_calc = 0;
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
-			}
-			else
-			{
-				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
-			}
-
-			// all F's seems to be a special case
-			if ((temp_calc & 0xFF000000) == 0xFF000000)
-			{
-				cpu_Mul_Cycles = 3;
-
-				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
-				{
-					cpu_Mul_Cycles -= 1;
-
-					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
-					{
-						cpu_Mul_Cycles -= 1;
-					}
-				}
-			}
-			else if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 2;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 1;
-			}
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				cpu_Mul_Cycles += 1;
-			}
-		}
-
-		// seems to be based on the number of non-zero upper bits
-		void cpu_Calculate_Mul_Cycles_UL_LDM()
-		{
-			uint32_t temp_calc = 0;
+			cpu_Opcode = 0;
+			cpu_Instr_Cycle = 0;
 			
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
+			for (int i = 0; i < 14; i++)
 			{
-				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
-			}
-			else
-			{
-				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
-			}
-
-			if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 5;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 2;
-			}
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				cpu_Mul_Cycles += 1;
+				cpu_Regs[i] = 0;
 			}
 		}
 
-		void cpu_Calculate_Mul_Cycles_SL_LDM()
+		inline void cpu_Halt_Check()
 		{
-			uint32_t temp_calc = 0;
 
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				temp_calc = cpu_Regs[(cpu_Instr_ARM_2 >> 8) & 0xF];
-			}
-			else
-			{
-				temp_calc = cpu_LDM_Glitch_Get_Reg((cpu_Instr_ARM_2 >> 8) & 0xF);
-			}
-
-			// all F's seems to be a special case
-			if ((temp_calc & 0xFF000000) == 0xFF000000)
-			{
-				cpu_Mul_Cycles = 4;
-
-				if ((temp_calc & 0x00FF0000) == 0x00FF0000)
-				{
-					cpu_Mul_Cycles -= 1;
-
-					if ((temp_calc & 0x0000FF00) == 0x0000FF00)
-					{
-						cpu_Mul_Cycles -= 1;
-					}
-				}
-			}
-			else if ((temp_calc & 0xFF000000) != 0)
-			{
-				cpu_Mul_Cycles = 5;
-			}
-			else if ((temp_calc & 0x00FF0000) != 0)
-			{
-				cpu_Mul_Cycles = 4;
-			}
-			else if ((temp_calc & 0x0000FF00) != 0)
-			{
-				cpu_Mul_Cycles = 3;
-			}
-			else
-			{
-				cpu_Mul_Cycles = 2;
-			}
-
-			if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-			{
-				cpu_Mul_Cycles += 1;
-			}
 		}
 
-		void cpu_Execute_Internal_Only_ARM();
-
-		void cpu_Execute_Internal_Only_TMB();
-
-		bool cpu_ARM_Condition_Check()
+		inline void cpu_Op_Func()
 		{
-			switch (cpu_Instr_ARM_2 & 0xF0000000)
-			{
-			case 0x00000000: return cpu_FlagZget();
-			case 0x10000000: return !cpu_FlagZget();
-			case 0x20000000: return cpu_FlagCget();
-			case 0x30000000: return !cpu_FlagCget();
-			case 0x40000000: return cpu_FlagNget();
-			case 0x50000000: return !cpu_FlagNget();
-			case 0x60000000: return cpu_FlagVget();
-			case 0x70000000: return !cpu_FlagVget();
-			case 0x80000000: return (cpu_FlagCget() && !cpu_FlagZget());
-			case 0x90000000: return (!cpu_FlagCget() || cpu_FlagZget());
-			case 0xA0000000: return (cpu_FlagNget() == cpu_FlagVget());
-			case 0xB0000000: return (cpu_FlagNget() != cpu_FlagVget());
-			case 0xC0000000: return (!cpu_FlagZget() && (cpu_FlagNget() == cpu_FlagVget()));
-			case 0xD0000000: return (cpu_FlagZget() || (cpu_FlagNget() != cpu_FlagVget()));
-			case 0xE0000000: return true;
-			case 0xF0000000: return false; // Architecturally invalid, but is just false
-			}
 
-			return true;
 		}
 
-		bool cpu_Calc_V_Flag_Add(uint32_t val1, uint32_t val2, uint32_t val3)
-		{
-			if ((val1 & cpu_Neg_Compare) == cpu_Neg_Compare)
-			{
-				if ((val2 & cpu_Neg_Compare) == cpu_Neg_Compare)
-				{
-					if ((val3 & cpu_Neg_Compare) == 0)
-					{
-						return true;
-					}
-
-					return false;
-				}
-
-				return false;
-			}
-			else
-			{
-				if ((val2 & cpu_Neg_Compare) == 0)
-				{
-					if ((val3 & cpu_Neg_Compare) == cpu_Neg_Compare)
-					{
-						return true;
-					}
-
-					return false;
-				}
-
-				return false;
-			}
-		}
-
-		bool cpu_Calc_V_Flag_Sub(uint32_t val1, uint32_t val2, uint32_t val3)
-		{
-			if ((val1 & cpu_Neg_Compare) == cpu_Neg_Compare)
-			{
-				if ((val2 & cpu_Neg_Compare) == 0)
-				{
-					if ((val3 & cpu_Neg_Compare) == 0)
-					{
-						return true;
-					}
-
-					return false;
-				}
-
-				return false;
-			}
-			else
-			{
-				if ((val2 & cpu_Neg_Compare) == cpu_Neg_Compare)
-				{
-					if ((val3 & cpu_Neg_Compare) == cpu_Neg_Compare)
-					{
-						return true;
-					}
-
-					return false;
-				}
-
-				return false;
-			}
-		}
-
-		bool cpu_TMB_Condition_Check()
-		{
-			switch (cpu_Instr_TMB_2 & 0xF00)
-			{
-			case 0x000: return cpu_FlagZget();
-			case 0x100: return !cpu_FlagZget();
-			case 0x200: return cpu_FlagCget();
-			case 0x300: return !cpu_FlagCget();
-			case 0x400: return cpu_FlagNget();
-			case 0x500: return !cpu_FlagNget();
-			case 0x600: return cpu_FlagVget();
-			case 0x700: return !cpu_FlagVget();
-			case 0x800: return (cpu_FlagCget() && !cpu_FlagZget());
-			case 0x900: return (!cpu_FlagCget() || cpu_FlagZget());
-			case 0xA00: return (cpu_FlagNget() == cpu_FlagVget());
-			case 0xB00: return (cpu_FlagNget() != cpu_FlagVget());
-			case 0xC00: return (!cpu_FlagZget() && (cpu_FlagNget() == cpu_FlagVget()));
-			case 0xD00: return (cpu_FlagZget() || (cpu_FlagNget() != cpu_FlagVget()));
-			case 0xE00: return true;
-			case 0xF00: return false; // Architecturally invalid, but is just false
-			}
-
-			return true;
-		}
-
-		// LDM^ glitch details:
-		// If the next register access happens immediately following the completion of the LDM^/STM^ instruction,
-		// and this access is to one of the banked registers,
-		// then the returned value will be the banked register and user mode register OR'd together
-		void cpu_LDM_Glitch_Decode_ARM();
-
-		uint32_t cpu_LDM_Glitch_Get_Reg(uint32_t reg_num)
-		{
-			uint32_t ret = 0;
-
-			if (reg_num < 8)
-			{
-				ret = cpu_Regs[reg_num];
-			}
-			else
-			{
-				if (reg_num == 13)
-				{
-					ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R13);
-				}
-				else if (reg_num == 14)
-				{
-					ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R14);
-				}
-				else if ((cpu_Regs[16] & 0x1F) == 0x11)
-				{
-					if (reg_num == 8)
-					{
-						ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R8);
-					}
-					else if (reg_num == 9)
-					{
-						ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R9);
-					}
-					else if (reg_num == 10)
-					{
-						ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R10);
-					}
-					else if (reg_num == 11)
-					{
-						ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R11);
-					}
-					else if (reg_num == 12)
-					{
-						ret = (uint32_t)(cpu_Regs[reg_num] | cpu_user_R12);
-					}
-				}
-				else
-				{
-					ret = cpu_Regs[reg_num];
-				}
-			}
-
-			return ret;
-		}
+		inline void cpu_Execute_One();
 
 		#pragma endregion
 
@@ -3396,1023 +2488,6 @@ namespace GBHawk
 		}
 
 		#pragma endregion
-
-	#pragma endregion
-
-	#pragma region Wait States
-		// NOTE: For 32 bit accesses, PALRAM and VRAM take 2 accesses, but could be interrupted by rendering. So the 32 bit wait state processors need to know about
-		// the destination and value in this case.
-		// For the CPU, the value will be in cpu_Regs[cpu_Temp_Reg_Ptr], for DMA it is in dma_TFR_Word. 
-		// For the CPU, whether it is a write or not is in cpu_LS_Is_Load, for DMA it is in dma_Read_Cycle	
-
-		uint32_t Wait_State_Access_8(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x10000000)
-				{
-					if (addr < 0x0A000000)
-					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
-					}
-					else if (addr < 0x0C000000)
-					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
-					}
-					else if (addr < 0x0E000000)
-					{
-						if ((addr & 0x1FFFF) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
-					}
-					else
-					{
-						wait_ret += SRAM_Waits; // SRAM
-					}
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_In_Use = true;
-								}
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_High_In_Use = true;
-								}
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-
-							ppu_VRAM_In_Use = true;
-						}
-					}
-				}
-				else
-				{
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-
-						ppu_PALRAM_In_Use = true;
-					}
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += WRAM_Waits; //WRAM
-			}
-
-			return wait_ret;
-		}
-
-		uint32_t Wait_State_Access_16(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x10000000)
-				{
-					if (addr < 0x0A000000)
-					{
-						if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0			
-					}
-					else if (addr < 0x0C000000)
-					{
-						if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
-					}
-					else if (addr < 0x0E000000)
-					{
-						if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
-					}
-					else
-					{
-						wait_ret += SRAM_Waits; // SRAM
-					}
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_In_Use = true;
-								}
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_High_In_Use = true;
-								}
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-
-							ppu_VRAM_In_Use = true;
-						}
-					}
-				}
-				else
-				{
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-
-						ppu_PALRAM_In_Use = true;
-					}
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += WRAM_Waits; //WRAM
-			}
-
-			return wait_ret;
-		}
-
-		uint32_t Wait_State_Access_32(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x10000000)
-				{
-					if (addr < 0x0A000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
-					}
-					else if (addr < 0x0C000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
-					}
-					else if (addr < 0x0E000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
-					}
-					else
-					{
-						wait_ret += SRAM_Waits; // SRAM
-					}
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-							}
-
-							// set to true since we also need to check the next cycle
-							ppu_VRAM_High_In_Use = true;
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_In_Use = true;
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-						}
-
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_In_Use = true;
-					}
-
-					if (!cpu_LS_Is_Load)
-					{
-						VRAM_32_Check = true;
-						VRAM_32_Delay = true;
-
-						Misc_Delays = true;
-						delays_to_process = true;
-
-						VRAM_32W_Addr = addr;
-						VRAM_32W_Value = (uint16_t)cpu_Regs[cpu_Temp_Reg_Ptr];
-					}
-				}
-				else
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-					}
-
-					// set to true since we also need to check the next cycle
-					ppu_PALRAM_In_Use = true;
-
-					if (!cpu_LS_Is_Load)
-					{
-						PALRAM_32_Check = true;
-						PALRAM_32_Delay = true;
-
-						Misc_Delays = true;
-						delays_to_process = true;
-
-						PALRAM_32W_Addr = addr;
-						PALRAM_32W_Value = (uint16_t)cpu_Regs[cpu_Temp_Reg_Ptr];
-					}
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
-			}
-
-			return wait_ret;
-		}
-
-		uint32_t Wait_State_Access_32_DMA(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x10000000)
-				{
-					if (addr < 0x0A000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)
-					}
-					else if (addr < 0x0C000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
-					}
-					else if (addr < 0x0E000000)
-					{
-						if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
-						else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
-					}
-					else
-					{
-						wait_ret += SRAM_Waits; // SRAM
-					}
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-							}
-
-							// set to true since we also need to check the next cycle
-							ppu_VRAM_High_In_Use = true;
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_In_Use = true;
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-						}
-
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_In_Use = true;
-					}
-
-					if (!dma_Read_Cycle[dma_Chan_Exec])
-					{
-						VRAM_32_Check = true;
-						VRAM_32_Delay = true;
-
-						Misc_Delays = true;
-						delays_to_process = true;
-
-						VRAM_32W_Addr = addr;
-						VRAM_32W_Value = (uint16_t)dma_TFR_Word;
-					}
-				}
-				else
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-					}
-
-					// set to true since we also need to check the next cycle
-					ppu_PALRAM_In_Use = true;
-
-					if (!dma_Read_Cycle[dma_Chan_Exec])
-					{
-						PALRAM_32_Check = true;
-						PALRAM_32_Delay = true;
-
-						Misc_Delays = true;
-						delays_to_process = true;
-
-						PALRAM_32W_Addr = addr;
-						PALRAM_32W_Value = (uint16_t)dma_TFR_Word;
-					}
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
-			}
-
-			return wait_ret;
-		}
-
-		uint32_t Wait_State_Access_16_Instr(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x0E000000)
-				{
-					if (addr == pre_Check_Addr)
-					{
-						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
-						{
-							// we have this address, can immediately read it
-							pre_Check_Addr += 2;
-							pre_Buffer_Cnt -= 1;
-
-							if (pre_Buffer_Cnt == 0)
-							{
-								if (pre_Buffer_Was_Full) { pre_Check_Addr = 0; pre_Force_Non_Seq = true; }
-
-								if (!pre_Enable) { pre_Check_Addr = 0; }
-							}
-						}
-						else if ((addr & 0x1FFFE) == 0)
-						{
-							// we encountered a boundary, always use non-sequential timing						
-							if (addr < 0x0A000000)
-							{
-								wait_ret += ROM_Waits_0_N;
-							}
-							else if (addr < 0x0C000000)
-							{
-								wait_ret += ROM_Waits_1_N;
-							}
-							else
-							{
-								wait_ret += ROM_Waits_2_N;
-							}
-							
-							if (pre_Cycle_Glitch)
-							{
-								// lose 1 cycle if prefetcher is holding the bus
-								wait_ret += 1;
-							}
-
-							pre_Read_Addr += 2;
-							pre_Check_Addr += 2;
-							pre_Fetch_Cnt = 0;
-
-							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
-
-							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-							pre_Inactive = true;
-						}
-						else
-						{
-							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
-							{
-								// this happens in a branch to the current prefetcher fetch address
-								if (addr < 0x0A000000)
-								{
-									wait_ret += ROM_Waits_0_N;
-								}
-								else if (addr < 0x0C000000)
-								{
-									wait_ret += ROM_Waits_1_N;
-								}
-								else
-								{
-									wait_ret += ROM_Waits_2_N;
-								}
-							}
-							else
-							{
-								// plus 1 since the prefetcher already used this cycle, so don't double count
-								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
-							}
-
-							pre_Read_Addr += 2;
-							pre_Check_Addr += 2;
-							pre_Fetch_Cnt = 0;
-
-							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
-
-							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-							pre_Inactive = true;
-						}
-					}
-					else
-					{
-						// the address is not related to the current ones available to the prefetcher
-						Seq_Access &= !pre_Force_Non_Seq;
-
-						if (addr < 0x0A000000)
-						{
-							if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_0_N; } // ROM 0, Forced Non-Sequential
-							else { wait_ret += Seq_Access ? ROM_Waits_0_S : ROM_Waits_0_N; } // ROM 0
-						}
-						else if (addr < 0x0C000000)
-						{
-							if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_1_N; } // ROM 1, Forced Non-Sequential
-							else { wait_ret += Seq_Access ? ROM_Waits_1_S : ROM_Waits_1_N; } // ROM 1
-						}
-						else
-						{
-							if ((addr & 0x1FFFE) == 0) { wait_ret += ROM_Waits_2_N; } // ROM 2, Forced Non-Sequential
-							else { wait_ret += Seq_Access ? ROM_Waits_2_S : ROM_Waits_2_N; } // ROM 2
-						}
-
-						pre_Force_Non_Seq = false;
-
-						if (pre_Cycle_Glitch)
-						{
-							// lose 1 cycle if prefetcher is holding the bus
-							wait_ret += 1;
-						}
-
-						// abandon the prefetcher current fetch and reset the address
-						pre_Buffer_Cnt = 0;
-						pre_Fetch_Cnt = 0;
-						pre_Run = pre_Enable;
-						pre_Buffer_Was_Full = false;
-						pre_Following = false;
-
-						pre_Inactive = true;
-
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 2; }
-						else { pre_Check_Addr = 0; }
-					}
-				}
-				else if (addr < 0x10000000)
-				{
-					wait_ret += SRAM_Waits; // SRAM
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_In_Use = true;
-								}
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-
-									ppu_VRAM_High_In_Use = true;
-								}
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-
-							ppu_VRAM_In_Use = true;
-						}
-					}
-				}
-				else
-				{
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-
-						ppu_PALRAM_In_Use = true;
-					}
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += WRAM_Waits; //WRAM
-			}
-
-			return wait_ret;
-		}
-
-		uint32_t Wait_State_Access_32_Instr(uint32_t addr, bool Seq_Access)
-		{
-			uint32_t wait_ret = 1;
-			uint32_t addr_check = (addr & 0xFFFFFFFC);
-
-			if (addr >= 0x08000000)
-			{
-				if (addr < 0x0E000000)
-				{
-					if (addr_check == pre_Check_Addr)
-					{
-						if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
-						{
-							// we have this address, can immediately read it
-							pre_Check_Addr += 2;
-							pre_Buffer_Cnt -= 1;
-
-							// check if we have the next address as well
-							if ((pre_Check_Addr != pre_Read_Addr) && (pre_Buffer_Cnt > 0))
-							{
-								// the prefetcher can return 32 bits in 1 cycle if it has it available
-								pre_Check_Addr += 2;
-								pre_Buffer_Cnt -= 1;
-
-								if (pre_Buffer_Cnt == 0)
-								{
-									if (pre_Buffer_Was_Full) { pre_Check_Addr = 0; pre_Force_Non_Seq = true; }
-
-									if (!pre_Enable) { pre_Check_Addr = 0; }
-								}
-							}
-							else
-							{
-								// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-								if (pre_Buffer_Was_Full && (pre_Buffer_Cnt == 0))
-								{
-									// console crashes when prefetcher is stopped mid instruction fetch
-									wait_ret = (int)0x7FFFFFF0;
-
-									//abandon the prefetcher current fetch and reset
-									pre_Fetch_Cnt = 0;
-									pre_Check_Addr = 0;
-								}
-								else
-								{
-									// plus 1 since the prefetcher already used this cycle, so don't double count
-									wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
-
-									// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-									pre_Inactive = true;
-
-									pre_Read_Addr += 2;
-									pre_Check_Addr += 2;
-									pre_Fetch_Cnt = 0;
-									pre_Buffer_Cnt = 0;
-									pre_Run = pre_Enable;
-
-									if (!pre_Enable) { pre_Check_Addr = 0; }
-								}
-							}
-						}
-						else if ((addr & 0x1FFFC) == 0)
-						{
-							// we encountered a boundary, always use non-sequential timing						
-							if (addr < 0x0A000000)
-							{
-								wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1;
-							}
-							else if (addr < 0x0C000000)
-							{
-								wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1;
-							}
-							else
-							{
-								wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1;
-							}
-
-							if (pre_Cycle_Glitch)
-							{
-								// lose 1 cycle if prefetcher is holding the bus
-								wait_ret += 1;
-							}
-
-							pre_Read_Addr += 4;
-							pre_Check_Addr += 4;
-							pre_Fetch_Cnt = 0;
-
-							if (!pre_Enable) { pre_Check_Addr = 0; pre_Run = false; }
-
-							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-							pre_Inactive = true;
-						}
-						else
-						{
-							// we are in the middle of a prefetch access, it takes however many cycles remain to fetch it
-							if (!Seq_Access && (pre_Fetch_Cnt == 1) && !pre_Following)
-							{
-								// this happens in a branch to the current prefetcher fetch address
-								if (addr < 0x0A000000)
-								{
-									wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1;
-								}
-								else if (addr < 0x0C000000)
-								{
-									wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1;
-								}
-								else
-								{
-									wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1;
-								}
-							}
-							else
-							{
-								// plus 1 since the prefetcher already used this cycle, so don't double count
-								wait_ret = pre_Fetch_Wait - pre_Fetch_Cnt + 1;
-
-								// then add the second access
-								if (addr < 0x0A000000)
-								{
-									wait_ret += ROM_Waits_0_S + 1; // ROM 0					
-								}
-								else if (addr < 0x0C000000)
-								{
-									wait_ret += ROM_Waits_1_S + 1; // ROM 1
-								}
-								else
-								{
-									wait_ret += ROM_Waits_2_S + 1; // ROM 2
-								}
-							}
-
-							// it is as if the cpu takes over a regular access, so reset the pre-fetcher
-							pre_Inactive = true;
-
-							pre_Read_Addr += 4;
-							pre_Check_Addr += 4;
-							pre_Fetch_Cnt = 0;
-							pre_Run = pre_Enable;
-
-							if (!pre_Enable) { pre_Check_Addr = 0; }
-						}
-					}
-					else
-					{
-						// the address is not related to the current ones available to the prefetcher
-						Seq_Access &= !pre_Force_Non_Seq;
-
-						if (addr < 0x0A000000)
-						{
-							if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0, Forced Non-Sequential (2 accesses)
-							else { wait_ret += Seq_Access ? ROM_Waits_0_S * 2 + 1 : ROM_Waits_0_N + ROM_Waits_0_S + 1; } // ROM 0 (2 accesses)				
-						}
-						else if (addr < 0x0C000000)
-						{
-							if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1, Forced Non-Sequential (2 accesses)
-							else { wait_ret += Seq_Access ? ROM_Waits_1_S * 2 + 1 : ROM_Waits_1_N + ROM_Waits_1_S + 1; } // ROM 1 (2 accesses)
-						}
-						else
-						{
-							if ((addr & 0x1FFFC) == 0) { wait_ret += ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2, Forced Non-Sequential (2 accesses)
-							else { wait_ret += Seq_Access ? ROM_Waits_2_S * 2 + 1 : ROM_Waits_2_N + ROM_Waits_2_S + 1; } // ROM 2 (2 accesses)
-						}
-
-						pre_Force_Non_Seq = false;
-
-						if (pre_Cycle_Glitch)
-						{
-							// lose 1 cycle if prefetcher is holding the bus
-							wait_ret += 1;
-						}
-
-						// abandon the prefetcher current fetch and reset the address
-						pre_Buffer_Cnt = 0;
-						pre_Fetch_Cnt = 0;
-						pre_Run = pre_Enable;
-						pre_Buffer_Was_Full = false;
-						pre_Following = false;
-
-						pre_Inactive = true;
-
-						if (pre_Enable) { pre_Check_Addr = pre_Read_Addr = addr + 4; }
-						else { pre_Check_Addr = 0; }
-					}
-				}
-				else if (addr < 0x10000000)
-				{
-					wait_ret += SRAM_Waits; // SRAM
-
-					if (pre_Cycle_Glitch)
-					{
-						// lose 1 cycle if prefetcher is holding the bus
-						wait_ret += 1;
-					}
-
-					// abandon the prefetcher current fetch and reset
-					pre_Fetch_Cnt = 0;
-					pre_Check_Addr = 0;
-				}
-			}
-			else if (addr >= 0x05000000)
-			{
-				if (addr >= 0x07000000)
-				{
-					if (ppu_OAM_Access)
-					{
-						wait_ret += 1;
-					}
-				}
-				else if (addr >= 0x06000000)
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					if ((addr & 0x00010000) == 0x00010000)
-					{
-						if ((addr & 0x00004000) == 0x00004000)
-						{
-							if (ppu_VRAM_High_Access)
-							{
-								wait_ret += 1;
-							}
-
-							// set to true since we also need to check the next cycle
-							ppu_VRAM_High_In_Use = true;
-						}
-						else
-						{
-							if ((ppu_BG_Mode >= 3) && (ppu_BG_Mode <= 5))
-							{
-								if (ppu_VRAM_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_In_Use = true;
-							}
-							else
-							{
-								if (ppu_VRAM_High_Access)
-								{
-									wait_ret += 1;
-								}
-
-								// set to true since we also need to check the next cycle
-								ppu_VRAM_High_In_Use = true;
-							}
-						}
-					}
-					else
-					{
-						if (ppu_VRAM_Access)
-						{
-							wait_ret += 1;
-						}
-
-						// set to true since we also need to check the next cycle
-						ppu_VRAM_In_Use = true;
-					}
-				}
-				else
-				{
-					wait_ret += 1; // PALRAM and VRAM take 2 cycles on 32 bit accesses
-
-					// check both edges of the access
-					if (ppu_PALRAM_Access)
-					{
-						wait_ret += 1;
-					}
-
-					// set to true since we also need to check the next cycle
-					ppu_PALRAM_In_Use = true;
-				}
-			}
-			else if ((addr < 0x03000000) && (addr >= 0x02000000))
-			{
-				wait_ret += (WRAM_Waits * 2 + 1); // WRAM (2 accesses)
-			}
-
-			return wait_ret;
-		}
 
 	#pragma endregion
 

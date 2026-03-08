@@ -4,11 +4,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 {
 	public partial class LR35902
 	{
-		// local variables for operations, not stated
-		private int Reg16_d, Reg16_s, c;
-		private ushort ans, ans_l, ans_h, temp;
-		private byte a_d;
-		private bool imm;
+		
 
 		public void Read_Func(ushort dest, ushort src_l, ushort src_h)
 		{
