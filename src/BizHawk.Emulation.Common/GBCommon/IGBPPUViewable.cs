@@ -12,7 +12,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 	/// </summary>
 	public interface IGBPPUViewable : IEmulatorService
 	{
-		bool IsCGBMode();
+		public bool IsCGBMode();
+
+		public bool IsCGBDMGMode();
 
 		/// <summary>
 		/// get the 32 byte BG palette ram

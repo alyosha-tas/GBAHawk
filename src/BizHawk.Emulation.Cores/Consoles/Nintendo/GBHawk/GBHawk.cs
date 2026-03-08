@@ -2,10 +2,8 @@
 using BizHawk.Common.ReflectionExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
-using BizHawk.Emulation.Cores.Nintendo.NES.Common;
 using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Text;
 
 // TODO: mode1_disableint_gbc.gbc behaves differently between GBC and GBA, why?
 // TODO: Window Position A6 behaves differently
@@ -23,85 +21,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGBPPUViewable,
 	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
-		public bool Is_GBC = false;
+		public bool Is_GBC;
+		public bool is_GB_in_GBC;
 
-		// this register controls whether or not the GB BIOS is mapped into memory
-		public byte GB_bios_register;
-
-		public byte input_register;
-
-		// The unused bits in this register are still read/writable
-		public byte REG_FFFF;
-		// The unused bits in this register (interrupt flags) are always set
-		public byte REG_FF0F = 0xE0;
-		// Updating reg FF0F seems to be delayed by one cycle,needs more testing
-		public byte REG_FF0F_OLD = 0xE0;
-
-		// memory domains
-		public byte[] RAM = new byte[0x8000]; // only 0x2000 available to GB
-		public byte[] ZP_RAM = new byte[0x80];
-		/* 
-		 * VRAM is arranged as: 
-		 * 0x1800 Tiles
-		 * 0x400 BG Map 1
-		 * 0x400 BG Map 2
-		 * 0x1800 Tiles
-		 * 0x400 CA Map 1
-		 * 0x400 CA Map 2
-		 * Only the top set is available in GB (i.e. VRAM_Bank = 0)
-		 */
-		public byte[] VRAM = new byte[0x4000];
-		public byte[] OAM = new byte[0xA0];
-
-		// vblank memory domains
-		public byte[] RAM_vbls = new byte[0x8000];
-		public byte[] ZP_RAM_vbls = new byte[0x80];
-		public byte[] VRAM_vbls = new byte[0x4000];
-		public byte[] OAM_vbls = new byte[0xA0];
-
-		public int RAM_Bank;
-		public int RAM_Bank_ret;
-		public byte VRAM_Bank;
-		internal bool is_GB_in_GBC;
-		public bool GBC_compat; // compatibility mode for GB games played on GBC
-		public bool double_speed;
-		public bool speed_switch;
-		public bool HDMA_transfer; // stalls CPU when in progress
-		public byte bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
-		public ulong bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
-		public byte IR_reg, IR_mask, IR_signal, IR_receive, IR_self;
-		public int IR_write;
-
-		// several undocumented GBC Registers
-		public byte undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
-
-		public byte[] _bios;
+		public byte[] BIOS;
 		public readonly byte[] _rom;
 		public readonly byte[] header = new byte[0x50];
 
 		public byte[] cart_RAM;
 		public byte[] cart_RAM_vbls;
 		public bool has_bat;
-
-		private int _frame = 0;
-
+		public int Cart_RAM_Size;
 		public bool Use_MT;
-		public ushort addr_access;
-
-		public MapperBase mapper;
-
-		private readonly GBHawkDisassembler _disassembler = new();
-
-		private readonly ITraceable _tracer;
-
-		public LR35902 cpu;
-		public PPU ppu;
-		public Timer timer;
-		public Audio audio;
-		public SerialPort serialport;
 
 		public bool is_subframe_core = false;
-		public bool is_multi_core = false;
 
 		private static readonly byte[] GBA_override = { 0xFF, 0x00, 0xCD, 0x03, 0x35, 0xAA, 0x31, 0x90, 0x94, 0x00, 0x00, 0x00, 0x00 };
 
@@ -117,60 +50,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			Is_GBC = SyncSettings.ConsoleMode != GBHawkSyncSettings.ConsoleModeType.GB;
 
-			if (Is_GBC)
-			{
-				
-				
-				_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
-
-				// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-				if (SyncSettings.GBACGB)
-				{
-					for (int i = 0; i < 13; i++)
-					{
-						_bios[i + 0xF3] = (byte)((GBA_override[i] + _bios[i + 0xF3]) & 0xFF);
-					}
-
-					IR_mask = 2;
-				}
-			}
-			else
-			{
-				
-				
-				_bios = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
-			}
-
-
-
-			cpu = new LR35902
-			{
-				ReadMemory = ReadMemory,
-				WriteMemory = WriteMemory,
-				PeekMemory = PeekMemory,
-				DummyReadMemory = ReadMemory,
-				SpeedFunc = SpeedFunc,
-				GetButtons = GetButtons,
-				GetIntRegs = GetIntRegs,
-				SetIntRegs = SetIntRegs
-			};
-			
-			timer = new Timer();
-			audio = new Audio();
-			serialport = new SerialPort();
-
-			// Load up a BIOS and initialize the correct PPU
-			
-			ppu = new GBC_PPU();
-
-			// set up IR register to off state
-			IR_mask = 0; IR_reg = 0x3E; IR_receive = 2; IR_self = 2; IR_signal = 2;
-
 			Buffer.BlockCopy(rom, 0x100, header, 0, 0x50);
 
 			if ((header[0x43] != 0x80) && (header[0x43] != 0xC0))
 			{
-				ppu = new GBC_GB_PPU();
 				is_GB_in_GBC = true; // for movie files
 			}
 
@@ -180,24 +63,121 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			Console.WriteLine(romHashSHA1);
 
 			_rom = rom;
-			var mppr = Setup_Mapper(romHashMD5, romHashSHA1);
-			if (cart_RAM != null) { cart_RAM_vbls = new byte[cart_RAM.Length]; }
+			string mppr;
+
+			GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out has_bat, out Cart_RAM_Size);
+
+			if (Cart_RAM_Size != 0)
+			{
+				cart_RAM = new byte[Cart_RAM_Size];
+				cart_RAM_vbls = new byte[Cart_RAM_Size];
+
+				Console.Write("RAM: "); Console.WriteLine(Cart_RAM_Size);
+			}
 
 			_controllerDeck = new(mppr is "MBC7"
 				? typeof(StandardTilt).DisplayName()
 				: GBHawkControllerDeck.DefaultControllerName, subframe);
 
-			timer.Core = this;
-			audio.Core = this;
-			ppu.Core = this;
-			serialport.Core = this;
+			if ((mppr == "MBC3") || (mppr == "HuC3") || (mppr == "TAMA5"))
+			{
+				Use_MT = true;
+			}
+
+			int years = 0;
+			int days = 0;
+			int days_upper = 0;
+			int hours = 0 ;
+			int minutes = 0;
+			int minutes_upper = 0;
+			int seconds = 0;
+			int remaining = 0;
+
+
+
+			if (mppr == "MBC3")
+			{
+				days = (int)Math.Floor(SyncSettings.RTCInitialTime / 86400.0);
+				days_upper = ((days & 0x100) >> 8) | ((days & 0x200) >> 2);
+				remaining = SyncSettings.RTCInitialTime - (days * 86400);
+				hours = (int)Math.Floor(remaining / 3600.0);
+				remaining = remaining - (hours * 3600);
+				minutes = (int)Math.Floor(remaining / 60.0);
+				seconds = remaining - (minutes * 60);
+			}
+
+			if (mppr == "HuC3")
+			{
+				years = (int)Math.Floor(SyncSettings.RTCInitialTime / 31536000.0);
+				remaining = SyncSettings.RTCInitialTime - (years * 31536000);
+				days = (int)Math.Floor(remaining / 86400.0);
+				days_upper = (days >> 8) & 0xF;
+				remaining = remaining - (days * 86400);
+				minutes = (int)Math.Floor(remaining / 60.0);
+				minutes_upper = (minutes >> 8) & 0xF;
+			}
+
+
+			if (Is_GBC)
+			{
+				GB_Pntr = LibGBCHawk.GBC_create();
+
+				GBC_message = GetMessageGBC;
+
+				LibGBCHawk.GBC_setmessagecallback(GB_Pntr, GBC_message);
+
+				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
+
+				// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
+				if (SyncSettings.GBACGB)
+				{
+					for (int i = 0; i < 13; i++)
+					{
+						BIOS[i + 0xF3] = (byte)((GBA_override[i] + BIOS[i + 0xF3]) & 0xFF);
+					}
+				}
+
+				LibGBCHawk.GBC_load_bios(GB_Pntr, BIOS);
+
+				LibGBCHawk.GBC_load(GB_Pntr, rom, (uint)rom.Length);
+
+				if (mppr == "MBC3")
+				{
+					mapper.RTC_Get(SyncSettings.RTCOffset, 5);
+					mapper.RTC_Get(days_upper, 4);
+					mapper.RTC_Get(days & 0xFF, 3);
+					mapper.RTC_Get(hours & 0xFF, 2);
+					mapper.RTC_Get(minutes & 0xFF, 1);
+					mapper.RTC_Get(seconds & 0xFF, 0);
+				}
+
+				if (mppr == "HuC3")
+				{
+					mapper.RTC_Get(years, 24);
+					mapper.RTC_Get(days_upper, 20);
+					mapper.RTC_Get(days & 0xFF, 12);
+					mapper.RTC_Get(minutes_upper, 8);
+					mapper.RTC_Get(remaining & 0xFF, 0);
+				}
+			}
+			else
+			{
+				GB_Pntr = LibGBHawk.GB_create();
+
+				GB_message = GetMessageGB;
+
+				LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
+
+				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
+
+				LibGBHawk.GB_load_bios(GB_Pntr, BIOS);
+
+				LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length);
+			}
 
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(audio);
 			ServiceProvider = ser;
-
-			_ = PutSettings(settings ?? new GBHawkSettings());
-			_syncSettings = (GBHawkSyncSettings)syncSettings ?? new GBHawkSyncSettings();
 
 			_tracer = new TraceBuffer(cpu.TraceHeader);
 			ser.Register<ITraceable>(_tracer);
@@ -320,6 +300,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		private readonly GBHawkControllerDeck _controllerDeck;
 
+		private LibGBHawk.MessageCallback GB_message;
+		private void GetMessageGB(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBHawk.GB_getmessage(GB_Pntr, new_m);
+
+			Console.WriteLine(new_m);
+		}
+
+		private LibGBCHawk.MessageCallback GBC_message;
+
+		private void GetMessageGBC(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBCHawk.GBC_getmessage(GB_Pntr, new_m);
+
+			Console.WriteLine(new_m);
+		}
+
 		public void HardReset()
 		{
 			GB_bios_register = 0; // bios enable
@@ -439,264 +440,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 					RAM[0x7E0A + (16 * i)] = 0xFF;
 				}
 				*/
-			}
-		}
-
-		public string Setup_Mapper(string romHashMD5, string romHashSHA1)
-		{
-			// setup up mapper based on header entry
-			string mppr;
-
-			switch (header[0x47])
-			{
-				case 0x0: mapper = new MapperDefault();		mppr = "NROM";							break;
-				case 0x1: mapper = new MapperMBC1();		mppr = "MBC1";							break;
-				case 0x2: mapper = new MapperMBC1();		mppr = "MBC1";							break;
-				case 0x3: mapper = new MapperMBC1();		mppr = "MBC1";		has_bat = true;		break;
-				case 0x5: mapper = new MapperMBC2();		mppr = "MBC2";							break;
-				case 0x6: mapper = new MapperMBC2();		mppr = "MBC2";		has_bat = true;		break;
-				case 0x8: mapper = new MapperDefault();		mppr = "NROM";							break;
-				case 0x9: mapper = new MapperDefault();		mppr = "NROM";		has_bat = true;		break;
-				case 0xB: mapper = new MapperMMM01();		mppr = "MMM01";							break;
-				case 0xC: mapper = new MapperMMM01();		mppr = "MMM01";							break;
-				case 0xD: mapper = new MapperMMM01();		mppr = "MMM01";		has_bat = true;		break;
-				case 0xF: mapper = new MapperMBC3();		mppr = "MBC3";		has_bat = true;		break;
-				case 0x10: mapper = new MapperMBC3();		mppr = "MBC3";		has_bat = true;		break;
-				case 0x11: mapper = new MapperMBC3();		mppr = "MBC3";							break;
-				case 0x12: mapper = new MapperMBC3();		mppr = "MBC3";							break;
-				case 0x13: mapper = new MapperMBC3();		mppr = "MBC3";		has_bat = true;		break;
-				case 0x19: mapper = new MapperMBC5();		mppr = "MBC5";							break;
-				case 0x1A: mapper = new MapperMBC5();		mppr = "MBC5";		has_bat = true;		break;
-				case 0x1B: mapper = new MapperMBC5();		mppr = "MBC5";							break;
-				case 0x1C: mapper = new MapperMBC5();		mppr = "MBC5";							break;
-				case 0x1D: mapper = new MapperMBC5();		mppr = "MBC5";							break;
-				case 0x1E: mapper = new MapperMBC5();		mppr = "MBC5";		has_bat = true;		break;
-				case 0x20: mapper = new MapperMBC6();		mppr = "MBC6";							break;
-				case 0x22: mapper = new MapperMBC7();		mppr = "MBC7";		has_bat = true;		break;
-				case 0xFC: mapper = new MapperCamera();		mppr = "CAM";		has_bat = true;		break;
-				case 0xFD: mapper = new MapperTAMA5();		mppr = "TAMA5";		has_bat = true;		break;
-				case 0xFE: mapper = new MapperHuC3();		mppr = "HuC3";		has_bat = true;		break;
-				case 0xFF: mapper = new MapperHuC1();		mppr = "HuC1";							break;
-
-				// Bootleg mappers
-				// NOTE: Sachen mapper selection does not account for scrambling, so if another bootleg mapper
-				// identifies itself as 0x31, this will need to be modified
-				case 0x31: mapper = new MapperSachen2();	mppr = "Schn2";							break;
-
-				case 0x4:
-				case 0x7:
-				case 0xA:
-				case 0xE:
-				case 0x14:
-				case 0x15:
-				case 0x16:
-				case 0x17:
-				case 0x18:
-				case 0x1F:
-				case 0x21:
-				default:
-					// mapper not implemented
-					Console.WriteLine(header[0x47]);
-					throw new Exception("Mapper not implemented");
-			}
-
-			// special case for multi cart mappers
-			if (romHashMD5 is RomChecksums.UnknownRomA
-				|| romHashSHA1 is RomChecksums.BombermanCollection or RomChecksums.MortalKombatIAndIIUSAEU or RomChecksums.BombermanSelectionKORNotInGameDB)
-			{
-				Console.WriteLine("Using Multi-Cart Mapper");
-				mapper = new MapperMBC1Multi();
-			}
-
-			// 2 games use the MMM01 mapper, the header is at the end of the file so won't be picked up automatically
-			else if (romHashSHA1 is RomChecksums.MomotaroCollection2 or RomChecksums.TaitoVarietyPack)
-			{
-				Console.WriteLine("Using MMM01 Mapper");
-				mapper = new MapperMMM01();
-				mppr = "MMM01";
-				has_bat = false;
-			}
-
-			// Wisdom Tree does not identify their mapper, so use hash instead
-			else if (romHashSHA1 is RomChecksums.WisdomTreeJoshua or RomChecksums.WisdomTreeSpiritualWarfare or RomChecksums.WisdomTreeExodus or RomChecksums.WisdomTreeKJVBible or RomChecksums.WisdomTreeNIVBible)
-			{
-				Console.WriteLine("Using Wisdom Tree Mapper");
-				mapper = new MapperWT();
-				mppr = "Wtree";
-			}
-
-			// special case for bootlegs
-			else if (romHashMD5 == RomChecksums.PirateRockMan8)
-			{
-				Console.WriteLine("Using RockMan 8 (Unlicensed) Mapper");
-				mapper = new MapperRM8();
-			}
-			else if (romHashMD5 == RomChecksums.PirateSachen1)
-			{
-				Console.WriteLine("Using Sachen 1 (Unlicensed) Mapper");
-				mapper = new MapperSachen1();
-				mppr = "Schn1";
-			}
-
-			Console.Write("Mapper: ");
-			Console.WriteLine(mppr);
-
-			cart_RAM = null;
-
-			switch (header[0x49])
-			{
-				case 1:
-					cart_RAM = new byte[0x800];
-					break;
-				case 2:
-					cart_RAM = new byte[0x2000];
-					break;
-				case 3:
-					cart_RAM = new byte[0x8000];
-					break;
-				case 4:
-					cart_RAM = new byte[0x20000];
-					break;
-				case 5:
-					cart_RAM = new byte[0x10000];
-					break;
-				case 0:
-					if ((mppr != "Schn1") && (mppr != "Schn2") && (mppr != "MMM01"))
-					{
-						Console.WriteLine("Mapper Number indicates Battery Backed RAM but none present.");
-						Console.WriteLine("Disabling Battery Setting.");
-						has_bat = false;
-					}					
-					break;
-			}
-
-			// Sachen maper not known to have RAM
-			if ((mppr == "Schn1") || (mppr == "Schn2"))
-			{
-				cart_RAM = null;
-				has_bat = false;
-				Use_MT = true;
-			}
-
-			// mbc2 carts have built in RAM
-			if (mppr == "MBC2")
-			{
-				cart_RAM = new byte[0x200];
-			}
-
-			// mbc7 has 256 bytes of RAM, regardless of any header info
-			if (mppr == "MBC7")
-			{
-				cart_RAM = new byte[0x100];
-				has_bat = true;
-			}
-
-			// TAMA5 has 0x1000 bytes of RAM, regardless of any header info
-			if (mppr == "TAMA5")
-			{
-				cart_RAM = new byte[0x20];
-				has_bat = true;
-			}
-
-			// Momotaro Collection 2 has 8kB SRAM
-			if (romHashSHA1 is RomChecksums.MomotaroCollection2)
-			{
-				cart_RAM = new byte[0x2000];
-				has_bat = true;
-			}
-
-			mapper.Core = this;
-
-			if (cart_RAM != null && (mppr != "MBC7"))
-			{
-				Console.Write("RAM: "); Console.WriteLine(cart_RAM.Length);
-
-				for (int i = 0; i < cart_RAM.Length; i++)
-				{
-					cart_RAM[i] = 0xFF;
-				}
-			}
-			
-			// Extra RTC initialization for mbc3, HuC3, and TAMA5
-			if (mppr == "MBC3")
-			{
-				Use_MT = true;
-
-				mapper.RTC_Get(_syncSettings.RTCOffset, 5);
-
-				int days = (int)Math.Floor(_syncSettings.RTCInitialTime / 86400.0);
-
-				int days_upper = ((days & 0x100) >> 8) | ((days & 0x200) >> 2);
-
-				mapper.RTC_Get(days_upper, 4);
-				mapper.RTC_Get(days & 0xFF, 3);
-
-				int remaining = _syncSettings.RTCInitialTime - (days * 86400);
-
-				int hours = (int)Math.Floor(remaining / 3600.0);
-
-				mapper.RTC_Get(hours & 0xFF, 2);
-
-				remaining = remaining - (hours * 3600);
-
-				int minutes = (int)Math.Floor(remaining / 60.0);
-
-				mapper.RTC_Get(minutes & 0xFF, 1);
-
-				remaining = remaining - (minutes * 60);
-
-				mapper.RTC_Get(remaining & 0xFF, 0);
-			}
-
-			if (mppr == "HuC3")
-			{
-				Use_MT = true;
-
-				int years = (int)Math.Floor(_syncSettings.RTCInitialTime / 31536000.0);
-
-				mapper.RTC_Get(years, 24);
-
-				int remaining = _syncSettings.RTCInitialTime - (years * 31536000);
-
-				int days = (int)Math.Floor(remaining / 86400.0);
-				int days_upper = (days >> 8) & 0xF;
-
-				mapper.RTC_Get(days_upper, 20);
-				mapper.RTC_Get(days & 0xFF, 12);
-
-				remaining = remaining - (days * 86400);
-
-				int minutes = (int)Math.Floor(remaining / 60.0);
-				int minutes_upper = (minutes >> 8) & 0xF;
-
-				mapper.RTC_Get(minutes_upper, 8);
-				mapper.RTC_Get(remaining & 0xFF, 0);
-			}
-
-			if (mppr == "TAMA5")
-			{
-				Use_MT = true;
-
-				// currently no date / time input for TAMA5
-
-			}
-
-			return mppr;
-		}
-
-		public class GBHawkDisassembler : VerifiedDisassembler
-		{
-			public bool UseRGBDSSyntax;
-
-			public override IEnumerable<string> AvailableCpus { get; } = new[] { "LR35902" };
-
-			public override string PCRegisterName => "PC";
-
-			public override string Disassemble(MemoryDomain m, uint addr, out int length)
-			{
-				var ret = LR35902.Disassemble((ushort) addr, a => m.PeekByte(a), out var tmp);
-				length = tmp;
-				return ret;
 			}
 		}
 	}

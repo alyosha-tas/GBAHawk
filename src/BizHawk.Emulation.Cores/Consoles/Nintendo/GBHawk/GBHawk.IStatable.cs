@@ -44,7 +44,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			ser.Sync(nameof(VRAM), ref VRAM, false);
 			ser.Sync(nameof(OAM), ref OAM, false);
 
-			ser.Sync(nameof(_bios), ref _bios, false);
+			ser.Sync(nameof(BIOS), ref BIOS, false);
 
 			ser.Sync(nameof(RAM_Bank), ref RAM_Bank);
 			ser.Sync(nameof(RAM_Bank_ret), ref RAM_Bank_ret);

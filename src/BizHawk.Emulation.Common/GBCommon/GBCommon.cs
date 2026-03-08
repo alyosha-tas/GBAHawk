@@ -2098,6 +2098,166 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 				}
 			}
 		}
+
+
+		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out bool has_bat, out int RAM_Size)
+		{
+			has_bat = false;
+			RAM_Size = 0;
+
+			// setup up mapper based on header entry
+			switch (header[0x47])
+			{
+				case 0x0: mppr = "NROM"; break;
+				case 0x1: mppr = "MBC1"; break;
+				case 0x2: mppr = "MBC1"; break;
+				case 0x3: mppr = "MBC1"; has_bat = true; break;
+				case 0x5: mppr = "MBC2"; break;
+				case 0x6: mppr = "MBC2"; has_bat = true; break;
+				case 0x8: mppr = "NROM"; break;
+				case 0x9: mppr = "NROM"; has_bat = true; break;
+				case 0xB: mppr = "MMM01"; break;
+				case 0xC: mppr = "MMM01"; break;
+				case 0xD: mppr = "MMM01"; has_bat = true; break;
+				case 0xF: mppr = "MBC3"; has_bat = true; break;
+				case 0x10: mppr = "MBC3"; has_bat = true; break;
+				case 0x11: mppr = "MBC3"; break;
+				case 0x12: mppr = "MBC3"; break;
+				case 0x13: mppr = "MBC3"; has_bat = true; break;
+				case 0x19: mppr = "MBC5"; break;
+				case 0x1A: mppr = "MBC5"; has_bat = true; break;
+				case 0x1B: mppr = "MBC5"; break;
+				case 0x1C: mppr = "MBC5"; break;
+				case 0x1D: mppr = "MBC5"; break;
+				case 0x1E: mppr = "MBC5"; has_bat = true; break;
+				case 0x20: mppr = "MBC6"; break;
+				case 0x22: mppr = "MBC7"; has_bat = true; break;
+				case 0xFC: mppr = "CAM"; has_bat = true; break;
+				case 0xFD: mppr = "TAMA5"; has_bat = true; break;
+				case 0xFE: mppr = "HuC3"; has_bat = true; break;
+				case 0xFF: mppr = "HuC1"; break;
+
+				// Bootleg mappers
+				// NOTE: Sachen mapper selection does not account for scrambling, so if another bootleg mapper
+				// identifies itself as 0x31, this will need to be modified
+				case 0x31: mppr = "Schn2"; break;
+
+				case 0x4:
+				case 0x7:
+				case 0xA:
+				case 0xE:
+				case 0x14:
+				case 0x15:
+				case 0x16:
+				case 0x17:
+				case 0x18:
+				case 0x1F:
+				case 0x21:
+				default:
+					// mapper not implemented
+					Console.WriteLine(header[0x47]);
+					throw new Exception("Mapper not implemented");
+			}
+
+			// special case for multi cart mappers
+			if (romHashMD5 is RomChecksums.UnknownRomA
+				|| romHashSHA1 is RomChecksums.BombermanCollection or RomChecksums.MortalKombatIAndIIUSAEU or RomChecksums.BombermanSelectionKORNotInGameDB)
+			{
+				Console.WriteLine("Using Multi-Cart Mapper");
+			}
+
+			// 2 games use the MMM01 mapper, the header is at the end of the file so won't be picked up automatically
+			else if (romHashSHA1 is RomChecksums.MomotaroCollection2 or RomChecksums.TaitoVarietyPack)
+			{
+				Console.WriteLine("Using MMM01 Mapper");
+				mppr = "MMM01";
+				has_bat = false;
+			}
+
+			// Wisdom Tree does not identify their mapper, so use hash instead
+			else if (romHashSHA1 is RomChecksums.WisdomTreeJoshua or RomChecksums.WisdomTreeSpiritualWarfare or RomChecksums.WisdomTreeExodus or RomChecksums.WisdomTreeKJVBible or RomChecksums.WisdomTreeNIVBible)
+			{
+				Console.WriteLine("Using Wisdom Tree Mapper");
+				mppr = "Wtree";
+			}
+
+			// special case for bootlegs
+			else if (romHashMD5 == RomChecksums.PirateRockMan8)
+			{
+				Console.WriteLine("Using RockMan 8 (Unlicensed) Mapper");
+				mppr = "RM8";
+			}
+			else if (romHashMD5 == RomChecksums.PirateSachen1)
+			{
+				Console.WriteLine("Using Sachen 1 (Unlicensed) Mapper");
+				mppr = "Schn1";
+			}
+
+			Console.Write("Mapper: ");
+			Console.WriteLine(mppr);
+
+			switch (header[0x49])
+			{
+				case 1:
+					RAM_Size = 0x800;
+					break;
+				case 2:
+					RAM_Size = 0x2000;
+					break;
+				case 3:
+					RAM_Size = 0x8000;
+					break;
+				case 4:
+					RAM_Size = 0x20000;
+					break;
+				case 5:
+					RAM_Size = 0x10000;
+					break;
+				case 0:
+					if ((mppr != "Schn1") && (mppr != "Schn2") && (mppr != "MMM01"))
+					{
+						Console.WriteLine("Mapper Number indicates Battery Backed RAM but none present.");
+						Console.WriteLine("Disabling Battery Setting.");
+						has_bat = false;
+					}
+					break;
+			}
+
+			// Sachen maper not known to have RAM
+			if ((mppr == "Schn1") || (mppr == "Schn2"))
+			{
+				RAM_Size = 0;
+				has_bat = false;
+				Use_MT = true;
+			}
+
+			// mbc2 carts have built in RAM
+			if (mppr == "MBC2")
+			{
+				RAM_Size = 0x200;
+			}
+
+			// mbc7 has 256 bytes of RAM, regardless of any header info
+			if (mppr == "MBC7")
+			{
+				RAM_Size = 0x100;
+				has_bat = true;
+			}
+
+			// TAMA5 has 0x1000 bytes of RAM, regardless of any header info
+			if (mppr == "TAMA5")
+			{
+				RAM_Size = 0x20;
+				has_bat = true;
+			}
+
+			// Momotaro Collection 2 has 8kB SRAM
+			if (romHashSHA1 is RomChecksums.MomotaroCollection2)
+			{
+				RAM_Size = 0x2000;
+				has_bat = true;
+			}
+		}
 	}
 
 	internal static class RomChecksums

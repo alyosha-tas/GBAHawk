@@ -106,10 +106,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 		// several undocumented GBC Registers
 		public byte undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
 
-		public byte[] _bios;
-		public readonly byte[] _rom;
-		public readonly byte[] header = new byte[0x50];
-
 		public byte[] cart_RAM;
 		public byte[] cart_RAM_vbls;
 		public bool has_bat;

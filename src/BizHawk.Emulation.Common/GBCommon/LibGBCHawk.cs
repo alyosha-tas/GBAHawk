@@ -21,19 +21,33 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern void GBC_destroy(IntPtr core);
 
 		/// <summary>
+		/// Free the memory.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern int GBC_load_bios(IntPtr core, byte[] bios);
+
+		/// <summary>
 		/// Load ROM image.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="romdata">the rom data, can be disposed of once this function returns</param>
 		/// <param name="length">length of romdata in bytes</param>
-		/// <param name="headerdata">header</param>
-		/// <param name="Old_MMC3_IRQ">MMC3 IRRQ type</param>
-		/// <param name="bus_conflicts">mapper bus conflicts</param>
-		/// <param name="apu_test_regs">activate apu test regs</param>
-		/// <param name="cpu_zero">set cpu zero flag at reset</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBC_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool Old_MMC3_IRQ, bool bus_conflicts, bool apu_test_regs, bool cpu_zero);
+		public static extern int GBC_load(IntPtr core, byte[] romdata, uint length);
+
+		/// <summary>
+		/// Set cart RTC.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="rtcdata">the rom data, can be disposed of once this function returns</param>
+		/// <param name="index">length of romdata in bytes</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern int GBC_set_rtc(IntPtr core, byte rtcdata, uint index);
 
 		/// <summary>
 		/// Create SRAM image.

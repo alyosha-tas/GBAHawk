@@ -4,7 +4,8 @@ using System.Linq;
 
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+BizHawk.Emulation.Cores.Nintendo.GB.Common;
 
 namespace BizHawk.Client.Common
 {
@@ -222,7 +223,7 @@ namespace BizHawk.Client.Common
 				}
 			}
 
-			if (emulator is IGameboyCommon gb)
+			if (emulator is IGBPPUViewable gb)
 			{
 				if (gb.IsCGBMode())
 				{
