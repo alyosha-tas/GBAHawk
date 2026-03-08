@@ -5,15 +5,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 		// this contains the vectors of instruction operations
 		// NOTE: This list is NOT confirmed accurate for each individual cycle
 
-		private void NOP_()
-		{
-			cur_instr = new[]
-						{IDLE,
-						IDLE,
-						HALT_CHK,
-						OP };
-		}
-
 		private void INC_16(ushort src_l, ushort src_h)
 		{
 			cur_instr = new[]
@@ -34,19 +25,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 						IDLE,
 						IDLE,
 						DEC16, src_l, src_h,
-						IDLE,
-						IDLE,
-						HALT_CHK,
-						OP };
-		}
-
-		private void ADD_16(ushort dest_l, ushort dest_h, ushort src_l, ushort src_h)
-		{
-			cur_instr = new[]
-						{IDLE,
-						IDLE,
-						IDLE,
-						ADD16, dest_l, dest_h, src_l, src_h,
 						IDLE,
 						IDLE,
 						HALT_CHK,
