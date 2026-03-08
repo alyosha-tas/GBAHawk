@@ -89,9 +89,6 @@ namespace GBHawk
 		// several undocumented GBC Registers
 		uint8_t undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
 
-
-
-
 		// other system state
 		bool controller_was_checked;
 		bool delays_to_process;
@@ -137,6 +134,7 @@ namespace GBHawk
 
 		bool is_linked_system = false;
 		bool Is_GBC = false;
+		bool Is_GBC_GBA = false;
 
 		// Most memory accesses from the cpu / dma are force aligned to word / half wod boundaries, 
 		// so use some pointers of the appropriate memory size to simplify accesses
@@ -233,72 +231,131 @@ namespace GBHawk
 				video_buffer[i] = startup_color;
 			}
 
-			for (int i = 0; i < 0x8000; i++)
+			for (int i = 0; i < 0x80; i++)
 			{
-				IWRAM[i] = 0;
+				ZP_RAM[i] = 0;
 			}
 
-			for (int i = 0; i < 0x40000; i++)
+			if (Is_GBC_GBA)
 			{
-				WRAM[i] = 0;
+				// on GBA, initial RAM is mostly random, choosing 0 allows for stable clear and hotswap for games that encounter
+				// uninitialized RAM
+				for (int i = 0; i < 0x8000; i++)
+				{
+					RAM[i] = 0;//GBA_Init_RAM[i];
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 0x800; i++)
+				{
+					if ((i & 0xF) < 8)
+					{
+						RAM[i] = 0xFF;
+						RAM[i + 0x1000] = 0xFF;
+						RAM[i + 0x2000] = 0xFF;
+						RAM[i + 0x3000] = 0xFF;
+						RAM[i + 0x4000] = 0xFF;
+						RAM[i + 0x5000] = 0xFF;
+						RAM[i + 0x6000] = 0xFF;
+						RAM[i + 0x7000] = 0xFF;
+
+						RAM[i + 0x800] = 0;
+						RAM[i + 0x1800] = 0;
+						RAM[i + 0x2800] = 0;
+						RAM[i + 0x3800] = 0;
+						RAM[i + 0x4800] = 0;
+						RAM[i + 0x5800] = 0;
+						RAM[i + 0x6800] = 0;
+						RAM[i + 0x7800] = 0;
+					}
+					else
+					{
+						RAM[i] = 0;
+						RAM[i + 0x1000] = 0;
+						RAM[i + 0x2000] = 0;
+						RAM[i + 0x3000] = 0;
+						RAM[i + 0x4000] = 0;
+						RAM[i + 0x5000] = 0;
+						RAM[i + 0x6000] = 0;
+						RAM[i + 0x7000] = 0;
+
+						RAM[i + 0x800] = 0xFF;
+						RAM[i + 0x1800] = 0xFF;
+						RAM[i + 0x2800] = 0xFF;
+						RAM[i + 0x3800] = 0xFF;
+						RAM[i + 0x4800] = 0xFF;
+						RAM[i + 0x5800] = 0xFF;
+						RAM[i + 0x6800] = 0xFF;
+						RAM[i + 0x7800] = 0xFF;
+					}
+				}
+
+				// some bytes are like this is Gambatte, hardware anomoly? Is it consistent across versions?
+				/*
+				for (int i = 0; i < 16; i++)
+				{
+					RAM[0xE02 + (16 * i)] = 0;
+					RAM[0xE0A + (16 * i)] = 0xFF;
+
+					RAM[0x1E02 + (16 * i)] = 0;
+					RAM[0x1E0A + (16 * i)] = 0xFF;
+
+					RAM[0x2E02 + (16 * i)] = 0;
+					RAM[0x2E0A + (16 * i)] = 0xFF;
+
+					RAM[0x3E02 + (16 * i)] = 0;
+					RAM[0x3E0A + (16 * i)] = 0xFF;
+
+					RAM[0x4E02 + (16 * i)] = 0;
+					RAM[0x4E0A + (16 * i)] = 0xFF;
+
+					RAM[0x5E02 + (16 * i)] = 0;
+					RAM[0x5E0A + (16 * i)] = 0xFF;
+
+					RAM[0x6E02 + (16 * i)] = 0;
+					RAM[0x6E0A + (16 * i)] = 0xFF;
+
+					RAM[0x7E02 + (16 * i)] = 0;
+					RAM[0x7E0A + (16 * i)] = 0xFF;
+				}
+				*/
 			}
 		}
 
 		void do_controller_check(bool from_reg)
 		{
-			// only check interrupts on new button press or change in register
-			bool do_check = false;
+			// check if new input changed the input register and triggered IRQ
+			uint8_t contr_prev = input_register;
 
-			if (from_reg)
+			input_register &= 0xF0;
+			if ((input_register & 0x30) == 0x20)
 			{
-				do_check = true;
+				input_register |= (uint8_t)(controller_state & 0xF);
 			}
-			for (int i = 0; i < 10; i++)
+			else if ((input_register & 0x30) == 0x10)
 			{
-				if (((controller_state >> i) & 1) == 0)
-				{
-					if (((controller_state_old >> i) & 1) == 1)
-					{
-						do_check = true;
-					}
-				}
+				input_register |= (uint8_t)((controller_state & 0xF0) >> 4);
 			}
-			
-			if (do_check)
+			else if ((input_register & 0x30) == 0x00)
 			{
-				if ((key_CTRL & 0x4000) == 0x4000)
-				{
-					if ((key_CTRL & 0x8000) == 0x8000)
-					{
-						if ((key_CTRL & ~controller_state & 0x3FF) == (key_CTRL & 0x3FF))
-						{
-							// doesn't trigger an interrupt if no keys are selected. (see joypad.gba test rom)
-							if ((key_CTRL & 0x3FF) != 0)
-							{
-								Trigger_IRQ(12);
-							}
-						}
-					}
-					else
-					{
-						if ((key_CTRL & ~controller_state & 0x3FF) != 0)
-						{
-							Trigger_IRQ(12);
-						}
-					}
-				}
-			}		
-		}
+				// if both polls are set, then a bit is zero if either or both pins are zero
+				uint8_t temp = (uint8_t)((controller_state & 0xF) & ((controller_state & 0xF0) >> 4));
+				input_register |= temp;
+			}
+			else
+			{
+				input_register |= 0xF;
+			}
 
-		// only on writes, it is possible to trigger an interrupt with and mode and no keys selected or pressed
-		void do_controller_check_glitch()
-		{
-			if ((key_CTRL & 0xC3FF) == 0xC000)
+			// check for interrupts			
+			if (((contr_prev & 8) > 0) && ((input_register & 8) == 0) ||
+				((contr_prev & 4) > 0) && ((input_register & 4) == 0) ||
+				((contr_prev & 2) > 0) && ((input_register & 2) == 0) ||
+				((contr_prev & 1) > 0) && ((input_register & 1) == 0))
 			{
-				if ((controller_state & 0x3FF) == 0x3FF)
-				{
-					Trigger_IRQ(12);
-				}
+				if ((REG_FFFF& 0x10) == 0x10) { cpu_FlagIset(true); }
+				REG_FF0F |= 0x10;
 			}
 		}
 
@@ -526,22 +583,22 @@ namespace GBHawk
 
 				case 0xFF76:
 					uint8_t ret1 = audio.SQ1_output >= Audio.DAC_OFST
-						? (byte)(audio.SQ1_output - Audio.DAC_OFST)
-						: (byte)0;
+						? (uint8_t)(audio.SQ1_output - Audio.DAC_OFST)
+						: (uint8_t)0;
 					uint8_t ret2 = audio.SQ2_output >= Audio.DAC_OFST
-						? (byte)(audio.SQ2_output - Audio.DAC_OFST)
-						: (byte)0;
-					ret = (byte)(ret1 | (ret2 << 4));
+						? (uint8_t)(audio.SQ2_output - Audio.DAC_OFST)
+						: (uint8_t)0;
+					ret = (uint8_t)(ret1 | (ret2 << 4));
 					break;
 
 				case 0xFF77:
 					uint8_t retN = audio.NOISE_output >= Audio.DAC_OFST
-						? (byte)(audio.NOISE_output - Audio.DAC_OFST)
-						: (byte)0;
+						? (uint8_t)(audio.NOISE_output - Audio.DAC_OFST)
+						: (uint8_t)0;
 					uint8_t retW = audio.WAVE_output >= Audio.DAC_OFST
-						? (byte)(audio.WAVE_output - Audio.DAC_OFST)
-						: (byte)0;
-					ret = (byte)(retN | (retW << 4));
+						? (uint8_t)(audio.WAVE_output - Audio.DAC_OFST)
+						: (uint8_t)0;
+					ret = (uint8_t)(retN | (retW << 4));
 					break;
 
 					// interrupt control register
@@ -812,12 +869,12 @@ namespace GBHawk
 					{
 						if (REG_FFFF.Bit(i) && REG_FF0F.Bit(i))
 						{
-							cpu.FlagI = true;
+							cpu_FlagIset(true);
 						}
 					}
 
 					// if no bits are in common between flags and enables, de-assert the IRQ
-					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu.FlagI = false; }
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagIset(false); }
 					break;
 
 				default:
@@ -4886,26 +4943,26 @@ namespace GBHawk
 
 	#pragma region Serial port
 
-		bool can_pulse;
-		bool IRQ_block;
+		bool ser_Can_Pulse;
+		bool ser_IRQ_Block;
 
-		uint8_t serial_control;
-		uint8_t serial_data;
-		uint8_t going_out;
-		uint8_t coming_in;
+		uint8_t ser_Control;
+		uint8_t ser_Data;
+		uint8_t ser_Going_Out;
+		uint8_t ser_Coming_In;
 
-		uint32_t serial_clock;
-		uint32_t serial_bits;
-		uint32_t clk_rate;
+		uint32_t ser_Clock;
+		uint32_t ser_Bits;
+		uint32_t ser_Clk_Rate;
 
 		uint8_t ser_Read_Reg(int addr)
 		{
 			switch (addr)
 			{
 				case 0xFF01:
-					return serial_data;
+					return ser_Data;
 				case 0xFF02:
-					return serial_control;
+					return ser_Control;
 			}
 
 			return 0xFF;
@@ -4916,7 +4973,7 @@ namespace GBHawk
 			switch (addr)
 			{
 			case 0xFF01:
-				serial_data = value;
+				ser_Data = value;
 				break;
 
 			case 0xFF02:
@@ -4924,18 +4981,18 @@ namespace GBHawk
 				{
 					if ((value & 0x01) == 0x01)
 					{
-						if (((value & 2) > 0) && Core.Is_GBC)
+						if (((value & 2) > 0) && Is_GBC)
 						{
-							clk_rate = 16;
-							serial_clock = 16 - (int)(Core.timer.divider_reg % 8) - 1;
+							ser_Clk_Rate = 16;
+							ser_Clock = 16 - (uint32_t)(tim_Divider_Reg % 8) - 1;
 
 							// if the clock rate is changing and it's on a GBA/C, the parity of (cpu.totalexecutedcycles & 512) effects the first bit
 							// Not sure exactly how yet
 						}
 						else
 						{
-							clk_rate = 512;
-							serial_clock = 512 - (int)(Core.timer.divider_reg % 256) - 1;
+							ser_Clk_Rate = 512;
+							ser_Clock = 512 - (uint32_t)(tim_Divider_Reg % 256) - 1;
 
 							// there seems to be some clock inverting happening on some transfers
 							// not sure of the exact nature of it, here is one method that gives correct result on one test rom but not others
@@ -4950,31 +5007,31 @@ namespace GBHawk
 							*/
 						}
 
-						can_pulse = true;
-						serial_bits = 8;
+						ser_Can_Pulse = true;
+						ser_Bits = 8;
 					}
 					else
 					{
-						clk_rate = -1;
-						can_pulse = false;
-						serial_bits = 8;
+						ser_Clk_Rate = -1;
+						ser_Can_Pulse = false;
+						ser_Bits = 8;
 					}
 				}
 				else
 				{
-					serial_bits = 8;
-					clk_rate = -1;
-					serial_clock = clk_rate;
-					can_pulse = false;
+					ser_Bits = 8;
+					ser_Clk_Rate = -1;
+					ser_Clock = ser_Clk_Rate;
+					ser_Can_Pulse = false;
 				}
 
-				if (Core.Is_GBC)
+				if (Is_GBC)
 				{
-					serial_control = (uint8_t)(0x7C | (value & 0x83)); // extra CGB bit
+					ser_Control = (uint8_t)(0x7C | (value & 0x83)); // extra CGB bit
 				}
 				else
 				{
-					serial_control = (uint8_t)(0x7E | (value & 0x81)); // middle six bits always 1
+					ser_Control = (uint8_t)(0x7E | (value & 0x81)); // middle six bits always 1
 				}
 
 				break;
@@ -4983,33 +5040,33 @@ namespace GBHawk
 
 		void ser_Tick()
 		{
-			IRQ_block = false;
+			ser_IRQ_Block = false;
 
-			if (serial_clock > 0)
+			if (ser_Clock > 0)
 			{
-				serial_clock--;
+				ser_Clock--;
 
-				if (serial_clock == 0)
+				if (ser_Clock == 0)
 				{
-					if (serial_bits > 0)
+					if (ser_Bits > 0)
 					{
-						serial_data = (byte)((serial_data << 1) | coming_in);
+						ser_Data = (uint8_t)((ser_Data << 1) | ser_Coming_In);
 
-						serial_bits--;
+						ser_Bits--;
 
-						if (serial_bits == 0)
+						if (ser_Bits == 0)
 						{
-							serial_control &= 0x7F;
+							ser_Control &= 0x7F;
 
-							if (Core.REG_FFFF.Bit(3)) { Core.cpu.FlagI = true; }
-							Core.REG_FF0F |= 0x08;
+							if ((REG_FFFF & 0x8) == 0x8) { cpu_FlagIset(true); }
+							REG_FF0F |= 0x08;
 							//Console.WriteLine("SIRQ " + Core.cpu.TotalExecutedCycles);
-							IRQ_block = true;
+							ser_IRQ_Block = true;
 						}
 						else
 						{
-							serial_clock = clk_rate;
-							if (clk_rate > 0) { can_pulse = true; }
+							ser_Clock = ser_Clk_Rate;
+							if (ser_Clk_Rate > 0) { ser_Can_Pulse = true; }
 						}
 					}
 				}
@@ -5018,47 +5075,47 @@ namespace GBHawk
 
 		void ser_Reset()
 		{
-			serial_control = 0x7E;
-			serial_data = 0x00;
-			serial_clock = -1;
-			serial_bits = 8;
-			clk_rate = -1;
-			going_out = 0;
-			coming_in = 1;
-			can_pulse = false;
-			IRQ_block = false;
+			ser_Control = 0x7E;
+			ser_Data = 0x00;
+			ser_Clock = -1;
+			ser_Bits = 8;
+			ser_Clk_Rate = -1;
+			ser_Going_Out = 0;
+			ser_Coming_In = 1;
+			ser_Can_Pulse = false;
+			ser_IRQ_Block = false;
 		}
 
 		uint8_t* ser_SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(can_pulse, saver);
-			saver = bool_saver(IRQ_block, saver);
+			saver = bool_saver(ser_Can_Pulse, saver);
+			saver = bool_saver(ser_IRQ_Block, saver);
 
-			saver = byte_saver(serial_control, saver);
-			saver = byte_saver(serial_data, saver);
-			saver = byte_saver(going_out, saver);
-			saver = byte_saver(coming_in, saver);
+			saver = byte_saver(ser_Control, saver);
+			saver = byte_saver(ser_Data, saver);
+			saver = byte_saver(ser_Going_Out, saver);
+			saver = byte_saver(ser_Coming_In, saver);
 
-			saver = int_saver(serial_clock, saver);
-			saver = int_saver(serial_bits, saver);
-			saver = int_saver(clk_rate, saver);
+			saver = int_saver(ser_Clock, saver);
+			saver = int_saver(ser_Bits, saver);
+			saver = int_saver(ser_Clk_Rate, saver);
 
 			return saver;
 		}
 
 		uint8_t* ser_LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&can_pulse, loader);
-			loader = bool_loader(&IRQ_block, loader);
+			loader = bool_loader(&ser_Can_Pulse, loader);
+			loader = bool_loader(&ser_IRQ_Block, loader);
 
-			loader = byte_loader(&serial_control, loader);
-			loader = byte_loader(&serial_data, loader);
-			loader = byte_loader(&going_out, loader);
-			loader = byte_loader(&coming_in, loader);
+			loader = byte_loader(&ser_Control, loader);
+			loader = byte_loader(&ser_Data, loader);
+			loader = byte_loader(&ser_Going_Out, loader);
+			loader = byte_loader(&ser_Coming_In, loader);
 
-			loader = int_loader(&serial_clock, loader);
-			loader = int_loader(&serial_bits, loader);
-			loader = int_loader(&clk_rate, loader);
+			loader = int_loader(&ser_Clock, loader);
+			loader = int_loader(&ser_Bits, loader);
+			loader = int_loader(&ser_Clk_Rate, loader);
 
 			return loader;
 		}
@@ -5081,17 +5138,17 @@ namespace GBHawk
 		// there is a coincident timer increment, there will be an additional increment along with this write.
 		// not sure it effects all models or of exact details, see test tac_set_timer_disabled.gbc
 
-		bool IRQ_block; // if the timer IRQ happens on the same cycle as a previous one was cleared, the IRQ is set
-		bool old_state;
-		bool state;
-		bool reload_block;
-		uint8_t timer_reload;
-		uint8_t timer;
-		uint8_t timer_old;
-		uint8_t timer_control;
-		uint8_t pending_reload;
-		uint16_t divider_reg;
-		uint64_t next_free_cycle;
+		bool tim_IRQ_Block; // if the timer IRQ happens on the same cycle as a previous one was cleared, the IRQ is set
+		bool tim_Old_State;
+		bool tim_State;
+		bool tim_Reload_Block;
+		uint8_t tim_Reload;
+		uint8_t tim_Timer;
+		uint8_t tim_Timer_Old;
+		uint8_t tim_Control;
+		uint8_t tim_Pending_Reload;
+		uint16_t tim_Divider_Reg;
+		uint64_t tim_Next_Free_Cycle;
 
 		uint8_t tim_Read_Reg(uint16_t addr)
 		{
@@ -5099,10 +5156,10 @@ namespace GBHawk
 
 			switch (addr)
 			{
-				case 0xFF04: ret = (uint8_t)(divider_reg >> 8); 	break; // DIV register
-				case 0xFF05: ret = timer;							break; // TIMA (Timer Counter)
-				case 0xFF06: ret = timer_reload;					break; // TMA (Timer Modulo)
-				case 0xFF07: ret = timer_control;					break; // TAC (Timer Control)
+				case 0xFF04: ret = (uint8_t)(tim_Divider_Reg >> 8); 	break; // DIV register
+				case 0xFF05: ret = tim_Timer;						break; // TIMA (Timer Counter)
+				case 0xFF06: ret = tim_Reload;						break; // TMA (Timer Modulo)
+				case 0xFF07: ret = tim_Control;					break; // TAC (Timer Control)
 			}
 
 			return ret;
@@ -5116,77 +5173,77 @@ namespace GBHawk
 				case 0xFF04:
 					// NOTE: even though there is an automatic increment directly after the CPU loop, 
 					// it is still expected that 0 is written here
-					divider_reg = 0;
+					tim_Divider_Reg = 0;
 					break;
 
 					// TIMA (Timer Counter)
 				case 0xFF05:
-					if (CycleCount >= next_free_cycle)
+					if (CycleCount >= tim_Next_Free_Cycle)
 					{
-						timer_old = timer;
-						timer = value;
-						reload_block = true;
+						tim_Timer_Old = tim_Timer;
+						tim_Timer = value;
+						tim_Reload_Block = true;
 					}
 					break;
 
 					// TMA (Timer Modulo)
 				case 0xFF06:
-					timer_reload = value;
-					if (Core.cpu.TotalExecutedCycles < next_free_cycle)
+					tim_Reload = value;
+					if (CycleCount < tim_Next_Free_Cycle)
 					{
-						timer = timer_reload;
-						timer_old = timer;
+						tim_Timer = tim_Reload;
+						tim_Timer_Old = tim_Timer;
 					}
 					break;
 
 					// TAC (Timer Control)
 				case 0xFF07:
-					uint8_t timer_control_old = timer_control;
+					uint8_t timer_control_old = tim_Control;
 
 					// Console.WriteLine("tac: " + timer_control + " " + value + " " + timer + " " + divider_reg);
-					timer_control = (uint8_t)((timer_control & 0xf8) | (value & 0x7)); // only bottom 3 bits function
+					tim_Control = (uint8_t)((tim_Control & 0xf8) | (value & 0x7)); // only bottom 3 bits function
 
-					if (!((timer_control_old & 4) == 4) && ((timer_control & 4) == 4) && Core._syncSettings.GBACGB)
+					if (!((timer_control_old & 4) == 4) && ((tim_Control & 4) == 4) && Is_GBC_GBA)
 					{
 						bool temp_check_old = false;
 						bool temp_check = false;
 
 						switch (timer_control_old & 3)
 						{
-						case 0:
-							temp_check_old = divider_reg.Bit(9);
-							break;
-						case 1:
-							temp_check_old = divider_reg.Bit(3);
-							break;
-						case 2:
-							temp_check_old = divider_reg.Bit(5);
-							break;
-						case 3:
-							temp_check_old = divider_reg.Bit(7);
-							break;
+							case 0:
+								temp_check_old = ((tim_Divider_Reg & 0x100) == 0x100);
+								break;
+							case 1:
+								temp_check_old = ((tim_Divider_Reg & 8) == 8);
+								break;
+							case 2:
+								temp_check_old = ((tim_Divider_Reg & 0x20) == 0x20);
+								break;
+							case 3:
+								temp_check_old = ((tim_Divider_Reg & 0x80) == 0x80);
+								break;
 						}
 
-						switch (timer_control & 3)
+						switch (tim_Control & 3)
 						{
-						case 0:
-							temp_check = divider_reg.Bit(9);
-							break;
-						case 1:
-							temp_check = divider_reg.Bit(3);
-							break;
-						case 2:
-							temp_check = divider_reg.Bit(5);
-							break;
-						case 3:
-							temp_check = divider_reg.Bit(7);
-							break;
+							case 0:
+								temp_check = ((tim_Divider_Reg & 0x100) == 0x100);
+								break;
+							case 1:
+								temp_check = ((tim_Divider_Reg & 8) == 8);
+								break;
+							case 2:
+								temp_check = ((tim_Divider_Reg & 0x20) == 0x20);
+								break;
+							case 3:
+								temp_check = ((tim_Divider_Reg & 0x80) == 0x80);
+								break;
 						}
 
 						if (temp_check_old && !temp_check)
 						{
-							timer_old = timer;
-							timer++;
+							tim_Timer_Old = tim_Timer;
+							tim_Timer++;
 
 
 							Message_String = "Timer glitch.";
@@ -5195,10 +5252,10 @@ namespace GBHawk
 
 
 							// if overflow happens, set the interrupt flag and reload the timer (if applicable)
-							if (timer < timer_old)
+							if (tim_Timer < tim_Timer_Old)
 							{
-								pending_reload = 4;
-								reload_block = false;
+								tim_Pending_Reload = 4;
+								tim_Reload_Block = false;
 							}
 						}
 					}
@@ -5209,121 +5266,123 @@ namespace GBHawk
 
 		void tick()
 		{
-			IRQ_block = false;
+			tim_IRQ_Block = false;
 
 			// pick a bit to test based on the current value of timer control
-			switch (timer_control & 3)
+			switch (tim_Control & 3)
 			{
-			case 0:
-				state = divider_reg.Bit(9);
-				break;
-			case 1:
-				state = divider_reg.Bit(3);
-				break;
-			case 2:
-				state = divider_reg.Bit(5);
-				break;
-			case 3:
-				state = divider_reg.Bit(7);
-				break;
+				case 0:
+					tim_State = ((tim_Divider_Reg & 0x100) == 0x100);
+					break;
+				case 1:
+					tim_State = ((tim_Divider_Reg & 8) == 8);
+					break;
+				case 2:
+					tim_State = ((tim_Divider_Reg & 0x20) == 0x20);
+					break;
+				case 3:
+					tim_State = ((tim_Divider_Reg & 0x80) == 0x80);
+					break;
 			}
 
 			// And it with the state of the timer on/off bit
-			state &= ((timer_control & 4) == 4);
+			tim_State &= ((tim_Control & 4) == 4);
 
 			// this procedure allows several glitchy timer ticks, since it only measures falling edge of the state
 			// so things like turning the timer off and resetting the divider will tick the timer
-			if (old_state && !state)
+			if (tim_Old_State && !tim_State)
 			{
-				timer_old = timer;
-				timer++;
+				tim_Timer_Old = tim_Timer;
+				tim_Timer++;
 
 				// if overflow happens, set the interrupt flag and reload the timer (if applicable)
-				if (timer < timer_old)
+				if (tim_Timer < tim_Timer_Old)
 				{
-					if (((timer_control & 4) == 4))
+					if (((tim_Control & 4) == 4))
 					{
-						pending_reload = 4;
-						reload_block = false;
+						tim_Pending_Reload = 4;
+						tim_Reload_Block = false;
 					}
 					else
 					{
-						pending_reload = 3;
-						reload_block = false;
+						tim_Pending_Reload = 3;
+						tim_Reload_Block = false;
 					}
 				}
 			}
 
-			old_state = state;
+			tim_Old_State = tim_State;
 
-			if (pending_reload > 0)
+			if (tim_Pending_Reload > 0)
 			{
-				pending_reload--;
-				if (pending_reload == 0 && !reload_block)
+				tim_Pending_Reload--;
+				if (tim_Pending_Reload == 0 && !tim_Reload_Block)
 				{
-					timer = timer_reload;
-					timer_old = timer;
+					tim_Timer = tim_Reload;
+					tim_Timer_Old = tim_Timer;
 
-					next_free_cycle = 4 + CycleCount;
+					tim_Next_Free_Cycle = 4 + CycleCount;
 
 					// set interrupts
-					if (Core.REG_FFFF.Bit(2)) { Core.cpu.FlagI = true; }
+					if ((REG_FFFF & 4) == 4) { cpu_FlagIset(true); }
 					//Console.WriteLine("timer " + Core.cpu.TotalExecutedCycles);
-					Core.REG_FF0F |= 0x04;
-					IRQ_block = true;
+					REG_FF0F |= 0x04;
+					tim_IRQ_Block = true;
 				}
 			}
 		}
 
 		void tim_Reset()
 		{
-			divider_reg = 0xFFFE;
-			timer_reload = 0;
-			timer = 0;
-			timer_old = 0;
-			timer_control = 0xF8;
-			pending_reload = 0;
-			IRQ_block = false;
-			old_state = false;
-			state = false;
-			reload_block = false;
-			next_free_cycle = 0;
+			tim_Divider_Reg = 0xFFFE;
+			tim_Reload = 0;
+			tim_Timer = 0;
+			tim_Timer_Old = 0;
+			tim_Control = 0xF8;
+			tim_Pending_Reload = 0;
+			tim_IRQ_Block = false;
+			tim_Old_State = false;
+			tim_State = false;
+			tim_Reload_Block = false;
+			tim_Next_Free_Cycle = 0;
 		}
 
 		uint8_t* tim_SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(IRQ_block, saver);
-			saver = bool_saver(old_state, saver);
-			saver = bool_saver(state, saver);
-			saver = bool_saver(reload_block, saver);
+			saver = bool_saver(tim_IRQ_Block, saver);
+			saver = bool_saver(tim_Old_State, saver);
+			saver = bool_saver(tim_State, saver);
+			saver = bool_saver(tim_Reload_Block, saver);
 
-			saver = byte_saver(timer_reload, saver);
-			saver = byte_saver(timer, saver);
-			saver = byte_saver(timer_old, saver);
-			saver = byte_saver(timer_control, saver);
-			saver = byte_saver(pending_reload, saver);
+			saver = byte_saver(tim_Reload, saver);
+			saver = byte_saver(tim_Timer, saver);
+			saver = byte_saver(tim_Timer_Old, saver);
+			saver = byte_saver(tim_Control, saver);
+			saver = byte_saver(tim_Pending_Reload, saver);
 
-			saver = long_saver(divider_reg, saver);
-			saver = long_saver(next_free_cycle, saver);
+			saver = short_saver(tim_Divider_Reg, saver);
+
+			saver = long_saver(tim_Next_Free_Cycle, saver);
 
 			return saver;
 		}
 
 		uint8_t* tim_LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&IRQ_block, loader);
-			loader = bool_loader(&old_state, loader);
-			loader = bool_loader(&state, loader);
-			loader = bool_loader(&reload_block, loader);
+			loader = bool_loader(&tim_IRQ_Block, loader);
+			loader = bool_loader(&tim_Old_State, loader);
+			loader = bool_loader(&tim_State, loader);
+			loader = bool_loader(&tim_Reload_Block, loader);
 
-			loader = byte_loader(&timer_reload, loader);
-			loader = byte_loader(&timer, loader);
-			loader = byte_loader(&timer_old, loader);
-			loader = byte_loader(&timer_control, loader);
-			loader = byte_loader(&pending_reload, loader);
+			loader = byte_loader(&tim_Reload, loader);
+			loader = byte_loader(&tim_Timer, loader);
+			loader = byte_loader(&tim_Timer_Old, loader);
+			loader = byte_loader(&tim_Control, loader);
+			loader = byte_loader(&tim_Pending_Reload, loader);
 
-			loader = long_loader(&divider_reg, loader);
-			loader = long_loader(&next_free_cycle, loader);
+			loader = short_loader(&tim_Divider_Reg, loader);
+
+			loader = long_loader(&tim_Next_Free_Cycle, loader);
 
 			return loader;
 		}

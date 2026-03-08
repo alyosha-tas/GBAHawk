@@ -46,7 +46,7 @@ namespace GBHawk
 				}
 
 				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				return bus_value;
 			}
 
@@ -54,7 +54,7 @@ namespace GBHawk
 			{
 				// on GBC only, cart is accessible during DMA
 				bus_value = mapper.ReadMemoryHigh(addr);
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				return bus_value;
 			}
 
@@ -107,7 +107,7 @@ namespace GBHawk
 			if (addr >= 0x900)
 			{
 				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				return bus_value;
 			}
 
@@ -116,11 +116,11 @@ namespace GBHawk
 				// return Either BIOS ROM or Game ROM
 				if ((GB_bios_register & 0x1) == 0)
 				{
-					return _bios[addr]; // Return BIOS
+					return BIOS[addr]; // Return BIOS
 				}
 
 				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				return bus_value;
 			}
 
@@ -133,12 +133,12 @@ namespace GBHawk
 				}
 
 				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				return bus_value;
 			}
 
 			bus_value = mapper.ReadMemoryLow(addr);
-			bus_access_time = cpu.TotalExecutedCycles;
+			bus_access_time = CycleCount;
 			return bus_value;
 		}
 
@@ -185,7 +185,7 @@ namespace GBHawk
 		if (addr < 0xC000)
 		{
 			bus_value = mapper.ReadMemoryHigh(addr);
-			bus_access_time = cpu.TotalExecutedCycles;
+			bus_access_time = CycleCount;
 			return bus_value;
 		}
 
@@ -209,12 +209,12 @@ namespace GBHawk
 			}
 
 			// unmapped memory, return depends on console and rendering
-			if (_syncSettings.GBACGB)
+			if (Is_GBC_GBA)
 			{
 				// in GBA mode, it returns a reflection of the address somehow
 				if (ppu.OAM_access_read)
 				{
-					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
 
 				return 0xFF;
@@ -224,7 +224,7 @@ namespace GBHawk
 				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
 				if (ppu.OAM_access_read)
 				{
-					return (byte)((addr & 0xF0) | ((addr & 0xF0) >> 4));
+					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
 
 				return 0xFF;
@@ -256,7 +256,7 @@ namespace GBHawk
 			{
 				// on GBC only, cart is accessible during DMA
 				bus_value = value;
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				mapper.WriteMemory(addr, value);
 			}
 
@@ -320,7 +320,7 @@ namespace GBHawk
 			// unmapped memory writes depend on console		
 			else
 			{
-				if (_syncSettings.GBACGB)
+				if (Is_GBC_GBA)
 				{
 					// in GBA mode, writes have no effect as far as tested, might need more thorough tests
 				}
@@ -332,14 +332,14 @@ namespace GBHawk
 		}
 		else if (addr >= 0xC000)
 		{
-			addr = (ushort)(RAM_Bank * (addr & 0x1000) + (addr & 0xFFF));
+			addr = (uint16_t)(RAM_Bank * (addr & 0x1000) + (addr & 0xFFF));
 			//RAM_read[addr] = 1;
 			RAM[addr] = value;
 		}
 		else if (addr >= 0xA000)
 		{
 			bus_value = value;
-			bus_access_time = cpu.TotalExecutedCycles;
+			bus_access_time = CycleCount;
 			mapper.WriteMemory(addr, value);
 		}
 		else if (addr >= 0x8000)
@@ -354,7 +354,7 @@ namespace GBHawk
 			if (addr >= 0x900)
 			{
 				bus_value = value;
-				bus_access_time = cpu.TotalExecutedCycles;
+				bus_access_time = CycleCount;
 				mapper.WriteMemory(addr, value);
 			}
 			else
@@ -368,7 +368,7 @@ namespace GBHawk
 					else
 					{
 						bus_value = value;
-						bus_access_time = cpu.TotalExecutedCycles;
+						bus_access_time = CycleCount;
 						mapper.WriteMemory(addr, value);
 					}
 				}
@@ -381,14 +381,14 @@ namespace GBHawk
 					else
 					{
 						bus_value = value;
-						bus_access_time = cpu.TotalExecutedCycles;
+						bus_access_time = CycleCount;
 						mapper.WriteMemory(addr, value);
 					}
 				}
 				else
 				{
 					bus_value = value;
-					bus_access_time = cpu.TotalExecutedCycles;
+					bus_access_time = CycleCount;
 					mapper.WriteMemory(addr, value);
 				}
 			}
@@ -470,7 +470,7 @@ namespace GBHawk
 				// return Either BIOS ROM or Game ROM
 				if ((GB_bios_register & 0x1) == 0)
 				{
-					return _bios[addr]; // Return BIOS
+					return BIOS[addr]; // Return BIOS
 				}
 
 				return mapper.PeekMemoryLow(addr);
@@ -481,7 +481,7 @@ namespace GBHawk
 				// return Either BIOS ROM or Game ROM
 				if ((GB_bios_register & 0x1) == 0)
 				{
-					return _bios[addr]; // Return BIOS
+					return BIOS[addr]; // Return BIOS
 				}
 
 				return mapper.PeekMemoryLow(addr);
@@ -524,7 +524,7 @@ namespace GBHawk
 			}
 
 			// unmapped memory, return depends on console and rendering
-			if (_syncSettings.GBACGB)
+			if (Is_GBC_GBA)
 			{
 				// in GBA mode, it returns a reflection of the address somehow
 				if (ppu.OAM_access_read)
