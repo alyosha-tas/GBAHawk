@@ -20,10 +20,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 					1),
 				new MemoryDomainDelegate(
 					"ROM",
-					_rom.Length,
+					ROM.Length,
 					MemoryDomain.Endian.Little,
-					addr => _rom[addr],
-					(addr, value) => _rom[addr] = value,
+					addr => ROM[addr],
+					(addr, value) => ROM[addr] = value,
 					1),
 				new MemoryDomainDelegate(
 					"VRAM",

@@ -22,10 +22,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
 		public bool Is_GBC;
-		public bool is_GB_in_GBC;
+		public bool Is_GB_in_GBC;
 
 		public byte[] BIOS;
-		public readonly byte[] _rom;
+		public readonly byte[] ROM;
 		public readonly byte[] header = new byte[0x50];
 
 		public byte[] cart_RAM;
@@ -54,7 +54,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if ((header[0x43] != 0x80) && (header[0x43] != 0xC0))
 			{
-				is_GB_in_GBC = true; // for movie files
+				Is_GB_in_GBC = true; // for movie files
 			}
 
 			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
@@ -62,7 +62,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 
-			_rom = rom;
+			ROM = new byte[rom.Length];
+
+			// make sure rom passes basic sanity checks
+			if (rom.Length < 32*1024)
+			{
+				ROM = new byte[32 * 1024];
+			}
+
+			for (int i = 0; i < rom.Length; i++)
+			{
+				ROM[i] = rom[i];
+			}
+
 			string mppr;
 
 			GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out has_bat, out Cart_RAM_Size);
@@ -93,8 +105,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			int seconds = 0;
 			int remaining = 0;
 
-
-
 			if (mppr == "MBC3")
 			{
 				days = (int)Math.Floor(SyncSettings.RTCInitialTime / 86400.0);
@@ -117,86 +127,86 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				minutes_upper = (minutes >> 8) & 0xF;
 			}
 
+			GB_Pntr = LibGBHawk.GB_create();
+
+			GB_message = GetMessageGB;
+
+			LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
 
 			if (Is_GBC)
 			{
-				GB_Pntr = LibGBCHawk.GBC_create();
-
-				GBC_message = GetMessageGBC;
-
-				LibGBCHawk.GBC_setmessagecallback(GB_Pntr, GBC_message);
-
 				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
-
-				// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-				if (SyncSettings.GBACGB)
-				{
-					for (int i = 0; i < 13; i++)
-					{
-						BIOS[i + 0xF3] = (byte)((GBA_override[i] + BIOS[i + 0xF3]) & 0xFF);
-					}
-				}
-
-				LibGBCHawk.GBC_load_bios(GB_Pntr, BIOS);
-
-				LibGBCHawk.GBC_load(GB_Pntr, rom, (uint)rom.Length);
-
-				if (mppr == "MBC3")
-				{
-					mapper.RTC_Get(SyncSettings.RTCOffset, 5);
-					mapper.RTC_Get(days_upper, 4);
-					mapper.RTC_Get(days & 0xFF, 3);
-					mapper.RTC_Get(hours & 0xFF, 2);
-					mapper.RTC_Get(minutes & 0xFF, 1);
-					mapper.RTC_Get(seconds & 0xFF, 0);
-				}
-
-				if (mppr == "HuC3")
-				{
-					mapper.RTC_Get(years, 24);
-					mapper.RTC_Get(days_upper, 20);
-					mapper.RTC_Get(days & 0xFF, 12);
-					mapper.RTC_Get(minutes_upper, 8);
-					mapper.RTC_Get(remaining & 0xFF, 0);
-				}
 			}
 			else
 			{
-				GB_Pntr = LibGBHawk.GB_create();
-
-				GB_message = GetMessageGB;
-
-				LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
-
 				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
-
-				LibGBHawk.GB_load_bios(GB_Pntr, BIOS);
-
-				LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length);
 			}
 
-			ser.Register<IVideoProvider>(this);
-			ser.Register<ISoundProvider>(audio);
-			ServiceProvider = ser;
+			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
+			if (SyncSettings.GBACGB)
+			{
+				for (int i = 0; i < 13; i++)
+				{
+					BIOS[i + 0xF3] = (byte)((GBA_override[i] + BIOS[i + 0xF3]) & 0xFF);
+				}
+			}
 
-			_tracer = new TraceBuffer(cpu.TraceHeader);
-			ser.Register<ITraceable>(_tracer);
-			ser.Register<IStatable>(new StateSerializer(SyncState));
-            ser.Register<IDisassemblable>(_disassembler);
+			LibGBHawk.GB_load_bios(GB_Pntr, BIOS, Is_GBC);
+
+			LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length);
+
+			if (mppr == "MBC3")
+			{
+				LibGBHawk.GB_set_rtc(GB_Pntr, SyncSettings.RTCOffset, 5);
+				LibGBHawk.GB_set_rtc(GB_Pntr, days_upper, 4);
+				LibGBHawk.GB_set_rtc(GB_Pntr, days & 0xFF, 3);
+				LibGBHawk.GB_set_rtc(GB_Pntr, hours & 0xFF, 2);
+				LibGBHawk.GB_set_rtc(GB_Pntr, minutes & 0xFF, 1);
+				LibGBHawk.GB_set_rtc(GB_Pntr, seconds & 0xFF, 0);
+			}
+
+			if (mppr == "HuC3")
+			{
+				LibGBHawk.GB_set_rtc(GB_Pntr, years, 24);
+				LibGBHawk.GB_set_rtc(GB_Pntr, days_upper, 20);
+				LibGBHawk.GB_set_rtc(GB_Pntr, days & 0xFF, 12);
+				LibGBHawk.GB_set_rtc(GB_Pntr, minutes_upper, 8);
+				LibGBHawk.GB_set_rtc(GB_Pntr, remaining & 0xFF, 0);
+			}
+
+			blip_L.SetRates(4194304 * 2, 44100);
+			blip_R.SetRates(4194304 * 2, 44100);
+
+			(ServiceProvider as BasicServiceProvider).Register<ISoundProvider>(this);
+
 			SetupMemoryDomains();
-			cpu.SetCallbacks(ReadMemory, PeekMemory, PeekMemory, WriteMemory);
-			HardReset();
 
-			_scanlineCallback = null;
+			Header_Length = LibGBHawk.GB_getheaderlength(GB_Pntr);
+			Disasm_Length = LibGBHawk.GB_getdisasmlength(GB_Pntr);
+			Reg_String_Length = LibGBHawk.GB_getregstringlength(GB_Pntr);
+
+			var newHeader = new StringBuilder(Header_Length);
+			LibGBHawk.GB_getheader(GB_Pntr, newHeader, Header_Length);
+
+			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
+
+			Tracer = new TraceBuffer(newHeader.ToString());
+
+			var serviceProvider = ServiceProvider as BasicServiceProvider;
+			serviceProvider.Register<ITraceable>(Tracer);
+			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 		}
 
 		public IntPtr GB_Pntr { get; set; } = IntPtr.Zero;
+		private byte[] GB_core = new byte[0x80000];
 
-		public ulong TotalExecutedCycles => Settings.cycle_return_setting == GBHawkSettings.Cycle_Return.CPU ? cpu.TotalExecutedCycles : CycleCount;
+		public ulong TotalExecutedCycles => 0;//Settings.cycle_return_setting == GBHawkSettings.Cycle_Return.CPU ? 0 : 0;
 
 		public bool IsCGBMode() => Is_GBC;
 
-		public bool IsCGBDMGMode() => is_GB_in_GBC;
+		public bool IsCGBDMGMode() => Is_GB_in_GBC;
+
+		private int _frame = 0;
 
 		public IntPtr GetBGPalRam()
 		{
@@ -204,14 +214,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				if (Is_GBC)
-				{
-					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
-				}
-				else
-				{
-					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
-				}
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
 			}
 
 			return temp_ptr;
@@ -223,14 +226,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				if (Is_GBC)
-				{
-					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
-				}
-				else
-				{
-					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
-				}
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
 			}
 
 			return temp_ptr;
@@ -242,14 +238,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				if (Is_GBC)
-				{
-					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 1);
-				}
-				else
-				{
-					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
-				}
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
 			}
 
 			return temp_ptr;
@@ -261,14 +250,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				if (Is_GBC)
-				{
-					temp_ptr = LibGBCHawk.GBC_get_ppu_pntrs(GB_Pntr, 2);
-				}
-				else
-				{
-					temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 2);
-				}
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 2);
 			}
 
 			return temp_ptr;
@@ -310,137 +292,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			Console.WriteLine(new_m);
 		}
 
-		private LibGBCHawk.MessageCallback GBC_message;
-
-		private void GetMessageGBC(int str_length)
-		{
-			StringBuilder new_m = new StringBuilder(str_length + 1);
-
-			LibGBCHawk.GBC_getmessage(GB_Pntr, new_m);
-
-			Console.WriteLine(new_m);
-		}
-
 		public void HardReset()
 		{
-			GB_bios_register = 0; // bios enable
-			GBC_compat = true;
-			double_speed = false;
-			VRAM_Bank = 0;
-			RAM_Bank = 1; // RAM bank always starts as 1 (even writing zero still sets 1)
-			RAM_Bank_ret = 0; // return value can still be zero even though the bank itself cannot be
-			delays_to_process = false;
-			controller_delay_cd = 0;
-			clear_counter = 0;
+			LibGBHawk.GB_Hard_Reset(GB_Pntr);
+		}
 
-			Register_Reset();
-			timer.Reset();
-			ppu.Reset();
-			audio.Reset();
-			serialport.Reset();
-			mapper.Reset();
-			cpu.Reset();
-			
-			vid_buffer = new uint[VirtualWidth * VirtualHeight];
-			frame_buffer = new int[VirtualWidth * VirtualHeight];
+		private readonly ITraceable Tracer;
 
-			uint startup_color = 0xFFFFFFFF;
-			for (int i = 0; i < vid_buffer.Length; i++)
-			{
-				vid_buffer[i] = startup_color;
-				frame_buffer[i] = (int)vid_buffer[i];
-			}
+		private LibGBHawk.TraceCallback tracecb;
 
-			for (int i = 0; i < ZP_RAM.Length; i++)
-			{
-				ZP_RAM[i] = 0;
-			}
+		// these will be constant values assigned during core construction
+		private int Header_Length;
+		private readonly int Disasm_Length;
+		private readonly int Reg_String_Length;
 
-			if (_syncSettings.GBACGB)
-			{
-				// on GBA, initial RAM is mostly random, choosing 0 allows for stable clear and hotswap for games that encounter
-				// uninitialized RAM
-				for (int i = 0; i < RAM.Length; i++)
-				{
-					RAM[i] = 0;//GBA_Init_RAM[i];
-				}
-			}
-			else
-			{
-				for (int i = 0; i < 0x800; i++)
-				{
-					if ((i & 0xF) < 8)
-					{
-						RAM[i] = 0xFF;
-						RAM[i + 0x1000] = 0xFF;
-						RAM[i + 0x2000] = 0xFF;
-						RAM[i + 0x3000] = 0xFF;
-						RAM[i + 0x4000] = 0xFF;
-						RAM[i + 0x5000] = 0xFF;
-						RAM[i + 0x6000] = 0xFF;
-						RAM[i + 0x7000] = 0xFF;
+		private void MakeTrace(int t)
+		{
+			StringBuilder new_d = new StringBuilder(Disasm_Length);
+			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-						RAM[i + 0x800] = 0;
-						RAM[i + 0x1800] = 0;
-						RAM[i + 0x2800] = 0;
-						RAM[i + 0x3800] = 0;
-						RAM[i + 0x4800] = 0;
-						RAM[i + 0x5800] = 0;
-						RAM[i + 0x6800] = 0;
-						RAM[i + 0x7800] = 0;
-					}
-					else
-					{
-						RAM[i] = 0;
-						RAM[i + 0x1000] = 0;
-						RAM[i + 0x2000] = 0;
-						RAM[i + 0x3000] = 0;
-						RAM[i + 0x4000] = 0;
-						RAM[i + 0x5000] = 0;
-						RAM[i + 0x6000] = 0;
-						RAM[i + 0x7000] = 0;
+			LibGBHawk.GB_getdisassembly(GB_Pntr, new_d, t, Disasm_Length);
+			LibGBHawk.GB_getregisterstate(GB_Pntr, new_r, t, Reg_String_Length);
 
-						RAM[i + 0x800] = 0xFF;
-						RAM[i + 0x1800] = 0xFF;
-						RAM[i + 0x2800] = 0xFF;
-						RAM[i + 0x3800] = 0xFF;
-						RAM[i + 0x4800] = 0xFF;
-						RAM[i + 0x5800] = 0xFF;
-						RAM[i + 0x6800] = 0xFF;
-						RAM[i + 0x7800] = 0xFF;
-					}
-				}
-
-				// some bytes are like this is Gambatte, hardware anomoly? Is it consistent across versions?
-				/*
-				for (int i = 0; i < 16; i++)
-				{
-					RAM[0xE02 + (16 * i)] = 0;
-					RAM[0xE0A + (16 * i)] = 0xFF;
-
-					RAM[0x1E02 + (16 * i)] = 0;
-					RAM[0x1E0A + (16 * i)] = 0xFF;
-
-					RAM[0x2E02 + (16 * i)] = 0;
-					RAM[0x2E0A + (16 * i)] = 0xFF;
-
-					RAM[0x3E02 + (16 * i)] = 0;
-					RAM[0x3E0A + (16 * i)] = 0xFF;
-
-					RAM[0x4E02 + (16 * i)] = 0;
-					RAM[0x4E0A + (16 * i)] = 0xFF;
-
-					RAM[0x5E02 + (16 * i)] = 0;
-					RAM[0x5E0A + (16 * i)] = 0xFF;
-
-					RAM[0x6E02 + (16 * i)] = 0;
-					RAM[0x6E0A + (16 * i)] = 0xFF;
-
-					RAM[0x7E02 + (16 * i)] = 0;
-					RAM[0x7E0A + (16 * i)] = 0xFF;
-				}
-				*/
-			}
+			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}
 	}
 }

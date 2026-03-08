@@ -25,9 +25,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
+		/// <param name="gbcflag">whether or not console is gbc</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GB_load_bios(IntPtr core, byte[] bios);
+		public static extern int GB_load_bios(IntPtr core, byte[] bios, bool gbcflag);
 
 		/// <summary>
 		/// Load ROM image.
@@ -38,6 +39,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int GB_load(IntPtr core, byte[] romdata, uint length);
+
+		/// <summary>
+		/// Set cart RTC.
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="rtcdata">the rom data, can be disposed of once this function returns</param>
+		/// <param name="index">length of romdata in bytes</param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern int GB_set_rtc(IntPtr core, int rtcdata, uint index);
 
 		/// <summary>
 		/// Create SRAM image.
@@ -77,14 +88,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern void GB_Hard_Reset(IntPtr core);
 
 		/// <summary>
-		/// Soft Reset.
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <returns>0 on success, negative value on failure.</returns>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_Soft_Reset(IntPtr core);
-
-		/// <summary>
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
@@ -93,7 +96,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern bool GB_frame_advance(IntPtr core, bool render, bool sound);
+		public static extern bool GB_frame_advance(IntPtr core, byte ctrl1, ushort accx, ushort accy, bool render, bool sound);
 
 		/// <summary>
 		/// get cpu cycles since last reset
@@ -159,13 +162,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern void GB_get_video(IntPtr core, int[] videobuf);
 
 		/// <summary>
-		/// Get Video data
+		/// Get audio data
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
-		/// <param name="aud_buf">where to send left audio to</param>
-		/// <param name="n_samp">number of left samples</param>
+		/// <param name="aud_buf_L">where to send left audio to</param>
+		/// <param name="n_samp_L">number of left samples</param>
+		/// <param name="aud_buf_R">where to send right audio to</param>
+		/// <param name="n_samp_R">number of right samples</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern uint GB_get_audio(IntPtr core, int[] aud_buf, ref uint n_samp);
+		public static extern uint GB_get_audio(IntPtr core, int[] aud_buf_L, ref uint n_samp_L, int[] aud_buf_R, ref uint n_samp_R);
+
 
 		/// <summary>
 		/// Save State
@@ -184,68 +190,94 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern void GB_load_state(IntPtr core, byte[] loader);
 
 		/// <summary>
+		/// Read the registers
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="addr">system bus address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern byte GB_getregisters(IntPtr core, int addr, bool onvbl);
+
+		/// <summary>
 		/// Read the system bus
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">system bus address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getsysbus(IntPtr core, int addr);
+		public static extern byte GB_getsysbus(IntPtr core, int addr, bool onvbl);
+
+		/// <summary>
+		/// Read the WRAM
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="addr">vram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern byte GB_getwram(IntPtr core, int addr, bool onvbl);
+
+		/// <summary>
+		/// Read the HRAM
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="addr">vram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern byte GB_gethram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the VRAM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getvram(IntPtr core, int addr);
-
-		/// <summary>
-		/// Read the VROM
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">vram address</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getchrrom(IntPtr core, int addr);
+		public static extern byte GB_getvram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the WRAM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getram(IntPtr core, int addr);
+		public static extern byte GB_getram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the ROM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getrom(IntPtr core, int addr);
+		public static extern byte GB_getrom(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the OAM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getoam(IntPtr core, int addr);
+		public static extern byte GB_getoam(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the Palette Ram
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">vram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getpalram(IntPtr core, int addr);
+		public static extern byte GB_getpalram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// Read the SRAM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>
+		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getsram(IntPtr core, int addr);
+		public static extern byte GB_getsram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
 		/// type of the cpu trace callback
