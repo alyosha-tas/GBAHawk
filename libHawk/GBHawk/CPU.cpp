@@ -71,7 +71,7 @@ namespace GBHawk
 			case 0x04:													// INC B
 				switch (cpu_Instr_Cycle)
 				{
-					case 0: cpu_Regs[cpu_B] += 1;
+					case 0: cpu_INC8_Func(cpu_B); break;
 					case 1: break;
 					case 2: cpu_Halt_Check(); break;
 					case 3: cpu_Op_Func(); break;
@@ -81,7 +81,7 @@ namespace GBHawk
 			case 0x05:													// DEC B
 				switch (cpu_Instr_Cycle)
 				{
-					case 0: cpu_Regs[cpu_B] -= 1;
+					case 0: cpu_DEC8_Func(cpu_B); break;
 					case 1: break;
 					case 2: cpu_Halt_Check(); break;
 					case 3: cpu_Op_Func(); break;
@@ -102,9 +102,46 @@ namespace GBHawk
 				}			
 				break;
 
-			case 0x07: INT_OP(RLC, Aim);						break; // RLCA
-			case 0x08: LD_R_IM(SPl, SPh, PCl, PCh);				break; // LD (imm), SP
-			case 0x09: ADD_16(L, H, C, B);						break; // ADD HL, BC
+			case 0x07:													// RLCA
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: cpu_RLC_Func(cpu_Aim); break;
+					case 1: break;
+					case 2: cpu_Halt_Check(); break;
+					case 3: cpu_Op_Func(); break;
+				}
+				break;
+
+			case 0x08:													// LD (imm), SP
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: break;
+					case 1: break;
+					case 2: break;
+					case 3: cpu_Regs[cpu_W] = GB_System::Read_Memory(cpu_RegPCget()); break;
+					case 4: break;
+					case 5: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
+					case 6: break;
+					case 7: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
+					case 8: break;
+					case 9: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
+					case 10: break;
+					case 11: GB_System::Write_Memory(cpu_RegWZget(), cpu_Regs[cpu_SPl]); break;
+					case 12: break;
+					case 13: cpu_RegWZset((uint16_t)(cpu_RegWZget() + 1)); break;
+					case 14: break;
+					case 15: GB_System::Write_Memory(cpu_RegWZget(), cpu_Regs[cpu_SPh]); break;
+					case 16: break;
+					case 17: break;
+					case 18: cpu_Halt_Check(); break;
+					case 19: cpu_Op_Func(); break;
+				}
+				break;
+
+			case 0x09:													// ADD HL, BC
+				
+				
+				break;
 			case 0x0A: REG_OP_IND(TR, A, C, B);					break; // LD A, (BC)
 			case 0x0B: DEC_16(C, B);							break; // DEC BC
 			case 0x0C: INT_OP(INC8, C);							break; // INC C

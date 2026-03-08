@@ -262,20 +262,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			FlagN = false;
 		}
 
-		public void RLC_Func(ushort src)
-		{
-			imm = src == Aim;
-			if (imm) { src = A; }
-
-			c = Regs[src].Bit(7) ? 1 : 0;
-			FlagC = Regs[src].Bit(7);
-
-			Regs[src] = (ushort)(((Regs[src] << 1) & 0xFF) | c);
-
-			FlagZ = imm ? false : (Regs[src] == 0);
-			FlagH = false;
-			FlagN = false;
-		}
 
 		public void RL_Func(ushort src)
 		{
@@ -290,64 +276,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			FlagZ = imm ? false : (Regs[src] == 0);
 			FlagH = false;
 			FlagN = false;
-		}
-
-		public void INC8_Func(ushort src)
-		{
-			Reg16_d = Regs[src];
-			Reg16_d += 1;
-
-			FlagZ = (Reg16_d & 0xFF) == 0;
-
-			ans = (ushort)(Reg16_d & 0xFF);
-
-			// redo for half carry flag
-			Reg16_d = Regs[src] & 0xF;
-			Reg16_d += 1;
-
-			FlagH = Reg16_d.Bit(4);
-			FlagN = false;
-
-			Regs[src] = ans;
-		}
-
-		public void DEC8_Func(ushort src)
-		{
-			Reg16_d = Regs[src];
-			Reg16_d -= 1;
-
-			FlagZ = (Reg16_d & 0xFF) == 0;
-
-			ans = (ushort)(Reg16_d & 0xFF);
-
-			// redo for half carry flag
-			Reg16_d = Regs[src] & 0xF;
-			Reg16_d -= 1;
-
-			FlagH = Reg16_d.Bit(4);
-			FlagN = true;
-
-			Regs[src] = ans;
-		}
-
-		public void INC16_Func(ushort src_l, ushort src_h)
-		{
-			Reg16_d = Regs[src_l] | (Regs[src_h] << 8);
-
-			Reg16_d += 1;
-
-			Regs[src_l] = (ushort)(Reg16_d & 0xFF);
-			Regs[src_h] = (ushort)((Reg16_d & 0xFF00) >> 8);
-		}
-
-		public void DEC16_Func(ushort src_l, ushort src_h)
-		{
-			Reg16_d = Regs[src_l] | (Regs[src_h] << 8);
-
-			Reg16_d -= 1;
-
-			Regs[src_l] = (ushort)(Reg16_d & 0xFF);
-			Regs[src_h] = (ushort)((Reg16_d & 0xFF00) >> 8);
 		}
 
 		public void ADC8_Func(ushort dest, ushort src)

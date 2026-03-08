@@ -1054,6 +1054,9 @@ namespace GBHawk
 		inline uint16_t cpu_RegBCget() { return ((uint16_t)(cpu_Regs[cpu_C] | (cpu_Regs[cpu_B] << 8))); }
 		inline void cpu_RegBCset(uint16_t value) { cpu_Regs[cpu_C] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_B] = (uint16_t)((value >> 8) & 0xFF); }
 
+		inline uint16_t cpu_RegWZget() { return ((uint16_t)(cpu_Regs[cpu_Z] | (cpu_Regs[cpu_W] << 8))); }
+		inline void cpu_RegWZset(uint16_t value) { cpu_Regs[cpu_Z] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_W] = (uint16_t)((value >> 8) & 0xFF); }
+
 
 		// local variables for operations, not stated
 		uint32_t cpu_Reg16_dt, cpu_Reg16_st, cpu_ct;
@@ -1108,6 +1111,452 @@ namespace GBHawk
 		}
 
 		inline void cpu_Execute_One();
+
+
+
+		void Read_Func(uint16_t dest, uint16_t src_l, uint16_t src_h)
+		{
+			uint16_t addr = (uint16_t)(cpu_Regs[src_l] | (cpu_Regs[src_h]) << 8);
+			cpu_Regs[dest] = ReadMemory(addr);
+		}
+
+		// special read for POP AF that always clears the lower 4 bits of F 
+		void Read_Func_F(uint16_t dest, uint16_t src_l, uint16_t src_h)
+		{
+			cpu_Regs[dest] = (byte)(ReadMemory((uint16_t)(cpu_Regs[src_l] | (cpu_Regs[src_h]) << 8)) & 0xF0);
+		}
+
+		void Write_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src)
+		{
+			uint16_t addr = (uint16_t)(cpu_Regs[dest_l] | (cpu_Regs[dest_h]) << 8);
+			WriteMemory(addr, (byte)cpu_Regs[src]);
+		}
+
+		void TR_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Regs[dest] = cpu_Regs[src];
+		}
+
+		void ADD8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest];
+			cpu_Reg16_dt += cpu_Regs[src];
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest] & 0xF;
+			cpu_Reg16_dt += (cpu_Regs[src] & 0xF);
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+
+			cpu_FlagNset(false);
+
+			cpu_Regs[dest] = (uint8_t) cpu_ans;
+		}
+
+		void SUB8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest];
+			cpu_Reg16_dt -= cpu_Regs[src];
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest] & 0xF;
+			cpu_Reg16_dt -= (cpu_Regs[src] & 0xF);
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+			cpu_FlagNset(true);
+
+			cpu_Regs[dest] = (uint8_t) cpu_ans;
+		}
+
+		void BIT_Func(uint16_t bit, uint16_t src)
+		{
+			cpu_FlagZset(!((cpu_Regs[src] & (1 << bit)) == (1 << bit)));
+			cpu_FlagHset(true);
+			cpu_FlagNset(false);
+		}
+
+		void SET_Func(uint16_t bit, uint16_t src)
+		{
+			cpu_Regs[src] |= (uint8_t)(1 << bit);
+		}
+
+		void RES_Func(uint16_t bit, uint16_t src)
+		{
+			cpu_Regs[src] &= (uint8_t)(0xFF - (1 << bit));
+		}
+
+		void ASGN_Func(uint16_t src, uint16_t val)
+		{
+			cpu_Regs[src] = (uint8_t) val;
+		}
+
+		void SWAP_Func(uint16_t src)
+		{
+			cpu_temp = (uint16_t)((cpu_Regs[src] << 4) & 0xF0);
+			cpu_Regs[src] = (uint8_t)(cpu_temp | (cpu_Regs[src] >> 4));
+
+			cpu_FlagZset(cpu_Regs[src] == 0);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+			cpu_FlagCset(false);
+		}
+
+		void SLA_Func(uint16_t src)
+		{
+			cpu_FlagCset(((cpu_Regs[src] & 0x80) == 0x80));
+
+			cpu_Regs[src] = (uint8_t)((cpu_Regs[src] << 1) & 0xFF);
+
+			cpu_FlagZset(cpu_Regs[src] == 0);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void SRA_Func(uint16_t src)
+		{
+			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
+
+			cpu_temp = (uint16_t)(cpu_Regs[src] & 0x80); // MSB doesn't change in this operation
+
+			cpu_Regs[src] = (uint8_t)((cpu_Regs[src] >> 1) | cpu_temp);
+
+			cpu_FlagZset(cpu_Regs[src] == 0);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void SRL_Func(uint16_t src)
+		{
+			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
+
+			cpu_Regs[src] = (uint8_t)(cpu_Regs[src] >> 1);
+
+			cpu_FlagZset(cpu_Regs[src] == 0);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void CPL_Func(uint16_t src)
+		{
+			cpu_Regs[src] = (uint8_t)((~cpu_Regs[src]) & 0xFF);
+
+			cpu_FlagHset(true);
+			cpu_FlagNset(true);
+		}
+
+		void CCF_Func(uint16_t src)
+		{
+			cpu_FlagCset(!cpu_FlagCget());
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void SCF_Func(uint16_t src)
+		{
+			cpu_FlagCset(true);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void AND8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] & cpu_Regs[src]);
+
+			cpu_FlagZset(cpu_Regs[dest] == 0);
+			cpu_FlagCset(false);
+			cpu_FlagHset(true);
+			cpu_FlagNset(false);
+		}
+
+		void OR8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] | cpu_Regs[src]);
+
+			cpu_FlagZset(cpu_Regs[dest] == 0);
+			cpu_FlagCset(false);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void XOR8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] ^ cpu_Regs[src]);
+
+			cpu_FlagZset(cpu_Regs[dest] == 0);
+			cpu_FlagCset(false);
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void CP8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest];
+			cpu_Reg16_dt -= cpu_Regs[src];
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest] & 0xF;
+			cpu_Reg16_dt -= (cpu_Regs[src] & 0xF);
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+
+			cpu_FlagNset(true);
+		}
+
+		void RRC_Func(uint16_t src)
+		{
+			cpu_imm = (src == cpu_Aim);
+			if (cpu_imm) { src = cpu_A; }
+
+			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
+
+			cpu_Regs[src] = (uint16_t)((cpu_FlagCget() ? 0x80 : 0) | (cpu_Regs[src] >> 1));
+
+			cpu_FlagZset(cpu_imm ? false : (cpu_Regs[src] == 0));
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void RR_Func(uint16_t src)
+		{
+			cpu_imm = (src == cpu_Aim);
+			if (cpu_imm) { src = cpu_A; }
+
+			cpu_ct = cpu_FlagCget() ? 0x80 : 0;
+
+			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
+
+			cpu_Regs[src] = (uint8_t)(cpu_ct | (cpu_Regs[src] >> 1));
+
+			cpu_FlagZset(cpu_imm ? false : (cpu_Regs[src] == 0));
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+
+		void RL_Func(uint16_t src)
+		{
+			cpu_imm = src == cpu_Aim;
+			if (cpu_imm) { src = cpu_A; }
+
+			cpu_ct = cpu_FlagCget() ? 1 : 0;
+			cpu_FlagCset(((cpu_Regs[src] & 0x80) == 0x80));
+
+			cpu_Regs[src] = (uint8_t)(((cpu_Regs[src] << 1) & 0xFF) | cpu_ct);
+
+			cpu_FlagZset(cpu_imm ? false : (cpu_Regs[src] == 0));
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
+
+		void ADC8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest];
+			cpu_ct = cpu_FlagCget() ? 1 : 0;
+
+			cpu_Reg16_dt += (cpu_Regs[src] + cpu_ct);
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest] & 0xF;
+			cpu_Reg16_dt += ((cpu_Regs[src] & 0xF) + cpu_ct);
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+			cpu_FlagNset(false);
+
+			cpu_Regs[dest] = (uint8_t)cpu_ans;
+		}
+
+		void SBC8_Func(uint16_t dest, uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest];
+			cpu_ct = cpu_FlagCget() ? 1 : 0;
+
+			cpu_Reg16_dt -= (cpu_Regs[src] + cpu_ct);
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest] & 0xF;
+			cpu_Reg16_dt -= ((cpu_Regs[src] & 0xF) + cpu_ct);
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+			cpu_FlagNset(true);
+
+			cpu_Regs[dest] = (uint8_t)cpu_ans;
+		}
+
+		// DA code courtesy of AWJ: http://forums.nesdev.com/viewtopic.php?f=20&t=15944
+		void DA_Func(uint16_t src)
+		{
+			cpu_a_d = cpu_Regs[src];
+
+			if (!cpu_FlagNget())
+			{  // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+				if (cpu_FlagCget() || cpu_a_d > 0x99) { cpu_a_d += 0x60; cpu_FlagCset(true); }
+				if (cpu_FlagHget() || (cpu_a_d & 0x0f) > 0x09) { cpu_a_d += 0x6; }
+			}
+			else
+			{  // after a subtraction, only adjust if (half-)carry occurred
+				if (cpu_FlagCget()) { cpu_a_d -= 0x60; }
+				if (cpu_FlagHget()) { cpu_a_d -= 0x6; }
+			}
+
+			cpu_a_d &= 0xFF;
+
+			cpu_Regs[src] = cpu_a_d;
+
+			cpu_FlagZset(cpu_a_d == 0);
+			cpu_FlagHset(false);
+		}
+
+		// used for signed operations
+		void ADDS_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src_l, uint16_t src_h)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest_l];
+			cpu_Reg16_st = cpu_Regs[src_l];
+
+			cpu_Reg16_dt += cpu_Reg16_st;
+
+			cpu_temp = 0;
+
+			// since this is signed addition, calculate the high byte carry appropriately
+			if (((cpu_Reg16_st & 0x80) == 0x80))
+			{
+				if (((cpu_Reg16_dt & 0xFF) >= cpu_Regs[dest_l]))
+				{
+					cpu_temp = 0xFF;
+				}
+				else
+				{
+					cpu_temp = 0;
+				}
+			}
+			else
+			{
+				cpu_temp = (uint16_t)(((cpu_Reg16_dt & 0x100) == 0x100) ? 1 : 0);
+			}
+
+			cpu_ans_l = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// JR operations do not effect flags
+			if (dest_l != cpu_PCl)
+			{
+				cpu_FlagCset(((cpu_Reg16_dt & 0x100) == 0x100));
+
+				// redo for half carry flag
+				cpu_Reg16_dt = cpu_Regs[dest_l] & 0xF;
+				cpu_Reg16_dt += cpu_Regs[src_l] & 0xF;
+
+				cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+				cpu_FlagNset(false);
+				cpu_FlagZset(false);
+			}
+
+			cpu_Regs[dest_l] = cpu_ans_l;
+			cpu_Regs[dest_h] += cpu_temp;
+			cpu_Regs[dest_h] &= 0xFF;
+
+		}
+
+
+		void cpu_ADD16_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src_l, uint16_t src_h)
+		{
+			cpu_Reg16_dt = cpu_Regs[dest_l] | (cpu_Regs[dest_h] << 8);
+			cpu_Reg16_st = cpu_Regs[src_l] | (cpu_Regs[src_h] << 8);
+
+			cpu_Reg16_dt += cpu_Reg16_st;
+
+			cpu_FlagCset(((cpu_Reg16_dt & 0x10000) == 0x10000));
+
+			cpu_ans_l = (uint16_t)(cpu_Reg16_dt & 0xFF);
+			cpu_ans_h = (uint16_t)((cpu_Reg16_dt & 0xFF00) >> 8);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[dest_l] | ((cpu_Regs[dest_h] & 0x0F) << 8);
+			cpu_Reg16_st = cpu_Regs[src_l] | ((cpu_Regs[src_h] & 0x0F) << 8);
+
+			cpu_Reg16_dt += cpu_Reg16_st;
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x1000) == 0x1000));
+			cpu_FlagNset(false);
+
+			cpu_Regs[dest_l] = cpu_ans_l;
+			cpu_Regs[dest_h] = cpu_ans_h;
+		}
+
+
+		void cpu_INC8_Func(uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[src];
+			cpu_Reg16_dt += 1;
+
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[src] & 0xF;
+			cpu_Reg16_dt += 1;
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+			cpu_FlagNset(false);
+
+			cpu_Regs[src] = (uint8_t) cpu_ans;
+		}
+
+		void cpu_DEC8_Func(uint16_t src)
+		{
+			cpu_Reg16_dt = cpu_Regs[src];
+			cpu_Reg16_dt -= 1;
+
+			cpu_FlagZset((cpu_Reg16_dt & 0xFF) == 0);
+
+			cpu_ans = (uint16_t)(cpu_Reg16_dt & 0xFF);
+
+			// redo for half carry flag
+			cpu_Reg16_dt = cpu_Regs[src] & 0xF;
+			cpu_Reg16_dt -= 1;
+
+			cpu_FlagHset(((cpu_Reg16_dt & 0x10) == 0x10));
+			cpu_FlagNset(true);
+
+			cpu_Regs[src] = cpu_ans;
+		}
+
+		void cpu_RLC_Func(uint16_t src)
+		{
+			cpu_imm = (src == cpu_Aim);
+			if (cpu_imm) { src = cpu_A; }
+
+			cpu_ct = ((cpu_Regs[src]& 0x80) == 0x80) ? 1 : 0;
+			cpu_FlagCset(((cpu_Regs[src] & 0x80) == 0x80));
+
+			cpu_Regs[src] = (uint8_t)(((cpu_Regs[src] << 1) & 0xFF) | cpu_ct);
+
+			cpu_FlagZset(cpu_imm ? false : (cpu_Regs[src] == 0));
+			cpu_FlagHset(false);
+			cpu_FlagNset(false);
+		}
 
 		#pragma endregion
 

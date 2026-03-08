@@ -28,15 +28,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			{
 				switch (i)
 				{
-					case 0x00: NOP_();									break; // NOP
-					case 0x01: LD_IND_16(C, B, PCl, PCh);				break; // LD BC, nn
-					case 0x02: LD_8_IND(C, B, A);						break; // LD (BC), A
-					case 0x03: INC_16(C, B);							break; // INC BC
-					case 0x04: INT_OP(INC8, B);							break; // INC B
-					case 0x05: INT_OP(DEC8, B);							break; // DEC B
-					case 0x06: LD_IND_8_INC(B, PCl, PCh);				break; // LD B, n
-					case 0x07: INT_OP(RLC, Aim);						break; // RLCA
-					case 0x08: LD_R_IM(SPl, SPh, PCl, PCh);				break; // LD (imm), SP
 					case 0x09: ADD_16(L, H, C, B);						break; // ADD HL, BC
 					case 0x0A: REG_OP_IND(TR, A, C, B);					break; // LD A, (BC)
 					case 0x0B: DEC_16(C, B);							break; // DEC BC

@@ -77,27 +77,7 @@
 
 		private void LD_R_IM(ushort dest_l, ushort dest_h, ushort src_l, ushort src_h)
 		{
-			cur_instr = new ushort[]
-						{IDLE,
-						IDLE,
-						IDLE,
-						RD, W, src_l, src_h,
-						IDLE,
-						INC16, src_l, src_h,
-						IDLE,
-						RD, Z, src_l, src_h,
-						IDLE,
-						INC16, src_l, src_h,
-						IDLE,
-						WR, W, Z, dest_l,
-						IDLE,
-						INC16, W, Z,
-						IDLE,
-						WR, W, Z, dest_h,
-						IDLE,
-						IDLE,
-						HALT_CHK,
-						OP };
+
 		}
 
 		private void LD_8_IND_INC(ushort dest_l, ushort dest_h, ushort src)
