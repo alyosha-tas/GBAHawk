@@ -40,15 +40,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 						OP };
 		}
 
-		private void STOP_()
-		{
-			cur_instr = new[]
-						{RD, Z, PCl, PCh,
-						INC16, PCl, PCh,
-						IDLE,
-						STOP };
-		}
-
 		private void HALT_()
 		{
 			cur_instr = new ushort[]
