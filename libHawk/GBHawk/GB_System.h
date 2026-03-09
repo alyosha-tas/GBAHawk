@@ -1086,17 +1086,16 @@ namespace GBHawk
 		// Instruction types
 		enum class OpT
 		{
-			NOP_,
+			INT_OP,
+			REG_OP,
 			LD_IND_16,
 			LD_8_IND,
 			INC_16,
-			INT_OP,
 			LD_IND_8_INC,
 			LD_R_IM,
 			ADD_16,
 			REG_OP_IND,
 			DEC_16,
-			INT_OP,
 			STOP,
 			JR_COND,
 			LD_8_IND_INC,
@@ -1104,8 +1103,7 @@ namespace GBHawk
 			LD_8_IND_DEC,
 			INC_DEC_8_IND,
 			LD_8_IND_IND,
-			LD_IND_8_DEC_HL,
-			REG_OP,
+			LD_IND_8_DEC_HL,		
 			HALT,
 			RET_COND,
 			POP,
@@ -1129,268 +1127,553 @@ namespace GBHawk
 			LD_HL_SPn,
 			LD_SP_HL,
 			LD_16_IND_FF,
+			INT_OP_IND,
+			BIT_OP,
+			BIT_TE_IND,
+			BIT_OP_IND,
+
+			RESET,
+			EXIT,
+			SKIP,
+			GBC_HALT,
+			SPC_HALT,
+			STOP_LOOP,
+			INTRPT,
+			INTRPT_GBC,
+			WAIT,
+			SPD_CHG
 		};
 
 		OpT cpu_Instr_Type;
 
-		OpT cpu_Instr_Type_List[256] =
+		OpT cpu_Instr_Type_List[512 + 10] =
 		{
-			/*0x00 */ OpT::NOP_,							// NOP
-			/*0x01 */ OpT::LD_IND_16,						// LD BC, nn
-			/*0x02 */ OpT::LD_8_IND,						// LD (BC), A
-			/*0x03 */ OpT::INC_16,							// INC BC
-			/*0x04 */ OpT::INT_OP,							// INC B
-			/*0x05 */ OpT::INT_OP,							// DEC B
-			/*0x06 */ OpT::LD_IND_8_INC,					// LD B, n
-			/*0x07 */ OpT::INT_OP,							// RLCA
-			/*0x08 */ OpT::LD_R_IM,							// LD (imm), SP
-			/*0x09 */ OpT::ADD_16,							// ADD HL, BC
-			/*0x0A */ OpT::REG_OP_IND,						// LD A, (BC)
-			/*0x0B */ OpT::DEC_16,							// DEC BC
-			/*0x0C */ OpT::INT_OP,							// INC C
-			/*0x0D */ OpT::INT_OP,							// DEC C
-			/*0x0E */ OpT::LD_IND_8_INC,					// LD C, n
-			/*0x0F */ OpT::INT_OP,							// RRCA
-			/*0x10 */ OpT::STOP,							// STOP
-			/*0x11 */ OpT::LD_IND_16,						// LD DE, nn
-			/*0x12 */ OpT::LD_8_IND,						// LD (DE), A
-			/*0x13 */ OpT::INC_16,							// INC DE
-			/*0x14 */ OpT::INT_OP,							// INC D
-			/*0x15 */ OpT::INT_OP,							// DEC D
-			/*0x16 */ OpT::LD_IND_8_INC,					// LD D, n
-			/*0x17 */ OpT::INT_OP,							// RLA
-			/*0x18 */ OpT::JR_COND,							// JR, r8
-			/*0x19 */ OpT::ADD_16,							// ADD HL, DE
-			/*0x1A */ OpT::REG_OP_IND,						// LD A, (DE)
-			/*0x1B */ OpT::DEC_16,							// DEC DE
-			/*0x1C */ OpT::INT_OP,							// INC E
-			/*0x1D */ OpT::INT_OP,							// DEC E
-			/*0x1E */ OpT::LD_IND_8_INC,					// LD E, n
-			/*0x1F */ OpT::INT_OP,							// RRA
-			/*0x20 */ OpT::JR_COND,							// JR NZ, r8
-			/*0x21 */ OpT::LD_IND_16,						// LD HL, nn
-			/*0x22 */ OpT::LD_8_IND_INC,					// LD (HL+), A
-			/*0x23 */ OpT::INC_16,							// INC HL
-			/*0x24 */ OpT::INT_OP,							// INC H
-			/*0x25 */ OpT::INT_OP,							// DEC H
-			/*0x26 */ OpT::LD_IND_8_INC,					// LD H, n
-			/*0x27 */ OpT::INT_OP,							// DAA
-			/*0x28 */ OpT::JR_COND,							// JR Z, r8
-			/*0x29 */ OpT::ADD_16,							// ADD HL, HL
-			/*0x2A */ OpT::LD_IND_8_INC_HL,					// LD A, (HL+)
-			/*0x2B */ OpT::DEC_16,							// DEC HL
-			/*0x2C */ OpT::INT_OP,							// INC L
-			/*0x2D */ OpT::INT_OP,							// DEC L
-			/*0x2E */ OpT::LD_IND_8_INC,					// LD L, n
-			/*0x2F */ OpT::INT_OP,							// CPL
-			/*0x30 */ OpT::JR_COND,							// JR NC, r8
-			/*0x31 */ OpT::LD_IND_16,						// LD SP, nn
-			/*0x32 */ OpT::LD_8_IND_DEC,					// LD (HL-), A
-			/*0x33 */ OpT::INC_16,							// INC SP
-			/*0x34 */ OpT::INC_DEC_8_IND,					// INC (HL)
-			/*0x35 */ OpT::INC_DEC_8_IND,					// DEC (HL)
-			/*0x36 */ OpT::LD_8_IND_IND,					// LD (HL), n
-			/*0x37 */ OpT::INT_OP,							// SCF
-			/*0x38 */ OpT::JR_COND,							// JR C, r8
-			/*0x39 */ OpT::ADD_16,							// ADD HL, SP
-			/*0x3A */ OpT::LD_IND_8_DEC_HL,					// LD A, (HL-)
-			/*0x3B */ OpT::DEC_16,							// DEC SP
-			/*0x3C */ OpT::INT_OP,							// INC A
-			/*0x3D */ OpT::INT_OP,							// DEC A
-			/*0x3E */ OpT::LD_IND_8_INC,					// LD A, n
-			/*0x3F */ OpT::INT_OP,							// CCF
-			/*0x40 */ OpT::REG_OP,							// LD B, B
-			/*0x41 */ OpT::REG_OP,							// LD B, C
-			/*0x42 */ OpT::REG_OP,							// LD B, D
-			/*0x43 */ OpT::REG_OP,							// LD B, E
-			/*0x44 */ OpT::REG_OP,							// LD B, H
-			/*0x45 */ OpT::REG_OP,							// LD B, L
-			/*0x46 */ OpT::REG_OP_IND,						// LD B, (HL)
-			/*0x47 */ OpT::REG_OP,							// LD B, A
-			/*0x48 */ OpT::REG_OP,							// LD C, B
-			/*0x49 */ OpT::REG_OP,							// LD C, C
-			/*0x4A */ OpT::REG_OP,							// LD C, D
-			/*0x4B */ OpT::REG_OP,							// LD C, E
-			/*0x4C */ OpT::REG_OP,							// LD C, H
-			/*0x4D */ OpT::REG_OP,							// LD C, L
-			/*0x4E */ OpT::REG_OP_IND,						// LD C, (HL)
-			/*0x4F */ OpT::REG_OP,							// LD C, A
-			/*0x50 */ OpT::REG_OP,							// LD D, B
-			/*0x51 */ OpT::REG_OP,							// LD D, C
-			/*0x52 */ OpT::REG_OP,							// LD D, D
-			/*0x53 */ OpT::REG_OP,							// LD D, E
-			/*0x54 */ OpT::REG_OP,							// LD D, H
-			/*0x55 */ OpT::REG_OP,							// LD D, L
-			/*0x56 */ OpT::REG_OP_IND,						// LD D, (HL)
-			/*0x57 */ OpT::REG_OP,							// LD D, A
-			/*0x58 */ OpT::REG_OP,							// LD E, B
-			/*0x59 */ OpT::REG_OP,							// LD E, C
-			/*0x5A */ OpT::REG_OP,							// LD E, D
-			/*0x5B */ OpT::REG_OP,							// LD E, E
-			/*0x5C */ OpT::REG_OP,							// LD E, H
-			/*0x5D */ OpT::REG_OP,							// LD E, L
-			/*0x5E */ OpT::REG_OP_IND,						// LD E, (HL)
-			/*0x5F */ OpT::REG_OP,							// LD E, A
-			/*0x60 */ OpT::REG_OP,							// LD H, B
-			/*0x61 */ OpT::REG_OP,							// LD H, C
-			/*0x62 */ OpT::REG_OP,							// LD H, D
-			/*0x63 */ OpT::REG_OP,							// LD H, E
-			/*0x64 */ OpT::REG_OP,							// LD H, H
-			/*0x65 */ OpT::REG_OP,							// LD H, L
-			/*0x66 */ OpT::REG_OP_IND,						// LD H, (HL)
-			/*0x67 */ OpT::REG_OP,							// LD H, A
-			/*0x68 */ OpT::REG_OP,							// LD L, B
-			/*0x69 */ OpT::REG_OP,							// LD L, C
-			/*0x6A */ OpT::REG_OP,							// LD L, D
-			/*0x6B */ OpT::REG_OP,							// LD L, E
-			/*0x6C */ OpT::REG_OP,							// LD L, H
-			/*0x6D */ OpT::REG_OP,							// LD L, L
-			/*0x6E */ OpT::REG_OP_IND,						// LD L, (HL)
-			/*0x6F */ OpT::REG_OP,							// LD L, A
-			/*0x70 */ OpT::LD_8_IND,						// LD (HL), B
-			/*0x71 */ OpT::LD_8_IND,						// LD (HL), C
-			/*0x72 */ OpT::LD_8_IND,						// LD (HL), D
-			/*0x73 */ OpT::LD_8_IND,						// LD (HL), E
-			/*0x74 */ OpT::LD_8_IND,						// LD (HL), H
-			/*0x75 */ OpT::LD_8_IND,						// LD (HL), L
-			/*0x76 */ OpT::HALT,							// HALT
-			/*0x77 */ OpT::LD_8_IND,						// LD (HL), A
-			/*0x78 */ OpT::REG_OP,							// LD A, B
-			/*0x79 */ OpT::REG_OP,							// LD A, C
-			/*0x7A */ OpT::REG_OP,							// LD A, D
-			/*0x7B */ OpT::REG_OP,							// LD A, E
-			/*0x7C */ OpT::REG_OP,							// LD A, H
-			/*0x7D */ OpT::REG_OP,							// LD A, L
-			/*0x7E */ OpT::REG_OP_IND,						// LD A, (HL)
-			/*0x7F */ OpT::REG_OP,							// LD A, A
-			/*0x80 */ OpT::REG_OP,							// ADD A, B
-			/*0x81 */ OpT::REG_OP,							// ADD A, C
-			/*0x82 */ OpT::REG_OP,							// ADD A, D
-			/*0x83 */ OpT::REG_OP,							// ADD A, E
-			/*0x84 */ OpT::REG_OP,							// ADD A, H
-			/*0x85 */ OpT::REG_OP,							// ADD A, L
-			/*0x86 */ OpT::REG_OP_IND,						// ADD A, (HL)
-			/*0x87 */ OpT::REG_OP,							// ADD A, A
-			/*0x88 */ OpT::REG_OP,							// ADC A, B
-			/*0x89 */ OpT::REG_OP,							// ADC A, C
-			/*0x8A */ OpT::REG_OP,							// ADC A, D
-			/*0x8B */ OpT::REG_OP,							// ADC A, E
-			/*0x8C */ OpT::REG_OP,							// ADC A, H
-			/*0x8D */ OpT::REG_OP,							// ADC A, L
-			/*0x8E */ OpT::REG_OP_IND,						// ADC A, (HL)
-			/*0x8F */ OpT::REG_OP,							// ADC A, A
-			/*0x90 */ OpT::REG_OP,							// SUB A, B
-			/*0x91 */ OpT::REG_OP,							// SUB A, C
-			/*0x92 */ OpT::REG_OP,							// SUB A, D
-			/*0x93 */ OpT::REG_OP,							// SUB A, E
-			/*0x94 */ OpT::REG_OP,							// SUB A, H
-			/*0x95 */ OpT::REG_OP,							// SUB A, L
-			/*0x96 */ OpT::REG_OP_IND,						// SUB A, (HL)
-			/*0x97 */ OpT::REG_OP,							// SUB A, A
-			/*0x98 */ OpT::REG_OP,							// SBC A, B
-			/*0x99 */ OpT::REG_OP,							// SBC A, C
-			/*0x9A */ OpT::REG_OP,							// SBC A, D
-			/*0x9B */ OpT::REG_OP,							// SBC A, E
-			/*0x9C */ OpT::REG_OP,							// SBC A, H
-			/*0x9D */ OpT::REG_OP,							// SBC A, L
-			/*0x9E */ OpT::REG_OP_IND,						// SBC A, (HL)
-			/*0x9F */ OpT::REG_OP,							// SBC A, A
-			/*0xA0 */ OpT::REG_OP,							// AND A, B
-			/*0xA1 */ OpT::REG_OP,							// AND A, C
-			/*0xA2 */ OpT::REG_OP,							// AND A, D
-			/*0xA3 */ OpT::REG_OP,							// AND A, E
-			/*0xA4 */ OpT::REG_OP,							// AND A, H
-			/*0xA5 */ OpT::REG_OP,							// AND A, L
-			/*0xA6 */ OpT::REG_OP_IND,						// AND A, (HL)
-			/*0xA7 */ OpT::REG_OP,							// AND A, A
-			/*0xA8 */ OpT::REG_OP,							// XOR A, B
-			/*0xA9 */ OpT::REG_OP,							// XOR A, C
-			/*0xAA */ OpT::REG_OP,							// XOR A, D
-			/*0xAB */ OpT::REG_OP,							// XOR A, E
-			/*0xAC */ OpT::REG_OP,							// XOR A, H
-			/*0xAD */ OpT::REG_OP,							// XOR A, L
-			/*0xAE */ OpT::REG_OP_IND,						// XOR A, (HL)
-			/*0xAF */ OpT::REG_OP,							// XOR A, A
-			/*0xB0 */ OpT::REG_OP,							// OR A, B
-			/*0xB1 */ OpT::REG_OP,							// OR A, C
-			/*0xB2 */ OpT::REG_OP,							// OR A, D
-			/*0xB3 */ OpT::REG_OP,							// OR A, E
-			/*0xB4 */ OpT::REG_OP,							// OR A, H
-			/*0xB5 */ OpT::REG_OP,							// OR A, L
-			/*0xB6 */ OpT::REG_OP_IND,						// OR A, (HL)
-			/*0xB7 */ OpT::REG_OP,							// OR A, A
-			/*0xB8 */ OpT::REG_OP,							// CP A, B
-			/*0xB9 */ OpT::REG_OP,							// CP A, C
-			/*0xBA */ OpT::REG_OP,							// CP A, D
-			/*0xBB */ OpT::REG_OP,							// CP A, E
-			/*0xBC */ OpT::REG_OP,							// CP A, H
-			/*0xBD */ OpT::REG_OP,							// CP A, L
-			/*0xBE */ OpT::REG_OP_IND,						// CP A, (HL)
-			/*0xBF */ OpT::REG_OP,							// CP A, A
-			/*0xC0 */ OpT::RET_COND,						// Ret NZ
-			/*0xC1 */ OpT::POP,								// POP BC
-			/*0xC2 */ OpT::JP_COND,							// JP NZ
-			/*0xC3 */ OpT::JP_COND,							// JP
-			/*0xC4 */ OpT::CALL_COND,						// CALL NZ
-			/*0xC5 */ OpT::PUSH,							// PUSH BC
-			/*0xC6 */ OpT::REG_OP_IND_INC,					// ADD A, n
-			/*0xC7 */ OpT::RST,								// RST 0
-			/*0xC8 */ OpT::RET_COND,						// RET Z
-			/*0xC9 */ OpT::RET,								// RET
-			/*0xCA */ OpT::JP_COND,							// JP Z
-			/*0xCB */ OpT::PREFIX,							// PREFIX
-			/*0xCC */ OpT::CALL_COND,						// CALL Z
-			/*0xCD */ OpT::CALL_COND,						// CALL
-			/*0xCE */ OpT::REG_OP_IND_INC,					// ADC A, n
-			/*0xCF */ OpT::RST,								// RST 0x08
-			/*0xD0 */ OpT::RET_COND,						// Ret NC
-			/*0xD1 */ OpT::POP,								// POP DE
-			/*0xD2 */ OpT::JP_COND,							// JP NC
-			/*0xD3 */ OpT::JAM,								// JAM
-			/*0xD4 */ OpT::CALL_COND,						// CALL NC
-			/*0xD5 */ OpT::PUSH,							// PUSH DE
-			/*0xD6 */ OpT::REG_OP_IND_INC,					// SUB A, n
-			/*0xD7 */ OpT::RST,								// RST 0x10
-			/*0xD8 */ OpT::RET_COND,						// RET C
-			/*0xD9 */ OpT::RETI,							// RETI
-			/*0xDA */ OpT::JP_COND,							// JP C
-			/*0xDB */ OpT::JAM,								// JAM
-			/*0xDC */ OpT::CALL_COND,						// CALL C
-			/*0xDD */ OpT::JAM,								// JAM
-			/*0xDE */ OpT::REG_OP_IND_INC,					// SBC A, n
-			/*0xDF */ OpT::RST,								// RST 0x18
-			/*0xE0 */ OpT::LD_FF_IND_8,						// LD(n), A
-			/*0xE1 */ OpT::POP,								// POP HL
-			/*0xE2 */ OpT::LD_FFC_IND_8,					// LD(C), A
-			/*0xE3 */ OpT::JAM,								// JAM
-			/*0xE4 */ OpT::JAM,								// JAM
-			/*0xE5 */ OpT::PUSH,							// PUSH HL
-			/*0xE6 */ OpT::REG_OP_IND_INC,					// AND A, n
-			/*0xE7 */ OpT::RST,								// RST 0x20
-			/*0xE8 */ OpT::ADD_SP,							// ADD SP,n
-			/*0xE9 */ OpT::JP_HL,							// JP (HL)
-			/*0xEA */ OpT::LD_FF_IND_16,					// LD(nn), A
-			/*0xEB */ OpT::JAM,								// JAM
-			/*0xEC */ OpT::JAM,								// JAM
-			/*0xED */ OpT::JAM,								// JAM
-			/*0xEE */ OpT::REG_OP_IND_INC,					// XOR A, n
-			/*0xEF */ OpT::RST,								// RST 0x28
-			/*0xF0 */ OpT::LD_8_IND_FF,						// A, LD(n)
-			/*0xF1 */ OpT::POP,								// POP AF
-			/*0xF2 */ OpT::LD_8_IND_FFC,					// A, LD(C)
-			/*0xF3 */ OpT::EI_DI,								// DI
-			/*0xF4 */ OpT::JAM,								// JAM
-			/*0xF5 */ OpT::PUSH,							// PUSH AF
-			/*0xF6 */ OpT::REG_OP_IND_INC,					// OR A, n
-			/*0xF7 */ OpT::RST,								// RST 0x30
-			/*0xF8 */ OpT::LD_HL_SPn,						// LD HL, SP+n
-			/*0xF9 */ OpT::LD_SP_HL,						// LD, SP, HL
-			/*0xFA */ OpT::LD_16_IND_FF,					// A, LD(nn)
-			/*0xFB */ OpT::EI_DI,							// EI
-			/*0xFC */ OpT::JAM,								// JAM
-			/*0xFD */ OpT::JAM,								// JAM
-			/*0xFE */ OpT::REG_OP_IND_INC,					// CP A, n
-			/*0xFF */ OpT::RST								// RST 0x38
+			/*0x00*/ OpT::INT_OP,							// NOP
+			/*0x01*/ OpT::LD_IND_16,						// LD BC, nn
+			/*0x02*/ OpT::LD_8_IND,						// LD (BC), A
+			/*0x03*/ OpT::INC_16,							// INC BC
+			/*0x04*/ OpT::INT_OP,							// INC B
+			/*0x05*/ OpT::INT_OP,							// DEC B
+			/*0x06*/ OpT::LD_IND_8_INC,					// LD B, n
+			/*0x07*/ OpT::INT_OP,							// RLCA
+			/*0x08*/ OpT::LD_R_IM,							// LD (imm), SP
+			/*0x09*/ OpT::ADD_16,							// ADD HL, BC
+			/*0x0A*/ OpT::REG_OP_IND,						// LD A, (BC)
+			/*0x0B*/ OpT::DEC_16,							// DEC BC
+			/*0x0C*/ OpT::INT_OP,							// INC C
+			/*0x0D*/ OpT::INT_OP,							// DEC C
+			/*0x0E*/ OpT::LD_IND_8_INC,					// LD C, n
+			/*0x0F*/ OpT::INT_OP,							// RRCA
+			/*0x10*/ OpT::STOP,							// STOP
+			/*0x11*/ OpT::LD_IND_16,						// LD DE, nn
+			/*0x12*/ OpT::LD_8_IND,						// LD (DE), A
+			/*0x13*/ OpT::INC_16,							// INC DE
+			/*0x14*/ OpT::INT_OP,							// INC D
+			/*0x15*/ OpT::INT_OP,							// DEC D
+			/*0x16*/ OpT::LD_IND_8_INC,					// LD D, n
+			/*0x17*/ OpT::INT_OP,							// RLA
+			/*0x18*/ OpT::JR_COND,							// JR, r8
+			/*0x19*/ OpT::ADD_16,							// ADD HL, DE
+			/*0x1A*/ OpT::REG_OP_IND,						// LD A, (DE)
+			/*0x1B*/ OpT::DEC_16,							// DEC DE
+			/*0x1C*/ OpT::INT_OP,							// INC E
+			/*0x1D*/ OpT::INT_OP,							// DEC E
+			/*0x1E*/ OpT::LD_IND_8_INC,					// LD E, n
+			/*0x1F*/ OpT::INT_OP,							// RRA
+			/*0x20*/ OpT::JR_COND,							// JR NZ, r8
+			/*0x21*/ OpT::LD_IND_16,						// LD HL, nn
+			/*0x22*/ OpT::LD_8_IND_INC,					// LD (HL+), A
+			/*0x23*/ OpT::INC_16,							// INC HL
+			/*0x24*/ OpT::INT_OP,							// INC H
+			/*0x25*/ OpT::INT_OP,							// DEC H
+			/*0x26*/ OpT::LD_IND_8_INC,					// LD H, n
+			/*0x27*/ OpT::INT_OP,							// DAA
+			/*0x28*/ OpT::JR_COND,							// JR Z, r8
+			/*0x29*/ OpT::ADD_16,							// ADD HL, HL
+			/*0x2A*/ OpT::LD_IND_8_INC_HL,					// LD A, (HL+)
+			/*0x2B*/ OpT::DEC_16,							// DEC HL
+			/*0x2C*/ OpT::INT_OP,							// INC L
+			/*0x2D*/ OpT::INT_OP,							// DEC L
+			/*0x2E*/ OpT::LD_IND_8_INC,					// LD L, n
+			/*0x2F*/ OpT::INT_OP,							// CPL
+			/*0x30*/ OpT::JR_COND,							// JR NC, r8
+			/*0x31*/ OpT::LD_IND_16,						// LD SP, nn
+			/*0x32*/ OpT::LD_8_IND_DEC,					// LD (HL-), A
+			/*0x33*/ OpT::INC_16,							// INC SP
+			/*0x34*/ OpT::INC_DEC_8_IND,					// INC (HL)
+			/*0x35*/ OpT::INC_DEC_8_IND,					// DEC (HL)
+			/*0x36*/ OpT::LD_8_IND_IND,					// LD (HL), n
+			/*0x37*/ OpT::INT_OP,							// SCF
+			/*0x38*/ OpT::JR_COND,							// JR C, r8
+			/*0x39*/ OpT::ADD_16,							// ADD HL, SP
+			/*0x3A*/ OpT::LD_IND_8_DEC_HL,					// LD A, (HL-)
+			/*0x3B*/ OpT::DEC_16,							// DEC SP
+			/*0x3C*/ OpT::INT_OP,							// INC A
+			/*0x3D*/ OpT::INT_OP,							// DEC A
+			/*0x3E*/ OpT::LD_IND_8_INC,					// LD A, n
+			/*0x3F*/ OpT::INT_OP,							// CCF
+			/*0x40*/ OpT::REG_OP,							// LD B, B
+			/*0x41*/ OpT::REG_OP,							// LD B, C
+			/*0x42*/ OpT::REG_OP,							// LD B, D
+			/*0x43*/ OpT::REG_OP,							// LD B, E
+			/*0x44*/ OpT::REG_OP,							// LD B, H
+			/*0x45*/ OpT::REG_OP,							// LD B, L
+			/*0x46*/ OpT::REG_OP_IND,						// LD B, (HL)
+			/*0x47*/ OpT::REG_OP,							// LD B, A
+			/*0x48*/ OpT::REG_OP,							// LD C, B
+			/*0x49*/ OpT::REG_OP,							// LD C, C
+			/*0x4A*/ OpT::REG_OP,							// LD C, D
+			/*0x4B*/ OpT::REG_OP,							// LD C, E
+			/*0x4C*/ OpT::REG_OP,							// LD C, H
+			/*0x4D*/ OpT::REG_OP,							// LD C, L
+			/*0x4E*/ OpT::REG_OP_IND,						// LD C, (HL)
+			/*0x4F*/ OpT::REG_OP,							// LD C, A
+			/*0x50*/ OpT::REG_OP,							// LD D, B
+			/*0x51*/ OpT::REG_OP,							// LD D, C
+			/*0x52*/ OpT::REG_OP,							// LD D, D
+			/*0x53*/ OpT::REG_OP,							// LD D, E
+			/*0x54*/ OpT::REG_OP,							// LD D, H
+			/*0x55*/ OpT::REG_OP,							// LD D, L
+			/*0x56*/ OpT::REG_OP_IND,						// LD D, (HL)
+			/*0x57*/ OpT::REG_OP,							// LD D, A
+			/*0x58*/ OpT::REG_OP,							// LD E, B
+			/*0x59*/ OpT::REG_OP,							// LD E, C
+			/*0x5A*/ OpT::REG_OP,							// LD E, D
+			/*0x5B*/ OpT::REG_OP,							// LD E, E
+			/*0x5C*/ OpT::REG_OP,							// LD E, H
+			/*0x5D*/ OpT::REG_OP,							// LD E, L
+			/*0x5E*/ OpT::REG_OP_IND,						// LD E, (HL)
+			/*0x5F*/ OpT::REG_OP,							// LD E, A
+			/*0x60*/ OpT::REG_OP,							// LD H, B
+			/*0x61*/ OpT::REG_OP,							// LD H, C
+			/*0x62*/ OpT::REG_OP,							// LD H, D
+			/*0x63*/ OpT::REG_OP,							// LD H, E
+			/*0x64*/ OpT::REG_OP,							// LD H, H
+			/*0x65*/ OpT::REG_OP,							// LD H, L
+			/*0x66*/ OpT::REG_OP_IND,						// LD H, (HL)
+			/*0x67*/ OpT::REG_OP,							// LD H, A
+			/*0x68*/ OpT::REG_OP,							// LD L, B
+			/*0x69*/ OpT::REG_OP,							// LD L, C
+			/*0x6A*/ OpT::REG_OP,							// LD L, D
+			/*0x6B*/ OpT::REG_OP,							// LD L, E
+			/*0x6C*/ OpT::REG_OP,							// LD L, H
+			/*0x6D*/ OpT::REG_OP,							// LD L, L
+			/*0x6E*/ OpT::REG_OP_IND,						// LD L, (HL)
+			/*0x6F*/ OpT::REG_OP,							// LD L, A
+			/*0x70*/ OpT::LD_8_IND,						// LD (HL), B
+			/*0x71*/ OpT::LD_8_IND,						// LD (HL), C
+			/*0x72*/ OpT::LD_8_IND,						// LD (HL), D
+			/*0x73*/ OpT::LD_8_IND,						// LD (HL), E
+			/*0x74*/ OpT::LD_8_IND,						// LD (HL), H
+			/*0x75*/ OpT::LD_8_IND,						// LD (HL), L
+			/*0x76*/ OpT::HALT,							// HALT
+			/*0x77*/ OpT::LD_8_IND,						// LD (HL), A
+			/*0x78*/ OpT::REG_OP,							// LD A, B
+			/*0x79*/ OpT::REG_OP,							// LD A, C
+			/*0x7A*/ OpT::REG_OP,							// LD A, D
+			/*0x7B*/ OpT::REG_OP,							// LD A, E
+			/*0x7C*/ OpT::REG_OP,							// LD A, H
+			/*0x7D*/ OpT::REG_OP,							// LD A, L
+			/*0x7E*/ OpT::REG_OP_IND,						// LD A, (HL)
+			/*0x7F*/ OpT::REG_OP,							// LD A, A
+			/*0x80*/ OpT::REG_OP,							// ADD A, B
+			/*0x81*/ OpT::REG_OP,							// ADD A, C
+			/*0x82*/ OpT::REG_OP,							// ADD A, D
+			/*0x83*/ OpT::REG_OP,							// ADD A, E
+			/*0x84*/ OpT::REG_OP,							// ADD A, H
+			/*0x85*/ OpT::REG_OP,							// ADD A, L
+			/*0x86*/ OpT::REG_OP_IND,						// ADD A, (HL)
+			/*0x87*/ OpT::REG_OP,							// ADD A, A
+			/*0x88*/ OpT::REG_OP,							// ADC A, B
+			/*0x89*/ OpT::REG_OP,							// ADC A, C
+			/*0x8A*/ OpT::REG_OP,							// ADC A, D
+			/*0x8B*/ OpT::REG_OP,							// ADC A, E
+			/*0x8C*/ OpT::REG_OP,							// ADC A, H
+			/*0x8D*/ OpT::REG_OP,							// ADC A, L
+			/*0x8E*/ OpT::REG_OP_IND,						// ADC A, (HL)
+			/*0x8F*/ OpT::REG_OP,							// ADC A, A
+			/*0x90*/ OpT::REG_OP,							// SUB A, B
+			/*0x91*/ OpT::REG_OP,							// SUB A, C
+			/*0x92*/ OpT::REG_OP,							// SUB A, D
+			/*0x93*/ OpT::REG_OP,							// SUB A, E
+			/*0x94*/ OpT::REG_OP,							// SUB A, H
+			/*0x95*/ OpT::REG_OP,							// SUB A, L
+			/*0x96*/ OpT::REG_OP_IND,						// SUB A, (HL)
+			/*0x97*/ OpT::REG_OP,							// SUB A, A
+			/*0x98*/ OpT::REG_OP,							// SBC A, B
+			/*0x99*/ OpT::REG_OP,							// SBC A, C
+			/*0x9A*/ OpT::REG_OP,							// SBC A, D
+			/*0x9B*/ OpT::REG_OP,							// SBC A, E
+			/*0x9C*/ OpT::REG_OP,							// SBC A, H
+			/*0x9D*/ OpT::REG_OP,							// SBC A, L
+			/*0x9E*/ OpT::REG_OP_IND,						// SBC A, (HL)
+			/*0x9F*/ OpT::REG_OP,							// SBC A, A
+			/*0xA0*/ OpT::REG_OP,							// AND A, B
+			/*0xA1*/ OpT::REG_OP,							// AND A, C
+			/*0xA2*/ OpT::REG_OP,							// AND A, D
+			/*0xA3*/ OpT::REG_OP,							// AND A, E
+			/*0xA4*/ OpT::REG_OP,							// AND A, H
+			/*0xA5*/ OpT::REG_OP,							// AND A, L
+			/*0xA6*/ OpT::REG_OP_IND,						// AND A, (HL)
+			/*0xA7*/ OpT::REG_OP,							// AND A, A
+			/*0xA8*/ OpT::REG_OP,							// XOR A, B
+			/*0xA9*/ OpT::REG_OP,							// XOR A, C
+			/*0xAA*/ OpT::REG_OP,							// XOR A, D
+			/*0xAB*/ OpT::REG_OP,							// XOR A, E
+			/*0xAC*/ OpT::REG_OP,							// XOR A, H
+			/*0xAD*/ OpT::REG_OP,							// XOR A, L
+			/*0xAE*/ OpT::REG_OP_IND,						// XOR A, (HL)
+			/*0xAF*/ OpT::REG_OP,							// XOR A, A
+			/*0xB0*/ OpT::REG_OP,							// OR A, B
+			/*0xB1*/ OpT::REG_OP,							// OR A, C
+			/*0xB2*/ OpT::REG_OP,							// OR A, D
+			/*0xB3*/ OpT::REG_OP,							// OR A, E
+			/*0xB4*/ OpT::REG_OP,							// OR A, H
+			/*0xB5*/ OpT::REG_OP,							// OR A, L
+			/*0xB6*/ OpT::REG_OP_IND,						// OR A, (HL)
+			/*0xB7*/ OpT::REG_OP,							// OR A, A
+			/*0xB8*/ OpT::REG_OP,							// CP A, B
+			/*0xB9*/ OpT::REG_OP,							// CP A, C
+			/*0xBA*/ OpT::REG_OP,							// CP A, D
+			/*0xBB*/ OpT::REG_OP,							// CP A, E
+			/*0xBC*/ OpT::REG_OP,							// CP A, H
+			/*0xBD*/ OpT::REG_OP,							// CP A, L
+			/*0xBE*/ OpT::REG_OP_IND,						// CP A, (HL)
+			/*0xBF*/ OpT::REG_OP,							// CP A, A
+			/*0xC0*/ OpT::RET_COND,						// Ret NZ
+			/*0xC1*/ OpT::POP,								// POP BC
+			/*0xC2*/ OpT::JP_COND,							// JP NZ
+			/*0xC3*/ OpT::JP_COND,							// JP
+			/*0xC4*/ OpT::CALL_COND,						// CALL NZ
+			/*0xC5*/ OpT::PUSH,							// PUSH BC
+			/*0xC6*/ OpT::REG_OP_IND_INC,					// ADD A, n
+			/*0xC7*/ OpT::RST,								// RST 0
+			/*0xC8*/ OpT::RET_COND,						// RET Z
+			/*0xC9*/ OpT::RET,								// RET
+			/*0xCA*/ OpT::JP_COND,							// JP Z
+			/*0xCB*/ OpT::PREFIX,							// PREFIX
+			/*0xCC*/ OpT::CALL_COND,						// CALL Z
+			/*0xCD*/ OpT::CALL_COND,						// CALL
+			/*0xCE*/ OpT::REG_OP_IND_INC,					// ADC A, n
+			/*0xCF*/ OpT::RST,								// RST 0x08
+			/*0xD0*/ OpT::RET_COND,						// Ret NC
+			/*0xD1*/ OpT::POP,								// POP DE
+			/*0xD2*/ OpT::JP_COND,							// JP NC
+			/*0xD3*/ OpT::JAM,								// JAM
+			/*0xD4*/ OpT::CALL_COND,						// CALL NC
+			/*0xD5*/ OpT::PUSH,							// PUSH DE
+			/*0xD6*/ OpT::REG_OP_IND_INC,					// SUB A, n
+			/*0xD7*/ OpT::RST,								// RST 0x10
+			/*0xD8*/ OpT::RET_COND,						// RET C
+			/*0xD9*/ OpT::RETI,							// RETI
+			/*0xDA*/ OpT::JP_COND,							// JP C
+			/*0xDB*/ OpT::JAM,								// JAM
+			/*0xDC*/ OpT::CALL_COND,						// CALL C
+			/*0xDD*/ OpT::JAM,								// JAM
+			/*0xDE*/ OpT::REG_OP_IND_INC,					// SBC A, n
+			/*0xDF*/ OpT::RST,								// RST 0x18
+			/*0xE0*/ OpT::LD_FF_IND_8,						// LD(n), A
+			/*0xE1*/ OpT::POP,								// POP HL
+			/*0xE2*/ OpT::LD_FFC_IND_8,					// LD(C), A
+			/*0xE3*/ OpT::JAM,								// JAM
+			/*0xE4*/ OpT::JAM,								// JAM
+			/*0xE5*/ OpT::PUSH,							// PUSH HL
+			/*0xE6*/ OpT::REG_OP_IND_INC,					// AND A, n
+			/*0xE7*/ OpT::RST,								// RST 0x20
+			/*0xE8*/ OpT::ADD_SP,							// ADD SP,n
+			/*0xE9*/ OpT::JP_HL,							// JP (HL)
+			/*0xEA*/ OpT::LD_FF_IND_16,					// LD(nn), A
+			/*0xEB*/ OpT::JAM,								// JAM
+			/*0xEC*/ OpT::JAM,								// JAM
+			/*0xED*/ OpT::JAM,								// JAM
+			/*0xEE*/ OpT::REG_OP_IND_INC,					// XOR A, n
+			/*0xEF*/ OpT::RST,								// RST 0x28
+			/*0xF0*/ OpT::LD_8_IND_FF,						// A, LD(n)
+			/*0xF1*/ OpT::POP,								// POP AF
+			/*0xF2*/ OpT::LD_8_IND_FFC,					// A, LD(C)
+			/*0xF3*/ OpT::EI_DI,							// DI
+			/*0xF4*/ OpT::JAM,								// JAM
+			/*0xF5*/ OpT::PUSH,							// PUSH AF
+			/*0xF6*/ OpT::REG_OP_IND_INC,					// OR A, n
+			/*0xF7*/ OpT::RST,								// RST 0x30
+			/*0xF8*/ OpT::LD_HL_SPn,						// LD HL, SP+n
+			/*0xF9*/ OpT::LD_SP_HL,						// LD, SP, HL
+			/*0xFA*/ OpT::LD_16_IND_FF,					// A, LD(nn)
+			/*0xFB*/ OpT::EI_DI,							// EI
+			/*0xFC*/ OpT::JAM,								// JAM
+			/*0xFD*/ OpT::JAM,								// JAM
+			/*0xFE*/ OpT::REG_OP_IND_INC,					// CP A, n
+			/*0xFF*/ OpT::RST,								// RST 0x38
+
+			// Prefix opcodes
+			/*0x00*/ OpT::INT_OP,							// RLC B
+			/*0x01*/ OpT::INT_OP,							// RLC C
+			/*0x02*/ OpT::INT_OP,							// RLC D
+			/*0x03*/ OpT::INT_OP,							// RLC E
+			/*0x04*/ OpT::INT_OP,							// RLC H
+			/*0x05*/ OpT::INT_OP,							// RLC L
+			/*0x06*/ OpT::INT_OP_IND,						// RLC (HL)
+			/*0x07*/ OpT::INT_OP,							// RLC A
+			/*0x08*/ OpT::INT_OP,							// RRC B
+			/*0x09*/ OpT::INT_OP,							// RRC C
+			/*0x0A*/ OpT::INT_OP,							// RRC D
+			/*0x0B*/ OpT::INT_OP,							// RRC E
+			/*0x0C*/ OpT::INT_OP,							// RRC H
+			/*0x0D*/ OpT::INT_OP,							// RRC L
+			/*0x0E*/ OpT::INT_OP_IND,						// RRC (HL)
+			/*0x0F*/ OpT::INT_OP,							// RRC A
+			/*0x10*/ OpT::INT_OP,							// RL B
+			/*0x11*/ OpT::INT_OP,							// RL C
+			/*0x12*/ OpT::INT_OP,							// RL D
+			/*0x13*/ OpT::INT_OP,							// RL E
+			/*0x14*/ OpT::INT_OP,							// RL H
+			/*0x15*/ OpT::INT_OP,							// RL L
+			/*0x16*/ OpT::INT_OP_IND,						// RL (HL)
+			/*0x17*/ OpT::INT_OP,							// RL A
+			/*0x18*/ OpT::INT_OP,							// RR B
+			/*0x19*/ OpT::INT_OP,							// RR C
+			/*0x1A*/ OpT::INT_OP,							// RR D
+			/*0x1B*/ OpT::INT_OP,							// RR E
+			/*0x1C*/ OpT::INT_OP,							// RR H
+			/*0x1D*/ OpT::INT_OP,							// RR L
+			/*0x1E*/ OpT::INT_OP_IND,						// RR (HL)
+			/*0x1F*/ OpT::INT_OP,							// RR A
+			/*0x20*/ OpT::INT_OP,							// SLA B
+			/*0x21*/ OpT::INT_OP,							// SLA C
+			/*0x22*/ OpT::INT_OP,							// SLA D
+			/*0x23*/ OpT::INT_OP,							// SLA E
+			/*0x24*/ OpT::INT_OP,							// SLA H
+			/*0x25*/ OpT::INT_OP,							// SLA L
+			/*0x26*/ OpT::INT_OP_IND,						// SLA (HL)
+			/*0x27*/ OpT::INT_OP,							// SLA A
+			/*0x28*/ OpT::INT_OP,							// SRA B
+			/*0x29*/ OpT::INT_OP,							// SRA C
+			/*0x2A*/ OpT::INT_OP,							// SRA D
+			/*0x2B*/ OpT::INT_OP,							// SRA E
+			/*0x2C*/ OpT::INT_OP,							// SRA H
+			/*0x2D*/ OpT::INT_OP,							// SRA L
+			/*0x2E*/ OpT::INT_OP_IND,						// SRA (HL)
+			/*0x2F*/ OpT::INT_OP,							// SRA A
+			/*0x30*/ OpT::INT_OP,							// SWAP B
+			/*0x31*/ OpT::INT_OP,							// SWAP C
+			/*0x32*/ OpT::INT_OP,							// SWAP D
+			/*0x33*/ OpT::INT_OP,							// SWAP E
+			/*0x34*/ OpT::INT_OP,							// SWAP H
+			/*0x35*/ OpT::INT_OP,							// SWAP L
+			/*0x36*/ OpT::INT_OP_IND,						// SWAP (HL)
+			/*0x37*/ OpT::INT_OP,							// SWAP A
+			/*0x38*/ OpT::INT_OP,							// SRL B
+			/*0x39*/ OpT::INT_OP,							// SRL C
+			/*0x3A*/ OpT::INT_OP,							// SRL D
+			/*0x3B*/ OpT::INT_OP,							// SRL E
+			/*0x3C*/ OpT::INT_OP,							// SRL H
+			/*0x3D*/ OpT::INT_OP,							// SRL L
+			/*0x3E*/ OpT::INT_OP_IND,						// SRL (HL)
+			/*0x3F*/ OpT::INT_OP,							// SRL A
+			/*0x40*/ OpT::BIT_OP,							// BIT 0, B
+			/*0x41*/ OpT::BIT_OP,							// BIT 0, C
+			/*0x42*/ OpT::BIT_OP,							// BIT 0, D
+			/*0x43*/ OpT::BIT_OP,							// BIT 0, E
+			/*0x44*/ OpT::BIT_OP,							// BIT 0, H
+			/*0x45*/ OpT::BIT_OP,							// BIT 0, L
+			/*0x46*/ OpT::BIT_TE_IND,						// BIT 0, (HL)
+			/*0x47*/ OpT::BIT_OP,							// BIT 0, A
+			/*0x48*/ OpT::BIT_OP,							// BIT 1, B
+			/*0x49*/ OpT::BIT_OP,							// BIT 1, C
+			/*0x4A*/ OpT::BIT_OP,							// BIT 1, D
+			/*0x4B*/ OpT::BIT_OP,							// BIT 1, E
+			/*0x4C*/ OpT::BIT_OP,							// BIT 1, H
+			/*0x4D*/ OpT::BIT_OP,							// BIT 1, L
+			/*0x4E*/ OpT::BIT_TE_IND,						// BIT 1, (HL)
+			/*0x4F*/ OpT::BIT_OP,							// BIT 1, A
+			/*0x50*/ OpT::BIT_OP,							// BIT 2, B
+			/*0x51*/ OpT::BIT_OP,							// BIT 2, C
+			/*0x52*/ OpT::BIT_OP,							// BIT 2, D
+			/*0x53*/ OpT::BIT_OP,							// BIT 2, E
+			/*0x54*/ OpT::BIT_OP,							// BIT 2, H
+			/*0x55*/ OpT::BIT_OP,							// BIT 2, L
+			/*0x56*/ OpT::BIT_TE_IND,						// BIT 2, (HL)
+			/*0x57*/ OpT::BIT_OP,							// BIT 2, A
+			/*0x58*/ OpT::BIT_OP,							// BIT 3, B
+			/*0x59*/ OpT::BIT_OP,							// BIT 3, C
+			/*0x5A*/ OpT::BIT_OP,							// BIT 3, D
+			/*0x5B*/ OpT::BIT_OP,							// BIT 3, E
+			/*0x5C*/ OpT::BIT_OP,							// BIT 3, H
+			/*0x5D*/ OpT::BIT_OP,							// BIT 3, L
+			/*0x5E*/ OpT::BIT_TE_IND,						// BIT 3, (HL)
+			/*0x5F*/ OpT::BIT_OP,							// BIT 3, A
+			/*0x60*/ OpT::BIT_OP,							// BIT 4, B
+			/*0x61*/ OpT::BIT_OP,							// BIT 4, C
+			/*0x62*/ OpT::BIT_OP,							// BIT 4, D
+			/*0x63*/ OpT::BIT_OP,							// BIT 4, E
+			/*0x64*/ OpT::BIT_OP,							// BIT 4, H
+			/*0x65*/ OpT::BIT_OP,							// BIT 4, L
+			/*0x66*/ OpT::BIT_TE_IND,						// BIT 4, (HL)
+			/*0x67*/ OpT::BIT_OP,							// BIT 4, A
+			/*0x68*/ OpT::BIT_OP,							// BIT 5, B
+			/*0x69*/ OpT::BIT_OP,							// BIT 5, C
+			/*0x6A*/ OpT::BIT_OP,							// BIT 5, D
+			/*0x6B*/ OpT::BIT_OP,							// BIT 5, E
+			/*0x6C*/ OpT::BIT_OP,							// BIT 5, H
+			/*0x6D*/ OpT::BIT_OP,							// BIT 5, L
+			/*0x6E*/ OpT::BIT_TE_IND,						// BIT 5, (HL)
+			/*0x6F*/ OpT::BIT_OP,							// BIT 5, A
+			/*0x70*/ OpT::BIT_OP,							// BIT 6, B
+			/*0x71*/ OpT::BIT_OP,							// BIT 6, C
+			/*0x72*/ OpT::BIT_OP,							// BIT 6, D
+			/*0x73*/ OpT::BIT_OP,							// BIT 6, E
+			/*0x74*/ OpT::BIT_OP,							// BIT 6, H
+			/*0x75*/ OpT::BIT_OP,							// BIT 6, L
+			/*0x76*/ OpT::BIT_TE_IND,						// BIT 6, (HL)
+			/*0x77*/ OpT::BIT_OP,							// BIT 6, A
+			/*0x78*/ OpT::BIT_OP,							// BIT 7, B
+			/*0x79*/ OpT::BIT_OP,							// BIT 7, C
+			/*0x7A*/ OpT::BIT_OP,							// BIT 7, D
+			/*0x7B*/ OpT::BIT_OP,							// BIT 7, E
+			/*0x7C*/ OpT::BIT_OP,							// BIT 7, H
+			/*0x7D*/ OpT::BIT_OP,							// BIT 7, L
+			/*0x7E*/ OpT::BIT_TE_IND,						// BIT 7, (HL)
+			/*0x7F*/ OpT::BIT_OP,							// BIT 7, A
+			/*0x80*/ OpT::BIT_OP,							// RES 0, B
+			/*0x81*/ OpT::BIT_OP,							// RES 0, C
+			/*0x82*/ OpT::BIT_OP,							// RES 0, D
+			/*0x83*/ OpT::BIT_OP,							// RES 0, E
+			/*0x84*/ OpT::BIT_OP,							// RES 0, H
+			/*0x85*/ OpT::BIT_OP,							// RES 0, L
+			/*0x86*/ OpT::BIT_OP_IND,						// RES 0, (HL)
+			/*0x87*/ OpT::BIT_OP,							// RES 0, A
+			/*0x88*/ OpT::BIT_OP,							// RES 1, B
+			/*0x89*/ OpT::BIT_OP,							// RES 1, C
+			/*0x8A*/ OpT::BIT_OP,							// RES 1, D
+			/*0x8B*/ OpT::BIT_OP,							// RES 1, E
+			/*0x8C*/ OpT::BIT_OP,							// RES 1, H
+			/*0x8D*/ OpT::BIT_OP,							// RES 1, L
+			/*0x8E*/ OpT::BIT_OP_IND,						// RES 1, (HL)
+			/*0x8F*/ OpT::BIT_OP,							// RES 1, A
+			/*0x90*/ OpT::BIT_OP,							// RES 2, B
+			/*0x91*/ OpT::BIT_OP,							// RES 2, C
+			/*0x92*/ OpT::BIT_OP,							// RES 2, D
+			/*0x93*/ OpT::BIT_OP,							// RES 2, E
+			/*0x94*/ OpT::BIT_OP,							// RES 2, H
+			/*0x95*/ OpT::BIT_OP,							// RES 2, L
+			/*0x96*/ OpT::BIT_OP_IND,						// RES 2, (HL)
+			/*0x97*/ OpT::BIT_OP,							// RES 2, A
+			/*0x98*/ OpT::BIT_OP,							// RES 3, B
+			/*0x99*/ OpT::BIT_OP,							// RES 3, C
+			/*0x9A*/ OpT::BIT_OP,							// RES 3, D
+			/*0x9B*/ OpT::BIT_OP,							// RES 3, E
+			/*0x9C*/ OpT::BIT_OP,							// RES 3, H
+			/*0x9D*/ OpT::BIT_OP,							// RES 3, L
+			/*0x9E*/ OpT::BIT_OP_IND,						// RES 3, (HL)
+			/*0x9F*/ OpT::BIT_OP,							// RES 3, A
+			/*0xA0*/ OpT::BIT_OP,							// RES 4, B
+			/*0xA1*/ OpT::BIT_OP,							// RES 4, C
+			/*0xA2*/ OpT::BIT_OP,							// RES 4, D
+			/*0xA3*/ OpT::BIT_OP,							// RES 4, E
+			/*0xA4*/ OpT::BIT_OP,							// RES 4, H
+			/*0xA5*/ OpT::BIT_OP,							// RES 4, L
+			/*0xA6*/ OpT::BIT_OP_IND,						// RES 4, (HL)
+			/*0xA7*/ OpT::BIT_OP,							// RES 4, A
+			/*0xA8*/ OpT::BIT_OP,							// RES 5, B
+			/*0xA9*/ OpT::BIT_OP,							// RES 5, C
+			/*0xAA*/ OpT::BIT_OP,							// RES 5, D
+			/*0xAB*/ OpT::BIT_OP,							// RES 5, E
+			/*0xAC*/ OpT::BIT_OP,							// RES 5, H
+			/*0xAD*/ OpT::BIT_OP,							// RES 5, L
+			/*0xAE*/ OpT::BIT_OP_IND,						// RES 5, (HL)
+			/*0xAF*/ OpT::BIT_OP,							// RES 5, A
+			/*0xB0*/ OpT::BIT_OP,							// RES 6, B
+			/*0xB1*/ OpT::BIT_OP,							// RES 6, C
+			/*0xB2*/ OpT::BIT_OP,							// RES 6, D
+			/*0xB3*/ OpT::BIT_OP,							// RES 6, E
+			/*0xB4*/ OpT::BIT_OP,							// RES 6, H
+			/*0xB5*/ OpT::BIT_OP,							// RES 6, L
+			/*0xB6*/ OpT::BIT_OP_IND,						// RES 6, (HL)
+			/*0xB7*/ OpT::BIT_OP,							// RES 6, A
+			/*0xB8*/ OpT::BIT_OP,							// RES 7, B
+			/*0xB9*/ OpT::BIT_OP,							// RES 7, C
+			/*0xBA*/ OpT::BIT_OP,							// RES 7, D
+			/*0xBB*/ OpT::BIT_OP,							// RES 7, E
+			/*0xBC*/ OpT::BIT_OP,							// RES 7, H
+			/*0xBD*/ OpT::BIT_OP,							// RES 7, L
+			/*0xBE*/ OpT::BIT_OP_IND,						// RES 7, (HL)
+			/*0xBF*/ OpT::BIT_OP,							// RES 7, A
+			/*0xC0*/ OpT::BIT_OP,							// SET 0, B
+			/*0xC1*/ OpT::BIT_OP,							// SET 0, C
+			/*0xC2*/ OpT::BIT_OP,							// SET 0, D
+			/*0xC3*/ OpT::BIT_OP,							// SET 0, E
+			/*0xC4*/ OpT::BIT_OP,							// SET 0, H
+			/*0xC5*/ OpT::BIT_OP,							// SET 0, L
+			/*0xC6*/ OpT::BIT_OP_IND,						// SET 0, (HL)
+			/*0xC7*/ OpT::BIT_OP,							// SET 0, A
+			/*0xC8*/ OpT::BIT_OP,							// SET 1, B
+			/*0xC9*/ OpT::BIT_OP,							// SET 1, C
+			/*0xCA*/ OpT::BIT_OP,							// SET 1, D
+			/*0xCB*/ OpT::BIT_OP,							// SET 1, E
+			/*0xCC*/ OpT::BIT_OP,							// SET 1, H
+			/*0xCD*/ OpT::BIT_OP,							// SET 1, L
+			/*0xCE*/ OpT::BIT_OP_IND,						// SET 1, (HL)
+			/*0xCF*/ OpT::BIT_OP,							// SET 1, A
+			/*0xD0*/ OpT::BIT_OP,							// SET 2, B
+			/*0xD1*/ OpT::BIT_OP,							// SET 2, C
+			/*0xD2*/ OpT::BIT_OP,							// SET 2, D
+			/*0xD3*/ OpT::BIT_OP,							// SET 2, E
+			/*0xD4*/ OpT::BIT_OP,							// SET 2, H
+			/*0xD5*/ OpT::BIT_OP,							// SET 2, L
+			/*0xD6*/ OpT::BIT_OP_IND,						// SET 2, (HL)
+			/*0xD7*/ OpT::BIT_OP,							// SET 2, A
+			/*0xD8*/ OpT::BIT_OP,							// SET 3, B
+			/*0xD9*/ OpT::BIT_OP,							// SET 3, C
+			/*0xDA*/ OpT::BIT_OP,							// SET 3, D
+			/*0xDB*/ OpT::BIT_OP,							// SET 3, E
+			/*0xDC*/ OpT::BIT_OP,							// SET 3, H
+			/*0xDD*/ OpT::BIT_OP,							// SET 3, L
+			/*0xDE*/ OpT::BIT_OP_IND,						// SET 3, (HL)
+			/*0xDF*/ OpT::BIT_OP,							// SET 3, A
+			/*0xE0*/ OpT::BIT_OP,							// SET 4, B
+			/*0xE1*/ OpT::BIT_OP,							// SET 4, C
+			/*0xE2*/ OpT::BIT_OP,							// SET 4, D
+			/*0xE3*/ OpT::BIT_OP,							// SET 4, E
+			/*0xE4*/ OpT::BIT_OP,							// SET 4, H
+			/*0xE5*/ OpT::BIT_OP,							// SET 4, L
+			/*0xE6*/ OpT::BIT_OP_IND,						// SET 4, (HL)
+			/*0xE7*/ OpT::BIT_OP,							// SET 4, A
+			/*0xE8*/ OpT::BIT_OP,							// SET 5, B
+			/*0xE9*/ OpT::BIT_OP,							// SET 5, C
+			/*0xEA*/ OpT::BIT_OP,							// SET 5, D
+			/*0xEB*/ OpT::BIT_OP,							// SET 5, E
+			/*0xEC*/ OpT::BIT_OP,							// SET 5, H
+			/*0xED*/ OpT::BIT_OP,							// SET 5, L
+			/*0xEE*/ OpT::BIT_OP_IND,						// SET 5, (HL)
+			/*0xEF*/ OpT::BIT_OP,							// SET 5, A
+			/*0xF0*/ OpT::BIT_OP,							// SET 6, B
+			/*0xF1*/ OpT::BIT_OP,							// SET 6, C
+			/*0xF2*/ OpT::BIT_OP,							// SET 6, D
+			/*0xF3*/ OpT::BIT_OP,							// SET 6, E
+			/*0xF4*/ OpT::BIT_OP,							// SET 6, H
+			/*0xF5*/ OpT::BIT_OP,							// SET 6, L
+			/*0xF6*/ OpT::BIT_OP_IND,						// SET 6, (HL)
+			/*0xF7*/ OpT::BIT_OP,							// SET 6, A
+			/*0xF8*/ OpT::BIT_OP,							// SET 7, B
+			/*0xF9*/ OpT::BIT_OP,							// SET 7, C
+			/*0xFA*/ OpT::BIT_OP,							// SET 7, D
+			/*0xFB*/ OpT::BIT_OP,							// SET 7, E
+			/*0xFC*/ OpT::BIT_OP,							// SET 7, H
+			/*0xFD*/ OpT::BIT_OP,							// SET 7, L
+			/*0xFE*/ OpT::BIT_OP_IND,						// SET 7, (HL)
+			/*0xFF*/ OpT::BIT_OP,							// SET 7, A
+
+			// IRQ and misc
+			OpT::RESET,
+			OpT::EXIT,
+			OpT::SKIP,
+			OpT::GBC_HALT,
+			OpT::SPC_HALT,
+			OpT::STOP_LOOP,
+			OpT::INTRPT,
+			OpT::INTRPT_GBC,
+			OpT::WAIT,
+			OpT::SPD_CHG
 		};
 
 

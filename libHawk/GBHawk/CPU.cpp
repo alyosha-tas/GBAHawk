@@ -10,8 +10,174 @@ namespace GBHawk
 {
 	inline void GB_System::cpu_Execute_One()
 	{
-		switch (cpu_Opcode)
+		switch (cpu_Instr_Type)
 		{
+			case OpT::INT_OP:
+				break;
+
+			case OpT::REG_OP:
+				break;
+
+			case OpT::LD_IND_16:
+				break;
+
+			case OpT::LD_8_IND:
+				break;
+
+			case OpT::INC_16:
+				break;
+
+			case OpT::LD_IND_8_INC:
+				break;
+
+			case OpT::LD_R_IM:
+				break;
+
+			case OpT::ADD_16:
+				break;
+
+			case OpT::REG_OP_IND:
+				break;
+
+			case OpT::DEC_16:
+				break;
+
+			case OpT::STOP:
+				break;
+
+			case OpT::JR_COND:
+				break;
+
+			case OpT::LD_8_IND_INC:
+				break;
+
+			case OpT::LD_IND_8_INC_HL:
+				break;
+
+			case OpT::LD_8_IND_DEC:
+				break;
+
+			case OpT::INC_DEC_8_IND:
+				break;
+
+			case OpT::LD_8_IND_IND:
+				break;
+
+			case OpT::LD_IND_8_DEC_HL:
+				break;
+
+			case OpT::HALT:
+				break;
+
+			case OpT::RET_COND:
+				break;
+
+			case OpT::POP:
+				break;
+
+			case OpT::JP_COND:
+				break;
+
+			case OpT::CALL_COND:
+				break;
+
+			case OpT::PUSH:
+				break;
+
+			case OpT::REG_OP_IND_INC:
+				break;
+
+			case OpT::RST:
+				break;
+
+			case OpT::RET:
+				break;
+
+			case OpT::PREFIX:
+				break;
+
+			case OpT::JAM:
+				break;
+
+			case OpT::RETI:
+				break;
+
+			case OpT::LD_FF_IND_8:
+				break;
+
+			case OpT::LD_FFC_IND_8:
+				break;
+
+			case OpT::ADD_SP:
+				break;
+
+			case OpT::JP_HL:
+				break;
+
+			case OpT::LD_FF_IND_16:
+				break;
+
+			case OpT::LD_8_IND_FF:
+				break;
+
+			case OpT::LD_8_IND_FFC:
+				break;
+
+			case OpT::EI_DI:
+				break;
+
+			case OpT::LD_HL_SPn:
+				break;
+
+			case OpT::LD_SP_HL:
+				break;
+
+			case OpT::LD_16_IND_FF:
+				break;
+
+			case OpT::INT_OP_IND:
+				break;
+
+			case OpT::BIT_OP:
+				break;
+
+			case OpT::BIT_TE_IND:
+				break;
+
+			case OpT::BIT_OP_IND:
+				break;
+
+			case OpT::RESET:
+				break;
+
+			case OpT::EXIT:
+				break;
+
+			case OpT::SKIP:
+				break;
+
+			case OpT::GBC_HALT:
+				break;
+
+			case OpT::SPC_HALT:
+				break;
+
+			case OpT::STOP_LOOP:
+				break;
+
+			case OpT::INTRPT:
+				break;
+
+			case OpT::INTRPT_GBC:
+				break;
+
+			case OpT::WAIT:
+				break;
+
+			case OpT::SPD_CHG:
+				break;
+		
+		
 			case 0x00:													// NOP						
 				switch (cpu_Instr_Cycle)
 				{
