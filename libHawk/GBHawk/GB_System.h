@@ -1053,6 +1053,15 @@ namespace GBHawk
 
 		inline uint16_t cpu_RegBCget() { return ((uint16_t)(cpu_Regs[cpu_C] | (cpu_Regs[cpu_B] << 8))); }
 		inline void cpu_RegBCset(uint16_t value) { cpu_Regs[cpu_C] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_B] = (uint16_t)((value >> 8) & 0xFF); }
+		
+		inline uint16_t cpu_RegDEget() { return ((uint16_t)(cpu_Regs[cpu_E] | (cpu_Regs[cpu_D] << 8))); }
+		inline void cpu_RegDEset(uint16_t value) { cpu_Regs[cpu_E] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_D] = (uint16_t)((value >> 8) & 0xFF); }
+
+		inline uint16_t cpu_RegHLget() { return ((uint16_t)(cpu_Regs[cpu_L] | (cpu_Regs[cpu_H] << 8))); }
+		inline void cpu_RegHLset(uint16_t value) { cpu_Regs[cpu_L] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_H] = (uint16_t)((value >> 8) & 0xFF); }
+
+		inline uint16_t cpu_RegSPget() { return ((uint16_t)(cpu_Regs[cpu_SPl] | (cpu_Regs[cpu_SPh] << 8))); }
+		inline void cpu_RegSPset(uint16_t value) { cpu_Regs[cpu_SPl] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_SPh] = (uint16_t)((value >> 8) & 0xFF); }
 
 		inline uint16_t cpu_RegWZget() { return ((uint16_t)(cpu_Regs[cpu_Z] | (cpu_Regs[cpu_W] << 8))); }
 		inline void cpu_RegWZset(uint16_t value) { cpu_Regs[cpu_Z] = (uint16_t)(value & 0xFF); cpu_Regs[cpu_W] = (uint16_t)((value >> 8) & 0xFF); }
@@ -1150,11 +1159,11 @@ namespace GBHawk
 		{
 			/*0x00*/ OpT::INT_OP,							// NOP
 			/*0x01*/ OpT::LD_IND_16,						// LD BC, nn
-			/*0x02*/ OpT::LD_8_IND,						// LD (BC), A
+			/*0x02*/ OpT::LD_8_IND,							// LD (BC), A
 			/*0x03*/ OpT::INC_16,							// INC BC
 			/*0x04*/ OpT::INT_OP,							// INC B
 			/*0x05*/ OpT::INT_OP,							// DEC B
-			/*0x06*/ OpT::LD_IND_8_INC,					// LD B, n
+			/*0x06*/ OpT::LD_IND_8_INC,						// LD B, n
 			/*0x07*/ OpT::INT_OP,							// RLCA
 			/*0x08*/ OpT::LD_R_IM,							// LD (imm), SP
 			/*0x09*/ OpT::ADD_16,							// ADD HL, BC
@@ -1162,15 +1171,15 @@ namespace GBHawk
 			/*0x0B*/ OpT::DEC_16,							// DEC BC
 			/*0x0C*/ OpT::INT_OP,							// INC C
 			/*0x0D*/ OpT::INT_OP,							// DEC C
-			/*0x0E*/ OpT::LD_IND_8_INC,					// LD C, n
+			/*0x0E*/ OpT::LD_IND_8_INC,						// LD C, n
 			/*0x0F*/ OpT::INT_OP,							// RRCA
-			/*0x10*/ OpT::STOP,							// STOP
+			/*0x10*/ OpT::STOP,								// STOP
 			/*0x11*/ OpT::LD_IND_16,						// LD DE, nn
-			/*0x12*/ OpT::LD_8_IND,						// LD (DE), A
+			/*0x12*/ OpT::LD_8_IND,							// LD (DE), A
 			/*0x13*/ OpT::INC_16,							// INC DE
 			/*0x14*/ OpT::INT_OP,							// INC D
 			/*0x15*/ OpT::INT_OP,							// DEC D
-			/*0x16*/ OpT::LD_IND_8_INC,					// LD D, n
+			/*0x16*/ OpT::LD_IND_8_INC,						// LD D, n
 			/*0x17*/ OpT::INT_OP,							// RLA
 			/*0x18*/ OpT::JR_COND,							// JR, r8
 			/*0x19*/ OpT::ADD_16,							// ADD HL, DE
@@ -1178,15 +1187,15 @@ namespace GBHawk
 			/*0x1B*/ OpT::DEC_16,							// DEC DE
 			/*0x1C*/ OpT::INT_OP,							// INC E
 			/*0x1D*/ OpT::INT_OP,							// DEC E
-			/*0x1E*/ OpT::LD_IND_8_INC,					// LD E, n
+			/*0x1E*/ OpT::LD_IND_8_INC,						// LD E, n
 			/*0x1F*/ OpT::INT_OP,							// RRA
 			/*0x20*/ OpT::JR_COND,							// JR NZ, r8
 			/*0x21*/ OpT::LD_IND_16,						// LD HL, nn
-			/*0x22*/ OpT::LD_8_IND_INC,					// LD (HL+), A
+			/*0x22*/ OpT::LD_8_IND_INC,						// LD (HL+), A
 			/*0x23*/ OpT::INC_16,							// INC HL
 			/*0x24*/ OpT::INT_OP,							// INC H
 			/*0x25*/ OpT::INT_OP,							// DEC H
-			/*0x26*/ OpT::LD_IND_8_INC,					// LD H, n
+			/*0x26*/ OpT::LD_IND_8_INC,						// LD H, n
 			/*0x27*/ OpT::INT_OP,							// DAA
 			/*0x28*/ OpT::JR_COND,							// JR Z, r8
 			/*0x29*/ OpT::ADD_16,							// ADD HL, HL
@@ -1194,15 +1203,15 @@ namespace GBHawk
 			/*0x2B*/ OpT::DEC_16,							// DEC HL
 			/*0x2C*/ OpT::INT_OP,							// INC L
 			/*0x2D*/ OpT::INT_OP,							// DEC L
-			/*0x2E*/ OpT::LD_IND_8_INC,					// LD L, n
+			/*0x2E*/ OpT::LD_IND_8_INC,						// LD L, n
 			/*0x2F*/ OpT::INT_OP,							// CPL
 			/*0x30*/ OpT::JR_COND,							// JR NC, r8
 			/*0x31*/ OpT::LD_IND_16,						// LD SP, nn
-			/*0x32*/ OpT::LD_8_IND_DEC,					// LD (HL-), A
+			/*0x32*/ OpT::LD_8_IND_DEC,						// LD (HL-), A
 			/*0x33*/ OpT::INC_16,							// INC SP
 			/*0x34*/ OpT::INC_DEC_8_IND,					// INC (HL)
 			/*0x35*/ OpT::INC_DEC_8_IND,					// DEC (HL)
-			/*0x36*/ OpT::LD_8_IND_IND,					// LD (HL), n
+			/*0x36*/ OpT::LD_8_IND_IND,						// LD (HL), n
 			/*0x37*/ OpT::INT_OP,							// SCF
 			/*0x38*/ OpT::JR_COND,							// JR C, r8
 			/*0x39*/ OpT::ADD_16,							// ADD HL, SP
@@ -1210,7 +1219,7 @@ namespace GBHawk
 			/*0x3B*/ OpT::DEC_16,							// DEC SP
 			/*0x3C*/ OpT::INT_OP,							// INC A
 			/*0x3D*/ OpT::INT_OP,							// DEC A
-			/*0x3E*/ OpT::LD_IND_8_INC,					// LD A, n
+			/*0x3E*/ OpT::LD_IND_8_INC,						// LD A, n
 			/*0x3F*/ OpT::INT_OP,							// CCF
 			/*0x40*/ OpT::REG_OP,							// LD B, B
 			/*0x41*/ OpT::REG_OP,							// LD B, C
@@ -1260,14 +1269,14 @@ namespace GBHawk
 			/*0x6D*/ OpT::REG_OP,							// LD L, L
 			/*0x6E*/ OpT::REG_OP_IND,						// LD L, (HL)
 			/*0x6F*/ OpT::REG_OP,							// LD L, A
-			/*0x70*/ OpT::LD_8_IND,						// LD (HL), B
-			/*0x71*/ OpT::LD_8_IND,						// LD (HL), C
-			/*0x72*/ OpT::LD_8_IND,						// LD (HL), D
-			/*0x73*/ OpT::LD_8_IND,						// LD (HL), E
-			/*0x74*/ OpT::LD_8_IND,						// LD (HL), H
-			/*0x75*/ OpT::LD_8_IND,						// LD (HL), L
-			/*0x76*/ OpT::HALT,							// HALT
-			/*0x77*/ OpT::LD_8_IND,						// LD (HL), A
+			/*0x70*/ OpT::LD_8_IND,							// LD (HL), B
+			/*0x71*/ OpT::LD_8_IND,							// LD (HL), C
+			/*0x72*/ OpT::LD_8_IND,							// LD (HL), D
+			/*0x73*/ OpT::LD_8_IND,							// LD (HL), E
+			/*0x74*/ OpT::LD_8_IND,							// LD (HL), H
+			/*0x75*/ OpT::LD_8_IND,							// LD (HL), L
+			/*0x76*/ OpT::HALT,								// HALT
+			/*0x77*/ OpT::LD_8_IND,							// LD (HL), A
 			/*0x78*/ OpT::REG_OP,							// LD A, B
 			/*0x79*/ OpT::REG_OP,							// LD A, C
 			/*0x7A*/ OpT::REG_OP,							// LD A, D
@@ -1340,15 +1349,15 @@ namespace GBHawk
 			/*0xBD*/ OpT::REG_OP,							// CP A, L
 			/*0xBE*/ OpT::REG_OP_IND,						// CP A, (HL)
 			/*0xBF*/ OpT::REG_OP,							// CP A, A
-			/*0xC0*/ OpT::RET_COND,						// Ret NZ
+			/*0xC0*/ OpT::RET_COND,							// Ret NZ
 			/*0xC1*/ OpT::POP,								// POP BC
 			/*0xC2*/ OpT::JP_COND,							// JP NZ
 			/*0xC3*/ OpT::JP_COND,							// JP
 			/*0xC4*/ OpT::CALL_COND,						// CALL NZ
-			/*0xC5*/ OpT::PUSH,							// PUSH BC
+			/*0xC5*/ OpT::PUSH,								// PUSH BC
 			/*0xC6*/ OpT::REG_OP_IND_INC,					// ADD A, n
 			/*0xC7*/ OpT::RST,								// RST 0
-			/*0xC8*/ OpT::RET_COND,						// RET Z
+			/*0xC8*/ OpT::RET_COND,							// RET Z
 			/*0xC9*/ OpT::RET,								// RET
 			/*0xCA*/ OpT::JP_COND,							// JP Z
 			/*0xCB*/ OpT::PREFIX,							// PREFIX
@@ -1356,16 +1365,16 @@ namespace GBHawk
 			/*0xCD*/ OpT::CALL_COND,						// CALL
 			/*0xCE*/ OpT::REG_OP_IND_INC,					// ADC A, n
 			/*0xCF*/ OpT::RST,								// RST 0x08
-			/*0xD0*/ OpT::RET_COND,						// Ret NC
+			/*0xD0*/ OpT::RET_COND,							// Ret NC
 			/*0xD1*/ OpT::POP,								// POP DE
 			/*0xD2*/ OpT::JP_COND,							// JP NC
 			/*0xD3*/ OpT::JAM,								// JAM
 			/*0xD4*/ OpT::CALL_COND,						// CALL NC
-			/*0xD5*/ OpT::PUSH,							// PUSH DE
+			/*0xD5*/ OpT::PUSH,								// PUSH DE
 			/*0xD6*/ OpT::REG_OP_IND_INC,					// SUB A, n
 			/*0xD7*/ OpT::RST,								// RST 0x10
-			/*0xD8*/ OpT::RET_COND,						// RET C
-			/*0xD9*/ OpT::RETI,							// RETI
+			/*0xD8*/ OpT::RET_COND,							// RET C
+			/*0xD9*/ OpT::RETI,								// RETI
 			/*0xDA*/ OpT::JP_COND,							// JP C
 			/*0xDB*/ OpT::JAM,								// JAM
 			/*0xDC*/ OpT::CALL_COND,						// CALL C
@@ -1374,15 +1383,15 @@ namespace GBHawk
 			/*0xDF*/ OpT::RST,								// RST 0x18
 			/*0xE0*/ OpT::LD_FF_IND_8,						// LD(n), A
 			/*0xE1*/ OpT::POP,								// POP HL
-			/*0xE2*/ OpT::LD_FFC_IND_8,					// LD(C), A
+			/*0xE2*/ OpT::LD_FFC_IND_8,						// LD(C), A
 			/*0xE3*/ OpT::JAM,								// JAM
 			/*0xE4*/ OpT::JAM,								// JAM
-			/*0xE5*/ OpT::PUSH,							// PUSH HL
+			/*0xE5*/ OpT::PUSH,								// PUSH HL
 			/*0xE6*/ OpT::REG_OP_IND_INC,					// AND A, n
 			/*0xE7*/ OpT::RST,								// RST 0x20
 			/*0xE8*/ OpT::ADD_SP,							// ADD SP,n
 			/*0xE9*/ OpT::JP_HL,							// JP (HL)
-			/*0xEA*/ OpT::LD_FF_IND_16,					// LD(nn), A
+			/*0xEA*/ OpT::LD_FF_IND_16,						// LD(nn), A
 			/*0xEB*/ OpT::JAM,								// JAM
 			/*0xEC*/ OpT::JAM,								// JAM
 			/*0xED*/ OpT::JAM,								// JAM
@@ -1390,15 +1399,15 @@ namespace GBHawk
 			/*0xEF*/ OpT::RST,								// RST 0x28
 			/*0xF0*/ OpT::LD_8_IND_FF,						// A, LD(n)
 			/*0xF1*/ OpT::POP,								// POP AF
-			/*0xF2*/ OpT::LD_8_IND_FFC,					// A, LD(C)
+			/*0xF2*/ OpT::LD_8_IND_FFC,						// A, LD(C)
 			/*0xF3*/ OpT::EI_DI,							// DI
 			/*0xF4*/ OpT::JAM,								// JAM
-			/*0xF5*/ OpT::PUSH,							// PUSH AF
+			/*0xF5*/ OpT::PUSH,								// PUSH AF
 			/*0xF6*/ OpT::REG_OP_IND_INC,					// OR A, n
 			/*0xF7*/ OpT::RST,								// RST 0x30
 			/*0xF8*/ OpT::LD_HL_SPn,						// LD HL, SP+n
-			/*0xF9*/ OpT::LD_SP_HL,						// LD, SP, HL
-			/*0xFA*/ OpT::LD_16_IND_FF,					// A, LD(nn)
+			/*0xF9*/ OpT::LD_SP_HL,							// LD, SP, HL
+			/*0xFA*/ OpT::LD_16_IND_FF,						// A, LD(nn)
 			/*0xFB*/ OpT::EI_DI,							// EI
 			/*0xFC*/ OpT::JAM,								// JAM
 			/*0xFD*/ OpT::JAM,								// JAM
