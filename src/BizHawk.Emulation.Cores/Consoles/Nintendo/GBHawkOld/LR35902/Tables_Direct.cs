@@ -372,14 +372,5 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 						HALT_CHK,
 						OP };
 		}
-
-		private void JAM_()
-		{
-			cur_instr = new[]
-						{JAM,
-						IDLE,
-						IDLE,
-						IDLE };
-		}
 	}
 }

@@ -1031,8 +1031,23 @@ namespace GBHawk
 		#pragma region Variables
 		// General Execution
 		bool cpu_was_FlagI, cpu_FlagI;
+		bool cpu_Jammed, cpu_Stopped, cpu_Halted;
+		bool cpu_CB_Prefix;
 
-		uint16_t cpu_Opcode, cpu_Instr_Type, cpu_Instr_Cycle;
+		bool cpu_Interrupts_Enabled;
+
+		bool I_use; // in halt mode, the I flag is checked earlier then when deicision to IRQ is taken
+		bool skip_once;
+		bool Halt_bug_2;
+		bool Halt_bug_3;
+		bool Halt_bug_4;
+		bool Halt_bug_5;
+
+		int cpu_EI_Pending;
+
+
+
+		uint16_t cpu_Opcode, cpu_Instr_Cycle;
 
 		uint8_t cpu_Regs[14] = { };
 
@@ -1091,6 +1106,8 @@ namespace GBHawk
 		const static uint16_t cpu_W = 12;
 		const static uint16_t cpu_Z = 13;
 		const static uint16_t cpu_Aim = 14; // use this indicator for RLCA etc., since the Z flag is reset on those
+
+		uint8_t INT_vectors[6] = { 0x40, 0x48, 0x50, 0x58, 0x60, 0x00 };
 
 		// Instruction types
 		enum class OpT
@@ -1690,9 +1707,20 @@ namespace GBHawk
 		void cpu_Reset()
 		{
 			cpu_was_FlagI = cpu_FlagI = false;
+			cpu_Jammed = cpu_Stopped = cpu_Halted = false;
+			cpu_CB_Prefix = false;
+			cpu_Interrupts_Enabled = false;
+
+			I_use = false;
+			skip_once = false;
+			Halt_bug_2 = false;
+			Halt_bug_3 = false;
+			Halt_bug_4 = false;
+			Halt_bug_5 = false;
 
 			cpu_Opcode = 0;
 			cpu_Instr_Cycle = 0;
+			cpu_Instr_Type = OpT::RESET;
 			
 			for (int i = 0; i < 14; i++)
 			{
@@ -1705,39 +1733,28 @@ namespace GBHawk
 
 		}
 
+		inline void cpu_Halt_Func()
+		{
+
+		}
+
 		inline void cpu_Op_Func()
 		{
 
 		}
 
+		inline void cpu_Halt_Ex(uint8_t param);
+
 		inline void cpu_Execute_One();
 
-		inline void cpu_STOP_Func();
+		inline void cpu_STOP_Ex();
 
-		void Read_Func(uint16_t dest, uint16_t src_l, uint16_t src_h)
-		{
-			uint16_t addr = (uint16_t)(cpu_Regs[src_l] | (cpu_Regs[src_h]) << 8);
-			cpu_Regs[dest] = ReadMemory(addr);
-		}
-
-		// special read for POP AF that always clears the lower 4 bits of F 
-		void Read_Func_F(uint16_t dest, uint16_t src_l, uint16_t src_h)
-		{
-			cpu_Regs[dest] = (byte)(ReadMemory((uint16_t)(cpu_Regs[src_l] | (cpu_Regs[src_h]) << 8)) & 0xF0);
-		}
-
-		void Write_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src)
-		{
-			uint16_t addr = (uint16_t)(cpu_Regs[dest_l] | (cpu_Regs[dest_h]) << 8);
-			WriteMemory(addr, (byte)cpu_Regs[src]);
-		}
-
-		void TR_Func(uint16_t dest, uint16_t src)
+		void cpu_TR_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Regs[dest] = cpu_Regs[src];
 		}
 
-		void ADD8_Func(uint16_t dest, uint16_t src)
+		void cpu_ADD8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest];
 			cpu_Reg16_dt += cpu_Regs[src];
@@ -1758,7 +1775,7 @@ namespace GBHawk
 			cpu_Regs[dest] = (uint8_t) cpu_ans;
 		}
 
-		void SUB8_Func(uint16_t dest, uint16_t src)
+		void cpu_SUB8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest];
 			cpu_Reg16_dt -= cpu_Regs[src];
@@ -1778,29 +1795,29 @@ namespace GBHawk
 			cpu_Regs[dest] = (uint8_t) cpu_ans;
 		}
 
-		void BIT_Func(uint16_t bit, uint16_t src)
+		void cpu_BIT_Func(uint16_t bit, uint16_t src)
 		{
 			cpu_FlagZset(!((cpu_Regs[src] & (1 << bit)) == (1 << bit)));
 			cpu_FlagHset(true);
 			cpu_FlagNset(false);
 		}
 
-		void SET_Func(uint16_t bit, uint16_t src)
+		void cpu_SET_Func(uint16_t bit, uint16_t src)
 		{
 			cpu_Regs[src] |= (uint8_t)(1 << bit);
 		}
 
-		void RES_Func(uint16_t bit, uint16_t src)
+		void cpu_RES_Func(uint16_t bit, uint16_t src)
 		{
 			cpu_Regs[src] &= (uint8_t)(0xFF - (1 << bit));
 		}
 
-		void ASGN_Func(uint16_t src, uint16_t val)
+		void cpu_ASGN_Func(uint16_t src, uint16_t val)
 		{
 			cpu_Regs[src] = (uint8_t) val;
 		}
 
-		void SWAP_Func(uint16_t src)
+		void cpu_SWAP_Func(uint16_t src)
 		{
 			cpu_temp = (uint16_t)((cpu_Regs[src] << 4) & 0xF0);
 			cpu_Regs[src] = (uint8_t)(cpu_temp | (cpu_Regs[src] >> 4));
@@ -1811,7 +1828,7 @@ namespace GBHawk
 			cpu_FlagCset(false);
 		}
 
-		void SLA_Func(uint16_t src)
+		void cpu_SLA_Func(uint16_t src)
 		{
 			cpu_FlagCset(((cpu_Regs[src] & 0x80) == 0x80));
 
@@ -1822,7 +1839,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void SRA_Func(uint16_t src)
+		void cpu_SRA_Func(uint16_t src)
 		{
 			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
 
@@ -1835,7 +1852,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void SRL_Func(uint16_t src)
+		void cpu_SRL_Func(uint16_t src)
 		{
 			cpu_FlagCset(((cpu_Regs[src] & 0x1) == 0x1));
 
@@ -1846,7 +1863,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void CPL_Func(uint16_t src)
+		void cpu_CPL_Func(uint16_t src)
 		{
 			cpu_Regs[src] = (uint8_t)((~cpu_Regs[src]) & 0xFF);
 
@@ -1854,21 +1871,21 @@ namespace GBHawk
 			cpu_FlagNset(true);
 		}
 
-		void CCF_Func(uint16_t src)
+		void cpu_CCF_Func(uint16_t src)
 		{
 			cpu_FlagCset(!cpu_FlagCget());
 			cpu_FlagHset(false);
 			cpu_FlagNset(false);
 		}
 
-		void SCF_Func(uint16_t src)
+		void cpu_SCF_Func(uint16_t src)
 		{
 			cpu_FlagCset(true);
 			cpu_FlagHset(false);
 			cpu_FlagNset(false);
 		}
 
-		void AND8_Func(uint16_t dest, uint16_t src)
+		void cpu_AND8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] & cpu_Regs[src]);
 
@@ -1878,7 +1895,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void OR8_Func(uint16_t dest, uint16_t src)
+		void cpu_OR8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] | cpu_Regs[src]);
 
@@ -1888,7 +1905,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void XOR8_Func(uint16_t dest, uint16_t src)
+		void cpu_XOR8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Regs[dest] = (uint8_t)(cpu_Regs[dest] ^ cpu_Regs[src]);
 
@@ -1898,7 +1915,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void CP8_Func(uint16_t dest, uint16_t src)
+		void cpu_CP8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest];
 			cpu_Reg16_dt -= cpu_Regs[src];
@@ -1915,7 +1932,7 @@ namespace GBHawk
 			cpu_FlagNset(true);
 		}
 
-		void RRC_Func(uint16_t src)
+		void cpu_RRC_Func(uint16_t src)
 		{
 			cpu_imm = (src == cpu_Aim);
 			if (cpu_imm) { src = cpu_A; }
@@ -1929,7 +1946,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void RR_Func(uint16_t src)
+		void cpu_RR_Func(uint16_t src)
 		{
 			cpu_imm = (src == cpu_Aim);
 			if (cpu_imm) { src = cpu_A; }
@@ -1946,7 +1963,7 @@ namespace GBHawk
 		}
 
 
-		void RL_Func(uint16_t src)
+		void cpu_RL_Func(uint16_t src)
 		{
 			cpu_imm = src == cpu_Aim;
 			if (cpu_imm) { src = cpu_A; }
@@ -1961,7 +1978,7 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
-		void ADC8_Func(uint16_t dest, uint16_t src)
+		void cpu_ADC8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest];
 			cpu_ct = cpu_FlagCget() ? 1 : 0;
@@ -1983,7 +2000,7 @@ namespace GBHawk
 			cpu_Regs[dest] = (uint8_t)cpu_ans;
 		}
 
-		void SBC8_Func(uint16_t dest, uint16_t src)
+		void cpu_SBC8_Func(uint16_t dest, uint16_t src)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest];
 			cpu_ct = cpu_FlagCget() ? 1 : 0;
@@ -2006,7 +2023,7 @@ namespace GBHawk
 		}
 
 		// DA code courtesy of AWJ: http://forums.nesdev.com/viewtopic.php?f=20&t=15944
-		void DA_Func(uint16_t src)
+		void cpu_DA_Func(uint16_t src)
 		{
 			cpu_a_d = cpu_Regs[src];
 
@@ -2077,7 +2094,6 @@ namespace GBHawk
 			cpu_Regs[dest_h] &= 0xFF;
 
 		}
-
 
 		void cpu_ADD16_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src_l, uint16_t src_h)
 		{
