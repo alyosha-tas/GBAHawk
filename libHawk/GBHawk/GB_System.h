@@ -26,6 +26,13 @@ using namespace std;
  * Only the top set is available in GB (i.e. VRAM_Bank = 0)
  */
 
+// TODO:
+/* 
+* The check when read on opcode 0xE8 ADD SP is happening
+* 
+* 
+*/
+
 //Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
 
 //MessageCallback(Message_String.length());
@@ -1047,15 +1054,13 @@ namespace GBHawk
 		bool Halt_bug_5;
 		bool cpu_Stop_Check;
 
-		int cpu_EI_Pending;
-
-
-
 		uint8_t cpu_Int_Clear;
 
 		uint16_t cpu_Opcode, cpu_Instr_Cycle;
 
 		uint16_t cpu_Int_Src;
+
+		uint32_t cpu_EI_Pending;
 
 		uint64_t cpu_Instruction_Start;
 
@@ -2066,7 +2071,7 @@ namespace GBHawk
 		}
 
 		// used for signed operations
-		void ADDS_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src_l, uint16_t src_h)
+		void cpu_ADDS_Func(uint16_t dest_l, uint16_t dest_h, uint16_t src_l, uint16_t src_h)
 		{
 			cpu_Reg16_dt = cpu_Regs[dest_l];
 			cpu_Reg16_st = cpu_Regs[src_l];
