@@ -1145,7 +1145,6 @@ namespace GBHawk
 			LD_IND_8_INC_DEC_HL,
 			INC_DEC_8_IND,
 			LD_8_IND_IND,		
-			HALT,
 			RET_COND,
 			POP,
 			JP_COND,
@@ -1176,6 +1175,7 @@ namespace GBHawk
 			RESET,
 			EXIT,
 			SKIP,
+			HALT,
 			GBC_HALT,
 			SPC_HALT,
 			STOP_LOOP,
@@ -1721,6 +1721,206 @@ namespace GBHawk
 		#pragma endregion
 
 		#pragma region ARM7_TDMI functions
+
+		void cpu_Exec_Bit_Func()
+		{
+			switch (cpu_Opcode)
+			{
+				case 0x140: cpu_BIT_Func(0, cpu_B); break;
+				case 0x141: cpu_BIT_Func(0, cpu_C); break;
+				case 0x142: cpu_BIT_Func(0, cpu_D); break;
+				case 0x143: cpu_BIT_Func(0, cpu_E); break;
+				case 0x144: cpu_BIT_Func(0, cpu_H); break;
+				case 0x145: cpu_BIT_Func(0, cpu_L); break;
+				// cpu_BIT_Func(0, (HL)
+				case 0x147: cpu_BIT_Func(0, cpu_A); break;
+				case 0x148: cpu_BIT_Func(1, cpu_B); break;
+				case 0x149: cpu_BIT_Func(1, cpu_C); break;
+				case 0x14A: cpu_BIT_Func(1, cpu_D); break;
+				case 0x14B: cpu_BIT_Func(1, cpu_E); break;
+				case 0x14C: cpu_BIT_Func(1, cpu_H); break;
+				case 0x14D: cpu_BIT_Func(1, cpu_L); break;
+				// cpu_BIT_Func(1, (HL)
+				case 0x14F: cpu_BIT_Func(1, cpu_A); break;
+				case 0x150: cpu_BIT_Func(2, cpu_B); break;
+				case 0x151: cpu_BIT_Func(2, cpu_C); break;
+				case 0x152: cpu_BIT_Func(2, cpu_D); break;
+				case 0x153: cpu_BIT_Func(2, cpu_E); break;
+				case 0x154: cpu_BIT_Func(2, cpu_H); break;
+				case 0x155: cpu_BIT_Func(2, cpu_L); break;
+				// cpu_BIT_Func(2, (HL)
+				case 0x157: cpu_BIT_Func(2, cpu_A); break;
+				case 0x158: cpu_BIT_Func(3, cpu_B); break;
+				case 0x159: cpu_BIT_Func(3, cpu_C); break;
+				case 0x15A: cpu_BIT_Func(3, cpu_D); break;
+				case 0x15B: cpu_BIT_Func(3, cpu_E); break;
+				case 0x15C: cpu_BIT_Func(3, cpu_H); break;
+				case 0x15D: cpu_BIT_Func(3, cpu_L); break;
+				// cpu_BIT_Func(3, (HL)
+				case 0x15F: cpu_BIT_Func(3, cpu_A); break;
+				case 0x160: cpu_BIT_Func(4, cpu_B); break;
+				case 0x161: cpu_BIT_Func(4, cpu_C); break;
+				case 0x162: cpu_BIT_Func(4, cpu_D); break;
+				case 0x163: cpu_BIT_Func(4, cpu_E); break;
+				case 0x164: cpu_BIT_Func(4, cpu_H); break;
+				case 0x165: cpu_BIT_Func(4, cpu_L); break;
+				// cpu_BIT_Func(4, (HL)
+				case 0x167: cpu_BIT_Func(4, cpu_A); break;
+				case 0x168: cpu_BIT_Func(5, cpu_B); break;
+				case 0x169: cpu_BIT_Func(5, cpu_C); break;
+				case 0x16A: cpu_BIT_Func(5, cpu_D); break;
+				case 0x16B: cpu_BIT_Func(5, cpu_E); break;
+				case 0x16C: cpu_BIT_Func(5, cpu_H); break;
+				case 0x16D: cpu_BIT_Func(5, cpu_L); break;
+				// cpu_BIT_Func(5, (HL)
+				case 0x16F: cpu_BIT_Func(5, cpu_A); break;
+				case 0x170: cpu_BIT_Func(6, cpu_B); break;
+				case 0x171: cpu_BIT_Func(6, cpu_C); break;
+				case 0x172: cpu_BIT_Func(6, cpu_D); break;
+				case 0x173: cpu_BIT_Func(6, cpu_E); break;
+				case 0x174: cpu_BIT_Func(6, cpu_H); break;
+				case 0x175: cpu_BIT_Func(6, cpu_L); break;
+				// cpu_BIT_Func(6, (HL)
+				case 0x177: cpu_BIT_Func(6, cpu_A); break;
+				case 0x178: cpu_BIT_Func(7, cpu_B); break;
+				case 0x179: cpu_BIT_Func(7, cpu_C); break;
+				case 0x17A: cpu_BIT_Func(7, cpu_D); break;
+				case 0x17B: cpu_BIT_Func(7, cpu_E); break;
+				case 0x17C: cpu_BIT_Func(7, cpu_H); break;
+				case 0x17D: cpu_BIT_Func(7, cpu_L); break;
+				// cpu_BIT_Func(7, (HL)
+				case 0x17F: cpu_BIT_Func(7, cpu_A); break;
+				case 0x180: cpu_RES_Func(0, cpu_B); break;
+				case 0x181: cpu_RES_Func(0, cpu_C); break;
+				case 0x182: cpu_RES_Func(0, cpu_D); break;
+				case 0x183: cpu_RES_Func(0, cpu_E); break;
+				case 0x184: cpu_RES_Func(0, cpu_H); break;
+				case 0x185: cpu_RES_Func(0, cpu_L); break;
+				// cpu_RES_Func(0, (HL)
+				case 0x187: cpu_RES_Func(0, cpu_A); break;
+				case 0x188: cpu_RES_Func(1, cpu_B); break;
+				case 0x189: cpu_RES_Func(1, cpu_C); break;
+				case 0x18A: cpu_RES_Func(1, cpu_D); break;
+				case 0x18B: cpu_RES_Func(1, cpu_E); break;
+				case 0x18C: cpu_RES_Func(1, cpu_H); break;
+				case 0x18D: cpu_RES_Func(1, cpu_L); break;
+				// cpu_RES_Func(1, (HL)
+				case 0x18F: cpu_RES_Func(1, cpu_A); break;
+				case 0x190: cpu_RES_Func(2, cpu_B); break;
+				case 0x191: cpu_RES_Func(2, cpu_C); break;
+				case 0x192: cpu_RES_Func(2, cpu_D); break;
+				case 0x193: cpu_RES_Func(2, cpu_E); break;
+				case 0x194: cpu_RES_Func(2, cpu_H); break;
+				case 0x195: cpu_RES_Func(2, cpu_L); break;
+				// cpu_RES_Func(2, (HL)
+				case 0x197: cpu_RES_Func(2, cpu_A); break;
+				case 0x198: cpu_RES_Func(3, cpu_B); break;
+				case 0x199: cpu_RES_Func(3, cpu_C); break;
+				case 0x19A: cpu_RES_Func(3, cpu_D); break;
+				case 0x19B: cpu_RES_Func(3, cpu_E); break;
+				case 0x19C: cpu_RES_Func(3, cpu_H); break;
+				case 0x19D: cpu_RES_Func(3, cpu_L); break;
+				// cpu_RES_Func(3, (HL)
+				case 0x19F: cpu_RES_Func(3, cpu_A); break;
+				case 0x1A0: cpu_RES_Func(4, cpu_B); break;
+				case 0x1A1: cpu_RES_Func(4, cpu_C); break;
+				case 0x1A2: cpu_RES_Func(4, cpu_D); break;
+				case 0x1A3: cpu_RES_Func(4, cpu_E); break;
+				case 0x1A4: cpu_RES_Func(4, cpu_H); break;
+				case 0x1A5: cpu_RES_Func(4, cpu_L); break;
+				// cpu_RES_Func(4, (HL)
+				case 0x1A7: cpu_RES_Func(4, cpu_A); break;
+				case 0x1A8: cpu_RES_Func(5, cpu_B); break;
+				case 0x1A9: cpu_RES_Func(5, cpu_C); break;
+				case 0x1AA: cpu_RES_Func(5, cpu_D); break;
+				case 0x1AB: cpu_RES_Func(5, cpu_E); break;
+				case 0x1AC: cpu_RES_Func(5, cpu_H); break;
+				case 0x1AD: cpu_RES_Func(5, cpu_L); break;
+				// cpu_RES_Func(5, (HL)
+				case 0x1AF: cpu_RES_Func(5, cpu_A); break;
+				case 0x1B0: cpu_RES_Func(6, cpu_B); break;
+				case 0x1B1: cpu_RES_Func(6, cpu_C); break;
+				case 0x1B2: cpu_RES_Func(6, cpu_D); break;
+				case 0x1B3: cpu_RES_Func(6, cpu_E); break;
+				case 0x1B4: cpu_RES_Func(6, cpu_H); break;
+				case 0x1B5: cpu_RES_Func(6, cpu_L); break;
+				// cpu_RES_Func(6, (HL)
+				case 0x1B7: cpu_RES_Func(6, cpu_A); break;
+				case 0x1B8: cpu_RES_Func(7, cpu_B); break;
+				case 0x1B9: cpu_RES_Func(7, cpu_C); break;
+				case 0x1BA: cpu_RES_Func(7, cpu_D); break;
+				case 0x1BB: cpu_RES_Func(7, cpu_E); break;
+				case 0x1BC: cpu_RES_Func(7, cpu_H); break;
+				case 0x1BD: cpu_RES_Func(7, cpu_L); break;
+				// cpu_RES_Func(7, (HL)
+				case 0x1BF: cpu_RES_Func(7, cpu_A); break;
+				case 0x1C0: cpu_SET_Func(0, cpu_B); break;
+				case 0x1C1: cpu_SET_Func(0, cpu_C); break;
+				case 0x1C2: cpu_SET_Func(0, cpu_D); break;
+				case 0x1C3: cpu_SET_Func(0, cpu_E); break;
+				case 0x1C4: cpu_SET_Func(0, cpu_H); break;
+				case 0x1C5: cpu_SET_Func(0, cpu_L); break;
+				// cpu_SET_Func(0, (HL)
+				case 0x1C7: cpu_SET_Func(0, cpu_A); break;
+				case 0x1C8: cpu_SET_Func(1, cpu_B); break;
+				case 0x1C9: cpu_SET_Func(1, cpu_C); break;
+				case 0x1CA: cpu_SET_Func(1, cpu_D); break;
+				case 0x1CB: cpu_SET_Func(1, cpu_E); break;
+				case 0x1CC: cpu_SET_Func(1, cpu_H); break;
+				case 0x1CD: cpu_SET_Func(1, cpu_L); break;
+				// cpu_SET_Func(1, (HL)
+				case 0x1CF: cpu_SET_Func(1, cpu_A); break;
+				case 0x1D0: cpu_SET_Func(2, cpu_B); break;
+				case 0x1D1: cpu_SET_Func(2, cpu_C); break;
+				case 0x1D2: cpu_SET_Func(2, cpu_D); break;
+				case 0x1D3: cpu_SET_Func(2, cpu_E); break;
+				case 0x1D4: cpu_SET_Func(2, cpu_H); break;
+				case 0x1D5: cpu_SET_Func(2, cpu_L); break;
+				// cpu_SET_Func(2, (HL)
+				case 0x1D7: cpu_SET_Func(2, cpu_A); break;
+				case 0x1D8: cpu_SET_Func(3, cpu_B); break;
+				case 0x1D9: cpu_SET_Func(3, cpu_C); break;
+				case 0x1DA: cpu_SET_Func(3, cpu_D); break;
+				case 0x1DB: cpu_SET_Func(3, cpu_E); break;
+				case 0x1DC: cpu_SET_Func(3, cpu_H); break;
+				case 0x1DD: cpu_SET_Func(3, cpu_L); break;
+				// cpu_SET_Func(3, (HL)
+				case 0x1DF: cpu_SET_Func(3, cpu_A); break;
+				case 0x1E0: cpu_SET_Func(4, cpu_B); break;
+				case 0x1E1: cpu_SET_Func(4, cpu_C); break;
+				case 0x1E2: cpu_SET_Func(4, cpu_D); break;
+				case 0x1E3: cpu_SET_Func(4, cpu_E); break;
+				case 0x1E4: cpu_SET_Func(4, cpu_H); break;
+				case 0x1E5: cpu_SET_Func(4, cpu_L); break;
+				// cpu_SET_Func(4, (HL)
+				case 0x1E7: cpu_SET_Func(4, cpu_A); break;
+				case 0x1E8: cpu_SET_Func(5, cpu_B); break;
+				case 0x1E9: cpu_SET_Func(5, cpu_C); break;
+				case 0x1EA: cpu_SET_Func(5, cpu_D); break;
+				case 0x1EB: cpu_SET_Func(5, cpu_E); break;
+				case 0x1EC: cpu_SET_Func(5, cpu_H); break;
+				case 0x1ED: cpu_SET_Func(5, cpu_L); break;
+				// cpu_SET_Func(5, (HL)
+				case 0x1EF: cpu_SET_Func(5, cpu_A); break;
+				case 0x1F0: cpu_SET_Func(6, cpu_B); break;
+				case 0x1F1: cpu_SET_Func(6, cpu_C); break;
+				case 0x1F2: cpu_SET_Func(6, cpu_D); break;
+				case 0x1F3: cpu_SET_Func(6, cpu_E); break;
+				case 0x1F4: cpu_SET_Func(6, cpu_H); break;
+				case 0x1F5: cpu_SET_Func(6, cpu_L); break;
+				// cpu_SET_Func(6, (HL)
+				case 0x1F7: cpu_SET_Func(6, cpu_A); break;
+				case 0x1F8: cpu_SET_Func(7, cpu_B); break;
+				case 0x1F9: cpu_SET_Func(7, cpu_C); break;
+				case 0x1FA: cpu_SET_Func(7, cpu_D); break;
+				case 0x1FB: cpu_SET_Func(7, cpu_E); break;
+				case 0x1FC: cpu_SET_Func(7, cpu_H); break;
+				case 0x1FD: cpu_SET_Func(7, cpu_L); break;
+				// cpu_SET_Func(7, (HL)
+				case 0x1FF: cpu_SET_Func(7, cpu_A); break;
+			}
+		}
+
 
 		void cpu_Reset()
 		{
