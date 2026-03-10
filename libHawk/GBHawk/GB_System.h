@@ -115,6 +115,7 @@ namespace GBHawk
 		uint32_t clear_counter;
 
 		uint64_t bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
+		uint64_t Cycle_Count;
 
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
 		uint8_t ZP_RAM[0x80] = { };
@@ -200,6 +201,8 @@ namespace GBHawk
 			delays_to_process = false;
 			controller_delay_cd = 0;
 			clear_counter = 0;
+
+			Cycle_Count = 0;
 
 			input_register = 0xCF; // not reading any input
 
@@ -1042,12 +1045,22 @@ namespace GBHawk
 		bool Halt_bug_3;
 		bool Halt_bug_4;
 		bool Halt_bug_5;
+		bool cpu_Stop_Check;
 
 		int cpu_EI_Pending;
 
 
 
+		uint8_t cpu_Int_Clear;
+
 		uint16_t cpu_Opcode, cpu_Instr_Cycle;
+
+		uint16_t cpu_Int_Src;
+
+		uint64_t cpu_Instruction_Start;
+
+		uint64_t stop_time;
+
 
 		uint8_t cpu_Regs[14] = { };
 
@@ -1721,6 +1734,12 @@ namespace GBHawk
 			cpu_Opcode = 0;
 			cpu_Instr_Cycle = 0;
 			cpu_Instr_Type = OpT::RESET;
+
+
+			cpu_Int_Src = 5;
+			cpu_Int_Clear = 0;
+
+			cpu_Instruction_Start = 0;
 			
 			for (int i = 0; i < 14; i++)
 			{
@@ -2174,6 +2193,45 @@ namespace GBHawk
 			cpu_FlagNset(false);
 		}
 
+		void cpu_IRQ_Clear_Func()
+		{
+			uint8_t interrupt_src_reg = GetIntRegs(0);
+			uint8_t interrupt_enable_reg = GetIntRegs(1);
+
+			if ((interrupt_src_reg & (1 <<cpu_Int_Src)) == (1 << cpu_Int_Src)) { interrupt_src_reg -= cpu_Int_Clear; }
+
+			SetIntRegs(interrupt_src_reg);
+
+			if ((interrupt_src_reg & (interrupt_enable_reg & 0x1F)) == 0) { cpu_FlagI = false; }
+			// reset back to default state
+			cpu_Int_Src = 5;
+			cpu_Int_Clear = 0;
+		}
+
+		void cpu_Int_Get_Func(uint16_t reg, uint8_t value)
+		{
+			// check if any interrupts got cancelled along the way
+			// interrupt src = 5 sets the PC to zero as observed
+			// also the triggering interrupt seems like it is held low (i.e. cannot trigger I flag) until the interrupt is serviced
+			uint16_t bit_check = value;
+			//Console.WriteLine("int " + TotalExecutedCycles);
+
+			uint8_t interrupt_src_reg = GetIntRegs(0);
+			uint8_t interrupt_enable_reg = GetIntRegs(1);
+
+			//if (interrupt_src_reg.Bit(bit_check) && interrupt_enable_reg.Bit(bit_check)) { cpu_Int_Src = bit_check; cpu_Int_Clear = (byte)(1 << bit_check); }
+
+			if ((interrupt_src_reg & interrupt_enable_reg & 1) == 1) { cpu_Int_Src = 0; cpu_Int_Clear = 1; }
+			else if ((interrupt_src_reg & interrupt_enable_reg & 2) == 2) { cpu_Int_Src = 1; cpu_Int_Clear = 2; }
+			else if ((interrupt_src_reg & interrupt_enable_reg & 4) == 4) { cpu_Int_Src = 2; cpu_Int_Clear = 4; }
+			else if ((interrupt_src_reg & interrupt_enable_reg & 8) == 8) { cpu_Int_Src = 3; cpu_Int_Clear = 8; }
+			else if ((interrupt_src_reg & interrupt_enable_reg & 0x10) == 0x10) { cpu_Int_Src = 4; cpu_Int_Clear = 16; }
+			else { cpu_Int_Src = 5; cpu_Int_Clear = 0; }
+
+			cpu_Regs[reg] = INT_vectors[cpu_Int_Src];
+
+		}
+
 		#pragma endregion
 
 		#pragma region Disassemble
@@ -2230,7 +2288,7 @@ namespace GBHawk
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" Cy:");
-			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", CycleCount));
+			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", Cycle_Count));
 
 			while (reg_state.length() < 282)
 			{
