@@ -100,7 +100,7 @@ namespace GBHawk
 		bool controller_was_checked;
 		bool delays_to_process;
 		bool DIV_falling_edge, DIV_edge_old;
-		bool double_speed;
+		bool Double_Speed;
 		bool speed_switch;
 		bool HDMA_transfer; // stalls CPU when in progress
 
@@ -118,7 +118,6 @@ namespace GBHawk
 		uint32_t RAM_Bank;
 		uint32_t RAM_Bank_ret;
 		uint32_t controller_delay_cd;
-		uint32_t cpu_state_hold;
 		uint32_t clear_counter;
 
 		uint64_t bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
@@ -197,11 +196,10 @@ namespace GBHawk
 			Acc_Y_state = 0;
 
 			IR_write = 0;
-			cpu_state_hold = 0;
 
 			GB_bios_register = 0; // bios enable
 			GBC_Compat = true;
-			double_speed = false;
+			Double_Speed = false;
 			VRAM_Bank = 0;
 			RAM_Bank = 1; // RAM bank always starts as 1 (even writing zero still sets 1)
 			RAM_Bank_ret = 0; // return value can still be zero even though the bank itself cannot be
@@ -364,7 +362,7 @@ namespace GBHawk
 				((contr_prev & 2) > 0) && ((input_register & 2) == 0) ||
 				((contr_prev & 1) > 0) && ((input_register & 1) == 0))
 			{
-				if ((REG_FFFF& 0x10) == 0x10) { cpu_FlagIset(true); }
+				if ((REG_FFFF& 0x10) == 0x10) { cpu_FlagI = true; }
 				REG_FF0F |= 0x10;
 			}
 		}
@@ -377,12 +375,15 @@ namespace GBHawk
 
 			if (hdma_start)
 			{
-				cpu_state_hold = cpu.instr_pntr;
-				cpu.instr_pntr = 256 * 60 * 2 + 60 * 8;
+				cpu_State_Hold = cpu_Instr_Type;
+				cpu_Instr_Type = OpT::WAIT;
+
+				cpu_Instr_Cycle_Hold = cpu_Instr_Cycle;
 			}
 			else
 			{
-				cpu.instr_pntr = cpu_state_hold;
+				cpu_Instr_Type = cpu_State_Hold;
+				cpu_Instr_Cycle = cpu_Instr_Cycle_Hold;
 			}
 		}
 
@@ -392,60 +393,9 @@ namespace GBHawk
 			controller_delay_cd--;
 			if (controller_delay_cd == 0)
 			{
-				if ((REG_FFFF & 0x10) == 0x10) { cpu_FlagIset(true); }
+				if ((REG_FFFF & 0x10) == 0x10) { cpu_FlagI = true; }
 				REG_FF0F |= 0x10;
 				delays_to_process = false;
-			}
-		}
-
-		int SpeedFunc(int temp)
-		{
-			if (temp == 0)
-			{
-				if (speed_switch)
-				{
-					speed_switch = false;
-
-					Message_String = "Speed Switch: " + to_string(CycleCount);
-
-					MessageCallback(Message_String.length());
-
-					int ret = double_speed ? 32770 : 32770; // actual time needs checking
-					return ret;
-				}
-
-				// if we are not switching speed, return 0
-				return 0;
-			}
-			else if (temp == 1)
-			{
-				// reset the divider (only way for speed_change_timing_fine.gbc and speed_change_cancel.gbc to both work)
-				// Console.WriteLine("at stop " + timer.divider_reg + " " + timer.timer_control);
-
-				// only if the timer mode is 1, an extra tick of the timer is counted before the reset
-				// this varies between console revisions
-				if ((tim_Control & 7) == 5)
-				{
-					if ((tim_Divider_Reg & 0x7) == 7)
-					{
-						tim_Old_State = true;
-					}
-				}
-
-				tim_Divider_Reg = 0xFFFF;
-
-				double_speed = !double_speed;
-
-				ppu.LYC_offset = double_speed ? 1 : 2;
-
-				ppu.LY_153_change = double_speed ? 8 : 10;
-
-				return 0;
-			}
-			else
-			{
-
-				return 0;
 			}
 		}
 
@@ -482,8 +432,8 @@ namespace GBHawk
 			// For timer interrupts or serial interrupts that occur on the same cycle as the IRQ clear
 			// the clear wins on GB and GBA (tested on GBP.) Assuming true for GBC E too.
 			// but only in single speed
-			if (((REG_FF0F & 4) == 4) && ((r & 4) == 0) && tim_IRQ_Block && !double_speed) { r |= 4; }
-			if (((REG_FF0F & 8) == 8) && ((r & 8) == 0) && ser_IRQ_Block && !double_speed) { r |= 8; }
+			if (((REG_FF0F & 4) == 4) && ((r & 4) == 0) && tim_IRQ_Block && !Double_Speed) { r |= 4; }
+			if (((REG_FF0F & 8) == 8) && ((r & 8) == 0) && ser_IRQ_Block && !Double_Speed) { r |= 8; }
 			REG_FF0F = r;
 		}
 
@@ -593,7 +543,7 @@ namespace GBHawk
 				case 0xFF4D:
 					if (GBC_Compat)
 					{
-						ret = (uint8_t)(((double_speed ? 1 : 0) << 7) | (speed_switch ? 1 : 0) | 0x7E);
+						ret = (uint8_t)(((Double_Speed ? 1 : 0) << 7) | (speed_switch ? 1 : 0) | 0x7E);
 					}
 					else
 					{
@@ -602,7 +552,7 @@ namespace GBHawk
 					break;
 
 				case 0xFF4F: // VBK
-					if (is_GBC)
+					if (Is_GBC)
 					{
 						ret = (uint8_t)(0xFE | VRAM_Bank);
 					}
@@ -656,7 +606,7 @@ namespace GBHawk
 				case 0xFF69:
 				case 0xFF6A:
 				case 0xFF6B:
-					if (is_GBC)
+					if (Is_GBC)
 					{
 						ret = ppu.ReadReg(addr);
 					}
@@ -804,12 +754,12 @@ namespace GBHawk
 					{
 						if (((REG_FFFF >> i) & (REG_FF0F >> i) & 1) == 1)
 						{
-							cpu_FlagIset(true);
+							cpu_FlagI = true;
 						}
 					}
 
 					// if no bits are in common between flags and enables, de-assert the IRQ
-					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagIset(false); }
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagI = false; }
 					break;
 
 					// audio regs
@@ -875,8 +825,9 @@ namespace GBHawk
 					{
 						GBC_Compat = false;
 					}
-					Console.Write("GBC Compatibility? ");
-					Console.WriteLine(value);
+
+					//Message_String = "GBC Compatibility? " + to_string(value);
+					//MessageCallback(Message_String.length());
 					break;
 
 					// Speed Control for GBC
@@ -988,12 +939,12 @@ namespace GBHawk
 					{
 						if (((REG_FFFF >> i) & (REG_FF0F >> i) & 1) == 1)
 						{
-							cpu_FlagIset(true);
+							cpu_FlagI = true;
 						}
 					}
 
 					// if no bits are in common between flags and enables, de-assert the IRQ
-					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagIset(false); }
+					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagI = false; }
 					break;
 
 				default:
@@ -1056,7 +1007,7 @@ namespace GBHawk
 
 		uint8_t cpu_Int_Clear;
 
-		uint16_t cpu_Opcode, cpu_Instr_Cycle;
+		uint16_t cpu_Opcode, cpu_Instr_Cycle, cpu_Instr_Cycle_Hold;
 
 		uint16_t cpu_Int_Src;
 
@@ -1185,6 +1136,8 @@ namespace GBHawk
 		};
 
 		OpT cpu_Instr_Type;
+
+		OpT cpu_State_Hold;
 
 		OpT cpu_Instr_Type_List[512 + 10] =
 		{
@@ -1718,7 +1671,7 @@ namespace GBHawk
 
 		#pragma endregion
 
-		#pragma region ARM7_TDMI functions
+		#pragma region LR35902 functions
 		void cpu_Exec_INT_Func()
 		{
 			switch (cpu_Opcode)
@@ -2190,6 +2143,8 @@ namespace GBHawk
 			}
 		}
 
+		inline uint32_t SpeedFunc(uint32_t val);
+
 		void cpu_Reset()
 		{
 			cpu_was_FlagI = cpu_FlagI = false;
@@ -2206,6 +2161,7 @@ namespace GBHawk
 
 			cpu_Opcode = 0;
 			cpu_Instr_Cycle = 0;
+			cpu_Instr_Cycle_Hold = 0;
 			cpu_Instr_Type = OpT::RESET;
 
 
@@ -2220,20 +2176,76 @@ namespace GBHawk
 			}
 		}
 
-		inline void cpu_Halt_Check()
+		inline void cpu_Halt_Check_Func()
 		{
+			cpu_I_Use = cpu_FlagI;
+			if (cpu_Halt_bug_2 && cpu_I_Use)
+			{
+				cpu_RegPCset(cpu_RegPCget() - 1);
+				cpu_Halt_bug_3 = true;
+				//Console.WriteLine("Halt_bug_3");
+				//Console.WriteLine(TotalExecutedCycles);
+			}
 
-		}
-
-		inline void cpu_Halt_Func()
-		{
-
+			cpu_Halt_bug_2 = false;
 		}
 
 		inline void cpu_Op_Func()
 		{
+			// Read the opcode of the next instruction
+			if (cpu_EI_Pending > 0 && !cpu_CB_Prefix)
+			{
+				cpu_EI_Pending--;
+				if (cpu_EI_Pending == 0)
+				{
+					cpu_Interrupts_Enabled = true;
+				}
+			}
 
+			if (cpu_I_Use && cpu_Interrupts_Enabled && !cpu_CB_Prefix && !cpu_Jammed)
+			{
+				cpu_Interrupts_Enabled = false;
+
+				if (TraceCallback) TraceCallback(3); // IRQ
+
+				// call interrupt processor
+				// lowest bit set is highest priority
+				cpu_Opcode = 512 + 6; // point to Interrupt
+			}
+			else
+			{
+				if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
+
+				cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+				cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
+				cpu_Instr_Cycle = -1;
+			}
+
+			cpu_Instruction_Start = Cycle_Count + 1;
+			cpu_I_Use = false;
 		}
+
+		inline void cpu_Op_G_Func()
+		{
+			if (TraceCallback) TraceCallback(0);
+
+			cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+			// note no increment
+			cpu_Instr_Cycle = -1;
+		}
+
+		inline void cpu_FetchInstruction(int op)
+		{
+			cpu_Opcode = op;
+
+			if (cpu_CB_Prefix) { cpu_Opcode += 256; }
+
+			cpu_CB_Prefix = false;
+
+			cpu_was_FlagI = cpu_FlagI;
+		}
+
+		inline void cpu_Halt_Enter();
 
 		inline void cpu_Halt_Ex(uint8_t param);
 
@@ -2709,10 +2721,13 @@ namespace GBHawk
 
 		#pragma region Disassemble
 
+		// syntax option set by front end option;
+		bool useRGBDSSyntax = false;
+
 		// disassemblies will also return strings of the same length
 		const char* TraceHeader = "ARM7TDMI: PC, machine code, mnemonic, operands, registers, Cy, flags (ZNHCIFE)";
-		const char* SWI_event =  "                                 ====SWI====                                 ";
-		const char* UDF_event =  "                                 ====UDF====                                 ";
+		const char* UNS_event =  "                               ====Un-STOP====                               ";
+		const char* UNH_event =  "                               ====Un-HALT====                               ";
 		const char* IRQ_event =  "                                 ====IRQ====                                 ";
 		const char* HALT_event = "                                 ====HALT====                                ";
 		const char* DMA_event =  "                                 ====DMA====                                 ";
@@ -3313,6 +3328,7 @@ namespace GBHawk
 
 			saver = short_saver(cpu_Opcode, saver);
 			saver = short_saver(cpu_Instr_Cycle, saver);
+			saver = short_saver(cpu_Instr_Cycle_Hold, saver);
 
 			saver = short_saver(cpu_Int_Src, saver);
 
@@ -3349,6 +3365,7 @@ namespace GBHawk
 
 			loader = short_loader(&cpu_Opcode, loader);
 			loader = short_loader(&cpu_Instr_Cycle, loader);
+			loader = short_loader(&cpu_Instr_Cycle_Hold, loader);
 
 			loader = short_loader(&cpu_Int_Src, loader);
 
@@ -7255,7 +7272,7 @@ namespace GBHawk
 			saver = bool_saver(delays_to_process, saver);
 			saver = bool_saver(DIV_falling_edge, saver);
 			saver = bool_saver(DIV_edge_old, saver);
-			saver = bool_saver(double_speed, saver);
+			saver = bool_saver(Double_Speed, saver);
 			saver = bool_saver(speed_switch, saver);
 			saver = bool_saver(HDMA_transfer, saver);
 
@@ -7335,7 +7352,7 @@ namespace GBHawk
 			loader = bool_loader(&delays_to_process, loader);
 			loader = bool_loader(&DIV_falling_edge, loader);
 			loader = bool_loader(&DIV_edge_old, loader);
-			loader = bool_loader(&double_speed, loader);
+			loader = bool_loader(&Double_Speed, loader);
 			loader = bool_loader(&speed_switch, loader);
 			loader = bool_loader(&HDMA_transfer, loader);
 

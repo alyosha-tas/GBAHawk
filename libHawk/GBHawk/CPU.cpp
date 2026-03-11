@@ -17,7 +17,7 @@ namespace GBHawk
 				{
 					case 0: cpu_Exec_INT_Func();  break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -27,7 +27,7 @@ namespace GBHawk
 				{
 					case 0: cpu_Exec_REG_Func();  break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -53,7 +53,7 @@ namespace GBHawk
 						break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -87,7 +87,7 @@ namespace GBHawk
 						break;
 					case 8: break;
 					case 9: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));  break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -114,7 +114,7 @@ namespace GBHawk
 						break;				
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -140,7 +140,7 @@ namespace GBHawk
 						break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -165,7 +165,7 @@ namespace GBHawk
 						break;
 					case 4: break;
 					case 5: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -191,7 +191,7 @@ namespace GBHawk
 					case 15: GB_System::Write_Memory(cpu_RegWZget(), cpu_Regs[cpu_SPh]); break;
 					case 16: break;
 					case 17: break;
-					case 18: cpu_Halt_Check(); break;
+					case 18: cpu_Halt_Check_Func(); break;
 					case 19: cpu_Op_Func(); break;
 				}
 				break;
@@ -213,7 +213,7 @@ namespace GBHawk
 						break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -255,7 +255,7 @@ namespace GBHawk
 					case 7: cpu_Regs[cpu_W] = 0; break;
 					case 8: break;
 					case 9: cpu_ADDS_Func(cpu_PCl, cpu_PCh, cpu_Z, cpu_W); break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 
@@ -276,7 +276,7 @@ namespace GBHawk
 							case 0x32: cpu_RegHLset((uint16_t)(cpu_RegHLget() - 1)); break;
 						}
 						break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -296,7 +296,7 @@ namespace GBHawk
 							case 0x3A: cpu_RegHLset((uint16_t)(cpu_RegHLget() - 1)); break;
 						}
 						break;					
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -320,7 +320,7 @@ namespace GBHawk
 					case 7: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_Z]); break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -338,7 +338,7 @@ namespace GBHawk
 					case 7: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_Z]);  break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -377,7 +377,7 @@ namespace GBHawk
 					case 15: break;
 					case 16: break;
 					case 17: break;
-					case 18: cpu_Halt_Check(); break;
+					case 18: cpu_Halt_Check_Func(); break;
 					case 19: cpu_Op_Func(); break;
 				}
 				break;
@@ -412,7 +412,7 @@ namespace GBHawk
 						break;
 					case 8: break;
 					case 9: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -448,7 +448,7 @@ namespace GBHawk
 					case 11: break;
 					case 12: cpu_RegPCset((uint16_t)(cpu_RegWZget())); break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -492,7 +492,7 @@ namespace GBHawk
 					case 19: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_PCl]); break;
 					case 20: break;
 					case 21: cpu_RegPCset((uint16_t)(cpu_RegWZget())); break;
-					case 22: cpu_Halt_Check(); break;
+					case 22: cpu_Halt_Check_Func(); break;
 					case 23: cpu_Op_Func(); break;
 				}
 				break;
@@ -530,7 +530,7 @@ namespace GBHawk
 						break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -586,7 +586,7 @@ namespace GBHawk
 							case 0xBE: cpu_CP8_Func(cpu_A, cpu_Z); break;
 						}
 						break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -620,7 +620,7 @@ namespace GBHawk
 							case 0xFF: cpu_Regs[cpu_PCl] = 0x38; break;
 						}
 						break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -642,7 +642,7 @@ namespace GBHawk
 					case 11: break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -684,7 +684,7 @@ namespace GBHawk
 					case 11: cpu_EI_Pending = 1; break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -702,7 +702,7 @@ namespace GBHawk
 					case 7: GB_System::Write_Memory(cpu_RegWZget(), cpu_Regs[cpu_A]); break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -716,7 +716,7 @@ namespace GBHawk
 					case 3: GB_System::Write_Memory((uint16_t)(0xFF00 | cpu_Regs[cpu_C]), cpu_Regs[cpu_A]); break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -738,7 +738,7 @@ namespace GBHawk
 					case 11: cpu_ADDS_Func(cpu_SPl, cpu_SPh, cpu_Z, cpu_W); break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -748,7 +748,7 @@ namespace GBHawk
 				{
 					case 0: cpu_RegPCset((uint16_t)(cpu_RegHLget())); break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -770,7 +770,7 @@ namespace GBHawk
 					case 11: GB_System::Write_Memory(cpu_RegWZget(), cpu_Regs[cpu_A]); break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -788,7 +788,7 @@ namespace GBHawk
 					case 7: cpu_Regs[cpu_A] = GB_System::Read_Memory(cpu_RegWZget()); break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -802,7 +802,7 @@ namespace GBHawk
 					case 3: cpu_Regs[cpu_A] = GB_System::Read_Memory((uint16_t)(0xFF00 | cpu_Regs[cpu_C])); break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -815,7 +815,7 @@ namespace GBHawk
 						else { if (cpu_EI_Pending == 0) { cpu_EI_Pending = 2; } }
 						break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -833,7 +833,7 @@ namespace GBHawk
 					case 7: cpu_RegHLset((uint16_t)(cpu_RegSPget())); break;
 					case 8: cpu_Regs[cpu_W] = 0;  break;
 					case 9: cpu_ADDS_Func(cpu_L, cpu_H, cpu_Z, cpu_W); break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -847,7 +847,7 @@ namespace GBHawk
 					case 3: cpu_RegSPset((uint16_t)(cpu_RegHLget())); break;
 					case 4: break;
 					case 5: break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -869,7 +869,7 @@ namespace GBHawk
 					case 11: cpu_Regs[cpu_A] = GB_System::Read_Memory(cpu_RegWZget()); break;
 					case 12: break;
 					case 13: break;
-					case 14: cpu_Halt_Check(); break;
+					case 14: cpu_Halt_Check_Func(); break;
 					case 15: cpu_Op_Func(); break;
 				}
 				break;
@@ -899,7 +899,7 @@ namespace GBHawk
 					case 7: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_Z]); break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -909,7 +909,7 @@ namespace GBHawk
 				{
 					case 0: cpu_Exec_Bit_Func();  break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -935,7 +935,7 @@ namespace GBHawk
 							case 0x17E: cpu_BIT_Func(7, cpu_Z); break;
 						}
 						break;
-					case 6: cpu_Halt_Check(); break;
+					case 6: cpu_Halt_Check_Func(); break;
 					case 7: cpu_Op_Func(); break;
 				}
 				break;
@@ -973,7 +973,7 @@ namespace GBHawk
 					case 7: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_Z]); break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -991,7 +991,7 @@ namespace GBHawk
 					case 7: break;
 					case 8: break;
 					case 9: break;
-					case 10: cpu_Halt_Check(); break;
+					case 10: cpu_Halt_Check_Func(); break;
 					case 11: cpu_Op_Func(); break;
 				}
 				break;
@@ -1001,7 +1001,7 @@ namespace GBHawk
 				{
 					case 0: break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Op_Func(); break;
 				}
 				break;
@@ -1017,14 +1017,16 @@ namespace GBHawk
 				break;
 
 			case OpT::HALT:
-				cur_instr = new ushort[]
-				{ HALT_FUNC,
-				IDLE,
-				IDLE,
-				OP_G,
-				HALT_CHK,
-				HALT_CHK_2,
-				HALT, 0 };
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: cpu_Halt_Enter(); break;
+					case 1: break;
+					case 2: break;
+					case 3: cpu_Op_G_Func(); break;
+					case 4: cpu_Halt_Check_Func(); break;
+					case 5:if (cpu_FlagI && !cpu_I_Use) { cpu_Halt_bug_5 = true; } break;
+					case 6: cpu_Halt_Ex(0); break;
+				}
 				break;
 
 			case OpT::GBC_HALT:
@@ -1032,7 +1034,7 @@ namespace GBHawk
 				{
 					case 0: break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_Halt_Ex(0); break;
 				}
 				break;
@@ -1040,7 +1042,7 @@ namespace GBHawk
 			case OpT::SPC_HALT:
 				switch (cpu_Instr_Cycle)
 				{
-					case 0: cpu_Halt_Check(); break;
+					case 0: cpu_Halt_Check_Func(); break;
 					case 1: break;
 					case 2: break;
 					case 3: cpu_Halt_Ex(0); break;
@@ -1052,7 +1054,7 @@ namespace GBHawk
 				{
 					case 0: break;
 					case 1: break;
-					case 2: cpu_Halt_Check(); break;
+					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_STOP_Ex(); break;
 				}
 				break;
@@ -1114,20 +1116,113 @@ namespace GBHawk
 				break;
 
 			case OpT::WAIT:
+				cpu_Instr_Cycle = -1;
 				break;
 
 			case OpT::SPD_CHG:
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: break;
+					case 1: SpeedFunc(1); break;
+					case 2: cpu_Halt_Check_Func(); break;
+					case 3: cpu_STOP_Ex(); break;
+				}
 				break;
+		}
+
+		cpu_Instr_Cycle += 1;
+	}
+
+	inline uint32_t GB_System::SpeedFunc(uint32_t val)
+	{
+		if (val == 0)
+		{
+			if (speed_switch)
+			{
+				speed_switch = false;
+
+				Message_String = "Speed Switch: " + to_string(Cycle_Count);
+
+				MessageCallback(Message_String.length());
+
+				uint32_t ret = Double_Speed ? 32770 : 32770; // actual time needs checking
+				return ret;
+			}
+
+			// if we are not switching speed, return 0
+			return 0;
+		}
+		else if (val == 1)
+		{
+			// reset the divider (only way for speed_change_timing_fine.gbc and speed_change_cancel.gbc to both work)
+			// Console.WriteLine("at stop " + timer.divider_reg + " " + timer.timer_control);
+
+			// only if the timer mode is 1, an extra tick of the timer is counted before the reset
+			// this varies between console revisions
+			if ((tim_Control & 7) == 5)
+			{
+				if ((tim_Divider_Reg & 0x7) == 7)
+				{
+					tim_Old_State = true;
+				}
+			}
+
+			tim_Divider_Reg = 0xFFFF;
+
+			Double_Speed = !Double_Speed;
+
+			ppu.LYC_offset = Double_Speed ? 1 : 2;
+
+			ppu.LY_153_change = Double_Speed ? 8 : 10;
+
+			return 0;
+		}
+		else
+		{
+
+			return 0;
 		}
 	}
 
-	inline void cpu_Halt_Ex(uint8_t param)
+	inline void GB_System::cpu_Halt_Enter()
 	{
-		halted = true;
+		if (cpu_was_FlagI && (cpu_EI_Pending == 0) && !cpu_Interrupts_Enabled)
+		{
+			// in GBC mode, the HALT bug is worked around by simply adding a NOP
+			// so it just takes 4 cycles longer to reach the next instruction
+
+			// otherwise, if interrupts are disabled,
+			// a glitchy decrement to the program counter happens
+
+			// either way, nothing needs to be done here
+		}
+		else
+		{
+			cpu_Instr_Cycle += 3;
+
+			if (!Is_GBC) { cpu_Skip_Once = true; }
+			// If the interrupt flag is not currently set, but it does get set in the first check
+			// then a bug is triggered
+			// With interrupts enabled, this runs the halt command twice
+			// when they are disabled, it reads the next byte twice
+			if (!cpu_was_FlagI || (cpu_was_FlagI && !cpu_Interrupts_Enabled)) { cpu_Halt_bug_2 = true; }
+
+			// If the I flag was set right before hitting this point, then there is no extra cycle for the halt
+			// also there is a glitched increment to the program counter
+			if (cpu_was_FlagI && cpu_Interrupts_Enabled)
+			{
+				cpu_Halt_bug_4 = true;
+			}
+		}
+	}
+
+	inline void GB_System::cpu_Halt_Ex(uint8_t param)
+	{
+		cpu_Halted = true;
 
 		bool temp = false;
 
-		if (instr_table[instr_pntr++] == 1)
+		if (param == 1)
 		{
 			temp = cpu_FlagI;
 		}
@@ -1136,213 +1231,217 @@ namespace GBHawk
 			temp = cpu_I_Use;
 		}
 
-		if (EI_pending > 0 && !CB_prefix)
+		if (cpu_EI_Pending > 0 && !cpu_CB_Prefix)
 		{
-			EI_pending--;
-			if (EI_pending == 0)
+			cpu_EI_Pending--;
+			if (cpu_EI_Pending == 0)
 			{
-				interrupts_enabled = true;
+				cpu_Interrupts_Enabled = true;
 			}
 		}
 
 		// if the I flag is asserted at the time of halt, don't halt
-		if (Halt_bug_5)
+		if (cpu_Halt_bug_5)
 		{
-			Halt_bug_5 = Halt_bug_3 = halted = skip_once = false;
+			cpu_Halt_bug_5 = cpu_Halt_bug_3 = cpu_Halted = cpu_Skip_Once = false;
 
-			if (interrupts_enabled)
+			if (cpu_Interrupts_Enabled)
 			{
-				interrupts_enabled = false;
+				cpu_Interrupts_Enabled = false;
 
-				TraceCallback ? .Invoke(new(disassembly: "====IRQ====", registerInfo : string.Empty));
+				if (TraceCallback) TraceCallback(3); // IRQ
 
-				RegPC--;
+				cpu_RegPCset(cpu_RegPCget() - 1);
 
 				// TODO: If interrupt priotrity is checked differently in GBC, then this is correct
 				// a new interrupt vector would be needed
-				instr_pntr = 256 * 60 * 2 + 60 * 6; // point to Interrupt
+				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
 			}
 			else
 			{
-				TraceCallback ? .Invoke(new(disassembly: "====un-halted====", registerInfo : string.Empty));
+				if (TraceCallback) TraceCallback(2); // Un-Halt
 
-				OnExecFetch ? .Invoke(RegPC);
-				if (TraceCallback != null && !CB_prefix) TraceCallback(State(useRGBDSSyntax));
-				CDLCallback ? .Invoke(RegPC, eCDLogMemFlags.FetchFirst);
+				if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
 
-				FetchInstruction(ReadMemory(RegPC));
+				cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget())); // note no increment
 			}
 		}
-		else if (temp && interrupts_enabled)
+		else if (temp && cpu_Interrupts_Enabled)
 		{
-			interrupts_enabled = false;
+			cpu_Interrupts_Enabled = false;
 
-			TraceCallback ? .Invoke(new(disassembly: "====IRQ====", registerInfo : string.Empty));
-			halted = false;
+			if (TraceCallback) TraceCallback(3); // IRQ
+			cpu_Halted = false;
 
-			if (Halt_bug_4)
+			if (cpu_Halt_bug_4)
 			{
 				// TODO: If interrupt priotrity is checked differently in GBC, then this is incorrect
 				// a new interrupt vector would be needed
-				DEC16_Func(PCl, PCh);
-				instr_pntr = 256 * 60 * 2 + 60 * 6; // point to Interrupt
-				Halt_bug_4 = false;
-				skip_once = false;
-				Halt_bug_3 = false;
+				cpu_RegPCset(cpu_RegPCget() - 1);
+				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
+
+				cpu_Halt_bug_4 = false;
+				cpu_Skip_Once = false;
+				cpu_Halt_bug_3 = false;
 			}
-			else if (is_GBC)
+			else if (Is_GBC)
 			{
 				// call the interrupt processor after 4 extra cycles
-				if (!Halt_bug_3)
+				if (!cpu_Halt_bug_3)
 				{
-					instr_pntr = 256 * 60 * 2 + 60 * 7; // point to Interrupt for GBC
+					cpu_Instr_Type = OpT::INTRPT_GBC; // point to Interrupt for GBC
 				}
 				else
 				{
 					// TODO: If interrupt priotrity is checked differently in GBC, then this is incorrect
 					// a new interrupt vector would be needed
-					instr_pntr = 256 * 60 * 2 + 60 * 6; // point to Interrupt
-					Halt_bug_3 = false;
+					cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
+					cpu_Halt_bug_3 = false;
 					//Console.WriteLine("Hit INT");
 				}
 			}
 			else
 			{
 				// call interrupt processor
-				instr_pntr = 256 * 60 * 2 + 60 * 6; // point to Interrupt
-				Halt_bug_3 = false;
+				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
+				cpu_Halt_bug_3 = false;
 			}
 		}
 		else if (temp)
 		{
 			// even if interrupt servicing is disabled, any interrupt flag raised still resumes execution
-			TraceCallback ? .Invoke(new(disassembly: "====un-halted====", registerInfo : string.Empty));
-			halted = false;
+			if (TraceCallback) TraceCallback(2); // Un-Halt
+			cpu_Halted = false;
 
-			if (is_GBC)
+			if (Is_GBC)
 			{
 				// extra 4 cycles for GBC
-				if (Halt_bug_3)
+				if (cpu_Halt_bug_3)
 				{
-					OnExecFetch ? .Invoke(RegPC);
-					if (TraceCallback != null && !CB_prefix) TraceCallback(State(useRGBDSSyntax));
-					CDLCallback ? .Invoke(RegPC, eCDLogMemFlags.FetchFirst);
+					if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
 
-					RegPC++;
-					FetchInstruction(ReadMemory(RegPC));
-					Halt_bug_3 = false;
+					cpu_RegPCset(cpu_RegPCget() + 1);
+					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+
+					cpu_Halt_bug_3 = false;
 					//Console.WriteLine("Hit un");
 				}
 				else
 				{
-					instr_pntr = 256 * 60 * 2 + 60; // exit halt loop
+					cpu_Instr_Type = OpT::EXIT; // exit halt loop
 				}
 			}
 			else
 			{
-				OnExecFetch ? .Invoke(RegPC);
-				if (TraceCallback != null && !CB_prefix) TraceCallback(State(useRGBDSSyntax));
-				CDLCallback ? .Invoke(RegPC, eCDLogMemFlags.FetchFirst);
+				if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
 
-				if (Halt_bug_3)
+				if (cpu_Halt_bug_3)
 				{
 					//special variant of halt bug where RegPC also isn't incremented post fetch
-					RegPC++;
-					FetchInstruction(ReadMemory(RegPC));
-					Halt_bug_3 = false;
+					cpu_RegPCset(cpu_RegPCget() + 1);
+					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+
+					cpu_Halt_bug_3 = false;
 				}
 				else
 				{
-					FetchInstruction(ReadMemory(RegPC++));
+					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+					cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
 				}
 			}
 		}
 		else
 		{
-			if (skip_once)
+			if (cpu_Skip_Once)
 			{
-				instr_pntr = 256 * 60 * 2 + 60 * 2; // point to skipped loop
-				skip_once = false;
+				cpu_Instr_Type = OpT::SKIP; // point to skipped loop
+				cpu_Skip_Once = false;
 			}
 			else
 			{
-				if (is_GBC)
+				if (Is_GBC)
 				{
-					instr_pntr = 256 * 60 * 2 + 60 * 3; // point to GBC Halt loop
+					cpu_Instr_Type = OpT::GBC_HALT; // point to GBC Halt loop
 				}
 				else
 				{
-					instr_pntr = 256 * 60 * 2 + 60 * 4; // point to spec Halt loop
+					cpu_Instr_Type = OpT::SPC_HALT; // point to spec Halt loop
 				}
 			}
 		}
-		I_use = false;
+
+		cpu_Instr_Cycle = -1;
+		cpu_I_Use = false;
 	}
 
-	inline void cpu_STOP_Ex()
+	inline void GB_System::cpu_STOP_Ex()
 	{
 		cpu_Stopped = true;
 		if (!cpu_Stop_Check)
 		{
 			// Z contains the second stop byte, not sure if it's useful at all
-			stop_time = SpeedFunc(0);
-			stop_check = true;
+			cpu_Stop_Time = SpeedFunc(0);
+			cpu_Stop_Check = true;
 		}
 
-		buttons_pressed = GetButtons(0);
+		uint8_t buttons_pressed = GetButtons(0);
 
-		if (stop_time > 0)
+		if (cpu_Stop_Time > 0)
 		{
 			// Timer interrupts can prematurely terminate a speedchange, not sure about other sources
 			// NOTE: some testing around the edge case of where the speed actually changes is needed						
-			if (I_use && interrupts_enabled)
+			if (cpu_I_Use && cpu_Interrupts_Enabled)
 			{
-				interrupts_enabled = false;
-				I_use = false;
+				cpu_Interrupts_Enabled = false;
+				cpu_I_Use = false;
 
-				TraceCallback ? .Invoke(new(disassembly: "====un-stop====", registerInfo : string.Empty));
+				if (TraceCallback) TraceCallback(1); // Un-Stop
 
-				stopped = false;
-				stop_check = false;
-				stop_time = 0;
+				cpu_Stopped = false;
+				cpu_Stop_Check = false;
+				cpu_Stop_Time = 0;
 
-				TraceCallback ? .Invoke(new(disassembly: "====IRQ====", registerInfo : string.Empty));
+				if (TraceCallback) TraceCallback(3); // IRQ
 
 				// call interrupt processor 
 				// lowest bit set is highest priority
-				instr_pntr = 256 * 60 * 2 + 60 * 6; // point to Interrupt
-				break;
+				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
+				cpu_Instr_Cycle = -1;
+				return;
 			}
 
-			if (stop_time == 32770)
+			if (cpu_Stop_Time == 32770)
 			{
 				// point to speed cange loop
-				instr_pntr = 256 * 60 * 2 + 60 * 9;
-				stop_time--;
-				break;
+				cpu_Instr_Type = OpT::SPD_CHG;
+				cpu_Instr_Cycle = -1;
+				cpu_Stop_Time--;
+				return;
 			}
 
-			stop_time--;
+			cpu_Stop_Time--;
 
-			if (stop_time == 0)
+			if (cpu_Stop_Time == 0)
 			{
-				TraceCallback ? .Invoke(new(disassembly: "====un-stop====", registerInfo : string.Empty));
+				if (TraceCallback) TraceCallback(1); // Un-Stop
 
-				stopped = false;
+				cpu_Stopped = false;
 
 				// it takes the CPU 4 cycles longer to restart then the rest of the system.
-				instr_pntr = 256 * 60 * 2 + 60;
+				cpu_Instr_Type = OpT::EXIT;
+				cpu_Instr_Cycle = -1;
 
-				stop_check = false;
+				cpu_Stop_Check = false;
 
-				break;
+				return;
 			}
 
 			// If a button is pressed during speed change, the processor will jam
 			if ((buttons_pressed & 0xF) != 0xF)
 			{
-				stop_time++;
-				break;
+				cpu_Stop_Time++;
+				cpu_Instr_Cycle -= 1; // TODO: check
+				return;
 			}
 		}
 
@@ -1350,17 +1449,21 @@ namespace GBHawk
 		if ((buttons_pressed & 0xF) != 0xF)
 		{
 			// TODO: On a gameboy, you can only un-STOP once, needs further testing
-			TraceCallback ? .Invoke(new(disassembly: "====un-stop====", registerInfo : string.Empty));
+			if (TraceCallback) TraceCallback(1); // Un-Stop
 
-			stopped = false;
-			if (TraceCallback != null && !CB_prefix) TraceCallback(State());
-			FetchInstruction(ReadMemory(RegPC++));
+			cpu_Stopped = false;
+			if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
+			
+			cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+			cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
+			cpu_Instr_Cycle = -1;
 
-			stop_check = false;
+			cpu_Stop_Check = false;
 		}
 		else
 		{
-			instr_pntr = 256 * 60 * 2 + 60 * 5; // point to stop loop
+			cpu_Instr_Type = OpT::STOP_LOOP; // point to stop loop
+			cpu_Instr_Cycle = -1;
 		}
 	}
 }

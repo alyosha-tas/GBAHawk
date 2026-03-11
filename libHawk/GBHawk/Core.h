@@ -488,11 +488,11 @@ namespace GBHawk
 			}
 			else if (t == 1)
 			{
-				std::memcpy(d, GB.SWI_event, l);
+				std::memcpy(d, GB.UNS_event, l);
 			}
 			else if (t == 2)
 			{
-				std::memcpy(d, GB.UDF_event, l);
+				std::memcpy(d, GB.UNH_event, l);
 			}
 			else if (t == 3)
 			{
