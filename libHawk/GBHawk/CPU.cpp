@@ -13,9 +13,23 @@ namespace GBHawk
 		switch (cpu_Instr_Type)
 		{
 			case OpT::INT_OP:
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: cpu_Exec_INT_Func();  break;
+					case 1: break;
+					case 2: cpu_Halt_Check(); break;
+					case 3: cpu_Op_Func(); break;
+				}
 				break;
 
 			case OpT::REG_OP:
+				switch (cpu_Instr_Cycle)
+				{
+					case 0: cpu_Exec_REG_Func();  break;
+					case 1: break;
+					case 2: cpu_Halt_Check(); break;
+					case 3: cpu_Op_Func(); break;
+				}
 				break;
 
 			case OpT::REG_OP_IND:
@@ -893,7 +907,7 @@ namespace GBHawk
 			case OpT::BIT_OP:
 				switch (cpu_Instr_Cycle)
 				{
-				case 0: cpu_Exec_Bit_Func();  break;
+					case 0: cpu_Exec_Bit_Func();  break;
 					case 1: break;
 					case 2: cpu_Halt_Check(); break;
 					case 3: cpu_Op_Func(); break;
@@ -1003,6 +1017,14 @@ namespace GBHawk
 				break;
 
 			case OpT::HALT:
+				cur_instr = new ushort[]
+				{ HALT_FUNC,
+				IDLE,
+				IDLE,
+				OP_G,
+				HALT_CHK,
+				HALT_CHK_2,
+				HALT, 0 };
 				break;
 
 			case OpT::GBC_HALT:
@@ -1103,16 +1125,15 @@ namespace GBHawk
 	{
 		halted = true;
 
-
 		bool temp = false;
 
 		if (instr_table[instr_pntr++] == 1)
 		{
-			temp = FlagI;
+			temp = cpu_FlagI;
 		}
 		else
 		{
-			temp = I_use;
+			temp = cpu_I_Use;
 		}
 
 		if (EI_pending > 0 && !CB_prefix)
@@ -1260,8 +1281,8 @@ namespace GBHawk
 
 	inline void cpu_STOP_Ex()
 	{
-		stopped = true;
-		if (!stop_check)
+		cpu_Stopped = true;
+		if (!cpu_Stop_Check)
 		{
 			// Z contains the second stop byte, not sure if it's useful at all
 			stop_time = SpeedFunc(0);

@@ -1046,12 +1046,12 @@ namespace GBHawk
 
 		bool cpu_Interrupts_Enabled;
 
-		bool I_use; // in halt mode, the I flag is checked earlier then when deicision to IRQ is taken
-		bool skip_once;
-		bool Halt_bug_2;
-		bool Halt_bug_3;
-		bool Halt_bug_4;
-		bool Halt_bug_5;
+		bool cpu_I_Use; // in halt mode, the I flag is checked earlier then when deicision to IRQ is taken
+		bool cpu_Skip_Once;
+		bool cpu_Halt_bug_2;
+		bool cpu_Halt_bug_3;
+		bool cpu_Halt_bug_4;
+		bool cpu_Halt_bug_5;
 		bool cpu_Stop_Check;
 
 		uint8_t cpu_Int_Clear;
@@ -1064,8 +1064,7 @@ namespace GBHawk
 
 		uint64_t cpu_Instruction_Start;
 
-		uint64_t stop_time;
-
+		uint64_t cpu_Stop_Time;
 
 		uint8_t cpu_Regs[14] = { };
 
@@ -1717,10 +1716,280 @@ namespace GBHawk
 			OpT::SPD_CHG
 		};
 
-
 		#pragma endregion
 
 		#pragma region ARM7_TDMI functions
+		void cpu_Exec_INT_Func()
+		{
+			switch (cpu_Opcode)
+			{
+				case 0x00: break;
+				// LD BC, nn
+				// LD (BC), A
+				// INC_Func(cpu_B); break;C
+				case 0x04: cpu_INC8_Func(cpu_B); break;
+				case 0x05: cpu_DEC8_Func(cpu_B); break;
+				// LD B, n
+				case 0x07: cpu_RLC_Func(cpu_Aim); break;
+				// LD (imm), SP
+				// ADD HL, BC
+				// LD A, (BC)
+				// DEC_Func(cpu_B); break;C
+				case 0x0C: cpu_INC8_Func(cpu_C); break;
+				case 0x0D: cpu_DEC8_Func(cpu_C); break;
+				// LD C, n
+				case 0x0F: cpu_RRC_Func(cpu_Aim); break;
+				// STOP
+				// LD DE, nn
+				// LD (DE), A
+				// INC_Func(cpu_D); break;E
+				case 0x14: cpu_INC8_Func(cpu_D); break;
+				case 0x15: cpu_DEC8_Func(cpu_D); break;
+				// LD D, n
+				case 0x17: cpu_RL_Func(cpu_Aim); break;
+				// JR, r8
+				// ADD HL, DE
+				// LD A, (DE)
+				// DEC_Func(cpu_D); break;E
+				case 0x1C: cpu_INC8_Func(cpu_E); break;
+				case 0x1D: cpu_DEC8_Func(cpu_E); break;
+				// LD E, n
+				case 0x1F: cpu_RR_Func(cpu_Aim); break;
+				// JR NZ, r8
+				// LD HL, nn
+				// LD (HL+), A
+				// INC_Func(cpu_H); break;L
+				case 0x24: cpu_INC8_Func(cpu_H); break;
+				case 0x25: cpu_DEC8_Func(cpu_H); break;
+				// LD H, n
+				case 0x27: cpu_DA_Func(cpu_A); break;
+				// JR Z, r8
+				// ADD HL, HL
+				// LD A, (HL+)
+				// DEC_Func(cpu_H); break;L
+				case 0x2C: cpu_INC8_Func(cpu_L); break;
+				case 0x2D: cpu_DEC8_Func(cpu_L); break;
+				// LD L, n
+				case 0x2F: cpu_CPL_Func(cpu_A); break;
+				// JR NC, r8
+				// LD SP, nn
+				// LD (HL-), A
+				// INC_Func(cpu_SP
+				// INC_Func(cpu_(HL)
+				// DEC_Func(cpu_(HL)
+				// LD (HL), n
+				case 0x37: cpu_SCF_Func(cpu_A); break;
+				// JR C, r8
+				// ADD HL, SP
+				// LD A, (HL-)
+				// DEC_Func(cpu_SP
+				case 0x3C: cpu_INC8_Func(cpu_A); break;
+				case 0x3D: cpu_DEC8_Func(cpu_A); break;
+				// LD A, n
+				case 0x3F: cpu_CCF_Func(cpu_A); break;
+
+				// Prefix opcodes
+				case 0x100: cpu_RLC_Func(cpu_B); break;
+				case 0x101: cpu_RLC_Func(cpu_C); break;
+				case 0x102: cpu_RLC_Func(cpu_D); break;
+				case 0x103: cpu_RLC_Func(cpu_E); break;
+				case 0x104: cpu_RLC_Func(cpu_H); break;
+				case 0x105: cpu_RLC_Func(cpu_L); break;
+				// RLC_Func(cpu_(HL)
+				case 0x107: cpu_RLC_Func(cpu_A); break;
+				case 0x108: cpu_RRC_Func(cpu_B); break;
+				case 0x109: cpu_RRC_Func(cpu_C); break;
+				case 0x10A: cpu_RRC_Func(cpu_D); break;
+				case 0x10B: cpu_RRC_Func(cpu_E); break;
+				case 0x10C: cpu_RRC_Func(cpu_H); break;
+				case 0x10D: cpu_RRC_Func(cpu_L); break;
+				// RRC_Func(cpu_(HL)
+				case 0x10F: cpu_RRC_Func(cpu_A); break;
+				case 0x110: cpu_RL_Func(cpu_B); break;
+				case 0x111: cpu_RL_Func(cpu_C); break;
+				case 0x112: cpu_RL_Func(cpu_D); break;
+				case 0x113: cpu_RL_Func(cpu_E); break;
+				case 0x114: cpu_RL_Func(cpu_H); break;
+				case 0x115: cpu_RL_Func(cpu_L); break;
+				// RL_Func(cpu_(HL)
+				case 0x117: cpu_RL_Func(cpu_A); break;
+				case 0x118: cpu_RR_Func(cpu_B); break;
+				case 0x119: cpu_RR_Func(cpu_C); break;
+				case 0x11A: cpu_RR_Func(cpu_D); break;
+				case 0x11B: cpu_RR_Func(cpu_E); break;
+				case 0x11C: cpu_RR_Func(cpu_H); break;
+				case 0x11D: cpu_RR_Func(cpu_L); break;
+				// RR_Func(cpu_(HL)
+				case 0x11F: cpu_RR_Func(cpu_A); break;
+				case 0x120: cpu_SLA_Func(cpu_B); break;
+				case 0x121: cpu_SLA_Func(cpu_C); break;
+				case 0x122: cpu_SLA_Func(cpu_D); break;
+				case 0x123: cpu_SLA_Func(cpu_E); break;
+				case 0x124: cpu_SLA_Func(cpu_H); break;
+				case 0x125: cpu_SLA_Func(cpu_L); break;
+				// SLA_Func(cpu_(HL)
+				case 0x127: cpu_SLA_Func(cpu_A); break;
+				case 0x128: cpu_SRA_Func(cpu_B); break;
+				case 0x129: cpu_SRA_Func(cpu_C); break;
+				case 0x12A: cpu_SRA_Func(cpu_D); break;
+				case 0x12B: cpu_SRA_Func(cpu_E); break;
+				case 0x12C: cpu_SRA_Func(cpu_H); break;
+				case 0x12D: cpu_SRA_Func(cpu_L); break;
+				// SRA_Func(cpu_(HL)
+				case 0x12F: cpu_SRA_Func(cpu_A); break;
+				case 0x130: cpu_SWAP_Func(cpu_B); break;
+				case 0x131: cpu_SWAP_Func(cpu_C); break;
+				case 0x132: cpu_SWAP_Func(cpu_D); break;
+				case 0x133: cpu_SWAP_Func(cpu_E); break;
+				case 0x134: cpu_SWAP_Func(cpu_H); break;
+				case 0x135: cpu_SWAP_Func(cpu_L); break;
+				// SWAP_Func(cpu_(HL)
+				case 0x137: cpu_SWAP_Func(cpu_A); break;
+				case 0x138: cpu_SRL_Func(cpu_B); break;
+				case 0x139: cpu_SRL_Func(cpu_C); break;
+				case 0x13A: cpu_SRL_Func(cpu_D); break;
+				case 0x13B: cpu_SRL_Func(cpu_E); break;
+				case 0x13C: cpu_SRL_Func(cpu_H); break;
+				case 0x13D: cpu_SRL_Func(cpu_L); break;
+				// SRL_Func(cpu_(HL)
+				case 0x13F: cpu_SRL_Func(cpu_A); break;
+			}
+		}
+
+		void cpu_Exec_REG_Func()
+		{
+			switch (cpu_Opcode)
+			{
+				case 0x40: cpu_TR_Func(cpu_B, cpu_B); break;
+				case 0x41: cpu_TR_Func(cpu_B, cpu_C); break;
+				case 0x42: cpu_TR_Func(cpu_B, cpu_D); break;
+				case 0x43: cpu_TR_Func(cpu_B, cpu_E); break;
+				case 0x44: cpu_TR_Func(cpu_B, cpu_H); break;
+				case 0x45: cpu_TR_Func(cpu_B, cpu_L); break;
+				// LD_Func(cpu_B, (HL)
+				case 0x47: cpu_TR_Func(cpu_B, cpu_A); break;
+				case 0x48: cpu_TR_Func(cpu_C, cpu_B); break;
+				case 0x49: cpu_TR_Func(cpu_C, cpu_C); break;
+				case 0x4A: cpu_TR_Func(cpu_C, cpu_D); break;
+				case 0x4B: cpu_TR_Func(cpu_C, cpu_E); break;
+				case 0x4C: cpu_TR_Func(cpu_C, cpu_H); break;
+				case 0x4D: cpu_TR_Func(cpu_C, cpu_L); break;
+				// LD_Func(cpu_C, (HL)
+				case 0x4F: cpu_TR_Func(cpu_C, cpu_A); break;
+				case 0x50: cpu_TR_Func(cpu_D, cpu_B); break;
+				case 0x51: cpu_TR_Func(cpu_D, cpu_C); break;
+				case 0x52: cpu_TR_Func(cpu_D, cpu_D); break;
+				case 0x53: cpu_TR_Func(cpu_D, cpu_E); break;
+				case 0x54: cpu_TR_Func(cpu_D, cpu_H); break;
+				case 0x55: cpu_TR_Func(cpu_D, cpu_L); break;
+				// LD_Func(cpu_D, (HL)
+				case 0x57: cpu_TR_Func(cpu_D, cpu_A); break;
+				case 0x58: cpu_TR_Func(cpu_E, cpu_B); break;
+				case 0x59: cpu_TR_Func(cpu_E, cpu_C); break;
+				case 0x5A: cpu_TR_Func(cpu_E, cpu_D); break;
+				case 0x5B: cpu_TR_Func(cpu_E, cpu_E); break;
+				case 0x5C: cpu_TR_Func(cpu_E, cpu_H); break;
+				case 0x5D: cpu_TR_Func(cpu_E, cpu_L); break;
+				// LD_Func(cpu_E, (HL)
+				case 0x5F: cpu_TR_Func(cpu_E, cpu_A); break;
+				case 0x60: cpu_TR_Func(cpu_H, cpu_B); break;
+				case 0x61: cpu_TR_Func(cpu_H, cpu_C); break;
+				case 0x62: cpu_TR_Func(cpu_H, cpu_D); break;
+				case 0x63: cpu_TR_Func(cpu_H, cpu_E); break;
+				case 0x64: cpu_TR_Func(cpu_H, cpu_H); break;
+				case 0x65: cpu_TR_Func(cpu_H, cpu_L); break;
+				// LD_Func(cpu_H, (HL)
+				case 0x67: cpu_TR_Func(cpu_H, cpu_A); break;
+				case 0x68: cpu_TR_Func(cpu_L, cpu_B); break;
+				case 0x69: cpu_TR_Func(cpu_L, cpu_C); break;
+				case 0x6A: cpu_TR_Func(cpu_L, cpu_D); break;
+				case 0x6B: cpu_TR_Func(cpu_L, cpu_E); break;
+				case 0x6C: cpu_TR_Func(cpu_L, cpu_H); break;
+				case 0x6D: cpu_TR_Func(cpu_L, cpu_L); break;
+				// LD_Func(cpu_L, (HL)
+				case 0x6F: cpu_TR_Func(cpu_L, cpu_A); break;
+				// LD (HL), cpu_B); break;
+				// LD (HL), cpu_C); break;
+				// LD (HL), cpu_D); break;
+				// LD (HL), cpu_E); break;
+				// LD (HL), cpu_H); break;
+				// LD (HL), cpu_L); break;
+				// HALT
+				// LD (HL), cpu_A); break;
+				case 0x78: cpu_TR_Func(cpu_A, cpu_B); break;
+				case 0x79: cpu_TR_Func(cpu_A, cpu_C); break;
+				case 0x7A: cpu_TR_Func(cpu_A, cpu_D); break;
+				case 0x7B: cpu_TR_Func(cpu_A, cpu_E); break;
+				case 0x7C: cpu_TR_Func(cpu_A, cpu_H); break;
+				case 0x7D: cpu_TR_Func(cpu_A, cpu_L); break;
+				// LD_Func(cpu_A, (HL)
+				case 0x7F: cpu_TR_Func(cpu_A, cpu_A); break;
+				case 0x80: cpu_ADD8_Func(cpu_A, cpu_B); break;
+				case 0x81: cpu_ADD8_Func(cpu_A, cpu_C); break;
+				case 0x82: cpu_ADD8_Func(cpu_A, cpu_D); break;
+				case 0x83: cpu_ADD8_Func(cpu_A, cpu_E); break;
+				case 0x84: cpu_ADD8_Func(cpu_A, cpu_H); break;
+				case 0x85: cpu_ADD8_Func(cpu_A, cpu_L); break;
+				// ADD_Func(cpu_A, (HL)
+				case 0x87: cpu_ADD8_Func(cpu_A, cpu_A); break;
+				case 0x88: cpu_ADC8_Func(cpu_A, cpu_B); break;
+				case 0x89: cpu_ADC8_Func(cpu_A, cpu_C); break;
+				case 0x8A: cpu_ADC8_Func(cpu_A, cpu_D); break;
+				case 0x8B: cpu_ADC8_Func(cpu_A, cpu_E); break;
+				case 0x8C: cpu_ADC8_Func(cpu_A, cpu_H); break;
+				case 0x8D: cpu_ADC8_Func(cpu_A, cpu_L); break;
+				// ADC_Func(cpu_A, (HL)
+				case 0x8F: cpu_ADC8_Func(cpu_A, cpu_A); break;
+				case 0x90: cpu_SUB8_Func(cpu_A, cpu_B); break;
+				case 0x91: cpu_SUB8_Func(cpu_A, cpu_C); break;
+				case 0x92: cpu_SUB8_Func(cpu_A, cpu_D); break;
+				case 0x93: cpu_SUB8_Func(cpu_A, cpu_E); break;
+				case 0x94: cpu_SUB8_Func(cpu_A, cpu_H); break;
+				case 0x95: cpu_SUB8_Func(cpu_A, cpu_L); break;
+				// SUB_Func(cpu_A, (HL)
+				case 0x97: cpu_SUB8_Func(cpu_A, cpu_A); break;
+				case 0x98: cpu_SBC8_Func(cpu_A, cpu_B); break;
+				case 0x99: cpu_SBC8_Func(cpu_A, cpu_C); break;
+				case 0x9A: cpu_SBC8_Func(cpu_A, cpu_D); break;
+				case 0x9B: cpu_SBC8_Func(cpu_A, cpu_E); break;
+				case 0x9C: cpu_SBC8_Func(cpu_A, cpu_H); break;
+				case 0x9D: cpu_SBC8_Func(cpu_A, cpu_L); break;
+				// SBC_Func(cpu_A, (HL)
+				case 0x9F: cpu_SBC8_Func(cpu_A, cpu_A); break;
+				case 0xA0: cpu_AND8_Func(cpu_A, cpu_B); break;
+				case 0xA1: cpu_AND8_Func(cpu_A, cpu_C); break;
+				case 0xA2: cpu_AND8_Func(cpu_A, cpu_D); break;
+				case 0xA3: cpu_AND8_Func(cpu_A, cpu_E); break;
+				case 0xA4: cpu_AND8_Func(cpu_A, cpu_H); break;
+				case 0xA5: cpu_AND8_Func(cpu_A, cpu_L); break;
+				// AND_Func(cpu_A, (HL)
+				case 0xA7: cpu_AND8_Func(cpu_A, cpu_A); break;
+				case 0xA8: cpu_XOR8_Func(cpu_A, cpu_B); break;
+				case 0xA9: cpu_XOR8_Func(cpu_A, cpu_C); break;
+				case 0xAA: cpu_XOR8_Func(cpu_A, cpu_D); break;
+				case 0xAB: cpu_XOR8_Func(cpu_A, cpu_E); break;
+				case 0xAC: cpu_XOR8_Func(cpu_A, cpu_H); break;
+				case 0xAD: cpu_XOR8_Func(cpu_A, cpu_L); break;
+				// XOR_Func(cpu_A, (HL)
+				case 0xAF: cpu_XOR8_Func(cpu_A, cpu_A); break;
+				case 0xB0: cpu_OR8_Func(cpu_A, cpu_B); break;
+				case 0xB1: cpu_OR8_Func(cpu_A, cpu_C); break;
+				case 0xB2: cpu_OR8_Func(cpu_A, cpu_D); break;
+				case 0xB3: cpu_OR8_Func(cpu_A, cpu_E); break;
+				case 0xB4: cpu_OR8_Func(cpu_A, cpu_H); break;
+				case 0xB5: cpu_OR8_Func(cpu_A, cpu_L); break;
+				// OR_Func(cpu_A, (HL)
+				case 0xB7: cpu_OR8_Func(cpu_A, cpu_A); break;
+				case 0xB8: cpu_CP8_Func(cpu_A, cpu_B); break;
+				case 0xB9: cpu_CP8_Func(cpu_A, cpu_C); break;
+				case 0xBA: cpu_CP8_Func(cpu_A, cpu_D); break;
+				case 0xBB: cpu_CP8_Func(cpu_A, cpu_E); break;
+				case 0xBC: cpu_CP8_Func(cpu_A, cpu_H); break;
+				case 0xBD: cpu_CP8_Func(cpu_A, cpu_L); break;
+				// CP_Func(cpu_A, (HL)
+				case 0xBF: cpu_CP8_Func(cpu_A, cpu_A); break;
+			}
+		}
 
 		void cpu_Exec_Bit_Func()
 		{
@@ -1921,7 +2190,6 @@ namespace GBHawk
 			}
 		}
 
-
 		void cpu_Reset()
 		{
 			cpu_was_FlagI = cpu_FlagI = false;
@@ -1929,12 +2197,12 @@ namespace GBHawk
 			cpu_CB_Prefix = false;
 			cpu_Interrupts_Enabled = false;
 
-			I_use = false;
-			skip_once = false;
-			Halt_bug_2 = false;
-			Halt_bug_3 = false;
-			Halt_bug_4 = false;
-			Halt_bug_5 = false;
+			cpu_I_Use = false;
+			cpu_Skip_Once = false;
+			cpu_Halt_bug_2 = false;
+			cpu_Halt_bug_3 = false;
+			cpu_Halt_bug_4 = false;
+			cpu_Halt_bug_5 = false;
 
 			cpu_Opcode = 0;
 			cpu_Instr_Cycle = 0;
@@ -2599,7 +2867,7 @@ namespace GBHawk
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" Cy:");
-			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", CycleCount));
+			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", Cycle_Count));
 
 			reg_state.append(" LY:");
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 4, "%3u", ppu_LY));
@@ -2624,28 +2892,14 @@ namespace GBHawk
 			string byte_code = "";
 			
 			val_char_1 = replacer;
-			
-			if (cpu_Thumb_Mode)
-			{
-				sprintf_s(val_char_1, 9, "%08X", (cpu_Regs[15] - 4));
-				byte_code.append(val_char_1, 8);
-				byte_code.append(":      ");
-				sprintf_s(val_char_1, 5, "%04X", cpu_Instr_TMB_2);
-				byte_code.append(val_char_1, 4);
-				byte_code.append("  ");
-				byte_code.append(cpu_Disassemble_TMB());
-			}
-			else
-			{
-				sprintf_s(val_char_1, 9, "%08X", (cpu_Regs[15] - 8));
-				byte_code.append(val_char_1, 8);
-				byte_code.append(":  ");
-				sprintf_s(val_char_1, 9, "%08X", cpu_Instr_ARM_2);
-				byte_code.append(val_char_1, 8);
-				byte_code.append("  ");
-				if (!cpu_ARM_Condition_Check()) { byte_code.append("(fail)  "); }
-				byte_code.append(cpu_Disassemble_ARM());
-			}
+
+			sprintf_s(val_char_1, 9, "%08X", (cpu_Regs[15] - 4));
+			byte_code.append(val_char_1, 8);
+			byte_code.append(":      ");
+			sprintf_s(val_char_1, 5, "%04X", cpu_Instr_TMB_2);
+			byte_code.append(val_char_1, 4);
+			byte_code.append("  ");
+			byte_code.append(cpu_Disassemble());
 
 			while (byte_code.length() < 78) 
 			{
@@ -2655,538 +2909,7 @@ namespace GBHawk
 			return byte_code;
 		}
 
-		string cpu_Disassemble_ARM()
-		{
-			string ret = "";
-
-			val_char_2 = replacer;
-
-			switch ((cpu_Instr_ARM_2 >> 25) & 7)
-			{
-			case 0:
-				if ((cpu_Instr_ARM_2 & 0x90) == 0x90)
-				{
-					// miscellaneous
-					if (((cpu_Instr_ARM_2 & 0xF0) == 0x90))
-					{
-						switch ((cpu_Instr_ARM_2 >> 22) & 0x7)
-						{
-							case 0x0:
-								// Multiply
-								if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-								{
-									sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-								}
-								else
-								{
-									sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								}
-								return std::string(val_char_2);
-
-							case 0x1:
-								// Unpredictable but still Multiply
-								if ((cpu_Instr_ARM_2 & 0x00200000) == 0x00200000)
-								{
-									sprintf_s(val_char_2, 40, "MLA R%02d, R%02d * R%02d + R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-								}
-								else
-								{
-									sprintf_s(val_char_2, 40, "MUL R%02d, R%02d * R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								}
-								return std::string(val_char_2);
-
-							case 0x2:
-								// Multiply Long - Unsigned
-								sprintf_s(val_char_2, 40, "MUL-LU R%02dH  R%02dL, R%02d * R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								return std::string(val_char_2);
-
-							case 0x3:
-								// Multiply Long - Signed
-								sprintf_s(val_char_2, 40, "MUL-LS R%02dH  R%02dL, R%02d * R%02d",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 8) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								return std::string(val_char_2);
-
-							case 0x4:
-							case 0x5:
-							case 0x6:
-							case 0x7:
-								// Swap
-								if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
-								{
-									sprintf_s(val_char_2, 40, "SWAPB R%02d, (R%02d), R%02d",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								}
-								else
-								{
-									sprintf_s(val_char_2, 40, "SWAP R%02d, (R%02d), R%02d",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF));
-								}
-
-								return std::string(val_char_2);
-						}
-					}
-					else
-					{
-						// halfword or byte transfers
-						if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-						{
-							ret.append("LD");
-						}
-						else
-						{
-							ret.append("ST");
-						}
-
-						switch ((cpu_Instr_ARM_2 >> 5) & 0x3)
-						{
-							// 0 case is not a load store instruction
-							case 0x1:
-								// Unsigned halfword
-								ret.append("H ");
-								break;
-
-							case 0x2:
-								// Signed Byte
-								ret.append("SB ");
-								break;
-							case 0x3:
-								// Signed halfword
-								ret.append("SH ");
-								break;
-						}
-
-						if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-						{
-							sprintf_s(val_char_2, 40, "R%02d, (R%02d, ", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF));
-							ret.append(std::string(val_char_2));
-
-							if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
-							{
-								sprintf_s(val_char_2, 40, "%2X)", ((cpu_Instr_ARM_2 >> 4) & 0xF0) | (cpu_Instr_ARM_2 & 0xF));
-								ret.append(std::string(val_char_2));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "R%02d)", (cpu_Instr_ARM_2 & 0xF));
-								ret.append(std::string(val_char_2));
-							}
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "(R%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-							ret.append(std::string(val_char_2));
-
-							if ((cpu_Instr_ARM_2 & 0x00400000) == 0x00400000)
-							{
-								sprintf_s(val_char_2, 40, "%2X), ", ((cpu_Instr_ARM_2 >> 4) & 0xF0) | (cpu_Instr_ARM_2 & 0xF));
-								ret.append(std::string(val_char_2));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "R%02d), ", (cpu_Instr_ARM_2 & 0xF));
-								ret.append(std::string(val_char_2));
-							}
-
-							sprintf_s(val_char_2, 40, "R%02d", ((cpu_Instr_ARM_2 >> 12) & 0xF));
-							ret.append(std::string(val_char_2));
-						}
-
-						return ret;
-					}
-				}
-				else
-				{
-					// ALU ops
-					if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-					{
-						// update flags
-						switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-						{
-							case 0x0: ret.append("AND "); break;
-							case 0x1: ret.append("EOR "); break;
-							case 0x2: ret.append("SUB "); break;
-							case 0x3: ret.append("RSB "); break;
-							case 0x4: ret.append("ADD "); break;
-							case 0x5: ret.append("ADC "); break;
-							case 0x6: ret.append("SBC "); break;
-							case 0x7: ret.append("RSC "); break;
-							case 0x8: ret.append("TST "); break;
-							case 0x9: ret.append("TEQ "); break;
-							case 0xA: ret.append("CMP "); break;
-							case 0xB: ret.append("CMN "); break;
-							case 0xC: ret.append("ORR "); break;
-							case 0xD: ret.append("MOV "); break;
-							case 0xE: ret.append("BIC "); break;
-							case 0xF: ret.append("MVN "); break;
-						}
-
-						sprintf_s(val_char_2, 40, "R%02d, R%02d, ", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF));
-						ret.append(std::string(val_char_2));
-					}
-					else
-					{
-						// don't update flags
-						switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-						{
-							case 0x0: ret.append("AND "); break;
-							case 0x1: ret.append("EOR "); break;
-							case 0x2: ret.append("SUB "); break;
-							case 0x3: ret.append("RSB "); break;
-							case 0x4: ret.append("ADD "); break;
-							case 0x5: ret.append("ADC "); break;
-							case 0x6: ret.append("SBC "); break;
-							case 0x7: ret.append("RSC "); break;
-							case 0x8: sprintf_s(val_char_2, 40, "MRS R%02d, CPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
-							case 0x9:
-								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
-								{
-									sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
-									return std::string(val_char_2);
-								}
-								else
-								{
-									sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-									ret.append(std::string(val_char_2)); break;
-								}
-							case 0xA: sprintf_s(val_char_2, 40, "MRS R%02d, SPSR", ((cpu_Instr_ARM_2 >> 12) & 0xF)); return std::string(val_char_2);
-							case 0xB:
-								if ((cpu_Instr_ARM_2 & 0xFFF90) == 0xFFF10)
-								{
-									sprintf_s(val_char_2, 40, "Bx R%02d", (cpu_Instr_ARM_2 & 0xF));
-									return std::string(val_char_2);
-								}
-								else
-								{
-									sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, ", ((cpu_Instr_ARM_2 >> 16) & 0xF));
-									ret.append(std::string(val_char_2));
-								}
-								break;
-							case 0xC: ret.append("ORR "); break;
-							case 0xD: ret.append("MOV "); break;
-							case 0xE: ret.append("BIC "); break;
-							case 0xF: ret.append("MVN "); break;
-						}
-
-						if ((((cpu_Instr_ARM_2 >> 21) & 0xF) == 0x9) || (((cpu_Instr_ARM_2 >> 21) & 0xF) == 0xB))
-						{
-							// nothing to append
-						}
-						else
-						{
-							ret.append("(no flags) ");
-							sprintf_s(val_char_2, 40, "R%02d, R%02d, ", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF));
-							ret.append(std::string(val_char_2));
-						}
-					}
-
-					sprintf_s(val_char_2, 40, "(R%02d ", (cpu_Instr_ARM_2 & 0xF));
-					ret.append(std::string(val_char_2));
-
-					switch ((cpu_Instr_ARM_2 >> 5) & 3)
-					{
-						case 0:         // LSL
-							ret.append("<< ");
-							break;
-
-						case 1:         // LSR
-							ret.append(">> ");
-							break;
-
-						case 2:         // ASR
-							ret.append("ASR ");
-							break;
-
-						case 3:         // RRX
-							ret.append("RRX ");
-						break;
-					}
-
-					if ((cpu_Instr_ARM_2 & 0x10) == 0x0)
-					{
-						// immediate shift
-						sprintf_s(val_char_2, 40, "%2X)", ((cpu_Instr_ARM_2 >> 7) & 0x1F));
-						ret.append(std::string(val_char_2));
-					}
-					else
-					{
-						// register shift
-						sprintf_s(val_char_2, 40, "R%02d & FF)", ((cpu_Instr_ARM_2 >> 8) & 0xF));
-						ret.append(std::string(val_char_2));
-					}
-
-					return ret;
-				}
-				break;
-
-			case 1:
-				// ALU ops
-				if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-				{
-					// update flags
-					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-					{
-						case 0x0: ret.append("AND "); break;
-						case 0x1: ret.append("EOR "); break;
-						case 0x2: ret.append("SUB "); break;
-						case 0x3: ret.append("RSB "); break;
-						case 0x4: ret.append("ADD "); break;
-						case 0x5: ret.append("ADC "); break;
-						case 0x6: ret.append("SBC "); break;
-						case 0x7: ret.append("RSC "); break;
-						case 0x8: ret.append("TST "); break;
-						case 0x9: ret.append("TEQ "); break;
-						case 0xA: ret.append("CMP "); break;
-						case 0xB: ret.append("CMN "); break;
-						case 0xC: ret.append("ORR "); break;
-						case 0xD: ret.append("MOV "); break;
-						case 0xE: ret.append("BIC "); break;
-						case 0xF: ret.append("MVN "); break;
-					}
-					sprintf_s(val_char_2, 40, "R%02d, R%02d, (%2X >> %2X)",
-							((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-					ret.append(std::string(val_char_2));
-				}
-				else
-				{
-					// don't update flags
-					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-					{
-						case 0x0: ret.append("AND "); break;
-						case 0x1: ret.append("EOR "); break;
-						case 0x2: ret.append("SUB "); break;
-						case 0x3: ret.append("RSB "); break;
-						case 0x4: ret.append("ADD "); break;
-						case 0x5: ret.append("ADC "); break;
-						case 0x6: ret.append("SBC "); break;
-						case 0x7: ret.append("RSC "); break;
-						case 0x8:
-							sprintf_s(val_char_2, 40, "MSR GLCH, mask:%02d, (%2X >> %2X)",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-							return std::string(val_char_2);
-						case 0x9:
-							sprintf_s(val_char_2, 40, "MSR CPSR, mask:%02d, (%2X >> %2X)",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-							return std::string(val_char_2);
-						case 0xA:
-							sprintf_s(val_char_2, 40, "MSR GLCH, mask:%02d, (%2X >> %2X)",
-								((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-							return std::string(val_char_2);
-						case 0xB:
-							sprintf_s(val_char_2, 40, "MSR SPSR, mask:%02d, (%2X >> %2X)",
-									((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1E)); 
-							return std::string(val_char_2);
-						case 0xC: ret.append("ORR "); break;
-						case 0xD: ret.append("MOV "); break;
-						case 0xE: ret.append("BIC "); break;
-						case 0xF: ret.append("MVN "); break;
-					}
-					ret.append("(no flags) ");
-					sprintf_s(val_char_2, 40, "R%02d, R%02d, (%2X >> %2X)",
-							((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFF), ((cpu_Instr_ARM_2 >> 7) & 0x1E));
-					ret.append(std::string(val_char_2));
-				}
-				return ret;
-
-			case 2:
-				// load / store immediate offset
-				if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-				{
-					if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-					{
-						sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, %3X)", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFFF));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, %3X)", ((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFFF));
-					}
-				}
-				else
-				{
-					if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-					{
-						sprintf_s(val_char_2, 40, "STB (R%02d, %3X), R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFFF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "ST (R%02d, %3X), R%02d", ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xFFF), ((cpu_Instr_ARM_2 >> 12) & 0xF));
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 3:
-				if ((cpu_Instr_ARM_2 & 0x10) == 0)
-				{
-					// load / store register offset
-					if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-					{
-						if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
-							{
-								case 0:         // LSL
-									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d << %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 1:         // LSR
-									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d >> %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 2:         // ASR
-									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d ASR %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 3:         // RRX
-									sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d, R%02d RRX %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							}
-						}
-						else
-						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
-							{
-								case 0:         // LSL
-									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d << %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 1:         // LSR
-									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d >> %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 2:         // ASR
-									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d ASR %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-								case 3:         // RRX
-									sprintf_s(val_char_2, 40, "LD R%02d, (R%02d, R%02d RRX %2X)",
-										((cpu_Instr_ARM_2 >> 12) & 0xF), ((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F)); break;
-							}
-						}
-					}
-					else
-					{
-						if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
-							{
-								case 0:         // LSL
-									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d << %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 1:         // LSR
-									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d >> %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 2:         // ASR
-									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d ASR %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 3:         // RRX
-									sprintf_s(val_char_2, 40, "STB (R%02d, R%02d RRX %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							}
-						}
-						else
-						{
-							switch ((cpu_Instr_ARM_2 >> 5) & 3)
-							{
-								case 0:         // LSL
-									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d << %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 1:         // LSR
-									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d >> %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 2:         // ASR
-									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d ASR %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-								case 3:         // RRX
-									sprintf_s(val_char_2, 40, "ST (R%02d, R%02d RRX %2X), R%02d",
-										((cpu_Instr_ARM_2 >> 16) & 0xF), (cpu_Instr_ARM_2 & 0xF), ((cpu_Instr_ARM_2 >> 7) & 0x1F), ((cpu_Instr_ARM_2 >> 12) & 0xF)); break;
-							}
-						}
-					}
-
-					return std::string(val_char_2);
-				}
-				else
-				{
-					// Undefined Opcode Exception
-					return "Undefined";
-				}
-				return "";
-
-			case 4:
-				// block transfer
-				if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
-				{
-					// user mode
-					if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-					{
-						sprintf_s(val_char_2, 40, "LDMU %8X regs:%4X", cpu_Regs[((cpu_Instr_ARM_2 >> 16) & 0xF)], (cpu_Instr_ARM_2 & 0xFFFF));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "LDM %8X regs:%4X", cpu_Regs[((cpu_Instr_ARM_2 >> 16) & 0xF)], (cpu_Instr_ARM_2 & 0xFFFF));
-					}
-				}
-				else
-				{
-					// user mode
-					if ((cpu_Instr_ARM_2 & 0x400000) == 0x400000)
-					{
-						sprintf_s(val_char_2, 40, "STMU %8X regs:%4X", cpu_Regs[((cpu_Instr_ARM_2 >> 16) & 0xF)], (cpu_Instr_ARM_2 & 0xFFFF));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "STM %8X regs:%4X", cpu_Regs[((cpu_Instr_ARM_2 >> 16) & 0xF)], (cpu_Instr_ARM_2 & 0xFFFF));
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 5:
-				// branch
-				if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
-				{
-					// Link if link bit set
-					// offset is signed
-					if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
-					{
-						sprintf_s(val_char_2, 40, "BL %8X", (((cpu_Instr_ARM_2 & 0xFFFFFF) << 2) | 0xFC000000));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "BL %8X", ((cpu_Instr_ARM_2 & 0xFFFFFF) << 2));
-					}
-				}
-				else
-				{
-					// offset is signed
-					if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
-					{
-						sprintf_s(val_char_2, 40, "B %8X", (((cpu_Instr_ARM_2 & 0xFFFFFF) << 2) | 0xFC000000));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "B %8X", ((cpu_Instr_ARM_2 & 0xFFFFFF) << 2));
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 6:
-				// Coprocessor Instruction (treat as Undefined Opcode Exception)
-				return "Undefined";
-
-			case 7:
-				if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
-				{
-					// software interrupt
-					return "SWI";
-				}
-				else
-				{
-					// Coprocessor Instruction (treat as Undefined Opcode Exception)
-					return "Undefined";
-				}
-			}
-
-			return "";
-		}
-
-		string cpu_Disassemble_TMB()
+		string cpu_Disassemble()
 		{
 			val_char_2 = replacer;
 			
@@ -3569,248 +3292,72 @@ namespace GBHawk
 
 		uint8_t* cpu_SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(cpu_Thumb_Mode, saver);
-			saver = bool_saver(cpu_ARM_Cond_Passed, saver);
-			saver = bool_saver(cpu_Seq_Access, saver);
-			saver = bool_saver(cpu_IRQ_Input, saver);
-			saver = bool_saver(cpu_IRQ_Input_Use, saver);
-			saver = bool_saver(cpu_Next_IRQ_Input, saver);
-			saver = bool_saver(cpu_Next_IRQ_Input_2, saver);
-			saver = bool_saver(cpu_Next_IRQ_Input_3, saver);
-			saver = bool_saver(cpu_Is_Paused, saver);
-			saver = bool_saver(cpu_No_IRQ_Clock, saver);
-			saver = bool_saver(cpu_Restore_IRQ_Clock, saver);
-			saver = bool_saver(cpu_Take_Branch, saver);
-			saver = bool_saver(cpu_LS_Is_Load, saver);
-			saver = bool_saver(cpu_LS_First_Access, saver);
-			saver = bool_saver(cpu_Invalidate_Pipeline, saver);
-			saver = bool_saver(cpu_Overwrite_Base_Reg, saver);
-			saver = bool_saver(cpu_Multi_Before, saver);
-			saver = bool_saver(cpu_Multi_Inc, saver);
-			saver = bool_saver(cpu_Multi_S_Bit, saver);
-			saver = bool_saver(cpu_ALU_S_Bit, saver);
-			saver = bool_saver(cpu_Multi_Swap, saver);
-			saver = bool_saver(cpu_Sign_Extend_Load, saver);
-			saver = bool_saver(cpu_Dest_Is_R15, saver);
-			saver = bool_saver(cpu_Swap_Store, saver);
-			saver = bool_saver(cpu_Swap_Lock, saver);
-			saver = bool_saver(cpu_Clear_Pipeline, saver);
-			saver = bool_saver(cpu_Special_Inc, saver);
-			saver = bool_saver(cpu_FlagI_Old, saver);
-			saver = bool_saver(cpu_LDM_Glitch_Mode, saver);
-			saver = bool_saver(cpu_LDM_Glitch_Store, saver);
-			
-			saver = bool_saver(stopped, saver);
-			saver = bool_saver(cpu_Trigger_Unhalt, saver);
-			saver = bool_saver(cpu_Trigger_Unhalt_2, saver);
-			saver = bool_saver(cpu_Trigger_Unhalt_3, saver);
-			saver = bool_saver(cpu_Trigger_Unhalt_4, saver);
+			saver = bool_saver(cpu_was_FlagI, saver);
+			saver = bool_saver(cpu_FlagI, saver);
+			saver = bool_saver(cpu_Jammed, saver);
+			saver = bool_saver(cpu_Stopped, saver);
+			saver = bool_saver(cpu_Halted, saver);
+			saver = bool_saver(cpu_CB_Prefix, saver);
 
-			saver = short_saver(cpu_Exec_ARM, saver);
-			saver = short_saver(cpu_Exec_TMB, saver);
-			saver = short_saver(cpu_Instr_TMB_0, saver);
-			saver = short_saver(cpu_Instr_TMB_1, saver);
-			saver = short_saver(cpu_Instr_TMB_2, saver);
-			saver = short_saver(cpu_Instr_Type, saver);
-			saver = short_saver(cpu_Exception_Type, saver);
-			saver = short_saver(cpu_Next_Load_Store_Type, saver);
+			saver = bool_saver(cpu_Interrupts_Enabled, saver);
 
-			saver = int_saver(cpu_user_R8, saver);
-			saver = int_saver(cpu_user_R9, saver);
-			saver = int_saver(cpu_user_R10, saver);
-			saver = int_saver(cpu_user_R11, saver);
-			saver = int_saver(cpu_user_R12, saver);
-			saver = int_saver(cpu_user_R13, saver);
-			saver = int_saver(cpu_user_R14, saver);
-			saver = int_saver(cpu_spr_R13, saver);
-			saver = int_saver(cpu_spr_R14, saver);
-			saver = int_saver(cpu_spr_S, saver);
-			saver = int_saver(cpu_abort_R13, saver);
-			saver = int_saver(cpu_abort_R14, saver);
-			saver = int_saver(cpu_abort_S, saver);
-			saver = int_saver(cpu_undf_R13, saver);
-			saver = int_saver(cpu_undf_R14, saver);
-			saver = int_saver(cpu_undf_S, saver);
-			saver = int_saver(cpu_intr_R13, saver);
-			saver = int_saver(cpu_intr_R14, saver);
-			saver = int_saver(cpu_intr_S, saver);
-			saver = int_saver(cpu_fiq_R8, saver);
-			saver = int_saver(cpu_fiq_R9, saver);
-			saver = int_saver(cpu_fiq_R10, saver);
-			saver = int_saver(cpu_fiq_R11, saver);
-			saver = int_saver(cpu_fiq_R12, saver);
-			saver = int_saver(cpu_fiq_R13, saver);
-			saver = int_saver(cpu_fiq_R14, saver);
-			saver = int_saver(cpu_fiq_S, saver);
+			saver = bool_saver(cpu_I_Use, saver);
+			saver = bool_saver(cpu_Skip_Once, saver);
+			saver = bool_saver(cpu_Halt_bug_2, saver);
+			saver = bool_saver(cpu_Halt_bug_3, saver);
+			saver = bool_saver(cpu_Halt_bug_4, saver);
+			saver = bool_saver(cpu_Halt_bug_5, saver);
+			saver = bool_saver(cpu_Stop_Check, saver);
 
-			saver = int_saver(cpu_Instr_ARM_0, saver);
-			saver = int_saver(cpu_Instr_ARM_1, saver);
-			saver = int_saver(cpu_Instr_ARM_2, saver);
-			saver = int_saver(cpu_Temp_Reg, saver);
-			saver = int_saver(cpu_Temp_Addr, saver);
-			saver = int_saver(cpu_Temp_Data, saver);
-			saver = int_saver(cpu_Temp_Mode, saver);
-			saver = int_saver(cpu_Bit_To_Check, saver);
-			saver = int_saver(cpu_Write_Back_Addr, saver);
-			saver = int_saver(cpu_Addr_Offset, saver);
-			saver = int_saver(cpu_Last_Bus_Value, saver);
-			saver = int_saver(cpu_Last_Bus_Value_Old, saver);
+			saver = byte_saver(cpu_Int_Clear, saver);
 
-			saver = int_saver(cpu_ALU_Temp_Val, saver);
-			saver = int_saver(cpu_ALU_Temp_S_Val, saver);
-			saver = int_saver(cpu_ALU_Shift_Carry, saver);
+			saver = short_saver(cpu_Opcode, saver);
+			saver = short_saver(cpu_Instr_Cycle, saver);
 
-			saver = int_saver(cpu_Fetch_Cnt, saver);
-			saver = int_saver(cpu_Fetch_Wait, saver);
+			saver = short_saver(cpu_Int_Src, saver);
 
-			saver = int_saver(cpu_Multi_List_Ptr, saver);
-			saver = int_saver(cpu_Multi_List_Size, saver);
-			saver = int_saver(cpu_Temp_Reg_Ptr, saver);
-			saver = int_saver(cpu_Base_Reg, saver);
-			saver = int_saver(cpu_Base_Reg_2, saver);
+			saver = int_saver(cpu_EI_Pending, saver);
 
-			saver = int_saver(cpu_ALU_Reg_Dest, saver);
-			saver = int_saver(cpu_ALU_Reg_Src, saver);
+			saver = long_saver(cpu_Instruction_Start, saver);
+			saver = long_saver(cpu_Stop_Time, saver);
 
-			saver = int_saver(cpu_Mul_Cycles, saver);
-			saver = int_saver(cpu_Mul_Cycles_Cnt, saver);
-
-			saver = int_saver(cpu_Shift_Imm, saver);
-
-			saver = long_saver(cpu_ALU_Long_Result, saver);
-			saver = long_saver(CycleCount, saver);
-			saver = long_saver(FrameCycle, saver);
-			saver = long_saver(Clock_Update_Cycle, saver);
-
-			saver = long_saver(cpu_ALU_Signed_Long_Result, saver);
-
-			saver = int_array_saver(cpu_Regs_To_Access, saver, 16);
-
-			saver = int_array_saver(cpu_Regs, saver, 18);
+			saver = byte_array_saver(cpu_Regs, saver, 14);
 
 			return saver;
 		}
 
 		uint8_t* cpu_LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&cpu_Thumb_Mode, loader);
-			loader = bool_loader(&cpu_ARM_Cond_Passed, loader);
-			loader = bool_loader(&cpu_Seq_Access, loader);
-			loader = bool_loader(&cpu_IRQ_Input, loader);
-			loader = bool_loader(&cpu_IRQ_Input_Use, loader);
-			loader = bool_loader(&cpu_Next_IRQ_Input, loader);
-			loader = bool_loader(&cpu_Next_IRQ_Input_2, loader);
-			loader = bool_loader(&cpu_Next_IRQ_Input_3, loader);
-			loader = bool_loader(&cpu_Is_Paused, loader);
-			loader = bool_loader(&cpu_No_IRQ_Clock, loader);
-			loader = bool_loader(&cpu_Restore_IRQ_Clock, loader);
-			loader = bool_loader(&cpu_Take_Branch, loader);
-			loader = bool_loader(&cpu_LS_Is_Load, loader);
-			loader = bool_loader(&cpu_LS_First_Access, loader);
-			loader = bool_loader(&cpu_Invalidate_Pipeline, loader);
-			loader = bool_loader(&cpu_Overwrite_Base_Reg, loader);
-			loader = bool_loader(&cpu_Multi_Before, loader);
-			loader = bool_loader(&cpu_Multi_Inc, loader);
-			loader = bool_loader(&cpu_Multi_S_Bit, loader);
-			loader = bool_loader(&cpu_ALU_S_Bit, loader);
-			loader = bool_loader(&cpu_Multi_Swap, loader);
-			loader = bool_loader(&cpu_Sign_Extend_Load, loader);
-			loader = bool_loader(&cpu_Dest_Is_R15, loader);
-			loader = bool_loader(&cpu_Swap_Store, loader);
-			loader = bool_loader(&cpu_Swap_Lock, loader);
-			loader = bool_loader(&cpu_Clear_Pipeline, loader);
-			loader = bool_loader(&cpu_Special_Inc, loader);
-			loader = bool_loader(&cpu_FlagI_Old, loader);
-			loader = bool_loader(&cpu_LDM_Glitch_Mode, loader);
-			loader = bool_loader(&cpu_LDM_Glitch_Store, loader);
+			loader = bool_loader(&cpu_was_FlagI, loader);
+			loader = bool_loader(&cpu_FlagI, loader);
+			loader = bool_loader(&cpu_Jammed, loader);
+			loader = bool_loader(&cpu_Stopped, loader);
+			loader = bool_loader(&cpu_Halted, loader);
+			loader = bool_loader(&cpu_CB_Prefix, loader);
 
-			loader = bool_loader(&stopped, loader);
-			loader = bool_loader(&cpu_Trigger_Unhalt, loader);
-			loader = bool_loader(&cpu_Trigger_Unhalt_2, loader);
-			loader = bool_loader(&cpu_Trigger_Unhalt_3, loader);
-			loader = bool_loader(&cpu_Trigger_Unhalt_4, loader);
+			loader = bool_loader(&cpu_Interrupts_Enabled, loader);
 
-			loader = short_loader(&cpu_Exec_ARM, loader);
-			loader = short_loader(&cpu_Exec_TMB, loader);
-			loader = short_loader(&cpu_Instr_TMB_0, loader);
-			loader = short_loader(&cpu_Instr_TMB_1, loader);
-			loader = short_loader(&cpu_Instr_TMB_2, loader);
-			loader = short_loader(&cpu_Instr_Type, loader);
-			loader = short_loader(&cpu_Exception_Type, loader);
-			loader = short_loader(&cpu_Next_Load_Store_Type, loader);
+			loader = bool_loader(&cpu_I_Use, loader);
+			loader = bool_loader(&cpu_Skip_Once, loader);
+			loader = bool_loader(&cpu_Halt_bug_2, loader);
+			loader = bool_loader(&cpu_Halt_bug_3, loader);
+			loader = bool_loader(&cpu_Halt_bug_4, loader);
+			loader = bool_loader(&cpu_Halt_bug_5, loader);
+			loader = bool_loader(&cpu_Stop_Check, loader);
 
-			loader = int_loader(&cpu_user_R8, loader);
-			loader = int_loader(&cpu_user_R9, loader);
-			loader = int_loader(&cpu_user_R10, loader);
-			loader = int_loader(&cpu_user_R11, loader);
-			loader = int_loader(&cpu_user_R12, loader);
-			loader = int_loader(&cpu_user_R13, loader);
-			loader = int_loader(&cpu_user_R14, loader);
-			loader = int_loader(&cpu_spr_R13, loader);
-			loader = int_loader(&cpu_spr_R14, loader);
-			loader = int_loader(&cpu_spr_S, loader);
-			loader = int_loader(&cpu_abort_R13, loader);
-			loader = int_loader(&cpu_abort_R14, loader);
-			loader = int_loader(&cpu_abort_S, loader);
-			loader = int_loader(&cpu_undf_R13, loader);
-			loader = int_loader(&cpu_undf_R14, loader);
-			loader = int_loader(&cpu_undf_S, loader);
-			loader = int_loader(&cpu_intr_R13, loader);
-			loader = int_loader(&cpu_intr_R14, loader);
-			loader = int_loader(&cpu_intr_S, loader);
-			loader = int_loader(&cpu_fiq_R8, loader);
-			loader = int_loader(&cpu_fiq_R9, loader);
-			loader = int_loader(&cpu_fiq_R10, loader);
-			loader = int_loader(&cpu_fiq_R11, loader);
-			loader = int_loader(&cpu_fiq_R12, loader);
-			loader = int_loader(&cpu_fiq_R13, loader);
-			loader = int_loader(&cpu_fiq_R14, loader);
-			loader = int_loader(&cpu_fiq_S, loader);
+			loader = byte_loader(&cpu_Int_Clear, loader);
 
-			loader = int_loader(&cpu_Instr_ARM_0, loader);
-			loader = int_loader(&cpu_Instr_ARM_1, loader);
-			loader = int_loader(&cpu_Instr_ARM_2, loader);
-			loader = int_loader(&cpu_Temp_Reg, loader);
-			loader = int_loader(&cpu_Temp_Addr, loader);
-			loader = int_loader(&cpu_Temp_Data, loader);
-			loader = int_loader(&cpu_Temp_Mode, loader);
-			loader = int_loader(&cpu_Bit_To_Check, loader);
-			loader = int_loader(&cpu_Write_Back_Addr, loader);
-			loader = int_loader(&cpu_Addr_Offset, loader);
-			loader = int_loader(&cpu_Last_Bus_Value, loader);
-			loader = int_loader(&cpu_Last_Bus_Value_Old, loader);
+			loader = short_loader(&cpu_Opcode, loader);
+			loader = short_loader(&cpu_Instr_Cycle, loader);
 
-			loader = int_loader(&cpu_ALU_Temp_Val, loader);
-			loader = int_loader(&cpu_ALU_Temp_S_Val, loader);
-			loader = int_loader(&cpu_ALU_Shift_Carry, loader);
+			loader = short_loader(&cpu_Int_Src, loader);
 
-			loader = sint_loader(&cpu_Fetch_Cnt, loader);
-			loader = sint_loader(&cpu_Fetch_Wait, loader);
+			loader = int_loader(&cpu_EI_Pending, loader);
 
-			loader = sint_loader(&cpu_Multi_List_Ptr, loader);
-			loader = sint_loader(&cpu_Multi_List_Size, loader);
-			loader = sint_loader(&cpu_Temp_Reg_Ptr, loader);
-			loader = sint_loader(&cpu_Base_Reg, loader);
-			loader = sint_loader(&cpu_Base_Reg_2, loader);
+			loader = long_loader(&cpu_Instruction_Start, loader);
+			loader = long_loader(&cpu_Stop_Time, loader);
 
-			loader = sint_loader(&cpu_ALU_Reg_Dest, loader);
-			loader = sint_loader(&cpu_ALU_Reg_Src, loader);
-
-			loader = sint_loader(&cpu_Mul_Cycles, loader);
-			loader = sint_loader(&cpu_Mul_Cycles_Cnt, loader);
-
-			loader = sint_loader(&cpu_Shift_Imm, loader);
-
-			loader = long_loader(&cpu_ALU_Long_Result, loader);
-			loader = long_loader(&CycleCount, loader);
-			loader = long_loader(&FrameCycle, loader);
-			loader = long_loader(&Clock_Update_Cycle, loader);
-
-			loader = slong_loader(&cpu_ALU_Signed_Long_Result, loader);
-
-			loader = int_array_loader(cpu_Regs_To_Access, loader, 16);
-
-			loader = int_array_loader(cpu_Regs, loader, 18);
+			loader = byte_array_loader(cpu_Regs, loader, 14);
 
 			return loader;
 		}
@@ -4461,7 +4008,7 @@ namespace GBHawk
 						{
 							ser_Control &= 0x7F;
 
-							if ((REG_FFFF & 0x8) == 0x8) { cpu_FlagIset(true); }
+							if ((REG_FFFF & 0x8) == 0x8) { cpu_FlagI = true; }
 							REG_FF0F |= 0x08;
 							//Console.WriteLine("SIRQ " + Core.cpu.TotalExecutedCycles);
 							ser_IRQ_Block = true;
@@ -4581,7 +4128,7 @@ namespace GBHawk
 
 					// TIMA (Timer Counter)
 				case 0xFF05:
-					if (CycleCount >= tim_Next_Free_Cycle)
+					if (Cycle_Count >= tim_Next_Free_Cycle)
 					{
 						tim_Timer_Old = tim_Timer;
 						tim_Timer = value;
@@ -4592,7 +4139,7 @@ namespace GBHawk
 					// TMA (Timer Modulo)
 				case 0xFF06:
 					tim_Reload = value;
-					if (CycleCount < tim_Next_Free_Cycle)
+					if (Cycle_Count < tim_Next_Free_Cycle)
 					{
 						tim_Timer = tim_Reload;
 						tim_Timer_Old = tim_Timer;
