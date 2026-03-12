@@ -142,10 +142,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
+    <ClInclude Include="GBC_GB_PPU.h" />
+    <ClInclude Include="GBC_PPU.h" />
     <ClInclude Include="GBHawk.h" />
+    <ClInclude Include="GB_PPU.h" />
     <ClInclude Include="GB_System.h" />
     <ClInclude Include="LinkCore.h" />
     <ClInclude Include="Mappers.h" />
+    <ClInclude Include="PPUs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />

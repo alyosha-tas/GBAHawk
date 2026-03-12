@@ -2741,7 +2741,7 @@ namespace GBHawk
 		const char* HALT_event = "              ====HALT====               ";
 		const char* DMA_event =  "              ====DMA====                ";
 		const char* No_Reg = 
-			"                                                                                                                                                                                                                                                                                          ";
+			"                                                                                                      ";
 		const char* Reg_template = 
 			"A:XX F:XX B:XX C:XX D:XX E:XX H:XX L:XX SP:XXXX Cy:XXXXXXXXXXXXXXXX LY:XXX ZNHCI F-Cy:XXXXXXXXXXXXXXXX";
 		const char* Disasm_template = "PCPC:   AA BB   Di Di Di Di Di Di Di Di  ";
@@ -2790,7 +2790,7 @@ namespace GBHawk
 			reg_state.append(" Cy:");
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", Cycle_Count));
 
-			while (reg_state.length() < 282)
+			while (reg_state.length() < 103)
 			{
 				reg_state.append(" ");
 			}
@@ -2901,11 +2901,8 @@ namespace GBHawk
 			return trace_string;
 		}
 
-		uint8_t cpu_Get_Disasm_Opcode(uint16_t addr);
-
 		string cpu_Disassemble(uint16_t pc)
 		{
-
 			uint16_t diff = pc;
 
 			uint8_t op = Peek_Memory(pc++);
