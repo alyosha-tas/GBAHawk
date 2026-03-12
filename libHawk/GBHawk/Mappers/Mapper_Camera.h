@@ -1,21 +1,28 @@
-﻿using BizHawk.Common;
-using System;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Gameboy Camera Mapper (no camera support yet)
-	// 128  kb of RAM
-	public class MapperCamera : MapperBase
+	class Mapper_Camera : Mappers
 	{
-		public int ROM_bank;
-		public int RAM_bank;
-		public bool RAM_enable;
-		public int ROM_mask;
-		public int RAM_mask;
-		public bool regs_enable;
-		public byte[] regs = new byte[0x80];
+	public:
+		int ROM_bank;
+		int RAM_bank;
+		bool RAM_enable;
+		int ROM_mask;
+		int RAM_mask;
+		bool regs_enable;
+		byte[] regs = new byte[0x80];
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 1;
 			RAM_bank = 0;
@@ -27,7 +34,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			regs_enable = false;
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -37,7 +44,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if (regs_enable)
 			{
@@ -57,12 +64,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			return 0xFF;
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0x8000)
 			{
@@ -105,12 +112,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

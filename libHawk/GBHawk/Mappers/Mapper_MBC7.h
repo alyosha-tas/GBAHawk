@@ -1,40 +1,47 @@
-﻿using BizHawk.Common;
-using BizHawk.Common.NumberExtensions;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Mapper with built in EEPROM, also used with Kirby's tilt 'n tumble
-	// The EEPROM contains 256 bytes of read/write memory
-	public class MapperMBC7 : MapperBase
+	class Mapper_MBC7 : Mappers
 	{
-		public int ROM_bank;
-		public bool RAM_enable_1, RAM_enable_2;
-		public int ROM_mask;
-		public byte acc_x_low;
-		public byte acc_x_high;
-		public byte acc_y_low;
-		public byte acc_y_high;
-		public bool is_erased;
+	public:
+		int ROM_bank;
+		bool RAM_enable_1, RAM_enable_2;
+		int ROM_mask;
+		byte acc_x_low;
+		byte acc_x_high;
+		byte acc_y_low;
+		byte acc_y_high;
+		bool is_erased;
 
 		// EEPROM related
-		public bool CS_prev;
-		public bool CLK_prev;
-		public bool DI_prev;
-		public bool DO;
-		public bool instr_read;
-		public bool perf_instr;
-		public int instr_bit_counter;
-		public int instr;
-		public bool WR_EN;
-		public int EE_addr;
-		public int instr_case;
-		public int instr_clocks;
-		public int EE_value;
-		public int countdown;
-		public bool countdown_start;
+		bool CS_prev;
+		bool CLK_prev;
+		bool DI_prev;
+		bool DO;
+		bool instr_read;
+		bool perf_instr;
+		int instr_bit_counter;
+		int instr;
+		bool WR_EN;
+		int EE_addr;
+		int instr_case;
+		int instr_clocks;
+		int EE_value;
+		int countdown;
+		bool countdown_start;
 
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 1;
 			RAM_enable_1 = RAM_enable_2 = false;
@@ -56,7 +63,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 		instr_bit_counter = instr = EE_addr = instr_case = instr_clocks = EE_value = countdown = 0;
 	}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -68,7 +75,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if (addr < 0xA000)
 			{
@@ -91,12 +98,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0xA000)
 			{
@@ -129,12 +136,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);
@@ -163,7 +170,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			ser.Sync(nameof(countdown_start), ref countdown_start);
 		}
 
-		public byte Register_Access_Read(ushort addr)
+		byte Register_Access_Read(ushort addr)
 		{
 			if ((addr & 0xA0F0) == 0xA000)
 			{
@@ -210,7 +217,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public void Register_Access_Write(ushort addr, byte value)
+		void Register_Access_Write(ushort addr, byte value)
 		{
 			if ((addr & 0xA0F0) == 0xA000)
 			{

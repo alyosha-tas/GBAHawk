@@ -28,7 +28,6 @@ using namespace std;
 
 namespace NESHawk
 {
-	class MemoryManager;
 	class Mappers;
 
 	class NES_System

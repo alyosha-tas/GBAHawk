@@ -89,7 +89,6 @@ namespace GBHawk
 		uint32_t y_scroll_offset;
 		uint32_t x_tile;
 		uint32_t x_scroll_offset;
-		uint32_t tile_byte;
 		uint32_t sprite_fetch_counter;
 		uint32_t temp_fetch;
 		uint32_t tile_inc;
@@ -117,6 +116,8 @@ namespace GBHawk
 		uint32_t LYC_offset; // in double speed mode it appears timing changes for LYC int
 		uint32_t LY_153_change; // the timing of LYC chaning to 153 looks like it varies with speed mode
 		uint32_t total_counter;
+
+		int32_t tile_byte;
 
 		uint8_t sprite_attr_list[160] = { };
 		uint8_t sprite_pixel_list[160] = { };
@@ -160,7 +161,6 @@ namespace GBHawk
 		uint8_t HDMA_dest_hi;
 		uint8_t HDMA_dest_lo;
 		uint8_t HDMA_byte;
-		uint32_t HDMA_tick;
 		// the first read on GBA (and first two on GBC) encounter access glitches if the source address is VRAM
 		uint8_t HDMA_VRAM_access_glitch;
 
@@ -174,6 +174,7 @@ namespace GBHawk
 		uint32_t HDMA_countdown;
 		uint32_t HBL_HDMA_count;
 		uint32_t last_HBL;
+		uint32_t HDMA_tick;
 
 		// individual byte used in palette colors
 		uint8_t BG_bytes[64] = { };
@@ -192,7 +193,28 @@ namespace GBHawk
 
 		inline uint8_t HDMA_ctrl() { return (uint8_t)(((HDMA_active ? 0 : 1) << 7) | ((HDMA_length >> 4) - 1)); }
 
+		uint8_t BitReverse(uint8_t b)
+		{
+			uint8_t ret = (uint8_t)(b >> 7);
 
+			uint8_t bit_0 = (uint8_t)(b & 1);
+			uint8_t bit_1 = (uint8_t)(b & 2);
+			uint8_t bit_2 = (uint8_t)(b & 4);
+			uint8_t bit_3 = (uint8_t)(b & 8);
+			uint8_t bit_4 = (uint8_t)(b & 0x10);
+			uint8_t bit_5 = (uint8_t)(b & 0x20);
+			uint8_t bit_6 = (uint8_t)(b & 0x40);
+
+			ret |= (uint8_t)(bit_0 << 7);
+			ret |= (uint8_t)(bit_1 << 5);
+			ret |= (uint8_t)(bit_2 << 3);
+			ret |= (uint8_t)(bit_3 << 1);
+			ret |= (uint8_t)(bit_4 >> 1);
+			ret |= (uint8_t)(bit_5 >> 3);
+			ret |= (uint8_t)(bit_6 >> 5);
+
+			return ret;
+		}
 
 		virtual uint8_t ReadReg(uint16_t addr)
 		{
@@ -249,46 +271,19 @@ namespace GBHawk
 
 		}
 
+		bool* Core_cpu_FlagI = nullptr;
 
-		uint8_t Ex_RAM[0x400] = { };
+		bool* Core_GBC_compat = nullptr;
 
-		// always 32 k available, but most games only have access to 8
-		uint8_t VRAM[0x8000] = { };
+		uint8_t* Core_REG_FFFF = nullptr;
 
-		// used by ex mmc3 in 4 screen mode, replaces internal CIRAM
-		uint8_t EXT_CIRAM[0x2000] = { };
+		uint8_t* Core_REG_FF0F = nullptr;
 
-		bool* Core_show_bg_new = nullptr;
+		uint8_t* Core_VRAM = nullptr;
 
-		bool* Core_show_obj_new = nullptr;
+		uint8_t* Core_OAM = nullptr;
 
-		bool* Core_ppu_OBJ_Size_16 = nullptr;
-
-		uint64_t* Core_Cycle_Count = nullptr;
-
-		uint64_t* Core_Clock_Update_Cycle = nullptr;
-
-		uint8_t* Core_Cart_RAM = nullptr;
-
-		uint32_t* Core_Cart_RAM_Length = nullptr;
-
-		uint8_t* Core_ROM[4] = { nullptr, nullptr, nullptr, nullptr };
-
-		uint8_t* Core_ROM_Base = nullptr;
-
-		uint8_t* Core_CIRAM_Base = nullptr;
-
-		uint32_t* Core_ROM_Length = nullptr;
-
-		uint32_t* Core_status_sl = nullptr;
-
-		uint32_t* Core_status_cycle = nullptr;
-
-		uint32_t* Core_PPU_Phase = nullptr;
-
-		uint8_t* Core_DB = nullptr;
-
-		uint8_t* Core_CHR_ROM = nullptr;
+		uint8_t* ScanlineCallbackLine = nullptr;
 
 		uint8_t* Core_CIRAM[4] = { nullptr, nullptr, nullptr, nullptr };
 
@@ -296,9 +291,15 @@ namespace GBHawk
 
 		string* Core_Message_String = nullptr;
 
+		void (*OnVBlank)();
+
 		void (*RumbleCallback)(bool);
 
 		void (*MessageCallback)(int);
+
+		void (*ScanlinCallback)(uint8_t);
+
+		uint8_t(*Core_ReadMemory)(uint16_t);
 
 		PPUs()
 		{
@@ -382,7 +383,6 @@ namespace GBHawk
 			saver = int_saver(y_scroll_offset, saver);
 			saver = int_saver(x_tile, saver);
 			saver = int_saver(x_scroll_offset, saver);
-			saver = int_saver(tile_byte, saver);
 			saver = int_saver(sprite_fetch_counter, saver);
 			saver = int_saver(temp_fetch, saver);
 			saver = int_saver(tile_inc, saver);
@@ -411,6 +411,8 @@ namespace GBHawk
 			saver = int_saver(LY_153_change, saver); // the timing of LYC chaning to 153 looks like it varies with speed mode
 			saver = int_saver(total_counter, saver);
 
+			saver = int_saver(tile_byte, saver);
+
 			saver = byte_array_saver(sprite_attr_list, saver, 160);
 			saver = byte_array_saver(sprite_pixel_list, saver, 160);
 			saver = byte_array_saver(sprite_present_list, saver, 160);
@@ -424,6 +426,46 @@ namespace GBHawk
 			saver = int_array_saver(OBJ_palette, saver, 32);
 			saver = int_array_saver(SL_sprites, saver, 40);
 			saver = int_array_saver(SL_sprites_ordered, saver, 40);
+
+			// GBC specific
+			saver = bool_saver(BG_bytes_inc, saver);
+			saver = bool_saver(OBJ_bytes_inc, saver);
+			saver = bool_saver(VRAM_access_read_HDMA, saver);
+			saver = bool_saver(VRAM_access_write_HDMA, saver);
+			saver = bool_saver(HDMA_can_start, saver);
+			saver = bool_saver(LCDC_Bit_4_glitch, saver);
+			saver = bool_saver(BG_V_flip, saver);
+			saver = bool_saver(HDMA_mode, saver);
+			saver = bool_saver(HDMA_run_once, saver);
+			saver = bool_saver(HBL_HDMA_go, saver);
+			saver = bool_saver(HBL_test, saver);
+
+			saver = byte_saver(BG_bytes_index, saver);
+			saver = byte_saver(OBJ_bytes_index, saver);
+			saver = byte_saver(BG_transfer_byte, saver);
+			saver = byte_saver(OBJ_transfer_byte, saver);
+			saver = byte_saver(LYC_t, saver);
+			saver = byte_saver(LY_read, saver);
+			saver = byte_saver(HDMA_src_hi, saver);
+			saver = byte_saver(HDMA_src_lo, saver);
+			saver = byte_saver(HDMA_dest_hi, saver);
+			saver = byte_saver(HDMA_dest_lo, saver);
+			saver = byte_saver(HDMA_byte, saver);
+			saver = byte_saver(HDMA_VRAM_access_glitch, saver);
+
+			saver = short_saver(cur_DMA_src, saver);
+			saver = short_saver(cur_DMA_dest, saver);
+
+			saver = int_saver(VRAM_sel, saver);
+			saver = int_saver(LYC_cd, saver);
+			saver = int_saver(HDMA_length, saver);
+			saver = int_saver(HDMA_countdown, saver);
+			saver = int_saver(HBL_HDMA_count, saver);
+			saver = int_saver(last_HBL, saver);
+			saver = int_saver(HDMA_tick, saver);
+
+			saver = byte_array_saver(BG_bytes, saver, 64);
+			saver = byte_array_saver(OBJ_bytes, saver, 64);
 
 			return saver;
 		}
@@ -500,7 +542,6 @@ namespace GBHawk
 			loader = int_loader(&y_scroll_offset, loader);
 			loader = int_loader(&x_tile, loader);
 			loader = int_loader(&x_scroll_offset, loader);
-			loader = int_loader(&tile_byte, loader);
 			loader = int_loader(&sprite_fetch_counter, loader);
 			loader = int_loader(&temp_fetch, loader);
 			loader = int_loader(&tile_inc, loader);
@@ -528,6 +569,8 @@ namespace GBHawk
 			loader = int_loader(&LYC_offset, loader); // in double speed mode it appears timing changes for LYC int
 			loader = int_loader(&LY_153_change, loader); // the timing of LYC chaning to 153 looks like it varies with speed mode
 			loader = int_loader(&total_counter, loader);
+
+			loader = sint_loader(&tile_byte, loader);
 	
 			loader = byte_array_loader(sprite_attr_list, loader, 160);
 			loader = byte_array_loader(sprite_pixel_list, loader, 160);
@@ -542,6 +585,46 @@ namespace GBHawk
 			loader = int_array_loader(OBJ_palette, loader, 32);
 			loader = int_array_loader(SL_sprites, loader, 40);
 			loader = int_array_loader(SL_sprites_ordered, loader, 40);
+
+			// GBC specific
+			loader = bool_loader(&BG_bytes_inc, loader);
+			loader = bool_loader(&OBJ_bytes_inc, loader);
+			loader = bool_loader(&VRAM_access_read_HDMA, loader);
+			loader = bool_loader(&VRAM_access_write_HDMA, loader);
+			loader = bool_loader(&HDMA_can_start, loader);
+			loader = bool_loader(&LCDC_Bit_4_glitch, loader);
+			loader = bool_loader(&BG_V_flip, loader);
+			loader = bool_loader(&HDMA_mode, loader);
+			loader = bool_loader(&HDMA_run_once, loader);
+			loader = bool_loader(&HBL_HDMA_go, loader);
+			loader = bool_loader(&HBL_test, loader);
+
+			loader = byte_loader(&BG_bytes_index, loader);
+			loader = byte_loader(&OBJ_bytes_index, loader);
+			loader = byte_loader(&BG_transfer_byte, loader);
+			loader = byte_loader(&OBJ_transfer_byte, loader);
+			loader = byte_loader(&LYC_t, loader);
+			loader = byte_loader(&LY_read, loader);
+			loader = byte_loader(&HDMA_src_hi, loader);
+			loader = byte_loader(&HDMA_src_lo, loader);
+			loader = byte_loader(&HDMA_dest_hi, loader);
+			loader = byte_loader(&HDMA_dest_lo, loader);
+			loader = byte_loader(&HDMA_byte, loader);
+			loader = byte_loader(&HDMA_VRAM_access_glitch, loader);
+
+			loader = short_loader(&cur_DMA_src, loader);
+			loader = short_loader(&cur_DMA_dest, loader);
+
+			loader = int_loader(&VRAM_sel, loader);
+			loader = int_loader(&LYC_cd, loader);
+			loader = int_loader(&HDMA_length, loader);
+			loader = int_loader(&HDMA_countdown, loader);
+			loader = int_loader(&HBL_HDMA_count, loader);
+			loader = int_loader(&last_HBL, loader);
+			loader = int_loader(&HDMA_tick, loader);
+
+			loader = byte_array_loader(BG_bytes, loader, 64);
+			loader = byte_array_loader(OBJ_bytes, loader, 64);
 
 			return loader;
 		}
@@ -630,6 +713,14 @@ namespace GBHawk
 		{
 			to_load[0] = *loader; loader++; to_load[0] |= (uint32_t)(*loader << 8); loader++;
 			to_load[0] |= (uint32_t)(*loader << 16); loader++; to_load[0] |= (uint32_t)(*loader << 24); loader++;
+
+			return loader;
+		}
+
+		uint8_t* sint_loader(int32_t* to_load, uint8_t* loader)
+		{
+			to_load[0] = *loader; loader++; to_load[0] |= ((int32_t)(*loader) << 8); loader++;
+			to_load[0] |= ((int32_t)(*loader) << 16); loader++; to_load[0] |= ((int32_t)(*loader) << 24); loader++;
 
 			return loader;
 		}

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <string>
+#include <cmath>
 
 #include "PPUs.h"
 
@@ -62,7 +63,7 @@ namespace GBHawk
 
 		uint8_t OBJ_PAL_read()
 		{
-			if (VRAM_access_read_PPU && Core.GBC_compat)
+			if (VRAM_access_read_PPU && *Core_GBC_compat)
 			{
 				return OBJ_bytes[OBJ_bytes_index];
 			}
@@ -329,17 +330,17 @@ namespace GBHawk
 							{
 								if (HDMA_VRAM_access_glitch > 0)
 								{
-									HDMA_byte = Core.ReadMemory(Core.cpu.RegPC);
+									HDMA_byte = Core_ReadMemory(Core.cpu.RegPC);
 									HDMA_VRAM_access_glitch--;
 								}
 								else
 								{
-									HDMA_byte = Core.ReadMemory(cur_DMA_src);
+									HDMA_byte = Core_ReadMemory(cur_DMA_src);
 								}
 							}
 							else
 							{
-								Core.VRAM[(Core.VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
+								Core_VRAM[(Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
 
 								// DMA destination address does not wrap and terminates DMA
 								if (cur_DMA_dest == 0xFFFF)
@@ -421,7 +422,7 @@ namespace GBHawk
 								}
 								else
 								{
-									Core.VRAM[(Core.VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
+									Core_VRAM[(Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
 
 									// DMA destination address does not wrap and terminates DMA
 									if (cur_DMA_dest == 0xFFFF)
@@ -481,17 +482,13 @@ namespace GBHawk
 				if (cycle == 456)
 				{
 					// scanline callback
-					if ((LY + LY_inc) == Core._scanlineCallbackLine)
+					if ((LY + LY_inc) == ScanlineCallbackLine[0])
 					{
-						if (Core._scanlineCallback)
-						{
-							Core._scanlineCallback(LCDC);
-						}
+						if (ScanlinCallback) { ScanlinCallback(LCDC); }
 					}
 
 					cycle = 0;
 					LY += LY_inc;
-					Core.cpu.LY = LY;
 
 					no_scan = false;
 
@@ -522,7 +519,7 @@ namespace GBHawk
 					if (LY == 144)
 					{
 						in_vbl = true;
-						Core.on_vblank();
+						OnVBlank();
 					}
 				}
 
@@ -591,15 +588,14 @@ namespace GBHawk
 						STAT &= 0xFC;
 						STAT |= 0x01;
 
-						if (Core.REG_FFFF.Bit(0)) { Core.cpu.FlagI = true; }
-						Core.REG_FF0F |= 0x01;
+						if ((*Core_REG_FFFF & 1) == 1) { *Core_cpu_FlagI = true; }
+						*Core_REG_FF0F |= 0x01;
 					}
 
 					if ((cycle == 8) && (LY == 153))
 					{
 						LY = 0;
 						LY_inc = 0;
-						Core.cpu.LY = LY;
 					}
 				}
 				else
@@ -789,7 +785,6 @@ namespace GBHawk
 
 				LY = 0;
 				LY_read = 0;
-				Core.cpu.LY = LY;
 
 				cycle = 0;
 			}
@@ -799,8 +794,8 @@ namespace GBHawk
 
 			if (stat_line && !stat_line_old)
 			{
-				if (Core.REG_FFFF.Bit(1)) { Core.cpu.FlagI = true; }
-				Core.REG_FF0F |= 0x02;
+				if ((*Core_REG_FFFF & 2) == 2) { *Core_cpu_FlagI = true; }
+				*Core_REG_FF0F |= 0x02;
 			}
 
 			stat_line_old = stat_line;
@@ -904,7 +899,7 @@ namespace GBHawk
 				window_counter = 0;
 				render_counter = 0;
 
-				window_x_tile = (int)Math.Floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
+				window_x_tile = (int)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
 
 				window_tile_inc = 0;
 				window_started = true;
@@ -945,10 +940,10 @@ namespace GBHawk
 							x_tile = scroll_x >> 3;
 
 							temp_fetch = y_tile * 32 + (x_tile + tile_inc) % 32;
-							tile_byte = Core.VRAM[0x1800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch];
+							tile_byte = Core_VRAM[0x1800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch];
 
 							bus_address = 0x3800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch;
-							tile_data[2] = Core.VRAM[bus_address];
+							tile_data[2] = Core_VRAM[bus_address];
 							//bus_address = 0x1800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch;
 
 							VRAM_sel = tile_data[2].Bit(3) ? 1 : 0;
@@ -978,18 +973,18 @@ namespace GBHawk
 							if (LCDC_Bit(4))
 							{
 								bus_address = (VRAM_sel * 0x2000) + tile_byte * 16 + y_scroll_offset * 2;
-								tile_data[0] = Core.VRAM[bus_address];
+								tile_data[0] = Core_VRAM[bus_address];
 							}
 							else
 							{
 								// same as before except now tile uint8_t represents a signed byte
-								if (tile_byte.Bit(7))
+								if ((tile_byte & 0x80) == 0x80)
 								{
 									tile_byte -= 256;
 								}
 								bus_address = (VRAM_sel * 0x2000) + 0x1000 + tile_byte * 16 + y_scroll_offset * 2;
 
-								if (!LCDC_Bit_4_glitch) { tile_data[0] = Core.VRAM[bus_address]; }
+								if (!LCDC_Bit_4_glitch) { tile_data[0] = Core_VRAM[bus_address]; }
 								else { tile_data[0] = (uint8_t)tile_byte; }
 							}
 
@@ -1018,19 +1013,19 @@ namespace GBHawk
 								}
 
 								bus_address = (VRAM_sel * 0x2000) + tile_byte * 16 + y_scroll_offset * 2 + 1;
-								tile_data[1] = Core.VRAM[bus_address];
+								tile_data[1] = Core_VRAM[bus_address];
 							}
 							else
 							{
 								// same as before except now tile uint8_t represents a signed byte
-								if (tile_byte.Bit(7) && tile_byte > 0)
+								if (((tile_byte & 0x80) == 0x80) && tile_byte > 0)
 								{
 									tile_byte -= 256;
 								}
 
 								bus_address = (VRAM_sel * 0x2000) + 0x1000 + tile_byte * 16 + y_scroll_offset * 2 + 1;
 
-								if (!LCDC_Bit_4_glitch) { tile_data[1] = Core.VRAM[bus_address]; }
+								if (!LCDC_Bit_4_glitch) { tile_data[1] = Core_VRAM[bus_address]; }
 								else { tile_data[1] = (uint8_t)tile_byte; }
 							}
 
@@ -1076,10 +1071,10 @@ namespace GBHawk
 							read_case_prev = 4;
 
 							temp_fetch = window_y_tile * 32 + (window_x_tile + window_tile_inc) % 32;
-							tile_byte = Core.VRAM[0x1800 + (LCDC_Bit(6) ? 1 : 0) * 0x400 + temp_fetch];
+							tile_byte = Core_VRAM[0x1800 + (LCDC_Bit(6) ? 1 : 0) * 0x400 + temp_fetch];
 
 							bus_address = 0x3800 + (LCDC_Bit(6) ? 1 : 0) * 0x400 + temp_fetch;
-							tile_data[2] = Core.VRAM[bus_address];
+							tile_data[2] = Core_VRAM[bus_address];
 
 							VRAM_sel = tile_data[2].Bit(3) ? 1 : 0;
 							BG_V_flip = tile_data[2].Bit(6) & Core.GBC_compat;
@@ -1106,19 +1101,19 @@ namespace GBHawk
 							if (LCDC_Bit(4))
 							{
 								bus_address = (VRAM_sel * 0x2000) + tile_byte * 16 + y_scroll_offset * 2;
-								tile_data[0] = Core.VRAM[bus_address];
+								tile_data[0] = Core_VRAM[bus_address];
 							}
 							else
 							{
 								// same as before except now tile uint8_t represents a signed byte
-								if (tile_byte.Bit(7))
+								if ((tile_byte & 0x80) == 0x80)
 								{
 									tile_byte -= 256;
 								}
 
 								bus_address = (VRAM_sel * 0x2000) + 0x1000 + tile_byte * 16 + y_scroll_offset * 2;
 
-								if (!LCDC_Bit_4_glitch) { tile_data[0] = Core.VRAM[bus_address]; }
+								if (!LCDC_Bit_4_glitch) { tile_data[0] = Core_VRAM[bus_address]; }
 								else { tile_data[0] = (uint8_t)tile_byte; }
 							}
 
@@ -1148,19 +1143,19 @@ namespace GBHawk
 								}
 
 								bus_address = (VRAM_sel * 0x2000) + tile_byte * 16 + y_scroll_offset * 2 + 1;
-								tile_data[1] = Core.VRAM[bus_address];
+								tile_data[1] = Core_VRAM[bus_address];
 							}
 							else
 							{
 								// same as before except now tile uint8_t represents a signed byte
-								if (tile_byte.Bit(7) && tile_byte > 0)
+								if (((tile_byte & 0x80) == 0x80) && tile_byte > 0)
 								{
 									tile_byte -= 256;
 								}
 
 								bus_address = (VRAM_sel * 0x2000) + 0x1000 + tile_byte * 16 + y_scroll_offset * 2 + 1;
 
-								if (!LCDC_Bit_4_glitch) { tile_data[1] = Core.VRAM[bus_address]; }
+								if (!LCDC_Bit_4_glitch) { tile_data[1] = Core_VRAM[bus_address]; }
 								else { tile_data[1] = (uint8_t)tile_byte; }
 							}
 
@@ -1263,7 +1258,7 @@ namespace GBHawk
 					// start shifting data into the LCD
 					if (render_counter >= (render_offset + 8))
 					{
-						if (tile_data_latch[2].Bit(5) && Core.GBC_compat)
+						if (tile_data_latch[2].Bit(5) && *Core_GBC_compat)
 						{
 							pixel = tile_data_latch[0].Bit(render_counter % 8) ? 1 : 0;
 							pixel |= tile_data_latch[1].Bit(render_counter % 8) ? 2 : 0;
@@ -1325,7 +1320,7 @@ namespace GBHawk
 										use_sprite = true;
 									}
 
-									// There is another priority bit in GBC, that can still override sprite priority
+									// There is another priority bit in GBC, that can still sprite priority
 									if (LCDC_Bit(0) && tile_data_latch[2].Bit(7) && (ref_pixel != 0) && Core.GBC_compat)
 									{
 										use_sprite = false;
@@ -1459,7 +1454,7 @@ namespace GBHawk
 						else if (((last_eval + sprite_scroll_offset) % 8) == 6) { sprite_fetch_counter += 0; }
 						else if (((last_eval + sprite_scroll_offset) % 8) == 7) { sprite_fetch_counter += 0; }
 
-						consecutive_sprite = (int)Math.Floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
+						consecutive_sprite = (int)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
 
 						// special case exists here for sprites at zero with non-zero x-scroll. Not sure exactly the reason for it.
 						if (last_eval == 0)
@@ -1507,21 +1502,21 @@ namespace GBHawk
 					// So transfers nominally from higher memory areas are actually still from there (i.e. FF -> DF)
 					uint8_t DMA_actual = DMA_addr;
 					if (DMA_addr > 0xDF) { DMA_actual &= 0xDF; }
-					DMA_byte = Core.ReadMemory((uint16_t)((DMA_actual << 8) + DMA_inc));
+					DMA_byte = Core_ReadMemory((uint16_t)((DMA_actual << 8) + DMA_inc));
 					DMA_bus_control = true;
 				}
 				else if ((DMA_clock % 4) == 3)
 				{
 					if (!HDMA_active)
 					{
-						Core.OAM[DMA_inc] = DMA_byte;
+						Core_OAM[DMA_inc] = DMA_byte;
 					}
 					else
 					{
 						// TODO: timing is off by one, maybe HDMA is aligned with CPU cycles
 						if (((cur_DMA_dest - 1) & 0xFF) <= 0x9F)
 						{
-							Core.OAM[(cur_DMA_dest - 1) & 0xFF] = HDMA_byte;
+							Core_OAM[(cur_DMA_dest - 1) & 0xFF] = HDMA_byte;
 						}
 					}
 
@@ -1543,23 +1538,23 @@ namespace GBHawk
 		void process_sprite()
 		{
 			int y;
-			int VRAM_temp = (SL_sprites[sl_use_index * 4 + 3].Bit(3) && Core.GBC_compat) ? 1 : 0;
+			int VRAM_temp = (SL_sprites[sl_use_index * 4 + 3].Bit(3) && *Core_GBC_compat) ? 1 : 0;
 
-			if (SL_sprites[sl_use_index * 4 + 3].Bit(6))
+			if ((SL_sprites[sl_use_index * 4 + 3] & 0x40) == 0x40)
 			{
 				if (LCDC_Bit(2))
 				{
 					y = LY - (SL_sprites[sl_use_index * 4] - 16);
 					y = 15 - y;
-					sprite_sel[0] = Core.VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2];
-					sprite_sel[1] = Core.VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2 + 1];
+					sprite_sel[0] = Core_VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2];
+					sprite_sel[1] = Core_VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2 + 1];
 				}
 				else
 				{
 					y = LY - (SL_sprites[sl_use_index * 4] - 16);
 					y = 7 - y;
-					sprite_sel[0] = Core.VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2];
-					sprite_sel[1] = Core.VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2 + 1];
+					sprite_sel[0] = Core_VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2];
+					sprite_sel[1] = Core_VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2 + 1];
 				}
 			}
 			else
@@ -1567,31 +1562,21 @@ namespace GBHawk
 				if (LCDC_Bit(2))
 				{
 					y = LY - (SL_sprites[sl_use_index * 4] - 16);
-					sprite_sel[0] = Core.VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2];
-					sprite_sel[1] = Core.VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2 + 1];
+					sprite_sel[0] = Core_VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2];
+					sprite_sel[1] = Core_VRAM[(VRAM_temp * 0x2000) + (SL_sprites[sl_use_index * 4 + 2] & 0xFE) * 16 + y * 2 + 1];
 				}
 				else
 				{
 					y = LY - (SL_sprites[sl_use_index * 4] - 16);
-					sprite_sel[0] = Core.VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2];
-					sprite_sel[1] = Core.VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2 + 1];
+					sprite_sel[0] = Core_VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2];
+					sprite_sel[1] = Core_VRAM[(VRAM_temp * 0x2000) + SL_sprites[sl_use_index * 4 + 2] * 16 + y * 2 + 1];
 				}
 			}
 
-			if (SL_sprites[sl_use_index * 4 + 3].Bit(5))
+			if ((SL_sprites[sl_use_index * 4 + 3] & 0x20) == 0x20)
 			{
-				uint8_t temp_0 = sprite_sel[0];
-				uint8_t temp_1 = sprite_sel[1];
-
-				sprite_sel[0] = (uint8_t)(((temp_0 & 0x01) << 7) | ((temp_0 & 0x02) << 5) |
-										((temp_0 & 0x04) << 3) | ((temp_0 & 0x08) << 1) |
-										((temp_0 & 0x10) >> 1) | ((temp_0 & 0x20) >> 3) |
-										((temp_0 & 0x40) >> 5) | ((temp_0 & 0x80) >> 7));
-
-				sprite_sel[1] = (uint8_t)(((temp_1 & 0x01) << 7) | ((temp_1 & 0x02) << 5) |
-										((temp_1 & 0x04) << 3) | ((temp_1 & 0x08) << 1) |
-										((temp_1 & 0x10) >> 1) | ((temp_1 & 0x20) >> 3) |
-										((temp_1 & 0x40) >> 5) | ((temp_1 & 0x80) >> 7));
+				sprite_sel[1] = BitReverse(sprite_sel[1]);
+				sprite_sel[0] = BitReverse(sprite_sel[0]);
 			}
 		}
 
@@ -1602,7 +1587,7 @@ namespace GBHawk
 			sprite_ordered_index = 0;
 
 			// In CGB mode, sprites are ordered solely based on their position in OAM, so they are already ordered
-			if (Core.GBC_compat)
+			if (*Core_GBC_compat)
 			{
 				for (int j = 0; j < SL_sprites_index; j++)
 				{
@@ -1706,7 +1691,9 @@ namespace GBHawk
 				{
 					if (OAM_scan_index < 40)
 					{
-						uint16_t temp = DMA_OAM_access ? Core.OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+						uint16_t temp = DMA_OAM_access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+						int32_t LY_check = (int32_t)(LY - temp);
+						int32_t comp_val = LCDC_Bit(2) ? 0 : -8;
 						// (sprite Y - 16) equals LY, we have a sprite
 						if ((temp - 16) <= LY &&
 							((temp - 16) + 8 + (LCDC_Bit(2) ? 8 : 0)) > LY)
@@ -1732,7 +1719,7 @@ namespace GBHawk
 				}
 				else
 				{
-					uint16_t temp2 = DMA_OAM_access ? Core.OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
+					uint16_t temp2 = DMA_OAM_access ? Core_OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
 					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
 					write_sprite++;
 

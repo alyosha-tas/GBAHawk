@@ -7,6 +7,7 @@
 #include "Memory.h"
 #include "GB_System.h"
 #include "Mappers.h"
+#include "PPUs.h"
 
 /*
 	$FFFF          Interrupt Enable Flag
@@ -35,26 +36,26 @@ namespace GBHawk
 	{
 		addr_access = addr;
 
-		if (ppu.DMA_bus_control)
+		if (ppu_pntr->DMA_bus_control)
 		{
 			// some of gekkio's tests require these to be accessible during DMA
 			if (addr < 0x8000)
 			{
-				if (ppu.DMA_addr < 0x80)
+				if (ppu_pntr->DMA_addr < 0x80)
 				{
-					return ppu.DMA_byte;
+					return ppu_pntr->DMA_byte;
 				}
 
-				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = CycleCount;
+				bus_value = mapper_pntr->ReadMemoryLow(addr);
+				bus_access_time = Cycle_Count;
 				return bus_value;
 			}
 
 			if (addr >= 0xA000 && addr < 0xC000)
 			{
 				// on GBC only, cart is accessible during DMA
-				bus_value = mapper.ReadMemoryHigh(addr);
-				bus_access_time = CycleCount;
+				bus_value = mapper_pntr->ReadMemoryHigh(addr);
+				bus_access_time = Cycle_Count;
 				return bus_value;
 			}
 
@@ -71,7 +72,7 @@ namespace GBHawk
 
 			if (addr >= 0xFE00 && addr < 0xFEA0)
 			{
-				if (ppu.DMA_OAM_access)
+				if (ppu_pntr->DMA_OAM_access)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -99,15 +100,15 @@ namespace GBHawk
 				}
 			}
 
-			return ppu.DMA_byte;
+			return ppu_pntr->DMA_byte;
 		}
 
 		if (addr < 0x8000)
 		{
 			if (addr >= 0x900)
 			{
-				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = CycleCount;
+				bus_value = mapper_pntr->ReadMemoryLow(addr);
+				bus_access_time = Cycle_Count;
 				return bus_value;
 			}
 
@@ -119,8 +120,8 @@ namespace GBHawk
 					return BIOS[addr]; // Return BIOS
 				}
 
-				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = CycleCount;
+				bus_value = mapper_pntr->ReadMemoryLow(addr);
+				bus_access_time = Cycle_Count;
 				return bus_value;
 			}
 
@@ -132,47 +133,49 @@ namespace GBHawk
 					return _bios[addr]; // Return BIOS
 				}
 
-				bus_value = mapper.ReadMemoryLow(addr);
-				bus_access_time = CycleCount;
+				bus_value = mapper_pntr->ReadMemoryLow(addr);
+				bus_access_time = Cycle_Count;
 				return bus_value;
 			}
 
-			bus_value = mapper.ReadMemoryLow(addr);
-			bus_access_time = CycleCount;
+			bus_value = mapper_pntr->ReadMemoryLow(addr);
+			bus_access_time = Cycle_Count;
 			return bus_value;
 		}
 
 		if (addr < 0xA000)
 		{
-			if (ppu.VRAM_access_read)
+			if (ppu_pntr->VRAM_access_read)
 			{
 				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 			}
 
 			if (!HDMA_transfer)
 			{
-				if (ppu.pixel_counter == 160)
+				if (ppu_pntr->pixel_counter == 160)
 				{
-					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + ppu.bus_address + " " +
-						VRAM[ppu.bus_address] + " " + ppu.read_case_prev + " " + (ppu.internal_cycle & 1) + " " +
-						(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);
+					/*
+					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + ppu_pntr->bus_address + " " +
+						VRAM[ppu_pntr->bus_address] + " " + ppu_pntr->read_case_prev + " " + (ppu_pntr->internal_cycle & 1) + " " +
+						(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);					
+					*/
 
 					// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
-					if ((ppu.read_case_prev == 0) || (ppu.read_case_prev == 4))
+					if ((ppu_pntr->read_case_prev == 0) || (ppu_pntr->read_case_prev == 4))
 					{
 						if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
 						{
 							return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 						}
-						return VRAM[ppu.bus_address];
+						return VRAM[ppu_pntr->bus_address];
 					}
 
 					// TODO: What is returned when the ppu isn't accessing VRAM?
-					//if ((ppu.read_case_prev == 3) || (ppu.read_case_prev == 7))
+					//if ((ppu_pntr->read_case_prev == 3) || (ppu_pntr->read_case_prev == 7))
 					//{
 					//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 					//}
-					return VRAM[ppu.bus_address];
+					return VRAM[ppu_pntr->bus_address];
 				}
 				return 0xFF;
 			}
@@ -184,8 +187,8 @@ namespace GBHawk
 
 		if (addr < 0xC000)
 		{
-			bus_value = mapper.ReadMemoryHigh(addr);
-			bus_access_time = CycleCount;
+			bus_value = mapper_pntr->ReadMemoryHigh(addr);
+			bus_access_time = Cycle_Count;
 			return bus_value;
 		}
 
@@ -200,7 +203,7 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -212,7 +215,7 @@ namespace GBHawk
 			if (Is_GBC_GBA)
 			{
 				// in GBA mode, it returns a reflection of the address somehow
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -222,7 +225,7 @@ namespace GBHawk
 			else
 			{
 				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -249,15 +252,15 @@ namespace GBHawk
 	{
 		addr_access = addr;
 
-		if (ppu.DMA_bus_control)
+		if (ppu_pntr->DMA_bus_control)
 		{
 			// some of gekkio's tests require this to be accessible during DMA
 			if (addr >= 0xA000 && addr < 0xC000)
 			{
 				// on GBC only, cart is accessible during DMA
 				bus_value = value;
-				bus_access_time = CycleCount;
-				mapper.WriteMemory(addr, value);
+				bus_access_time = Cycle_Count;
+				mapper_pntr->WriteMemory(addr, value);
 			}
 
 			if (addr >= 0xE000 && addr < 0xF000)
@@ -270,7 +273,7 @@ namespace GBHawk
 				//RAM_read[RAM_Bank * 0x1000 + (addr - 0xF000)] = 1;
 				RAM[RAM_Bank * 0x1000 + (addr - 0xF000)] = value;
 			}
-			else if (addr >= 0xFE00 && addr < 0xFEA0 && ppu.DMA_OAM_access)
+			else if (addr >= 0xFE00 && addr < 0xFEA0 && ppu_pntr->DMA_OAM_access)
 			{
 				OAM[addr - 0xFE00] = value;
 			}
@@ -315,7 +318,7 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu.OAM_access_write) { OAM[addr - 0xFE00] = value; }
+				if (ppu_pntr->OAM_access_write) { OAM[addr - 0xFE00] = value; }
 			}
 			// unmapped memory writes depend on console		
 			else
@@ -339,12 +342,12 @@ namespace GBHawk
 		else if (addr >= 0xA000)
 		{
 			bus_value = value;
-			bus_access_time = CycleCount;
-			mapper.WriteMemory(addr, value);
+			bus_access_time = Cycle_Count;
+			mapper_pntr->WriteMemory(addr, value);
 		}
 		else if (addr >= 0x8000)
 		{
-			if (ppu.VRAM_access_write)
+			if (ppu_pntr->VRAM_access_write)
 			{
 				VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)] = value;
 			}
@@ -354,8 +357,8 @@ namespace GBHawk
 			if (addr >= 0x900)
 			{
 				bus_value = value;
-				bus_access_time = CycleCount;
-				mapper.WriteMemory(addr, value);
+				bus_access_time = Cycle_Count;
+				mapper_pntr->WriteMemory(addr, value);
 			}
 			else
 			{
@@ -368,8 +371,8 @@ namespace GBHawk
 					else
 					{
 						bus_value = value;
-						bus_access_time = CycleCount;
-						mapper.WriteMemory(addr, value);
+						bus_access_time = Cycle_Count;
+						mapper_pntr->WriteMemory(addr, value);
 					}
 				}
 				else if (addr >= 0x200)
@@ -381,15 +384,15 @@ namespace GBHawk
 					else
 					{
 						bus_value = value;
-						bus_access_time = CycleCount;
-						mapper.WriteMemory(addr, value);
+						bus_access_time = Cycle_Count;
+						mapper_pntr->WriteMemory(addr, value);
 					}
 				}
 				else
 				{
 					bus_value = value;
-					bus_access_time = CycleCount;
-					mapper.WriteMemory(addr, value);
+					bus_access_time = Cycle_Count;
+					mapper_pntr->WriteMemory(addr, value);
 				}
 			}
 		}
@@ -397,23 +400,23 @@ namespace GBHawk
 
 	uint8_t GB_System::Peek_Memory(uint16_t addr)
 	{
-		if (ppu.DMA_bus_control)
+		if (ppu_pntr->DMA_bus_control)
 		{
 			// some of gekkio's tests require these to be accessible during DMA
 			if (addr < 0x8000)
 			{
-				if (ppu.DMA_addr < 0x80)
+				if (ppu_pntr->DMA_addr < 0x80)
 				{
-					return ppu.DMA_byte;
+					return ppu_pntr->DMA_byte;
 				}
 
-				return mapper.PeekMemoryLow(addr);
+				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
 			if ((addr >= 0xA000) && (addr < 0xC000))
 			{
 				// on GBC only, cart is accessible during DMA
-				return mapper.PeekMemoryHigh(addr);
+				return mapper_pntr->PeekMemoryHigh(addr);
 			}
 
 			if (addr >= 0xE000 && addr < 0xF000)
@@ -428,7 +431,7 @@ namespace GBHawk
 
 			if (addr >= 0xFE00 && addr < 0xFEA0)
 			{
-				if (ppu.DMA_OAM_access)
+				if (ppu_pntr->DMA_OAM_access)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -455,14 +458,14 @@ namespace GBHawk
 				}
 			}
 
-			return ppu.DMA_byte;
+			return ppu_pntr->DMA_byte;
 		}
 
 		if (addr < 0x8000)
 		{
 			if (addr >= 0x900)
 			{
-				return mapper.PeekMemoryLow(addr);
+				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
 			if (addr < 0x100)
@@ -473,7 +476,7 @@ namespace GBHawk
 					return BIOS[addr]; // Return BIOS
 				}
 
-				return mapper.PeekMemoryLow(addr);
+				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
 			if (addr >= 0x200)
@@ -484,15 +487,15 @@ namespace GBHawk
 					return BIOS[addr]; // Return BIOS
 				}
 
-				return mapper.PeekMemoryLow(addr);
+				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
-			return mapper.PeekMemoryLow(addr);
+			return mapper_pntr->PeekMemoryLow(addr);
 		}
 
 		if (addr < 0xA000)
 		{
-			if (ppu.VRAM_access_read)
+			if (ppu_pntr->VRAM_access_read)
 			{
 				return VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)];
 			}
@@ -502,7 +505,7 @@ namespace GBHawk
 
 		if (addr < 0xC000)
 		{
-			return mapper.PeekMemoryHigh(addr);
+			return mapper_pntr->PeekMemoryHigh(addr);
 		}
 
 		if (addr < 0xFE00)
@@ -515,7 +518,7 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -527,7 +530,7 @@ namespace GBHawk
 			if (Is_GBC_GBA)
 			{
 				// in GBA mode, it returns a reflection of the address somehow
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -537,7 +540,7 @@ namespace GBHawk
 			else
 			{
 				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
-				if (ppu.OAM_access_read)
+				if (ppu_pntr->OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}

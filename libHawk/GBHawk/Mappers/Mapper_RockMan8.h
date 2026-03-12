@@ -1,14 +1,23 @@
-﻿using BizHawk.Common;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// RockMan 8, just some simple bankswitching 
-	public class MapperRM8 : MapperBase
+	class Mapper_RockMan8 : Mappers
 	{
-		public int ROM_bank;
-		public int ROM_mask;
+	public:
+		int ROM_bank;
+		int ROM_mask;
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 1;
 			ROM_mask = Core._rom.Length / 0x4000 - 1;
@@ -17,7 +26,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			if (ROM_mask > 4) { ROM_mask |= 3; }
 	}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -31,17 +40,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			return 0xFF;
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if ((addr >= 0x2000) && (addr < 0x4000))
 			{
@@ -54,12 +63,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

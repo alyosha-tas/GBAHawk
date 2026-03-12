@@ -1,26 +1,35 @@
-﻿using BizHawk.Common;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Hudson HuC3 used with Robopon and others
-	public class MapperHuC3 : MapperBase
+	class Mapper_HuC3 : Mappers
 	{
-		public int ROM_bank;
-		public int RAM_bank;
-		public bool RAM_enable;
-		public int ROM_mask;
-		public int RAM_mask;
-		public bool IR_signal;
-		public byte control;
-		public byte chip_read;
-		public bool timer_read;
-		public int time_val_shift;
-		public uint time;
-		public int RTC_timer;
-		public int RTC_low_clock;
-		public int RTC_seconds;
+	public:
+		int ROM_bank;
+		int RAM_bank;
+		bool RAM_enable;
+		int ROM_mask;
+		int RAM_mask;
+		bool IR_signal;
+		byte control;
+		byte chip_read;
+		bool timer_read;
+		int time_val_shift;
+		uint time;
+		int RTC_timer;
+		int RTC_low_clock;
+		int RTC_seconds;
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 0;
 			RAM_bank = 0;
@@ -42,7 +51,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -54,7 +63,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if ((control >= 0xB) && (control < 0xE))
 			{
@@ -82,12 +91,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0x8000)
 			{
@@ -204,12 +213,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void RTC_Get(int value, int index)
+		void RTC_Get(int value, int index)
 		{
 			time |= (uint)((value & 0xFF) << index);
 		}
 
-		public override void Mapper_Tick()
+		void Mapper_Tick()
 		{
 			RTC_timer++;
 
@@ -243,7 +252,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

@@ -1,29 +1,34 @@
-﻿using BizHawk.Common;
-using BizHawk.Common.NumberExtensions;
-using System;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Mapper for multi-game ROMs
-
-	// TODO: Implement alternate mbc1 mode (no games uses it)
-	public class MapperMMM01 : MapperBase
+	class Mapper_MMM01 : Mappers
 	{
-		public byte RAM_enable_Reg;
-		public byte ROM_bank_Reg;
-		public byte RAM_bank_Reg;
-		public byte Mode_Reg;
+	public:
+		byte RAM_enable_Reg;
+		byte ROM_bank_Reg;
+		byte RAM_bank_Reg;
+		byte Mode_Reg;
 
-		public int ROM_mask;
-		public int RAM_mask;
-		public bool SRAM_en;
+		int ROM_mask;
+		int RAM_mask;
+		bool SRAM_en;
 
-		public int ROM_bank;
-		public int Forced_Mask;
-		public int RAM_bank;
-		public bool sel_mode;
+		int ROM_bank;
+		int Forced_Mask;
+		int RAM_bank;
+		bool sel_mode;
 
-		public override void Reset()
+		void Reset()
 		{
 			RAM_enable_Reg = 0;
 			ROM_bank_Reg = 0;
@@ -49,7 +54,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -61,7 +66,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if (Core.cart_RAM != null)
 			{
@@ -73,12 +78,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			//Console.WriteLine(addr + " " + value);
 			
@@ -224,12 +229,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(RAM_enable_Reg), ref RAM_enable_Reg);
 			ser.Sync(nameof(ROM_bank_Reg), ref ROM_bank_Reg);

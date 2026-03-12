@@ -149,6 +149,23 @@
     <ClInclude Include="GB_System.h" />
     <ClInclude Include="LinkCore.h" />
     <ClInclude Include="Mappers.h" />
+    <ClInclude Include="Mappers\Mapper_Camera.h" />
+    <ClInclude Include="Mappers\Mapper_Default.h" />
+    <ClInclude Include="Mappers\Mapper_HuC1.h" />
+    <ClInclude Include="Mappers\Mapper_HuC3.h" />
+    <ClInclude Include="Mappers\Mapper_MBC1.h" />
+    <ClInclude Include="Mappers\Mapper_MBC1_Multi.h" />
+    <ClInclude Include="Mappers\Mapper_MBC2.h" />
+    <ClInclude Include="Mappers\Mapper_MBC3.h" />
+    <ClInclude Include="Mappers\Mapper_MBC5.h" />
+    <ClInclude Include="Mappers\Mapper_MBC6.h" />
+    <ClInclude Include="Mappers\Mapper_MBC7.h" />
+    <ClInclude Include="Mappers\Mapper_MMM01.h" />
+    <ClInclude Include="Mappers\Mapper_RockMan8.h" />
+    <ClInclude Include="Mappers\Mapper_Sachen_MMC1.h" />
+    <ClInclude Include="Mappers\Mapper_Sachen_MMC2.h" />
+    <ClInclude Include="Mappers\Mapper_TAMA5.h" />
+    <ClInclude Include="Mappers\Mapper_WisdomTree.h" />
     <ClInclude Include="PPUs.h" />
   </ItemGroup>
   <ItemGroup>

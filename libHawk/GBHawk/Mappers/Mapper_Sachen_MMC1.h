@@ -1,25 +1,35 @@
-﻿using BizHawk.Common;
-using System;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Sachen Bootleg Mapper
-	// NOTE: Normally, locked mode is disabled after 31 rises of A15
-	// this occurs when the Boot Rom is loading the nintendo logo into VRAM
-	// instead of tracking that in the main memory map where it will just slow things down for no reason
-	// we'll clear the 'locked' flag when the last byte of the logo is read
-	internal class MapperSachen1 : MapperBase
+	class Mapper_Sachen1 : Mappers
 	{
-		public int ROM_bank;
-		public bool locked;
-		public int ROM_mask;
-		public int ROM_bank_mask;
-		public int BASE_ROM_Bank;
-		public bool reg_access;
-		public ushort addr_last;
-		public int counter;
+	public:
+		// Sachen Bootleg Mapper
+		// NOTE: Normally, locked mode is disabled after 31 rises of A15
+		// this occurs when the Boot Rom is loading the nintendo logo into VRAM
+		// instead of tracking that in the main memory map where it will just slow things down for no reason
+		// we'll clear the 'locked' flag when the last byte of the logo is read
+	
+		int ROM_bank;
+		bool locked;
+		int ROM_mask;
+		int ROM_bank_mask;
+		int BASE_ROM_Bank;
+		bool reg_access;
+		ushort addr_last;
+		int counter;
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 1;
 			ROM_mask = Core._rom.Length / 0x4000 - 1;
@@ -31,7 +41,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			counter = 0;
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -64,17 +74,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			return 0xFF;
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0x2000)
 			{
@@ -105,12 +115,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void Mapper_Tick()
+		void Mapper_Tick()
 		{
 			if (locked)
 			{
@@ -133,7 +143,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

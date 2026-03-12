@@ -1,28 +1,37 @@
-﻿using BizHawk.Common;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Tama 5 mapper used in tamagatchi 3
-	public class MapperTAMA5 : MapperBase
+	class Mapper_TAMA5 : Mappers
 	{
-		public int ROM_bank;
-		public int RAM_bank;
-		public int ROM_mask;
-		public int RAM_mask;
-		public byte[] RTC_regs = new byte[10];
-		public int RTC_timer;
-		public int RTC_low_clock;
-		public bool halt;
-		public int RTC_offset;
-		public int ctrl;
-		public int RAM_addr_low;
-		public int RAM_addr_high;
-		public int RAM_val_low;
-		public int RAM_val_high;
-		public byte Chip_return_low;
-		public byte Chip_return_high;
+	public:
+		int ROM_bank;
+		int RAM_bank;
+		int ROM_mask;
+		int RAM_mask;
+		byte[] RTC_regs = new byte[10];
+		int RTC_timer;
+		int RTC_low_clock;
+		bool halt;
+		int RTC_offset;
+		int ctrl;
+		int RAM_addr_low;
+		int RAM_addr_high;
+		int RAM_val_low;
+		int RAM_val_high;
+		byte Chip_return_low;
+		byte Chip_return_high;
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 0;
 			RAM_bank = 0;
@@ -45,7 +54,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			ctrl = 0;
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -57,7 +66,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			switch (ctrl)
 			{
@@ -76,12 +85,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			return 0x0;
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr == 0xA000)
 			{
@@ -172,12 +181,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void RTC_Get(int value, int index)
+		void RTC_Get(int value, int index)
 		{
 			if (index < 10)
 			{
@@ -189,7 +198,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void Mapper_Tick()
+		void Mapper_Tick()
 		{
 			if (!halt)
 			{
@@ -242,7 +251,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

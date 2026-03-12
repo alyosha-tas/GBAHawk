@@ -5,6 +5,7 @@
 #include <string>
 
 #include "GB_System.h"
+#include "PPUs.h"
 
 namespace GBHawk
 {
@@ -1171,9 +1172,9 @@ namespace GBHawk
 
 			Double_Speed = !Double_Speed;
 
-			ppu.LYC_offset = Double_Speed ? 1 : 2;
+			ppu_pntr->LYC_offset = Double_Speed ? 1 : 2;
 
-			ppu.LY_153_change = Double_Speed ? 8 : 10;
+			ppu_pntr->LY_153_change = Double_Speed ? 8 : 10;
 
 			return 0;
 		}

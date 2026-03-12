@@ -35,7 +35,6 @@ using namespace std;
 
 namespace GBAHawk
 {
-	class MemoryManager;
 	class Mappers;
 
 	class GBA_System

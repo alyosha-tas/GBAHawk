@@ -1,17 +1,26 @@
-﻿using BizHawk.Common;
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
 
-namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// MBC5, common mapper for GBC games
-	public class MapperMBC5 : MapperBase
+	class Mapper_MBC5 : Mappers
 	{
-		public int ROM_bank;
-		public int RAM_bank;
-		public bool RAM_enable;
-		public int ROM_mask;
-		public int RAM_mask;
+	public:
+		int ROM_bank;
+		int RAM_bank;
+		bool RAM_enable;
+		int ROM_mask;
+		int RAM_mask;
 
-		public override void Reset()
+		void Reset()
 		{
 			ROM_bank = 1;
 			RAM_bank = 0;
@@ -30,7 +39,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -42,7 +51,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if (Core.cart_RAM != null)
 			{
@@ -62,12 +71,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0x8000)
 			{
@@ -109,12 +118,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		public override void SyncState(Serializer ser)
+		void SyncState(Serializer ser)
 		{
 			ser.Sync(nameof(ROM_bank), ref ROM_bank);
 			ser.Sync(nameof(ROM_mask), ref ROM_mask);

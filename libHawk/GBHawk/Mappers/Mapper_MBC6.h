@@ -1,14 +1,25 @@
-﻿namespace BizHawk.Emulation.Cores.Nintendo.GBHawkOld
+﻿#pragma once
+#include <iostream>
+#include <cstdint>
+#include <iomanip>
+#include <string>
+#include <cmath>
+
+#include "../Mappers.h"
+
+using namespace std;
+
+namespace GBHawk
 {
-	// Default mapper with no bank switching
-	public class MapperMBC6 : MapperBase
+	class Mapper_MBC6 : Mappers
 	{
-		public override void Reset()
+	public:
+		void Reset()
 		{
 			// nothing to initialize
 		}
 
-		public override byte ReadMemoryLow(ushort addr)
+		byte ReadMemoryLow(ushort addr)
 		{
 			if (addr < 0x8000)
 			{
@@ -27,7 +38,7 @@
 			}
 		}
 
-		public override byte ReadMemoryHigh(ushort addr)
+		byte ReadMemoryHigh(ushort addr)
 		{
 			if (Core.cart_RAM != null)
 			{
@@ -39,12 +50,12 @@
 			}
 		}
 
-		public override byte PeekMemoryLow(ushort addr)
+		byte PeekMemoryLow(ushort addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		public override void WriteMemory(ushort addr, byte value)
+		void WriteMemory(ushort addr, byte value)
 		{
 			if (addr < 0x8000)
 			{
@@ -59,7 +70,7 @@
 			}
 		}
 
-		public override void PokeMemory(ushort addr, byte value)
+		void PokeMemory(ushort addr, byte value)
 		{
 			WriteMemory(addr, value);
 		}

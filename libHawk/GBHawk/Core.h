@@ -10,6 +10,7 @@
 #include "GB_System.h"
 #include "Memory.h"
 #include "Mappers.h"
+#include "PPUs.h"
 
 using namespace std;
 
@@ -28,7 +29,9 @@ namespace GBHawk
 		};
 
 		GB_System GB;
+
 		Mappers* Mapper;
+		PPUs* PPU;
 
 		void Load_BIOS(uint8_t* bios)
 		{
