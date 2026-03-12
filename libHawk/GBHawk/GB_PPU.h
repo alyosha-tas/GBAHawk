@@ -43,7 +43,7 @@ namespace GBHawk
 			switch (addr)
 			{
 				case 0xFF40: // LCDC
-					if (LCDC_Bit(7) && !value.Bit(7))
+					if (LCDC_Bit(7) && !((value & 0x80) == 0x80))
 					{
 						VRAM_access_read = true;
 						VRAM_access_write = true;
@@ -53,7 +53,7 @@ namespace GBHawk
 						clear_screen = true;
 					}
 
-					if (!LCDC_Bit(7) && value.Bit(7))
+					if (!LCDC_Bit(7) && ((value & 0x80) == 0x80))
 					{
 						// don't draw for one frame after turning on
 						blank_frame = true;
@@ -66,7 +66,7 @@ namespace GBHawk
 					// this appears to be a glitchy LYC compare
 					//Console.WriteLine("stat " + " " + STAT + " " + value + " " + LY + " " + cycle + " " + Core.REG_FF0F);
 
-					if (!value.Bit(6)) { LYC_INT = false; }
+					if (!((value & 0x40) == 0x40)) { LYC_INT = false; }
 
 					if (LCDC_Bit(7))
 					{
@@ -78,7 +78,7 @@ namespace GBHawk
 						}
 						else
 						{
-							if (value.Bit(6))
+							if (((value & 0x40) == 0x40))
 							{
 								if (LY == LYC) { LYC_INT = true; }
 								else { LYC_INT = false; }
