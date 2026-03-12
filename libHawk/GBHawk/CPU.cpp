@@ -1466,4 +1466,9 @@ namespace GBHawk
 			cpu_Instr_Cycle = -1;
 		}
 	}
+
+	uint8_t cpu_Get_Disasm_Opcode(uint16_t addr)
+	{
+		return Peek_Memory(addr);
+	}
 }

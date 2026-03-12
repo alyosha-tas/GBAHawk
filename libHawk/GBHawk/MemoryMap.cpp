@@ -559,6 +559,16 @@ namespace GBHawk
 		return Read_Registers(addr);
 	}
 
+	int8_t GB_System::Peek_Memory_Signed(uint16_t addr)
+	{
+		return (int8_t)Peek_Memory(addr);
+	}
+
+	uint16_t GB_System::Peek_Memory_16(uint16_t addr)
+	{
+		return (uint16_t)(Peek_Memory(addr) | (Peek_Memory((uint16_t)(addr + 1)) << 8));
+	}
+
 	#pragma endregion
 
 	#pragma region DMA Memory Map

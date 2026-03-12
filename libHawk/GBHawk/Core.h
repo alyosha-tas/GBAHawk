@@ -443,17 +443,17 @@ namespace GBHawk
 
 		int GetHeaderLength()
 		{
-			return 78 + 1;
+			return 105 + 1;
 		}
 
 		int GetDisasmLength()
 		{
-			return 78 + 1;
+			return 42 + 1;
 		}
 
 		int GetRegStringLength()
 		{
-			return 282 + 1;
+			return 103 + 1;
 		}
 
 		void GetHeader(char* h, int l)

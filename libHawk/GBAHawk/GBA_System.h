@@ -2264,7 +2264,7 @@ namespace GBAHawk
 			"R0:XXXXXXXX R1:XXXXXXXX R2:XXXXXXXX R3:XXXXXXXX R4:XXXXXXXX R5:XXXXXXXX R6:XXXXXXXX R7:XXXXXXXX R8:XXXXXXXX R9:XXXXXXXX R10:XXXXXXXX R11:XXXXXXXX R12:XXXXXXXX R13:XXXXXXXX R14:XXXXXXXX R15:XXXXXXXX CPSR:XXXXXXXX SPSR:XXXXXXXX Cy:XXXXXXXXXXXXXXXX LY:XXX NZCVIFE F-Cy:XXXXXXXXXXXXXXXX";
 		const char* Disasm_template = "PCPCPCPCPC:  AABBCCDD  (fail)  Di Di Di Di Di Di Di Di                       ";
 
-		char replacer[40] = {};
+		char replacer[300] = {};
 		char* val_char_1 = nullptr;
 		char* val_char_2 = nullptr;
 		uint32_t temp_reg;

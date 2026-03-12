@@ -73,6 +73,8 @@ namespace GBHawk
 		void Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
 
 		uint8_t Peek_Memory(uint16_t addr);
+		int8_t Peek_Memory_Signed(uint16_t addr);
+		uint16_t Peek_Memory_16(uint16_t addr);
 
 		// General Variables
 		bool Is_Lag;
@@ -122,6 +124,7 @@ namespace GBHawk
 
 		uint64_t bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
 		uint64_t Cycle_Count;
+		uint64_t Frame_Cycle;
 
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
 		uint8_t ZP_RAM[0x80] = { };
@@ -208,6 +211,7 @@ namespace GBHawk
 			clear_counter = 0;
 
 			Cycle_Count = 0;
+			Frame_Cycle = 0;
 
 			input_register = 0xCF; // not reading any input
 
@@ -1012,6 +1016,9 @@ namespace GBHawk
 		uint16_t cpu_Int_Src;
 
 		uint32_t cpu_EI_Pending;
+
+		uint32_t cpu_Instr_Type_Save;
+		uint32_t cpu_State_Hold_Save;
 
 		uint64_t cpu_Instruction_Start;
 
@@ -2210,7 +2217,7 @@ namespace GBHawk
 
 				// call interrupt processor
 				// lowest bit set is highest priority
-				cpu_Opcode = 512 + 6; // point to Interrupt
+				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
 			}
 			else
 			{
@@ -2237,8 +2244,13 @@ namespace GBHawk
 		inline void cpu_FetchInstruction(int op)
 		{
 			cpu_Opcode = op;
+			cpu_Instr_Type = cpu_Instr_Type_List[op];
 
-			if (cpu_CB_Prefix) { cpu_Opcode += 256; }
+			if (cpu_CB_Prefix)
+			{
+				cpu_Opcode += 256;
+				cpu_Instr_Type = cpu_Instr_Type_List[op];
+			}
 
 			cpu_CB_Prefix = false;
 
@@ -2721,26 +2733,26 @@ namespace GBHawk
 
 		#pragma region Disassemble
 
-		// syntax option set by front end option;
-		bool useRGBDSSyntax = false;
-
 		// disassemblies will also return strings of the same length
-		const char* TraceHeader = "ARM7TDMI: PC, machine code, mnemonic, operands, registers, Cy, flags (ZNHCIFE)";
-		const char* UNS_event =  "                               ====Un-STOP====                               ";
-		const char* UNH_event =  "                               ====Un-HALT====                               ";
-		const char* IRQ_event =  "                                 ====IRQ====                                 ";
-		const char* HALT_event = "                                 ====HALT====                                ";
-		const char* DMA_event =  "                                 ====DMA====                                 ";
+		const char* TraceHeader = "LR35902: PC, machine code, mnemonic, operands, registers (A, F, B, C, D, E, H, L, SP), Cy, flags (ZNHCI)";
+		const char* UNS_event =  "            ====Un-STOP====              ";
+		const char* UNH_event =  "            ====Un-HALT====              ";
+		const char* IRQ_event =  "              ====IRQ====                ";
+		const char* HALT_event = "              ====HALT====               ";
+		const char* DMA_event =  "              ====DMA====                ";
 		const char* No_Reg = 
 			"                                                                                                                                                                                                                                                                                          ";
 		const char* Reg_template = 
-			"R0:XXXXXXXX R1:XXXXXXXX R2:XXXXXXXX R3:XXXXXXXX R4:XXXXXXXX R5:XXXXXXXX R6:XXXXXXXX R7:XXXXXXXX R8:XXXXXXXX R9:XXXXXXXX R10:XXXXXXXX R11:XXXXXXXX R12:XXXXXXXX R13:XXXXXXXX R14:XXXXXXXX R15:XXXXXXXX CPSR:XXXXXXXX SPSR:XXXXXXXX Cy:XXXXXXXXXXXXXXXX LY:XXX NZCVIFE F-Cy:XXXXXXXXXXXXXXXX";
-		const char* Disasm_template = "PCPCPCPCPC:  AABBCCDD  (fail)  Di Di Di Di Di Di Di Di                       ";
+			"A:XX F:XX B:XX C:XX D:XX E:XX H:XX L:XX SP:XXXX Cy:XXXXXXXXXXXXXXXX LY:XXX ZNHCI F-Cy:XXXXXXXXXXXXXXXX";
+		const char* Disasm_template = "PCPC:   AA BB   Di Di Di Di Di Di Di Di  ";
 
-		char replacer[40] = {};
+		char replacer[300] = {};
 		char* val_char_1 = nullptr;
 		char* val_char_2 = nullptr;
 		uint32_t temp_reg;
+
+		uint32_t op_size = 0;
+
 
 		void (*TraceCallback)(int);
 		void (*RumbleCallback)(bool);
@@ -2790,96 +2802,51 @@ namespace GBHawk
 		{		
 			val_char_1 = replacer;
 
-			string reg_state = "R0:";
+			string reg_state = "A:";
 
-			temp_reg = cpu_Regs[0];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			temp_reg = cpu_Regs[cpu_A];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R1:");			
-			temp_reg = cpu_Regs[1];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" F:");			
+			temp_reg = cpu_Regs[cpu_F];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R2:");
-			temp_reg = cpu_Regs[2];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" B:");
+			temp_reg = cpu_Regs[cpu_B];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R3:");
-			temp_reg = cpu_Regs[3];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" C:");
+			temp_reg = cpu_Regs[cpu_C];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R4:");
-			temp_reg = cpu_Regs[4];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" D:");
+			temp_reg = cpu_Regs[cpu_D];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R5:");
-			temp_reg = cpu_Regs[5];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" E:");
+			temp_reg = cpu_Regs[cpu_E];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R6:");
-			temp_reg = cpu_Regs[6];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" H:");
+			temp_reg = cpu_Regs[cpu_H];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R7:");
-			temp_reg = cpu_Regs[7];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" L:");
+			temp_reg = cpu_Regs[cpu_L];
+			sprintf_s(val_char_1, 3, "%02X", temp_reg);
+			reg_state.append(val_char_1, 2);
 
-			reg_state.append(" R8:");
-			temp_reg = cpu_Regs[8];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R9:");
-			temp_reg = cpu_Regs[9];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R10:");
-			temp_reg = cpu_Regs[10];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R11:");
-			temp_reg = cpu_Regs[11];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R12:");
-			temp_reg = cpu_Regs[12];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R13:");
-			temp_reg = cpu_Regs[13];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R14:");
-			temp_reg = cpu_Regs[14];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" R15:");
-			temp_reg = cpu_Regs[15];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" CPSR:");
-			temp_reg = cpu_Regs[16];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
-
-			reg_state.append(" SPSR:");
-			temp_reg = cpu_Regs[17];
-			sprintf_s(val_char_1, 9, "%08X", temp_reg);
-			reg_state.append(val_char_1, 8);
+			reg_state.append(" SP:");
+			temp_reg = cpu_RegSPget();
+			sprintf_s(val_char_1, 5, "%04X", temp_reg);
+			reg_state.append(val_char_1, 4);
 
 			reg_state.append(" Cy:");
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", Cycle_Count));
@@ -2888,418 +2855,601 @@ namespace GBHawk
 			reg_state.append(val_char_1, sprintf_s(val_char_1, 4, "%3u", ppu_LY));
 			reg_state.append(" ");
 			
-			reg_state.append(cpu_FlagNget() ? "N" : "n");
 			reg_state.append(cpu_FlagZget() ? "Z" : "z");
+			reg_state.append(cpu_FlagNget() ? "N" : "n");
+			reg_state.append(cpu_FlagHget() ? "H" : "h");
 			reg_state.append(cpu_FlagCget() ? "C" : "c");		
-			reg_state.append(cpu_FlagVget() ? "V" : "v");
-			reg_state.append(cpu_FlagIget() ? "I" : "i");
-			reg_state.append(cpu_FlagFget() ? "F" : "f");
-			reg_state.append(INT_Master_On ? "E" : "e");
+			reg_state.append(cpu_FlagI ? "I" : "i");
 
 			reg_state.append(" F-Cy:");
-			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", FrameCycle));
+			reg_state.append(val_char_1, sprintf_s(val_char_1, 17, "%16lld", Frame_Cycle));
 
 			return reg_state;
 		}
 
 		string CPUDisassembly()
 		{
-			string byte_code = "";
+			string trace_string = "";
+
+			string disasm = cpu_Disassemble(cpu_RegPCget());
 			
 			val_char_1 = replacer;
 
-			sprintf_s(val_char_1, 9, "%08X", (cpu_Regs[15] - 4));
-			byte_code.append(val_char_1, 8);
-			byte_code.append(":      ");
-			sprintf_s(val_char_1, 5, "%04X", cpu_Instr_TMB_2);
-			byte_code.append(val_char_1, 4);
-			byte_code.append("  ");
-			byte_code.append(cpu_Disassemble());
+			trace_string.append(":  ");
 
-			while (byte_code.length() < 78) 
+			uint16_t dis_pc = cpu_RegPCget();
+			for (uint32_t i = 0; i < op_size; i++)
 			{
-				byte_code.append(" ");
+				sprintf_s(val_char_1, 3, "%02X", Peek_Memory(dis_pc++));
+
+				trace_string.append(val_char_1, 2);
+				trace_string.append(" ");
 			}
 
-			return byte_code;
+			while (trace_string.length() < 18)
+			{
+				trace_string.append(" ");
+			}
+
+			trace_string.append(disasm);
+
+			while (trace_string.length() < 42)
+			{
+				trace_string.append(" ");
+			}
+
+			return trace_string;
 		}
 
-		string cpu_Disassemble()
+		uint8_t cpu_Get_Disasm_Opcode(uint16_t addr);
+
+		string cpu_Disassemble(uint16_t pc)
 		{
-			val_char_2 = replacer;
-			
-			switch ((cpu_Instr_TMB_2 >> 13) & 7)
+
+			uint16_t diff = pc;
+
+			uint8_t op = Peek_Memory(pc++);
+
+			if (op == 0xCB)
 			{
-			case 0:
-				// shift / add / sub
-				if ((cpu_Instr_TMB_2 & 0x1800) == 0x1800)
-				{
-					if ((cpu_Instr_TMB_2 & 0x200) == 0x200)
-					{
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-						{
-							sprintf_s(val_char_2, 40, "SUB R%02d = R%02d - %2X", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x7));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "SUB R%02d = R%02d - R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7));
-						}
-					}
-					else
-					{
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-						{
-							sprintf_s(val_char_2, 40, "ADD R%02d = R%02d + %2X", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x7));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "ADD R%02d = R%02d + R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7));
-						}
-					}
-				}
-				else
-				{
-					switch ((cpu_Instr_TMB_2 >> 11) & 0x3)
-					{
-					case 0:
-						sprintf_s(val_char_2, 40, "LSL IMM R%02d = R%02d << %2X", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x1F)); break;
-
-					case 1:
-						sprintf_s(val_char_2, 40, "LSR IMM R%02d = R%02d >> %2X", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x1F)); break;
-
-					case 2:
-						sprintf_s(val_char_2, 40, "ROR IMM R%02d = R%02d >> %2X", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x1F)); break;
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 1:
-				// data ops (immedaite)
-				switch ((cpu_Instr_TMB_2 >> 11) & 3)
-				{
-					case 0:         // MOV
-						sprintf_s(val_char_2, 40, "MOV IMM R%02d, %2X", ((cpu_Instr_TMB_2 >> 8) & 7), (cpu_Instr_TMB_2 & 0xFF)); break;
-
-					case 1:         // CMP
-						sprintf_s(val_char_2, 40, "CMP IMM R%02d, %2X", ((cpu_Instr_TMB_2 >> 8) & 7), (cpu_Instr_TMB_2 & 0xFF)); break;
-
-					case 2:         // ADD
-						sprintf_s(val_char_2, 40, "ADD IMM R%02d, %2X", ((cpu_Instr_TMB_2 >> 8) & 7), (cpu_Instr_TMB_2 & 0xFF)); break;
-
-					case 3:         // SUB
-						sprintf_s(val_char_2, 40, "SUB IMM R%02d, %2X", ((cpu_Instr_TMB_2 >> 8) & 7), (cpu_Instr_TMB_2 & 0xFF)); break;
-				}
-
-				return std::string(val_char_2);
-
-			case 2:
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0x0)
-				{
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x0)
-					{
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x0)
-						{
-							// ALU Ops
-							switch ((cpu_Instr_TMB_2 >> 6) & 0xF)
-							{
-								case 0x0: sprintf_s(val_char_2, 40, "AND R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x1: sprintf_s(val_char_2, 40, "EOR R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x2: sprintf_s(val_char_2, 40, "LSL R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x3: sprintf_s(val_char_2, 40, "LSR R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x4: sprintf_s(val_char_2, 40, "ASR R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x5: sprintf_s(val_char_2, 40, "ADC R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x6: sprintf_s(val_char_2, 40, "SBC R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x7: sprintf_s(val_char_2, 40, "ROR R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x8: sprintf_s(val_char_2, 40, "TST R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0x9: sprintf_s(val_char_2, 40, "NEG R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xA: sprintf_s(val_char_2, 40, "CMP R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xB: sprintf_s(val_char_2, 40, "CMN R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xC: sprintf_s(val_char_2, 40, "ORR R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xD: sprintf_s(val_char_2, 40, "MUL R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xE: sprintf_s(val_char_2, 40, "BIC R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-								case 0xF: sprintf_s(val_char_2, 40, "MVN R%02d, R%02d", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7)); break;
-							}
-
-							return std::string(val_char_2);
-						}
-						else
-						{
-							// High Regs / Branch and exchange
-							switch ((cpu_Instr_TMB_2 >> 8) & 3)
-							{
-								case 0:
-									sprintf_s(val_char_2, 40, "ADD R%02d, R%02d", (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8), ((cpu_Instr_TMB_2 >> 3) & 0xF));
-									return std::string(val_char_2);
-
-								case 1:
-									sprintf_s(val_char_2, 40, "CMP R%02d, R%02d", (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8), ((cpu_Instr_TMB_2 >> 3) & 0xF));
-									return std::string(val_char_2);
-
-								case 2:
-									if ((cpu_Instr_TMB_2 & 0xC0) == 0x0)
-									{
-										sprintf_s(val_char_2, 40, "CPY R%02d, R%02d", (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8), ((cpu_Instr_TMB_2 >> 3) & 0xF));
-										return std::string(val_char_2);
-									}
-									else
-									{
-										sprintf_s(val_char_2, 40, "MOV R%02d, R%02d", (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8), ((cpu_Instr_TMB_2 >> 3) & 0xF));
-										return std::string(val_char_2);
-									}
-
-								case 3:
-									sprintf_s(val_char_2, 40, "Bx (R%02d)", ((cpu_Instr_TMB_2 >> 3) & 0xF));
-									return std::string(val_char_2);
-							}
-						}
-					}
-					else
-					{
-						// PC relative load
-						sprintf_s(val_char_2, 40, "LD R%02d, (PC + %3X)", ((cpu_Instr_TMB_2 >> 8) & 7), ((cpu_Instr_TMB_2 & 0xFF) << 2));
-						return std::string(val_char_2);
-					}
-				}
-				else
-				{
-					// Load / store Relative offset
-					switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
-					{
-						case 0: sprintf_s(val_char_2, 40, "ST (R%02d + R%02d), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7), (cpu_Instr_TMB_2 & 7)); break;
-						case 1: sprintf_s(val_char_2, 40, "STH (R%02d + R%02d), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7), (cpu_Instr_TMB_2 & 7)); break;
-						case 2: sprintf_s(val_char_2, 40, "STB (R%02d + R%02d), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7), (cpu_Instr_TMB_2 & 7)); break;
-						case 3: sprintf_s(val_char_2, 40, "LDSB R%02d, (R%02d + R%02d)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7)); break;
-						case 4: sprintf_s(val_char_2, 40, "LD R%02d, (R%02d + R%02d)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7)); break;
-						case 5: sprintf_s(val_char_2, 40, "LDH R%02d, (R%02d + R%02d)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7)); break;
-						case 6: sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d + R%02d)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7)); break;
-						case 7: sprintf_s(val_char_2, 40, "LDSH R%02d, (R%02d + R%02d)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 7)); break;
-					}
-
-					return std::string(val_char_2);
-				}
-				return "";
-
-			case 3:
-				// Load / store Immediate offset
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0x1000)
-				{
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "LDB R%02d, (R%02d + %2X)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x1F));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "STB (R%02d + %2X), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 6) & 0x1F), (cpu_Instr_TMB_2 & 7));
-					}
-				}
-				else
-				{
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "LD R%02d, (R%02d + %2X)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 4) & 0x7C));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "ST (R%02d + %2X), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 4) & 0x7C), (cpu_Instr_TMB_2 & 7));
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 4:
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0)
-				{
-					// Load / store half word
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "LDH R%02d, (R%02d + %2X)", (cpu_Instr_TMB_2 & 7), ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 5) & 0x3E));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "STH (R%02d + %2X), R%02d", ((cpu_Instr_TMB_2 >> 3) & 7), ((cpu_Instr_TMB_2 >> 5) & 0x3E), (cpu_Instr_TMB_2 & 7));
-					}
-				}
-				else
-				{
-					// SP relative load store
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "LD R%02d, (R13 + %3X)", ((cpu_Instr_TMB_2 >> 8) & 7), ((cpu_Instr_TMB_2 & 0xFF) << 2));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "ST (R13 + %3X), R%02d", ((cpu_Instr_TMB_2 & 0xFF) << 2), ((cpu_Instr_TMB_2 >> 8) & 7));
-					}
-				}
-
-				return std::string(val_char_2);
-
-			case 5:
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0)
-				{
-					// Load Address
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "R%02d = R13 + %3X", ((cpu_Instr_TMB_2 >> 8) & 7), ((cpu_Instr_TMB_2 & 0xFF) << 2));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "R%02d = R15 + %3X", ((cpu_Instr_TMB_2 >> 8) & 7), ((cpu_Instr_TMB_2 & 0xFF) << 2));
-					}
-
-					return std::string(val_char_2);
-				}
-				else
-				{
-					if ((cpu_Instr_TMB_2 & 0xF00) == 0x0)
-					{
-						// Add offset to stack
-						if ((cpu_Instr_TMB_2 & 0x80) == 0x0)
-						{
-							sprintf_s(val_char_2, 40, "ADD SP:%2X", (cpu_Instr_TMB_2 & 0x7F));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "SUB SP:%2X", (cpu_Instr_TMB_2 & 0x7F));
-						}
-
-						return std::string(val_char_2);
-					}
-					else
-					{
-						if ((cpu_Instr_TMB_2 & 0x600) == 0x400)
-						{
-							// Push / Pop
-							if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-							{
-								sprintf_s(val_char_2, 40, "Pop %8X regs:%3X", cpu_Regs[13], (cpu_Instr_TMB_2 & 0x1FF));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "Push %8X regs:%3X", cpu_Regs[13], (cpu_Instr_TMB_2 & 0x1FF));
-							}
-
-							return std::string(val_char_2);
-						}
-						else
-						{
-							// Undefined Opcode Exception
-							return "Undefined";
-						}
-					}
-				}
-
-			case 6:
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0)
-				{
-					// Multiple Load/Store
-					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-					{
-						sprintf_s(val_char_2, 40, "LDM %8X regs:%2X", cpu_Regs[(cpu_Instr_TMB_2 >> 8) & 7], (cpu_Instr_TMB_2 & 0xFF));
-					}
-					else
-					{
-						sprintf_s(val_char_2, 40, "STM %8X regs:%2X", cpu_Regs[(cpu_Instr_TMB_2 >> 8) & 7], (cpu_Instr_TMB_2 & 0xFF));
-					}
-
-					return std::string(val_char_2);
-				}
-				else
-				{
-					if ((cpu_Instr_TMB_2 & 0xF00) == 0xF00)
-					{
-						// Software Interrupt
-						return "SWI";
-					}
-					else if ((cpu_Instr_TMB_2 & 0xE00) == 0xE00)
-					{
-						// Undefined instruction
-						return "Undefined";
-					}
-					else
-					{
-						// Conditional Branch
-						if (cpu_TMB_Condition_Check())
-						{
-							if ((cpu_Instr_TMB_2 & 0x80) == 0x80)
-							{
-								sprintf_s(val_char_2, 40, "B (-) %2X", (cpu_Instr_TMB_2 & 0xFF));
-							}
-							else
-							{
-								sprintf_s(val_char_2, 40, "B (+) %2X", (cpu_Instr_TMB_2 & 0xFF));
-							}
-
-							return std::string(val_char_2);
-						}
-						else
-						{
-							return "B (failed)";
-						}
-					}
-				}
-
-			case 7:
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0)
-				{
-					if ((cpu_Instr_TMB_2 & 0x800) == 0)
-					{
-						// Unconditional branch
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-						{
-							sprintf_s(val_char_2, 40, "B (-) %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "B (+) %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-
-						return std::string(val_char_2);
-					}
-					else
-					{
-						// Undefined Opcode Exception
-						return "Undefined";
-					}
-				}
-				else
-				{
-					// Branch with link
-					if ((cpu_Instr_TMB_2 & 0x800) == 0)
-					{
-						// A standard data operation assigning the upper part of the branch
-
-						// offset is signed
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-						{
-							sprintf_s(val_char_2, 40, "BL 1 (-) %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "BL 1 (+) %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-					}
-					else
-					{
-						// Actual branch operation (can it occur without the first one?)
-						if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-						{
-							sprintf_s(val_char_2, 40, "BL 2 %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-						else
-						{
-							sprintf_s(val_char_2, 40, "BL 2 %3X", (cpu_Instr_TMB_2 & 0x7FF));
-						}
-					}
-
-					return std::string(val_char_2);
-				}
+				op = Peek_Memory(pc++);
+				op += 256;
 			}
 
-			return "";
-		}
+			string ret = "";
 
+			val_char_2 = replacer;
+
+			switch (op)
+			{
+				case 0x00: sprintf_s(val_char_2, 40, "NOP"); break;
+				case 0x01: sprintf_s(val_char_2, 40, "LD   BC,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0x02: sprintf_s(val_char_2, 40, "LD   (BC),A"); break;
+				case 0x03: sprintf_s(val_char_2, 40, "INC  BC"); break;
+				case 0x04: sprintf_s(val_char_2, 40, "INC  B"); break;
+				case 0x05: sprintf_s(val_char_2, 40, "DEC  B"); break;
+				case 0x06: sprintf_s(val_char_2, 40, "LD   B,$%02X", Peek_Memory(pc++)); break;
+				case 0x07: sprintf_s(val_char_2, 40, "RLCA"); break;
+				case 0x08: sprintf_s(val_char_2, 40, "LD   ($%04X),SP", Peek_Memory_16(pc++)); pc++; break;
+				case 0x09: sprintf_s(val_char_2, 40, "ADD  HL,BC"); break;
+				case 0x0A: sprintf_s(val_char_2, 40, "LD   A,(BC)"); break;
+				case 0x0B: sprintf_s(val_char_2, 40, "DEC  BC"); break;
+				case 0x0C: sprintf_s(val_char_2, 40, "INC  C"); break;
+				case 0x0D: sprintf_s(val_char_2, 40, "DEC  C"); break;
+				case 0x0E: sprintf_s(val_char_2, 40, "LD   C,$%02X", Peek_Memory(pc++)); break;
+				case 0x0F: sprintf_s(val_char_2, 40, "RRCA"); break;
+				case 0x10: sprintf_s(val_char_2, 40, "STOP $%02X", Peek_Memory(pc++)); break;
+				case 0x11: sprintf_s(val_char_2, 40, "LD   DE,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0x12: sprintf_s(val_char_2, 40, "LD   (DE),A"); break;
+				case 0x13: sprintf_s(val_char_2, 40, "INC  DE"); break;
+				case 0x14: sprintf_s(val_char_2, 40, "INC  D"); break;
+				case 0x15: sprintf_s(val_char_2, 40, "DEC  D"); break;
+				case 0x16: sprintf_s(val_char_2, 40, "LD   D,$%02X", Peek_Memory(pc++)); break;
+				case 0x17: sprintf_s(val_char_2, 40, "RLA"); break;
+				case 0x18: sprintf_s(val_char_2, 40, "JR   $%04d", Peek_Memory_Signed(pc++)); break;
+				case 0x19: sprintf_s(val_char_2, 40, "ADD  HL,DE"); break;
+				case 0x1A: sprintf_s(val_char_2, 40, "LD   A,(DE)"); break;
+				case 0x1B: sprintf_s(val_char_2, 40, "DEC  DE"); break;
+				case 0x1C: sprintf_s(val_char_2, 40, "INC  E"); break;
+				case 0x1D: sprintf_s(val_char_2, 40, "DEC  E"); break;
+				case 0x1E: sprintf_s(val_char_2, 40, "LD   E,$%02X", Peek_Memory(pc++)); break;
+				case 0x1F: sprintf_s(val_char_2, 40, "RRA"); break;
+				case 0x20: sprintf_s(val_char_2, 40, "JR   NZ,$%04d", Peek_Memory_Signed(pc++)); break;
+				case 0x21: sprintf_s(val_char_2, 40, "LD   HL,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0x22: sprintf_s(val_char_2, 40, "LD   (HL+),A"); break;
+				case 0x23: sprintf_s(val_char_2, 40, "INC  HL"); break;
+				case 0x24: sprintf_s(val_char_2, 40, "INC  H"); break;
+				case 0x25: sprintf_s(val_char_2, 40, "DEC  H"); break;
+				case 0x26: sprintf_s(val_char_2, 40, "LD   H,$%02X", Peek_Memory(pc++)); break;
+				case 0x27: sprintf_s(val_char_2, 40, "DAA"); break;
+				case 0x28: sprintf_s(val_char_2, 40, "JR   Z,$%04d", Peek_Memory_Signed(pc++)); break;
+				case 0x29: sprintf_s(val_char_2, 40, "ADD  HL,HL"); break;
+				case 0x2A: sprintf_s(val_char_2, 40, "LD   A,(HL+)"); break;
+				case 0x2B: sprintf_s(val_char_2, 40, "DEC  HL"); break;
+				case 0x2C: sprintf_s(val_char_2, 40, "INC  L"); break;
+				case 0x2D: sprintf_s(val_char_2, 40, "DEC  L"); break;
+				case 0x2E: sprintf_s(val_char_2, 40, "LD   L,$%02X", Peek_Memory(pc++)); break;
+				case 0x2F: sprintf_s(val_char_2, 40, "CPL"); break;
+				case 0x30: sprintf_s(val_char_2, 40, "JR   NC,$%04d", Peek_Memory_Signed(pc++)); break;
+				case 0x31: sprintf_s(val_char_2, 40, "LD   SP,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0x32: sprintf_s(val_char_2, 40, "LD   (HL-),A"); break;
+				case 0x33: sprintf_s(val_char_2, 40, "INC  SP"); break;
+				case 0x34: sprintf_s(val_char_2, 40, "INC  (HL)"); break;
+				case 0x35: sprintf_s(val_char_2, 40, "DEC  (HL)"); break;
+				case 0x36: sprintf_s(val_char_2, 40, "LD   (HL),$%02X", Peek_Memory(pc++)); break;
+				case 0x37: sprintf_s(val_char_2, 40, "SCF"); break;
+				case 0x38: sprintf_s(val_char_2, 40, "JR   C,$%04d", Peek_Memory_Signed(pc++)); break;
+				case 0x39: sprintf_s(val_char_2, 40, "ADD  HL,SP"); break;
+				case 0x3A: sprintf_s(val_char_2, 40, "LD   A,(HL-)"); break;
+				case 0x3B: sprintf_s(val_char_2, 40, "DEC  SP"); break;
+				case 0x3C: sprintf_s(val_char_2, 40, "INC  A"); break;
+				case 0x3D: sprintf_s(val_char_2, 40, "DEC  A"); break;
+				case 0x3E: sprintf_s(val_char_2, 40, "LD   A,$%02X", Peek_Memory(pc++)); break;
+				case 0x3F: sprintf_s(val_char_2, 40, "CCF"); break;
+				case 0x40: sprintf_s(val_char_2, 40, "LD   B,B"); break;
+				case 0x41: sprintf_s(val_char_2, 40, "LD   B,C"); break;
+				case 0x42: sprintf_s(val_char_2, 40, "LD   B,D"); break;
+				case 0x43: sprintf_s(val_char_2, 40, "LD   B,E"); break;
+				case 0x44: sprintf_s(val_char_2, 40, "LD   B,H"); break;
+				case 0x45: sprintf_s(val_char_2, 40, "LD   B,L"); break;
+				case 0x46: sprintf_s(val_char_2, 40, "LD   B,(HL)"); break;
+				case 0x47: sprintf_s(val_char_2, 40, "LD   B,A"); break;
+				case 0x48: sprintf_s(val_char_2, 40, "LD   C,B"); break;
+				case 0x49: sprintf_s(val_char_2, 40, "LD   C,C"); break;
+				case 0x4A: sprintf_s(val_char_2, 40, "LD   C,D"); break;
+				case 0x4B: sprintf_s(val_char_2, 40, "LD   C,E"); break;
+				case 0x4C: sprintf_s(val_char_2, 40, "LD   C,H"); break;
+				case 0x4D: sprintf_s(val_char_2, 40, "LD   C,L"); break;
+				case 0x4E: sprintf_s(val_char_2, 40, "LD   C,(HL)"); break;
+				case 0x4F: sprintf_s(val_char_2, 40, "LD   C,A"); break;
+				case 0x50: sprintf_s(val_char_2, 40, "LD   D,B"); break;
+				case 0x51: sprintf_s(val_char_2, 40, "LD   D,C"); break;
+				case 0x52: sprintf_s(val_char_2, 40, "LD   D,D"); break;
+				case 0x53: sprintf_s(val_char_2, 40, "LD   D,E"); break;
+				case 0x54: sprintf_s(val_char_2, 40, "LD   D,H"); break;
+				case 0x55: sprintf_s(val_char_2, 40, "LD   D,L"); break;
+				case 0x56: sprintf_s(val_char_2, 40, "LD   D,(HL)"); break;
+				case 0x57: sprintf_s(val_char_2, 40, "LD   D,A"); break;
+				case 0x58: sprintf_s(val_char_2, 40, "LD   E,B"); break;
+				case 0x59: sprintf_s(val_char_2, 40, "LD   E,C"); break;
+				case 0x5A: sprintf_s(val_char_2, 40, "LD   E,D"); break;
+				case 0x5B: sprintf_s(val_char_2, 40, "LD   E,E"); break;
+				case 0x5C: sprintf_s(val_char_2, 40, "LD   E,H"); break;
+				case 0x5D: sprintf_s(val_char_2, 40, "LD   E,L"); break;
+				case 0x5E: sprintf_s(val_char_2, 40, "LD   E,(HL)"); break;
+				case 0x5F: sprintf_s(val_char_2, 40, "LD   E,A"); break;
+				case 0x60: sprintf_s(val_char_2, 40, "LD   H,B"); break;
+				case 0x61: sprintf_s(val_char_2, 40, "LD   H,C"); break;
+				case 0x62: sprintf_s(val_char_2, 40, "LD   H,D"); break;
+				case 0x63: sprintf_s(val_char_2, 40, "LD   H,E"); break;
+				case 0x64: sprintf_s(val_char_2, 40, "LD   H,H"); break;
+				case 0x65: sprintf_s(val_char_2, 40, "LD   H,L"); break;
+				case 0x66: sprintf_s(val_char_2, 40, "LD   H,(HL)"); break;
+				case 0x67: sprintf_s(val_char_2, 40, "LD   H,A"); break;
+				case 0x68: sprintf_s(val_char_2, 40, "LD   L,B"); break;
+				case 0x69: sprintf_s(val_char_2, 40, "LD   L,C"); break;
+				case 0x6A: sprintf_s(val_char_2, 40, "LD   L,D"); break;
+				case 0x6B: sprintf_s(val_char_2, 40, "LD   L,E"); break;
+				case 0x6C: sprintf_s(val_char_2, 40, "LD   L,H"); break;
+				case 0x6D: sprintf_s(val_char_2, 40, "LD   L,L"); break;
+				case 0x6E: sprintf_s(val_char_2, 40, "LD   L,(HL)"); break;
+				case 0x6F: sprintf_s(val_char_2, 40, "LD   L,A"); break;
+				case 0x70: sprintf_s(val_char_2, 40, "LD   (HL),B"); break;
+				case 0x71: sprintf_s(val_char_2, 40, "LD   (HL),C"); break;
+				case 0x72: sprintf_s(val_char_2, 40, "LD   (HL),D"); break;
+				case 0x73: sprintf_s(val_char_2, 40, "LD   (HL),E"); break;
+				case 0x74: sprintf_s(val_char_2, 40, "LD   (HL),H"); break;
+				case 0x75: sprintf_s(val_char_2, 40, "LD   (HL),L"); break;
+				case 0x76: sprintf_s(val_char_2, 40, "HALT"); break;
+				case 0x77: sprintf_s(val_char_2, 40, "LD   (HL),A"); break;
+				case 0x78: sprintf_s(val_char_2, 40, "LD   A,B"); break;
+				case 0x79: sprintf_s(val_char_2, 40, "LD   A,C"); break;
+				case 0x7A: sprintf_s(val_char_2, 40, "LD   A,D"); break;
+				case 0x7B: sprintf_s(val_char_2, 40, "LD   A,E"); break;
+				case 0x7C: sprintf_s(val_char_2, 40, "LD   A,H"); break;
+				case 0x7D: sprintf_s(val_char_2, 40, "LD   A,L"); break;
+				case 0x7E: sprintf_s(val_char_2, 40, "LD   A,(HL)"); break;
+				case 0x7F: sprintf_s(val_char_2, 40, "LD   A,A"); break;
+				case 0x80: sprintf_s(val_char_2, 40, "ADD  A,B"); break;
+				case 0x81: sprintf_s(val_char_2, 40, "ADD  A,C"); break;
+				case 0x82: sprintf_s(val_char_2, 40, "ADD  A,D"); break;
+				case 0x83: sprintf_s(val_char_2, 40, "ADD  A,E"); break;
+				case 0x84: sprintf_s(val_char_2, 40, "ADD  A,H"); break;
+				case 0x85: sprintf_s(val_char_2, 40, "ADD  A,L"); break;
+				case 0x86: sprintf_s(val_char_2, 40, "ADD  A,(HL)"); break;
+				case 0x87: sprintf_s(val_char_2, 40, "ADD  A,A"); break;
+				case 0x88: sprintf_s(val_char_2, 40, "ADC  A,B"); break;
+				case 0x89: sprintf_s(val_char_2, 40, "ADC  A,C"); break;
+				case 0x8A: sprintf_s(val_char_2, 40, "ADC  A,D"); break;
+				case 0x8B: sprintf_s(val_char_2, 40, "ADC  A,E"); break;
+				case 0x8C: sprintf_s(val_char_2, 40, "ADC  A,H"); break;
+				case 0x8D: sprintf_s(val_char_2, 40, "ADC  A,L"); break;
+				case 0x8E: sprintf_s(val_char_2, 40, "ADC  A,(HL)"); break;
+				case 0x8F: sprintf_s(val_char_2, 40, "ADC  A,A"); break;
+				case 0x90: sprintf_s(val_char_2, 40, "SUB  B"); break;
+				case 0x91: sprintf_s(val_char_2, 40, "SUB  C"); break;
+				case 0x92: sprintf_s(val_char_2, 40, "SUB  D"); break;
+				case 0x93: sprintf_s(val_char_2, 40, "SUB  E"); break;
+				case 0x94: sprintf_s(val_char_2, 40, "SUB  H"); break;
+				case 0x95: sprintf_s(val_char_2, 40, "SUB  L"); break;
+				case 0x96: sprintf_s(val_char_2, 40, "SUB  (HL)"); break;
+				case 0x97: sprintf_s(val_char_2, 40, "SUB  A"); break;
+				case 0x98: sprintf_s(val_char_2, 40, "SBC  A,B"); break;
+				case 0x99: sprintf_s(val_char_2, 40, "SBC  A,C"); break;
+				case 0x9A: sprintf_s(val_char_2, 40, "SBC  A,D"); break;
+				case 0x9B: sprintf_s(val_char_2, 40, "SBC  A,E"); break;
+				case 0x9C: sprintf_s(val_char_2, 40, "SBC  A,H"); break;
+				case 0x9D: sprintf_s(val_char_2, 40, "SBC  A,L"); break;
+				case 0x9E: sprintf_s(val_char_2, 40, "SBC  A,(HL)"); break;
+				case 0x9F: sprintf_s(val_char_2, 40, "SBC  A,A"); break;
+				case 0xA0: sprintf_s(val_char_2, 40, "AND  B"); break;
+				case 0xA1: sprintf_s(val_char_2, 40, "AND  C"); break;
+				case 0xA2: sprintf_s(val_char_2, 40, "AND  D"); break;
+				case 0xA3: sprintf_s(val_char_2, 40, "AND  E"); break;
+				case 0xA4: sprintf_s(val_char_2, 40, "AND  H"); break;
+				case 0xA5: sprintf_s(val_char_2, 40, "AND  L"); break;
+				case 0xA6: sprintf_s(val_char_2, 40, "AND  (HL)"); break;
+				case 0xA7: sprintf_s(val_char_2, 40, "AND  A"); break;
+				case 0xA8: sprintf_s(val_char_2, 40, "XOR  B"); break;
+				case 0xA9: sprintf_s(val_char_2, 40, "XOR  C"); break;
+				case 0xAA: sprintf_s(val_char_2, 40, "XOR  D"); break;
+				case 0xAB: sprintf_s(val_char_2, 40, "XOR  E"); break;
+				case 0xAC: sprintf_s(val_char_2, 40, "XOR  H"); break;
+				case 0xAD: sprintf_s(val_char_2, 40, "XOR  L"); break;
+				case 0xAE: sprintf_s(val_char_2, 40, "XOR  (HL)"); break;
+				case 0xAF: sprintf_s(val_char_2, 40, "XOR  A"); break;
+				case 0xB0: sprintf_s(val_char_2, 40, "OR   B"); break;
+				case 0xB1: sprintf_s(val_char_2, 40, "OR   C"); break;
+				case 0xB2: sprintf_s(val_char_2, 40, "OR   D"); break;
+				case 0xB3: sprintf_s(val_char_2, 40, "OR   E"); break;
+				case 0xB4: sprintf_s(val_char_2, 40, "OR   H"); break;
+				case 0xB5: sprintf_s(val_char_2, 40, "OR   L"); break;
+				case 0xB6: sprintf_s(val_char_2, 40, "OR   (HL)"); break;
+				case 0xB7: sprintf_s(val_char_2, 40, "OR   A"); break;
+				case 0xB8: sprintf_s(val_char_2, 40, "CP   B"); break;
+				case 0xB9: sprintf_s(val_char_2, 40, "CP   C"); break;
+				case 0xBA: sprintf_s(val_char_2, 40, "CP   D"); break;
+				case 0xBB: sprintf_s(val_char_2, 40, "CP   E"); break;
+				case 0xBC: sprintf_s(val_char_2, 40, "CP   H"); break;
+				case 0xBD: sprintf_s(val_char_2, 40, "CP   L"); break;
+				case 0xBE: sprintf_s(val_char_2, 40, "CP   (HL)"); break;
+				case 0xBF: sprintf_s(val_char_2, 40, "CP   A"); break;
+				case 0xC0: sprintf_s(val_char_2, 40, "RET  NZ"); break;
+				case 0xC1: sprintf_s(val_char_2, 40, "POP  BC"); break;
+				case 0xC2: sprintf_s(val_char_2, 40, "JP   NZ,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xC3: sprintf_s(val_char_2, 40, "JP   $%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xC4: sprintf_s(val_char_2, 40, "CALL NZ,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xC5: sprintf_s(val_char_2, 40, "PUSH BC"); break;
+				case 0xC6: sprintf_s(val_char_2, 40, "ADD  A,$%02X", Peek_Memory(pc++)); break;
+				case 0xC7: sprintf_s(val_char_2, 40, "RST  00H"); break;
+				case 0xC8: sprintf_s(val_char_2, 40, "RET  Z"); break;
+				case 0xC9: sprintf_s(val_char_2, 40, "RET"); break;
+				case 0xCA: sprintf_s(val_char_2, 40, "JP   Z,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xCB: sprintf_s(val_char_2, 40, "PREFIX CB"); break;
+				case 0xCC: sprintf_s(val_char_2, 40, "CALL Z,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xCD: sprintf_s(val_char_2, 40, "CALL $%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xCE: sprintf_s(val_char_2, 40, "ADC  A,$%02X", Peek_Memory(pc++)); break;
+				case 0xCF: sprintf_s(val_char_2, 40, "RST  08H"); break;
+				case 0xD0: sprintf_s(val_char_2, 40, "RET  NC"); break;
+				case 0xD1: sprintf_s(val_char_2, 40, "POP  DE"); break;
+				case 0xD2: sprintf_s(val_char_2, 40, "JP   NC,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xD3: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xD4: sprintf_s(val_char_2, 40, "CALL NC,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xD5: sprintf_s(val_char_2, 40, "PUSH DE"); break;
+				case 0xD6: sprintf_s(val_char_2, 40, "SUB  $%02X", Peek_Memory(pc++)); break;
+				case 0xD7: sprintf_s(val_char_2, 40, "RST  10H"); break;
+				case 0xD8: sprintf_s(val_char_2, 40, "RET  C"); break;
+				case 0xD9: sprintf_s(val_char_2, 40, "RETI"); break;
+				case 0xDA: sprintf_s(val_char_2, 40, "JP   C,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xDB: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xDC: sprintf_s(val_char_2, 40, "CALL C,$%04X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xDD: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xDE: sprintf_s(val_char_2, 40, "SBC  A,$%02X", Peek_Memory(pc++)); break;
+				case 0xDF: sprintf_s(val_char_2, 40, "RST  18H"); break;
+				case 0xE0: sprintf_s(val_char_2, 40, "LDH  (FF$%02X),A", Peek_Memory(pc++)); break;
+				case 0xE1: sprintf_s(val_char_2, 40, "POP  HL"); break;
+				case 0xE2: sprintf_s(val_char_2, 40, "LD   (C),A"); break;
+				case 0xE3: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xE4: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xE5: sprintf_s(val_char_2, 40, "PUSH HL"); break;
+				case 0xE6: sprintf_s(val_char_2, 40, "AND  $%02X", Peek_Memory(pc++)); break;
+				case 0xE7: sprintf_s(val_char_2, 40, "RST  20H"); break;
+				case 0xE8: sprintf_s(val_char_2, 40, "ADD  SP,$%04d", Peek_Memory_Signed(pc++));
+				case 0xE9: sprintf_s(val_char_2, 40, "JP   HL"); break;
+				case 0xEA: sprintf_s(val_char_2, 40, "LD   ($%04X),A", Peek_Memory_16(pc++)); pc++; break;
+				case 0xEB: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xEC: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xED: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xEE: sprintf_s(val_char_2, 40, "XOR  $%02X", Peek_Memory(pc++)); break;
+				case 0xEF: sprintf_s(val_char_2, 40, "RST  28H"); break;
+				case 0xF0: sprintf_s(val_char_2, 40, "LDH  A,(FF$%02X)", Peek_Memory(pc++)); break;
+				case 0xF1: sprintf_s(val_char_2, 40, "POP  AF"); break;
+				case 0xF2: sprintf_s(val_char_2, 40, "LD   A,(C)"); break;
+				case 0xF3: sprintf_s(val_char_2, 40, "DI"); break;
+				case 0xF4: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xF5: sprintf_s(val_char_2, 40, "PUSH AF"); break;
+				case 0xF6: sprintf_s(val_char_2, 40, "OR   $%02X", Peek_Memory(pc++)); break;
+				case 0xF7: sprintf_s(val_char_2, 40, "RST  30H"); break;
+				case 0xF8: sprintf_s(val_char_2, 40, "LD   HL,SP+$%04d", Peek_Memory_Signed(pc++)); break;
+				case 0xF9: sprintf_s(val_char_2, 40, "LD   SP,HL"); break;
+				case 0xFA: sprintf_s(val_char_2, 40, "LD   A,($%04X)", Peek_Memory_16(pc++)); pc++; break;
+				case 0xFB: sprintf_s(val_char_2, 40, "EI   "); break;
+				case 0xFC: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xFD: sprintf_s(val_char_2, 40, "???"); break;
+				case 0xFE: sprintf_s(val_char_2, 40, "CP   $%02X", Peek_Memory(pc++)); break;
+				case 0xFF: sprintf_s(val_char_2, 40, "RST  38H"); break;
+				// CB prefix opcode
+				case 0x100: sprintf_s(val_char_2, 40, "RLC  B"); break;
+				case 0x101: sprintf_s(val_char_2, 40, "RLC  C"); break;
+				case 0x102: sprintf_s(val_char_2, 40, "RLC  D"); break;
+				case 0x103: sprintf_s(val_char_2, 40, "RLC  E"); break;
+				case 0x104: sprintf_s(val_char_2, 40, "RLC  H"); break;
+				case 0x105: sprintf_s(val_char_2, 40, "RLC  L"); break;
+				case 0x106: sprintf_s(val_char_2, 40, "RLC  (HL)"); break;
+				case 0x107: sprintf_s(val_char_2, 40, "RLC  A"); break;
+				case 0x108: sprintf_s(val_char_2, 40, "RRC  B"); break;
+				case 0x109: sprintf_s(val_char_2, 40, "RRC  C"); break;
+				case 0x10A: sprintf_s(val_char_2, 40, "RRC  D"); break;
+				case 0x10B: sprintf_s(val_char_2, 40, "RRC  E"); break;
+				case 0x10C: sprintf_s(val_char_2, 40, "RRC  H"); break;
+				case 0x10D: sprintf_s(val_char_2, 40, "RRC  L"); break;
+				case 0x10E: sprintf_s(val_char_2, 40, "RRC  (HL)"); break;
+				case 0x10F: sprintf_s(val_char_2, 40, "RRC  A"); break;
+				case 0x110: sprintf_s(val_char_2, 40, "RL   B"); break;
+				case 0x111: sprintf_s(val_char_2, 40, "RL   C"); break;
+				case 0x112: sprintf_s(val_char_2, 40, "RL   D"); break;
+				case 0x113: sprintf_s(val_char_2, 40, "RL   E"); break;
+				case 0x114: sprintf_s(val_char_2, 40, "RL   H"); break;
+				case 0x115: sprintf_s(val_char_2, 40, "RL   L"); break;
+				case 0x116: sprintf_s(val_char_2, 40, "RL   (HL)"); break;
+				case 0x117: sprintf_s(val_char_2, 40, "RL   A"); break;
+				case 0x118: sprintf_s(val_char_2, 40, "RR   B"); break;
+				case 0x119: sprintf_s(val_char_2, 40, "RR   C"); break;
+				case 0x11A: sprintf_s(val_char_2, 40, "RR   D"); break;
+				case 0x11B: sprintf_s(val_char_2, 40, "RR   E"); break;
+				case 0x11C: sprintf_s(val_char_2, 40, "RR   H"); break;
+				case 0x11D: sprintf_s(val_char_2, 40, "RR   L"); break;
+				case 0x11E: sprintf_s(val_char_2, 40, "RR   (HL)"); break;
+				case 0x11F: sprintf_s(val_char_2, 40, "RR   A"); break;
+				case 0x120: sprintf_s(val_char_2, 40, "SLA  B"); break;
+				case 0x121: sprintf_s(val_char_2, 40, "SLA  C"); break;
+				case 0x122: sprintf_s(val_char_2, 40, "SLA  D"); break;
+				case 0x123: sprintf_s(val_char_2, 40, "SLA  E"); break;
+				case 0x124: sprintf_s(val_char_2, 40, "SLA  H"); break;
+				case 0x125: sprintf_s(val_char_2, 40, "SLA  L"); break;
+				case 0x126: sprintf_s(val_char_2, 40, "SLA  (HL)"); break;
+				case 0x127: sprintf_s(val_char_2, 40, "SLA  A"); break;
+				case 0x128: sprintf_s(val_char_2, 40, "SRA  B"); break;
+				case 0x129: sprintf_s(val_char_2, 40, "SRA  C"); break;
+				case 0x12A: sprintf_s(val_char_2, 40, "SRA  D"); break;
+				case 0x12B: sprintf_s(val_char_2, 40, "SRA  E"); break;
+				case 0x12C: sprintf_s(val_char_2, 40, "SRA  H"); break;
+				case 0x12D: sprintf_s(val_char_2, 40, "SRA  L"); break;
+				case 0x12E: sprintf_s(val_char_2, 40, "SRA  (HL)"); break;
+				case 0x12F: sprintf_s(val_char_2, 40, "SRA  A"); break;
+				case 0x130: sprintf_s(val_char_2, 40, "SWAP B"); break;
+				case 0x131: sprintf_s(val_char_2, 40, "SWAP C"); break;
+				case 0x132: sprintf_s(val_char_2, 40, "SWAP D"); break;
+				case 0x133: sprintf_s(val_char_2, 40, "SWAP E"); break;
+				case 0x134: sprintf_s(val_char_2, 40, "SWAP H"); break;
+				case 0x135: sprintf_s(val_char_2, 40, "SWAP L"); break;
+				case 0x136: sprintf_s(val_char_2, 40, "SWAP (HL)"); break;
+				case 0x137: sprintf_s(val_char_2, 40, "SWAP A"); break;
+				case 0x138: sprintf_s(val_char_2, 40, "SRL  B"); break;
+				case 0x139: sprintf_s(val_char_2, 40, "SRL  C"); break;
+				case 0x13A: sprintf_s(val_char_2, 40, "SRL  D"); break;
+				case 0x13B: sprintf_s(val_char_2, 40, "SRL  E"); break;
+				case 0x13C: sprintf_s(val_char_2, 40, "SRL  H"); break;
+				case 0x13D: sprintf_s(val_char_2, 40, "SRL  L"); break;
+				case 0x13E: sprintf_s(val_char_2, 40, "SRL  (HL)"); break;
+				case 0x13F: sprintf_s(val_char_2, 40, "SRL  A"); break;
+				case 0x140: sprintf_s(val_char_2, 40, "BIT  0,B"); break;
+				case 0x141: sprintf_s(val_char_2, 40, "BIT  0,C"); break;
+				case 0x142: sprintf_s(val_char_2, 40, "BIT  0,D"); break;
+				case 0x143: sprintf_s(val_char_2, 40, "BIT  0,E"); break;
+				case 0x144: sprintf_s(val_char_2, 40, "BIT  0,H"); break;
+				case 0x145: sprintf_s(val_char_2, 40, "BIT  0,L"); break;
+				case 0x146: sprintf_s(val_char_2, 40, "BIT  0,(HL)"); break;
+				case 0x147: sprintf_s(val_char_2, 40, "BIT  0,A"); break;
+				case 0x148: sprintf_s(val_char_2, 40, "BIT  1,B"); break;
+				case 0x149: sprintf_s(val_char_2, 40, "BIT  1,C"); break;
+				case 0x14A: sprintf_s(val_char_2, 40, "BIT  1,D"); break;
+				case 0x14B: sprintf_s(val_char_2, 40, "BIT  1,E"); break;
+				case 0x14C: sprintf_s(val_char_2, 40, "BIT  1,H"); break;
+				case 0x14D: sprintf_s(val_char_2, 40, "BIT  1,L"); break;
+				case 0x14E: sprintf_s(val_char_2, 40, "BIT  1,(HL)"); break;
+				case 0x14F: sprintf_s(val_char_2, 40, "BIT  1,A"); break;
+				case 0x150: sprintf_s(val_char_2, 40, "BIT  2,B"); break;
+				case 0x151: sprintf_s(val_char_2, 40, "BIT  2,C"); break;
+				case 0x152: sprintf_s(val_char_2, 40, "BIT  2,D"); break;
+				case 0x153: sprintf_s(val_char_2, 40, "BIT  2,E"); break;
+				case 0x154: sprintf_s(val_char_2, 40, "BIT  2,H"); break;
+				case 0x155: sprintf_s(val_char_2, 40, "BIT  2,L"); break;
+				case 0x156: sprintf_s(val_char_2, 40, "BIT  2,(HL)"); break;
+				case 0x157: sprintf_s(val_char_2, 40, "BIT  2,A"); break;
+				case 0x158: sprintf_s(val_char_2, 40, "BIT  3,B"); break;
+				case 0x159: sprintf_s(val_char_2, 40, "BIT  3,C"); break;
+				case 0x15A: sprintf_s(val_char_2, 40, "BIT  3,D"); break;
+				case 0x15B: sprintf_s(val_char_2, 40, "BIT  3,E"); break;
+				case 0x15C: sprintf_s(val_char_2, 40, "BIT  3,H"); break;
+				case 0x15D: sprintf_s(val_char_2, 40, "BIT  3,L"); break;
+				case 0x15E: sprintf_s(val_char_2, 40, "BIT  3,(HL)"); break;
+				case 0x15F: sprintf_s(val_char_2, 40, "BIT  3,A"); break;
+				case 0x160: sprintf_s(val_char_2, 40, "BIT  4,B"); break;
+				case 0x161: sprintf_s(val_char_2, 40, "BIT  4,C"); break;
+				case 0x162: sprintf_s(val_char_2, 40, "BIT  4,D"); break;
+				case 0x163: sprintf_s(val_char_2, 40, "BIT  4,E"); break;
+				case 0x164: sprintf_s(val_char_2, 40, "BIT  4,H"); break;
+				case 0x165: sprintf_s(val_char_2, 40, "BIT  4,L"); break;
+				case 0x166: sprintf_s(val_char_2, 40, "BIT  4,(HL)"); break;
+				case 0x167: sprintf_s(val_char_2, 40, "BIT  4,A"); break;
+				case 0x168: sprintf_s(val_char_2, 40, "BIT  5,B"); break;
+				case 0x169: sprintf_s(val_char_2, 40, "BIT  5,C"); break;
+				case 0x16A: sprintf_s(val_char_2, 40, "BIT  5,D"); break;
+				case 0x16B: sprintf_s(val_char_2, 40, "BIT  5,E"); break;
+				case 0x16C: sprintf_s(val_char_2, 40, "BIT  5,H"); break;
+				case 0x16D: sprintf_s(val_char_2, 40, "BIT  5,L"); break;
+				case 0x16E: sprintf_s(val_char_2, 40, "BIT  5,(HL)"); break;
+				case 0x16F: sprintf_s(val_char_2, 40, "BIT  5,A"); break;
+				case 0x170: sprintf_s(val_char_2, 40, "BIT  6,B"); break;
+				case 0x171: sprintf_s(val_char_2, 40, "BIT  6,C"); break;
+				case 0x172: sprintf_s(val_char_2, 40, "BIT  6,D"); break;
+				case 0x173: sprintf_s(val_char_2, 40, "BIT  6,E"); break;
+				case 0x174: sprintf_s(val_char_2, 40, "BIT  6,H"); break;
+				case 0x175: sprintf_s(val_char_2, 40, "BIT  6,L"); break;
+				case 0x176: sprintf_s(val_char_2, 40, "BIT  6,(HL)"); break;
+				case 0x177: sprintf_s(val_char_2, 40, "BIT  6,A"); break;
+				case 0x178: sprintf_s(val_char_2, 40, "BIT  7,B"); break;
+				case 0x179: sprintf_s(val_char_2, 40, "BIT  7,C"); break;
+				case 0x17A: sprintf_s(val_char_2, 40, "BIT  7,D"); break;
+				case 0x17B: sprintf_s(val_char_2, 40, "BIT  7,E"); break;
+				case 0x17C: sprintf_s(val_char_2, 40, "BIT  7,H"); break;
+				case 0x17D: sprintf_s(val_char_2, 40, "BIT  7,L"); break;
+				case 0x17E: sprintf_s(val_char_2, 40, "BIT  7,(HL)"); break;
+				case 0x17F: sprintf_s(val_char_2, 40, "BIT  7,A"); break;
+				case 0x180: sprintf_s(val_char_2, 40, "RES  0,B"); break;
+				case 0x181: sprintf_s(val_char_2, 40, "RES  0,C"); break;
+				case 0x182: sprintf_s(val_char_2, 40, "RES  0,D"); break;
+				case 0x183: sprintf_s(val_char_2, 40, "RES  0,E"); break;
+				case 0x184: sprintf_s(val_char_2, 40, "RES  0,H"); break;
+				case 0x185: sprintf_s(val_char_2, 40, "RES  0,L"); break;
+				case 0x186: sprintf_s(val_char_2, 40, "RES  0,(HL)"); break;
+				case 0x187: sprintf_s(val_char_2, 40, "RES  0,A"); break;
+				case 0x188: sprintf_s(val_char_2, 40, "RES  1,B"); break;
+				case 0x189: sprintf_s(val_char_2, 40, "RES  1,C"); break;
+				case 0x18A: sprintf_s(val_char_2, 40, "RES  1,D"); break;
+				case 0x18B: sprintf_s(val_char_2, 40, "RES  1,E"); break;
+				case 0x18C: sprintf_s(val_char_2, 40, "RES  1,H"); break;
+				case 0x18D: sprintf_s(val_char_2, 40, "RES  1,L"); break;
+				case 0x18E: sprintf_s(val_char_2, 40, "RES  1,(HL)"); break;
+				case 0x18F: sprintf_s(val_char_2, 40, "RES  1,A"); break;
+				case 0x190: sprintf_s(val_char_2, 40, "RES  2,B"); break;
+				case 0x191: sprintf_s(val_char_2, 40, "RES  2,C"); break;
+				case 0x192: sprintf_s(val_char_2, 40, "RES  2,D"); break;
+				case 0x193: sprintf_s(val_char_2, 40, "RES  2,E"); break;
+				case 0x194: sprintf_s(val_char_2, 40, "RES  2,H"); break;
+				case 0x195: sprintf_s(val_char_2, 40, "RES  2,L"); break;
+				case 0x196: sprintf_s(val_char_2, 40, "RES  2,(HL)"); break;
+				case 0x197: sprintf_s(val_char_2, 40, "RES  2,A"); break;
+				case 0x198: sprintf_s(val_char_2, 40, "RES  3,B"); break;
+				case 0x199: sprintf_s(val_char_2, 40, "RES  3,C"); break;
+				case 0x19A: sprintf_s(val_char_2, 40, "RES  3,D"); break;
+				case 0x19B: sprintf_s(val_char_2, 40, "RES  3,E"); break;
+				case 0x19C: sprintf_s(val_char_2, 40, "RES  3,H"); break;
+				case 0x19D: sprintf_s(val_char_2, 40, "RES  3,L"); break;
+				case 0x19E: sprintf_s(val_char_2, 40, "RES  3,(HL)"); break;
+				case 0x19F: sprintf_s(val_char_2, 40, "RES  3,A"); break;
+				case 0x1A0: sprintf_s(val_char_2, 40, "RES  4,B"); break;
+				case 0x1A1: sprintf_s(val_char_2, 40, "RES  4,C"); break;
+				case 0x1A2: sprintf_s(val_char_2, 40, "RES  4,D"); break;
+				case 0x1A3: sprintf_s(val_char_2, 40, "RES  4,E"); break;
+				case 0x1A4: sprintf_s(val_char_2, 40, "RES  4,H"); break;
+				case 0x1A5: sprintf_s(val_char_2, 40, "RES  4,L"); break;
+				case 0x1A6: sprintf_s(val_char_2, 40, "RES  4,(HL)"); break;
+				case 0x1A7: sprintf_s(val_char_2, 40, "RES  4,A"); break;
+				case 0x1A8: sprintf_s(val_char_2, 40, "RES  5,B"); break;
+				case 0x1A9: sprintf_s(val_char_2, 40, "RES  5,C"); break;
+				case 0x1AA: sprintf_s(val_char_2, 40, "RES  5,D"); break;
+				case 0x1AB: sprintf_s(val_char_2, 40, "RES  5,E"); break;
+				case 0x1AC: sprintf_s(val_char_2, 40, "RES  5,H"); break;
+				case 0x1AD: sprintf_s(val_char_2, 40, "RES  5,L"); break;
+				case 0x1AE: sprintf_s(val_char_2, 40, "RES  5,(HL)"); break;
+				case 0x1AF: sprintf_s(val_char_2, 40, "RES  5,A"); break;
+				case 0x1B0: sprintf_s(val_char_2, 40, "RES  6,B"); break;
+				case 0x1B1: sprintf_s(val_char_2, 40, "RES  6,C"); break;
+				case 0x1B2: sprintf_s(val_char_2, 40, "RES  6,D"); break;
+				case 0x1B3: sprintf_s(val_char_2, 40, "RES  6,E"); break;
+				case 0x1B4: sprintf_s(val_char_2, 40, "RES  6,H"); break;
+				case 0x1B5: sprintf_s(val_char_2, 40, "RES  6,L"); break;
+				case 0x1B6: sprintf_s(val_char_2, 40, "RES  6,(HL)"); break;
+				case 0x1B7: sprintf_s(val_char_2, 40, "RES  6,A"); break;
+				case 0x1B8: sprintf_s(val_char_2, 40, "RES  7,B"); break;
+				case 0x1B9: sprintf_s(val_char_2, 40, "RES  7,C"); break;
+				case 0x1BA: sprintf_s(val_char_2, 40, "RES  7,D"); break;
+				case 0x1BB: sprintf_s(val_char_2, 40, "RES  7,E"); break;
+				case 0x1BC: sprintf_s(val_char_2, 40, "RES  7,H"); break;
+				case 0x1BD: sprintf_s(val_char_2, 40, "RES  7,L"); break;
+				case 0x1BE: sprintf_s(val_char_2, 40, "RES  7,(HL)"); break;
+				case 0x1BF: sprintf_s(val_char_2, 40, "RES  7,A"); break;
+				case 0x1C0: sprintf_s(val_char_2, 40, "SET  0,B"); break;
+				case 0x1C1: sprintf_s(val_char_2, 40, "SET  0,C"); break;
+				case 0x1C2: sprintf_s(val_char_2, 40, "SET  0,D"); break;
+				case 0x1C3: sprintf_s(val_char_2, 40, "SET  0,E"); break;
+				case 0x1C4: sprintf_s(val_char_2, 40, "SET  0,H"); break;
+				case 0x1C5: sprintf_s(val_char_2, 40, "SET  0,L"); break;
+				case 0x1C6: sprintf_s(val_char_2, 40, "SET  0,(HL)"); break;
+				case 0x1C7: sprintf_s(val_char_2, 40, "SET  0,A"); break;
+				case 0x1C8: sprintf_s(val_char_2, 40, "SET  1,B"); break;
+				case 0x1C9: sprintf_s(val_char_2, 40, "SET  1,C"); break;
+				case 0x1CA: sprintf_s(val_char_2, 40, "SET  1,D"); break;
+				case 0x1CB: sprintf_s(val_char_2, 40, "SET  1,E"); break;
+				case 0x1CC: sprintf_s(val_char_2, 40, "SET  1,H"); break;
+				case 0x1CD: sprintf_s(val_char_2, 40, "SET  1,L"); break;
+				case 0x1CE: sprintf_s(val_char_2, 40, "SET  1,(HL)"); break;
+				case 0x1CF: sprintf_s(val_char_2, 40, "SET  1,A"); break;
+				case 0x1D0: sprintf_s(val_char_2, 40, "SET  2,B"); break;
+				case 0x1D1: sprintf_s(val_char_2, 40, "SET  2,C"); break;
+				case 0x1D2: sprintf_s(val_char_2, 40, "SET  2,D"); break;
+				case 0x1D3: sprintf_s(val_char_2, 40, "SET  2,E"); break;
+				case 0x1D4: sprintf_s(val_char_2, 40, "SET  2,H"); break;
+				case 0x1D5: sprintf_s(val_char_2, 40, "SET  2,L"); break;
+				case 0x1D6: sprintf_s(val_char_2, 40, "SET  2,(HL)"); break;
+				case 0x1D7: sprintf_s(val_char_2, 40, "SET  2,A"); break;
+				case 0x1D8: sprintf_s(val_char_2, 40, "SET  3,B"); break;
+				case 0x1D9: sprintf_s(val_char_2, 40, "SET  3,C"); break;
+				case 0x1DA: sprintf_s(val_char_2, 40, "SET  3,D"); break;
+				case 0x1DB: sprintf_s(val_char_2, 40, "SET  3,E"); break;
+				case 0x1DC: sprintf_s(val_char_2, 40, "SET  3,H"); break;
+				case 0x1DD: sprintf_s(val_char_2, 40, "SET  3,L"); break;
+				case 0x1DE: sprintf_s(val_char_2, 40, "SET  3,(HL)"); break;
+				case 0x1DF: sprintf_s(val_char_2, 40, "SET  3,A"); break;
+				case 0x1E0: sprintf_s(val_char_2, 40, "SET  4,B"); break;
+				case 0x1E1: sprintf_s(val_char_2, 40, "SET  4,C"); break;
+				case 0x1E2: sprintf_s(val_char_2, 40, "SET  4,D"); break;
+				case 0x1E3: sprintf_s(val_char_2, 40, "SET  4,E"); break;
+				case 0x1E4: sprintf_s(val_char_2, 40, "SET  4,H"); break;
+				case 0x1E5: sprintf_s(val_char_2, 40, "SET  4,L"); break;
+				case 0x1E6: sprintf_s(val_char_2, 40, "SET  4,(HL)"); break;
+				case 0x1E7: sprintf_s(val_char_2, 40, "SET  4,A"); break;
+				case 0x1E8: sprintf_s(val_char_2, 40, "SET  5,B"); break;
+				case 0x1E9: sprintf_s(val_char_2, 40, "SET  5,C"); break;
+				case 0x1EA: sprintf_s(val_char_2, 40, "SET  5,D"); break;
+				case 0x1EB: sprintf_s(val_char_2, 40, "SET  5,E"); break;
+				case 0x1EC: sprintf_s(val_char_2, 40, "SET  5,H"); break;
+				case 0x1ED: sprintf_s(val_char_2, 40, "SET  5,L"); break;
+				case 0x1EE: sprintf_s(val_char_2, 40, "SET  5,(HL)"); break;
+				case 0x1EF: sprintf_s(val_char_2, 40, "SET  5,A"); break;
+				case 0x1F0: sprintf_s(val_char_2, 40, "SET  6,B"); break;
+				case 0x1F1: sprintf_s(val_char_2, 40, "SET  6,C"); break;
+				case 0x1F2: sprintf_s(val_char_2, 40, "SET  6,D"); break;
+				case 0x1F3: sprintf_s(val_char_2, 40, "SET  6,E"); break;
+				case 0x1F4: sprintf_s(val_char_2, 40, "SET  6,H"); break;
+				case 0x1F5: sprintf_s(val_char_2, 40, "SET  6,L"); break;
+				case 0x1F6: sprintf_s(val_char_2, 40, "SET  6,(HL)"); break;
+				case 0x1F7: sprintf_s(val_char_2, 40, "SET  6,A"); break;
+				case 0x1F8: sprintf_s(val_char_2, 40, "SET  7,B"); break;
+				case 0x1F9: sprintf_s(val_char_2, 40, "SET  7,C"); break;
+				case 0x1FA: sprintf_s(val_char_2, 40, "SET  7,D"); break;
+				case 0x1FB: sprintf_s(val_char_2, 40, "SET  7,E"); break;
+				case 0x1FC: sprintf_s(val_char_2, 40, "SET  7,H"); break;
+				case 0x1FD: sprintf_s(val_char_2, 40, "SET  7,L"); break;
+				case 0x1FE: sprintf_s(val_char_2, 40, "SET  7,(HL)"); break;
+				case 0x1FF: sprintf_s(val_char_2, 40, "SET  7,A"); break;
+			}
+
+			if (pc > diff)
+			{
+				op_size = pc - diff;
+			}
+			else
+			{
+				uint32_t h_diff = (uint32_t)pc + 0x10000;
+
+				op_size = h_diff - diff;
+			}
+
+			return std::string(val_char_2, 20);
+		}
 
 		#pragma endregion
 
@@ -3333,6 +3483,9 @@ namespace GBHawk
 			saver = short_saver(cpu_Int_Src, saver);
 
 			saver = int_saver(cpu_EI_Pending, saver);
+
+			saver = int_saver((uint32_t)cpu_Instr_Type, saver);
+			saver = int_saver((uint32_t)cpu_State_Hold, saver);
 
 			saver = long_saver(cpu_Instruction_Start, saver);
 			saver = long_saver(cpu_Stop_Time, saver);
@@ -3371,10 +3524,16 @@ namespace GBHawk
 
 			loader = int_loader(&cpu_EI_Pending, loader);
 
+			loader = int_loader(&cpu_Instr_Type_Save, loader);
+			loader = int_loader(&cpu_State_Hold_Save, loader);
+
 			loader = long_loader(&cpu_Instruction_Start, loader);
 			loader = long_loader(&cpu_Stop_Time, loader);
 
 			loader = byte_array_loader(cpu_Regs, loader, 14);
+
+			cpu_Instr_Type = static_cast<OpT>(cpu_Instr_Type_Save);
+			cpu_State_Hold = static_cast<OpT>(cpu_State_Hold_Save);
 
 			return loader;
 		}
@@ -7291,13 +7450,14 @@ namespace GBHawk
 			saver = short_saver(addr_access, saver);
 
 			saver = int_saver(controller_delay_cd, saver);
-			saver = int_saver(cpu_state_hold, saver);
 			saver = int_saver(clear_counter, saver);
 			saver = int_saver(IR_write, saver);
 			saver = int_saver(RAM_Bank, saver);
 			saver = int_saver(RAM_Bank_ret, saver);
 
 			saver = long_saver(bus_access_time, saver);
+			saver = long_saver(Cycle_Count, saver);
+			saver = long_saver(Frame_Cycle, saver);
 
 			saver = byte_array_saver(RAM, saver, 0x8000);
 			saver = byte_array_saver(ZP_RAM, saver, 0x80);
@@ -7371,13 +7531,14 @@ namespace GBHawk
 			loader = short_loader(&addr_access, loader);
 
 			loader = int_loader(&controller_delay_cd, loader);
-			loader = int_loader(&cpu_state_hold, loader);
 			loader = int_loader(&clear_counter, loader);
 			loader = int_loader(&IR_write, loader);
 			loader = int_loader(&RAM_Bank, loader);
 			loader = int_loader(&RAM_Bank_ret, loader);
 
 			loader = long_loader(&bus_access_time, loader);
+			loader = long_loader(&Cycle_Count, loader);
+			loader = long_loader(&Frame_Cycle, loader);
 			
 			loader = byte_array_loader(RAM, loader, 0x8000);
 			loader = byte_array_loader(ZP_RAM, loader, 0x80);

@@ -648,7 +648,7 @@ namespace NESHawk
 		const char* Reg_Blank = "                                                                                          ";
 		const char* Disasm_template = "PCPC:  AA BB CC  Di Di Di Di Di      ";
 
-		char replacer[40] = {};
+		char replacer[300] = {};
 		char* val_char_1 = nullptr;
 		char* val_char_2 = nullptr;
 		uint32_t temp_reg;
