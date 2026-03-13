@@ -58,6 +58,12 @@ namespace GBHawk
 
 		void (*MessageCallback)(int);
 
+		// external pointers and functions
+		bool* PPU_Clear_Screen = nullptr;
+
+		uint8_t PPU_Read_Regs(uint16_t addr);
+		void PPU_Write_Regs(uint16_t addr, uint8_t value);
+
 	# pragma region General System and Prefetch
 
 		uint32_t video_buffer[160 * 144] = { };
@@ -69,12 +75,6 @@ namespace GBHawk
 		uint8_t Read_Memory(uint16_t addr);
 
 		void Write_Memory(uint16_t addr, uint8_t value);
-
-		void Read_Memory_16_DMA(uint32_t addr, uint32_t chan);
-		void Read_Memory_32_DMA(uint32_t addr, uint32_t chan);
-
-		void Write_Memory_16_DMA(uint32_t addr, uint16_t value, uint32_t chan);
-		void Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
 
 		uint8_t Peek_Memory(uint16_t addr);
 		int8_t Peek_Memory_Signed(uint16_t addr);
@@ -150,29 +150,6 @@ namespace GBHawk
 		bool Is_GBC = false;
 		bool Is_GBC_GBA = false;
 
-		// Most memory accesses from the cpu / dma are force aligned to word / half wod boundaries, 
-		// so use some pointers of the appropriate memory size to simplify accesses
-		uint32_t* ROM_32 = (uint32_t*)(&ROM[0]);
-		uint16_t* ROM_16 = (uint16_t*)(&ROM[0]);
-
-		uint32_t* BIOS_32 = (uint32_t*)(&BIOS[0]);
-		uint16_t* BIOS_16 = (uint16_t*)(&BIOS[0]);
-
-		uint32_t* WRAM_32 = (uint32_t*)(&WRAM[0]);
-		uint16_t* WRAM_16 = (uint16_t*)(&WRAM[0]);
-
-		uint32_t* IWRAM_32 = (uint32_t*)(&IWRAM[0]);
-		uint16_t* IWRAM_16 = (uint16_t*)(&IWRAM[0]);
-
-		uint32_t* PALRAM_32 = (uint32_t*)(&PALRAM[0]);
-		uint16_t* PALRAM_16 = (uint16_t*)(&PALRAM[0]);
-
-		uint32_t* VRAM_32 = (uint32_t*)(&VRAM[0]);
-		uint16_t* VRAM_16 = (uint16_t*)(&VRAM[0]);
-
-		uint32_t* OAM_32 = (uint32_t*)(&OAM[0]);
-		uint16_t* OAM_16 = (uint16_t*)(&OAM[0]);
-
 		// only used by ppu viewer
 		uint8_t PPU_IO[0x60] = { };
 
@@ -232,9 +209,7 @@ namespace GBHawk
 			undoc_76 = 0;
 			undoc_77 = 0;
 
-
 			snd_Reset();
-			dma_Reset();
 			ser_Reset();
 			tim_Reset();
 			cpu_Reset();
@@ -430,7 +405,7 @@ namespace GBHawk
 			clear_counter++;
 			if (clear_counter == 4)
 			{
-				ppu.clear_screen = false;
+				*PPU_Clear_Screen = false;
 			}
 		}
 
@@ -527,7 +502,7 @@ namespace GBHawk
 				case 0xFF3D:
 				case 0xFF3E:
 				case 0xFF3F:
-					ret = audio.ReadReg(addr);
+					ret = snd_Read_Reg(addr);
 					break;
 
 					// PPU Regs
@@ -543,7 +518,7 @@ namespace GBHawk
 				case 0xFF49:
 				case 0xFF4A:
 				case 0xFF4B:
-					ret = ppu.ReadReg(addr);
+					ret = PPU_Read_Regs(addr);
 					break;
 
 					// Speed Control for GBC
@@ -582,7 +557,7 @@ namespace GBHawk
 				case 0xFF55:
 					if (GBC_Compat)
 					{
-						ret = ppu.ReadReg(addr);
+						ret = PPU_Read_Regs(addr);
 					}
 					else
 					{
@@ -615,7 +590,7 @@ namespace GBHawk
 				case 0xFF6B:
 					if (Is_GBC)
 					{
-						ret = ppu.ReadReg(addr);
+						ret = PPU_Read_Regs(addr);
 					}
 					else
 					{
@@ -658,21 +633,21 @@ namespace GBHawk
 					break;
 
 				case 0xFF76:
-					uint8_t ret1 = audio.SQ1_output >= Audio.DAC_OFST
-						? (uint8_t)(audio.SQ1_output - Audio.DAC_OFST)
+					uint8_t ret1 = snd_SQ1_output >= snd_DAC_OFST
+						? (uint8_t)(snd_SQ1_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					uint8_t ret2 = audio.SQ2_output >= Audio.DAC_OFST
-						? (uint8_t)(audio.SQ2_output - Audio.DAC_OFST)
+					uint8_t ret2 = snd_SQ2_output >= snd_DAC_OFST
+						? (uint8_t)(snd_SQ2_output - snd_DAC_OFST)
 						: (uint8_t)0;
 					ret = (uint8_t)(ret1 | (ret2 << 4));
 					break;
 
 				case 0xFF77:
-					uint8_t retN = audio.NOISE_output >= Audio.DAC_OFST
-						? (uint8_t)(audio.NOISE_output - Audio.DAC_OFST)
+					uint8_t retN = snd_NOISE_output >= snd_DAC_OFST
+						? (uint8_t)(snd_NOISE_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					uint8_t retW = audio.WAVE_output >= Audio.DAC_OFST
-						? (uint8_t)(audio.WAVE_output - Audio.DAC_OFST)
+					uint8_t retW = snd_WAVE_output >= snd_DAC_OFST
+						? (uint8_t)(snd_WAVE_output - snd_DAC_OFST)
 						: (uint8_t)0;
 					ret = (uint8_t)(retN | (retW << 4));
 					break;
@@ -807,7 +782,7 @@ namespace GBHawk
 				case 0xFF3D:
 				case 0xFF3E:
 				case 0xFF3F:
-					audio.WriteReg(addr, value);
+					snd_WriteReg(addr, value);
 					break;
 
 					// PPU Regs
@@ -823,7 +798,7 @@ namespace GBHawk
 				case 0xFF49:
 				case 0xFF4A:
 				case 0xFF4B:
-					ppu.WriteReg(addr, value);
+					PPU_Write_Regs(addr, value);
 					break;
 
 					// GBC compatibility register (I think)
@@ -871,7 +846,7 @@ namespace GBHawk
 				case 0xFF55:
 					if (GBC_Compat)
 					{
-						ppu.WriteReg(addr, value);
+						PPU_Write_Regs(addr, value);
 					}
 					break;
 
@@ -895,7 +870,7 @@ namespace GBHawk
 				case 0xFF6B:
 					if (Is_GBC)
 					{
-						ppu.WriteReg(addr, value);
+						PPU_Write_Regs(addr, value);
 					}
 					break;
 
@@ -2719,7 +2694,7 @@ namespace GBHawk
 			uint8_t interrupt_src_reg = GetIntRegs(0);
 			uint8_t interrupt_enable_reg = GetIntRegs(1);
 
-			//if (interrupt_src_reg.Bit(bit_check) && interrupt_enable_reg.Bit(bit_check)) { cpu_Int_Src = bit_check; cpu_Int_Clear = (byte)(1 << bit_check); }
+			//if (interrupt_src_reg.Bit(bit_check) && interrupt_enable_reg.Bit(bit_check)) { cpu_Int_Src = bit_check; cpu_Int_Clear = (uint8_t)(1 << bit_check); }
 
 			if ((interrupt_src_reg & interrupt_enable_reg & 1) == 1) { cpu_Int_Src = 0; cpu_Int_Clear = 1; }
 			else if ((interrupt_src_reg & interrupt_enable_reg & 2) == 2) { cpu_Int_Src = 1; cpu_Int_Clear = 2; }
@@ -3542,531 +3517,6 @@ namespace GBHawk
 
 	#pragma endregion
 
-	#pragma region DMA
-
-		bool dma_Seq_Access;
-		bool dma_Pausable;
-		bool dma_All_Off;
-		bool dma_Shutdown;
-		bool dma_Video_DMA_Start;
-		bool dma_Video_DMA_Delay;
-
-		uint16_t dma_TFR_HWord;
-		uint16_t dma_Held_CPU_Instr;
-
-		uint32_t dma_TFR_Word;
-
-		uint32_t dma_Access_Cnt, dma_Access_Wait, dma_Chan_Exec;
-
-		bool dma_Read_Cycle[4] = { };
-		bool dma_Go[4] = { }; // Tell Condition checkers when the channel is on
-		bool dma_Start_VBL[4] = { };
-		bool dma_Start_HBL[4] = { };
-		bool dma_Start_Snd_Vid[4] = { };
-		bool dma_Run[4] = { }; // Actually run the DMA channel
-		bool dma_Access_32[4] = { };
-		bool dma_Use_ROM_Addr_SRC[4] = { };
-		bool dma_Use_ROM_Addr_DST[4] = { };
-		bool dma_ROM_Being_Used[4] = { };
-		bool dma_ROM_Dec_Glitch_Read[4] = { };
-		bool dma_ROM_Dec_Glitch_Write[4] = { };
-
-		uint16_t dma_CNT[4] = { };
-		uint16_t dma_CTRL[4] = { };
-
-		uint32_t dma_SRC[4] = { };
-		uint32_t dma_DST[4] = { };
-		uint32_t dma_SRC_intl[4] = { };
-		uint32_t dma_DST_intl[4] = { };
-		uint32_t dma_SRC_INC[4] = { };
-		uint32_t dma_DST_INC[4] = { };
-		uint32_t dma_Last_Bus_Value[4] = { };
-
-		uint32_t dma_CNT_intl[4] = { };
-		uint32_t dma_ST_Time[4] = { };
-		uint32_t dma_ROM_Addr[4] = { };
-		uint32_t dma_Run_En_Time[4] = { };
-		
-		uint32_t dma_SRC_Mask[4] = {0x7FFFFFF, 0xFFFFFFF, 0xFFFFFFF, 0xFFFFFFF};
-
-		uint32_t dma_DST_Mask[4] = {0x7FFFFFF, 0x7FFFFFF, 0x7FFFFFF, 0xFFFFFFF};
-
-		uint32_t dma_CNT_Mask_0[4] = {0x4000, 0x4000, 0x4000, 0x10000};
-
-		uint16_t dma_CNT_Mask[4] = {0x3FFF, 0x3FFF, 0x3FFF, 0xFFFF};
-
-
-		uint8_t dma_Read_Reg_8(uint32_t addr)
-		{
-			uint8_t ret = 0;
-
-			switch (addr)
-			{
-				case 0xB8: ret = 0; break;
-				case 0xB9: ret = 0; break;
-				case 0xBA: ret = (uint8_t)(dma_CTRL[0] & 0xFF); break;
-				case 0xBB: ret = (uint8_t)((dma_CTRL[0] & 0xFF00) >> 8); break;
-
-				case 0xC4: ret = 0; break;
-				case 0xC5: ret = 0; break;
-				case 0xC6: ret = (uint8_t)(dma_CTRL[1] & 0xFF); break;
-				case 0xC7: ret = (uint8_t)((dma_CTRL[1] & 0xFF00) >> 8); break;
-
-				case 0xD0: ret = 0; break;
-				case 0xD1: ret = 0; break;
-				case 0xD2: ret = (uint8_t)(dma_CTRL[2] & 0xFF); break;
-				case 0xD3: ret = (uint8_t)((dma_CTRL[2] & 0xFF00) >> 8); break;
-
-				case 0xDC: ret = 0; break;
-				case 0xDD: ret = 0; break;
-				case 0xDE: ret = (uint8_t)(dma_CTRL[3] & 0xFF); break;
-				case 0xDF: ret = (uint8_t)((dma_CTRL[3] & 0xFF00) >> 8); break;
-
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
-			}
-
-			return ret;
-		}
-
-		uint16_t dma_Read_Reg_16(uint32_t addr)
-		{
-			uint16_t ret = 0;
-
-			switch (addr)
-			{
-				case 0xB8: ret = 0; break;
-				case 0xBA: ret = dma_CTRL[0]; break;
-
-				case 0xC4: ret = 0; break;
-				case 0xC6: ret = dma_CTRL[1]; break;
-
-				case 0xD0: ret = 0; break;
-				case 0xD2: ret = dma_CTRL[2]; break;
-
-				case 0xDC: ret = 0; break;
-				case 0xDE: ret = dma_CTRL[3]; break;
-
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
-			}
-
-			return ret;
-		}
-
-		uint32_t dma_Read_Reg_32(uint32_t addr)
-		{
-			uint32_t ret = 0;
-
-			switch (addr)
-			{
-				case 0xB8: ret = (uint32_t)((dma_CTRL[0] << 16) | 0); break;
-
-				case 0xC4: ret = (uint32_t)((dma_CTRL[1] << 16) | 0); break;
-
-				case 0xD0: ret = (uint32_t)((dma_CTRL[2] << 16) | 0); break;
-
-				case 0xDC: ret = (uint32_t)((dma_CTRL[3] << 16) | 0); break;
-
-				default: ret = cpu_Last_Bus_Value; break; // open bus
-			}
-
-			return ret;
-		}
-
-		void dma_Write_Reg_8(uint32_t addr, uint8_t value)
-		{
-			switch (addr)
-			{
-				case 0xB0: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0xFFFFFF00) | value); break;
-				case 0xB1: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xB2: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xB3: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xB4: dma_DST[0] = (uint32_t)((dma_DST[0] & 0xFFFFFF00) | value); break;
-				case 0xB5: dma_DST[0] = (uint32_t)((dma_DST[0] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xB6: dma_DST[0] = (uint32_t)((dma_DST[0] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xB7: dma_DST[0] = (uint32_t)((dma_DST[0] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xB8: dma_CNT[0] = (uint16_t)((dma_CNT[0] & 0xFF00) | value); break;
-				case 0xB9: dma_CNT[0] = (uint16_t)((dma_CNT[0] & 0x00FF) | (value << 8)); break;
-				case 0xBA: dma_Update_CTRL((uint16_t)((dma_CTRL[0] & 0xFF00) | value), 0); break;
-				case 0xBB: dma_Update_CTRL((uint16_t)((dma_CTRL[0] & 0x00FF) | (value << 8)), 0); break;
-
-				case 0xBC: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0xFFFFFF00) | value); break;
-				case 0xBD: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xBE: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xBF: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xC0: dma_DST[1] = (uint32_t)((dma_DST[1] & 0xFFFFFF00) | value); break;
-				case 0xC1: dma_DST[1] = (uint32_t)((dma_DST[1] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xC2: dma_DST[1] = (uint32_t)((dma_DST[1] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xC3: dma_DST[1] = (uint32_t)((dma_DST[1] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xC4: dma_CNT[1] = (uint16_t)((dma_CNT[1] & 0xFF00) | value); break;
-				case 0xC5: dma_CNT[1] = (uint16_t)((dma_CNT[1] & 0x00FF) | (value << 8)); break;
-				case 0xC6: dma_Update_CTRL((uint16_t)((dma_CTRL[1] & 0xFF00) | value), 1); break;
-				case 0xC7: dma_Update_CTRL((uint16_t)((dma_CTRL[1] & 0x00FF) | (value << 8)), 1); break;
-
-				case 0xC8: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0xFFFFFF00) | value); break;
-				case 0xC9: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xCA: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xCB: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xCC: dma_DST[2] = (uint32_t)((dma_DST[2] & 0xFFFFFF00) | value); break;
-				case 0xCD: dma_DST[2] = (uint32_t)((dma_DST[2] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xCE: dma_DST[2] = (uint32_t)((dma_DST[2] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xCF: dma_DST[2] = (uint32_t)((dma_DST[2] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xD0: dma_CNT[2] = (uint16_t)((dma_CNT[2] & 0xFF00) | value); break;
-				case 0xD1: dma_CNT[2] = (uint16_t)((dma_CNT[2] & 0x00FF) | (value << 8)); break;
-				case 0xD2: dma_Update_CTRL((uint16_t)((dma_CTRL[2] & 0xFF00) | value), 2); break;
-				case 0xD3: dma_Update_CTRL((uint16_t)((dma_CTRL[2] & 0x00FF) | (value << 8)), 2); break;
-
-				case 0xD4: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0xFFFFFF00) | value); break;
-				case 0xD5: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xD6: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xD7: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xD8: dma_DST[3] = (uint32_t)((dma_DST[3] & 0xFFFFFF00) | value); break;
-				case 0xD9: dma_DST[3] = (uint32_t)((dma_DST[3] & 0xFFFF00FF) | (value << 8)); break;
-				case 0xDA: dma_DST[3] = (uint32_t)((dma_DST[3] & 0xFF00FFFF) | (value << 16)); break;
-				case 0xDB: dma_DST[3] = (uint32_t)((dma_DST[3] & 0x00FFFFFF) | (value << 24)); break;
-				case 0xDC: dma_CNT[3] = (uint16_t)((dma_CNT[3] & 0xFF00) | value); break;
-				case 0xDD: dma_CNT[3] = (uint16_t)((dma_CNT[3] & 0x00FF) | (value << 8)); break;
-				case 0xDE: dma_Update_CTRL((uint16_t)((dma_CTRL[3] & 0xFF00) | value), 3); break;
-				case 0xDF: dma_Update_CTRL((uint16_t)((dma_CTRL[3] & 0x00FF) | (value << 8)), 3); break;
-			}
-		}
-
-		void dma_Write_Reg_16(uint32_t addr, uint16_t value)
-		{
-			switch (addr)
-			{
-				case 0xB0: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0xFFFF0000) | value); break;
-				case 0xB2: dma_SRC[0] = (uint32_t)((dma_SRC[0] & 0x0000FFFF) | (value << 16)); break;
-				case 0xB4: dma_DST[0] = (uint32_t)((dma_DST[0] & 0xFFFF0000) | value); break;
-				case 0xB6: dma_DST[0] = (uint32_t)((dma_DST[0] & 0x0000FFFF) | (value << 16)); break;
-				case 0xB8: dma_CNT[0] = value; break;
-				case 0xBA: dma_Update_CTRL(value, 0); break;
-
-				case 0xBC: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0xFFFF0000) | value); break;
-				case 0xBE: dma_SRC[1] = (uint32_t)((dma_SRC[1] & 0x0000FFFF) | (value << 16)); break;
-				case 0xC0: dma_DST[1] = (uint32_t)((dma_DST[1] & 0xFFFF0000) | value); break;
-				case 0xC2: dma_DST[1] = (uint32_t)((dma_DST[1] & 0x0000FFFF) | (value << 16)); break;
-				case 0xC4: dma_CNT[1] = value; break;
-				case 0xC6: dma_Update_CTRL(value, 1); break;
-
-				case 0xC8: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0xFFFF0000) | value); break;
-				case 0xCA: dma_SRC[2] = (uint32_t)((dma_SRC[2] & 0x0000FFFF) | (value << 16)); break;
-				case 0xCC: dma_DST[2] = (uint32_t)((dma_DST[2] & 0xFFFF0000) | value); break;
-				case 0xCE: dma_DST[2] = (uint32_t)((dma_DST[2] & 0x0000FFFF) | (value << 16)); break;
-				case 0xD0: dma_CNT[2] = value; break;
-				case 0xD2: dma_Update_CTRL(value, 2); break;
-
-				case 0xD4: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0xFFFF0000) | value); break;
-				case 0xD6: dma_SRC[3] = (uint32_t)((dma_SRC[3] & 0x0000FFFF) | (value << 16)); break;
-				case 0xD8: dma_DST[3] = (uint32_t)((dma_DST[3] & 0xFFFF0000) | value); break;
-				case 0xDA: dma_DST[3] = (uint32_t)((dma_DST[3] & 0x0000FFFF) | (value << 16)); break;
-				case 0xDC: dma_CNT[3] = value; break;
-				case 0xDE: dma_Update_CTRL(value, 3); break;
-			}
-		}
-
-		void dma_Write_Reg_32(uint32_t addr, uint32_t value)
-		{
-			switch (addr)
-			{
-				case 0xB0: dma_SRC[0] = value; break;
-				case 0xB4: dma_DST[0] = value; break;
-				case 0xB8: dma_CNT[0] = (uint16_t)(value & 0xFFFF);
-					dma_Update_CTRL((uint16_t)((value >> 16) & 0xFFFF), 0); break;
-
-				case 0xBC: dma_SRC[1] = value; break;
-				case 0xC0: dma_DST[1] = value; break;
-				case 0xC4: dma_CNT[1] = (uint16_t)(value & 0xFFFF);
-					dma_Update_CTRL((uint16_t)((value >> 16) & 0xFFFF), 1); break;
-
-				case 0xC8: dma_SRC[2] = value; break;
-				case 0xCC: dma_DST[2] = value; break;
-				case 0xD0: dma_CNT[2] = (uint16_t)(value & 0xFFFF);
-					dma_Update_CTRL((uint16_t)((value >> 16) & 0xFFFF), 2); break;
-
-				case 0xD4: dma_SRC[3] = value; break;
-				case 0xD8: dma_DST[3] = value; break;
-				case 0xDC: dma_CNT[3] = (uint16_t)(value & 0xFFFF);
-					dma_Update_CTRL((uint16_t)((value >> 16) & 0xFFFF), 3); break;
-			}
-		}
-
-		void dma_Update_CTRL(uint16_t value, uint32_t chan)
-		{
-			if (((dma_CTRL[chan] & 0x8000) == 0) && ((value & 0x8000) != 0))
-			{
-				dma_SRC_intl[chan] = (uint32_t)(dma_SRC[chan] & dma_SRC_Mask[chan]);
-
-				dma_DST_intl[chan] = (uint32_t)(dma_DST[chan] & dma_DST_Mask[chan]);
-
-				dma_CNT_intl[chan] = (dma_CNT[chan] & dma_CNT_Mask[chan]);
-
-				if (dma_CNT_intl[chan] == 0) { dma_CNT_intl[chan] = dma_CNT_Mask_0[chan]; }
-
-				dma_Access_32[chan] = (value & 0x400) == 0x400;
-
-				if (dma_Access_32[chan])
-				{
-					if ((value & 0x60) == 0) { dma_DST_INC[chan] = 4; }
-					else if ((value & 0x60) == 0x20) { dma_DST_INC[chan] = 0xFFFFFFFC; }
-					else if ((value & 0x60) == 0x40) { dma_DST_INC[chan] = 0; }
-					else { dma_DST_INC[chan] = 4; }
-
-					if ((value & 0x180) == 0) { dma_SRC_INC[chan] = 4; }
-					else if ((value & 0x180) == 0x80) { dma_SRC_INC[chan] = 0xFFFFFFFC; }
-					else if ((value & 0x180) == 0x100) { dma_SRC_INC[chan] = 0; }
-					else { dma_SRC_INC[chan] = 4; } // Prohibited?
-				}
-				else
-				{
-					if ((value & 0x60) == 0) { dma_DST_INC[chan] = 2; }
-					else if ((value & 0x60) == 0x20) { dma_DST_INC[chan] = 0xFFFFFFFE; }
-					else if ((value & 0x60) == 0x40) { dma_DST_INC[chan] = 0; }
-					else { dma_DST_INC[chan] = 2; }
-
-					if ((value & 0x180) == 0) { dma_SRC_INC[chan] = 2; }
-					else if ((value & 0x180) == 0x80) { dma_SRC_INC[chan] = 0xFFFFFFFE; }
-					else if ((value & 0x180) == 0x100) { dma_SRC_INC[chan] = 0; }
-					else { dma_SRC_INC[chan] = 2; } // Prohibited?
-				}
-
-				dma_Start_VBL[chan] = dma_Start_HBL[chan] = dma_Run[chan] = false;
-
-				dma_Start_Snd_Vid[chan] = false;
-				if ((value & 0x3000) == 0x0000)
-				{ 
-					dma_Run_En_Time[chan] = 3;
-					Misc_Delays = true;
-					delays_to_process = true;
-					DMA_Start_Delay[chan] = true;
-					DMA_Any_Start = true;
-				}
-				else if ((value & 0x3000) == 0x1000) { dma_Start_VBL[chan] = true; }
-				else if ((value & 0x3000) == 0x2000) { dma_Start_HBL[chan] = true; }
-				else
-				{
-					if (chan == 0)
-					{
-						// Prohibited? What happens?
-					}
-					else
-					{
-						dma_Start_Snd_Vid[chan] = true;
-
-						if ((chan == 1) || (chan == 2))
-						{
-							// ignore word count
-							dma_CNT_intl[chan] = 4;
-
-							// for sound FIFO DMA, always DMA to same destination
-							dma_DST_INC[chan] = 0;
-
-							// always word size accesses
-							dma_Access_32[chan] = true;
-
-							if ((value & 0x180) == 0) { dma_SRC_INC[chan] = 4; }
-							else if ((value & 0x180) == 0x80) { dma_SRC_INC[chan] = 0xFFFFFFFC; }
-							else if ((value & 0x180) == 0x100) { dma_SRC_INC[chan] = 0; }
-							else { dma_SRC_INC[chan] = 4; } // Prohibited? 
-						}
-
-						if (chan == 3)
-						{
-							dma_Video_DMA_Start = false;
-							dma_Video_DMA_Delay = true;
-						}
-					}
-				}
-
-				//Console.WriteLine(chan + " " + value);
-
-				dma_Go[chan] = true;
-			}
-
-			if ((value & 0x8000) == 0)
-			{
-				// if the channel isnt currently running, turn it off
-				dma_Run[chan] = false;
-				dma_Go[chan] = false;
-
-				if (dma_Chan_Exec == 4)
-				{
-					dma_All_Off = true;
-
-					for (int i = 0; i < 4; i++) { dma_All_Off &= !dma_Run[i]; }
-
-					dma_All_Off &= !dma_Shutdown;
-				}
-			}
-
-			//if (!dma_All_Off) { Console.WriteLine(dma_Go[0] + " " + dma_Go[1] + " " + dma_Go[2] + " " + dma_Go[3]); }
-
-			if (chan == 3)
-			{
-				dma_CTRL[chan] = (uint16_t)(value & 0xFFE0);
-			}
-			else
-			{
-				dma_CTRL[chan] = (uint16_t)(value & 0xF7E0);
-			}
-		}
-
-		void dma_Reset()
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				dma_CNT_intl[i] = 0;
-
-				dma_Run_En_Time[i] = 0;
-
-				dma_ST_Time[i] = 0;
-				dma_ROM_Addr[i] = 0;
-
-				dma_SRC[i] = 0;
-				dma_DST[i] = 0;
-				dma_SRC_intl[i] = 0;
-				dma_DST_intl[i] = 0;
-				dma_SRC_INC[i] = 0;
-				dma_DST_INC[i] = 0;
-
-				dma_Last_Bus_Value[i] = 0;
-
-				dma_CNT[i] = 0;
-				dma_CTRL[i] = 0;
-
-				dma_Read_Cycle[i] = true;
-				dma_Go[i] = false;
-				dma_Start_VBL[i] = false;
-				dma_Start_HBL[i] = false;
-				dma_Start_Snd_Vid[i] = false;
-				dma_Run[i] = false;
-				dma_Access_32[i] = false;
-				dma_Use_ROM_Addr_SRC[i] = false;
-				dma_Use_ROM_Addr_DST[i] = false;
-				dma_Use_ROM_Addr_DST[i] = false;
-				dma_ROM_Being_Used[i] = false;
-
-				dma_ROM_Dec_Glitch_Read[i] = false;
-				dma_ROM_Dec_Glitch_Write[i] = false;
-			}
-
-			dma_Access_Cnt = dma_Access_Wait = 0;
-
-			dma_Chan_Exec = 4;
-
-			dma_TFR_Word = 0;
-
-			dma_TFR_HWord = dma_Held_CPU_Instr = 0;
-
-			dma_Seq_Access = false;
-			dma_Pausable = true;
-			dma_All_Off = true;
-			dma_Shutdown = false;
-			dma_Video_DMA_Start = false;
-			dma_Video_DMA_Delay = false;
-		}
-
-		uint8_t* dma_SaveState(uint8_t* saver)
-		{
-			saver = bool_saver(dma_Seq_Access, saver);
-			saver = bool_saver(dma_Pausable, saver);
-			saver = bool_saver(dma_All_Off, saver);
-			saver = bool_saver(dma_Shutdown, saver);
-			saver = bool_saver(dma_Video_DMA_Start, saver);
-			saver = bool_saver(dma_Video_DMA_Delay, saver);
-
-			saver = short_saver(dma_TFR_HWord, saver);
-			saver = short_saver(dma_Held_CPU_Instr, saver);
-
-			saver = int_saver(dma_TFR_Word, saver);
-
-			saver = int_saver(dma_Access_Cnt, saver);
-			saver = int_saver(dma_Access_Wait, saver);
-			saver = int_saver(dma_Chan_Exec, saver);
-
-			saver = bool_array_saver(dma_Read_Cycle, saver, 4);
-			saver = bool_array_saver(dma_Go, saver, 4);
-			saver = bool_array_saver(dma_Start_VBL, saver, 4);
-			saver = bool_array_saver(dma_Start_HBL, saver, 4);
-			saver = bool_array_saver(dma_Start_Snd_Vid, saver, 4);
-			saver = bool_array_saver(dma_Run, saver, 4);
-			saver = bool_array_saver(dma_Access_32, saver, 4);
-			saver = bool_array_saver(dma_Use_ROM_Addr_SRC, saver, 4);
-			saver = bool_array_saver(dma_Use_ROM_Addr_DST, saver, 4);
-			saver = bool_array_saver(dma_ROM_Being_Used, saver, 4);
-			saver = bool_array_saver(dma_ROM_Dec_Glitch_Read, saver, 4);
-			saver = bool_array_saver(dma_ROM_Dec_Glitch_Write, saver, 4);
-
-			saver = short_array_saver(dma_CNT, saver, 4);
-			saver = short_array_saver(dma_CTRL, saver, 4);
-
-			saver = int_array_saver(dma_SRC, saver, 4);
-			saver = int_array_saver(dma_DST, saver, 4);
-			saver = int_array_saver(dma_SRC_intl, saver, 4);
-			saver = int_array_saver(dma_DST_intl, saver, 4);
-			saver = int_array_saver(dma_SRC_INC, saver, 4);
-			saver = int_array_saver(dma_DST_INC, saver, 4);
-			saver = int_array_saver(dma_Last_Bus_Value, saver, 4);
-
-			saver = int_array_saver(dma_CNT_intl, saver, 4);
-			saver = int_array_saver(dma_ST_Time, saver, 4);
-			saver = int_array_saver(dma_ROM_Addr, saver, 4);
-			saver = int_array_saver(dma_Run_En_Time, saver, 4);
-
-			return saver;
-		}
-
-		uint8_t* dma_LoadState(uint8_t* loader)
-		{
-			loader = bool_loader(&dma_Seq_Access, loader);
-			loader = bool_loader(&dma_Pausable, loader);
-			loader = bool_loader(&dma_All_Off, loader);
-			loader = bool_loader(&dma_Shutdown, loader);
-			loader = bool_loader(&dma_Video_DMA_Start, loader);
-			loader = bool_loader(&dma_Video_DMA_Delay, loader);
-
-			loader = short_loader(&dma_TFR_HWord, loader);
-			loader = short_loader(&dma_Held_CPU_Instr, loader);
-
-			loader = int_loader(&dma_TFR_Word, loader);
-
-			loader = int_loader(&dma_Access_Cnt, loader);
-			loader = int_loader(&dma_Access_Wait, loader);
-			loader = int_loader(&dma_Chan_Exec, loader);
-
-			loader = bool_array_loader(dma_Read_Cycle, loader, 4);
-			loader = bool_array_loader(dma_Go, loader, 4);
-			loader = bool_array_loader(dma_Start_VBL, loader, 4);
-			loader = bool_array_loader(dma_Start_HBL, loader, 4);
-			loader = bool_array_loader(dma_Start_Snd_Vid, loader, 4);
-			loader = bool_array_loader(dma_Run, loader, 4);
-			loader = bool_array_loader(dma_Access_32, loader, 4);
-			loader = bool_array_loader(dma_Use_ROM_Addr_SRC, loader, 4);
-			loader = bool_array_loader(dma_Use_ROM_Addr_DST, loader, 4);
-			loader = bool_array_loader(dma_ROM_Being_Used, loader, 4);
-			loader = bool_array_loader(dma_ROM_Dec_Glitch_Read, loader, 4);
-			loader = bool_array_loader(dma_ROM_Dec_Glitch_Write, loader, 4);
-
-			loader = short_array_loader(dma_CNT, loader, 4);
-			loader = short_array_loader(dma_CTRL, loader, 4);
-
-			loader = int_array_loader(dma_SRC, loader, 4);
-			loader = int_array_loader(dma_DST, loader, 4);
-			loader = int_array_loader(dma_SRC_intl, loader, 4);
-			loader = int_array_loader(dma_DST_intl, loader, 4);
-			loader = int_array_loader(dma_SRC_INC, loader, 4);
-			loader = int_array_loader(dma_DST_INC, loader, 4);
-			loader = int_array_loader(dma_Last_Bus_Value, loader, 4);
-
-			loader = int_array_loader(dma_CNT_intl, loader, 4);
-			loader = int_array_loader(dma_ST_Time, loader, 4);
-			loader = int_array_loader(dma_ROM_Addr, loader, 4);
-			loader = int_array_loader(dma_Run_En_Time, loader, 4);
-
-			return loader;
-		}
-
-	#pragma endregion
-
 	#pragma region Serial port
 
 		bool ser_Can_Pulse;
@@ -4447,10 +3897,10 @@ namespace GBHawk
 					tim_Timer = tim_Reload;
 					tim_Timer_Old = tim_Timer;
 
-					tim_Next_Free_Cycle = 4 + CycleCount;
+					tim_Next_Free_Cycle = 4 + Cycle_Count;
 
 					// set interrupts
-					if ((REG_FFFF & 4) == 4) { cpu_FlagIset(true); }
+					if ((REG_FFFF & 4) == 4) { cpu_FlagI = true; }
 					//Console.WriteLine("timer " + Core.cpu.TotalExecutedCycles);
 					REG_FF0F |= 0x04;
 					tim_IRQ_Block = true;
@@ -4522,13 +3972,35 @@ namespace GBHawk
 									true, false, false, false, false, true, true, true,
 									false, true, true, true, true, true, true, false };
 
+		const static uint16_t snd_NR10 = 0;
+		const static uint16_t snd_NR11 = 1;
+		const static uint16_t snd_NR12 = 2;
+		const static uint16_t snd_NR13 = 3;
+		const static uint16_t snd_NR14 = 4;
+		const static uint16_t snd_NR21 = 5;
+		const static uint16_t snd_NR22 = 6;
+		const static uint16_t snd_NR23 = 7;
+		const static uint16_t snd_NR24 = 8;
+		const static uint16_t snd_NR30 = 9;
+		const static uint16_t snd_NR31 = 10;
+		const static uint16_t snd_NR32 = 11;
+		const static uint16_t snd_NR33 = 12;
+		const static uint16_t snd_NR34 = 13;
+		const static uint16_t snd_NR41 = 14;
+		const static uint16_t snd_NR42 = 15;
+		const static uint16_t snd_NR43 = 16;
+		const static uint16_t snd_NR44 = 17;
+		const static uint16_t snd_NR50 = 18;
+		const static uint16_t snd_NR51 = 19;
+		const static uint16_t snd_NR52 = 20;
+
 		uint32_t snd_Divisor[8] = {8, 16, 32, 48, 64, 80, 96, 112};
 
 		uint32_t snd_Chan_Mult_Table[4] = {1, 2, 4, 4};
 
-		uint8_t snd_Audio_Regs[0x30] = { };
+		uint8_t snd_Audio_Regs[21] = { };
 
-		uint8_t snd_Wave_RAM[32] = { };
+		uint8_t snd_Wave_RAM[16] = { };
 
 		uint32_t snd_DAC_Offset = 8;
 		uint32_t snd_Wave_Decay_cnt;
@@ -4579,23 +4051,6 @@ namespace GBHawk
 		bool snd_Wave_Size;
 		bool snd_Wave_Vol_Force;
 
-		// FIFOs
-		uint32_t snd_FIFO_A_ptr, snd_FIFO_B_ptr;
-		uint32_t snd_FIFO_A_Timer, snd_FIFO_B_Timer;
-		uint32_t snd_FIFO_A_Output, snd_FIFO_B_Output;
-		uint32_t snd_FIFO_A_Mult, snd_FIFO_B_Mult;
-
-		uint8_t snd_FIFO_A[32] = { };
-		uint8_t snd_FIFO_B[32] = { };
-
-		uint8_t snd_FIFO_A_Data[4] = { };
-		uint8_t snd_FIFO_B_Data[4] = { };
-
-		uint8_t snd_FIFO_A_Sample, snd_FIFO_B_Sample;
-
-		bool snd_FIFO_A_Tick, snd_FIFO_B_Tick;
-		bool snd_FIFO_A_Enable_L, snd_FIFO_B_Enable_L, snd_FIFO_A_Enable_R, snd_FIFO_B_Enable_R;
-
 		// computed
 		int snd_SQ1_output, snd_SQ2_output, snd_WAVE_output, snd_NOISE_output;
 
@@ -4609,6 +4064,9 @@ namespace GBHawk
 		bool snd_CTRL_wave_R_en;
 		bool snd_CTRL_noise_R_en;
 		bool snd_CTRL_power;
+		bool snd_CTRL_vin_L_en;
+		bool snd_CTRL_vin_R_en;
+
 		uint8_t snd_CTRL_vol_L;
 		uint8_t snd_CTRL_vol_R;
 
@@ -4626,816 +4084,873 @@ namespace GBHawk
 		int32_t samples_L[25000] = {};
 		int32_t samples_R[25000] = {};
 
-		uint8_t snd_Read_Reg_8(uint32_t addr)
+		uint8_t snd_Unused_Bits[21] = { 0x80, 0x3F, 0x00, 0xFF, 0xBF,
+											  0x3F, 0x00, 0xFF, 0xBF,
+										0x7F, 0xFF, 0x9F, 0xFF, 0xBF,
+											  0xFF, 0x00, 0x00, 0xBF,
+										0x00, 0x00, 0x70 };
+
+		uint32_t snd_DAC_OFST = 8;
+		uint32_t snd_WAVE_decay_counter;
+		bool snd_WAVE_decay_done;
+
+		bool snd_Update_Needed;
+
+		uint8_t snd_WAVE_RAM_INI[16] = { 0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C,
+									0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA };
+
+		uint8_t snd_Read_Reg(uint32_t addr)
 		{
 			uint8_t ret = 0;
 
-			if (addr < 0x8C)
+			switch (addr)
 			{
-				ret = snd_Audio_Regs[addr - 0x60];
-			}
-			else if ((addr < 0xA0) && (addr >= 0x90))
-			{
-				int ofst = (int)(snd_Wave_Bank + addr - 0x90);
+			case 0xFF10: ret = (uint8_t)(snd_Audio_Regs[snd_NR10] | snd_Unused_Bits[snd_NR10]); break; // NR10 (sweep)
+			case 0xFF11: ret = (uint8_t)(snd_Audio_Regs[snd_NR11] | snd_Unused_Bits[snd_NR11]); break; // NR11 (sound length / wave pattern duty %)
+			case 0xFF12: ret = (uint8_t)(snd_Audio_Regs[snd_NR12] | snd_Unused_Bits[snd_NR12]); break; // NR12 (envelope)
+			case 0xFF13: ret = (uint8_t)(snd_Audio_Regs[snd_NR13] | snd_Unused_Bits[snd_NR13]); break; // NR13 (freq low)
+			case 0xFF14: ret = (uint8_t)(snd_Audio_Regs[snd_NR14] | snd_Unused_Bits[snd_NR14]); break; // NR14 (freq hi)
+			case 0xFF16: ret = (uint8_t)(snd_Audio_Regs[snd_NR21] | snd_Unused_Bits[snd_NR21]); break; // NR21 (sound length / wave pattern duty %)
+			case 0xFF17: ret = (uint8_t)(snd_Audio_Regs[snd_NR22] | snd_Unused_Bits[snd_NR22]); break; // NR22 (envelope)
+			case 0xFF18: ret = (uint8_t)(snd_Audio_Regs[snd_NR23] | snd_Unused_Bits[snd_NR23]); break; // NR23 (freq low)
+			case 0xFF19: ret = (uint8_t)(snd_Audio_Regs[snd_NR24] | snd_Unused_Bits[snd_NR24]); break; // NR24 (freq hi)
+			case 0xFF1A: ret = (uint8_t)(snd_Audio_Regs[snd_NR30] | snd_Unused_Bits[snd_NR30]); break; // NR30 (on/off)
+			case 0xFF1B: ret = (uint8_t)(snd_Audio_Regs[snd_NR31] | snd_Unused_Bits[snd_NR31]); break; // NR31 (length)
+			case 0xFF1C: ret = (uint8_t)(snd_Audio_Regs[snd_NR32] | snd_Unused_Bits[snd_NR32]); break; // NR32 (level output)
+			case 0xFF1D: ret = (uint8_t)(snd_Audio_Regs[snd_NR33] | snd_Unused_Bits[snd_NR33]); break; // NR33 (freq low)
+			case 0xFF1E: ret = (uint8_t)(snd_Audio_Regs[snd_NR34] | snd_Unused_Bits[snd_NR34]); break; // NR34 (freq hi)
+			case 0xFF20: ret = (uint8_t)(snd_Audio_Regs[snd_NR41] | snd_Unused_Bits[snd_NR41]); break; // NR41 (length)
+			case 0xFF21: ret = (uint8_t)(snd_Audio_Regs[snd_NR42] | snd_Unused_Bits[snd_NR42]); break; // NR42 (envelope)
+			case 0xFF22: ret = (uint8_t)(snd_Audio_Regs[snd_NR43] | snd_Unused_Bits[snd_NR43]); break; // NR43 (shift)
+			case 0xFF23: ret = (uint8_t)(snd_Audio_Regs[snd_NR44] | snd_Unused_Bits[snd_NR44]); break; // NR44 (trigger)
+			case 0xFF24: ret = (uint8_t)(snd_Audio_Regs[snd_NR50] | snd_Unused_Bits[snd_NR50]); break; // NR50 (ctrl)
+			case 0xFF25: ret = (uint8_t)(snd_Audio_Regs[snd_NR51] | snd_Unused_Bits[snd_NR51]); break; // NR51 (ctrl)
+			case 0xFF26: ret = (uint8_t)(snd_Read_NR52() | snd_Unused_Bits[snd_NR52]); break; // NR52 (ctrl)
 
-				ret = snd_Wave_RAM[ofst];
-			}
-			else
-			{
-				// FIFO not readable, other addresses are open bus
-				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus;
+				// wave ram table
+			case 0xFF30:
+			case 0xFF31:
+			case 0xFF32:
+			case 0xFF33:
+			case 0xFF34:
+			case 0xFF35:
+			case 0xFF36:
+			case 0xFF37:
+			case 0xFF38:
+			case 0xFF39:
+			case 0xFF3A:
+			case 0xFF3B:
+			case 0xFF3C:
+			case 0xFF3D:
+			case 0xFF3E:
+			case 0xFF3F:
+				if (snd_WAVE_enable)
+				{
+					if (snd_WAVE_can_get || Is_GBC) { ret = snd_Wave_RAM[snd_WAVE_wave_cntr >> 1]; }
+					else { ret = 0xFF; }
+				}
+				else { ret = snd_Wave_RAM[addr & 0x0F]; }
+
+				break;
 			}
 
 			return ret;
 		}
 
-		uint16_t snd_Read_Reg_16(uint32_t addr)
-		{
-			uint16_t ret = 0;
-
-			if (addr < 0x8C)
-			{
-				ret = (uint16_t)((snd_Audio_Regs[addr - 0x60 + 1] << 8) | snd_Audio_Regs[addr - 0x60]);
-			}
-			else if ((addr < 0xA0) && (addr >= 0x90))
-			{
-				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
-
-				ret = (uint16_t)((snd_Wave_RAM[ofst + 1] << 8) | snd_Wave_RAM[ofst]);
-			}
-			else
-			{
-				// FIFO not readable, other addresses are open bus
-				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
-			}
-
-			return ret;
-		}
-
-		uint32_t snd_Read_Reg_32(uint32_t addr)
-		{
-			uint32_t ret = 0;
-
-			if (addr < 0x8C)
-			{
-				ret = (uint32_t)((snd_Audio_Regs[addr - 0x60 + 3] << 24) | (snd_Audio_Regs[addr - 0x60 + 2] << 16) | (snd_Audio_Regs[addr - 0x60 + 1] << 8) | snd_Audio_Regs[addr - 0x60]);
-			}
-			else if ((addr < 0xA0) && (addr >= 0x90))
-			{
-				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
-
-				ret = (uint32_t)((snd_Wave_RAM[ofst + 3] << 24) | (snd_Wave_RAM[ofst + 2] << 16) | (snd_Wave_RAM[ofst + 1] << 8) | snd_Wave_RAM[ofst]);
-			}
-			else
-			{
-				// FIFO not readable, other addresses are open bus
-				ret = cpu_Last_Bus_Value; // open bus
-			}
-
-			return ret;
-		}
-
-		void snd_Write_Reg_8(uint32_t addr, uint8_t value)
-		{
-			if (addr < 0x90)
-			{
-				snd_Update_Regs(addr, value);
-			}
-			else if (addr < 0xA0)
-			{
-				int ofst = (int)(snd_Wave_Bank + addr - 0x90);
-
-				snd_Wave_RAM[ofst] = value;
-			}
-			else if (addr < 0xA4)
-			{
-				snd_FIFO_A_Data[(addr & 3)] = value;
-				snd_Write_FIFO_Data(true);
-			}
-			else if (addr < 0xA8)
-			{
-				snd_FIFO_B_Data[(addr & 3)] = value;
-				snd_Write_FIFO_Data(false);
-			}
-		}
-
-		void snd_Write_Reg_16(uint32_t addr, uint16_t value)
-		{
-			if (addr < 0x90)
-			{
-				snd_Update_Regs(addr, (uint8_t)(value & 0xFF));
-				snd_Update_Regs((uint32_t)(addr + 1), (uint8_t)((value >> 8) & 0xFF));
-			}
-			else if (addr < 0xA0)
-			{
-				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
-				snd_Wave_RAM[ofst] = (uint8_t)(value & 0xFF);
-				snd_Wave_RAM[ofst + 1] = (uint8_t)((value >> 8) & 0xFF);
-			}
-			else if (addr < 0xA4)
-			{
-				if (addr == 0xA0)
-				{
-					snd_FIFO_A_Data[0] = (uint8_t)(value & 0xFF);
-					snd_FIFO_A_Data[1] = (uint8_t)((value >> 8) & 0xFF);
-					snd_Write_FIFO_Data(true);
-				}
-				else
-				{
-					snd_FIFO_A_Data[2] = (uint8_t)(value & 0xFF);
-					snd_FIFO_A_Data[3] = (uint8_t)((value >> 8) & 0xFF);
-					snd_Write_FIFO_Data(true);
-				}
-			}
-			else if (addr < 0xA8)
-			{
-				if (addr == 0xA6)
-				{
-					snd_FIFO_B_Data[0] = (uint8_t)(value & 0xFF);
-					snd_FIFO_B_Data[1] = (uint8_t)((value >> 8) & 0xFF);
-					snd_Write_FIFO_Data(false);
-				}
-				else
-				{
-					snd_FIFO_B_Data[2] = (uint8_t)(value & 0xFF);
-					snd_FIFO_B_Data[3] = (uint8_t)((value >> 8) & 0xFF);
-					snd_Write_FIFO_Data(false);
-				}
-			}
-		}
-
-		void snd_Write_Reg_32(uint32_t addr, uint32_t value)
-		{
-			if (addr < 0x90)
-			{
-				snd_Update_Regs(addr, (uint8_t)(value & 0xFF));
-				snd_Update_Regs((uint32_t)(addr + 1), (uint8_t)((value >> 8) & 0xFF));
-				snd_Update_Regs((uint32_t)(addr + 2), (uint8_t)((value >> 16) & 0xFF));
-				snd_Update_Regs((uint32_t)(addr + 3), (uint8_t)((value >> 24) & 0xFF));
-			}
-			else if (addr < 0xA0)
-			{
-				int ofst = (int)(snd_Wave_Bank + (addr - 0x90));
-				snd_Wave_RAM[ofst] = (uint8_t)(value & 0xFF);
-				snd_Wave_RAM[ofst + 1] = (uint8_t)((value >> 8) & 0xFF);
-				snd_Wave_RAM[ofst + 2] = (uint8_t)((value >> 16) & 0xFF);
-				snd_Wave_RAM[ofst + 3] = (uint8_t)((value >> 24) & 0xFF);
-			}
-			else if (addr < 0xA4)
-			{
-				snd_FIFO_A_Data[0] = (uint8_t)(value & 0xFF);
-				snd_FIFO_A_Data[1] = (uint8_t)((value >> 8) & 0xFF);
-				snd_FIFO_A_Data[2] = (uint8_t)((value >> 16) & 0xFF);
-				snd_FIFO_A_Data[3] = (uint8_t)((value >> 24) & 0xFF);
-				snd_Write_FIFO_Data(true);
-			}
-			else if (addr < 0xA8)
-			{
-				snd_FIFO_B_Data[0] = (uint8_t)(value & 0xFF);
-				snd_FIFO_B_Data[1] = (uint8_t)((value >> 8) & 0xFF);
-				snd_FIFO_B_Data[2] = (uint8_t)((value >> 16) & 0xFF);
-				snd_FIFO_B_Data[3] = (uint8_t)((value >> 24) & 0xFF);
-				snd_Write_FIFO_Data(false);
-			}
-		}
-
-		void snd_Write_FIFO_Data(bool chan_A)
-		{
-			if (snd_CTRL_power)
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					if (chan_A)
-					{
-						if (snd_FIFO_A_ptr < 32)
-						{
-							snd_FIFO_A[snd_FIFO_A_ptr] = snd_FIFO_A_Data[i];
-							snd_FIFO_A_ptr += 1;
-						}
-
-						if (snd_FIFO_A_ptr == 32)
-						{
-							snd_FIFO_A_ptr = 0;
-						}
-					}
-					else
-					{
-						if (snd_FIFO_B_ptr < 32)
-						{
-							snd_FIFO_B[snd_FIFO_B_ptr] = snd_FIFO_B_Data[i];
-							snd_FIFO_B_ptr += 1;
-						}
-
-						if (snd_FIFO_B_ptr == 32)
-						{
-							snd_FIFO_B_ptr = 0;
-						}
-					}
-				}
-			}
-		}
-
-		void snd_Update_Regs(uint32_t addr, uint8_t value)
+		void snd_WriteReg(uint16_t addr, uint8_t value)
 		{
 			// while power is on, everything is writable
-			//Message_String = to_string(addr) + " " + to_string(value) + " " + to_string(CycleCount);
-
-			//if (MessageCallback) { MessageCallback(Message_String.length()); }
-
+			//Console.WriteLine((addr & 0xFF) + " " + value);
 			if (snd_CTRL_power)
 			{
-				if (addr < 0x90)
+				switch (addr)
 				{
-					switch (addr)
-					{
-						case 0x60:												// NR10 (sweep)
-							snd_SQ1_swp_prd = (uint8_t)((value & 0x70) >> 4);
-							snd_SQ1_negate = (value & 8) > 0;
-							snd_SQ1_shift = (uint8_t)(value & 7);
+					case 0xFF10:                                        // NR10 (sweep)
+						snd_Audio_Regs[snd_NR10] = value;
+						snd_SQ1_swp_prd = (uint8_t)((value & 0x70) >> 4);
+						snd_SQ1_negate = (value & 8) > 0;
+						snd_SQ1_shift = (uint8_t)(value & 7);
 
-							if (!snd_SQ1_negate && snd_SQ1_calc_done) { snd_SQ1_enable = false; }
+						if (!snd_SQ1_negate && snd_SQ1_calc_done) { snd_SQ1_enable = false; snd_calculate_bias_gain_1(); }
+						break;
+					case 0xFF11:                                        // NR11 (sound length / wave pattern duty %)
+						snd_Audio_Regs[snd_NR11] = value;
+						snd_SQ1_duty = (uint8_t)((value & 0xC0) >> 6);
+						snd_SQ1_length = (uint16_t)(64 - (value & 0x3F));
+						snd_SQ1_len_cntr = snd_SQ1_length;
+						break;
+					case 0xFF12:                                        // NR12 (envelope)
+						snd_SQ1_st_vol = (uint8_t)((value & 0xF0) >> 4);
+						snd_SQ1_env_add = (value & 8) > 0;
+						snd_SQ1_per = (uint8_t)(value & 7);
 
-							value &= 0x7F;
-							break;
+						// several glitchy effects happen when writing to NRx2 during audio playing
+						if (((snd_Audio_Regs[snd_NR12] & 7) == 0) && !snd_SQ1_vol_done) { snd_SQ1_vol_state++; }
+						else if ((snd_Audio_Regs[snd_NR12] & 8) == 0) { snd_SQ1_vol_state += 2; }
 
-						case 0x61:
-							// not writable
-							value = 0;
-							break;
+						if (((snd_Audio_Regs[snd_NR12] ^ value) & 8) > 0) { snd_SQ1_vol_state = (uint8_t)(0x10 - snd_SQ1_vol_state); }
 
-						case 0x62:												// NR11 (sound length / wave pattern duty %)
-							snd_SQ1_duty = (uint8_t)((value & 0xC0) >> 6);
-							snd_SQ1_length = (uint16_t)(64 - (value & 0x3F));
-							snd_SQ1_len_cntr = snd_SQ1_length;
+						snd_SQ1_vol_state &= 0xF;
 
-							// lower bits not readable
-							value &= 0xC0;
-							break;
+						if ((value & 0xF8) == 0) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
+						snd_Audio_Regs[snd_NR12] = value;
 
-						case 0x63:												// NR12 (envelope)
-							snd_SQ1_st_vol = (uint8_t)((value & 0xF0) >> 4);
-							snd_SQ1_env_add = (value & 8) > 0;
-							snd_SQ1_per = (uint8_t)(value & 7);
+						snd_calculate_bias_gain_1();
+						break;
+					case 0xFF13:                                        // NR13 (freq low)
+						snd_Audio_Regs[snd_NR13] = value;
+						snd_SQ1_frq &= 0x700;
+						snd_SQ1_frq |= value;
+						break;
+					case 0xFF14:                                        // NR14 (freq hi)
+						snd_Audio_Regs[snd_NR14] = value;
+						snd_SQ1_trigger = (value & 0x80) > 0;
+						snd_SQ1_frq &= 0xFF;
+						snd_SQ1_frq |= (uint16_t)((value & 7) << 8);
 
-							// several glitchy effects happen when writing to snd_NRx2 during audio playing
-							if (((snd_Audio_Regs[0x03] & 7) == 0) && !snd_SQ1_vol_done) { snd_SQ1_vol_state++; }
-							else if ((snd_Audio_Regs[0x03] & 8) == 0) { snd_SQ1_vol_state += 2; }
-
-							if (((snd_Audio_Regs[0x03] ^ value) & 8) > 0) { snd_SQ1_vol_state = (uint8_t)(0x10 - snd_SQ1_vol_state); }
-
-							snd_SQ1_vol_state &= 0xF;
-
-							if ((value & 0xF8) == 0) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
-							break;
-
-						case 0x64:												// NR13 (freq low)
-							snd_SQ1_frq &= 0x700;
-							snd_SQ1_frq |= value;
-
-							// not readable
-							value = 0;
-							break;
-
-						case 0x65:												// NR14 (freq hi)
-							snd_SQ1_trigger = (value & 0x80) > 0;
-							snd_SQ1_frq &= 0xFF;
-							snd_SQ1_frq |= (uint16_t)((value & 7) << 8);
-
-							if (((snd_Sequencer_len & 1) == 0))
+						if (((snd_Sequencer_len & 1) == 0))
+						{
+							if (!snd_SQ1_len_en && ((value & 0x40) > 0) && (snd_SQ1_len_cntr > 0))
 							{
-								if (!snd_SQ1_len_en && ((value & 0x40) > 0) && (snd_SQ1_len_cntr > 0))
-								{
-									snd_SQ1_len_cntr--;
-									if ((snd_SQ1_len_cntr == 0) && !snd_SQ1_trigger) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
-								}
+								snd_SQ1_len_cntr--;
+								if ((snd_SQ1_len_cntr == 0) && !snd_SQ1_trigger) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
+							}
+						}
+
+						if (snd_SQ1_trigger)
+						{
+							snd_SQ1_enable = true;
+							snd_SQ1_vol_done = false;
+							snd_SQ1_duty_cntr = 0;
+
+							if (snd_SQ1_len_cntr == 0)
+							{
+								snd_SQ1_len_cntr = 64;
+								if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_SQ1_len_cntr--; }
+							}
+							snd_SQ1_vol_state = snd_SQ1_st_vol;
+							snd_SQ1_vol_per = (snd_SQ1_per > 0) ? snd_SQ1_per : 8;
+							if (snd_Sequencer_vol == 4) { snd_SQ1_vol_per++; }
+							snd_SQ1_frq_shadow = snd_SQ1_frq;
+							snd_SQ1_intl_cntr = ((2048 - snd_SQ1_frq_shadow) * 4) | (snd_SQ1_intl_cntr & 3);
+
+							snd_SQ1_intl_swp_cnt = snd_SQ1_swp_prd > 0 ? snd_SQ1_swp_prd : 8;
+							snd_SQ1_calc_done = false;
+
+							if ((snd_SQ1_shift > 0) || (snd_SQ1_swp_prd > 0))
+							{
+								snd_SQ1_swp_enable = true;
+							}
+							else
+							{
+								snd_SQ1_swp_enable = false;
 							}
 
-							if (snd_SQ1_trigger)
+							if (snd_SQ1_shift > 0)
 							{
-								snd_SQ1_enable = true;
-								snd_SQ1_vol_done = false;
-								snd_SQ1_duty_cntr = 0;
+								int shadow_frq = snd_SQ1_frq_shadow;
+								shadow_frq >>= snd_SQ1_shift;
+								if (snd_SQ1_negate) { shadow_frq = -shadow_frq; }
+								shadow_frq += snd_SQ1_frq_shadow;
 
-								if (snd_SQ1_len_cntr == 0)
+								// disable channel if overflow
+								if ((uint32_t)shadow_frq > 2047)
 								{
-									snd_SQ1_len_cntr = 64;
-									if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_SQ1_len_cntr--; }
+									snd_SQ1_enable = snd_SQ1_swp_enable = false;
 								}
-								snd_SQ1_vol_state = snd_SQ1_st_vol;
-								snd_SQ1_vol_per = (snd_SQ1_per > 0) ? snd_SQ1_per : 8;
-								if (snd_Sequencer_vol == 4) { snd_SQ1_vol_per++; }
-								snd_SQ1_frq_shadow = snd_SQ1_frq;
-								snd_SQ1_intl_cntr = ((2048 - snd_SQ1_frq_shadow) * 4) | (snd_SQ1_intl_cntr & 3);
 
-								snd_SQ1_intl_swp_cnt = snd_SQ1_swp_prd > 0 ? snd_SQ1_swp_prd : 8;
-								snd_SQ1_calc_done = false;
+								// set negate mode flag that disables channel is negate clerar
+								if (snd_SQ1_negate) { snd_SQ1_calc_done = true; }
+							}
 
-								if ((snd_SQ1_shift > 0) || (snd_SQ1_swp_prd > 0))
+							if ((snd_SQ1_vol_state == 0) && !snd_SQ1_env_add) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
+						}
+
+						snd_calculate_bias_gain_1();
+						snd_SQ1_len_en = (value & 0x40) > 0;
+						break;
+					case 0xFF16:                                        // NR21 (sound length / wave pattern duty %)
+						snd_Audio_Regs[snd_NR21] = value;
+						snd_SQ2_duty = (uint8_t)((value & 0xC0) >> 6);
+						snd_SQ2_length = (uint16_t)(64 - (value & 0x3F));
+						snd_SQ2_len_cntr = snd_SQ2_length;
+						break;
+					case 0xFF17:                                        // NR22 (envelope)
+						snd_SQ2_st_vol = (uint8_t)((value & 0xF0) >> 4);
+						snd_SQ2_env_add = (value & 8) > 0;
+						snd_SQ2_per = (uint8_t)(value & 7);
+
+						// several glitchy effects happen when writing to NRx2 during audio playing
+						if (((snd_Audio_Regs[snd_NR22] & 7) == 0) && !snd_SQ2_vol_done) { snd_SQ2_vol_state++; }
+						else if ((snd_Audio_Regs[snd_NR22] & 8) == 0) { snd_SQ2_vol_state += 2; }
+
+						if (((snd_Audio_Regs[snd_NR22] ^ value) & 8) > 0) { snd_SQ2_vol_state = (uint8_t)(0x10 - snd_SQ2_vol_state); }
+
+						snd_SQ2_vol_state &= 0xF;
+						if ((value & 0xF8) == 0) { snd_SQ2_enable = false; }
+						snd_Audio_Regs[snd_NR22] = value;
+
+						snd_calculate_bias_gain_2();
+						break;
+					case 0xFF18:                                        // NR23 (freq low)
+						snd_Audio_Regs[snd_NR23] = value;
+						snd_SQ2_frq &= 0x700;
+						snd_SQ2_frq |= value;
+						break;
+					case 0xFF19:                                        // NR24 (freq hi)
+						snd_Audio_Regs[snd_NR24] = value;
+						snd_SQ2_trigger = (value & 0x80) > 0;
+						snd_SQ2_frq &= 0xFF;
+						snd_SQ2_frq |= (uint16_t)((value & 7) << 8);
+
+						if ((snd_Sequencer_len & 1) == 0)
+						{
+							if (!snd_SQ2_len_en && ((value & 0x40) > 0) && (snd_SQ2_len_cntr > 0))
+							{
+								snd_SQ2_len_cntr--;
+								if ((snd_SQ2_len_cntr == 0) && !snd_SQ2_trigger) { snd_SQ2_enable = false; }
+							}
+						}
+
+						if (snd_SQ2_trigger)
+						{
+							snd_SQ2_enable = true;
+							snd_SQ2_vol_done = false;
+							snd_SQ2_duty_cntr = 0;
+
+							if (snd_SQ2_len_cntr == 0)
+							{
+								snd_SQ2_len_cntr = 64;
+								if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_SQ2_len_cntr--; }
+							}
+							snd_SQ2_intl_cntr = ((2048 - snd_SQ2_frq) * 4) | (snd_SQ2_intl_cntr & 3);
+							snd_SQ2_vol_state = snd_SQ2_st_vol;
+							snd_SQ2_vol_per = (snd_SQ2_per > 0) ? snd_SQ2_per : 8;
+							if (snd_Sequencer_vol == 4) { snd_SQ2_vol_per++; }
+							if ((snd_SQ2_vol_state == 0) && !snd_SQ2_env_add) { snd_SQ2_enable = false; }
+						}
+						snd_calculate_bias_gain_2();
+						snd_SQ2_len_en = (value & 0x40) > 0;
+						break;
+					case 0xFF1A:                                        // NR30 (on/off)
+						snd_Audio_Regs[snd_NR30] = value;
+						snd_WAVE_DAC_pow = (value & 0x80) > 0;
+						if (!snd_WAVE_DAC_pow) { snd_WAVE_enable = false; }
+						snd_calculate_bias_gain_w();
+						break;
+					case 0xFF1B:                                        // NR31 (length)
+						snd_Audio_Regs[snd_NR31] = value;
+						snd_WAVE_length = (uint16_t)(256 - value);
+						snd_WAVE_len_cntr = snd_WAVE_length;
+						break;
+					case 0xFF1C:                                        // NR32 (level output)
+						snd_Audio_Regs[snd_NR32] = value;
+						snd_WAVE_vol_code = (uint8_t)((value & 0x60) >> 5);
+						break;
+					case 0xFF1D:                                        // NR33 (freq low)
+						snd_Audio_Regs[snd_NR33] = value;
+						snd_WAVE_frq &= 0x700;
+						snd_WAVE_frq |= value;
+						break;
+					case 0xFF1E:                                        // NR34 (freq hi)
+						snd_Audio_Regs[snd_NR34] = value;
+						snd_WAVE_trigger = (value & 0x80) > 0;
+						snd_WAVE_frq &= 0xFF;
+						snd_WAVE_frq |= (uint16_t)((value & 7) << 8);
+
+						if ((snd_Sequencer_len & 1) == 0)
+						{
+
+							if (!snd_WAVE_len_en && ((value & 0x40) > 0) && (snd_WAVE_len_cntr > 0))
+							{
+								snd_WAVE_len_cntr--;
+								if ((snd_WAVE_len_cntr == 0) && !snd_WAVE_trigger) { snd_WAVE_enable = false; }
+							}
+						}
+
+						if (snd_WAVE_trigger)
+						{
+							// some corruption occurs if triggering while reading
+							if (snd_WAVE_enable && (snd_WAVE_intl_cntr == 2) && !Is_GBC)
+							{
+								// we want to use the previous wave cntr value since it was just incremented
+								int t_wave_cntr = (snd_WAVE_wave_cntr + 1) & 31;
+								if ((t_wave_cntr >> 1) < 4)
 								{
-									snd_SQ1_swp_enable = true;
+									snd_Wave_RAM[0] = snd_Wave_RAM[t_wave_cntr >> 1];
 								}
 								else
 								{
-									snd_SQ1_swp_enable = false;
+									snd_Wave_RAM[0] = snd_Wave_RAM[(t_wave_cntr >> 3) * 4];
+									snd_Wave_RAM[1] = snd_Wave_RAM[(t_wave_cntr >> 3) * 4 + 1];
+									snd_Wave_RAM[2] = snd_Wave_RAM[(t_wave_cntr >> 3) * 4 + 2];
+									snd_Wave_RAM[3] = snd_Wave_RAM[(t_wave_cntr >> 3) * 4 + 3];
 								}
-
-								if (snd_SQ1_shift > 0)
-								{
-									int shadow_frq = snd_SQ1_frq_shadow;
-									shadow_frq = shadow_frq >> snd_SQ1_shift;
-									if (snd_SQ1_negate) { shadow_frq = -shadow_frq; }
-									shadow_frq += snd_SQ1_frq_shadow;
-
-									// disable channel if overflow
-									if ((uint32_t)shadow_frq > 2047)
-									{
-										snd_SQ1_enable = snd_SQ1_swp_enable = false;
-									}
-
-									// set negate mode flag that disables channel is negate clerar
-									if (snd_SQ1_negate) { snd_SQ1_calc_done = true; }
-								}
-
-								if ((snd_SQ1_vol_state == 0) && !snd_SQ1_env_add) { snd_SQ1_enable = snd_SQ1_swp_enable = false; }
 							}
 
-							snd_SQ1_len_en = (value & 0x40) > 0;
+							snd_WAVE_enable = true;
 
-							value &= 0x40;
-							break;
-
-						case 0x66:
-						case 0x67:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x68:												// NR21 (sound length / wave pattern duty %)		
-							snd_SQ2_duty = (uint8_t)((value & 0xC0) >> 6);
-							snd_SQ2_length = (uint16_t)(64 - (value & 0x3F));
-							snd_SQ2_len_cntr = snd_SQ2_length;
-
-							value &= 0xC0;
-							break;
-
-						case 0x69:												// NR22 (envelope)
-							snd_SQ2_st_vol = (uint8_t)((value & 0xF0) >> 4);
-							snd_SQ2_env_add = (value & 8) > 0;
-							snd_SQ2_per = (uint8_t)(value & 7);
-
-							// several glitchy effects happen when writing to snd_NRx2 during audio playing
-							if (((snd_Audio_Regs[0x09] & 7) == 0) && !snd_SQ2_vol_done) { snd_SQ2_vol_state++; }
-							else if ((snd_Audio_Regs[0x09] & 8) == 0) { snd_SQ2_vol_state += 2; }
-
-							if (((snd_Audio_Regs[0x09] ^ value) & 8) > 0) { snd_SQ2_vol_state = (uint8_t)(0x10 - snd_SQ2_vol_state); }
-
-							snd_SQ2_vol_state &= 0xF;
-							if ((value & 0xF8) == 0) { snd_SQ2_enable = false; }
-
-							break;
-
-						case 0x6A:
-						case 0x6B:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x6C:												// NR23 (freq low)
-							snd_SQ2_frq &= 0x700;
-							snd_SQ2_frq |= value;
-
-							value = 0;
-							break;
-
-						case 0x6D:												// NR24 (freq hi)
-							snd_SQ2_trigger = (value & 0x80) > 0;
-							snd_SQ2_frq &= 0xFF;
-							snd_SQ2_frq |= (uint16_t)((value & 7) << 8);
-
-							if ((snd_Sequencer_len & 1) == 0)
+							if (snd_WAVE_len_cntr == 0)
 							{
-								if (!snd_SQ2_len_en && ((value & 0x40) > 0) && (snd_SQ2_len_cntr > 0))
-								{
-									snd_SQ2_len_cntr--;
-									if ((snd_SQ2_len_cntr == 0) && !snd_SQ2_trigger) { snd_SQ2_enable = false; }
-								}
+								snd_WAVE_len_cntr = 256;
+								if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_WAVE_len_cntr--; }
 							}
+							snd_WAVE_intl_cntr = (2048 - snd_WAVE_frq) * 2 + 6; // trigger delay for wave channel
 
-							if (snd_SQ2_trigger)
-							{
-								snd_SQ2_enable = true;
-								snd_SQ2_vol_done = false;
-								snd_SQ2_duty_cntr = 0;
-
-								if (snd_SQ2_len_cntr == 0)
-								{
-									snd_SQ2_len_cntr = 64;
-									if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_SQ2_len_cntr--; }
-								}
-								snd_SQ2_intl_cntr = ((2048 - snd_SQ2_frq) * 4) | (snd_SQ2_intl_cntr & 3);
-								snd_SQ2_vol_state = snd_SQ2_st_vol;
-								snd_SQ2_vol_per = (snd_SQ2_per > 0) ? snd_SQ2_per : 8;
-								if (snd_Sequencer_vol == 4) { snd_SQ2_vol_per++; }
-								if ((snd_SQ2_vol_state == 0) && !snd_SQ2_env_add) { snd_SQ2_enable = false; }
-							}
-
-							snd_SQ2_len_en = (value & 0x40) > 0;
-
-							value &= 0x40;
-							break;
-
-						case 0x6E:
-						case 0x6F:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x70:												// NR30 (on/off)
-							snd_WAVE_DAC_pow = (value & 0x80) > 0;
+							snd_WAVE_wave_cntr = 0;
 							if (!snd_WAVE_DAC_pow) { snd_WAVE_enable = false; }
+						}
 
-							// selected bank is played, other one can be written to
-							snd_Wave_Bank = ((value & 0x40) == 0) ? 16 : 0;
+						snd_calculate_bias_gain_w();
+						snd_WAVE_len_en = (value & 0x40) > 0;
+						break;
+					case 0xFF20:                                        // NR41 (length)
+						snd_Audio_Regs[snd_NR41] = value;
+						snd_NOISE_length = (uint16_t)(64 - (value & 0x3F));
+						snd_NOISE_len_cntr = snd_NOISE_length;
+						break;
+					case 0xFF21:                                        // NR42 (envelope)
+						snd_NOISE_st_vol = (uint8_t)((value & 0xF0) >> 4);
+						snd_NOISE_env_add = (value & 8) > 0;
+						snd_NOISE_per = (uint8_t)(value & 7);
 
-							snd_Wave_Size = (value & 0x20) == 0x20;
+						// several glitchy effects happen when writing to NRx2 during audio playing
+						if (((snd_Audio_Regs[snd_NR42] & 7) == 0) && !snd_NOISE_vol_done) { snd_NOISE_vol_state++; }
+						else if ((snd_Audio_Regs[snd_NR42] & 8) == 0) { snd_NOISE_vol_state += 2; }
 
-							value &= 0xE0;
-							break;
+						if (((snd_Audio_Regs[snd_NR42] ^ value) & 8) > 0) { snd_NOISE_vol_state = (uint8_t)(0x10 - snd_NOISE_vol_state); }
 
-						case 0x71:
-							value = 0;
-							break;
+						snd_NOISE_vol_state &= 0xF;
+						if ((value & 0xF8) == 0) { snd_NOISE_enable = false; }
+						snd_Audio_Regs[snd_NR42] = value;
 
-						case 0x72:												// NR31 (length)
-							snd_WAVE_length = (uint16_t)(256 - value);
-							snd_WAVE_len_cntr = snd_WAVE_length;
+						snd_calculate_bias_gain_n();
+						break;
+					case 0xFF22:                                        // NR43 (shift)
+						snd_Audio_Regs[snd_NR43] = value;
+						snd_NOISE_clk_shft = (uint8_t)((value & 0xF0) >> 4);
+						snd_NOISE_wdth_md = (value & 8) > 0;
+						snd_NOISE_div_code = (uint8_t)(value & 7);
+						// Mickey's Dangerous Chase requires writes here to take effect immediately (for sound of taking damage)
+						snd_NOISE_intl_cntr = (snd_Divisor[snd_NOISE_div_code] << snd_NOISE_clk_shft);
+						break;
+					case 0xFF23:                                        // NR44 (trigger)
+						snd_Audio_Regs[snd_NR44] = value;
+						snd_NOISE_trigger = (value & 0x80) > 0;
 
-							value = 0;
-							break;
-
-						case 0x73:												// NR32 (level output)
-							snd_WAVE_vol_code = (uint8_t)((value & 0x60) >> 5);
-							snd_Wave_Vol_Force = (value & 0x80) == 0x80;
-
-							value &= 0xE0;
-							break;
-
-						case 0x74:												// NR33 (freq low)
-							snd_WAVE_frq &= 0x700;
-							snd_WAVE_frq |= value;
-
-							value = 0;
-							break;
-
-						case 0x75:												// NR34 (freq hi)
-							snd_WAVE_trigger = (value & 0x80) > 0;
-							snd_WAVE_frq &= 0xFF;
-							snd_WAVE_frq |= (uint16_t)((value & 7) << 8);
-
-							if ((snd_Sequencer_len & 1) == 0)
+						if ((snd_Sequencer_len & 1) == 0)
+						{
+							if (!snd_NOISE_len_en && ((value & 0x40) > 0) && (snd_NOISE_len_cntr > 0))
 							{
-
-								if (!snd_WAVE_len_en && ((value & 0x40) > 0) && (snd_WAVE_len_cntr > 0))
-								{
-									snd_WAVE_len_cntr--;
-									if ((snd_WAVE_len_cntr == 0) && !snd_WAVE_trigger) { snd_WAVE_enable = false; }
-								}
+								snd_NOISE_len_cntr--;
+								if ((snd_NOISE_len_cntr == 0) && !snd_NOISE_trigger) { snd_NOISE_enable = false; }
 							}
+						}
 
-							if (snd_WAVE_trigger)
+						if (snd_NOISE_trigger)
+						{
+							snd_NOISE_enable = true;
+							snd_NOISE_vol_done = false;
+
+							if (snd_NOISE_len_cntr == 0)
 							{
-								snd_WAVE_enable = true;
-
-								if (snd_WAVE_len_cntr == 0)
-								{
-									snd_WAVE_len_cntr = 256;
-									if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_WAVE_len_cntr--; }
-								}
-								snd_WAVE_intl_cntr = (2048 - snd_WAVE_frq) * 2 + 6; // trigger delay for wave channel
-
-								snd_WAVE_wave_cntr = 0;
-								if (!snd_WAVE_DAC_pow) { snd_WAVE_enable = false; }
-
-								snd_Wave_Bank_Playing = (snd_Wave_Bank == 0) ? 16 : 0;
+								snd_NOISE_len_cntr = 64;
+								if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_NOISE_len_cntr--; }
 							}
-
-							snd_WAVE_len_en = (value & 0x40) > 0;
-
-							value &= 0x40;
-							break;
-
-						case 0x76:
-						case 0x77:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x78:												// NR41 (length)
-							snd_NOISE_length = (uint16_t)(64 - (value & 0x3F));
-							snd_NOISE_len_cntr = snd_NOISE_length;
-
-							value = 0;
-							break;
-
-						case 0x79:												// NR42 (envelope)
-							snd_NOISE_st_vol = (uint8_t)((value & 0xF0) >> 4);
-							snd_NOISE_env_add = (value & 8) > 0;
-							snd_NOISE_per = (uint8_t)(value & 7);
-
-							// several glitchy effects happen when writing to snd_NRx2 during audio playing
-							if (((snd_Audio_Regs[0x19] & 7) == 0) && !snd_NOISE_vol_done) { snd_NOISE_vol_state++; }
-							else if ((snd_Audio_Regs[0x19] & 8) == 0) { snd_NOISE_vol_state += 2; }
-
-							if (((snd_Audio_Regs[0x19] ^ value) & 8) > 0) { snd_NOISE_vol_state = (uint8_t)(0x10 - snd_NOISE_vol_state); }
-
-							snd_NOISE_vol_state &= 0xF;
-							if ((value & 0xF8) == 0) { snd_NOISE_enable = false; }
-							break;
-
-						case 0x7A:
-						case 0x7B:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x7C:												// NR43 (shift)
-							snd_NOISE_clk_shft = (uint8_t)((value & 0xF0) >> 4);
-							snd_NOISE_wdth_md = (value & 8) > 0;
-							snd_NOISE_div_code = (uint8_t)(value & 7);
-							// Mickey's Dangerous Chase requires writes here to take effect immediately (for sound of taking damage)
 							snd_NOISE_intl_cntr = (snd_Divisor[snd_NOISE_div_code] << snd_NOISE_clk_shft);
-							break;
+							snd_NOISE_vol_state = snd_NOISE_st_vol;
+							snd_NOISE_vol_per = (snd_NOISE_per > 0) ? snd_NOISE_per : 8;
+							if (snd_Sequencer_vol == 4) { snd_NOISE_vol_per++; }
+							snd_NOISE_LFSR = 0x7FFF;
+							if ((snd_NOISE_vol_state == 0) && !snd_NOISE_env_add) { snd_NOISE_enable = false; }
+						}
 
-						case 0x7D:												// NR44 (trigger)
-							snd_NOISE_trigger = (value & 0x80) > 0;
+						snd_calculate_bias_gain_n();
+						snd_NOISE_len_en = (value & 0x40) > 0;
+						break;
+					case 0xFF24:                                        // NR50 (ctrl)
+						snd_Audio_Regs[snd_NR50] = value;
+						snd_CTRL_vin_L_en = (value & 0x80) > 0;
+						snd_CTRL_vol_L = (uint8_t)((value & 0x70) >> 4);
+						snd_CTRL_vin_R_en = (value & 8) > 0;
+						snd_CTRL_vol_R = (uint8_t)(value & 7);
 
-							if ((snd_Sequencer_len & 1) == 0)
-							{
-								if (!snd_NOISE_len_en && ((value & 0x40) > 0) && (snd_NOISE_len_cntr > 0))
-								{
-									snd_NOISE_len_cntr--;
-									if ((snd_NOISE_len_cntr == 0) && !snd_NOISE_trigger) { snd_NOISE_enable = false; }
-								}
-							}
+						snd_calculate_bias_gain_a();
+						break;
+					case 0xFF25:                                        // NR51 (ctrl)
+						snd_Audio_Regs[snd_NR51] = value;
+						snd_CTRL_noise_L_en = (value & 0x80) > 0;
+						snd_CTRL_wave_L_en = (value & 0x40) > 0;
+						snd_CTRL_sq2_L_en = (value & 0x20) > 0;
+						snd_CTRL_sq1_L_en = (value & 0x10) > 0;
+						snd_CTRL_noise_R_en = (value & 8) > 0;
+						snd_CTRL_wave_R_en = (value & 4) > 0;
+						snd_CTRL_sq2_R_en = (value & 2) > 0;
+						snd_CTRL_sq1_R_en = (value & 1) > 0;
 
-							if (snd_NOISE_trigger)
-							{
-								snd_NOISE_enable = true;
-								snd_NOISE_vol_done = false;
+						snd_calculate_bias_gain_a();
+						break;
+					case 0xFF26:                                        // NR52 (ctrl)
+						// NOTE: Make sure to do the power off first since it will call the write_reg function again
+						if ((value & 0x80) == 0) { snd_power_off(); }
+						snd_CTRL_power = (value & 0x80) > 0;
+						break;
 
-								if (snd_NOISE_len_cntr == 0)
-								{
-									snd_NOISE_len_cntr = 64;
-									if (((value & 0x40) > 0) && ((snd_Sequencer_len & 1) == 0)) { snd_NOISE_len_cntr--; }
-								}
-								snd_NOISE_intl_cntr = (snd_Divisor[snd_NOISE_div_code] << snd_NOISE_clk_shft);
-								snd_NOISE_vol_state = snd_NOISE_st_vol;
-								snd_NOISE_vol_per = (snd_NOISE_per > 0) ? snd_NOISE_per : 8;
-								if (snd_Sequencer_vol == 4) { snd_NOISE_vol_per++; }
-								snd_NOISE_LFSR = 0x7FFF;
-								if ((snd_NOISE_vol_state == 0) && !snd_NOISE_env_add) { snd_NOISE_enable = false; }
-							}
+						// wave ram table
+					case 0xFF30:
+					case 0xFF31:
+					case 0xFF32:
+					case 0xFF33:
+					case 0xFF34:
+					case 0xFF35:
+					case 0xFF36:
+					case 0xFF37:
+					case 0xFF38:
+					case 0xFF39:
+					case 0xFF3A:
+					case 0xFF3B:
+					case 0xFF3C:
+					case 0xFF3D:
+					case 0xFF3E:
+					case 0xFF3F:
+						if (snd_WAVE_enable)
+						{
+							if (snd_WAVE_can_get || Is_GBC) { snd_Wave_RAM[snd_WAVE_wave_cntr >> 1] = value; }
+						}
+						else
+						{
+							snd_Wave_RAM[addr & 0xF] = value;
+						}
 
-							snd_NOISE_len_en = (value & 0x40) > 0;
-
-							value &= 0x40;
-							break;
-
-						case 0x7E:
-						case 0x7F:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x80:												// NR50 (ctrl)
-							snd_CTRL_vol_L = (uint8_t)((value & 0x70) >> 4);
-							snd_CTRL_vol_R = (uint8_t)(value & 7);
-
-							value &= 0x77;
-							break;
-
-						case 0x81:												// NR51 (ctrl)
-							snd_CTRL_noise_L_en = (value & 0x80) > 0;
-							snd_CTRL_wave_L_en = (value & 0x40) > 0;
-							snd_CTRL_sq2_L_en = (value & 0x20) > 0;
-							snd_CTRL_sq1_L_en = (value & 0x10) > 0;
-							snd_CTRL_noise_R_en = (value & 8) > 0;
-							snd_CTRL_wave_R_en = (value & 4) > 0;
-							snd_CTRL_sq2_R_en = (value & 2) > 0;
-							snd_CTRL_sq1_R_en = (value & 1) > 0;
-							break;
-
-						case 0x82:                                              // GB Low (ctrl)
-							snd_Chan_Mult = snd_Chan_Mult_Table[value & 3];
-
-							snd_FIFO_A_Mult = ((value & 0x04) == 0x04) ? 6 : 3;
-							snd_FIFO_B_Mult = ((value & 0x08) == 0x08) ? 6 : 3;
-
-							value &= 0xF;
-							break;
-
-						case 0x83:                                              // GB High (ctrl)
-							snd_FIFO_A_Enable_R = (value & 1) == 1;
-							snd_FIFO_A_Enable_L = (value & 2) == 2;
-
-							snd_FIFO_B_Enable_R = (value & 0x10) == 0x10;
-							snd_FIFO_B_Enable_L = (value & 0x20) == 0x20;
-
-							snd_FIFO_A_Timer = (value & 0x04) >> 2;
-							snd_FIFO_B_Timer = (value & 0x40) >> 6;
-
-							if ((value & 0x08) == 0x08)
-							{
-								for (int i = 0; i < 32; i++)
-								{
-									snd_FIFO_A[i] = 0;
-								}
-
-								snd_FIFO_A_ptr = 0;
-							}
-
-							if ((value & 0x80) == 0x80)
-							{
-								for (int i = 0; i < 32; i++)
-								{
-									snd_FIFO_B[i] = 0;
-								}
-
-								snd_FIFO_B_ptr = 0;
-							}
-
-							value &= 0x77;
-							break;
-
-						case 0x84:												// NR52 (ctrl)						
-							// NOTE: Make sure to do the power off first since it will call the write_reg function again
-							if ((value & 0x80) == 0) { power_off(); }
-							snd_CTRL_power = (value & 0x80) > 0;
-
-							value &= 0x80;
-							break;
-
-						case 0x85:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x86:
-						case 0x87:
-							// not writable
-							value = 0;
-							break;
-
-						case 0x88:                                              // Bias Control
-							snd_Bias_Low = value;
-
-							snd_BIAS_Offset &= 0xFFFFFF00;
-							snd_BIAS_Offset |= snd_Bias_Low;
-							break;
-
-						case 0x89:
-							snd_Bias_High = value;
-
-							snd_BIAS_Offset &= 0x000000FF;
-							snd_BIAS_Offset |= ((snd_Bias_High & 0x3) << 8);
-
-							if ((snd_BIAS_Offset & 0x200) == 0x200)
-							{
-								snd_BIAS_Offset |= 0xFFFFFC00;
-							}
-
-							switch (value & 0xC0)
-							{
-							case 0x00: snd_Sample_Rate = 0x1FF; break;
-							case 0x40: snd_Sample_Rate = 0xFF; break;
-							case 0x80: snd_Sample_Rate = 0x7F; break;
-							case 0xC0: snd_Sample_Rate = 0x3F; break;
-							}
-
-							break;
-
-						case 0x8A:
-						case 0x8B:
-							// not writable
-							value = 0;
-							break;
-					}
-
-					snd_Audio_Regs[addr - 0x60] = value;
-					snd_Update_NR52();
-				}
-				else
-				{
-
+						break;
 				}
 			}
 			// when power is off, only length counters and waveRAM are effected by writes
-			// FIFO registers are also read / writable
+			// ON GBC, length counters cannot be written to either
 			else
 			{
 				switch (addr)
 				{
-					case 0x82:                                              // GB Low (ctrl)
-						snd_Chan_Mult = snd_Chan_Mult_Table[value & 3];
-
-						snd_FIFO_A_Mult = ((value & 0x04) == 0x04) ? 6 : 3;
-						snd_FIFO_B_Mult = ((value & 0x08) == 0x08) ? 6 : 3;
-
-						value &= 0xF;
-						break;
-
-					case 0x83:                                              // GB High (ctrl)
-						snd_FIFO_A_Enable_R = (value & 1) == 1;
-						snd_FIFO_A_Enable_L = (value & 2) == 2;
-
-						snd_FIFO_B_Enable_R = (value & 0x10) == 0x10;
-						snd_FIFO_B_Enable_L = (value & 0x20) == 0x20;
-
-						snd_FIFO_A_Timer = (value & 0x04) >> 2;
-						snd_FIFO_B_Timer = (value & 0x40) >> 6;
-
-						if ((value & 0x08) == 0x08)
+					case 0xFF11:                                        // NR11 (sound length / wave pattern duty %)
+						if (!Is_GBC)
 						{
-							for (int i = 0; i < 32; i++)
-							{
-								snd_FIFO_A[i] = 0;
-							}
-
-							snd_FIFO_A_ptr = 0;
+							snd_SQ1_length = (uint16_t)(64 - (value & 0x3F));
+							snd_SQ1_len_cntr = snd_SQ1_length;
 						}
-
-						if ((value & 0x80) == 0x80)
-						{
-							for (int i = 0; i < 32; i++)
-							{
-								snd_FIFO_B[i] = 0;
-							}
-
-							snd_FIFO_B_ptr = 0;
-						}
-
-						value &= 0x77;
 						break;
-					case 0x84:                                        // NR52 (ctrl)
+					case 0xFF16:                                        // NR21 (sound length / wave pattern duty %)
+						if (!Is_GBC)
+						{
+							snd_SQ2_length = (uint16_t)(64 - (value & 0x3F));
+							snd_SQ2_len_cntr = snd_SQ2_length;
+						}
+						break;
+					case 0xFF1B:                                        // NR31 (length)
+						if (!Is_GBC)
+						{
+							snd_WAVE_length = (uint16_t)(256 - value);
+							snd_WAVE_len_cntr = snd_WAVE_length;
+						}
+						break;
+					case 0xFF20:                                        // NR41 (length)
+						if (!Is_GBC)
+						{
+							snd_NOISE_length = (uint16_t)(64 - (value & 0x3F));
+							snd_NOISE_len_cntr = snd_NOISE_length;
+						}
+						break;
+					case 0xFF26:                                        // NR52 (ctrl)
 						snd_CTRL_power = (value & 0x80) > 0;
 						if (snd_CTRL_power)
 						{
 							snd_Sequencer_reset_cd = 4;
 						}
-
-						value &= 0x80;
-						snd_Audio_Regs[addr - 0x60] = value;
-						snd_Update_NR52();
 						break;
-					case 0x88:                                        // Bias Control
-						snd_Bias_Low = value;
 
-						snd_BIAS_Offset &= 0xFFFFFF00;
-						snd_BIAS_Offset |= snd_Bias_Low;
-
-						snd_Audio_Regs[addr - 0x60] = value;
-						break;
-					case 0x89:                                        // Bias Control
-						snd_Bias_High = value;
-
-						snd_BIAS_Offset &= 0x000000FF;
-						snd_BIAS_Offset |= ((snd_Bias_High & 0x3) << 8);
-
-						if ((snd_BIAS_Offset & 0x200) == 0x200)
-						{
-							snd_BIAS_Offset |= 0xFFFFFC00;
-						}
-
-						switch (value & 0xC0)
-						{
-						case 0x00: snd_Sample_Rate = 0x1FF; break;
-						case 0x40: snd_Sample_Rate = 0xFF; break;
-						case 0x80: snd_Sample_Rate = 0x7F; break;
-						case 0xC0: snd_Sample_Rate = 0x3F; break;
-						}
-
-						snd_Audio_Regs[addr - 0x60] = value;
+						// wave ram table
+					case 0xFF30:
+					case 0xFF31:
+					case 0xFF32:
+					case 0xFF33:
+					case 0xFF34:
+					case 0xFF35:
+					case 0xFF36:
+					case 0xFF37:
+					case 0xFF38:
+					case 0xFF39:
+					case 0xFF3A:
+					case 0xFF3B:
+					case 0xFF3C:
+					case 0xFF3D:
+					case 0xFF3E:
+					case 0xFF3F:
+						snd_Wave_RAM[addr & 0x0F] = value;
 						break;
 				}
-
-				snd_Audio_Regs[addr - 0x60] = value;
 			}
 		}
 
-		void power_off()
+		void tick()
 		{
-			for (uint32_t i = 0x60; i < 0x82; i++)
+			// calculate square1's output
+			if (snd_SQ1_enable)
 			{
-				snd_Write_Reg_8(i, 0);
+				snd_SQ1_intl_cntr--;
+				if (snd_SQ1_intl_cntr == 0)
+				{
+					snd_SQ1_intl_cntr = (2048 - snd_SQ1_frq) * 4;
+					snd_SQ1_duty_cntr++;
+					snd_SQ1_duty_cntr &= 7;
+
+					snd_SQ1_output = snd_Duty_Cycles[snd_SQ1_duty * 8 + snd_SQ1_duty_cntr] ? (snd_SQ1_vol_state + snd_DAC_OFST) : snd_DAC_OFST;
+
+					snd_Update_Needed = true;
+				}
 			}
 
-			for (int i = 0; i < 32; i++)
+			// calculate square2's output
+			if (snd_SQ2_enable)
 			{
-				snd_FIFO_A[i] = 0;
-				snd_FIFO_B[i] = 0;
+				snd_SQ2_intl_cntr--;
+				if (snd_SQ2_intl_cntr == 0)
+				{
+					snd_SQ2_intl_cntr = (2048 - snd_SQ2_frq) * 4;
+					snd_SQ2_duty_cntr++;
+					snd_SQ2_duty_cntr &= 7;
+
+					snd_SQ2_output = snd_Duty_Cycles[snd_SQ2_duty * 8 + snd_SQ2_duty_cntr] ? (snd_SQ2_vol_state + snd_DAC_OFST) : snd_DAC_OFST;
+
+					snd_Update_Needed = true;
+				}
 			}
 
-			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
+			// calculate wave output
+			snd_WAVE_can_get = false;
+			if (snd_WAVE_enable)
+			{
+				snd_WAVE_intl_cntr--;
+
+				if (snd_WAVE_intl_cntr == 0)
+				{
+					snd_WAVE_can_get = true;
+
+					snd_WAVE_intl_cntr = (2048 - snd_WAVE_frq) * 2;
+
+					if ((snd_WAVE_wave_cntr & 1) == 0)
+					{
+						snd_Sample = (uint8_t)(snd_Sample >> 4);
+					}
+
+					if (snd_WAVE_vol_code == 0)
+					{
+						snd_Sample = (uint8_t)((snd_Sample & 0xF) >> 4);
+					}
+					else if (snd_WAVE_vol_code == 1)
+					{
+						snd_Sample = (uint8_t)(snd_Sample & 0xF);
+					}
+					else if (snd_WAVE_vol_code == 2)
+					{
+						snd_Sample = (uint8_t)((snd_Sample & 0xF) >> 1);
+					}
+					else
+					{
+						snd_Sample = (uint8_t)((snd_Sample & 0xF) >> 2);
+					}
+
+					snd_WAVE_output = snd_Sample + snd_DAC_OFST;
+
+					// NOTE: The sample buffer is only reloaded after the current sample is played, even if just triggered
+					snd_WAVE_wave_cntr++;
+					snd_WAVE_wave_cntr &= 0x1F;
+					snd_Sample = snd_Wave_RAM[snd_WAVE_wave_cntr >> 1];
+
+					snd_Update_Needed = true;
+				}
+			}
+			else if (!snd_WAVE_decay_done && (++snd_WAVE_decay_counter == 200))
+			{
+				snd_WAVE_decay_counter = 0;
+
+				// wave state must decay slow enough that games that turn on and off the wave channel to fill wave RAM don't buzz too much
+				if (!snd_WAVE_DAC_pow)
+				{
+					if (snd_WAVE_output > 0) { snd_WAVE_output--; snd_Update_Needed = true; }
+					else { snd_WAVE_decay_done = true; }
+				}
+				else
+				{
+					if (snd_WAVE_output > snd_DAC_OFST)
+					{
+						snd_WAVE_output--; snd_Update_Needed = true;
+					}
+					else if (snd_WAVE_output < snd_DAC_OFST)
+					{
+						snd_WAVE_output++; snd_Update_Needed = true;
+					}
+					else { snd_WAVE_decay_done = true; }
+				}
+			}
+
+			// calculate noise output
+			if (snd_NOISE_enable)
+			{
+				snd_NOISE_intl_cntr--;
+				if (snd_NOISE_intl_cntr == 0)
+				{
+					snd_NOISE_intl_cntr = (snd_Divisor[snd_NOISE_div_code] << snd_NOISE_clk_shft);
+					int bit_lfsr = (snd_NOISE_LFSR & 1) ^ ((snd_NOISE_LFSR & 2) >> 1);
+
+					snd_NOISE_LFSR = (snd_NOISE_LFSR >> 1) & 0x3FFF;
+					snd_NOISE_LFSR |= (bit_lfsr << 14);
+
+					if (snd_NOISE_wdth_md)
+					{
+						snd_NOISE_LFSR &= 0x7FBF;
+						snd_NOISE_LFSR |= (bit_lfsr << 6);
+					}
+
+					snd_NOISE_output = (snd_NOISE_LFSR & 1) > 0 ? snd_DAC_OFST : (snd_NOISE_vol_state + snd_DAC_OFST);
+					snd_Update_Needed = true;
+				}
+			}
+
+			// frame snd_Sequencer ticks at a rate of 512 hz (or every time a 13 bit counter rolls over)
+			// the snd_Sequencer is actually the timer DIV register
+			// so if it's constantly written to, these values won't update
+
+			if (DIV_falling_edge && snd_CTRL_power)
+			{
+				snd_Sequencer_vol++; snd_Sequencer_vol &= 0x7;
+				snd_Sequencer_len++; snd_Sequencer_len &= 0x7;
+				snd_Sequencer_swp++; snd_Sequencer_swp &= 0x7;
+
+				// clock the lengths
+				if ((snd_Sequencer_len & 1) == 0)
+				{
+					if (snd_SQ1_len_en && snd_SQ1_len_cntr > 0)
+					{
+						snd_SQ1_len_cntr--;
+						if (snd_SQ1_len_cntr == 0) { snd_SQ1_enable = snd_SQ1_swp_enable = false; snd_calculate_bias_gain_1(); }
+					}
+					if (snd_SQ2_len_en && snd_SQ2_len_cntr > 0)
+					{
+						snd_SQ2_len_cntr--;
+						if (snd_SQ2_len_cntr == 0) { snd_SQ2_enable = false; snd_calculate_bias_gain_2(); }
+					}
+					if (snd_WAVE_len_en && snd_WAVE_len_cntr > 0)
+					{
+						snd_WAVE_len_cntr--;
+						if (snd_WAVE_len_cntr == 0) { snd_WAVE_enable = false; snd_calculate_bias_gain_w(); }
+					}
+					if (snd_NOISE_len_en && snd_NOISE_len_cntr > 0)
+					{
+						snd_NOISE_len_cntr--;
+						if (snd_NOISE_len_cntr == 0) { snd_NOISE_enable = false; snd_calculate_bias_gain_n(); }
+					}
+				}
+
+				// clock the sweep
+				if ((snd_Sequencer_swp == 0) || (snd_Sequencer_swp == 4))
+				{
+					snd_SQ1_intl_swp_cnt--;
+					if ((snd_SQ1_intl_swp_cnt == 0) && snd_SQ1_swp_enable)
+					{
+						snd_SQ1_intl_swp_cnt = snd_SQ1_swp_prd > 0 ? snd_SQ1_swp_prd : 8;
+
+						if ((snd_SQ1_swp_prd > 0))
+						{
+							int shadow_frq = snd_SQ1_frq_shadow;
+							shadow_frq >>= snd_SQ1_shift;
+							if (snd_SQ1_negate) { shadow_frq = -shadow_frq; }
+							shadow_frq += snd_SQ1_frq_shadow;
+
+							// set negate mode flag that disables channel is negate clerar
+							if (snd_SQ1_negate) { snd_SQ1_calc_done = true; }
+
+							// disable channel if overflow
+							if ((uint32_t)shadow_frq > 2047)
+							{
+								snd_SQ1_enable = snd_SQ1_swp_enable = false; snd_calculate_bias_gain_1();
+							}
+							else
+							{
+								if (snd_SQ1_shift > 0)
+								{
+									shadow_frq &= 0x7FF;
+									snd_SQ1_frq = shadow_frq;
+									snd_SQ1_frq_shadow = shadow_frq;
+
+									// note that we also write back the frequency to the actual register
+									snd_Audio_Regs[snd_NR13] = (uint8_t)(snd_SQ1_frq & 0xFF);
+									snd_Audio_Regs[snd_NR14] &= 0xF8;
+									snd_Audio_Regs[snd_NR14] |= (uint8_t)((snd_SQ1_frq >> 8) & 7);
+
+									// after writing, we repeat the process and do another overflow check
+									shadow_frq = snd_SQ1_frq_shadow;
+									shadow_frq >>= snd_SQ1_shift;
+									if (snd_SQ1_negate) { shadow_frq = -shadow_frq; }
+									shadow_frq += snd_SQ1_frq_shadow;
+
+									if ((uint32_t)shadow_frq > 2047)
+									{
+										snd_SQ1_enable = snd_SQ1_swp_enable = false; snd_calculate_bias_gain_1();
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// clock the volume envelope
+				if (snd_Sequencer_vol == 5)
+				{
+					if (snd_SQ1_per > 0)
+					{
+						snd_SQ1_vol_per--;
+						if (snd_SQ1_vol_per == 0)
+						{
+							snd_SQ1_vol_per = (snd_SQ1_per > 0) ? snd_SQ1_per : 8;
+							if (!snd_SQ1_vol_done)
+							{
+								if (snd_SQ1_env_add)
+								{
+									if (snd_SQ1_vol_state < 15) { snd_SQ1_vol_state++; snd_Update_Needed = true; }
+									else { snd_SQ1_vol_done = true; }
+								}
+								else
+								{
+									if (snd_SQ1_vol_state >= 1) { snd_SQ1_vol_state--; snd_Update_Needed = true; }
+									else { snd_SQ1_vol_done = true; }
+								}
+							}
+						}
+					}
+
+					if (snd_SQ2_per > 0)
+					{
+						snd_SQ2_vol_per--;
+						if (snd_SQ2_vol_per == 0)
+						{
+							snd_SQ2_vol_per = (snd_SQ2_per > 0) ? snd_SQ2_per : 8;
+							if (!snd_SQ2_vol_done)
+							{
+								if (snd_SQ2_env_add)
+								{
+									if (snd_SQ2_vol_state < 15) { snd_SQ2_vol_state++; snd_Update_Needed = true; }
+									else { snd_SQ2_vol_done = true; }
+								}
+								else
+								{
+									if (snd_SQ2_vol_state >= 1) { snd_SQ2_vol_state--; snd_Update_Needed = true; }
+									else { snd_SQ2_vol_done = true; }
+								}
+							}
+						}
+					}
+
+					if (snd_NOISE_per > 0)
+					{
+						snd_NOISE_vol_per--;
+						if (snd_NOISE_vol_per == 0)
+						{
+							snd_NOISE_vol_per = (snd_NOISE_per > 0) ? snd_NOISE_per : 8;
+							if (!snd_NOISE_vol_done)
+							{
+								if (snd_NOISE_env_add)
+								{
+									if (snd_NOISE_vol_state < 15) { snd_NOISE_vol_state++; snd_Update_Needed = true; }
+									else { snd_NOISE_vol_done = true; }
+								}
+								else
+								{
+									if (snd_NOISE_vol_state >= 1) { snd_NOISE_vol_state--; snd_Update_Needed = true; }
+									else { snd_NOISE_vol_done = true; }
+								}
+							}
+						}
+					}
+				}
+			}
+
+			DIV_falling_edge = false;
+
+			if (snd_Sequencer_reset_cd > 0)
+			{
+				snd_Sequencer_reset_cd--;
+
+				if (snd_Sequencer_reset_cd == 0)
+				{
+					// seems to be off by one issues here, hard to tell since the write takes place in the cpu loop
+					// but the effect takes place in the sound loop
+					if (Double_Speed)
+					{
+						snd_Sequencer_len = ((tim_Divider_Reg - 1) & 0x2000) ? 0 : 1;
+						snd_Sequencer_vol = ((tim_Divider_Reg - 1) & 0x2000) ? 0 : 1;
+						snd_Sequencer_swp = ((tim_Divider_Reg - 1) & 0x2000) ? 0 : 1;
+					}
+					else
+					{
+						snd_Sequencer_len = ((tim_Divider_Reg - 1) & 0x1000) ? 0 : 1;
+						snd_Sequencer_vol = ((tim_Divider_Reg - 1) & 0x1000) ? 0 : 1;
+						snd_Sequencer_swp = ((tim_Divider_Reg - 1) & 0x1000) ? 0 : 1;
+					}
+				}
+			}
+
+			if (snd_Update_Needed)
+			{
+				// add up components to each channel
+				int L_final = 0;
+				int R_final = 0;
+
+				if (snd_CTRL_sq1_L_en) { L_final += snd_SQ1_output; }
+				if (snd_CTRL_sq2_L_en) { L_final += snd_SQ2_output; }
+				if (snd_CTRL_wave_L_en) { L_final += snd_WAVE_output; }
+				if (snd_CTRL_noise_L_en) { L_final += snd_NOISE_output; }
+
+				if (snd_CTRL_sq1_R_en) { R_final += snd_SQ1_output; }
+				if (snd_CTRL_sq2_R_en) { R_final += snd_SQ2_output; }
+				if (snd_CTRL_wave_R_en) { R_final += snd_WAVE_output; }
+				if (snd_CTRL_noise_R_en) { R_final += snd_NOISE_output; }
+
+				L_final *= (snd_CTRL_vol_L + 1) * 40;
+				R_final *= (snd_CTRL_vol_R + 1) * 40;
+
+				if (L_final != snd_Latched_Sample_L)
+				{
+					samples_L[num_samples_L * 2] = snd_Master_Clock;
+					samples_L[num_samples_L * 2 + 1] = L_final - snd_Latched_Sample_L;
+
+					num_samples_L += 1;
+
+					snd_Latched_Sample_L = L_final;
+				}
+
+				if (R_final != snd_Latched_Sample_R)
+				{
+					samples_R[num_samples_R * 2] = snd_Master_Clock;
+					samples_R[num_samples_R * 2 + 1] = R_final - snd_Latched_Sample_R;
+
+					num_samples_R += 1;
+
+					snd_Latched_Sample_R = R_final;
+				}
+			}
+
+			snd_Master_Clock++;
+			snd_Update_Needed = false;
+		}
+
+
+		void snd_power_off()
+		{
+			for (uint32_t i = 0; i < 0x16; i++)
+			{
+				snd_WriteReg(0xFF10 + i, 0);
+			}
+
+			snd_calculate_bias_gain_a();
 
 			// duty and length are reset
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
@@ -5448,34 +4963,39 @@ namespace GBHawk
 			snd_SQ1_output = snd_SQ2_output = snd_WAVE_output = snd_NOISE_output = 0;
 
 			// on GBC, lengths are also reset
-			snd_SQ1_length = snd_SQ2_length = snd_WAVE_length = snd_NOISE_length = 0;
-			snd_SQ1_len_cntr = snd_SQ2_len_cntr = snd_WAVE_len_cntr = snd_NOISE_len_cntr = 0;
-
-			snd_FIFO_A_Sample = snd_FIFO_B_Sample = 0;
-
-			snd_FIFO_A_Output = snd_FIFO_B_Output = 0;
+			if (Is_GBC)
+			{
+				snd_SQ1_length = snd_SQ2_length = snd_WAVE_length = snd_NOISE_length = 0;
+				snd_SQ1_len_cntr = snd_SQ2_len_cntr = snd_WAVE_len_cntr = snd_NOISE_len_cntr = 0;
+			}
 
 			snd_Update_NR52();
 		}
 
 		void snd_Reset()
 		{
-			for (int i = 0; i < 32; i++)
+			if (Is_GBC)
 			{
-				snd_Wave_RAM[i] = (uint8_t)(((i & 1) == 0) ? 0 : 0xFF);
-				snd_FIFO_A[i] = 0;
-				snd_FIFO_B[i] = 0;
+				for (int i = 0; i < 16; i++)
+				{
+					snd_Wave_RAM[i] = (uint8_t)(((i & 1) == 0) ? 0 : 0xFF);
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 16; i++)
+				{
+					snd_Wave_RAM[i] = snd_WAVE_RAM_INI[i];
+				}			
 			}
 
-			for (int i = 0; i < 0x30; i++)
+			for (int i = 0; i < 0x16; i++)
 			{
 				snd_Audio_Regs[i] = 0;
+				snd_WriteReg(0xFF10 + i, 0);
 			}
 
-			for (int i = 0; i < 0x30; i++)
-			{
-				snd_Write_Reg_8((uint32_t)(0x60 + i), 0);
-			}
+			snd_calculate_bias_gain_a();
 
 			snd_SQ1_duty_cntr = snd_SQ2_duty_cntr = 0;
 
@@ -5504,12 +5024,6 @@ namespace GBHawk
 
 			snd_Wave_Bank = snd_Wave_Bank_Playing = 0;
 
-			snd_FIFO_A_ptr = snd_FIFO_B_ptr = 0;
-
-			snd_FIFO_A_Sample = snd_FIFO_B_Sample = 0;
-
-			snd_FIFO_A_Output = snd_FIFO_B_Output = 0;
-
 			snd_BIAS_Offset = 0;
 
 			snd_Sample_Rate = 0x1FF;
@@ -5527,11 +5041,70 @@ namespace GBHawk
 				((snd_NOISE_enable ? 1 : 0) << 3));
 		}
 
+		uint8_t snd_Read_NR52()
+		{
+			return (uint8_t)(
+				((snd_CTRL_power ? 1 : 0) << 7) |
+				(snd_SQ1_enable ? 1 : 0) |
+				((snd_SQ2_enable ? 1 : 0) << 1) |
+				((snd_WAVE_enable ? 1 : 0) << 2) |
+				((snd_NOISE_enable ? 1 : 0) << 3));
+		}
+
+		void snd_calculate_bias_gain_a()
+		{
+			if (!snd_SQ1_enable && ((snd_Audio_Regs[snd_NR12] & 0xF8) > 0)) { snd_SQ1_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR12] & 0xF8) == 0) { snd_SQ1_output = 0; }
+
+			if (!snd_SQ2_enable && ((snd_Audio_Regs[snd_NR22] & 0xF8) > 0)) { snd_SQ2_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR22] & 0xF8) == 0) { snd_SQ2_output = 0; }
+
+			if (!snd_WAVE_enable && snd_WAVE_DAC_pow) { snd_WAVE_decay_counter = 0; snd_WAVE_decay_done = false; }
+			else if (!snd_WAVE_DAC_pow) { snd_WAVE_decay_counter = 0; snd_WAVE_decay_done = false; }
+
+			if (!snd_NOISE_enable && ((snd_Audio_Regs[snd_NR42] & 0xF8) > 0)) { snd_NOISE_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR42] & 0xF8) == 0) { snd_NOISE_output = 0; }
+
+			snd_Update_Needed = true;
+		}
+
+		void snd_calculate_bias_gain_1()
+		{
+			if (!snd_SQ1_enable && ((snd_Audio_Regs[snd_NR12] & 0xF8) > 0)) { snd_SQ1_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR12] & 0xF8) == 0) { snd_SQ1_output = 0; }
+
+			snd_Update_Needed = true;
+		}
+
+		void snd_calculate_bias_gain_2()
+		{
+			if (!snd_SQ2_enable && ((snd_Audio_Regs[snd_NR22] & 0xF8) > 0)) { snd_SQ2_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR22] & 0xF8) == 0) { snd_SQ2_output = 0; }
+
+			snd_Update_Needed = true;
+		}
+
+		void snd_calculate_bias_gain_w()
+		{
+			if (!snd_WAVE_enable && snd_WAVE_DAC_pow) { snd_WAVE_decay_counter = 0; snd_WAVE_decay_done = false; }
+			else if (!snd_WAVE_DAC_pow) { snd_WAVE_decay_counter = 0; snd_WAVE_decay_done = false; }
+
+			snd_Update_Needed = true;
+		}
+
+		void snd_calculate_bias_gain_n()
+		{
+			if (!snd_NOISE_enable && ((snd_Audio_Regs[snd_NR42] & 0xF8) > 0)) { snd_NOISE_output = snd_DAC_OFST; }
+			else if ((snd_Audio_Regs[snd_NR42] & 0xF8) == 0) { snd_NOISE_output = 0; }
+
+			snd_Update_Needed = true;
+		}
+
 		uint8_t* snd_SaveState(uint8_t* saver)
 		{
-			saver = byte_array_saver(snd_Audio_Regs, saver, 0x30);
+			saver = byte_array_saver(snd_Audio_Regs, saver, 21);
 
-			saver = byte_array_saver(snd_Wave_RAM, saver, 32);
+			saver = byte_array_saver(snd_Wave_RAM, saver, 16);
 
 			saver = int_saver(snd_DAC_Offset, saver);
 			saver = int_saver(snd_Wave_Decay_cnt, saver);
@@ -5621,32 +5194,6 @@ namespace GBHawk
 			saver = bool_saver(snd_Wave_Size, saver);
 			saver = bool_saver(snd_Wave_Vol_Force, saver);
 
-			// FIFOs
-			saver = int_saver(snd_FIFO_A_ptr, saver);
-			saver = int_saver(snd_FIFO_B_ptr, saver);
-			saver = int_saver(snd_FIFO_A_Timer, saver);
-			saver = int_saver(snd_FIFO_B_Timer, saver);
-			saver = int_saver(snd_FIFO_A_Output, saver);
-			saver = int_saver(snd_FIFO_B_Output, saver);
-			saver = int_saver(snd_FIFO_A_Mult, saver);
-			saver = int_saver(snd_FIFO_B_Mult, saver);
-
-			saver = byte_array_saver(snd_FIFO_A, saver, 32);
-			saver = byte_array_saver(snd_FIFO_B, saver, 32);
-
-			saver = byte_array_saver(snd_FIFO_A_Data, saver, 4);
-			saver = byte_array_saver(snd_FIFO_B_Data, saver, 4);
-
-			saver = byte_saver(snd_FIFO_A_Sample, saver); 
-			saver = byte_saver(snd_FIFO_B_Sample, saver);
-
-			saver = bool_saver(snd_FIFO_A_Tick, saver);
-			saver = bool_saver(snd_FIFO_B_Tick, saver);
-			saver = bool_saver(snd_FIFO_A_Enable_L, saver);
-			saver = bool_saver(snd_FIFO_B_Enable_L, saver);
-			saver = bool_saver(snd_FIFO_A_Enable_R, saver);
-			saver = bool_saver(snd_FIFO_B_Enable_R, saver);
-
 			// computed
 			saver = int_saver(snd_SQ1_output, saver);
 			saver = int_saver(snd_SQ2_output, saver);
@@ -5663,6 +5210,9 @@ namespace GBHawk
 			saver = bool_saver(snd_CTRL_wave_R_en, saver);
 			saver = bool_saver(snd_CTRL_noise_R_en, saver);
 			saver = bool_saver(snd_CTRL_power, saver);
+			saver = bool_saver(snd_CTRL_vin_L_en, saver);
+			saver = bool_saver(snd_CTRL_vin_R_en, saver);
+
 			saver = byte_saver(snd_CTRL_vol_L, saver);
 			saver = byte_saver(snd_CTRL_vol_R, saver);
 
@@ -5680,14 +5230,18 @@ namespace GBHawk
 			saver = int_saver(snd_BIAS_Offset, saver);
 			saver = int_saver(snd_Sample_Rate, saver);
 
+			saver = int_saver(snd_WAVE_decay_counter, saver);
+			saver = bool_saver(snd_WAVE_decay_done, saver);
+			saver = bool_saver(snd_Update_Needed, saver);
+
 			return saver;
 		}
 
 		uint8_t* snd_LoadState(uint8_t* loader)
 		{
-			loader = byte_array_loader(snd_Audio_Regs, loader, 0x30);
+			loader = byte_array_loader(snd_Audio_Regs, loader, 21);
 
-			loader = byte_array_loader(snd_Wave_RAM, loader, 32);
+			loader = byte_array_loader(snd_Wave_RAM, loader, 16);
 
 			loader = int_loader(&snd_DAC_Offset, loader);
 			loader = int_loader(&snd_Wave_Decay_cnt, loader);
@@ -5778,32 +5332,6 @@ namespace GBHawk
 			loader = bool_loader(&snd_Wave_Size, loader);
 			loader = bool_loader(&snd_Wave_Vol_Force, loader);
 
-			// FIFOs
-			loader = int_loader(&snd_FIFO_A_ptr, loader);
-			loader = int_loader(&snd_FIFO_B_ptr, loader);
-			loader = int_loader(&snd_FIFO_A_Timer, loader);
-			loader = int_loader(&snd_FIFO_B_Timer, loader);
-			loader = int_loader(&snd_FIFO_A_Output, loader);
-			loader = int_loader(&snd_FIFO_B_Output, loader);
-			loader = int_loader(&snd_FIFO_A_Mult, loader);
-			loader = int_loader(&snd_FIFO_B_Mult, loader);
-
-			loader = byte_array_loader(snd_FIFO_A, loader, 32);
-			loader = byte_array_loader(snd_FIFO_B, loader, 32);
-
-			loader = byte_array_loader(snd_FIFO_A_Data, loader, 4);
-			loader = byte_array_loader(snd_FIFO_B_Data, loader, 4);
-
-			loader = byte_loader(&snd_FIFO_A_Sample, loader);
-			loader = byte_loader(&snd_FIFO_B_Sample, loader);
-
-			loader = bool_loader(&snd_FIFO_A_Tick, loader);
-			loader = bool_loader(&snd_FIFO_B_Tick, loader);
-			loader = bool_loader(&snd_FIFO_A_Enable_L, loader);
-			loader = bool_loader(&snd_FIFO_B_Enable_L, loader);
-			loader = bool_loader(&snd_FIFO_A_Enable_R, loader);
-			loader = bool_loader(&snd_FIFO_B_Enable_R, loader);
-
 			// computed
 			loader = sint_loader(&snd_SQ1_output, loader);
 			loader = sint_loader(&snd_SQ2_output, loader);
@@ -5820,6 +5348,9 @@ namespace GBHawk
 			loader = bool_loader(&snd_CTRL_wave_R_en, loader);
 			loader = bool_loader(&snd_CTRL_noise_R_en, loader);
 			loader = bool_loader(&snd_CTRL_power, loader);
+			loader = bool_loader(&snd_CTRL_vin_L_en, loader);
+			loader = bool_loader(&snd_CTRL_vin_R_en, loader);
+
 			loader = byte_loader(&snd_CTRL_vol_L, loader);
 			loader = byte_loader(&snd_CTRL_vol_R, loader);
 
@@ -5836,6 +5367,10 @@ namespace GBHawk
 			loader = sint_loader(&snd_Latched_Sample_R, loader);
 			loader = sint_loader(&snd_BIAS_Offset, loader);
 			loader = sint_loader(&snd_Sample_Rate, loader);
+
+			loader = int_loader(&snd_WAVE_decay_counter, loader);
+			loader = bool_loader(&snd_WAVE_decay_done, loader);
+			loader = bool_loader(&snd_Update_Needed, loader);
 
 			return loader;
 		}

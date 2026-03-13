@@ -834,71 +834,6 @@ namespace GBHawk
 			}
 		}
 
-		// caclulate FIFO outputs
-		if (snd_FIFO_A_Tick)
-		{
-			if (snd_FIFO_A_ptr > 0)
-			{
-				snd_FIFO_A_Sample = snd_FIFO_A[0];
-
-				for (int i = 1; i <= 31; i++)
-				{
-					snd_FIFO_A[i - 1] = snd_FIFO_A[i];
-				}
-
-				snd_FIFO_A[31] = 0;
-
-				snd_FIFO_A_ptr -= 1;
-			}
-
-			if (snd_FIFO_A_ptr <= 14)
-			{
-				if (dma_Go[1] && dma_Start_Snd_Vid[1] && (FIFO_DMA_A_cd == 0))
-				{
-					FIFO_DMA_A_cd = 3;
-					FIFO_DMA_A_Delay = true;
-					Misc_Delays = true;
-					delays_to_process = true;
-				}
-			}
-
-			snd_FIFO_A_Output = ((int8_t)(snd_FIFO_A_Sample)) * snd_FIFO_A_Mult;
-
-			snd_FIFO_A_Tick = false;
-		}
-
-		if (snd_FIFO_B_Tick)
-		{
-			if (snd_FIFO_B_ptr > 0)
-			{
-				snd_FIFO_B_Sample = snd_FIFO_B[0];
-
-				for (int i = 1; i <= 31; i++)
-				{
-					snd_FIFO_B[i - 1] = snd_FIFO_B[i];
-				}
-
-				snd_FIFO_B[31] = 0;
-
-				snd_FIFO_B_ptr -= 1;
-			}
-
-			if (snd_FIFO_B_ptr <= 14)
-			{
-				if (dma_Go[2] && dma_Start_Snd_Vid[2] && (FIFO_DMA_B_cd == 0))
-				{
-					FIFO_DMA_B_cd = 3;
-					FIFO_DMA_B_Delay = true;
-					Misc_Delays = true;
-					delays_to_process = true;
-				}
-			}
-
-			snd_FIFO_B_Output = ((int8_t)(snd_FIFO_B_Sample)) * snd_FIFO_B_Mult;
-
-			snd_FIFO_B_Tick = false;
-		}
-
 		if ((snd_Divider & snd_Sample_Rate) == 0)
 		{
 			// add up components to each channel
@@ -913,9 +848,6 @@ namespace GBHawk
 			// channels 1-4 are effected by L/R volume controls, but not FIFO
 			L_final *= (snd_CTRL_vol_L + 1);
 
-			if (snd_FIFO_A_Enable_L) { L_final += snd_FIFO_A_Output; }
-			if (snd_FIFO_B_Enable_L) { L_final += snd_FIFO_B_Output; }
-
 			if (snd_CTRL_sq1_R_en) { R_final += snd_SQ1_output; }
 			if (snd_CTRL_sq2_R_en) { R_final += snd_SQ2_output; }
 			if (snd_CTRL_wave_R_en) { R_final += snd_WAVE_output; }
@@ -923,9 +855,6 @@ namespace GBHawk
 
 			// channels 1-4 are effected by L/R volume controls, but not FIFO
 			R_final *= (snd_CTRL_vol_R + 1);
-
-			if (snd_FIFO_A_Enable_R) { R_final += snd_FIFO_A_Output; }
-			if (snd_FIFO_B_Enable_R) { R_final += snd_FIFO_B_Output; }
 
 			R_final += snd_BIAS_Offset;
 			L_final += snd_BIAS_Offset;
