@@ -15,7 +15,7 @@ namespace GBHawk
 	{
 	public:
 
-		uint8_t ReadReg(int addr)
+		uint8_t ReadReg(uint16_t addr)
 		{
 			uint8_t ret = 0;
 			//Console.WriteLine(Core.cpu.TotalExecutedCycles);
@@ -73,7 +73,7 @@ namespace GBHawk
 			}
 		}
 
-		void WriteReg(int addr, uint8_t value)
+		void WriteReg(uint16_t addr, uint8_t value)
 		{
 			switch (addr)
 			{
@@ -81,14 +81,14 @@ namespace GBHawk
 					if (LCDC_Bit(7) && !((value & 0x80) == 0x80))
 					{
 						VRAM_access_read_PPU = true;
-						VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+						VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 						VRAM_access_write_PPU = true;
-						VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+						VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 						OAM_access_read = true;
 						OAM_access_write = true;
 
 						clear_screen = true;
-						Core.clear_counter = 0;
+						*Core_Clear_Counter = 0;
 
 						// turing off the screen causes HDMA to run for one cycle
 						HDMA_run_once = true;
@@ -294,7 +294,7 @@ namespace GBHawk
 		void tick()
 		{
 			// Do HDMA ticks
-			if (HDMA_active && !Core.cpu.halted && !Core.cpu.stopped)
+			if (HDMA_active && !*Core_CPU_Halted && !*Core_CPU_Stopped)
 			{
 				if (HDMA_length > 0)
 				{
@@ -306,16 +306,16 @@ namespace GBHawk
 
 							if (HDMA_countdown == 3)
 							{
-								if ((Core.cpu.TotalExecutedCycles - Core.cpu.instruction_start) == 0)
+								if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 								{
-									if (!Core.HDMA_transfer) { Core.HDMA_start_stop(true); }
+									if (!*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(true); }
 									VRAM_access_read_HDMA = false;
 									VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 									VRAM_access_write_HDMA = false;
 									VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 									// reading from open bus still returns 0xFF on DMA access, see dma_hiram_read_result_cgb04c_out1.gbc
-									Core.bus_value = 0xFF;
+									*Core_Bus_Value = 0xFF;
 								}
 								else
 								{
@@ -330,7 +330,7 @@ namespace GBHawk
 							{
 								if (HDMA_VRAM_access_glitch > 0)
 								{
-									HDMA_byte = Core_ReadMemory(Core.cpu.RegPC);
+									HDMA_byte = Core_ReadMemory(Core_RegPC());
 									HDMA_VRAM_access_glitch--;
 								}
 								else
@@ -386,16 +386,16 @@ namespace GBHawk
 
 								if (HDMA_countdown == 3)
 								{
-									if ((Core.cpu.TotalExecutedCycles - Core.cpu.instruction_start) == 0)
+									if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 									{
-										if (!Core.HDMA_transfer) { Core.HDMA_start_stop(true); }
+										if (!*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(true); }
 										VRAM_access_read_HDMA = false;
 										VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 										VRAM_access_write_HDMA = false;
 										VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 										// reading from open bus still returns 0xFF on DMA access, see dma_hiram_read_result_cgb04c_out1.gbc
-										Core.bus_value = 0xFF;
+										*Core_Bus_Value = 0xFF;
 
 										if (LCDC_Bit(7)) { last_HBL = LY_read; }
 										else { last_HBL = 0xFF; }
@@ -412,12 +412,12 @@ namespace GBHawk
 								{
 									if (HDMA_VRAM_access_glitch > 0)
 									{
-										HDMA_byte = Core.ReadMemory(Core.cpu.RegPC);
+										HDMA_byte = Core_ReadMemory(Core_RegPC());
 										HDMA_VRAM_access_glitch--;
 									}
 									else
 									{
-										HDMA_byte = Core.ReadMemory(cur_DMA_src);
+										HDMA_byte = Core_ReadMemory(cur_DMA_src);
 									}
 								}
 								else
@@ -456,7 +456,7 @@ namespace GBHawk
 						}
 						else
 						{
-							if (Core.HDMA_transfer) { Core.HDMA_start_stop(false); }
+							if (*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(false); }
 							VRAM_access_read_HDMA = true;
 							VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 							VRAM_access_write_HDMA = true;
@@ -467,7 +467,7 @@ namespace GBHawk
 				else
 				{
 					HDMA_active = false;
-					if (Core.HDMA_transfer) { Core.HDMA_start_stop(false); }
+					if (*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(false); }
 					VRAM_access_read_HDMA = true;
 					VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 					VRAM_access_write_HDMA = true;
@@ -827,7 +827,7 @@ namespace GBHawk
 			//BGP_l = BGP;
 		}
 
-		void render(int render_cycle)
+		void render(uint16_t render_cycle)
 		{
 			// we are now in STAT mode 3
 			// NOTE: presumably the first necessary sprite is fetched at sprite evaulation
@@ -899,7 +899,7 @@ namespace GBHawk
 				window_counter = 0;
 				render_counter = 0;
 
-				window_x_tile = (int)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
+				window_x_tile = (uint32_t)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
 
 				window_tile_inc = 0;
 				window_started = true;
@@ -936,7 +936,7 @@ namespace GBHawk
 							read_case_prev = 0;
 
 							// calculate the row number of the tiles to be fetched
-							y_tile = (((int)scroll_y + LY) >> 3) % 32;
+							y_tile = (((uint32_t)scroll_y + LY) >> 3) % 32;
 							x_tile = scroll_x >> 3;
 
 							temp_fetch = y_tile * 32 + (x_tile + tile_inc) % 32;
@@ -1353,22 +1353,22 @@ namespace GBHawk
 						{
 							if (use_sprite)
 							{
-								Core.vid_buffer[LY * 160 + pixel_counter] = OBJ_palette[pal_num * 4 + s_pixel];
+								Core_Video_Buffer[LY * 160 + pixel_counter] = OBJ_palette[pal_num * 4 + s_pixel];
 							}
 							else
 							{
-								Core.vid_buffer[LY * 160 + pixel_counter] = BG_palette[pal_num * 4 + pixel];
+								Core_Video_Buffer[LY * 160 + pixel_counter] = BG_palette[pal_num * 4 + pixel];
 							}
 						}
 						else
 						{
 							if (use_sprite)
 							{
-								Core.vid_buffer[LY * 160 + pixel_counter] = OBJ_palette[pal_num * 4 + pixel];
+								Core_Video_Buffer[LY * 160 + pixel_counter] = OBJ_palette[pal_num * 4 + pixel];
 							}
 							else
 							{
-								Core.vid_buffer[LY * 160 + pixel_counter] = BG_palette[pixel];
+								Core_Video_Buffer[LY * 160 + pixel_counter] = BG_palette[pixel];
 							}
 						}
 
@@ -1454,7 +1454,7 @@ namespace GBHawk
 						else if (((last_eval + sprite_scroll_offset) % 8) == 6) { sprite_fetch_counter += 0; }
 						else if (((last_eval + sprite_scroll_offset) % 8) == 7) { sprite_fetch_counter += 0; }
 
-						consecutive_sprite = (int)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
+						consecutive_sprite = (uint32_t)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
 
 						// special case exists here for sprites at zero with non-zero x-scroll. Not sure exactly the reason for it.
 						if (last_eval == 0)
@@ -1661,7 +1661,7 @@ namespace GBHawk
 			}
 		}
 
-		void OAM_scan(int OAM_cycle)
+		void OAM_scan(uint16_t OAM_cycle)
 		{
 			// we are now in STAT mode 2
 			// TODO: maybe stat mode 2 flags are set at cycle 0 on visible scanlines?
@@ -1861,8 +1861,8 @@ namespace GBHawk
 
 			LCDC_Bit_4_glitch = false;
 
-			for (int i = 0; i < BG_bytes.Length; i++) { BG_bytes[i] = 0xFF; }
-			for (int i = 0; i < OBJ_bytes.Length; i++) { OBJ_bytes[i] = 0xFF; }
+			for (int i = 0; i < 64; i++) { BG_bytes[i] = 0xFF; }
+			for (int i = 0; i < 64; i++) { OBJ_bytes[i] = 0xFF; }
 
 			pal_change_blocked = false;
 

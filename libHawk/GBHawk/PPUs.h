@@ -180,8 +180,6 @@ namespace GBHawk
 		uint8_t BG_bytes[64] = { };
 		uint8_t OBJ_bytes[64] = { };
 
-
-
 		// Helper functions
 		inline bool LCDC_Bit(uint8_t bit) { return (LCDC & (0x1 << bit)) == (0x1 << bit); }
 
@@ -226,63 +224,46 @@ namespace GBHawk
 			return 0;
 		}
 
-		virtual void WriteReg(uint16_t addr, uint8_t value)
-		{
+		virtual void WriteReg(uint16_t addr, uint8_t value) { }
 
-		}
-
-		virtual void tick()
-		{
-
-		}
+		virtual void tick() { }
 
 		// might be needed, not sure yet
-		virtual void latch_delay()
-		{
+		virtual void latch_delay() { }
 
-		}
+		virtual void render(uint16_t render_cycle) { }
 
-		virtual void render(uint16_t render_cycle)
-		{
-
-		}
-
-		virtual void process_sprite()
-		{
-
-		}
+		virtual void process_sprite() { }
 
 		// normal DMA moves twice as fast in double speed mode on GBC
 		// So give it it's own function so we can seperate it from PPU tick
-		virtual void DMA_tick()
-		{
+		virtual void DMA_tick() { }
 
-		}
+		virtual void OAM_scan(uint16_t OAM_cycle) { }
 
-		virtual void OAM_scan(uint16_t OAM_cycle)
-		{
-
-		}
-
-		virtual void Reset()
-		{
-
-		}
+		virtual void Reset() { }
 
 		// order sprites according to x coordinate
 		// note that for sprites of equal x coordinate, priority goes to first on the list
-		virtual void reorder_and_assemble_sprites()
-		{
-
-		}
+		virtual void reorder_and_assemble_sprites() { }
 
 		bool* Core_cpu_FlagI = nullptr;
 
 		bool* Core_GBC_compat = nullptr;
 
+		bool* Core_Double_Speed = nullptr;
+
+		bool* Core_CPU_Halted = nullptr;
+
+		bool* Core_CPU_Stopped = nullptr;
+
+		bool* Core_HDMA_Transfer = nullptr;
+
 		uint8_t* Core_REG_FFFF = nullptr;
 
 		uint8_t* Core_REG_FF0F = nullptr;
+
+		uint8_t* Core_Bus_Value = nullptr;
 
 		uint8_t* Core_VRAM = nullptr;
 
@@ -296,17 +277,29 @@ namespace GBHawk
 
 		uint32_t* Core_CHR_ROM_Length = nullptr;
 
+		uint32_t* Core_Clear_Counter = nullptr;
+
+		uint32_t* Core_Video_Buffer = nullptr;
+
+		uint64_t* Core_Cycle_Count = nullptr;
+
+		uint64_t* Core_Instruction_Start = nullptr;
+
 		string* Core_Message_String = nullptr;
 
 		void (*OnVBlank)();
 
 		void (*RumbleCallback)(bool);
 
+		void (*Core_HDMA_Start_Stop)(bool);
+
 		void (*MessageCallback)(int);
 
 		void (*ScanlinCallback)(uint8_t);
 
-		uint8_t(*Core_ReadMemory)(uint16_t);
+		uint8_t (*Core_ReadMemory)(uint16_t);
+
+		uint16_t(*Core_RegPC)();
 
 		PPUs()
 		{

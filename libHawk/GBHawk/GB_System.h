@@ -108,7 +108,7 @@ namespace GBHawk
 		bool DIV_falling_edge, DIV_edge_old;
 		bool Double_Speed;
 		bool speed_switch;
-		bool HDMA_transfer; // stalls CPU when in progress
+		bool HDMA_Transfer; // stalls CPU when in progress
 
 		uint8_t bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
 		uint8_t VRAM_Bank;
@@ -191,7 +191,7 @@ namespace GBHawk
 			controller_was_checked = false;
 			DIV_falling_edge = DIV_edge_old = false;
 			speed_switch = false;
-			HDMA_transfer = false;
+			HDMA_Transfer = false;
 
 			bus_value = 0;
 			IR_reg = IR_mask = IR_signal = IR_receive = IR_self = 0;
@@ -378,7 +378,7 @@ namespace GBHawk
 		{
 			// put the cpu into a wait state when HDMA starts
 			// restore it when HDMA ends
-			HDMA_transfer = hdma_start;
+			HDMA_Transfer = hdma_start;
 
 			if (hdma_start)
 			{
@@ -5871,7 +5871,7 @@ namespace GBHawk
 			saver = bool_saver(DIV_edge_old, saver);
 			saver = bool_saver(Double_Speed, saver);
 			saver = bool_saver(speed_switch, saver);
-			saver = bool_saver(HDMA_transfer, saver);
+			saver = bool_saver(HDMA_Transfer, saver);
 
 			saver = byte_saver(controller_state, saver);
 			saver = byte_saver(multi_core_controller_byte, saver);
@@ -5952,7 +5952,7 @@ namespace GBHawk
 			loader = bool_loader(&DIV_edge_old, loader);
 			loader = bool_loader(&Double_Speed, loader);
 			loader = bool_loader(&speed_switch, loader);
-			loader = bool_loader(&HDMA_transfer, loader);
+			loader = bool_loader(&HDMA_Transfer, loader);
 
 			loader = byte_loader(&controller_state, loader);
 			loader = byte_loader(&multi_core_controller_byte, loader);

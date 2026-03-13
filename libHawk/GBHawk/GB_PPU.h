@@ -466,7 +466,7 @@ namespace GBHawk
 		// might be needed, not sure yet
 		void latch_delay() {}
 
-		void render(int render_cycle)
+		void render(uint16_t render_cycle)
 		{
 			// we are now in STAT mode 3
 			// NOTE: presumably the first necessary sprite is fetched at sprite evaulation
@@ -538,7 +538,7 @@ namespace GBHawk
 				window_counter = 0;
 				render_counter = 0;
 
-				window_x_tile = (int)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
+				window_x_tile = (uint32_t)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
 
 				window_tile_inc = 0;
 				window_started = true;
@@ -556,7 +556,9 @@ namespace GBHawk
 				// Also, on DMG only, this process only runs if sprites are on in the LCDC (on GBC it always runs)
 				for (int i = 0; i < SL_sprites_index; i++)
 				{
-					if (!Get_Bit(evaled_sprites, i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
+					if (!Get_Bit(evaled_sprites, i) &&
+						(pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
+						(pixel_counter < (SL_sprites[i * 4 + 1])))
 					{
 						going_to_fetch = true;
 						fetch_sprite = true;
@@ -921,7 +923,7 @@ namespace GBHawk
 						}
 
 						// based on sprite priority and pixel values, pick a final pixel color
-						Core.vid_buffer[LY * 160 + pixel_counter] = color_palette[pixel];
+						Core_Video_Buffer[LY * 160 + pixel_counter] = color_palette[pixel];
 						pixel_counter++;
 
 						if (pixel_counter == 160)
@@ -980,7 +982,9 @@ namespace GBHawk
 					// at this time it is unknown what each cycle does, but we only need to accurately keep track of cycles
 					for (int i = 0; i < SL_sprites_index; i++)
 					{
-						if (!Get_Bit(evaled_sprites, i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
+						if (!Get_Bit(evaled_sprites, i) && 
+							(pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
+							(pixel_counter < (SL_sprites[i * 4 + 1])))
 						{
 							sprite_fetch_counter += 6;
 							evaled_sprites |= (1 << i);
@@ -1001,7 +1005,7 @@ namespace GBHawk
 						else if (((last_eval + sprite_scroll_offset) % 8) == 6) { sprite_fetch_counter += 0; }
 						else if (((last_eval + sprite_scroll_offset) % 8) == 7) { sprite_fetch_counter += 0; }
 
-						consecutive_sprite = (int)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
+						consecutive_sprite = (uint32_t)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
 
 						// special case exists here for sprites at zero with non-zero x-scroll. Not sure exactly the reason for it.
 						if (last_eval == 0)
@@ -1178,7 +1182,7 @@ namespace GBHawk
 			}
 		}
 
-		void OAM_scan(int OAM_cycle)
+		void OAM_scan(uint16_t OAM_cycle)
 		{
 			// we are now in STAT mode 2
 			// TODO: maybe stat mode 2 flags are set at cycle 0 on visible scanlines?

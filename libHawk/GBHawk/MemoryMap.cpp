@@ -150,7 +150,7 @@ namespace GBHawk
 				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 			}
 
-			if (!HDMA_transfer)
+			if (!HDMA_Transfer)
 			{
 				if (ppu_pntr->pixel_counter == 160)
 				{
