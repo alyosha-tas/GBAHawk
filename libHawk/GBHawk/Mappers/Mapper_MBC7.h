@@ -14,13 +14,13 @@ namespace GBHawk
 	class Mapper_MBC7 : Mappers
 	{
 	public:
-		int ROM_bank;
+		uint32_t ROM_bank;
 		bool RAM_enable_1, RAM_enable_2;
-		int ROM_mask;
-		byte acc_x_low;
-		byte acc_x_high;
-		byte acc_y_low;
-		byte acc_y_high;
+		uint32_t ROM_mask;
+		uint8_t acc_x_low;
+		uint8_t acc_x_high;
+		uint8_t acc_y_low;
+		uint8_t acc_y_high;
 		bool is_erased;
 
 		// EEPROM related
@@ -30,14 +30,14 @@ namespace GBHawk
 		bool DO;
 		bool instr_read;
 		bool perf_instr;
-		int instr_bit_counter;
-		int instr;
+		uint32_t instr_bit_counter;
+		uint32_t instr;
 		bool WR_EN;
-		int EE_addr;
-		int instr_case;
-		int instr_clocks;
-		int EE_value;
-		int countdown;
+		uint32_t EE_addr;
+		uint32_t instr_case;
+		uint32_t instr_clocks;
+		uint32_t EE_value;
+		uint32_t countdown;
 		bool countdown_start;
 
 
@@ -45,7 +45,7 @@ namespace GBHawk
 		{
 			ROM_bank = 1;
 			RAM_enable_1 = RAM_enable_2 = false;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
 			// some games have sizes that result in a degenerate ROM, account for it here
 			if (ROM_mask > 4) { ROM_mask |= 3; }
@@ -63,19 +63,19 @@ namespace GBHawk
 		instr_bit_counter = instr = EE_addr = instr_case = instr_clocks = EE_value = countdown = 0;
 	}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
-				return Core._rom[addr];
+				return Core_ROM[addr];
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
 			if (addr < 0xA000)
 			{
@@ -98,12 +98,12 @@ namespace GBHawk
 			}
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if (addr < 0xA000)
 			{
@@ -136,41 +136,12 @@ namespace GBHawk
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		void SyncState(Serializer ser)
-		{
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);
-			ser.Sync(nameof(RAM_enable_1), ref RAM_enable_1);
-			ser.Sync(nameof(RAM_enable_2), ref RAM_enable_2);
-			ser.Sync(nameof(acc_x_low), ref acc_x_low);
-			ser.Sync(nameof(acc_x_high), ref acc_x_high);
-			ser.Sync(nameof(acc_y_low), ref acc_y_low);
-			ser.Sync(nameof(acc_y_high), ref acc_y_high);
-			ser.Sync(nameof(is_erased), ref is_erased);
-
-			ser.Sync(nameof(CS_prev), ref CS_prev);
-			ser.Sync(nameof(CLK_prev), ref CLK_prev);
-			ser.Sync(nameof(DI_prev), ref DI_prev);
-			ser.Sync(nameof(DO), ref DO);
-			ser.Sync(nameof(instr_read), ref instr_read);
-			ser.Sync(nameof(perf_instr), ref perf_instr);
-			ser.Sync(nameof(instr_bit_counter), ref instr_bit_counter);
-			ser.Sync(nameof(instr), ref instr);
-			ser.Sync(nameof(WR_EN), ref WR_EN);
-			ser.Sync(nameof(EE_addr), ref EE_addr);
-			ser.Sync(nameof(instr_case), ref instr_case);
-			ser.Sync(nameof(instr_clocks), ref instr_clocks);
-			ser.Sync(nameof(EE_value), ref EE_value);
-			ser.Sync(nameof(countdown), ref countdown);
-			ser.Sync(nameof(countdown_start), ref countdown_start);
-		}
-
-		byte Register_Access_Read(ushort addr)
+		uint8_t Register_Access_Read(uint16_t addr)
 		{
 			if ((addr & 0xA0F0) == 0xA000)
 			{
@@ -206,7 +177,7 @@ namespace GBHawk
 			}
 			else if ((addr & 0xA0F0) == 0xA080)
 			{
-				return (byte)((CS_prev ? 0x80 : 0) |
+				return (uint8_t)((CS_prev ? 0x80 : 0) |
 							(CLK_prev ? 0x40 : 0) |
 							(DI_prev ? 2 : 0) |
 							(DO ? 1 : 0));
@@ -217,7 +188,7 @@ namespace GBHawk
 			}
 		}
 
-		void Register_Access_Write(ushort addr, byte value)
+		void Register_Access_Write(uint16_t addr, uint8_t value)
 		{
 			if ((addr & 0xA0F0) == 0xA000)
 			{
@@ -238,10 +209,10 @@ namespace GBHawk
 				{
 					// latch new accelerometer values
 					//Console.WriteLine("Latching ACC");
-					acc_x_low = (byte)(Core.Acc_X_state & 0xFF);
-					acc_x_high = (byte)((Core.Acc_X_state & 0xFF00) >> 8);
-					acc_y_low = (byte)(Core.Acc_Y_state & 0xFF);
-					acc_y_high = (byte)((Core.Acc_Y_state & 0xFF00) >> 8);
+					acc_x_low = (uint8_t)(Core.Acc_X_state & 0xFF);
+					acc_x_high = (uint8_t)((Core.Acc_X_state & 0xFF00) >> 8);
+					acc_y_low = (uint8_t)(Core.Acc_Y_state & 0xFF);
+					acc_y_high = (uint8_t)((Core.Acc_Y_state & 0xFF00) >> 8);
 				}
 			}
 			else if ((addr & 0xA0F0) == 0xA080)
@@ -251,7 +222,7 @@ namespace GBHawk
 			}
 		}
 
-		private void EEPROM_write(byte value)
+		private void EEPROM_write(uint8_t value)
 		{
 			bool CS = value.Bit(7);
 			bool CLK = value.Bit(6);
@@ -318,9 +289,9 @@ namespace GBHawk
 									instr_case = 2;
 									if (WR_EN)
 									{
-										for (int i = 0; i < 256; i++)
+										for (uint32_t i = 0; i < 256; i++)
 										{
-											Core.cart_RAM[i] = 0xFF;
+											Core_Cart_RAM[i] = 0xFF;
 										}
 									}
 									DO = true;
@@ -344,8 +315,8 @@ namespace GBHawk
 							instr_case = 6;
 							if (WR_EN)
 							{
-								Core.cart_RAM[EE_addr * 2] = 0xFF;
-								Core.cart_RAM[EE_addr * 2 + 1] = 0xFF;
+								Core_Cart_RAM[EE_addr * 2] = 0xFF;
+								Core_Cart_RAM[EE_addr * 2 + 1] = 0xFF;
 							}
 							DO = true;
 							break;
@@ -374,10 +345,10 @@ namespace GBHawk
 						{
 							if (WR_EN)
 							{
-								for (int i = 0; i < 128; i++)
+								for (uint32_t i = 0; i < 128; i++)
 								{
-									Core.cart_RAM[i * 2] = (byte)(EE_value & 0xFF);
-									Core.cart_RAM[i * 2 + 1] = (byte)((EE_value & 0xFF00) >> 8);
+									Core_Cart_RAM[i * 2] = (uint8_t)(EE_value & 0xFF);
+									Core_Cart_RAM[i * 2 + 1] = (uint8_t)((EE_value & 0xFF00) >> 8);
 								}
 							}
 							instr_case = 7;
@@ -392,8 +363,8 @@ namespace GBHawk
 						{
 							if (WR_EN)
 							{
-								Core.cart_RAM[EE_addr * 2] = (byte)(EE_value & 0xFF);
-								Core.cart_RAM[EE_addr * 2 + 1] = (byte)((EE_value & 0xFF00) >> 8);
+								Core_Cart_RAM[EE_addr * 2] = (uint8_t)(EE_value & 0xFF);
+								Core_Cart_RAM[EE_addr * 2 + 1] = (uint8_t)((EE_value & 0xFF00) >> 8);
 							}
 							instr_case = 7;
 							countdown = 8;
@@ -403,11 +374,11 @@ namespace GBHawk
 					case 5:
 						if ((instr_clocks >= 0) && (instr_clocks <= 7))
 						{
-							DO = ((Core.cart_RAM[EE_addr * 2 + 1] >> (7 - instr_clocks)) & 1) == 1;
+							DO = ((Core_Cart_RAM[EE_addr * 2 + 1] >> (7 - instr_clocks)) & 1) == 1;
 						}
 						else if ((instr_clocks >= 8) && (instr_clocks <= 15))
 						{
-							DO = ((Core.cart_RAM[EE_addr * 2] >> (15 - instr_clocks)) & 1) == 1;
+							DO = ((Core_Cart_RAM[EE_addr * 2] >> (15 - instr_clocks)) & 1) == 1;
 						}
 
 						if (instr_clocks == 15)
@@ -455,5 +426,33 @@ namespace GBHawk
 			CLK_prev = CLK;
 			DI_prev = DI;
 		}
-	}
+
+		uint8_t* SaveState(uint8_t* saver)
+		{
+			saver = int_saver(ROM_bank, saver);
+			saver = bool_saver(RAM_enable_1, RAM_enable_2, saver);
+			saver = int_saver(ROM_mask, saver);
+			saver = byte_saver(acc_x_low, saver);
+			saver = byte_saver(acc_x_high, saver);
+			saver = byte_saver(acc_y_low, saver);
+			saver = byte_saver(acc_y_high, saver);
+			saver = bool_saver(is_erased, saver);
+
+			return saver;
+		}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = int_loader(&ROM_bank, loader);
+			loader = bool_loader(&RAM_enable_1, RAM_enable_2, loader);
+			loader = int_loader(&ROM_mask, loader);
+			loader = byte_loader(&acc_x_low, loader);
+			loader = byte_loader(&acc_x_high, loader);
+			loader = byte_loader(&acc_y_low, loader);
+			loader = byte_loader(&acc_y_high, loader);
+			loader = bool_loader(&is_erased, loader);
+
+			return loader;
+		}
+	};
 }

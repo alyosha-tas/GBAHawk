@@ -227,6 +227,7 @@ namespace GBHawk
 		void Hard_Reset() 
 		{
 			Mapper->Reset();
+			PPU->Reset();
 			
 			GB.System_Reset();
 		}

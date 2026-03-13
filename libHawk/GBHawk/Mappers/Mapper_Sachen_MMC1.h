@@ -18,21 +18,21 @@ namespace GBHawk
 		// NOTE: Normally, locked mode is disabled after 31 rises of A15
 		// this occurs when the Boot Rom is loading the nintendo logo into VRAM
 		// instead of tracking that in the main memory map where it will just slow things down for no reason
-		// we'll clear the 'locked' flag when the last byte of the logo is read
+		// we'll clear the 'locked' flag when the last uint8_t of the logo is read
 	
-		int ROM_bank;
+		uint32_t ROM_bank;
 		bool locked;
-		int ROM_mask;
-		int ROM_bank_mask;
-		int BASE_ROM_Bank;
+		uint32_t ROM_mask;
+		uint32_t ROM_bank_mask;
+		uint32_t BASE_ROM_Bank;
 		bool reg_access;
-		ushort addr_last;
-		int counter;
+		uint16_t addr_last;
+		uint32_t counter;
 
 		void Reset()
 		{
 			ROM_bank = 1;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 			BASE_ROM_Bank = 0;
 			ROM_bank_mask = 0xFF;
 			locked = true;
@@ -41,7 +41,7 @@ namespace GBHawk
 			counter = 0;
 		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
@@ -50,10 +50,10 @@ namespace GBHawk
 					// header is scrambled
 					if ((addr >= 0x100) && (addr < 0x200))
 					{
-						int temp0 = (addr & 1);
-						int temp1 = (addr & 2);
-						int temp4 = (addr & 0x10);
-						int temp6 = (addr & 0x40);
+						uint32_t temp0 = (addr & 1);
+						uint32_t temp1 = (addr & 2);
+						uint32_t temp4 = (addr & 0x10);
+						uint32_t temp6 = (addr & 0x40);
 
 						temp0 = temp0 << 6;
 						temp1 = temp1 << 3;
@@ -61,30 +61,30 @@ namespace GBHawk
 						temp6 = temp6 >> 6;
 
 						addr &= 0x1AC;
-						addr |= (ushort)(temp0 | temp1 | temp4 | temp6);
+						addr |= (uint16_t)(temp0 | temp1 | temp4 | temp6);
 					}
 					addr |= 0x80;
 				}
 
-				return Core._rom[addr + BASE_ROM_Bank * 0x4000];
+				return Core_ROM[addr + BASE_ROM_Bank * 0x4000];
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
 			return 0xFF;
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if (addr < 0x2000)
 			{
@@ -115,7 +115,7 @@ namespace GBHawk
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
@@ -143,16 +143,32 @@ namespace GBHawk
 			}
 		}
 
-		void SyncState(Serializer ser)
+		uint8_t* SaveState(uint8_t* saver)
 		{
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);
-			ser.Sync(nameof(locked), ref locked);
-			ser.Sync(nameof(ROM_bank_mask), ref ROM_bank_mask);
-			ser.Sync(nameof(BASE_ROM_Bank), ref BASE_ROM_Bank);
-			ser.Sync(nameof(reg_access), ref reg_access);
-			ser.Sync(nameof(addr_last), ref addr_last);
-			ser.Sync(nameof(counter), ref counter);
+			saver = int_saver(ROM_bank, saver);
+			saver = bool_saver(locked, saver);
+			saver = int_saver(ROM_mask, saver);
+			saver = int_saver(ROM_bank_mask, saver);
+			saver = int_saver(BASE_ROM_Bank, saver);
+			saver = bool_saver(reg_access, saver);
+			saver = short_saver(addr_last, saver);
+			saver = int_saver(counter, saver);
+
+			return saver;
 		}
-	}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = int_loader(&ROM_bank, loader);
+			loader = bool_loader(&locked, loader);
+			loader = int_loader(&ROM_mask, loader);
+			loader = int_loader(&ROM_bank_mask, loader);
+			loader = int_loader(&BASE_ROM_Bank, loader);
+			loader = bool_loader(&reg_access, loader);
+			loader = short_loader(&addr_last, loader);
+			loader = int_loader(&counter, loader);
+
+			return loader;
+		}
+	};
 }

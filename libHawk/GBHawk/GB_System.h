@@ -234,7 +234,6 @@ namespace GBHawk
 
 
 			snd_Reset();
-			ppu_Reset();
 			dma_Reset();
 			ser_Reset();
 			tim_Reset();

@@ -14,18 +14,18 @@ namespace GBHawk
 	class Mapper_MMM01 : Mappers
 	{
 	public:
-		byte RAM_enable_Reg;
-		byte ROM_bank_Reg;
-		byte RAM_bank_Reg;
-		byte Mode_Reg;
+		uint8_t RAM_enable_Reg;
+		uint8_t ROM_bank_Reg;
+		uint8_t RAM_bank_Reg;
+		uint8_t Mode_Reg;
 
-		int ROM_mask;
-		int RAM_mask;
+		uint32_t ROM_mask;
+		uint32_t RAM_mask;
 		bool SRAM_en;
 
-		int ROM_bank;
-		int Forced_Mask;
-		int RAM_bank;
+		uint32_t ROM_bank;
+		uint32_t Forced_Mask;
+		uint32_t RAM_bank;
 		bool sel_mode;
 
 		void Reset()
@@ -36,7 +36,7 @@ namespace GBHawk
 			Mode_Reg = 0;
 
 			SRAM_en = false;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
 			ROM_bank = 0x1FF & ROM_mask;
 			Forced_Mask = 0x1FE & ROM_mask;
@@ -47,30 +47,30 @@ namespace GBHawk
 			if (ROM_mask > 4) { ROM_mask |= 3; }
 
 			RAM_mask = 0;
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				RAM_mask = Core.cart_RAM.Length / 0x2000 - 1;
-				if (Core.cart_RAM.Length == 0x800) { RAM_mask = 0; }
+				RAM_mask = *Core_Cart_RAM_Length / 0x2000 - 1;
+				if (*Core_Cart_RAM_Length == 0x800) { RAM_mask = 0; }
 			}
 		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
-				return Core._rom[addr + Forced_Mask * 0x4000];
+				return Core_ROM[addr + Forced_Mask * 0x4000];
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				return Core.cart_RAM[(addr - 0xA000) + (RAM_bank * 0x2000)];
+				return Core_Cart_RAM[(addr - 0xA000) + (RAM_bank * 0x2000)];
 			}
 			else
 			{
@@ -78,12 +78,12 @@ namespace GBHawk
 			}
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			//Console.WriteLine(addr + " " + value);
 			
@@ -93,7 +93,7 @@ namespace GBHawk
 				{
 					// bottom 4 bits always accessible
 					RAM_enable_Reg &= 0xF0;
-					RAM_enable_Reg |= (byte)(value & 0xF);
+					RAM_enable_Reg |= (uint8_t)(value & 0xF);
 
 					if ((RAM_enable_Reg & 0x0A) == 0x0A)
 					{
@@ -108,36 +108,36 @@ namespace GBHawk
 					if (!RAM_enable_Reg.Bit(6))
 					{
 						RAM_enable_Reg &= 0x0F;
-						RAM_enable_Reg |= (byte)(value & 0xF0);
+						RAM_enable_Reg |= (uint8_t)(value & 0xF0);
 					}
 				}
 				else if (addr < 0x4000)
 				{
 					// bottom bit always accessible
 					ROM_bank_Reg &= 0xFE;
-					ROM_bank_Reg |= (byte)(value & 0x01);
+					ROM_bank_Reg |= (uint8_t)(value & 0x01);
 
 					// next 4 bitss accessible based on status of mode register
 					// zero adjusted
 					if (!Mode_Reg.Bit(2))
 					{
 						ROM_bank_Reg &= 0xFD;
-						ROM_bank_Reg |= (byte)(value & 0x2);
+						ROM_bank_Reg |= (uint8_t)(value & 0x2);
 					}
 					if (!Mode_Reg.Bit(3))
 					{
 						ROM_bank_Reg &= 0xFB;
-						ROM_bank_Reg |= (byte)(value & 0x4);
+						ROM_bank_Reg |= (uint8_t)(value & 0x4);
 					}
 					if (!Mode_Reg.Bit(4))
 					{
 						ROM_bank_Reg &= 0xF7;
-						ROM_bank_Reg |= (byte)(value & 0x8);
+						ROM_bank_Reg |= (uint8_t)(value & 0x8);
 					}
 					if (!Mode_Reg.Bit(5))
 					{
 						ROM_bank_Reg &= 0xEF;
-						ROM_bank_Reg |= (byte)(value & 0x10);
+						ROM_bank_Reg |= (uint8_t)(value & 0x10);
 					}
 
 
@@ -145,7 +145,7 @@ namespace GBHawk
 					if (!RAM_enable_Reg.Bit(6))
 					{
 						ROM_bank_Reg &= 0x1F;
-						ROM_bank_Reg |= (byte)(value & 0xE0);
+						ROM_bank_Reg |= (uint8_t)(value & 0xE0);
 					}
 				}
 				else if (addr < 0x6000)
@@ -154,19 +154,19 @@ namespace GBHawk
 					if (!RAM_enable_Reg.Bit(4))
 					{
 						RAM_bank_Reg &= 0xFE;
-						RAM_bank_Reg |= (byte)(value & 0x1);
+						RAM_bank_Reg |= (uint8_t)(value & 0x1);
 					}
 					if (!RAM_enable_Reg.Bit(5))
 					{
 						RAM_bank_Reg &= 0xFD;
-						RAM_bank_Reg |= (byte)(value & 0x2);
+						RAM_bank_Reg |= (uint8_t)(value & 0x2);
 					}
 
 					// upper bits only accessible when bit 6 is reset in RAM_enable_Reg
 					if (!RAM_enable_Reg.Bit(6))
 					{
 						RAM_bank_Reg &= 0x03;
-						RAM_bank_Reg |= (byte)(value & 0xFC);
+						RAM_bank_Reg |= (uint8_t)(value & 0xFC);
 					}
 				}
 				else
@@ -175,14 +175,14 @@ namespace GBHawk
 					if (!RAM_bank_Reg.Bit(6))
 					{
 						Mode_Reg &= 0xFE;
-						Mode_Reg |= (byte)(value & 1);
+						Mode_Reg |= (uint8_t)(value & 1);
 					}
 
 					// upper bits only accessible when bit 6 is reset in RAM_enable_Reg
 					if (!RAM_enable_Reg.Bit(6))
 					{
 						Mode_Reg &= 0x01;
-						Mode_Reg |= (byte)(value & 0xFE);
+						Mode_Reg |= (uint8_t)(value & 0xFE);
 					}
 				}
 
@@ -222,33 +222,50 @@ namespace GBHawk
 			}
 			else
 			{
-				if (Core.cart_RAM != null && SRAM_en)
+				if (Core_Cart_RAM != nullptr && SRAM_en)
 				{
-					Core.cart_RAM[(addr - 0xA000) + (RAM_bank * 0x2000)] = value;
+					Core_Cart_RAM[(addr - 0xA000) + (RAM_bank * 0x2000)] = value;
 				}
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		void SyncState(Serializer ser)
+		uint8_t* SaveState(uint8_t* saver)
 		{
-			ser.Sync(nameof(RAM_enable_Reg), ref RAM_enable_Reg);
-			ser.Sync(nameof(ROM_bank_Reg), ref ROM_bank_Reg);
-			ser.Sync(nameof(RAM_bank_Reg), ref RAM_bank_Reg);
-			ser.Sync(nameof(Mode_Reg), ref Mode_Reg);
+			saver = byte_saver(RAM_enable_Reg, saver);
+			saver = byte_saver(ROM_bank_Reg, saver);
+			saver = byte_saver(RAM_bank_Reg, saver);
+			saver = byte_saver(Mode_Reg, saver);
+			saver = int_saver(ROM_mask, saver);
+			saver = int_saver(RAM_mask, saver);
+			saver = bool_saver(SRAM_en, saver);
+			saver = int_saver(ROM_bank, saver);
+			saver = int_saver(Forced_Mask, saver);
+			saver = int_saver(RAM_bank, saver);
+			saver = bool_saver(sel_mode, saver);
 
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);	
-			ser.Sync(nameof(RAM_mask), ref RAM_mask);
-			ser.Sync(nameof(SRAM_en), ref SRAM_en);
-
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(Forced_Mask), ref Forced_Mask);
-			ser.Sync(nameof(RAM_bank), ref RAM_bank);
-			ser.Sync(nameof(sel_mode), ref sel_mode);
+			return saver;
 		}
-	}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = byte_loader(&RAM_enable_Reg, loader);
+			loader = byte_loader(&ROM_bank_Reg, loader);
+			loader = byte_loader(&RAM_bank_Reg, loader);
+			loader = byte_loader(&Mode_Reg, loader);
+			loader = int_loader(&ROM_mask, loader);
+			loader = int_loader(&RAM_mask, loader);
+			loader = bool_loader(&SRAM_en, loader);
+			loader = int_loader(&ROM_bank, loader);
+			loader = int_loader(&Forced_Mask, loader);
+			loader = int_loader(&RAM_bank, loader);
+			loader = bool_loader(&sel_mode, loader);
+
+			return loader;
+		}
+	};
 }

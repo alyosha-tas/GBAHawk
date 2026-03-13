@@ -14,27 +14,30 @@ namespace GBHawk
 	class Mapper_HuC3 : Mappers
 	{
 	public:
-		int ROM_bank;
-		int RAM_bank;
+		
 		bool RAM_enable;
-		int ROM_mask;
-		int RAM_mask;
 		bool IR_signal;
-		byte control;
-		byte chip_read;
 		bool timer_read;
-		int time_val_shift;
-		uint time;
-		int RTC_timer;
-		int RTC_low_clock;
-		int RTC_seconds;
+
+		uint8_t control;
+		uint8_t chip_read;
+
+		uint32_t ROM_bank;
+		uint32_t RAM_bank;
+		uint32_t ROM_mask;
+		uint32_t RAM_mask;
+		uint32_t time_val_shift;
+		uint32_t time;
+		uint32_t RTC_timer;
+		uint32_t RTC_low_clock;
+		uint32_t RTC_seconds;
 
 		void Reset()
 		{
 			ROM_bank = 0;
 			RAM_bank = 0;
 			RAM_enable = false;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 			control = 0;
 			chip_read = 1;
 			timer_read = false;
@@ -44,26 +47,26 @@ namespace GBHawk
 			if (ROM_mask > 4) { ROM_mask |= 3; }
 
 			RAM_mask = 0;
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				RAM_mask = Core.cart_RAM.Length / 0x2000 - 1;
-				if (Core.cart_RAM.Length == 0x800) { RAM_mask = 0; }
+				RAM_mask = *Core_Cart_RAM_Length / 0x2000 - 1;
+				if (*Core_Cart_RAM_Length == 0x800) { RAM_mask = 0; }
 			}
 		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
-				return Core._rom[addr];
+				return Core_ROM[addr];
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
 			if ((control >= 0xB) && (control < 0xE))
 			{
@@ -74,11 +77,11 @@ namespace GBHawk
 				return chip_read;
 			}
 
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+				if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 				{
-					return Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+					return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
 				}
 				else
 				{	
@@ -91,12 +94,12 @@ namespace GBHawk
 			}
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if (addr < 0x8000)
 			{
@@ -128,11 +131,11 @@ namespace GBHawk
 						return;
 					}
 
-					if (Core.cart_RAM != null)
+					if (Core_Cart_RAM != nullptr)
 					{
-						if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+						if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 						{
-							Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
+							Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
 						}
 					}
 
@@ -147,7 +150,7 @@ namespace GBHawk
 							if (timer_read)
 							{
 								// return timer value
-								chip_read = (byte)((time >> time_val_shift) & 0xF);
+								chip_read = (uint8_t)((time >> time_val_shift) & 0xF);
 								time_val_shift += 4;
 								if (time_val_shift == 28) { time_val_shift = 0; }
 							}
@@ -161,7 +164,7 @@ namespace GBHawk
 								if (time_val_shift == 0) { time = 0; }							
 								if (time_val_shift < 28)
 								{
-									time |= (uint)((value & 0x0F) << time_val_shift);
+									time |= (uint32_t)((value & 0x0F) << time_val_shift);
 									time_val_shift += 4;
 									if (time_val_shift == 28) { timer_read = true; }
 								}
@@ -203,19 +206,19 @@ namespace GBHawk
 				}
 
 				// Still write to RAM if another command executed
-				if (Core.cart_RAM != null)
+				if (Core_Cart_RAM != nullptr)
 				{
-					if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+					if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 					{
-						Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
+						Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
 					}
 				}
 			}
 		}
 
-		void RTC_Get(int value, int index)
+		void RTC_Get(uint32_t value, uint32_t index)
 		{
-			time |= (uint)((value & 0xFF) << index);
+			time |= (uint32_t)((value & 0xFF) << index);
 		}
 
 		void Mapper_Tick()
@@ -252,22 +255,48 @@ namespace GBHawk
 			}
 		}
 
-		void SyncState(Serializer ser)
+		uint8_t* SaveState(uint8_t* saver)
 		{
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);
-			ser.Sync(nameof(RAM_bank), ref RAM_bank);
-			ser.Sync(nameof(RAM_mask), ref RAM_mask);
-			ser.Sync(nameof(RAM_enable), ref RAM_enable);
-			ser.Sync(nameof(IR_signal), ref IR_signal);
-			ser.Sync(nameof(control), ref control);
-			ser.Sync(nameof(chip_read), ref chip_read);
-			ser.Sync(nameof(timer_read), ref timer_read);
-			ser.Sync(nameof(time_val_shift), ref time_val_shift);
-			ser.Sync(nameof(time), ref time);
-			ser.Sync(nameof(RTC_timer), ref RTC_timer);
-			ser.Sync(nameof(RTC_low_clock), ref RTC_low_clock);
-			ser.Sync(nameof(RTC_seconds), ref RTC_seconds);
+			saver = bool_saver(RAM_enable, saver);
+			saver = bool_saver(IR_signal, saver);
+			saver = bool_saver(timer_read, saver);
+
+			saver = byte_saver(control, saver);
+			saver = byte_saver(chip_read, saver);
+			
+			saver = int_saver(ROM_bank, saver);
+			saver = int_saver(RAM_bank, saver);
+			saver = int_saver(ROM_mask, saver);
+			saver = int_saver(RAM_mask, saver);
+			saver = int_saver(time_val_shift, saver);
+			saver = int_saver(time, saver);
+			saver = int_saver(RTC_timer, saver);
+			saver = int_saver(RTC_low_clock, saver);
+			saver = int_saver(RTC_seconds, saver);
+
+			return saver;
 		}
-	}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = bool_loader(&RAM_enable, loader);
+			loader = bool_loader(&IR_signal, loader);
+			loader = bool_loader(&timer_read, loader);
+
+			loader = byte_loader(&control, loader);
+			loader = byte_loader(&chip_read, loader);
+			
+			loader = int_loader(&ROM_bank, loader);
+			loader = int_loader(&RAM_bank, loader);
+			loader = int_loader(&ROM_mask, loader);
+			loader = int_loader(&RAM_mask, loader);
+			loader = int_loader(&time_val_shift, loader);
+			loader = int_loader(&time, loader);
+			loader = int_loader(&RTC_timer, loader);
+			loader = int_loader(&RTC_low_clock, loader);
+			loader = int_loader(&RTC_seconds, loader);
+
+			return loader;
+		}
+	};
 }

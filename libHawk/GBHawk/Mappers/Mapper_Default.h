@@ -19,36 +19,36 @@ namespace GBHawk
 			// nothing to initialize
 		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
-			return Core._rom[addr];
+			return Core_ROM[addr];
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				return Core.cart_RAM[addr - 0xA000];
+				return Core_Cart_RAM[addr - 0xA000];
 			}
 			else
 			{
-				return Core.cpu.TotalExecutedCycles > (Core.bus_access_time + 8)
-					? (byte) 0xFF
-					: Core.bus_value;
+				return *Core_Cycle_Count > (*Core_Bus_Access_Time + 8)
+					? (uint8_t)0xFF
+					: *Core_Bus_Value;
 			}
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		byte PeekMemoryHigh(ushort addr)
+		uint8_t PeekMemoryHigh(uint16_t addr)
 		{
 			return ReadMemoryHigh(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if (addr < 0x8000)
 			{
@@ -56,16 +56,16 @@ namespace GBHawk
 			}
 			else
 			{
-				if (Core.cart_RAM != null)
+				if (Core_Cart_RAM != nullptr)
 				{
-					Core.cart_RAM[addr - 0xA000] = value;
+					Core_Cart_RAM[addr - 0xA000] = value;
 				}
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
-	}
+	};
 }

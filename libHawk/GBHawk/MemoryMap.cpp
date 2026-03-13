@@ -130,7 +130,7 @@ namespace GBHawk
 				// return Either BIOS ROM or Game ROM
 				if ((GB_bios_register & 0x1) == 0)
 				{
-					return _bios[addr]; // Return BIOS
+					return BIOS[addr]; // Return BIOS
 				}
 
 				bus_value = mapper_pntr->ReadMemoryLow(addr);

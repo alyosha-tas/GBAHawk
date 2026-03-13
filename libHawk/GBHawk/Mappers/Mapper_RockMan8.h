@@ -14,43 +14,43 @@ namespace GBHawk
 	class Mapper_RockMan8 : Mappers
 	{
 	public:
-		int ROM_bank;
-		int ROM_mask;
+		uint32_t ROM_bank;
+		uint32_t ROM_mask;
 
 		void Reset()
 		{
 			ROM_bank = 1;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
 			// some games have sizes that result in a degenerate ROM, account for it here
 			if (ROM_mask > 4) { ROM_mask |= 3; }
-	}
+		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
 				// lowest bank is fixed
-				return Core._rom[addr];
-			
+				return Core_ROM[addr];
+
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
 			return 0xFF;
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if ((addr >= 0x2000) && (addr < 0x4000))
 			{
@@ -63,15 +63,25 @@ namespace GBHawk
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		void SyncState(Serializer ser)
+		uint8_t* SaveState(uint8_t* saver)
 		{
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);
+			saver = int_saver(ROM_bank, saver);
+			saver = int_saver(ROM_mask, saver);
+
+			return saver;
 		}
-	}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = int_loader(&ROM_bank, loader);
+			loader = int_loader(&ROM_mask, loader);
+
+			return loader;
+		}
+	};
 }

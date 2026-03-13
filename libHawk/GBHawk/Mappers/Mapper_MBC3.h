@@ -14,34 +14,34 @@ namespace GBHawk
 	class Mapper_MBC3 : Mappers
 	{
 	public:
-		int ROM_bank;
-		int RAM_bank;
+		uint32_t ROM_bank;
+		uint32_t RAM_bank;
 		bool RAM_enable;
-		int ROM_mask;
-		int RAM_mask;
-		byte[] RTC_regs = new byte[5];
-		byte[] RTC_regs_latch = new byte[5];
+		uint32_t ROM_mask;
+		uint32_t RAM_mask;
+		uint8_t[] RTC_regs = new uint8_t[5];
+		uint8_t[] RTC_regs_latch = new uint8_t[5];
 		bool RTC_regs_latch_wr;
-		int RTC_timer;
-		int RTC_low_clock;
+		uint32_t RTC_timer;
+		uint32_t RTC_low_clock;
 		bool halt;
-		int RTC_offset;
+		uint32_t RTC_offset;
 
 		void Reset()
 		{
 			ROM_bank = 1;
 			RAM_bank = 0;
 			RAM_enable = false;
-			ROM_mask = Core._rom.Length / 0x4000 - 1;
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
 			// some games have sizes that result in a degenerate ROM, account for it here
 			if (ROM_mask > 4) { ROM_mask |= 3; }
 
 			RAM_mask = 0;
-			if (Core.cart_RAM != null)
+			if (Core_Cart_RAM != nullptr)
 			{
-				RAM_mask = Core.cart_RAM.Length / 0x2000 - 1;
-				if (Core.cart_RAM.Length == 0x800) { RAM_mask = 0; }
+				RAM_mask = *Core_Cart_RAM_Length / 0x2000 - 1;
+				if (*Core_Cart_RAM_Length == 0x800) { RAM_mask = 0; }
 			}
 
 			RTC_regs_latch[0] = 0;
@@ -53,32 +53,32 @@ namespace GBHawk
 			RTC_regs_latch_wr = true;
 		}
 
-		byte ReadMemoryLow(ushort addr)
+		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
-				return Core._rom[addr];
+				return Core_ROM[addr];
 			}
 			else
 			{
-				return Core._rom[(addr - 0x4000) + ROM_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
-		byte ReadMemoryHigh(ushort addr)
+		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
 			if (RAM_enable)
 			{
-				if ((Core.cart_RAM != null) && (RAM_bank <= RAM_mask))
+				if ((Core_Cart_RAM != nullptr) && (RAM_bank <= RAM_mask))
 				{
-					if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+					if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 					{
-						return Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+						return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
 					}
 					else
 					{
 						return Core.cpu.TotalExecutedCycles > (Core.bus_access_time + 8)
-							? (byte) 0xFF
+							? (uint8_t) 0xFF
 							: Core.bus_value;
 					}
 				}
@@ -96,24 +96,24 @@ namespace GBHawk
 			else
 			{
 				return Core.cpu.TotalExecutedCycles > (Core.bus_access_time + 8)
-					? (byte) 0xFF
+					? (uint8_t) 0xFF
 					: Core.bus_value;
 			}
 		}
 
-		byte PeekMemoryLow(ushort addr)
+		uint8_t PeekMemoryLow(uint16_t addr)
 		{
 			return ReadMemoryLow(addr);
 		}
 
-		byte PeekMemoryHigh(ushort addr)
+		uint8_t PeekMemoryHigh(uint16_t addr)
 		{
 
-			if ((Core.cart_RAM != null) && (RAM_bank <= RAM_mask))
+			if ((Core_Cart_RAM != nullptr) && (RAM_bank <= RAM_mask))
 			{
-				if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+				if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 				{
-					return Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+					return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
 				}
 				else
 				{
@@ -132,7 +132,7 @@ namespace GBHawk
 			}
 		}
 
-		void WriteMemory(ushort addr, byte value)
+		void WriteMemory(uint16_t addr, uint8_t value)
 		{
 			if (addr < 0x8000)
 			{
@@ -158,7 +158,7 @@ namespace GBHawk
 				{
 					if (!RTC_regs_latch_wr && ((value & 1) == 1))
 					{
-						for (int i = 0; i < 5; i++)
+						for (uint32_t i = 0; i < 5; i++)
 						{
 							RTC_regs_latch[i] = RTC_regs[i];
 						}
@@ -171,11 +171,11 @@ namespace GBHawk
 			{
 				if (RAM_enable)
 				{
-					if ((Core.cart_RAM != null) && (RAM_bank <= RAM_mask))
+					if ((Core_Cart_RAM != nullptr) && (RAM_bank <= RAM_mask))
 					{
-						if (((addr - 0xA000) + RAM_bank * 0x2000) < Core.cart_RAM.Length)
+						if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
 						{
-							Core.cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
+							Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
 						}
 					}
 					else if ((RAM_bank >= 8) && (RAM_bank <= 0xC))
@@ -200,16 +200,16 @@ namespace GBHawk
 			}
 		}
 
-		void PokeMemory(ushort addr, byte value)
+		void PokeMemory(uint16_t addr, uint8_t value)
 		{
 			WriteMemory(addr, value);
 		}
 
-		void RTC_Get(int value, int index)
+		void RTC_Get(uint32_t value, uint32_t index)
 		{
 			if (index < 5)
 			{
-				RTC_regs[index] = (byte)value;
+				RTC_regs[index] = (uint8_t)value;
 			}		
 			else
 			{
@@ -285,20 +285,40 @@ namespace GBHawk
 			}
 		}
 
-		void SyncState(Serializer ser)
+		uint8_t* SaveState(uint8_t* saver)
 		{
-			ser.Sync(nameof(ROM_bank), ref ROM_bank);
-			ser.Sync(nameof(ROM_mask), ref ROM_mask);
-			ser.Sync(nameof(RAM_bank), ref RAM_bank);
-			ser.Sync(nameof(RAM_mask), ref RAM_mask);
-			ser.Sync(nameof(RAM_enable), ref RAM_enable);
-			ser.Sync(nameof(halt), ref halt);
-			ser.Sync(nameof(RTC_regs), ref RTC_regs, false);
-			ser.Sync(nameof(RTC_regs_latch), ref RTC_regs_latch, false);
-			ser.Sync(nameof(RTC_regs_latch_wr), ref RTC_regs_latch_wr);
-			ser.Sync(nameof(RTC_timer), ref RTC_timer);
-			ser.Sync(nameof(RTC_low_clock), ref RTC_low_clock);
-			ser.Sync(nameof(RTC_offset), ref RTC_offset);
+			saver = int_saver(ROM_bank, saver);
+			saver = int_saver(RAM_bank, saver);
+			saver = bool_saver(RAM_enable, saver);
+			saver = int_saver(ROM_mask, saver);
+			saver = int_saver(RAM_mask, saver);
+			saver = byte_saver([] RTC_regs = new saver = byte_saver([5], saver);
+			saver = byte_saver([] RTC_regs_latch = new saver = byte_saver([5], saver);
+			saver = bool_saver(RTC_regs_latch_wr, saver);
+			saver = int_saver(RTC_timer, saver);
+			saver = int_saver(RTC_low_clock, saver);
+			saver = bool_saver(halt, saver);
+			saver = int_saver(RTC_offset, saver);
+
+			return saver;
 		}
-	}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = int_loader(&ROM_bank, loader);
+			loader = int_loader(&RAM_bank, loader);
+			loader = bool_loader(&RAM_enable, loader);
+			loader = int_loader(&ROM_mask, loader);
+			loader = int_loader(&RAM_mask, loader);
+			loader = byte_loader(&[] RTC_regs = new loader = byte_loader(&[5], loader);
+			loader = byte_loader(&[] RTC_regs_latch = new loader = byte_loader(&[5], loader);
+			loader = bool_loader(&RTC_regs_latch_wr, loader);
+			loader = int_loader(&RTC_timer, loader);
+			loader = int_loader(&RTC_low_clock, loader);
+			loader = bool_loader(&halt, loader);
+			loader = int_loader(&RTC_offset, loader);
+
+			return loader;
+		}
+	};
 }
