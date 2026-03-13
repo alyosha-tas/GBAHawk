@@ -19,13 +19,15 @@ namespace GBHawk
 		// this occurs when the Boot Rom is loading the nintendo logo into VRAM
 		// instead of tracking that in the main memory map where it will just slow things down for no reason
 		// we'll clear the 'locked' flag when the last uint8_t of the logo is read
-		uint32_t ROM_bank;
 		bool locked, locked_GBC, finished;
+		bool reg_access;
+
+		uint16_t addr_last;
+
+		uint32_t ROM_bank;
 		uint32_t ROM_mask;
 		uint32_t ROM_bank_mask;
 		uint32_t BASE_ROM_Bank;
-		bool reg_access;
-		uint16_t addr_last;
 		uint32_t counter;
 
 		void Reset()
@@ -126,14 +128,14 @@ namespace GBHawk
 		{
 			if (locked)
 			{
-				if (((Core.addr_access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (Core.addr_access >= 0x100))
+				if (((*Core_Addr_Access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (*Core_Addr_Access >= 0x100))
 				{
 					counter++;
 				}
 
-				if (Core.addr_access >= 0x100)
+				if (*Core_Addr_Access >= 0x100)
 				{
-					addr_last = Core.addr_access;
+					addr_last = *Core_Addr_Access;
 				}
 
 				if (counter == 0x30)
@@ -145,45 +147,49 @@ namespace GBHawk
 			}
 			else if (locked_GBC)
 			{
-				if (((Core.addr_access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (Core.addr_access >= 0x100))
+				if (((*Core_Addr_Access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (*Core_Addr_Access >= 0x100))
 				{
 					counter++;
 				}
 
-				if (Core.addr_access >= 0x100)
+				if (*Core_Addr_Access >= 0x100)
 				{
-					addr_last = Core.addr_access;
+					addr_last = *Core_Addr_Access;
 				}
 
 				if (counter == 0x30)
 				{
 					locked_GBC = false;
 					finished = true;
-					Console.WriteLine("Finished");
-					Console.WriteLine(Core.cpu.TotalExecutedCycles);
+					//Console.WriteLine("Finished");
+					//Console.WriteLine(Core.cpu.TotalExecutedCycles);
 				}
 
 				// The above condition seems to never be reached as described in the mapper notes
 				// so for now add this one
 
-				if ((Core.addr_access == 0x133) && (counter == 1))
+				if ((*Core_Addr_Access == 0x133) && (counter == 1))
 				{
 					locked_GBC = false;
 					finished = true;
-					Console.WriteLine("Unlocked");
+					//Console.WriteLine("Unlocked");
 				}
 			}
 		}
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(locked, saver);
+			saver = bool_saver(finished, saver);
+			saver = bool_saver(locked, saver);
+			saver = bool_saver(reg_access, saver);
+
+			saver = short_saver(addr_last, saver);
+			
 			saver = int_saver(ROM_bank, saver);
-			saver = bool_saver(locked, locked_GBC, finished, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(ROM_bank_mask, saver);
 			saver = int_saver(BASE_ROM_Bank, saver);
-			saver = bool_saver(reg_access, saver);
-			saver = short_saver(addr_last, saver);
 			saver = int_saver(counter, saver);
 
 			return saver;
@@ -191,13 +197,17 @@ namespace GBHawk
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&locked, loader);
+			loader = bool_loader(&locked_GBC, loader);
+			loader = bool_loader(&finished, loader);
+			loader = bool_loader(&reg_access, loader);
+
+			loader = short_loader(&addr_last, loader);
+			
 			loader = int_loader(&ROM_bank, loader);
-			loader = bool_loader(&locked, locked_GBC, finished, loader);
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&ROM_bank_mask, loader);
 			loader = int_loader(&BASE_ROM_Bank, loader);
-			loader = bool_loader(&reg_access, loader);
-			loader = short_loader(&addr_last, loader);
 			loader = int_loader(&counter, loader);
 
 			return loader;

@@ -14,9 +14,10 @@ namespace GBHawk
 	class Mapper_MBC5 : Mappers
 	{
 	public:
+		bool RAM_enable;
+		
 		uint32_t ROM_bank;
 		uint32_t RAM_bank;
-		bool RAM_enable;
 		uint32_t ROM_mask;
 		uint32_t RAM_mask;
 
@@ -125,9 +126,10 @@ namespace GBHawk
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(RAM_enable, saver);
+			
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(RAM_bank, saver);
-			saver = bool_saver(RAM_enable, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(RAM_mask, saver);
 
@@ -136,9 +138,10 @@ namespace GBHawk
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&RAM_enable, loader);
+			
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&RAM_bank, loader);
-			loader = bool_loader(&RAM_enable, loader);
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&RAM_mask, loader);
 

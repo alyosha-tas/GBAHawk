@@ -19,11 +19,13 @@ namespace GBHawk
 
 		uint64_t* Core_Clock_Update_Cycle = nullptr;
 
-		uint16_t* Core_Acc_X = nullptr;
+		uint8_t* Core_Acc_X_State = nullptr;
 
-		uint16_t* Core_Acc_Y = nullptr;
+		uint8_t* Core_Acc_Y_State = nullptr;
 
 		uint8_t* Core_Solar = nullptr;
+
+		uint16_t* Core_Addr_Access = nullptr;
 
 		uint8_t* Cart_RAM = nullptr;
 
@@ -50,6 +52,11 @@ namespace GBHawk
 		Mappers()
 		{
 			Reset();
+		}
+
+		inline bool Get_Bit(uint8_t val, uint8_t bit)
+		{
+			return ((val & (1 << bit)) == (1 << bit));
 		}
 
 		virtual uint8_t ReadMemoryLow(uint16_t addr)

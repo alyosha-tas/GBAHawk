@@ -124,21 +124,21 @@ namespace GBHawk
 		{
 			if (locked)
 			{
-				if (((Core.addr_access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (Core.addr_access >= 0x100))
+				if (((*Core_Addr_Access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (*Core_Addr_Access >= 0x100))
 				{
 					counter++;
-					Console.WriteLine(Core.cpu.TotalExecutedCycles);
+					//Console.WriteLine(Core.cpu.TotalExecutedCycles);
 				}
 
-				if (Core.addr_access >= 0x100)
+				if (*Core_Addr_Access >= 0x100)
 				{
-					addr_last = Core.addr_access;
+					addr_last = *Core_Addr_Access;
 				}
 
 				if (counter == 0x30)
 				{
 					locked = false;
-					Console.WriteLine("Unlocked");
+					//Console.WriteLine("Unlocked");
 				}
 			}
 		}

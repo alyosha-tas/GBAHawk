@@ -556,7 +556,7 @@ namespace GBHawk
 				// Also, on DMG only, this process only runs if sprites are on in the LCDC (on GBC it always runs)
 				for (int i = 0; i < SL_sprites_index; i++)
 				{
-					if (!evaled_sprites.Bit(i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
+					if (!Get_Bit(evaled_sprites, i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
 					{
 						going_to_fetch = true;
 						fetch_sprite = true;
@@ -859,8 +859,8 @@ namespace GBHawk
 					// start shifting data into the LCD
 					if (render_counter >= (render_offset + 8))
 					{
-						pixel = tile_data_latch[0].Bit(7 - (render_counter % 8)) ? 1 : 0;
-						pixel |= tile_data_latch[1].Bit(7 - (render_counter % 8)) ? 2 : 0;
+						pixel = Get_Bit(tile_data_latch[0], (7 - (render_counter % 8))) ? 1 : 0;
+						pixel |= Get_Bit(tile_data_latch[1], (7 - (render_counter % 8))) ? 2 : 0;
 
 						int ref_pixel = pixel;
 						if (LCDC_Bit(0))
@@ -891,7 +891,7 @@ namespace GBHawk
 								bool use_sprite = false;
 								if (LCDC_Bit(1))
 								{
-									if (!sprite_attr.Bit(7))
+									if (!Get_Bit(sprite_attr, 7))
 									{
 										use_sprite = true;
 									}
@@ -908,7 +908,7 @@ namespace GBHawk
 
 								if (use_sprite)
 								{
-									if (sprite_attr.Bit(4))
+									if (Get_Bit(sprite_attr, 4))
 									{
 										pixel = (obj_pal_1 >> (s_pixel * 2)) & 3;
 									}
@@ -980,7 +980,7 @@ namespace GBHawk
 					// at this time it is unknown what each cycle does, but we only need to accurately keep track of cycles
 					for (int i = 0; i < SL_sprites_index; i++)
 					{
-						if (!evaled_sprites.Bit(i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
+						if (!Get_Bit(evaled_sprites, i) && pixel_counter - SL_sprites[4 * i + 1] is >= -8 and < 0)
 						{
 							sprite_fetch_counter += 6;
 							evaled_sprites |= (1 << i);

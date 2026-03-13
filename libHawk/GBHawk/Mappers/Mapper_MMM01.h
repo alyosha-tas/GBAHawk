@@ -14,6 +14,9 @@ namespace GBHawk
 	class Mapper_MMM01 : Mappers
 	{
 	public:
+		bool SRAM_en;
+		bool sel_mode;
+
 		uint8_t RAM_enable_Reg;
 		uint8_t ROM_bank_Reg;
 		uint8_t RAM_bank_Reg;
@@ -21,12 +24,9 @@ namespace GBHawk
 
 		uint32_t ROM_mask;
 		uint32_t RAM_mask;
-		bool SRAM_en;
-
 		uint32_t ROM_bank;
 		uint32_t Forced_Mask;
 		uint32_t RAM_bank;
-		bool sel_mode;
 
 		void Reset()
 		{
@@ -105,7 +105,7 @@ namespace GBHawk
 					}
 
 					// upper bits only accessible when bit 6 is reset
-					if (!RAM_enable_Reg.Bit(6))
+					if (!Get_Bit(RAM_enable_Reg, 6))
 					{
 						RAM_enable_Reg &= 0x0F;
 						RAM_enable_Reg |= (uint8_t)(value & 0xF0);
@@ -119,22 +119,22 @@ namespace GBHawk
 
 					// next 4 bitss accessible based on status of mode register
 					// zero adjusted
-					if (!Mode_Reg.Bit(2))
+					if (!Get_Bit(Mode_Reg, 2))
 					{
 						ROM_bank_Reg &= 0xFD;
 						ROM_bank_Reg |= (uint8_t)(value & 0x2);
 					}
-					if (!Mode_Reg.Bit(3))
+					if (!Get_Bit(Mode_Reg, 3))
 					{
 						ROM_bank_Reg &= 0xFB;
 						ROM_bank_Reg |= (uint8_t)(value & 0x4);
 					}
-					if (!Mode_Reg.Bit(4))
+					if (!Get_Bit(Mode_Reg, 4))
 					{
 						ROM_bank_Reg &= 0xF7;
 						ROM_bank_Reg |= (uint8_t)(value & 0x8);
 					}
-					if (!Mode_Reg.Bit(5))
+					if (!Get_Bit(Mode_Reg, 5))
 					{
 						ROM_bank_Reg &= 0xEF;
 						ROM_bank_Reg |= (uint8_t)(value & 0x10);
@@ -142,7 +142,7 @@ namespace GBHawk
 
 
 					// upper bits only accessible when bit 6 is reset in RAM_enable_Reg
-					if (!RAM_enable_Reg.Bit(6))
+					if (!Get_Bit(RAM_enable_Reg, 6))
 					{
 						ROM_bank_Reg &= 0x1F;
 						ROM_bank_Reg |= (uint8_t)(value & 0xE0);
@@ -151,19 +151,19 @@ namespace GBHawk
 				else if (addr < 0x6000)
 				{
 					// bottom 2 writable based on bits in RAM_enable_Reg
-					if (!RAM_enable_Reg.Bit(4))
+					if (!Get_Bit(RAM_enable_Reg, 4))
 					{
 						RAM_bank_Reg &= 0xFE;
 						RAM_bank_Reg |= (uint8_t)(value & 0x1);
 					}
-					if (!RAM_enable_Reg.Bit(5))
+					if (!Get_Bit(RAM_enable_Reg, 5))
 					{
 						RAM_bank_Reg &= 0xFD;
 						RAM_bank_Reg |= (uint8_t)(value & 0x2);
 					}
 
 					// upper bits only accessible when bit 6 is reset in RAM_enable_Reg
-					if (!RAM_enable_Reg.Bit(6))
+					if (!Get_Bit(RAM_enable_Reg, 6))
 					{
 						RAM_bank_Reg &= 0x03;
 						RAM_bank_Reg |= (uint8_t)(value & 0xFC);
@@ -172,14 +172,14 @@ namespace GBHawk
 				else
 				{
 					// bit 0 only accessible when RAM_bank_reg bit 6 reset
-					if (!RAM_bank_Reg.Bit(6))
+					if (!Get_Bit(RAM_enable_Reg, 6))
 					{
 						Mode_Reg &= 0xFE;
 						Mode_Reg |= (uint8_t)(value & 1);
 					}
 
 					// upper bits only accessible when bit 6 is reset in RAM_enable_Reg
-					if (!RAM_enable_Reg.Bit(6))
+					if (!Get_Bit(RAM_enable_Reg, 6))
 					{
 						Mode_Reg &= 0x01;
 						Mode_Reg |= (uint8_t)(value & 0xFE);
@@ -187,12 +187,12 @@ namespace GBHawk
 				}
 
 				// update all memory access variables
-				sel_mode = Mode_Reg.Bit(0);
+				sel_mode = Get_Bit(Mode_Reg, 0);
 
 				// setting this bit disables most special registers (the mapper is effectively MBC1 now)
-				if (RAM_enable_Reg.Bit(6))
+				if (Get_Bit(RAM_enable_Reg, 6))
 				{
-					if (Mode_Reg.Bit(6))
+					if (Get_Bit(Mode_Reg, 6))
 					{
 						ROM_bank = (((RAM_bank_Reg & 0x30) << 3) | ((RAM_bank_Reg & 0x03) << 5) | (ROM_bank_Reg & 0x1F)) & ROM_mask;
 						Forced_Mask = (((Mode_Reg >> 1) & 0x1E) | 0x1E0) & ROM_bank;
@@ -211,7 +211,7 @@ namespace GBHawk
 					// does writing actually have any effect if bit 6 is clear?
 				}
 
-				if (Mode_Reg.Bit(6))
+				if (Get_Bit(Mode_Reg, 6))
 				{
 					RAM_bank = ((RAM_bank_Reg & 0x0C) | ((ROM_bank_Reg & 0x60) >> 5)) & RAM_mask;
 				}
@@ -236,34 +236,39 @@ namespace GBHawk
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(SRAM_en, saver);
+			saver = bool_saver(sel_mode, saver);
+
 			saver = byte_saver(RAM_enable_Reg, saver);
 			saver = byte_saver(ROM_bank_Reg, saver);
 			saver = byte_saver(RAM_bank_Reg, saver);
 			saver = byte_saver(Mode_Reg, saver);
+
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(RAM_mask, saver);
-			saver = bool_saver(SRAM_en, saver);
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(Forced_Mask, saver);
 			saver = int_saver(RAM_bank, saver);
-			saver = bool_saver(sel_mode, saver);
+
 
 			return saver;
 		}
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&SRAM_en, loader);
+			loader = bool_loader(&sel_mode, loader);
+
 			loader = byte_loader(&RAM_enable_Reg, loader);
 			loader = byte_loader(&ROM_bank_Reg, loader);
 			loader = byte_loader(&RAM_bank_Reg, loader);
 			loader = byte_loader(&Mode_Reg, loader);
+
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&RAM_mask, loader);
-			loader = bool_loader(&SRAM_en, loader);
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&Forced_Mask, loader);
 			loader = int_loader(&RAM_bank, loader);
-			loader = bool_loader(&sel_mode, loader);
 
 			return loader;
 		}

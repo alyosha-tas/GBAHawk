@@ -14,14 +14,16 @@ namespace GBHawk
 	class Mapper_MBC7 : Mappers
 	{
 	public:
-		uint32_t ROM_bank;
 		bool RAM_enable_1, RAM_enable_2;
-		uint32_t ROM_mask;
+		bool is_erased;
+
 		uint8_t acc_x_low;
 		uint8_t acc_x_high;
 		uint8_t acc_y_low;
 		uint8_t acc_y_high;
-		bool is_erased;
+		
+		uint32_t ROM_bank;
+		uint32_t ROM_mask;
 
 		// EEPROM related
 		bool CS_prev;
@@ -30,16 +32,16 @@ namespace GBHawk
 		bool DO;
 		bool instr_read;
 		bool perf_instr;
+		bool WR_EN;
+		bool countdown_start;
+
 		uint32_t instr_bit_counter;
 		uint32_t instr;
-		bool WR_EN;
 		uint32_t EE_addr;
 		uint32_t instr_case;
 		uint32_t instr_clocks;
 		uint32_t EE_value;
 		uint32_t countdown;
-		bool countdown_start;
-
 
 		void Reset()
 		{
@@ -209,10 +211,10 @@ namespace GBHawk
 				{
 					// latch new accelerometer values
 					//Console.WriteLine("Latching ACC");
-					acc_x_low = (uint8_t)(Core.Acc_X_state & 0xFF);
-					acc_x_high = (uint8_t)((Core.Acc_X_state & 0xFF00) >> 8);
-					acc_y_low = (uint8_t)(Core.Acc_Y_state & 0xFF);
-					acc_y_high = (uint8_t)((Core.Acc_Y_state & 0xFF00) >> 8);
+					acc_x_low = (uint8_t)(*Core_Acc_X_State & 0xFF);
+					acc_x_high = (uint8_t)((*Core_Acc_X_State & 0xFF00) >> 8);
+					acc_y_low = (uint8_t)(*Core_Acc_Y_State & 0xFF);
+					acc_y_high = (uint8_t)((*Core_Acc_Y_State & 0xFF00) >> 8);
 				}
 			}
 			else if ((addr & 0xA0F0) == 0xA080)
@@ -222,11 +224,11 @@ namespace GBHawk
 			}
 		}
 
-		private void EEPROM_write(uint8_t value)
+		void EEPROM_write(uint8_t value)
 		{
-			bool CS = value.Bit(7);
-			bool CLK = value.Bit(6);
-			bool DI = value.Bit(1);
+			bool CS = ((value & 0x80) == 0x80);
+			bool CLK = ((value & 0x40) == 0x40);
+			bool DI = ((value & 0x2) == 0x2);
 
 			// if we deselect the chip, complete instructions or countdown and stop
 			if (!CS)
@@ -429,28 +431,70 @@ namespace GBHawk
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
-			saver = int_saver(ROM_bank, saver);
-			saver = bool_saver(RAM_enable_1, RAM_enable_2, saver);
-			saver = int_saver(ROM_mask, saver);
+			saver = bool_saver(RAM_enable_1, saver);
+			saver = bool_saver(RAM_enable_2, saver);
+			saver = bool_saver(is_erased, saver);
+
 			saver = byte_saver(acc_x_low, saver);
 			saver = byte_saver(acc_x_high, saver);
 			saver = byte_saver(acc_y_low, saver);
 			saver = byte_saver(acc_y_high, saver);
-			saver = bool_saver(is_erased, saver);
+
+			saver = int_saver(ROM_bank, saver);
+			saver = int_saver(ROM_mask, saver);
+
+			// EEPROM related
+			saver = bool_saver(CS_prev, saver);
+			saver = bool_saver(CLK_prev, saver);
+			saver = bool_saver(DI_prev, saver);
+			saver = bool_saver(DO, saver);
+			saver = bool_saver(instr_read, saver);
+			saver = bool_saver(perf_instr, saver);
+			saver = bool_saver(WR_EN, saver);
+			saver = bool_saver(countdown_start, saver);
+
+			saver = int_saver(instr_bit_counter, saver);
+			saver = int_saver(instr, saver);
+			saver = int_saver(EE_addr, saver);
+			saver = int_saver(instr_case, saver);
+			saver = int_saver(instr_clocks, saver);
+			saver = int_saver(EE_value, saver);
+			saver = int_saver(countdown, saver);
 
 			return saver;
 		}
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
-			loader = int_loader(&ROM_bank, loader);
-			loader = bool_loader(&RAM_enable_1, RAM_enable_2, loader);
-			loader = int_loader(&ROM_mask, loader);
+			loader = bool_loader(&RAM_enable_1, loader);
+			loader = bool_loader(&RAM_enable_2, loader);
+			loader = bool_loader(&is_erased, loader);
+
 			loader = byte_loader(&acc_x_low, loader);
 			loader = byte_loader(&acc_x_high, loader);
 			loader = byte_loader(&acc_y_low, loader);
 			loader = byte_loader(&acc_y_high, loader);
-			loader = bool_loader(&is_erased, loader);
+
+			loader = int_loader(&ROM_bank, loader);
+			loader = int_loader(&ROM_mask, loader);
+
+			// EEPROM related
+			loader = bool_loader(&CS_prev, loader);
+			loader = bool_loader(&CLK_prev, loader);
+			loader = bool_loader(&DI_prev, loader);
+			loader = bool_loader(&DO, loader);
+			loader = bool_loader(&instr_read, loader);
+			loader = bool_loader(&perf_instr, loader);
+			loader = bool_loader(&WR_EN, loader);
+			loader = bool_loader(&countdown_start, loader);
+
+			loader = int_loader(&instr_bit_counter, loader);
+			loader = int_loader(&instr, loader);
+			loader = int_loader(&EE_addr, loader);
+			loader = int_loader(&instr_case, loader);
+			loader = int_loader(&instr_clocks, loader);
+			loader = int_loader(&EE_value, loader);
+			loader = int_loader(&countdown, loader);
 
 			return loader;
 		}

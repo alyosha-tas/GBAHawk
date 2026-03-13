@@ -310,9 +310,9 @@ namespace GBHawk
 								{
 									if (!Core.HDMA_transfer) { Core.HDMA_start_stop(true); }
 									VRAM_access_read_HDMA = false;
-									VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+									VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 									VRAM_access_write_HDMA = false;
-									VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+									VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 									// reading from open bus still returns 0xFF on DMA access, see dma_hiram_read_result_cgb04c_out1.gbc
 									Core.bus_value = 0xFF;
@@ -340,7 +340,7 @@ namespace GBHawk
 							}
 							else
 							{
-								Core_VRAM[(Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
+								Core_VRAM[(*Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
 
 								// DMA destination address does not wrap and terminates DMA
 								if (cur_DMA_dest == 0xFFFF)
@@ -390,9 +390,9 @@ namespace GBHawk
 									{
 										if (!Core.HDMA_transfer) { Core.HDMA_start_stop(true); }
 										VRAM_access_read_HDMA = false;
-										VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+										VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 										VRAM_access_write_HDMA = false;
-										VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+										VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 										// reading from open bus still returns 0xFF on DMA access, see dma_hiram_read_result_cgb04c_out1.gbc
 										Core.bus_value = 0xFF;
@@ -422,7 +422,7 @@ namespace GBHawk
 								}
 								else
 								{
-									Core_VRAM[(Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
+									Core_VRAM[(*Core_VRAM_Bank * 0x2000) + (cur_DMA_dest & 0x1FFF)] = HDMA_byte;
 
 									// DMA destination address does not wrap and terminates DMA
 									if (cur_DMA_dest == 0xFFFF)
@@ -458,9 +458,9 @@ namespace GBHawk
 						{
 							if (Core.HDMA_transfer) { Core.HDMA_start_stop(false); }
 							VRAM_access_read_HDMA = true;
-							VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+							VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 							VRAM_access_write_HDMA = true;
-							VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+							VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 						}
 					}
 				}
@@ -469,9 +469,9 @@ namespace GBHawk
 					HDMA_active = false;
 					if (Core.HDMA_transfer) { Core.HDMA_start_stop(false); }
 					VRAM_access_read_HDMA = true;
-					VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+					VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 					VRAM_access_write_HDMA = true;
-					VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+					VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 				}
 			}
 
@@ -512,9 +512,9 @@ namespace GBHawk
 					// Automatically restore access to VRAM at this time (force end drawing)
 					// Who Framed Roger Rabbit seems to run into this.
 					VRAM_access_read_PPU = true;
-					VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+					VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 					VRAM_access_write_PPU = true;
-					VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+					VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 					if (LY == 144)
 					{
@@ -550,7 +550,7 @@ namespace GBHawk
 					{
 						// Timing note: LYC interrupt cannot block mode 1 stat by itself
 						// But, the glitchy mode 2 stat check combined with LYC does block it. So adjust old stat line here
-						stat_line_old = VBL_INT | HBL_INT | OAM_INT;
+						stat_line_old = VBL_INT || HBL_INT || OAM_INT;
 
 						if (LY == 144) { HBL_INT = false; }
 					}
@@ -649,9 +649,9 @@ namespace GBHawk
 
 								OAM_access_write = false;
 								VRAM_access_read_PPU = false;
-								VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+								VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 								VRAM_access_write_PPU = false;
-								VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+								VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 							}
 
 							// render the screen and handle hblank
@@ -712,9 +712,9 @@ namespace GBHawk
 								OAM_INT = false;
 								OAM_access_write = false;
 								VRAM_access_read_PPU = false;
-								VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+								VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 								VRAM_access_write_PPU = false;
-								VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+								VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 							}
 
 							// render the screen and handle hblank
@@ -790,7 +790,7 @@ namespace GBHawk
 			}
 
 			// assert the STAT IRQ line if the line went from zero to 1
-			stat_line = VBL_INT | LYC_INT | HBL_INT | OAM_INT;
+			stat_line = VBL_INT || LYC_INT || HBL_INT || OAM_INT;
 
 			if (stat_line && !stat_line_old)
 			{
@@ -918,7 +918,7 @@ namespace GBHawk
 				{
 					if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 						(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-						!evaled_sprites.Bit(i))
+						!Get_Bit(evaled_sprites, i))
 					{
 						going_to_fetch = true;
 						fetch_sprite = true;
@@ -946,9 +946,9 @@ namespace GBHawk
 							tile_data[2] = Core_VRAM[bus_address];
 							//bus_address = 0x1800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch;
 
-							VRAM_sel = tile_data[2].Bit(3) ? 1 : 0;
+							VRAM_sel = Get_Bit(tile_data[2], 3) ? 1 : 0;
 
-							BG_V_flip = tile_data[2].Bit(6) & Core.GBC_compat;
+							BG_V_flip = Get_Bit(tile_data[2], 6) && *Core_GBC_compat;
 
 							read_case = 1;
 							if (!pre_render)
@@ -1076,8 +1076,8 @@ namespace GBHawk
 							bus_address = 0x3800 + (LCDC_Bit(6) ? 1 : 0) * 0x400 + temp_fetch;
 							tile_data[2] = Core_VRAM[bus_address];
 
-							VRAM_sel = tile_data[2].Bit(3) ? 1 : 0;
-							BG_V_flip = tile_data[2].Bit(6) & Core.GBC_compat;
+							VRAM_sel = Get_Bit(tile_data[2], 3) ? 1 : 0;
+							BG_V_flip = Get_Bit(tile_data[2], 6) && *Core_GBC_compat;
 
 							window_tile_inc++;
 
@@ -1223,9 +1223,9 @@ namespace GBHawk
 						OAM_access_read = true;
 						OAM_access_write = true;
 						VRAM_access_read_PPU = true;
-						VRAM_access_read = VRAM_access_read_PPU & VRAM_access_read_HDMA;
+						VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 						VRAM_access_write_PPU = true;
-						VRAM_access_write = VRAM_access_write_PPU & VRAM_access_write_HDMA;
+						VRAM_access_write = VRAM_access_write_PPU && VRAM_access_write_HDMA;
 
 						read_case = 18;
 						break;
@@ -1258,20 +1258,20 @@ namespace GBHawk
 					// start shifting data into the LCD
 					if (render_counter >= (render_offset + 8))
 					{
-						if (tile_data_latch[2].Bit(5) && *Core_GBC_compat)
+						if (Get_Bit(tile_data_latch[2], 5) && *Core_GBC_compat)
 						{
-							pixel = tile_data_latch[0].Bit(render_counter % 8) ? 1 : 0;
-							pixel |= tile_data_latch[1].Bit(render_counter % 8) ? 2 : 0;
+							pixel = Get_Bit(tile_data_latch[0], render_counter % 8) ? 1 : 0;
+							pixel |= Get_Bit(tile_data_latch[1], render_counter % 8) ? 2 : 0;
 						}
 						else
 						{
-							pixel = tile_data_latch[0].Bit(7 - (render_counter % 8)) ? 1 : 0;
-							pixel |= tile_data_latch[1].Bit(7 - (render_counter % 8)) ? 2 : 0;
+							pixel = Get_Bit(tile_data_latch[0], (7 - (render_counter % 8))) ? 1 : 0;
+							pixel |= Get_Bit(tile_data_latch[1], (7 - (render_counter % 8))) ? 2 : 0;
 						}
 
 						int ref_pixel = pixel;
 
-						if (!Core.GBC_compat)
+						if (!*Core_GBC_compat)
 						{
 							if (LCDC_Bit(0))
 							{
@@ -1306,7 +1306,7 @@ namespace GBHawk
 							{
 								if (LCDC_Bit(1))
 								{
-									if (!sprite_attr.Bit(7))
+									if (!Get_Bit(sprite_attr, 7))
 									{
 										use_sprite = true;
 									}
@@ -1321,7 +1321,7 @@ namespace GBHawk
 									}
 
 									// There is another priority bit in GBC, that can still sprite priority
-									if (LCDC_Bit(0) && tile_data_latch[2].Bit(7) && (ref_pixel != 0) && Core.GBC_compat)
+									if (LCDC_Bit(0) && Get_Bit(tile_data_latch[2], 7) && (ref_pixel != 0) && *Core_GBC_compat)
 									{
 										use_sprite = false;
 									}
@@ -1331,11 +1331,11 @@ namespace GBHawk
 								{
 									pal_num = sprite_attr & 7;
 
-									if (!Core.GBC_compat)
+									if (!*Core_GBC_compat)
 									{
-										pal_num = sprite_attr.Bit(4) ? 1 : 0;
+										pal_num = Get_Bit(sprite_attr, 4) ? 1 : 0;
 
-										if (sprite_attr.Bit(4))
+										if (Get_Bit(sprite_attr, 4))
 										{
 											pixel = (obj_pal_1 >> (s_pixel * 2)) & 3;
 										}
@@ -1349,7 +1349,7 @@ namespace GBHawk
 						}
 
 						// based on sprite priority and pixel values, pick a final pixel color
-						if (Core.GBC_compat)
+						if (*Core_GBC_compat)
 						{
 							if (use_sprite)
 							{
@@ -1433,7 +1433,7 @@ namespace GBHawk
 					{
 						if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 								(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-								!evaled_sprites.Bit(i))
+								!Get_Bit(evaled_sprites, i))
 						{
 							sprite_fetch_counter += 6;
 							evaled_sprites |= (1 << i);
@@ -1538,7 +1538,7 @@ namespace GBHawk
 		void process_sprite()
 		{
 			int y;
-			int VRAM_temp = (SL_sprites[sl_use_index * 4 + 3].Bit(3) && *Core_GBC_compat) ? 1 : 0;
+			int VRAM_temp = (Get_Bit(SL_sprites[sl_use_index * 4 + 3], 3) && *Core_GBC_compat) ? 1 : 0;
 
 			if ((SL_sprites[sl_use_index * 4 + 3] & 0x40) == 0x40)
 			{

@@ -216,6 +216,11 @@ namespace GBHawk
 			return ret;
 		}
 
+		inline bool Get_Bit(uint8_t val, uint8_t bit)
+		{
+			return ((val & (1 << bit)) == (1 << bit));
+		}
+
 		virtual uint8_t ReadReg(uint16_t addr)
 		{
 			return 0;
@@ -280,6 +285,8 @@ namespace GBHawk
 		uint8_t* Core_REG_FF0F = nullptr;
 
 		uint8_t* Core_VRAM = nullptr;
+
+		uint8_t* Core_VRAM_Bank = nullptr;
 
 		uint8_t* Core_OAM = nullptr;
 

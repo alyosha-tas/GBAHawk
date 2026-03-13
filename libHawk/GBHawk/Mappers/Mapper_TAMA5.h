@@ -14,22 +14,25 @@ namespace GBHawk
 	class Mapper_TAMA5 : Mappers
 	{
 	public:
+		bool halt;
+
+		uint8_t Chip_return_low;
+		uint8_t Chip_return_high;
+		
 		uint32_t ROM_bank;
 		uint32_t RAM_bank;
 		uint32_t ROM_mask;
 		uint32_t RAM_mask;
-		uint8_t[] RTC_regs = new uint8_t[10];
 		uint32_t RTC_timer;
 		uint32_t RTC_low_clock;
-		bool halt;
 		uint32_t RTC_offset;
 		uint32_t ctrl;
 		uint32_t RAM_addr_low;
 		uint32_t RAM_addr_high;
 		uint32_t RAM_val_low;
 		uint32_t RAM_val_high;
-		uint8_t Chip_return_low;
-		uint8_t Chip_return_high;
+
+		uint8_t RTC_regs[10] = { };
 
 		void Reset()
 		{
@@ -253,44 +256,50 @@ namespace GBHawk
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(halt, saver);
+
+			saver = byte_saver(Chip_return_low, saver);
+			saver = byte_saver(Chip_return_high, saver);
+			
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(RAM_bank, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(RAM_mask, saver);
-			saver = byte_saver([] RTC_regs = new saver = byte_saver([10], saver);
 			saver = int_saver(RTC_timer, saver);
 			saver = int_saver(RTC_low_clock, saver);
-			saver = bool_saver(halt, saver);
 			saver = int_saver(RTC_offset, saver);
 			saver = int_saver(ctrl, saver);
 			saver = int_saver(RAM_addr_low, saver);
 			saver = int_saver(RAM_addr_high, saver);
 			saver = int_saver(RAM_val_low, saver);
 			saver = int_saver(RAM_val_high, saver);
-			saver = byte_saver(Chip_return_low, saver);
-			saver = byte_saver(Chip_return_high, saver);
+
+			saver = byte_array_saver(RTC_regs, saver, 10);
 
 			return saver;
 		}
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&halt, loader);
+
+			loader = byte_loader(&Chip_return_low, loader);
+			loader = byte_loader(&Chip_return_high, loader);
+			
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&RAM_bank, loader);
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&RAM_mask, loader);
-			loader = byte_loader(&[] RTC_regs = new loader = byte_loader(&[10], loader);
 			loader = int_loader(&RTC_timer, loader);
 			loader = int_loader(&RTC_low_clock, loader);
-			loader = bool_loader(&halt, loader);
 			loader = int_loader(&RTC_offset, loader);
 			loader = int_loader(&ctrl, loader);
 			loader = int_loader(&RAM_addr_low, loader);
 			loader = int_loader(&RAM_addr_high, loader);
 			loader = int_loader(&RAM_val_low, loader);
 			loader = int_loader(&RAM_val_high, loader);
-			loader = byte_loader(&Chip_return_low, loader);
-			loader = byte_loader(&Chip_return_high, loader);
+
+			loader = byte_array_loader(RTC_regs, loader, 10);
 
 			return loader;
 		}
