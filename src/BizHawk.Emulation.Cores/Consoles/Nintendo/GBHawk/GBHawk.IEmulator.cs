@@ -2,7 +2,6 @@
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
 using System;
-using System.Runtime.InteropServices;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
@@ -12,18 +11,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
 
-		public byte controller_state;
-		public byte multi_core_controller_byte;
-		public ushort Acc_X_state;
-		public ushort Acc_Y_state;
-		public bool vblank_rise;
-		public bool controller_was_checked;
-		public bool delays_to_process;
-		public bool DIV_falling_edge, DIV_edge_old;
-		public int controller_delay_cd;
-		public int cpu_state_hold;
-		public int clear_counter;
-		public ulong CycleCount;
+		byte controller_state;
+		ushort Acc_X_state, Acc_Y_state;
+
 		public bool Current_sync_on_vbl;
 
 		public IController Controller;

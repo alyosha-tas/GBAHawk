@@ -12,6 +12,29 @@
 #include "Mappers.h"
 #include "PPUs.h"
 
+// mapper list
+#include "Mappers/Mapper_Camera.h"
+#include "Mappers/Mapper_Default.h"
+#include "Mappers/Mapper_HuC1.h"
+#include "Mappers/Mapper_HuC3.h"
+#include "Mappers/Mapper_MBC1.h"
+#include "Mappers/Mapper_MBC1_Multi.h"
+#include "Mappers/Mapper_MBC2.h"
+#include "Mappers/Mapper_MBC3.h"
+#include "Mappers/Mapper_MBC5.h"
+#include "Mappers/Mapper_MBC6.h"
+#include "Mappers/Mapper_MBC7.h"
+#include "Mappers/Mapper_MMM01.h"
+#include "Mappers/Mapper_RockMan8.h"
+#include "Mappers/Mapper_Sachen_MMC1.h"
+#include "Mappers/Mapper_Sachen_MMC2.h"
+#include "Mappers/Mapper_TAMA5.h"
+#include "Mappers/Mapper_WisdomTree.h"
+
+#include "PPUs/GB_PPU.h"
+#include "PPUs/GBC_PPU.h"
+#include "PPUs/GBC_GB_PPU.h"
+
 using namespace std;
 
 namespace GBHawk
@@ -22,6 +45,7 @@ namespace GBHawk
 		GBCore() 
 		{
 			Mapper = nullptr;
+			PPU = nullptr;
 			GB.MessageCallback = nullptr;
 			GB.RumbleCallback = nullptr;
 			GB.TraceCallback = nullptr;
@@ -33,73 +57,27 @@ namespace GBHawk
 		Mappers* Mapper;
 		PPUs* PPU;
 
-		void Load_BIOS(uint8_t* bios)
+		void Load_BIOS(uint8_t* bios, bool cgb_flag, bool cgb_gba_flag)
 		{
-			std::memcpy(GB.BIOS, bios, 0x4000);
+			if (cgb_flag)
+			{
+				std::memcpy(GB.BIOS, bios, 0x900);
+			}
+			else
+			{
+				std::memcpy(GB.BIOS, bios, 0x100);
+			}
+
+			GB.Is_GBC = cgb_flag;
+
+			GB.Is_GBC_GBA = cgb_flag && cgb_gba_flag;
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, uint16_t flash_type_64_value,
-					  uint16_t flash_type_128_value, int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper)
 		{
-			std::memcpy(GB.ROM, ext_rom, 0x6000000);
+			std::memcpy(GB.ROM, ext_rom, ext_rom_size);
 
-			if ((mapper == 0) || (mapper == 1))
-			{
-				GB.Cart_RAM_Present = false;
-				GB.Is_EEPROM = false;
-			}
-			else if ((mapper == 2) || (mapper == 3))
-			{
-				GB.Cart_RAM_Present = true;
-				GB.Is_EEPROM = false;
-			}
-			else if (mapper == 4)
-			{
-				GB.Cart_RAM_Present = true;
-				GB.Is_EEPROM = true;
-
-				if (ext_rom_size <= 0x1000000)
-				{
-					GB.EEPROM_Wiring = true;
-				}
-				else
-				{
-					GB.EEPROM_Wiring = false;
-				}
-			}
-			else if (mapper == 5)
-			{
-				GB.Cart_RAM_Present = true;
-				GB.Is_EEPROM = true;
-
-				if (ext_rom_size <= 0x1000000)
-				{
-					GB.EEPROM_Wiring = true;
-				}
-				else
-				{
-					GB.EEPROM_Wiring = false;
-				}
-			}
-			else if (mapper == 6)
-			{
-				GB.Cart_RAM_Present = true;
-				GB.Is_EEPROM = true;
-
-				if (ext_rom_size <= 0x1000000)
-				{
-					GB.EEPROM_Wiring = true;
-				}
-				else
-				{
-					GB.EEPROM_Wiring = false;
-				}
-			}
-			else if ((mapper == 7) || (mapper == 8))
-			{
-				GB.Cart_RAM_Present = true;
-				GB.Is_EEPROM = false;
-			}
+			GB.ROM_Length = ext_rom_size;
 
 			if (mapper == 0)
 			{
@@ -107,103 +85,105 @@ namespace GBHawk
 			}
 			else if (mapper == 1)
 			{
-				Mapper = new Mapper_DefaultRTC();
+				Mapper = new Mapper_MBC1();
 			}
 			else if (mapper == 2)
 			{
-				Mapper = new Mapper_SRAM();
+				Mapper = new Mapper_MBC2();
 			}
 			else if (mapper == 3)
 			{
-				Mapper = new Mapper_SRAM_Gyro();
+				Mapper = new Mapper_MBC3();
 			}
 			else if (mapper == 4)
 			{
-				Mapper = new Mapper_EEPROM();
+				Mapper = new Mapper_MBC1Multi();
 			}
 			else if (mapper == 5)
 			{
-				Mapper = new Mapper_EEPROM_Tilt();
+				Mapper = new Mapper_MBC5();
 			}
 			else if (mapper == 6)
 			{
-				Mapper = new Mapper_EEPROM_Solar();
+				Mapper = new Mapper_MBC6();
 			}
 			else if (mapper == 7)
 			{
-				if (flash_type_64_value == 0x3D1F) { Mapper = new Mapper_FLASH_Atmel(); }
-				else { Mapper = new Mapper_FLASH(); }
+				Mapper = new Mapper_MBC7();
 			}
 			else if (mapper == 8)
 			{
-				Mapper = new Mapper_FLASH_RTC();
+				Mapper = new Mapper_Camera();
+			}
+			else if (mapper == 9)
+			{
+				Mapper = new Mapper_TAMA5();
+			}
+			else if (mapper == 10)
+			{
+				Mapper = new Mapper_HuC3();
+			}
+			else if (mapper == 11)
+			{
+				Mapper = new Mapper_HuC1();
+			}
+			else if (mapper == 12)
+			{
+				Mapper = new Mapper_Sachen1();
+			}
+			else if (mapper == 13)
+			{
+				Mapper = new Mapper_Sachen2();
+			}
+			else if (mapper == 14)
+			{
+				Mapper = new Mapper_WisdomTree();
+			}
+			else if (mapper == 15)
+			{
+				Mapper = new Mapper_RockMan8();
+			}
+			else if (mapper == 16)
+			{
+				Mapper = new Mapper_MMM01();
 			}
 
 			GB.mapper_pntr = &Mapper[0];
 
-			Mapper->Core_Cycle_Count = &GB.CycleCount;
+			// set up all the pointers
+			Mapper->Core_Acc_X_State = &GB.Acc_X_state;
 
-			Mapper->Core_Clock_Update_Cycle = &GB.Clock_Update_Cycle;
+			Mapper->Core_Acc_Y_State = &GB.Acc_Y_state;
 
-			Mapper->Core_Acc_X = &GB.New_Acc_X;
-
-			Mapper->Core_Acc_Y = &GB.New_Acc_Y;
-
-			Mapper->Core_Solar = &GB.New_Solar;
+			Mapper->Core_Addr_Access = &GB.addr_access;
 
 			Mapper->Core_ROM = &GB.ROM[0];
 
-			Mapper->ROM_C4 = GB.ROM[0xC4];
-			Mapper->ROM_C5 = GB.ROM[0xC5];
-			Mapper->ROM_C6 = GB.ROM[0xC6];
-			Mapper->ROM_C7 = GB.ROM[0xC7];
-			Mapper->ROM_C8 = GB.ROM[0xC8];
-			Mapper->ROM_C9 = GB.ROM[0xC9];
+			Mapper->Core_ROM_Length = &GB.ROM_Length;
 
-			Mapper->Current_C4 = GB.ROM[0xC4];
-			Mapper->Current_C5 = GB.ROM[0xC5];
-			Mapper->Current_C6 = GB.ROM[0xC6];
-			Mapper->Current_C7 = GB.ROM[0xC7];
-			Mapper->Current_C8 = GB.ROM[0xC8];
-			Mapper->Current_C9 = GB.ROM[0xC9];
+			Mapper->Core_Bus_Value = &GB.bus_value;
 
-			// only reset RTC on initial power on
-			Mapper->Reset_RTC = true;
+			Mapper->Core_Cycle_Count = &GB.Cycle_Count;
+
+			Mapper->Core_Bus_Access_Time = &GB.bus_access_time;
+
+			// only set RTC at initialization
 			Mapper->Reset();
-			Mapper->Reset_RTC = false;
-
-			Mapper->Flash_Type_64_Value = flash_type_64_value;
-			Mapper->Flash_Type_128_Value = flash_type_128_value;
-
-			Mapper->RTC_Functional = rtc_functional;
-
-			Mapper->Solar_Functional = mapper == 6;
-
-			Mapper->Reg_Second = (uint8_t)datetime;
-			Mapper->Reg_Minute = (uint8_t)(datetime >> 8);
-			Mapper->Reg_Hour = (uint8_t)(datetime >> 16);
-			Mapper->Reg_Week = (uint8_t)(datetime >> 24);
-			Mapper->Reg_Day = (uint8_t)(datetime >> 32);
-			Mapper->Reg_Month = (uint8_t)(datetime >> 40);
-			Mapper->Reg_Year = (uint8_t)(datetime >> 48);
-			Mapper->CTRL_Reg = (uint8_t)(datetime >> 56);
-
-			Mapper->RTC_24_Hour = (Mapper->CTRL_Reg & 0x40) == 0x40;
-
-			Mapper->EEPROM_Offset = EEPROM_offset;
-			Mapper->Flash_Write_Offset = flash_write_offset;
-			Mapper->Flash_Sector_Erase_Offset = flash_sector_offset;
-			Mapper->Flash_Chip_Erase_Offset = flash_chip_offset;
 
 			Mapper->Core_Message_String = &GB.Message_String;
 			Mapper->RumbleCallback = GB.RumbleCallback;
 			Mapper->MessageCallback = GB.MessageCallback;
 
-			// Only reset cycle count on initial power on, not power cycles
-			GB.CycleCount = 0;
-			GB.Clock_Update_Cycle = 0;
+			// repeat for the ppu
+			if (GB.Is_GBC)
+			{
+				PPU = new GB_PPU();
+			}
+		}
 
-			GB.Is_GBP = is_GBP;
+		void Set_RTC(int32_t val, uint32_t param)
+		{
+			Mapper->Set_RTC(val, param);
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -214,9 +194,9 @@ namespace GBHawk
 
 			std::memcpy(GB.Cart_RAM, ext_sram, ext_sram_size);
 
-			Mapper->Cart_RAM = &GB.Cart_RAM[0];
+			Mapper->Core_Cart_RAM = &GB.Cart_RAM[0];
 
-			Mapper->Size_Mask = ext_sram_size - 1;
+			Mapper->Core_Cart_RAM_Length = &GB.Cart_RAM_Length;
 		}
 
 		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -369,37 +349,67 @@ namespace GBHawk
 
 		uint8_t GetSysBus(uint32_t addr)
 		{
-			return GB.Peek_Memory_8(addr);
+			return GB.Peek_Memory(addr);
 		}
 
-		uint8_t GetVRAM(uint32_t addr) 
+		uint8_t GetVRAM(uint32_t addr, bool vbl_sync)
 		{
-			if (addr < 0x18000)
+			if (vbl_sync)
 			{
-				return GB.VRAM[addr];
+				return GB.VRAM_vbls[addr & 0x3FFF];
 			}
-
-			return GB.VRAM[(addr & 0x7FFF) | 0x10000];
+			else
+			{
+				return GB.VRAM[addr & 0x3FFF];
+			}
 		}
 
-		uint8_t GetWRAM(uint32_t addr)
+		uint8_t GetRAM(uint32_t addr, bool vbl_sync)
 		{
-			return GB.WRAM[addr & 0x3FFFF];
+			if (vbl_sync)
+			{
+				return GB.RAM_vbls[addr & 0x7FFF];
+			}
+			else
+			{
+				return GB.RAM[addr & 0x7FFF];
+			}
 		}
 
-		uint8_t GetIWRAM(uint32_t addr)
+		uint8_t GetHRAM(uint32_t addr, bool vbl_sync)
 		{
-			return GB.IWRAM[addr & 0x7FFF];
+			if (vbl_sync)
+			{
+				return GB.ZP_RAM_vbls[addr & 0x7F];
+			}
+			else
+			{
+				return GB.ZP_RAM[addr & 0x7F];
+			}
 		}
 
-		uint8_t GetOAM(uint32_t addr)
+		uint8_t GetOAM(uint32_t addr, bool vbl_sync)
 		{
-			return GB.OAM[addr & 0x3FF];
+			if (vbl_sync)
+			{
+				if (addr < 0xA0) { return GB.OAM_vbls[addr]; }
+			}
+			else
+			{
+				if (addr < 0xA0) { return GB.OAM[addr]; }
+			}
 		}
 
-		uint8_t GetPALRAM(uint32_t addr)
+		uint8_t GetPALRAM(uint32_t addr, bool vbl_sync)
 		{
-			return GB.PALRAM[addr & 0x3FF];
+			if (vbl_sync)
+			{
+				return GB.PALRAM_vbls[addr & 0x3FF];
+			}
+			else
+			{
+				return GB.PALRAM[addr & 0x3FF];
+			}
 		}
 
 		uint8_t GetRegisters(uint32_t addr)
@@ -407,11 +417,18 @@ namespace GBHawk
 			return GB.Get_Registers_Internal(addr);
 		}
 
-		uint8_t GetSRAM(uint32_t addr)
+		uint8_t GetSRAM(uint32_t addr, bool vbl_sync)
 		{
 			if (GB.Cart_RAM_Length != 0) 
 			{
-				return GB.Cart_RAM[addr & (GB.Cart_RAM_Length - 1)];
+				if (vbl_sync)
+				{
+					return GB.Cart_RAM_vbls[addr & (GB.Cart_RAM_Length - 1)];
+				}
+				else
+				{
+					return GB.Cart_RAM[addr & (GB.Cart_RAM_Length - 1)];
+				}
 			}
 			
 			return 0;

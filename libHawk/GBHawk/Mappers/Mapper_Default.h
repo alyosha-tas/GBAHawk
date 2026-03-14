@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_Default : Mappers
+	class Mapper_Default : public Mappers
 	{
 	public:
 		void Reset()

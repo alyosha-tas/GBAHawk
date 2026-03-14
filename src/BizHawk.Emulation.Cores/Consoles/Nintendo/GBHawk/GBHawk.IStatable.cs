@@ -13,6 +13,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			ser.Sync("Frame", ref _frame);
 			ser.Sync("IsLag", ref Is_Lag);
 
+			ser.Sync(nameof(Current_sync_on_vbl), ref Current_sync_on_vbl);
 			ser.Sync(nameof(Is_GB_in_GBC), ref Is_GB_in_GBC);
 			ser.Sync(nameof(Is_GBC), ref Is_GBC);
 			ser.Sync(nameof(Use_MT), ref Use_MT);

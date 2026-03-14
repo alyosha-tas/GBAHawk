@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_RockMan8 : Mappers
+	class Mapper_RockMan8 : public Mappers
 	{
 	public:
 		uint32_t ROM_bank;

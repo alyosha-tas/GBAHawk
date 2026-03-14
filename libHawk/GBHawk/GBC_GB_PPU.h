@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class GBC_GB_PPU : PPUs
+	class GBC_GB_PPU : public PPUs
 	{
 	public:
 

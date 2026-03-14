@@ -27,16 +27,21 @@ GBHawk_EXPORT void GB_destroy(GBCore* p)
 }
 
 // load bios and basic into the core
-GBHawk_EXPORT void GB_load_bios(GBCore* p, uint8_t* bios)
+GBHawk_EXPORT void GB_load_bios(GBCore* p, uint8_t* bios, bool cgb_flag, bool cgb_gba_flag)
 {
-	p->Load_BIOS(bios);
+	p->Load_BIOS(bios, cgb_flag, cgb_gba_flag);
 }
 
 // load a rom into the core
-GBHawk_EXPORT void GB_load(GBCore* p, uint8_t* rom, uint32_t size, uint32_t mapper, uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset, uint16_t flash_type_64_value,
-							uint16_t flash_type_128_value, int16_t flash_write_offset, int32_t flash_sector_offset, int32_t flash_chip_offset, bool is_GBP)
+GBHawk_EXPORT void GB_load(GBCore* p, uint8_t* rom, uint32_t size, uint32_t mapper)
 {
-	p->Load_ROM(rom, size, mapper, datetime, rtc_functional, EEPROM_offset, flash_type_64_value, flash_type_128_value, flash_write_offset, flash_sector_offset, flash_chip_offset, is_GBP);
+	p->Load_ROM(rom, size, mapper);
+}
+
+// set RTC
+GBHawk_EXPORT void GB_set_rtc(GBCore* p, int32_t val, uint32_t param)
+{
+	p->Set_RTC(val, param);
 }
 
 // Create a default SRAM
@@ -118,32 +123,32 @@ GBHawk_EXPORT uint8_t GB_getsysbus(GBCore* p, uint32_t addr) {
 	return p->GetSysBus(addr);
 }
 
-GBHawk_EXPORT uint8_t GB_getvram(GBCore* p, uint32_t addr) {
-	return p->GetVRAM(addr);
+GBHawk_EXPORT uint8_t GB_getvram(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetVRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getwram(GBCore* p, uint32_t addr) {
-	return p->GetWRAM(addr);
+GBHawk_EXPORT uint8_t GB_getram(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getiwram(GBCore* p, uint32_t addr) {
-	return p->GetIWRAM(addr);
+GBHawk_EXPORT uint8_t GB_gethram(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetHRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getoam(GBCore* p, uint32_t addr) {
-	return p->GetOAM(addr);
+GBHawk_EXPORT uint8_t GB_getoam(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetOAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getpalram(GBCore* p, uint32_t addr) {
-	return p->GetPALRAM(addr);
+GBHawk_EXPORT uint8_t GB_getpalram(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetPALRAM(addr, vbl_sync);
 }
 
 GBHawk_EXPORT uint8_t GB_getregisters(GBCore* p, uint32_t addr) {
 	return p->GetRegisters(addr);
 }
 
-GBHawk_EXPORT uint8_t GB_getsram(GBCore* p, uint32_t addr) {
-	return p->GetSRAM(addr);
+GBHawk_EXPORT uint8_t GB_getsram(GBCore* p, uint32_t addr, bool vbl_sync) {
+	return p->GetSRAM(addr, vbl_sync);
 }
 
 #pragma endregion

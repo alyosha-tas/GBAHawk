@@ -16,10 +16,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			var domains = new List<MemoryDomain>
 			{
 				new MemoryDomainDelegate(
-					"WRAM",
+					"RAM",
 					0x40000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawk.GB_getwram(GB_Pntr, (int)(addr & 0x7FFF), Current_sync_on_vbl),
+					(addr) => LibGBHawk.GB_getram(GB_Pntr, (int)(addr & 0x7FFF), Current_sync_on_vbl),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
@@ -61,14 +61,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 					"Registers",
 					0x400,
 					MemoryDomain.Endian.Little,
-					addr => LibGBHawk.GB_getregisters(GB_Pntr, (int)(addr & 0x3FF), Current_sync_on_vbl),
+					addr => LibGBHawk.GB_getregisters(GB_Pntr, (int)(addr & 0x3FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawk.GB_getsysbus(GB_Pntr, (int)(addr & 0xFFFF), Settings.VBL_sync),
+					(addr) => LibGBHawk.GB_getsysbus(GB_Pntr, (int)(addr & 0xFFFF)),
 					(addr, value) => { },
 					1)
 			};

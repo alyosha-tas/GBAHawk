@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_Sachen2 : Mappers
+	class Mapper_Sachen2 : public Mappers
 	{
 	public:
 		// Sachen Bootleg Mapper

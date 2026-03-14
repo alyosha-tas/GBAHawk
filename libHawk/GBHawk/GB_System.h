@@ -154,8 +154,10 @@ namespace GBHawk
 		uint8_t OAM_vbls[0xA0] = { };
 
 		// not stated, controlled on system load
-		uint8_t BIOS[0x4000] = { };
-		uint8_t ROM[0x6000000] = { };
+		uint8_t BIOS[0x900] = { };
+		uint8_t ROM[0x2000000] = { };
+
+		uint32_t ROM_Length;
 
 		bool is_linked_system = false;
 		bool Is_GBC = false;

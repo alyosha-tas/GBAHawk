@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_MBC3 : Mappers
+	class Mapper_MBC3 : public Mappers
 	{
 	public:
 		bool RAM_enable;
@@ -24,7 +24,7 @@ namespace GBHawk
 		uint32_t RAM_mask;
 		uint32_t RTC_timer;
 		uint32_t RTC_low_clock;
-		uint32_t RTC_offset;
+		int32_t RTC_offset;
 
 		uint8_t RTC_regs[5] = { };
 		uint8_t RTC_regs_latch[5] = { };
@@ -207,7 +207,7 @@ namespace GBHawk
 			WriteMemory(addr, value);
 		}
 
-		void RTC_Get(uint32_t value, uint32_t index)
+		void RTC_Set(int32_t value, uint32_t index)
 		{
 			if (index < 5)
 			{
@@ -318,7 +318,7 @@ namespace GBHawk
 			loader = int_loader(&RAM_mask, loader);
 			loader = int_loader(&RTC_timer, loader);
 			loader = int_loader(&RTC_low_clock, loader);
-			loader = int_loader(&RTC_offset, loader);
+			loader = sint_loader(&RTC_offset, loader);
 
 			loader = byte_array_loader(RTC_regs, loader, 5);
 			loader = byte_array_loader(RTC_regs_latch, loader, 5);

@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_WisdomTree : Mappers
+	class Mapper_WisdomTree : public Mappers
 	{
 	public:
 		uint32_t ROM_bank;

@@ -2100,7 +2100,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		}
 
 
-		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out bool has_bat, out int RAM_Size)
+		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out uint mppr_num, out bool has_bat, out int RAM_Size)
 		{
 			has_bat = false;
 			RAM_Size = 0;
@@ -2108,39 +2108,39 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			// setup up mapper based on header entry
 			switch (header[0x47])
 			{
-				case 0x0: mppr = "NROM"; break;
-				case 0x1: mppr = "MBC1"; break;
-				case 0x2: mppr = "MBC1"; break;
-				case 0x3: mppr = "MBC1"; has_bat = true; break;
-				case 0x5: mppr = "MBC2"; break;
-				case 0x6: mppr = "MBC2"; has_bat = true; break;
-				case 0x8: mppr = "NROM"; break;
-				case 0x9: mppr = "NROM"; has_bat = true; break;
-				case 0xB: mppr = "MMM01"; break;
-				case 0xC: mppr = "MMM01"; break;
-				case 0xD: mppr = "MMM01"; has_bat = true; break;
-				case 0xF: mppr = "MBC3"; has_bat = true; break;
-				case 0x10: mppr = "MBC3"; has_bat = true; break;
-				case 0x11: mppr = "MBC3"; break;
-				case 0x12: mppr = "MBC3"; break;
-				case 0x13: mppr = "MBC3"; has_bat = true; break;
-				case 0x19: mppr = "MBC5"; break;
-				case 0x1A: mppr = "MBC5"; has_bat = true; break;
-				case 0x1B: mppr = "MBC5"; break;
-				case 0x1C: mppr = "MBC5"; break;
-				case 0x1D: mppr = "MBC5"; break;
-				case 0x1E: mppr = "MBC5"; has_bat = true; break;
-				case 0x20: mppr = "MBC6"; break;
-				case 0x22: mppr = "MBC7"; has_bat = true; break;
-				case 0xFC: mppr = "CAM"; has_bat = true; break;
-				case 0xFD: mppr = "TAMA5"; has_bat = true; break;
-				case 0xFE: mppr = "HuC3"; has_bat = true; break;
-				case 0xFF: mppr = "HuC1"; break;
+				case 0x0: mppr = "NROM"; mppr_num = 0; break;
+				case 0x1: mppr = "MBC1"; mppr_num = 1; break;
+				case 0x2: mppr = "MBC1"; mppr_num = 1; break;
+				case 0x3: mppr = "MBC1"; mppr_num = 1; has_bat = true; break;
+				case 0x5: mppr = "MBC2"; mppr_num = 2; break;
+				case 0x6: mppr = "MBC2"; mppr_num = 2; has_bat = true; break;
+				case 0x8: mppr = "NROM"; mppr_num = 0; break;
+				case 0x9: mppr = "NROM"; mppr_num = 0; has_bat = true; break;
+				case 0xB: mppr = "MMM01"; mppr_num = 16; break;
+				case 0xC: mppr = "MMM01"; mppr_num = 16; break;
+				case 0xD: mppr = "MMM01"; mppr_num = 16; has_bat = true; break;
+				case 0xF: mppr = "MBC3"; mppr_num = 3; has_bat = true; break;
+				case 0x10: mppr = "MBC3"; mppr_num = 3; has_bat = true; break;
+				case 0x11: mppr = "MBC3"; mppr_num = 3; break;
+				case 0x12: mppr = "MBC3"; mppr_num = 3; break;
+				case 0x13: mppr = "MBC3"; mppr_num = 3; has_bat = true; break;
+				case 0x19: mppr = "MBC5"; mppr_num = 5; break;
+				case 0x1A: mppr = "MBC5"; mppr_num = 5; has_bat = true; break;
+				case 0x1B: mppr = "MBC5"; mppr_num = 5; break;
+				case 0x1C: mppr = "MBC5"; mppr_num = 5; break;
+				case 0x1D: mppr = "MBC5"; mppr_num = 5; break;
+				case 0x1E: mppr = "MBC5"; mppr_num = 5; has_bat = true; break;
+				case 0x20: mppr = "MBC6"; mppr_num = 6; break;
+				case 0x22: mppr = "MBC7"; mppr_num = 7; has_bat = true; break;
+				case 0xFC: mppr = "CAM"; mppr_num = 8; has_bat = true; break;
+				case 0xFD: mppr = "TAMA5"; mppr_num = 9; has_bat = true; break;
+				case 0xFE: mppr = "HuC3"; mppr_num = 10; has_bat = true; break;
+				case 0xFF: mppr = "HuC1"; mppr_num = 11; break;
 
 				// Bootleg mappers
 				// NOTE: Sachen mapper selection does not account for scrambling, so if another bootleg mapper
 				// identifies itself as 0x31, this will need to be modified
-				case 0x31: mppr = "Schn2"; break;
+				case 0x31: mppr = "Schn2"; mppr_num = 13; break;
 
 				case 0x4:
 				case 0x7:
@@ -2164,6 +2164,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 				|| romHashSHA1 is RomChecksums.BombermanCollection or RomChecksums.MortalKombatIAndIIUSAEU or RomChecksums.BombermanSelectionKORNotInGameDB)
 			{
 				Console.WriteLine("Using Multi-Cart Mapper");
+				mppr = "MBC1_Multi";
+				mppr_num = 4;
+				has_bat = false;
 			}
 
 			// 2 games use the MMM01 mapper, the header is at the end of the file so won't be picked up automatically
@@ -2171,6 +2174,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			{
 				Console.WriteLine("Using MMM01 Mapper");
 				mppr = "MMM01";
+				mppr_num = 16;
 				has_bat = false;
 			}
 
@@ -2178,6 +2182,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			else if (romHashSHA1 is RomChecksums.WisdomTreeJoshua or RomChecksums.WisdomTreeSpiritualWarfare or RomChecksums.WisdomTreeExodus or RomChecksums.WisdomTreeKJVBible or RomChecksums.WisdomTreeNIVBible)
 			{
 				Console.WriteLine("Using Wisdom Tree Mapper");
+				mppr_num = 14;
 				mppr = "Wtree";
 			}
 
@@ -2185,11 +2190,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			else if (romHashMD5 == RomChecksums.PirateRockMan8)
 			{
 				Console.WriteLine("Using RockMan 8 (Unlicensed) Mapper");
+				mppr_num = 15;
 				mppr = "RM8";
 			}
 			else if (romHashMD5 == RomChecksums.PirateSachen1)
 			{
 				Console.WriteLine("Using Sachen 1 (Unlicensed) Mapper");
+				mppr_num = 12;
 				mppr = "Schn1";
 			}
 
@@ -2228,7 +2235,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			{
 				RAM_Size = 0;
 				has_bat = false;
-				Use_MT = true;
 			}
 
 			// mbc2 carts have built in RAM

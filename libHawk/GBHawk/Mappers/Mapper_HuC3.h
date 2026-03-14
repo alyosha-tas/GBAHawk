@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_HuC3 : Mappers
+	class Mapper_HuC3 : public Mappers
 	{
 	public:
 		
@@ -216,7 +216,7 @@ namespace GBHawk
 			}
 		}
 
-		void RTC_Get(uint32_t value, uint32_t index)
+		void RTC_Set(int32_t value, uint32_t index)
 		{
 			time |= (uint32_t)((value & 0xFF) << index);
 		}

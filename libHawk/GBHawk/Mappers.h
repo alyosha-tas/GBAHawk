@@ -15,25 +15,15 @@ namespace GBHawk
 	public:
 	#pragma region mapper base
  
-		uint64_t* Core_Cycle_Count = nullptr;
+		uint16_t* Core_Acc_X_State = nullptr;
 
-		uint64_t* Core_Clock_Update_Cycle = nullptr;
-
-		uint8_t* Core_Acc_X_State = nullptr;
-
-		uint8_t* Core_Acc_Y_State = nullptr;
-
-		uint8_t* Core_Solar = nullptr;
+		uint16_t* Core_Acc_Y_State = nullptr;
 
 		uint16_t* Core_Addr_Access = nullptr;
-
-		uint8_t* Cart_RAM = nullptr;
 
 		uint8_t* Core_ROM = nullptr;
 
 		uint32_t* Core_ROM_Length = nullptr;
-
-		string* Core_Message_String = nullptr;
 
 		uint8_t* Core_Bus_Value = nullptr;
 
@@ -44,6 +34,8 @@ namespace GBHawk
 		uint64_t* Core_Cycle_Count = nullptr;
 
 		uint64_t* Core_Bus_Access_Time = nullptr;
+
+		string* Core_Message_String = nullptr;
 
 		void (*RumbleCallback)(bool);
 
@@ -82,6 +74,8 @@ namespace GBHawk
 		virtual void WriteMemory(uint16_t addr, uint8_t value) { }
 
 		virtual void PokeMemory(uint16_t addr, uint8_t value) { }
+
+		virtual void Set_RTC(int32_t val, uint32_t param);
 
 		virtual void Dispose() { }
 
@@ -173,6 +167,14 @@ namespace GBHawk
 		{
 			to_load[0] = *loader; loader++; to_load[0] |= (uint32_t)(*loader << 8); loader++;
 			to_load[0] |= (uint32_t)(*loader << 16); loader++; to_load[0] |= (uint32_t)(*loader << 24); loader++;
+
+			return loader;
+		}
+
+		uint8_t* sint_loader(int32_t* to_load, uint8_t* loader)
+		{
+			to_load[0] = *loader; loader++; to_load[0] |= ((int32_t)(*loader) << 8); loader++;
+			to_load[0] |= ((int32_t)(*loader) << 16); loader++; to_load[0] |= ((int32_t)(*loader) << 24); loader++;
 
 			return loader;
 		}

@@ -26,9 +26,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="bios">the BIOS data, can be disposed of once this function returns</param>
 		/// <param name="gbcflag">whether or not console is gbc</param>
+		/// <param name="gbc_gba_flag">whether or not console is gba</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GB_load_bios(IntPtr core, byte[] bios, bool gbcflag);
+		public static extern int GB_load_bios(IntPtr core, byte[] bios, bool gbcflag, bool gbc_gba_flag);
 
 		/// <summary>
 		/// Load ROM image.
@@ -36,9 +37,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="romdata">the rom data, can be disposed of once this function returns</param>
 		/// <param name="length">length of romdata in bytes</param>
+		/// <param name="mapper_number">mapper id</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GB_load(IntPtr core, byte[] romdata, uint length);
+		public static extern int GB_load(IntPtr core, byte[] romdata, uint length, uint mapper_number);
 
 		/// <summary>
 		/// Set cart RTC.
@@ -74,7 +76,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// Set GB palette
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
-		/// <param name="palette"> true for BW, false for Gr/param>
+		/// <param name="palette"> true for BW, false for Gr</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GB_load_Palette(IntPtr core, bool palette);
@@ -83,7 +85,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// when to sync memory domains
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
-		/// <param name="on_VBL"> true for vbl, false for frame boundary/param>
+		/// <param name="on_VBL"> true for vbl, false for frame boundary</param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GB_Sync_Domain_VBL(IntPtr core, bool on_VBL);
@@ -203,27 +205,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">system bus address</param>
-		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getregisters(IntPtr core, int addr, bool onvbl);
+		public static extern byte GB_getregisters(IntPtr core, int addr);
 
 		/// <summary>
 		/// Read the system bus
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">system bus address</param>
-		/// <param name = "onvbl" > get new values only on vbl</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getsysbus(IntPtr core, int addr, bool onvbl);
-
-		/// <summary>
-		/// Read the WRAM
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">vram address</param>
-		/// <param name = "onvbl" > get new values only on vbl</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_getwram(IntPtr core, int addr, bool onvbl);
+		public static extern byte GB_getsysbus(IntPtr core, int addr);
 
 		/// <summary>
 		/// Read the HRAM
@@ -244,7 +235,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern byte GB_getvram(IntPtr core, int addr, bool onvbl);
 
 		/// <summary>
-		/// Read the WRAM
+		/// Read the RAM
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="addr">ram address</param>

@@ -76,15 +76,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			}
 
 			string mppr;
+			uint mppr_num;
 
-			GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out has_bat, out Cart_RAM_Size);
+			GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out mppr_num, out has_bat, out Cart_RAM_Size);
 
 			if (Cart_RAM_Size != 0)
 			{
 				cart_RAM = new byte[Cart_RAM_Size];
 				cart_RAM_vbls = new byte[Cart_RAM_Size];
 
-				Console.Write("RAM: "); Console.WriteLine(Cart_RAM_Size);
+				Console.Write("SRAM: "); Console.WriteLine(Cart_RAM_Size);
 			}
 
 			_controllerDeck = new(mppr is "MBC7"
@@ -127,12 +128,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				minutes_upper = (minutes >> 8) & 0xF;
 			}
 
-			GB_Pntr = LibGBHawk.GB_create();
-
-			GB_message = GetMessageGB;
-
-			LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
-
 			if (Is_GBC)
 			{
 				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
@@ -143,7 +138,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			}
 
 			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-			if (SyncSettings.GBACGB)
+			if (SyncSettings.GBACGB && Is_GBC)
 			{
 				for (int i = 0; i < 13; i++)
 				{
@@ -151,9 +146,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				}
 			}
 
-			LibGBHawk.GB_load_bios(GB_Pntr, BIOS, Is_GBC);
+			GB_Pntr = LibGBHawk.GB_create();
 
-			LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length);
+			GB_message = GetMessageGB;
+
+			LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
+
+			LibGBHawk.GB_load_bios(GB_Pntr, BIOS, Is_GBC, SyncSettings.GBACGB);
+
+			LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length, mppr_num);
 
 			if (mppr == "MBC3")
 			{

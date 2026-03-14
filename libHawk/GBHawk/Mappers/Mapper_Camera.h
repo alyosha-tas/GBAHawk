@@ -11,7 +11,7 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mapper_Camera : Mappers
+	class Mapper_Camera : public Mappers
 	{
 	public:
 		bool RAM_enable;
