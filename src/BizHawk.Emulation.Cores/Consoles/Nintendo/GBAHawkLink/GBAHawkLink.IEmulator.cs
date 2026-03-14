@@ -2,7 +2,6 @@
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System;
 using System.Text;
-using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {

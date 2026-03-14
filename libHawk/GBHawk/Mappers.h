@@ -1,6 +1,8 @@
 #ifndef MAPPERS_H
 #define MAPPERS_H
 
+#pragma once
+
 #include <iostream>
 #include <cstdint>
 #include <iomanip>
@@ -75,15 +77,13 @@ namespace GBHawk
 
 		virtual void PokeMemory(uint16_t addr, uint8_t value) { }
 
-		virtual void Set_RTC(int32_t val, uint32_t param);
+		virtual void Set_RTC(int32_t val, uint32_t param) { }
 
 		virtual void Dispose() { }
 
 		virtual void Reset() { }
 
 		virtual void Mapper_Tick() { }
-
-		virtual void RTC_Get(uint32_t value, uint32_t index) {}
 
 	#pragma endregion
 

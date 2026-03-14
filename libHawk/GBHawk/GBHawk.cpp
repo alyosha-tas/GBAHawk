@@ -1,3 +1,4 @@
+#pragma once
 // GBHawk.cpp : Defines the exported functions for the DLL.
 
 #include "GBHawk.h"
@@ -215,7 +216,7 @@ GBHawk_EXPORT uint8_t* GB_get_ppu_pntrs(GBCore* p, int sel)
 }
 
 // set scanline callback
-GBHawk_EXPORT void GB_setscanlinecallback(GBCore* p, void (*callback)(void), int sl) {
+GBHawk_EXPORT void GB_setscanlinecallback(GBCore* p, void (*callback)(uint8_t), int sl) {
 	p->SetScanlineCallback(callback, sl);
 }
 
@@ -247,20 +248,9 @@ GBHawk_EXPORT void GBLink_load_bios(GBLinkCore* p, uint8_t* bios)
 
 // load a rom into the core
 GBHawk_EXPORT void GBLink_load(GBLinkCore* p, uint8_t* rom_0, uint32_t size_0, uint32_t mapper_0,
-												 uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1,
-												 uint64_t datetime_0, bool rtc_functional_0,
-												 uint64_t datetime_1, bool rtc_functional_1,
-												 int16_t EEPROM_offset_0, int16_t EEPROM_offset_1,
-												 uint16_t flash_type_64_value_0, uint16_t flash_type_64_value_1,
-												 uint16_t flash_type_128_value_0, uint16_t flash_type_128_value_1,
-												 int16_t flash_write_offset_0, int16_t flash_write_offset_1,
-												 int32_t flash_sector_offset_0, int32_t flash_sector_offset_1,
-												 int32_t flash_chip_offset_0, int32_t flash_chip_offset_1,
-												 bool is_GBP_0, bool is_GBP_1)
+												 uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1)
 {
-	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1,
-				EEPROM_offset_0, EEPROM_offset_1, flash_type_64_value_0, flash_type_64_value_1, flash_type_128_value_0, flash_type_128_value_1,
-			    flash_write_offset_0, flash_write_offset_1, flash_sector_offset_0, flash_sector_offset_1, flash_chip_offset_0, flash_chip_offset_1, is_GBP_0, is_GBP_1);
+	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1);
 }
 
 // Create a default SRAM
@@ -281,18 +271,12 @@ GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p)
 	p->Hard_Reset();
 }
 
-// enable GBP
-GBHawk_EXPORT void GBLink_Set_GBP_Enable(GBLinkCore* p, uint32_t num)
-{
-	p->Set_GBP_Enable(num);
-}
-
 // advance a frame
-GBHawk_EXPORT bool GBLink_frame_advance(GBLinkCore* p, uint16_t ctrl_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool sound_0,
-														  uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool sound_1,
+GBHawk_EXPORT bool GBLink_frame_advance(GBLinkCore* p, uint16_t ctrl_0, uint16_t accx_0, uint16_t accy_0,  bool render_0, bool sound_0,
+														  uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, bool render_1, bool sound_1,
 														  bool l_reset, bool r_reset)
 {
-	return p->FrameAdvance(ctrl_0, accx_0, accy_0, solar_0, render_0, sound_0, ctrl_1, accx_1, accy_1, solar_1, render_1, sound_1, l_reset, r_reset);
+	return p->FrameAdvance(ctrl_0, accx_0, accy_0, render_0, sound_0, ctrl_1, accx_1, accy_1, render_1, sound_1, l_reset, r_reset);
 }
 
 // send video data to external video provider
@@ -338,12 +322,12 @@ GBHawk_EXPORT uint8_t GBLink_getvram(GBLinkCore* p, uint32_t addr, uint32_t num)
 	return p->GetVRAM(addr, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getwram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetWRAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_getram(GBLinkCore* p, uint32_t addr, uint32_t num) {
+	return p->GetRAM(addr, num);
 }
 
 GBHawk_EXPORT uint8_t GBLink_getiwram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetIWRAM(addr, num);
+	return p->GetHRAM(addr, num);
 }
 
 GBHawk_EXPORT uint8_t GBLink_getoam(GBLinkCore* p, uint32_t addr, uint32_t num) {

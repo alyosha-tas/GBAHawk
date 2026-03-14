@@ -311,7 +311,7 @@ namespace GBHawk
 							{
 								if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 								{
-									if (!Core_HDMA_Transfer) { Core_HDMA_Start_Stop(true); }
+									if (!Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
 									VRAM_access_read_HDMA = false;
 									VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 									VRAM_access_write_HDMA = false;
@@ -333,12 +333,12 @@ namespace GBHawk
 							{
 								if (HDMA_VRAM_access_glitch > 0)
 								{
-									HDMA_byte = Core_ReadMemory(Core_RegPC());
+									HDMA_byte = (sys_pntr->*Core_ReadMemory)((sys_pntr->*Core_RegPC)());
 									HDMA_VRAM_access_glitch--;
 								}
 								else
 								{
-									HDMA_byte = Core_ReadMemory(cur_DMA_src);
+									HDMA_byte = (sys_pntr->*Core_ReadMemory)(cur_DMA_src);
 								}
 							}
 							else
@@ -391,7 +391,7 @@ namespace GBHawk
 								{
 									if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 									{
-										if (!Core_HDMA_Transfer) { Core_HDMA_Start_Stop(true); }
+										if (!Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
 										VRAM_access_read_HDMA = false;
 										VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 										VRAM_access_write_HDMA = false;
@@ -415,12 +415,12 @@ namespace GBHawk
 								{
 									if (HDMA_VRAM_access_glitch > 0)
 									{
-										HDMA_byte = Core_ReadMemory(Core_RegPC());
+										HDMA_byte = (sys_pntr->*Core_ReadMemory)((sys_pntr->*Core_RegPC)());
 										HDMA_VRAM_access_glitch--;
 									}
 									else
 									{
-										HDMA_byte = Core_ReadMemory(cur_DMA_src);
+										HDMA_byte = (sys_pntr->*Core_ReadMemory)(cur_DMA_src);
 									}
 								}
 								else
@@ -458,7 +458,7 @@ namespace GBHawk
 						}
 						else
 						{
-							if (*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(false); }
+							if (*Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(false); }
 							VRAM_access_read_HDMA = true;
 							VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 							VRAM_access_write_HDMA = true;
@@ -469,7 +469,7 @@ namespace GBHawk
 				else
 				{
 					HDMA_active = false;
-					if (*Core_HDMA_Transfer) { Core_HDMA_Start_Stop(false); }
+					if (*Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(false); }
 					VRAM_access_read_HDMA = true;
 					VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 					VRAM_access_write_HDMA = true;
@@ -486,7 +486,7 @@ namespace GBHawk
 					// scanline callback
 					if ((LY + LY_inc) == ScanlineCallbackLine[0])
 					{
-						if (ScanlinCallback) { ScanlinCallback(LCDC); }
+						if (ScanlineCallback) { ScanlineCallback(LCDC); }
 					}
 
 					cycle = 0;
@@ -522,7 +522,7 @@ namespace GBHawk
 					if (LY == 144)
 					{
 						In_Vblank = true;
-						OnVBlank();
+						(sys_pntr->*OnVBlank)();
 					}
 				}
 
@@ -852,7 +852,7 @@ namespace GBHawk
 				fetch_sprite = false;
 				going_to_fetch = false;
 				first_fetch = true;
-				consecutive_sprite = -scroll_offset + 8;
+				consecutive_sprite = 8-scroll_offset;
 				no_sprites = false;
 				evaled_sprites = 0;
 				window_pre_render = false;
@@ -1471,7 +1471,7 @@ namespace GBHawk
 					// So transfers nominally from higher memory areas are actually still from there (i.e. FF -> DF)
 					uint8_t DMA_actual = DMA_addr;
 					if (DMA_addr > 0xDF) { DMA_actual &= 0xDF; }
-					DMA_byte = Core_ReadMemory((uint16_t)((DMA_actual << 8) + DMA_inc));
+					DMA_byte = (sys_pntr->*Core_ReadMemory)((uint16_t)((DMA_actual << 8) + DMA_inc));
 					DMA_bus_control = true;
 				}
 				else if ((DMA_clock % 4) == 3)

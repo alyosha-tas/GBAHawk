@@ -4,9 +4,9 @@ using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 {
-	public partial class SNESHawk : INESPPUViewable
+	public partial class SNESHawk //: INESPPUViewable
 	{
-		public int[] GetPalette() => Compiled_Palette;
+		//public int[] GetPalette() => Compiled_Palette;
 
 		public bool BGBaseHigh => LibSNESHawk.SNES_get_ppu_vals(SNES_Pntr, 0);
 

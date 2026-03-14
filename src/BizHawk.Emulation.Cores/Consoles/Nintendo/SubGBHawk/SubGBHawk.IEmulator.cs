@@ -1,5 +1,6 @@
-﻿using System;
 using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 {
@@ -7,58 +8,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 	{
 		public IEmulatorServiceProvider ServiceProvider { get; }
 
-		public ControllerDefinition ControllerDefinition => _GBCore.ControllerDefinition;
+		public ControllerDefinition ControllerDefinition => _gbCore.ControllerDefinition;
 
 		public bool FrameAdvance(IController controller, bool render, bool renderSound)
 		{
-			//Console.WriteLine("-----------------------FRAME-----------------------");
+			_gbCore.Controller = controller;
 
-			if (_tracer.IsEnabled())
+			//Console.WriteLine("-----------------------FRAME-----------------------");
+			if (_gbCore.Tracer.IsEnabled())
 			{
-				_GBCore.cpu.TraceCallback = s => _tracer.Put(s);
+				_gbCore.tracecb = _gbCore.MakeTrace;
 			}
 			else
 			{
-				_GBCore.cpu.TraceCallback = null;
+				_gbCore.tracecb = null;
 			}
 
+			LibGBHawk.GB_settracecallback(_gbCore.GB_Pntr, _gbCore.tracecb);
+
 			reset_frame = false;
-			if (controller.IsPressed("P1 Power"))
+
+			if (controller.IsPressed("Power"))
 			{
 				reset_frame = true;
 			}
 
-			input_frame_length = controller.AxisValue("Input Cycle");
-			input_frame_length_int = (int)Math.Floor(input_frame_length);
+			reset_cycle = controller.AxisValue("Reset Cycle");
+			reset_cycle_int = (uint)Math.Floor(reset_cycle);
 
-			if (input_frame_length_int == 0)
+			pass_a_frame = LibGBHawk.GB_subframe_advance(_gbCore.GB_Pntr, true, true, reset_frame, reset_cycle_int);
+
+			if (pass_a_frame)
 			{
-				input_frame_length_int = 70224;
+				LibGBHawk.GB_get_video(_gbCore.GB_Pntr, _gbCore._vidbuffer);
+				current_cycle = 0;
 			}
 
-			pass_a_frame = false;
-			_GBCore._islag = false;
-
-			InputCallbacks.Call();
-
-			DoFrame(controller);
-
-			bool ret = pass_a_frame;
-
-			if (pass_a_frame) 
-			{
-				// clear the screen as needed
-				if (_GBCore.ppu.clear_screen)
-				{
-					_GBCore.clear_screen_func();
-				}
-
-				// reset the frame cycle counter
-				frame_cycle = 0; 
-			}
-			current_cycle = 0;
-			
-			_isLag = _GBCore._islag;
+			_isLag = pass_a_frame;
 
 			if (_isLag)
 			{
@@ -69,51 +55,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 
 			_frame++;
 
-			return ret;
+			return pass_a_frame;
 		}
 
-		private bool stop_cur_frame;
 		private bool pass_new_input;
 		private bool pass_a_frame;
 		private bool reset_frame;
 		private int current_cycle;
-		private int frame_cycle;
-		private float input_frame_length;
-		private int input_frame_length_int;
-
-		private void DoFrame(IController controller)
-		{
-			stop_cur_frame = false;
-			_GBCore.GetControllerState(controller);
-			_GBCore.do_controller_check();
-			while (!stop_cur_frame)
-			{
-				_GBCore.do_single_step();
-
-				if (reset_frame)
-				{
-					HardReset();
-					reset_frame = false;
-					stop_cur_frame |= true;
-					pass_a_frame |= true;
-				}
-
-				current_cycle++;
-				frame_cycle++;
-				_cycleCount++;
-
-				if (frame_cycle == 70224)
-				{
-					stop_cur_frame |= true;
-					pass_a_frame |= true;
-				}
-
-				if (current_cycle == input_frame_length_int)
-				{
-					stop_cur_frame |= true;
-				}
-			}
-		}
+		private float reset_cycle;
+		private uint reset_cycle_int;
 
 		public int Frame => _frame;
 
@@ -126,6 +76,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 			_isLag = false;
 		}
 
-		public void Dispose() => _GBCore.Dispose();
+		public void Dispose() => _gbCore.Dispose();
 	}
 }

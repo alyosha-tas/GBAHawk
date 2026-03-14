@@ -162,4 +162,23 @@ namespace GBHawk
 			ppu_pntr->blank_frame = false;
 		}
 	}
+
+	void GB_System::clear_screen_func()
+	{
+		if (Is_GBC)
+		{
+			for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = frame_buffer[j] | (0x30303 << (clear_counter * 2)); }
+
+			clear_counter++;
+			if (clear_counter == 4)
+			{
+				ppu_pntr->clear_screen = false;
+			}
+		}
+		else
+		{
+			for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = (uint32_t)color_palette[0]; }
+			ppu_pntr->clear_screen = false;
+		}
+	}
 }

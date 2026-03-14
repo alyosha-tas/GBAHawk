@@ -1,67 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using BizHawk.Common;
-using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Consoles.Nintendo.Gameboy;
+﻿using BizHawk.Emulation.Common;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 {
-	[Core(CoreNames.SubGBHawk, "")]
-	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class SubGBHawk : IEmulator, IStatable, IInputPollable,
-		ISettable<GBHawkOld.GBHawkOld.GBSettings, GBHawkOld.GBHawkOld.GBSyncSettings>, ICycleTiming
+	[Core(CoreNames.SubGBHawk, "", isReleased: false)]
+	public partial class SubGBHawk : IEmulator, IStatable, IInputPollable, ICycleTiming, ISettable<GBHawk.GBHawk.GBHawkSettings, GBHawk.GBHawk.GBHawkSyncSettings>
 	{
-		[CoreConstructor(VSystemID.Raw.GB, Priority = CorePriority.SuperLow)]
-		[CoreConstructor(VSystemID.Raw.GBC, Priority = CorePriority.SuperLow)]
-		public SubGBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBHawkOld.GBHawkOld.GBSettings settings, GBHawkOld.GBHawkOld.GBSyncSettings syncSettings)
+		[CoreConstructor(VSystemID.Raw.NES)]
+		public SubGBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBHawk.GBHawk.GBHawkSettings settings, GBHawk.GBHawk.GBHawkSyncSettings syncSettings)
 		{
-			
-			var subGBSettings = (GBHawkOld.GBHawkOld.GBSettings)settings ?? new GBHawkOld.GBHawkOld.GBSettings();
-			var subGBSyncSettings = (GBHawkOld.GBHawkOld.GBSyncSettings)syncSettings ?? new GBHawkOld.GBHawkOld.GBSyncSettings();
+			var SubGBSettings = settings ?? new GBHawk.GBHawk.GBHawkSettings();
+			var SubGBSyncSettings = syncSettings ?? new GBHawk.GBHawk.GBHawkSyncSettings();
 
-			_GBCore = new GBHawkOld.GBHawkOld(comm, game, rom, subGBSettings, subGBSyncSettings, true);
+			_gbCore = new GBHawk.GBHawk(comm, game, rom, SubGBSettings, SubGBSyncSettings, true);
 
 			HardReset();
-			current_cycle = 0;
-			_cycleCount = 0;
 
-			_GBStatable = _GBCore.ServiceProvider.GetService<IStatable>();
+			_gbStatable = _gbCore.ServiceProvider.GetService<IStatable>();
 
 			var ser = new BasicServiceProvider(this);
 			ServiceProvider = ser;
 
-			ser.Register(_GBCore.ServiceProvider.GetService<IVideoProvider>());
-			ser.Register(_GBCore.ServiceProvider.GetService<ISoundProvider>());
-			ser.Register(_GBCore.ServiceProvider.GetService<ITraceable>());
-			ser.Register(_GBCore.ServiceProvider.GetService<IMemoryDomains>());
-			ser.Register(_GBCore.ServiceProvider.GetService<ISaveRam>());
-			ser.Register(_GBCore.ServiceProvider.GetService<IRegionable>());
-			ser.Register(_GBCore.ServiceProvider.GetService<IGameboyCommon>());
+			ser.Register(_gbCore.ServiceProvider.GetService<IVideoProvider>());
+			ser.Register(_gbCore.ServiceProvider.GetService<ISoundProvider>());
+			ser.Register(_gbCore.ServiceProvider.GetService<ITraceable>());
+			ser.Register(_gbCore.ServiceProvider.GetService<IDisassemblable>());
+			ser.Register(_gbCore.ServiceProvider.GetService<IMemoryDomains>());
+			ser.Register(_gbCore.ServiceProvider.GetService<IGBPPUViewable>());
+			ser.Register(_gbCore.ServiceProvider.GetService<ISaveRam>());
 
-			_tracer = new TraceBuffer(_GBCore.cpu.TraceHeader);
-			ser.Register(_tracer);
+			ser.Register(_gbCore.Tracer);
 		}
 
-		public GBHawkOld.GBHawkOld _GBCore;
+		private readonly GBHawk.GBHawk _gbCore;
 
-		// needed for movies to accurately calculate timing
-		private ulong _cycleCount;
-
-		public ulong CycleCount => _cycleCount;
-
-		public double ClockRate => 4194304;
-
-		public void HardReset() => _GBCore.HardReset();
+		public void HardReset() => _gbCore.HardReset();
 
 		private int _frame;
 
-		private readonly ITraceable _tracer;
+		public double ClockRate => 5369318.18181;
 
-		public GBHawkOld.GBHawkOld.GBSettings GetSettings() => _GBCore.GetSettings();
-		public GBHawkOld.GBHawkOld.GBSyncSettings GetSyncSettings() => _GBCore.GetSyncSettings();
-		public PutSettingsDirtyBits PutSettings(GBHawkOld.GBHawkOld.GBSettings o) => _GBCore.PutSettings(o);
-		public PutSettingsDirtyBits PutSyncSettings(GBHawkOld.GBHawkOld.GBSyncSettings o) => _GBCore.PutSyncSettings(o);
+		public ulong CycleCount => LibGBHawk.GB_subframe_cycles(_gbCore.GB_Pntr);
 
-		public ulong TotalExecutedCycles => _GBCore.cpu.TotalExecutedCycles;
+		public GBHawk.GBHawk.GBHawkSettings GetSettings() => _gbCore.GetSettings();
+		public GBHawk.GBHawk.GBHawkSyncSettings GetSyncSettings() => _gbCore.GetSyncSettings();
+		public PutSettingsDirtyBits PutSettings(GBHawk.GBHawk.GBHawkSettings o) => _gbCore.PutSettings(o);
+		public PutSettingsDirtyBits PutSyncSettings(GBHawk.GBHawk.GBHawkSyncSettings o) => _gbCore.PutSyncSettings(o);
+
+		public ulong TotalExecutedCycles => _gbCore.TotalExecutedCycles;
 	}
 }

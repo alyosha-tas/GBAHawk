@@ -44,13 +44,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"PPU Bus",
-					0x4000,
-					MemoryDomain.Endian.Little,
-					addr => LibN64Hawk.N64_get_ppu_bus(N64_Pntr, (uint)(addr & 0x3FFF)),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
 					"System Bus",
 					0x10000,
 					MemoryDomain.Endian.Little,
@@ -69,17 +62,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.N64Hawk
 					(addr, value) => { },
 					1);
 				domains.Add(CartVRom);
-			}
-			else if (vram_32)
-			{
-				var CartVRam = new MemoryDomainDelegate(
-					"CHR RAM",
-					0x8000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibN64Hawk.N64_getvram(N64_Pntr, (int)(addr & 0x7FFF)),
-					(addr, value) => { },
-					1);
-				domains.Add(CartVRam);
 			}
 			else
 			{

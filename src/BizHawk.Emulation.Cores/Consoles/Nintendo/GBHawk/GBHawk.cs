@@ -277,7 +277,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (line == -2)
 			{
-				_scanlineCallback(ppu.LCDC);
+				_scanlineCallback(0);
 			}
 		}
 
@@ -300,16 +300,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			LibGBHawk.GB_Hard_Reset(GB_Pntr);
 		}
 
-		private readonly ITraceable Tracer;
+		public readonly ITraceable Tracer;
 
-		private LibGBHawk.TraceCallback tracecb;
+		public LibGBHawk.TraceCallback tracecb;
 
 		// these will be constant values assigned during core construction
-		private int Header_Length;
-		private readonly int Disasm_Length;
-		private readonly int Reg_String_Length;
+		public int Header_Length;
+		public readonly int Disasm_Length;
+		public readonly int Reg_String_Length;
 
-		private void MakeTrace(int t)
+		public void MakeTrace(int t)
 		{
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);

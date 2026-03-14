@@ -1,6 +1,8 @@
 #ifndef GB_System_H
 #define GB_System_H
 
+#pragma once
+
 #include <iostream>
 #include <cstdint>
 #include <iomanip>
@@ -54,17 +56,17 @@ namespace GBHawk
 		uint32_t Cart_RAM_Length = 0;
 		string Message_String = "";
 
-		uint8_t* ppu_LY_pntr;
-		bool* ppu_In_VBlank;
-
 		void (*MessageCallback)(int);
+		void (*ScanlineCallback)(uint8_t);
+
+		int ScanlineCallbackLine = 0;
 
 		// external pointers and functions
-		bool* PPU_Clear_Screen = nullptr;
+		uint8_t* ppu_LY_pntr;
 		bool* PPU_Pal_Change_Blocked = nullptr;
 
-		uint8_t PPU_Read_Regs(uint16_t addr);
-		void PPU_Write_Regs(uint16_t addr, uint8_t value);
+		uint8_t (PPUs::*PPU_Read_Regs)(uint16_t addr);
+		void (PPUs::*PPU_Write_Regs)(uint16_t addr, uint8_t value);
 
 		const uint32_t color_palette_BW[4] = { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000 };
 		const uint32_t color_palette_Gr[4] = { 0xFFA4C505, 0xFF88A905, 0xFF1D551D, 0xFF052505 };
@@ -429,24 +431,7 @@ namespace GBHawk
 			}
 		}
 
-		void clear_screen_func()
-		{
-			if (Is_GBC)
-			{
-				for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = frame_buffer[j] | (0x30303 << (clear_counter * 2)); }
-
-				clear_counter++;
-				if (clear_counter == 4)
-				{
-					*PPU_Clear_Screen = false;
-				}
-			}
-			else
-			{
-				for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = (uint32_t)color_palette[0]; }
-				*PPU_Clear_Screen = false;
-			}
-		}
+		void clear_screen_func();
 
 		void Send_Video_Buffer();
 
@@ -472,6 +457,10 @@ namespace GBHawk
 		uint8_t Read_Registers(uint16_t addr)
 		{
 			uint8_t ret = 0;
+			uint8_t ret1 = 0;
+			uint8_t ret2 = 0;
+			uint8_t retN = 0;
+			uint8_t retW = 0;
 
 			switch (addr)
 			{
@@ -559,7 +548,7 @@ namespace GBHawk
 				case 0xFF49:
 				case 0xFF4A:
 				case 0xFF4B:
-					ret = PPU_Read_Regs(addr);
+					ret = (ppu_pntr->*PPU_Read_Regs)(addr);
 					break;
 
 					// Speed Control for GBC
@@ -598,7 +587,7 @@ namespace GBHawk
 				case 0xFF55:
 					if (GBC_Compat)
 					{
-						ret = PPU_Read_Regs(addr);
+						ret = (ppu_pntr->*PPU_Read_Regs)(addr);
 					}
 					else
 					{
@@ -631,7 +620,7 @@ namespace GBHawk
 				case 0xFF6B:
 					if (Is_GBC)
 					{
-						ret = PPU_Read_Regs(addr);
+						ret = (ppu_pntr->*PPU_Read_Regs)(addr);
 					}
 					else
 					{
@@ -674,20 +663,20 @@ namespace GBHawk
 					break;
 
 				case 0xFF76:
-					uint8_t ret1 = snd_SQ1_output >= snd_DAC_OFST
+					ret1 = snd_SQ1_output >= snd_DAC_OFST
 						? (uint8_t)(snd_SQ1_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					uint8_t ret2 = snd_SQ2_output >= snd_DAC_OFST
+					ret2 = snd_SQ2_output >= snd_DAC_OFST
 						? (uint8_t)(snd_SQ2_output - snd_DAC_OFST)
 						: (uint8_t)0;
 					ret = (uint8_t)(ret1 | (ret2 << 4));
 					break;
 
 				case 0xFF77:
-					uint8_t retN = snd_NOISE_output >= snd_DAC_OFST
+					retN = snd_NOISE_output >= snd_DAC_OFST
 						? (uint8_t)(snd_NOISE_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					uint8_t retW = snd_WAVE_output >= snd_DAC_OFST
+					retW = snd_WAVE_output >= snd_DAC_OFST
 						? (uint8_t)(snd_WAVE_output - snd_DAC_OFST)
 						: (uint8_t)0;
 					ret = (uint8_t)(retN | (retW << 4));
@@ -708,6 +697,8 @@ namespace GBHawk
 
 		void Write_Registers(uint16_t addr, uint8_t value)
 		{
+			uint8_t contr_prev = 0;
+			
 			switch (addr)
 			{
 				// select input
@@ -716,7 +707,7 @@ namespace GBHawk
 					input_register |= (uint8_t)(value & 0x30); // top 2 bits always 1
 
 					// check for high to low transitions that trigger IRQs
-					uint8_t contr_prev = input_register;
+					contr_prev = input_register;
 
 					input_register &= 0xF0;
 					if ((input_register & 0x30) == 0x20)
@@ -839,7 +830,7 @@ namespace GBHawk
 				case 0xFF49:
 				case 0xFF4A:
 				case 0xFF4B:
-					PPU_Write_Regs(addr, value);
+					(ppu_pntr->*PPU_Write_Regs)(addr, value);
 					break;
 
 					// GBC compatibility register (I think)
@@ -887,7 +878,7 @@ namespace GBHawk
 				case 0xFF55:
 					if (GBC_Compat)
 					{
-						PPU_Write_Regs(addr, value);
+						(ppu_pntr->*PPU_Write_Regs)(addr, value);
 					}
 					break;
 
@@ -911,7 +902,7 @@ namespace GBHawk
 				case 0xFF6B:
 					if (Is_GBC)
 					{
-						PPU_Write_Regs(addr, value);
+						(ppu_pntr->*PPU_Write_Regs)(addr, value);
 					}
 					break;
 
@@ -1081,6 +1072,7 @@ namespace GBHawk
 		uint16_t cpu_ans, cpu_ans_l, cpu_ans_h, cpu_temp;
 		uint8_t cpu_a_d;
 		bool cpu_imm;
+
 		#pragma endregion
 
 		#pragma region Constant Declarations
@@ -2280,7 +2272,7 @@ namespace GBHawk
 
 		inline void cpu_Halt_Ex(uint8_t param);
 
-		inline void cpu_Execute_One();
+		void cpu_Execute_One();
 
 		inline void cpu_STOP_Ex();
 
@@ -2772,7 +2764,6 @@ namespace GBHawk
 
 		uint32_t op_size = 0;
 
-
 		void (*TraceCallback)(int);
 		void (*RumbleCallback)(bool);
 
@@ -2924,7 +2915,7 @@ namespace GBHawk
 		{
 			uint16_t diff = pc;
 
-			uint8_t op = Peek_Memory(pc++);
+			uint16_t op = Peek_Memory(pc++);
 
 			if (op == 0xCB)
 			{
@@ -5009,8 +5000,6 @@ namespace GBHawk
 				snd_SQ1_length = snd_SQ2_length = snd_WAVE_length = snd_NOISE_length = 0;
 				snd_SQ1_len_cntr = snd_SQ2_len_cntr = snd_WAVE_len_cntr = snd_NOISE_len_cntr = 0;
 			}
-
-			snd_Update_NR52();
 		}
 
 		void snd_Reset()
@@ -5030,9 +5019,13 @@ namespace GBHawk
 				}			
 			}
 
-			for (int i = 0; i < 0x16; i++)
+			for (int i = 0; i < 21; i++)
 			{
 				snd_Audio_Regs[i] = 0;
+			}
+
+			for (int i = 0; i < 0x16; i++)
+			{
 				snd_WriteReg(0xFF10 + i, 0);
 			}
 
@@ -5068,18 +5061,6 @@ namespace GBHawk
 			snd_BIAS_Offset = 0;
 
 			snd_Sample_Rate = 0x1FF;
-
-			snd_Update_NR52();
-		}
-
-		void snd_Update_NR52()
-		{
-			snd_Audio_Regs[0x24] = (uint8_t)(
-				((snd_CTRL_power ? 1 : 0) << 7) |
-				(snd_SQ1_enable ? 1 : 0) |
-				((snd_SQ2_enable ? 1 : 0) << 1) |
-				((snd_WAVE_enable ? 1 : 0) << 2) |
-				((snd_NOISE_enable ? 1 : 0) << 3));
 		}
 
 		uint8_t snd_Read_NR52()

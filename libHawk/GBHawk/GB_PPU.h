@@ -161,7 +161,7 @@ namespace GBHawk
 					// scanline callback
 					if ((LY + LY_inc) == ScanlineCallbackLine[0])
 					{
-						if (ScanlinCallback) { ScanlinCallback(LCDC); }
+						if (ScanlineCallback) { ScanlineCallback(LCDC); }
 					}
 
 					cycle = 0;
@@ -194,7 +194,7 @@ namespace GBHawk
 					if (LY == 144)
 					{
 						In_Vblank = true;
-						OnVBlank();
+						(sys_pntr->*OnVBlank)();
 					}
 				}
 
@@ -485,7 +485,7 @@ namespace GBHawk
 				fetch_sprite = false;
 				going_to_fetch = false;
 				first_fetch = true;
-				consecutive_sprite = -scroll_offset + 8;
+				consecutive_sprite = 8-scroll_offset;
 				no_sprites = false;
 				evaled_sprites = 0;
 				window_pre_render = false;
@@ -1052,7 +1052,7 @@ namespace GBHawk
 					// So transfers nominally from higher memory areas are actually still from there (i.e. FF -> DF)
 					uint8_t  DMA_actual = DMA_addr;
 					if (DMA_addr > 0xDF) { DMA_actual &= 0xDF; }
-					DMA_byte  = Core_ReadMemory((uint16_t)((DMA_actual << 8) + DMA_inc));
+					DMA_byte  = (sys_pntr->*Core_ReadMemory)((uint16_t)((DMA_actual << 8) + DMA_inc));
 					DMA_bus_control = true;
 				}
 				else if ((DMA_clock % 4) == 3)

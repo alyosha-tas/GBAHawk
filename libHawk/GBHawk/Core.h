@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#pragma once
+
 #include <iostream>
 #include <cstdint>
 #include <iomanip>
@@ -31,9 +33,9 @@
 #include "Mappers/Mapper_TAMA5.h"
 #include "Mappers/Mapper_WisdomTree.h"
 
-#include "PPUs/GB_PPU.h"
-#include "PPUs/GBC_PPU.h"
-#include "PPUs/GBC_GB_PPU.h"
+#include "GB_PPU.h"
+#include "GBC_PPU.h"
+#include "GBC_GB_PPU.h"
 
 using namespace std;
 
@@ -177,8 +179,81 @@ namespace GBHawk
 			// repeat for the ppu
 			if (GB.Is_GBC)
 			{
+				if ((GB.ROM[0x43] != 0x80) && (GB.ROM[0x43] != 0xC0))
+				{
+					PPU = new GBC_GB_PPU();
+				}
+				else
+				{
+					PPU = new GBC_PPU();
+				}
+			}
+			else
+			{
 				PPU = new GB_PPU();
 			}
+
+			PPU->sys_pntr = &GB;
+
+			// set up all the pointers
+			PPU->Core_cpu_FlagI = &GB.cpu_FlagI;
+
+			PPU->Core_GBC_compat = &GB.GBC_Compat;
+
+			PPU->Core_Double_Speed = &GB.Double_Speed;
+
+			PPU->Core_CPU_Halted = &GB.cpu_Halted;
+
+			PPU->Core_CPU_Stopped = &GB.cpu_Stopped;
+
+			PPU->Core_HDMA_Transfer = &GB.HDMA_Transfer;
+
+			PPU->Core_REG_FFFF = &GB.REG_FFFF;
+
+			PPU->Core_REG_FF0F = &GB.REG_FF0F;
+
+			PPU->Core_Bus_Value = &GB.bus_value;
+
+			PPU->Core_VRAM = &GB.VRAM[0];
+
+			PPU->Core_VRAM_Bank = &GB.VRAM_Bank;
+
+			PPU->Core_OAM = &GB.OAM[0];
+
+			PPU->ScanlineCallbackLine = &GB.ScanlineCallbackLine;
+
+			PPU->Core_Clear_Counter = &GB.clear_counter;
+
+			PPU->Core_Color_Palette = &GB.color_palette[0];
+
+			PPU->Core_Video_Buffer = &GB.video_buffer[0];
+
+			PPU->Core_Cycle_Count = &GB.Cycle_Count;
+
+			PPU->Core_Instruction_Start = &GB.cpu_Instruction_Start;
+
+			PPU->Core_Message_String = &GB.Message_String;
+
+			PPU->OnVBlank = &GB_System::On_VBlank;
+
+			PPU->Core_HDMA_Start_Stop = &GB_System::HDMA_start_stop;
+
+			PPU->MessageCallback = GB.MessageCallback;
+
+			PPU->ScanlineCallback = GB.ScanlineCallback;
+
+			PPU->Core_ReadMemory = &GB_System::Read_Memory;
+
+			PPU->Core_RegPC = &GB_System::cpu_RegPCget;
+
+			PPU->Reset();
+
+			// finally link core pointers
+			GB.ppu_LY_pntr = &PPU->LY;
+			GB.PPU_Pal_Change_Blocked = &PPU->pal_change_blocked;
+
+			GB.PPU_Read_Regs = &PPUs::ReadReg;
+			GB.PPU_Write_Regs = &PPUs::WriteReg;
 		}
 
 		void Set_RTC(int32_t val, uint32_t param)
@@ -537,7 +612,7 @@ namespace GBHawk
 				case 3:
 					for (int i = 0; i < 0x60; i++)
 					{
-						GB.PPU_IO[i] = GB.ppu_Read_Reg_8(i);
+						GB.PPU_IO[i] = GB.Read_Registers(i);
 					}
 					return GB.PPU_IO; break;
 			}
@@ -545,10 +620,10 @@ namespace GBHawk
 			return nullptr;
 		}
 
-		void SetScanlineCallback(void (*callback)(void), int sl)
+		void SetScanlineCallback(void (*callback)(uint8_t), int sl)
 		{
 			GB.ScanlineCallback = callback;
-			GB.Callback_Scanline = sl;
+			GB.ScanlineCallbackLine = sl;
 		}
 
 	};

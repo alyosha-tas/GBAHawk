@@ -12,7 +12,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			{
 				for (int i = 0; i < cart_RAM.Length; i++)
 				{
-					cart_RAM[i] = LibGBHawk.GB_getsram(GB_Pntr, i);
+					cart_RAM[i] = LibGBHawk.GB_getsram(GB_Pntr, i, Current_sync_on_vbl);
 				}
 
 				return cart_RAM;

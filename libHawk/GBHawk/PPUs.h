@@ -1,5 +1,6 @@
 #ifndef PPUS_H
 #define PPUS_H
+#pragma once
 
 #include <iostream>
 #include <cstdint>
@@ -14,11 +15,15 @@ using namespace std;
 
 namespace GBHawk
 {
+	class GB_System;
+	
 	class PPUs
 	{
 	public:
 	#pragma region ppu base
 
+		GB_System* sys_pntr = nullptr;
+		
 		bool HDMA_active;
 		bool clear_screen;
 		bool rendering_complete;
@@ -268,12 +273,6 @@ namespace GBHawk
 
 		uint8_t* Core_OAM = nullptr;
 
-		uint8_t* ScanlineCallbackLine = nullptr;
-
-		uint8_t* Core_CIRAM[4] = { nullptr, nullptr, nullptr, nullptr };
-
-		uint32_t* Core_CHR_ROM_Length = nullptr;
-
 		uint32_t* Core_Clear_Counter = nullptr;
 
 		uint32_t* Core_Color_Palette = nullptr;
@@ -286,19 +285,19 @@ namespace GBHawk
 
 		string* Core_Message_String = nullptr;
 
-		void (*OnVBlank)();
+		void (GB_System::*OnVBlank)();
 
-		void (*RumbleCallback)(bool);
-
-		void (*Core_HDMA_Start_Stop)(bool);
+		void (GB_System::*Core_HDMA_Start_Stop)(bool);
 
 		void (*MessageCallback)(int);
 
-		void (*ScanlinCallback)(uint8_t);
+		void (*ScanlineCallback)(uint8_t);
 
-		uint8_t (*Core_ReadMemory)(uint16_t);
+		int* ScanlineCallbackLine = nullptr;
 
-		uint16_t(*Core_RegPC)();
+		uint8_t (GB_System::*Core_ReadMemory)(uint16_t);
+
+		uint16_t(GB_System::*Core_RegPC)();
 
 		PPUs()
 		{

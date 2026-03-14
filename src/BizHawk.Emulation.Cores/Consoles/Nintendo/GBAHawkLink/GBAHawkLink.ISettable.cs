@@ -5,8 +5,6 @@ using Newtonsoft.Json;
 
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
-using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink;
-using static BizHawk.Emulation.Cores.Nintendo.GBHawkLink.GBHawkLink.GBLinkSettings;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {

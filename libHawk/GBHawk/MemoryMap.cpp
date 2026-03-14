@@ -30,16 +30,6 @@
 
 namespace GBHawk
 {
-	uint8_t GB_System::PPU_Read_Regs(uint16_t addr)
-	{
-		return ppu_pntr->ReadReg(addr);
-	}
-
-	void GB_System::PPU_Write_Regs(uint16_t addr, uint8_t value)
-	{
-		return ppu_pntr->WriteReg(addr, value);
-	}
-
 	#pragma region Memory Map
 
 	uint8_t GB_System::Read_Memory(uint16_t addr)

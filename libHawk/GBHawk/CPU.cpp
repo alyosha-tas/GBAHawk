@@ -9,8 +9,13 @@
 
 namespace GBHawk
 {
-	inline void GB_System::cpu_Execute_One()
+	void GB_System::cpu_Execute_One()
 	{
+		bool cd_chk_retc = false;
+		bool cd_chk_jpcond = false;
+		bool cd_chk_jrcond = false;
+		bool cd_chk_call = false;
+	
 		switch (cpu_Instr_Type)
 		{
 			case OpT::INT_OP:
@@ -238,7 +243,7 @@ namespace GBHawk
 					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 4: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 5:
-						bool cd_chk_jrcond = false;
+						cd_chk_jrcond = false;
 						switch (cpu_Opcode)
 						{
 							case 0x18: cd_chk_jrcond = true; break;
@@ -351,7 +356,7 @@ namespace GBHawk
 					case 1: break;
 					case 2: break;
 					case 3:
-						bool cd_chk_retc = false;
+						cd_chk_retc = false;
 						switch (cpu_Opcode)
 						{
 							case 0xC0: cd_chk_retc = !cpu_FlagZget(); break;
@@ -431,7 +436,7 @@ namespace GBHawk
 					case 7: cpu_Regs[cpu_W] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 8: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 9:
-						bool cd_chk_jpcond = false;
+						cd_chk_jpcond = false;
 						switch (cpu_Opcode)
 						{
 							case 0xC2: cd_chk_jpcond = !cpu_FlagZget(); break;
@@ -469,7 +474,7 @@ namespace GBHawk
 					case 9: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 10: break;
 					case 11: 
-						bool cd_chk_call = false;
+						cd_chk_call = false;
 						switch (cpu_Opcode)
 						{
 							case 0xC4: cd_chk_call = !cpu_FlagZget(); break;

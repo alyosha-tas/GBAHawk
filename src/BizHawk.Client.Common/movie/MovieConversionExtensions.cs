@@ -5,7 +5,6 @@ using System.Linq;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
-BizHawk.Emulation.Cores.Nintendo.GB.Common;
 
 namespace BizHawk.Client.Common
 {
