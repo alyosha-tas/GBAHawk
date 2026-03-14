@@ -294,7 +294,7 @@ namespace GBHawk
 				}
 		}
 
-		void tick()
+		void Tick()
 		{
 			// Do HDMA ticks
 			if (HDMA_active && !*Core_CPU_Halted && !*Core_CPU_Stopped)
@@ -497,7 +497,7 @@ namespace GBHawk
 					if (LY == 0 && LY_inc == 0)
 					{
 						LY_inc = 1;
-						in_vbl = false;
+						In_Vblank = false;
 
 						//STAT &= 0xFC;
 
@@ -521,7 +521,7 @@ namespace GBHawk
 
 					if (LY == 144)
 					{
-						in_vbl = true;
+						In_Vblank = true;
 						OnVBlank();
 					}
 				}
@@ -530,7 +530,7 @@ namespace GBHawk
 				if (LCD_was_off)
 				{
 					//VBL_INT = false;
-					in_vbl = false;
+					In_Vblank = false;
 					LCD_was_off = false;
 
 					// we exit vblank into mode 0 for 4 cycles 
@@ -548,7 +548,7 @@ namespace GBHawk
 					//cycle = 8;
 				}
 
-				if (in_vbl)
+				if (In_Vblank)
 				{
 					if (cycle == 4)
 					{
@@ -785,7 +785,7 @@ namespace GBHawk
 
 				VBL_INT = LYC_INT = HBL_INT = OAM_INT = false;
 
-				in_vbl = true;
+				In_Vblank = true;
 
 				LCD_was_off = true;
 
@@ -1810,7 +1810,7 @@ namespace GBHawk
 			LYC_offset = 2;
 
 			glitch_state = false;
-			in_vbl = true;
+			In_Vblank = true;
 
 			LY_153_change = 10;
 		}

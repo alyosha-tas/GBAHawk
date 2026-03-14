@@ -51,28 +51,32 @@ GBHawk_EXPORT void GB_load_SRAM(GBCore* p, uint8_t* sram, uint32_t size)
 	p->Load_SRAM(sram, size);
 }
 
+GBHawk_EXPORT void GB_load_Palette(GBCore* p, bool palette)
+{
+	p->Set_Palette(palette);
+}
+
+GBHawk_EXPORT void GB_Sync_Domain_VBL(GBCore* p, bool on_vbl)
+{
+	p->Sync_Domain_VBL(on_vbl);
+}
+
 // reset the system
 GBHawk_EXPORT void GB_Hard_Reset(GBCore* p)
 {
 	p->Hard_Reset();
 }
 
-// enable GBP
-GBHawk_EXPORT void GB_Set_GBP_Enable(GBCore* p)
-{
-	p->Set_GBP_Enable();
-}
-
 // advance a frame
-GBHawk_EXPORT bool GB_frame_advance(GBCore* p, uint16_t ctrl1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool sound)
+GBHawk_EXPORT bool GB_frame_advance(GBCore* p, uint8_t ctrl1, uint16_t accx, uint16_t accy, bool render, bool sound)
 {
-	return p->FrameAdvance(ctrl1, accx, accy, solar, render, sound);
+	return p->FrameAdvance(ctrl1, accx, accy, render, sound);
 }
 
 // advance a frame and possibly subframe reset
-GBHawk_EXPORT bool GB_subframe_advance(GBCore* p, uint16_t ctrl1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool sound, bool do_reset, uint32_t reset_cycle)
+GBHawk_EXPORT bool GB_subframe_advance(GBCore* p, uint8_t ctrl1, uint16_t accx, uint16_t accy, bool render, bool sound, bool do_reset, uint32_t reset_cycle)
 {
-	return p->SubFrameAdvance(ctrl1, accx, accy, solar, render, sound, do_reset, reset_cycle);
+	return p->SubFrameAdvance(ctrl1, accx, accy, render, sound, do_reset, reset_cycle);
 }
 
 // send video data to external video provider

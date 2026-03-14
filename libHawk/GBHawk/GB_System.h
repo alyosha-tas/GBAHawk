@@ -50,6 +50,7 @@ namespace GBHawk
 		PPUs* ppu_pntr = nullptr;
 
 		uint8_t* Cart_RAM = nullptr;
+		uint8_t* Cart_RAM_vbls = nullptr;
 		uint32_t Cart_RAM_Length = 0;
 		string Message_String = "";
 
@@ -60,13 +61,19 @@ namespace GBHawk
 
 		// external pointers and functions
 		bool* PPU_Clear_Screen = nullptr;
+		bool* PPU_Pal_Change_Blocked = nullptr;
 
 		uint8_t PPU_Read_Regs(uint16_t addr);
 		void PPU_Write_Regs(uint16_t addr, uint8_t value);
 
+		const uint32_t color_palette_BW[4] = { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000 };
+		const uint32_t color_palette_Gr[4] = { 0xFFA4C505, 0xFF88A905, 0xFF1D551D, 0xFF052505 };
+		uint32_t color_palette[4] = { };
+
 	# pragma region General System and Prefetch
 
 		uint32_t video_buffer[160 * 144] = { };
+		uint32_t frame_buffer[160 * 144] = { };
 
 		void Frame_Advance();
 		bool SubFrame_Advance(uint32_t reset_cycle);
@@ -109,13 +116,17 @@ namespace GBHawk
 		bool Double_Speed;
 		bool speed_switch;
 		bool HDMA_Transfer; // stalls CPU when in progress
+		bool In_Vblank_old;
+		bool Sync_Domains_VBL;
 
 		uint8_t bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
 		uint8_t VRAM_Bank;
 		uint8_t IR_reg, IR_mask, IR_signal, IR_receive, IR_self;
 		uint8_t controller_state;
 		uint8_t multi_core_controller_byte;
+		uint8_t New_Controller;
 
+		uint16_t New_Acc_X, New_Acc_Y;
 		uint16_t addr_access;
 		uint16_t Acc_X_state;
 		uint16_t Acc_Y_state;
@@ -149,14 +160,10 @@ namespace GBHawk
 		bool is_linked_system = false;
 		bool Is_GBC = false;
 		bool Is_GBC_GBA = false;
+		bool Use_MT = false;
 
 		// only used by ppu viewer
 		uint8_t PPU_IO[0x60] = { };
-
-		uint16_t New_Controller;
-		uint16_t New_Acc_X, New_Acc_Y;
-
-		uint8_t New_Solar;
 
 		GB_System()
 		{
@@ -169,6 +176,7 @@ namespace GBHawk
 			DIV_falling_edge = DIV_edge_old = false;
 			speed_switch = false;
 			HDMA_Transfer = false;
+			In_Vblank_old = true;
 
 			bus_value = 0;
 			IR_reg = IR_mask = IR_signal = IR_receive = IR_self = 0;
@@ -313,7 +321,28 @@ namespace GBHawk
 			}
 		}
 
-		void do_controller_check(bool from_reg)
+		void Sync_Domains_VBL_Func()
+		{
+			for (int j = 0; j < 0x8000; j++) { RAM_vbls[j] = RAM[j]; }
+			for (int j = 0; j < 0x4000; j++) { VRAM_vbls[j] = VRAM[j]; }
+			for (int j = 0; j < 0x400; j++) { PALRAM_vbls[j] = PALRAM[j]; }
+			for (int j = 0; j < 0x80; j++) { ZP_RAM_vbls[j] = ZP_RAM[j]; }
+			for (int j = 0; j < 0xA0; j++) { OAM_vbls[j] = OAM[j]; }
+
+			if (Cart_RAM_Length != 0)
+			{
+				for (int j = 0; j < Cart_RAM_Length != 0; j++) { Cart_RAM_vbls[j] = Cart_RAM[j]; }
+			}
+		}
+
+		void Get_Controller_State()
+		{
+			controller_state = New_Controller;
+			Acc_X_state = New_Acc_X;
+			Acc_Y_state = New_Acc_Y;
+		}
+
+		void do_controller_check()
 		{
 			// check if new input changed the input register and triggered IRQ
 			uint8_t contr_prev = input_register;
@@ -400,14 +429,24 @@ namespace GBHawk
 
 		void clear_screen_func()
 		{
-			for (int j = 0; j < frame_buffer.Length; j++) { frame_buffer[j] = (int)(frame_buffer[j] | (0x30303 << (clear_counter * 2))); }
-
-			clear_counter++;
-			if (clear_counter == 4)
+			if (Is_GBC)
 			{
+				for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = frame_buffer[j] | (0x30303 << (clear_counter * 2)); }
+
+				clear_counter++;
+				if (clear_counter == 4)
+				{
+					*PPU_Clear_Screen = false;
+				}
+			}
+			else
+			{
+				for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = (uint32_t)color_palette[0]; }
 				*PPU_Clear_Screen = false;
 			}
 		}
+
+		void Send_Video_Buffer();
 
 		void SetIntRegs(uint8_t r)
 		{
@@ -834,7 +873,7 @@ namespace GBHawk
 					if (GB_bios_register == 0)
 					{
 						GB_bios_register = value;
-						if (!GBC_Compat) { ppu.pal_change_blocked = true; RAM_Bank = 1; RAM_Bank_ret = 0; }
+						if (!GBC_Compat) { *PPU_Pal_Change_Blocked = true; RAM_Bank = 1; RAM_Bank_ret = 0; }
 					}
 					break;
 
@@ -2742,27 +2781,27 @@ namespace GBHawk
 			string reg_state = "CH:";
 
 			temp_reg = cpu_Regs[0];
-			sprintf_s(val_char_1, 9, "%08X", dma_Chan_Exec);
+			sprintf_s(val_char_1, 9, "%08X", 0);
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" SR:");
 			temp_reg = cpu_Regs[1];
-			sprintf_s(val_char_1, 9, "%08X", dma_SRC_intl[dma_Chan_Exec]);
+			sprintf_s(val_char_1, 9, "%08X", 0);
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" DT:");
 			temp_reg = cpu_Regs[2];
-			sprintf_s(val_char_1, 9, "%08X", dma_DST_intl[dma_Chan_Exec]);
+			sprintf_s(val_char_1, 9, "%08X", 0);
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" CR:");
 			temp_reg = cpu_Regs[3];
-			sprintf_s(val_char_1, 9, "%08X", dma_CTRL[dma_Chan_Exec]);
+			sprintf_s(val_char_1, 9, "%08X", 0);
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" CT:");
 			temp_reg = cpu_Regs[3];
-			sprintf_s(val_char_1, 9, "%08X", dma_CNT[dma_Chan_Exec]);
+			sprintf_s(val_char_1, 9, "%08X", 0);
 			reg_state.append(val_char_1, 8);
 
 			reg_state.append(" Cy:");
@@ -3840,7 +3879,7 @@ namespace GBHawk
 			}
 		}
 
-		void tick()
+		void tim_Tick()
 		{
 			tim_IRQ_Block = false;
 
@@ -4590,7 +4629,7 @@ namespace GBHawk
 			}
 		}
 
-		void tick()
+		void snd_Tick()
 		{
 			// calculate square1's output
 			if (snd_SQ1_enable)
@@ -5407,6 +5446,8 @@ namespace GBHawk
 			saver = bool_saver(Double_Speed, saver);
 			saver = bool_saver(speed_switch, saver);
 			saver = bool_saver(HDMA_Transfer, saver);
+			saver = bool_saver(In_Vblank_old, saver);
+			saver = bool_saver(Sync_Domains_VBL, saver);
 
 			saver = byte_saver(controller_state, saver);
 			saver = byte_saver(multi_core_controller_byte, saver);
@@ -5444,14 +5485,14 @@ namespace GBHawk
 			saver = byte_array_saver(VRAM_vbls, saver, 0x4000);
 			saver = byte_array_saver(OAM_vbls, saver, 0xA0);
 
+			saver = int_array_saver(color_palette, saver, 4);
+
 			if (Cart_RAM_Length != 0)
 			{
 				saver = byte_array_saver(Cart_RAM, saver, Cart_RAM_Length);
 			}
 
 			saver = snd_SaveState(saver);
-			saver = ppu_SaveState(saver);
-			saver = dma_SaveState(saver);
 			saver = ser_SaveState(saver);
 			saver = tim_SaveState(saver);
 			saver = cpu_SaveState(saver);
@@ -5488,6 +5529,8 @@ namespace GBHawk
 			loader = bool_loader(&Double_Speed, loader);
 			loader = bool_loader(&speed_switch, loader);
 			loader = bool_loader(&HDMA_Transfer, loader);
+			loader = bool_loader(&In_Vblank_old, loader);
+			loader = bool_loader(&Sync_Domains_VBL, loader);
 
 			loader = byte_loader(&controller_state, loader);
 			loader = byte_loader(&multi_core_controller_byte, loader);
@@ -5525,14 +5568,14 @@ namespace GBHawk
 			loader = byte_array_loader(VRAM_vbls, loader, 0x4000);
 			loader = byte_array_loader(OAM_vbls, loader, 0xA0);
 
+			loader = int_array_loader(color_palette, loader, 4);
+
 			if (Cart_RAM_Length != 0)
 			{	
 				loader = byte_array_loader(Cart_RAM, loader, Cart_RAM_Length);
 			}
 
 			loader = snd_LoadState(loader);
-			loader = ppu_LoadState(loader);
-			loader = dma_LoadState(loader);
 			loader = ser_LoadState(loader);
 			loader = tim_LoadState(loader);
 			loader = cpu_LoadState(loader);

@@ -54,7 +54,7 @@ namespace GBHawk
 		bool was_pre_render;
 		bool pal_change_blocked; // in compatability mode, you can change palette values but not displayed color
 		bool glitch_state; // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
-		bool in_vbl; // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
+		bool In_Vblank; // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 		// register variables
 		uint8_t LCDC;
@@ -127,13 +127,10 @@ namespace GBHawk
 		uint8_t sprite_data[2] = { };
 		uint8_t sprite_sel[2] = { };
 
-		uint32_t color_palette[4] = { };
 		uint32_t BG_palette[32] = { };
 		uint32_t OBJ_palette[32] = { };
 		uint32_t SL_sprites[40] = { };
 		uint32_t SL_sprites_ordered[40] = { }; // (x_end, data_low, data_high, attr)
-
-
 
 		// These variables only relate to GBC PPUs
 		bool BG_bytes_inc;
@@ -226,7 +223,7 @@ namespace GBHawk
 
 		virtual void WriteReg(uint16_t addr, uint8_t value) { }
 
-		virtual void tick() { }
+		virtual void Tick() { }
 
 		// might be needed, not sure yet
 		virtual void latch_delay() { }
@@ -278,6 +275,8 @@ namespace GBHawk
 		uint32_t* Core_CHR_ROM_Length = nullptr;
 
 		uint32_t* Core_Clear_Counter = nullptr;
+
+		uint32_t* Core_Color_Palette = nullptr;
 
 		uint32_t* Core_Video_Buffer = nullptr;
 
@@ -348,7 +347,7 @@ namespace GBHawk
 			saver = bool_saver(was_pre_render, saver);
 			saver = bool_saver(pal_change_blocked, saver); // in compatability mode, you can change palette values but not displayed color
 			saver = bool_saver(glitch_state, saver); // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
-			saver = bool_saver(in_vbl, saver); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
+			saver = bool_saver(In_Vblank, saver); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 			// register variables
 			saver = byte_saver(LCDC, saver);
@@ -421,7 +420,6 @@ namespace GBHawk
 			saver = byte_array_saver(sprite_data, saver, 2);
 			saver = byte_array_saver(sprite_sel, saver, 2);
 
-			saver = int_array_saver(color_palette, saver, 4);
 			saver = int_array_saver(BG_palette, saver, 32);
 			saver = int_array_saver(OBJ_palette, saver, 32);
 			saver = int_array_saver(SL_sprites, saver, 40);
@@ -507,7 +505,7 @@ namespace GBHawk
 			loader = bool_loader(&was_pre_render, loader);
 			loader = bool_loader(&pal_change_blocked, loader); // in compatability mode, you can change palette values but not displayed color
 			loader = bool_loader(&glitch_state, loader); // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
-			loader = bool_loader(&in_vbl, loader); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
+			loader = bool_loader(&In_Vblank, loader); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 			// register variables
 			loader = byte_loader(&LCDC, loader);
@@ -580,7 +578,6 @@ namespace GBHawk
 			loader = byte_array_loader(sprite_data, loader, 2);
 			loader = byte_array_loader(sprite_sel, loader, 2);
 
-			loader = int_array_loader(color_palette, loader, 4);
 			loader = int_array_loader(BG_palette, loader, 32);
 			loader = int_array_loader(OBJ_palette, loader, 32);
 			loader = int_array_loader(SL_sprites, loader, 40);

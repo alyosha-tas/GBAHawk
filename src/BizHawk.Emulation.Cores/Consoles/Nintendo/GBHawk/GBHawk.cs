@@ -195,6 +195,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			var serviceProvider = ServiceProvider as BasicServiceProvider;
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
+
+			LibGBHawk.GB_Sync_Domain_VBL(GB_Pntr, Settings.VBL_sync);
 		}
 
 		public IntPtr GB_Pntr { get; set; } = IntPtr.Zero;

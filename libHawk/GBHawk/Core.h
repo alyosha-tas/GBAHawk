@@ -224,6 +224,29 @@ namespace GBHawk
 			std::memcpy(GB.Cart_RAM, ext_sram, ext_sram_size);
 		}
 
+		void Set_Palette(bool palette)
+		{
+			if (palette)
+			{
+				GB.color_palette[0] = GB.color_palette_BW[0];
+				GB.color_palette[1] = GB.color_palette_BW[1];
+				GB.color_palette[2] = GB.color_palette_BW[2];
+				GB.color_palette[3] = GB.color_palette_BW[3];
+			}
+			else
+			{
+				GB.color_palette[0] = GB.color_palette_Gr[0];
+				GB.color_palette[1] = GB.color_palette_Gr[1];
+				GB.color_palette[2] = GB.color_palette_Gr[2];
+				GB.color_palette[3] = GB.color_palette_Gr[3];
+			}
+		}
+
+		void Sync_Domain_VBL(bool on_vbl)
+		{
+			GB.Sync_Domains_VBL = on_vbl;
+		}
+
 		void Hard_Reset() 
 		{
 			Mapper->Reset();
@@ -232,28 +255,11 @@ namespace GBHawk
 			GB.System_Reset();
 		}
 
-		void Set_GBP_Enable()
-		{
-			GB.GBP_Mode_Enabled = true;
-		}
-
-		bool FrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool rendersound)
+		bool FrameAdvance(uint8_t controller_1, uint16_t accx, uint16_t accy, bool render, bool rendersound)
 		{
 			GB.New_Controller = controller_1;
 			GB.New_Acc_X = accx;
 			GB.New_Acc_Y = accy;
-			GB.New_Solar = solar;
-
-			// update the controller state
-			GB.controller_state_old = GB.controller_state;
-			GB.controller_state = GB.New_Controller;
-
-			// as long as not in stop mode, vblank will occur and the controller will be checked
-			if (GB.VBlank_Rise || GB.stopped)
-			{
-				// check if controller state caused interrupt
-				GB.do_controller_check(false);
-			}
 
 			GB.snd_Master_Clock = 0;
 
@@ -264,38 +270,26 @@ namespace GBHawk
 
 			GB.VBlank_Rise = false;
 
-			if (!GB.stopped)
+			GB.Frame_Advance();
+
+			// if the game is halted but controller interrupts are on, check for interrupts
+			// if the game is stopped, any button press will un-stop even if interrupts are off
+			if ((GB.cpu_Stopped && !GB.controller_was_checked) || (GB.cpu_Halted && ((GB.REG_FFFF & 0x10) == 0x10)))
 			{
-				GB.Frame_Advance();
-			}
-			else
-			{
-				if ((GB.INT_EN & GB.INT_Flags_Gather & 0x1000) == 0x1000)
-				{
-					GB.stopped = false;
-				}
+				// update the controller state on VBlank
+				GB.Get_Controller_State();
+
+				GB.do_controller_check();
 			}
 
 			return GB.Is_Lag;
 		}
 
-		bool SubFrameAdvance(uint16_t controller_1, uint16_t accx, uint16_t accy, uint8_t solar, bool render, bool rendersound, bool do_reset, uint32_t reset_cycle)
+		bool SubFrameAdvance(uint8_t controller_1, uint16_t accx, uint16_t accy,  bool render, bool rendersound, bool do_reset, uint32_t reset_cycle)
 		{
 			GB.New_Controller = controller_1;
 			GB.New_Acc_X = accx;
 			GB.New_Acc_Y = accy;
-			GB.New_Solar = solar;
-
-			// update the controller state
-			GB.controller_state_old = GB.controller_state;
-			GB.controller_state = GB.New_Controller;
-
-			// as long as not in stop mode, vblank will occur and the controller will be checked
-			if (GB.VBlank_Rise || GB.stopped)
-			{
-				// check if controller state caused interrupt
-				GB.do_controller_check(false);
-			}
 
 			GB.snd_Master_Clock = 0;
 
@@ -310,17 +304,7 @@ namespace GBHawk
 
 			if (!do_reset) { reset_cycle = -1; }
 
-			if (!GB.stopped)
-			{
-				reset_was_done = GB.SubFrame_Advance(reset_cycle);
-			}
-			else
-			{
-				if ((GB.INT_EN & GB.INT_Flags & 0x1000) == 0x1000)
-				{
-					GB.stopped = false;
-				}
-			}
+			reset_was_done = GB.SubFrame_Advance(reset_cycle);
 
 			if (reset_was_done)
 			{
@@ -332,15 +316,15 @@ namespace GBHawk
 
 		void GetVideo(uint32_t* dest) 
 		{
-			uint32_t* src = GB.video_buffer;
+			uint32_t* src = GB.frame_buffer;
 			uint32_t* dst = dest;
 
-			std::memcpy(dst, src, sizeof (uint32_t) * 240 * 160);
+			std::memcpy(dst, src, sizeof (uint32_t) * 160 * 144);
 
 			// blank the screen
-			for (int i = 0; i < 240 * 160; i++)
+			for (int i = 0; i < 160 * 144; i++)
 			{
-				GB.video_buffer[i] = 0xFFF8F8F8;
+				GB.frame_buffer[i] = 0xFFF8F8F8;
 			}
 		}
 
@@ -369,12 +353,14 @@ namespace GBHawk
 		{	
 			saver = GB.SaveState(saver);
 			saver = Mapper->SaveState(saver);
+			saver = PPU->SaveState(saver);
 		}
 
 		void LoadState(uint8_t* loader)
 		{
 			loader = GB.LoadState(loader);
 			loader = Mapper->LoadState(loader);
+			loader = PPU->LoadState(loader);
 		}
 
 		#pragma endregion

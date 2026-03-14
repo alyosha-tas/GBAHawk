@@ -38,11 +38,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		public class GBHawkSettings
 		{
+			public enum PaletteType
+			{
+				BW,
+				Gr
+			}
+
 			public enum Cycle_Return
 			{
 				CPU,
 				GBI
 			}
+
+			[DisplayName("Color Mode")]
+			[Description("Pick Between Green scale and Grey scale colors")]
+			[DefaultValue(PaletteType.BW)]
+			public PaletteType Palette { get; set; }
 
 			[DisplayName("Read Domains on VBlank")]
 			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]

@@ -71,13 +71,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern int GB_load_SRAM(IntPtr core, byte[] sram_data, uint length);
 
 		/// <summary>
-		/// Load palette, always 512 bytes.
+		/// Set GB palette
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
-		/// <param name="palette">the sram data, can be disposed of once this function returns</param>
+		/// <param name="palette"> true for BW, false for Gr/param>
 		/// <returns>0 on success, negative value on failure.</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GB_load_Palette(IntPtr core, int[] palette);
+		public static extern void GB_load_Palette(IntPtr core, bool palette);
+
+		/// <summary>
+		/// when to sync memory domains
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		/// <param name="on_VBL"> true for vbl, false for frame boundary/param>
+		/// <returns>0 on success, negative value on failure.</returns>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GB_Sync_Domain_VBL(IntPtr core, bool on_VBL);
 
 		/// <summary>
 		/// Hard Reset.

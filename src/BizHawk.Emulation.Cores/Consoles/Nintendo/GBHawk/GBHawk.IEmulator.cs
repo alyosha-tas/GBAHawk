@@ -24,11 +24,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public int cpu_state_hold;
 		public int clear_counter;
 		public ulong CycleCount;
+		public bool Current_sync_on_vbl;
 
 		public IController Controller;
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
+			//Update the color palette if a setting changed
+			if (Settings.Palette == GBHawkSettings.PaletteType.BW)
+			{
+				LibGBHawk.GB_load_Palette(GB_Pntr, true);
+			}
+			else
+			{
+				LibGBHawk.GB_load_Palette(GB_Pntr, false);
+			}
+
+			Current_sync_on_vbl = Settings.VBL_sync;
+
+			LibGBHawk.GB_Sync_Domain_VBL(GB_Pntr, Settings.VBL_sync);
+
 			Controller = controller;
 
 			// update the controller state on VBlank
@@ -176,8 +191,5 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public int BackgroundColor => unchecked((int)0xFF000000);
 		public int VsyncNumerator => 262144;
 		public int VsyncDenominator => 4389;
-
-		public static readonly uint[] color_palette_BW = { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000 };
-		public static readonly uint[] color_palette_Gr = { 0xFFA4C505, 0xFF88A905, 0xFF1D551D, 0xFF052505 };
 	}
 }

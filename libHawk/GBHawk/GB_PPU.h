@@ -150,7 +150,7 @@ namespace GBHawk
 			}
 		}
 
-		void tick()
+		void Tick()
 		{
 			// the ppu only does anything if it is turned on via bit 7 of LCDC
 			if (LCDC_Bit(7))
@@ -172,7 +172,7 @@ namespace GBHawk
 					if (LY == 0 && LY_inc == 0)
 					{
 						LY_inc = 1;
-						in_vbl = false;
+						In_Vblank = false;
 
 						STAT &= 0xFC;
 
@@ -193,7 +193,7 @@ namespace GBHawk
 
 					if (LY == 144)
 					{
-						in_vbl = true;
+						In_Vblank = true;
 						OnVBlank();
 					}
 				}
@@ -202,7 +202,7 @@ namespace GBHawk
 				if (LCD_was_off)
 				{
 					//VBL_INT = false;
-					in_vbl = false;
+					In_Vblank = false;
 					LCD_was_off = false;
 
 					// we exit vblank into mode 0 for 4 cycles
@@ -221,7 +221,7 @@ namespace GBHawk
 				// LYC=143 does block it
 
 				// the VBL stat is continuously asserted
-				if (in_vbl)
+				if (In_Vblank)
 				{
 					// glitchy check of mode 2
 					if (LY == 144)
@@ -439,7 +439,7 @@ namespace GBHawk
 
 				VBL_INT = LYC_INT = HBL_INT = OAM_INT = false;
 
-				in_vbl = true;
+				In_Vblank = true;
 
 				LCD_was_off = true;
 
@@ -923,7 +923,7 @@ namespace GBHawk
 						}
 
 						// based on sprite priority and pixel values, pick a final pixel color
-						Core_Video_Buffer[LY * 160 + pixel_counter] = color_palette[pixel];
+						Core_Video_Buffer[LY * 160 + pixel_counter] = Core_Color_Palette[pixel];
 						pixel_counter++;
 
 						if (pixel_counter == 160)
@@ -1296,7 +1296,7 @@ namespace GBHawk
 			window_y_tile_inc = 0;
 
 			glitch_state = false;
-			in_vbl = true;
+			In_Vblank = true;
 		}
 	};
 }
