@@ -228,6 +228,7 @@ namespace GBHawk
 			snd_Reset();
 			ser_Reset();
 			tim_Reset();
+			dma_Reset();
 			cpu_Reset();
 
 			uint32_t startup_color = 0xFFF8F8F8;
@@ -546,7 +547,11 @@ namespace GBHawk
 				case 0xFF43:
 				case 0xFF44:
 				case 0xFF45:
+					ret = (ppu_pntr->*PPU_Read_Regs)(addr);
+					break;
 				case 0xFF46:
+					ret = dma_Addr;
+					break;
 				case 0xFF47:
 				case 0xFF48:
 				case 0xFF49:
@@ -833,7 +838,15 @@ namespace GBHawk
 				case 0xFF43:
 				case 0xFF44:
 				case 0xFF45:
+					(ppu_pntr->*PPU_Write_Regs)(addr, value);
+					break;
 				case 0xFF46:
+					dma_Addr = value;
+					dma_Start = true;
+					if (!dma_Bus_Control) { dma_OAM_Access = true; }
+					dma_Clock = 8;
+					dma_Inc = 0;
+					break;
 				case 0xFF47:
 				case 0xFF48:
 				case 0xFF49:
@@ -4011,6 +4024,65 @@ namespace GBHawk
 
 	#pragma endregion
 
+	#pragma region DMA
+
+		bool dma_Start;
+		bool dma_Bus_Control;
+		bool dma_OAM_Access;
+		
+		uint8_t dma_Byte;
+		uint8_t dma_Addr;
+
+		uint32_t dma_Clock;
+		uint32_t dma_Inc;
+		
+		void dma_Tick();
+		
+		void dma_Reset()
+		{
+			dma_Addr = 0xFF;
+			dma_Byte = 0;
+
+			dma_OAM_Access = true;
+			dma_Bus_Control = false;
+			dma_Start = false;
+
+			dma_Clock = 0;
+			dma_Inc = 0;
+		}
+
+		uint8_t* dma_SaveState(uint8_t* saver)
+		{
+			saver = bool_saver(dma_Start, saver);
+			saver = bool_saver(dma_Bus_Control, saver);
+			saver = bool_saver(dma_OAM_Access, saver);
+
+			saver = byte_saver(dma_Byte, saver);
+			saver = byte_saver(dma_Addr, saver);
+
+			saver = int_saver(dma_Clock, saver);
+			saver = int_saver(dma_Inc, saver);
+
+			return saver;
+		}
+
+		uint8_t* dma_LoadState(uint8_t* loader)
+		{
+			loader = bool_loader(&dma_Start, loader);
+			loader = bool_loader(&dma_Bus_Control, loader);
+			loader = bool_loader(&dma_OAM_Access, loader);
+
+			loader = byte_loader(&dma_Byte, loader);
+			loader = byte_loader(&dma_Addr, loader);
+
+			loader = int_loader(&dma_Clock, loader);
+			loader = int_loader(&dma_Inc, loader);
+
+			return loader;
+		}
+
+	#pragma endregion
+
 	#pragma region Audio
 
 		bool snd_Duty_Cycles[32] = {false, false, false, false, false, false, false, true,
@@ -5492,6 +5564,7 @@ namespace GBHawk
 			saver = snd_SaveState(saver);
 			saver = ser_SaveState(saver);
 			saver = tim_SaveState(saver);
+			saver = dma_SaveState(saver);
 			saver = cpu_SaveState(saver);
 
 			return saver;
@@ -5575,6 +5648,7 @@ namespace GBHawk
 			loader = snd_LoadState(loader);
 			loader = ser_LoadState(loader);
 			loader = tim_LoadState(loader);
+			loader = dma_LoadState(loader);
 			loader = cpu_LoadState(loader);
 
 			return loader;

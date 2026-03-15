@@ -36,14 +36,14 @@ namespace GBHawk
 	{
 		addr_access = addr;
 
-		if (ppu_pntr->DMA_bus_control)
+		if (dma_Bus_Control)
 		{
 			// some of gekkio's tests require these to be accessible during DMA
 			if (addr < 0x8000)
 			{
-				if (ppu_pntr->DMA_addr < 0x80)
+				if (dma_Addr < 0x80)
 				{
-					return ppu_pntr->DMA_byte;
+					return dma_Byte;
 				}
 
 				bus_value = mapper_pntr->ReadMemoryLow(addr);
@@ -72,7 +72,7 @@ namespace GBHawk
 
 			if (addr >= 0xFE00 && addr < 0xFEA0)
 			{
-				if (ppu_pntr->DMA_OAM_access)
+				if (dma_OAM_Access)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -100,7 +100,7 @@ namespace GBHawk
 				}
 			}
 
-			return ppu_pntr->DMA_byte;
+			return dma_Byte;
 		}
 
 		if (addr < 0x8000)
@@ -252,7 +252,7 @@ namespace GBHawk
 	{
 		addr_access = addr;
 
-		if (ppu_pntr->DMA_bus_control)
+		if (dma_Bus_Control)
 		{
 			// some of gekkio's tests require this to be accessible during DMA
 			if (addr >= 0xA000 && addr < 0xC000)
@@ -273,7 +273,7 @@ namespace GBHawk
 				//RAM_read[RAM_Bank * 0x1000 + (addr - 0xF000)] = 1;
 				RAM[RAM_Bank * 0x1000 + (addr - 0xF000)] = value;
 			}
-			else if (addr >= 0xFE00 && addr < 0xFEA0 && ppu_pntr->DMA_OAM_access)
+			else if (addr >= 0xFE00 && addr < 0xFEA0 && dma_OAM_Access)
 			{
 				OAM[addr - 0xFE00] = value;
 			}
@@ -400,14 +400,14 @@ namespace GBHawk
 
 	uint8_t GB_System::Peek_Memory(uint16_t addr)
 	{
-		if (ppu_pntr->DMA_bus_control)
+		if (dma_Bus_Control)
 		{
 			// some of gekkio's tests require these to be accessible during DMA
 			if (addr < 0x8000)
 			{
-				if (ppu_pntr->DMA_addr < 0x80)
+				if (dma_Addr < 0x80)
 				{
-					return ppu_pntr->DMA_byte;
+					return dma_Byte;
 				}
 
 				return mapper_pntr->PeekMemoryLow(addr);
@@ -431,7 +431,7 @@ namespace GBHawk
 
 			if (addr >= 0xFE00 && addr < 0xFEA0)
 			{
-				if (ppu_pntr->DMA_OAM_access)
+				if (dma_OAM_Access)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -458,7 +458,7 @@ namespace GBHawk
 				}
 			}
 
-			return ppu_pntr->DMA_byte;
+			return dma_Byte;
 		}
 
 		if (addr < 0x8000)

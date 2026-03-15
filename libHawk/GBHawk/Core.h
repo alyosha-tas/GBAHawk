@@ -247,6 +247,8 @@ namespace GBHawk
 
 			PPU->MessageCallback = GB.MessageCallback;
 
+			PPU->Core_DMA_OAM_Access = &GB.dma_OAM_Access;
+
 			PPU->Core_ReadMemory = &GB_System::Read_Memory;
 
 			PPU->Core_RegPC = &GB_System::cpu_RegPCget;

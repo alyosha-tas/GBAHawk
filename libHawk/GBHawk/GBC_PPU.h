@@ -27,7 +27,7 @@ namespace GBHawk
 				case 0xFF43: ret = scroll_x;						break; // SCX
 				case 0xFF44: ret = LY_read;							break; // LY
 				case 0xFF45: ret = LYC;								break; // LYC
-				case 0xFF46: ret = DMA_addr;						break; // DMA 
+				//case 0xFF46: ret = DMA_addr;						break; // DMA  (handled in core)
 				case 0xFF47: ret = BGP;								break; // BGP
 				case 0xFF48: ret = obj_pal_0;						break; // OBP0
 				case 0xFF49: ret = obj_pal_1;						break; // OBP1
@@ -139,12 +139,7 @@ namespace GBHawk
 					LYC_t = value;
 					LYC_cd = 4;
 					break;
-				case 0xFF46: // DMA 
-					DMA_addr = value;
-					DMA_start = true;
-					if (!DMA_bus_control) { DMA_OAM_access = true; }
-					DMA_clock = 8;
-					DMA_inc = 0;
+				case 0xFF46: // DMA  (handled in core)
 					break;
 				case 0xFF47: // BGP
 					BGP = value;
@@ -1457,53 +1452,6 @@ namespace GBHawk
 			}
 		}
 
-		void DMA_tick()
-		{
-			if (DMA_clock >= 12)
-			{
-				DMA_bus_control = true;
-				DMA_OAM_access = false;
-				if ((DMA_clock % 4) == 1)
-				{
-					// the cpu can't access memory during this time, but we still need the ppu to be able to.
-					DMA_bus_control = false;
-					// Gekkio reports that A14 being high on DMA transfers always represent WRAM accesses
-					// So transfers nominally from higher memory areas are actually still from there (i.e. FF -> DF)
-					uint8_t DMA_actual = DMA_addr;
-					if (DMA_addr > 0xDF) { DMA_actual &= 0xDF; }
-					DMA_byte = (sys_pntr->*Core_ReadMemory)((uint16_t)((DMA_actual << 8) + DMA_inc));
-					DMA_bus_control = true;
-				}
-				else if ((DMA_clock % 4) == 3)
-				{
-					if (!HDMA_active)
-					{
-						Core_OAM[DMA_inc] = DMA_byte;
-					}
-					else
-					{
-						// TODO: timing is off by one, maybe HDMA is aligned with CPU cycles
-						if (((cur_DMA_dest - 1) & 0xFF) <= 0x9F)
-						{
-							Core_OAM[(cur_DMA_dest - 1) & 0xFF] = HDMA_byte;
-						}
-					}
-
-					if (DMA_inc < 0x9F) { DMA_inc++; }
-					else { DMA_clock = 0; }
-				}
-			}
-
-			DMA_clock++;
-
-			if (DMA_clock == 5)
-			{
-				DMA_start = false;
-				DMA_bus_control = false;
-				DMA_OAM_access = true;
-			}
-		}
-
 		void process_sprite()
 		{
 			int y;
@@ -1636,7 +1584,7 @@ namespace GBHawk
 				{
 					if (OAM_scan_index < 40)
 					{
-						uint16_t temp = DMA_OAM_access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+						uint16_t temp = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
 						// (sprite Y - 16) equals LY, we have a sprite
 						if ((temp - 16) <= LY &&
 							((temp - 16) + 8 + (LCDC_Bit(2) ? 8 : 0)) > LY)
@@ -1662,7 +1610,7 @@ namespace GBHawk
 				}
 				else
 				{
-					uint16_t temp2 = DMA_OAM_access ? Core_OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
+					uint16_t temp2 = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
 					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
 					write_sprite++;
 
@@ -1737,7 +1685,6 @@ namespace GBHawk
 			LY = 0;
 			LYC = 0; // NOTE: frame0_m2stat_count_1_dmg08_cgb04c_out91 returns 1 on GBP, indicating internal state is also zero
 			LY_read = 0;
-			DMA_addr = 0;
 			BGP = 0xFF;
 			obj_pal_0 = 0;
 			obj_pal_1 = 0;
@@ -1757,8 +1704,6 @@ namespace GBHawk
 			VRAM_access_write = true;
 			VRAM_access_write_PPU = true;
 			VRAM_access_write_HDMA = true;
-			DMA_OAM_access = true;
-			DMA_bus_control = false;
 
 			cycle = 0;
 			LYC_INT = false;

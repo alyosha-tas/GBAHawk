@@ -77,7 +77,7 @@ namespace GBHawk
 
 		if (Double_Speed)
 		{
-			if (ppu_pntr->DMA_start && !cpu_Halted && !cpu_Stopped) { ppu_pntr->DMA_tick(); }
+			if (dma_Start && !cpu_Halted && !cpu_Stopped) { dma_Tick(); }
 			ser_Tick();
 
 			// check state before changes from cpu writes
@@ -94,7 +94,7 @@ namespace GBHawk
 			REG_FF0F_OLD = REG_FF0F;
 		}
 
-		if (ppu_pntr->DMA_start && !cpu_Halted && !cpu_Stopped) { ppu_pntr->DMA_tick(); }
+		if (dma_Start && !cpu_Halted && !cpu_Stopped) { dma_Tick(); }
 		ser_Tick();
 
 		// check state before changes from cpu writes
@@ -179,6 +179,53 @@ namespace GBHawk
 		{
 			for (int j = 0; j < 160 * 144; j++) { frame_buffer[j] = (uint32_t)color_palette[0]; }
 			ppu_pntr->clear_screen = false;
+		}
+	}
+
+	void GB_System::dma_Tick()
+	{
+		if (dma_Clock >= 12)
+		{
+			dma_Bus_Control = true;
+			dma_OAM_Access = false;
+			if ((dma_Clock % 4) == 1)
+			{
+				// the cpu can't access memory during this time, but we still need the ppu to be able to.
+				dma_Bus_Control = false;
+				// Gekkio reports that A14 being high on DMA transfers always represent WRAM accesses
+				// So transfers nominally from higher memory areas are actually still from there (i.e. FF -> DF)
+				uint8_t  DMA_actual = dma_Addr;
+				if (dma_Addr > 0xDF) { DMA_actual &= 0xDF; }
+				dma_Byte = Read_Memory((uint16_t)((DMA_actual << 8) + dma_Inc));
+				dma_Bus_Control = true;
+			}
+			else if ((dma_Clock % 4) == 3)
+			{
+				if (!ppu_pntr->HDMA_active)
+				{
+					OAM[dma_Inc] = dma_Byte;
+				}
+				else
+				{
+					// TODO: timing is off by one, maybe HDMA is aligned with CPU cycles
+					if (((ppu_pntr->cur_DMA_dest - 1) & 0xFF) <= 0x9F)
+					{
+						OAM[(ppu_pntr->cur_DMA_dest - 1) & 0xFF] = ppu_pntr->HDMA_byte;
+					}
+				}
+
+				if (dma_Inc < 0x9F) { dma_Inc++; }
+				else { dma_Clock = 0; }
+			}
+		}
+
+		dma_Clock++;
+
+		if (dma_Clock == 5)
+		{
+			dma_Start = false;
+			dma_Bus_Control = false;
+			dma_OAM_Access = true;
 		}
 	}
 }

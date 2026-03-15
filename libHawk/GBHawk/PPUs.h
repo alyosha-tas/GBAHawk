@@ -27,8 +27,7 @@ namespace GBHawk
 		bool HDMA_active;
 		bool clear_screen;
 		bool rendering_complete;
-		bool DMA_start;
-		bool DMA_bus_control;
+		
 		bool LYC_INT;
 		bool HBL_INT;
 		bool VBL_INT;
@@ -37,7 +36,7 @@ namespace GBHawk
 		bool stat_line_old;
 		bool LCD_was_off;
 		bool no_scan;
-		bool DMA_OAM_access;
+		
 		bool OAM_access_read;
 		bool OAM_access_write;
 		bool VRAM_access_read;
@@ -70,7 +69,6 @@ namespace GBHawk
 		uint8_t LY_actual;
 		uint8_t LY_inc;
 		uint8_t LYC;
-		uint8_t DMA_addr;
 		uint8_t BGP;
 		uint8_t obj_pal_0;
 		uint8_t obj_pal_1;
@@ -78,12 +76,10 @@ namespace GBHawk
 		uint8_t window_x;
 		uint8_t window_y_read;
 		uint8_t window_x_read;
-		uint8_t DMA_byte;
+
 
 		// TODO: need a test ROM for the details here
 		uint32_t bus_address;
-		uint32_t DMA_clock;
-		uint32_t DMA_inc;
 		uint32_t cycle;
 		uint32_t OAM_scan_index;
 		uint32_t SL_sprites_index;
@@ -237,10 +233,6 @@ namespace GBHawk
 
 		virtual void process_sprite() { }
 
-		// normal DMA moves twice as fast in double speed mode on GBC
-		// So give it it's own function so we can seperate it from PPU tick
-		virtual void DMA_tick() { }
-
 		virtual void OAM_scan(uint16_t OAM_cycle) { }
 
 		virtual void Reset() { }
@@ -248,6 +240,8 @@ namespace GBHawk
 		// order sprites according to x coordinate
 		// note that for sprites of equal x coordinate, priority goes to first on the list
 		virtual void reorder_and_assemble_sprites() { }
+
+		bool* Core_DMA_OAM_Access = nullptr;
 
 		bool* Core_cpu_FlagI = nullptr;
 
@@ -289,13 +283,13 @@ namespace GBHawk
 
 		void (GB_System::*Core_HDMA_Start_Stop)(bool);
 
+		uint8_t (GB_System::*Core_ReadMemory)(uint16_t);
+
 		void (*MessageCallback)(int);
 
 		void (*ScanlineCallback)(uint8_t);
 
 		int ScanlineCallbackLine = -2;
-
-		uint8_t (GB_System::*Core_ReadMemory)(uint16_t);
 
 		uint16_t(GB_System::*Core_RegPC)();
 
@@ -314,8 +308,6 @@ namespace GBHawk
 			saver = bool_saver(HDMA_active, saver);
 			saver = bool_saver(clear_screen, saver);
 			saver = bool_saver(rendering_complete, saver);
-			saver = bool_saver(DMA_start, saver);
-			saver = bool_saver(DMA_bus_control, saver);
 			saver = bool_saver(LYC_INT, saver);
 			saver = bool_saver(HBL_INT, saver);
 			saver = bool_saver(VBL_INT, saver);
@@ -324,7 +316,6 @@ namespace GBHawk
 			saver = bool_saver(stat_line_old, saver);
 			saver = bool_saver(LCD_was_off, saver);
 			saver = bool_saver(no_scan, saver);
-			saver = bool_saver(DMA_OAM_access, saver);
 			saver = bool_saver(OAM_access_read, saver);
 			saver = bool_saver(OAM_access_write, saver);
 			saver = bool_saver(VRAM_access_read, saver);
@@ -357,7 +348,6 @@ namespace GBHawk
 			saver = byte_saver(LY_actual, saver);
 			saver = byte_saver(LY_inc, saver);
 			saver = byte_saver(LYC, saver);
-			saver = byte_saver(DMA_addr, saver);
 			saver = byte_saver(BGP, saver);
 			saver = byte_saver(obj_pal_0, saver);
 			saver = byte_saver(obj_pal_1, saver);
@@ -365,12 +355,9 @@ namespace GBHawk
 			saver = byte_saver(window_x, saver);
 			saver = byte_saver(window_y_read, saver);
 			saver = byte_saver(window_x_read, saver);
-			saver = byte_saver(DMA_byte, saver);
 
 			// TODO: need a test ROM for the details here
 			saver = int_saver(bus_address, saver);
-			saver = int_saver(DMA_clock, saver);
-			saver = int_saver(DMA_inc, saver);
 			saver = int_saver(cycle, saver);
 			saver = int_saver(OAM_scan_index, saver);
 			saver = int_saver(SL_sprites_index, saver);
@@ -472,8 +459,6 @@ namespace GBHawk
 			loader = bool_loader(&HDMA_active, loader);
 			loader = bool_loader(&clear_screen, loader);
 			loader = bool_loader(&rendering_complete, loader);
-			loader = bool_loader(&DMA_start, loader);
-			loader = bool_loader(&DMA_bus_control, loader);
 			loader = bool_loader(&LYC_INT, loader);
 			loader = bool_loader(&HBL_INT, loader);
 			loader = bool_loader(&VBL_INT, loader);
@@ -482,7 +467,6 @@ namespace GBHawk
 			loader = bool_loader(&stat_line_old, loader);
 			loader = bool_loader(&LCD_was_off, loader);
 			loader = bool_loader(&no_scan, loader);
-			loader = bool_loader(&DMA_OAM_access, loader);
 			loader = bool_loader(&OAM_access_read, loader);
 			loader = bool_loader(&OAM_access_write, loader);
 			loader = bool_loader(&VRAM_access_read, loader);
@@ -515,7 +499,6 @@ namespace GBHawk
 			loader = byte_loader(&LY_actual, loader);
 			loader = byte_loader(&LY_inc, loader);
 			loader = byte_loader(&LYC, loader);
-			loader = byte_loader(&DMA_addr, loader);
 			loader = byte_loader(&BGP, loader);
 			loader = byte_loader(&obj_pal_0, loader);
 			loader = byte_loader(&obj_pal_1, loader);
@@ -523,12 +506,9 @@ namespace GBHawk
 			loader = byte_loader(&window_x, loader);
 			loader = byte_loader(&window_y_read, loader);
 			loader = byte_loader(&window_x_read, loader);
-			loader = byte_loader(&DMA_byte, loader);
 
 			// TODO: need a test ROM for the details here
 			loader = int_loader(&bus_address, loader);
-			loader = int_loader(&DMA_clock, loader);
-			loader = int_loader(&DMA_inc, loader);
 			loader = int_loader(&cycle, loader);
 			loader = int_loader(&OAM_scan_index, loader);
 			loader = int_loader(&SL_sprites_index, loader);
