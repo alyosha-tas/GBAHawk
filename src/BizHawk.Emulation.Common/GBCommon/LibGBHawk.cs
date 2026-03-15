@@ -382,31 +382,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		#region PPU_Viewer
 
 		/// <summary>
-		/// Get variousa ppu states from the core
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="sel">value to get</param>
-		[DllImport(lib, CallingConvention = cc)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern bool GB_get_ppu_vals(IntPtr core, int sel);
-
-		/// <summary>
-		/// Get variousa ppu states from the core
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">ppu address to peek</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_get_ppu_bus(IntPtr core, uint addr);
-
-		/// <summary>
-		/// Get ppu bus as seen by the board
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="addr">ppu address to peek</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte GB_get_board_peek_ppu(IntPtr core, uint addr);
-
-		/// <summary>
 		/// Get PPU Pointers
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
@@ -415,22 +390,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern IntPtr GB_get_ppu_pntrs(IntPtr core, int sel);
 
 		/// <summary>
-		/// callback for nametable viewer
+		/// set a callback to occur when ly reaches a particular scanline (so at the beginning of the scanline).
+		/// when the LCD is active, typically 145 will be the first callback after the beginning of frame advance,
+		/// and 144 will be the last callback right before frame advance returns
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
 		/// <param name="callback">null to clear</param>
 		/// <param name="sl">0-153 inclusive</param>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_setntvcallback(IntPtr core, Action callback, int sl);
-
-		/// <summary>
-		/// callback for ppu viewer
-		/// </summary>
-		/// <param name="core">opaque state pointer</param>
-		/// <param name="callback">null to clear</param>
-		/// <param name="sl">0-153 inclusive</param>
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_setppucallback(IntPtr core, Action callback, int sl);
+		public static extern void GB_setscanlinecallback(IntPtr core, ScanlineCallback callback, int sl);
 
 		#endregion
 	}

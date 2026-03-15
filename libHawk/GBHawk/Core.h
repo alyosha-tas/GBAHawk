@@ -73,6 +73,13 @@ namespace GBHawk
 			GB.Is_GBC = cgb_flag;
 
 			GB.Is_GBC_GBA = cgb_flag && cgb_gba_flag;
+
+			// set up IR register to off state
+			if (GB.Is_GBC) { GB.IR_mask = 0; }
+			else { GB.IR_mask = 2; }
+
+			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
+			if (GB.Is_GBC && GB.Is_GBC_GBA) { GB.IR_mask = 2; }
 		}
 
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper)
@@ -222,8 +229,6 @@ namespace GBHawk
 
 			PPU->Core_OAM = &GB.OAM[0];
 
-			PPU->ScanlineCallbackLine = &GB.ScanlineCallbackLine;
-
 			PPU->Core_Clear_Counter = &GB.clear_counter;
 
 			PPU->Core_Color_Palette = &GB.color_palette[0];
@@ -242,8 +247,6 @@ namespace GBHawk
 
 			PPU->MessageCallback = GB.MessageCallback;
 
-			PPU->ScanlineCallback = GB.ScanlineCallback;
-
 			PPU->Core_ReadMemory = &GB_System::Read_Memory;
 
 			PPU->Core_RegPC = &GB_System::cpu_RegPCget;
@@ -260,6 +263,8 @@ namespace GBHawk
 			GB.Message_String = "Initialization Successful";
 
 			GB.MessageCallback(GB.Message_String.length());
+
+			GB.System_Reset();
 		}
 
 		void Set_RTC(int32_t val, uint32_t param)
@@ -610,19 +615,43 @@ namespace GBHawk
 			std::memcpy(d, GB.Message_String.c_str(), GB.Message_String.length() + 1);
 		}
 
-		uint8_t* Get_PPU_Pointers(int sel)
+		void* Get_PPU_Pointers(int sel)
 		{
 			switch (sel)
 			{
-				case 0: return GB.VRAM; break;
-				case 1: return GB.OAM; break;
-				case 2: return GB.PALRAM; break;
-				case 3:
-					for (int i = 0; i < 0x60; i++)
+				case 0:
+					if (GB.Is_GBC)
 					{
-						GB.PPU_IO[i] = GB.Read_Registers(i);
+						return PPU->BG_palette;
 					}
-					return GB.PPU_IO; break;
+					else
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							GB.ppu_GB_BG_Pal[i] = GB.color_palette[(PPU->BGP >> (i * 2)) & 3];
+						}
+
+						return GB.ppu_GB_BG_Pal;
+					}
+					break;
+				case 1:
+					if (GB.Is_GBC)
+					{
+						return PPU->OBJ_palette;
+					}
+					else
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							GB.ppu_GB_SPR_Pal[i] = GB.color_palette[(PPU->obj_pal_0 >> (i * 2)) & 3];
+							GB.ppu_GB_SPR_Pal[i + 4] = GB.color_palette[(PPU->obj_pal_1 >> (i * 2)) & 3];
+						}
+
+						return GB.ppu_GB_SPR_Pal;
+					}
+					break;
+				case 2: return GB.OAM; break;
+				case 3: return GB.VRAM; break;
 			}
 
 			return nullptr;
@@ -630,10 +659,10 @@ namespace GBHawk
 
 		void SetScanlineCallback(void (*callback)(uint8_t), int sl)
 		{
-			GB.ScanlineCallback = callback;
-			GB.ScanlineCallbackLine = sl;
-		}
+			PPU->ScanlineCallback = callback;
 
+			PPU->ScanlineCallbackLine = sl;
+		}
 	};
 }
 

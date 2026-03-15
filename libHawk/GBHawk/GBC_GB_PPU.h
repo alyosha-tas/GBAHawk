@@ -141,7 +141,7 @@ namespace GBHawk
 					DMA_addr = value;
 					DMA_start = true;
 					if (!DMA_bus_control) { DMA_OAM_access = true; }
-					DMA_clock = 0;
+					DMA_clock = 8;
 					DMA_inc = 0;
 					break;
 				case 0xFF47: // BGP
@@ -482,7 +482,7 @@ namespace GBHawk
 				if (cycle == 456)
 				{
 					// scanline callback
-					if ((LY + LY_inc) == *ScanlineCallbackLine)
+					if ((LY + LY_inc) == ScanlineCallbackLine)
 					{
 						if (ScanlineCallback) { ScanlineCallback(LCDC); }
 					}
@@ -1490,7 +1490,7 @@ namespace GBHawk
 
 		void DMA_tick()
 		{
-			if (DMA_clock >= 4)
+			if (DMA_clock >= 12)
 			{
 				DMA_bus_control = true;
 				DMA_OAM_access = false;
@@ -1521,13 +1521,13 @@ namespace GBHawk
 					}
 
 					if (DMA_inc < 0x9F) { DMA_inc++; }
-					else { DMA_clock = -6; }
+					else { DMA_clock = 0; }
 				}
 			}
 
 			DMA_clock++;
 
-			if (DMA_clock == -1)
+			if (DMA_clock == 5)
 			{
 				DMA_start = false;
 				DMA_bus_control = false;

@@ -57,13 +57,13 @@ namespace GBHawk
 		string Message_String = "";
 
 		void (*MessageCallback)(int);
-		void (*ScanlineCallback)(uint8_t);
-
-		int ScanlineCallbackLine = 0;
 
 		// external pointers and functions
-		uint8_t* ppu_LY_pntr;
 		bool* PPU_Pal_Change_Blocked = nullptr;
+		uint8_t* ppu_LY_pntr;
+
+		uint32_t ppu_GB_BG_Pal[4] = { };
+		uint32_t ppu_GB_SPR_Pal[8] = { };
 
 		uint8_t (PPUs::*PPU_Read_Regs)(uint16_t addr);
 		void (PPUs::*PPU_Write_Regs)(uint16_t addr, uint8_t value);
@@ -183,7 +183,11 @@ namespace GBHawk
 			In_Vblank_old = true;
 
 			bus_value = 0;
-			IR_reg = IR_mask = IR_signal = IR_receive = IR_self = 0;
+
+			// set up IR variables dependent on console
+			if (Is_GBC) { IR_reg = 0x3E; IR_receive = 2; IR_self = 2; IR_signal = 2; }
+			else { IR_reg = IR_signal = IR_receive = IR_self = 0; }
+
 			controller_state = 0;
 			multi_core_controller_byte = 0;
 
@@ -194,7 +198,7 @@ namespace GBHawk
 			IR_write = 0;
 
 			GB_bios_register = 0; // bios enable
-			GBC_Compat = true;
+			GBC_Compat = Is_GBC;
 			Double_Speed = false;
 			VRAM_Bank = 0;
 			RAM_Bank = 1; // RAM bank always starts as 1 (even writing zero still sets 1)
@@ -3157,7 +3161,7 @@ namespace GBHawk
 				case 0xDD: sprintf_s(val_char_2, 40, "???"); break;
 				case 0xDE: sprintf_s(val_char_2, 40, "SBC  A,$%02X", Peek_Memory(pc++)); break;
 				case 0xDF: sprintf_s(val_char_2, 40, "RST  18H"); break;
-				case 0xE0: sprintf_s(val_char_2, 40, "LDH  (FF$%02X),A", Peek_Memory(pc++)); break;
+				case 0xE0: sprintf_s(val_char_2, 40, "LDH  ($FF%02X),A", Peek_Memory(pc++)); break;
 				case 0xE1: sprintf_s(val_char_2, 40, "POP  HL"); break;
 				case 0xE2: sprintf_s(val_char_2, 40, "LD   (C),A"); break;
 				case 0xE3: sprintf_s(val_char_2, 40, "???"); break;
@@ -3173,7 +3177,7 @@ namespace GBHawk
 				case 0xED: sprintf_s(val_char_2, 40, "???"); break;
 				case 0xEE: sprintf_s(val_char_2, 40, "XOR  $%02X", Peek_Memory(pc++)); break;
 				case 0xEF: sprintf_s(val_char_2, 40, "RST  28H"); break;
-				case 0xF0: sprintf_s(val_char_2, 40, "LDH  A,(FF$%02X)", Peek_Memory(pc++)); break;
+				case 0xF0: sprintf_s(val_char_2, 40, "LDH  A,($FF%02X)", Peek_Memory(pc++)); break;
 				case 0xF1: sprintf_s(val_char_2, 40, "POP  AF"); break;
 				case 0xF2: sprintf_s(val_char_2, 40, "LD   A,(C)"); break;
 				case 0xF3: sprintf_s(val_char_2, 40, "DI"); break;

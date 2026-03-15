@@ -210,7 +210,7 @@ GBHawk_EXPORT void GB_getmessage(GBCore* p, char* d) {
 #pragma region PPU Viewer
 
 // set tracer callback
-GBHawk_EXPORT uint8_t* GB_get_ppu_pntrs(GBCore* p, int sel)
+GBHawk_EXPORT void* GB_get_ppu_pntrs(GBCore* p, int sel)
 {
 	return p->Get_PPU_Pointers(sel);
 }

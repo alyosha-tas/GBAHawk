@@ -44,7 +44,7 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget());
+					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 4: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 5:						
 						switch (cpu_Opcode)
@@ -53,7 +53,7 @@ namespace GBHawk
 							case 0xCE: cpu_ADC8_Func(cpu_A, cpu_Z); break;
 							case 0xD6: cpu_SUB8_Func(cpu_A, cpu_Z); break;
 							case 0xDE: cpu_SBC8_Func(cpu_A, cpu_Z); break;
-							case 0x1E: cpu_AND8_Func(cpu_A, cpu_Z); break;
+							case 0xE6: cpu_AND8_Func(cpu_A, cpu_Z); break;
 							case 0xEE: cpu_XOR8_Func(cpu_A, cpu_Z); break;
 							case 0xF6: cpu_OR8_Func(cpu_A, cpu_Z); break;
 							case 0xFE: cpu_CP8_Func(cpu_A, cpu_Z); break;
@@ -182,11 +182,11 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_W] = GB_System::Read_Memory(cpu_RegPCget()); break;
+					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 4: break;
 					case 5: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 6: break;
-					case 7: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
+					case 7: cpu_Regs[cpu_W] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 8: break;
 					case 9: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 10: break;
@@ -337,9 +337,9 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegHLget()); break;
+					case 3: cpu_Regs[cpu_Z] = GB_System::Read_Memory(cpu_RegPCget()); break;
 					case 4: break;
-					case 5: cpu_RegHLset((uint16_t)(cpu_RegHLget() + 1)); break;
+					case 5: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 6: break;
 					case 7: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_Z]);  break;
 					case 8: break;

@@ -431,9 +431,9 @@ namespace BizHawk.Client.GBAHawk
 		{
 			var bgPal = Gb.GetBGPalRam();
 			var spPal = Gb.GetSPRPalRam();
-			var oam = Gb.GetSPRPalRam();
-			var vram = Gb.GetOAM();
-			var tilesPal = Gb.GetVRAM();
+			var oam = Gb.GetOAM();
+			var vram = Gb.GetVRAM();
+			var tilesPal = ComputeTilesPalFromMemory(spPal, bgPal);
 
 			_lcdc = lcdc;
 

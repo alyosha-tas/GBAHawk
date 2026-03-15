@@ -101,7 +101,6 @@ namespace GBHawk
 		uint32_t render_counter;
 		uint32_t render_offset;
 		uint32_t scroll_offset;
-		uint32_t pixel_counter;
 		uint32_t pixel;
 		uint32_t sl_use_index;
 		uint32_t evaled_sprites;
@@ -122,6 +121,7 @@ namespace GBHawk
 		uint32_t LY_153_change; // the timing of LYC chaning to 153 looks like it varies with speed mode
 		uint32_t total_counter;
 
+		int32_t pixel_counter;
 		int32_t tile_byte;
 
 		uint8_t sprite_attr_list[160] = { };
@@ -293,7 +293,7 @@ namespace GBHawk
 
 		void (*ScanlineCallback)(uint8_t);
 
-		int* ScanlineCallbackLine = nullptr;
+		int ScanlineCallbackLine = -2;
 
 		uint8_t (GB_System::*Core_ReadMemory)(uint16_t);
 
@@ -546,7 +546,6 @@ namespace GBHawk
 			loader = int_loader(&render_counter, loader);
 			loader = int_loader(&render_offset, loader);
 			loader = int_loader(&scroll_offset, loader);
-			loader = int_loader(&pixel_counter, loader);
 			loader = int_loader(&pixel, loader);
 			loader = int_loader(&sl_use_index, loader);
 			loader = int_loader(&evaled_sprites, loader);
@@ -567,6 +566,7 @@ namespace GBHawk
 			loader = int_loader(&LY_153_change, loader); // the timing of LYC chaning to 153 looks like it varies with speed mode
 			loader = int_loader(&total_counter, loader);
 
+			loader = sint_loader(&pixel_counter, loader);
 			loader = sint_loader(&tile_byte, loader);
 	
 			loader = byte_array_loader(sprite_attr_list, loader, 160);

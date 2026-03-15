@@ -217,7 +217,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 0);
 			}
 
 			return temp_ptr;
@@ -241,7 +241,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 1);
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 2);
 			}
 
 			return temp_ptr;
@@ -253,7 +253,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			if (GB_Pntr != IntPtr.Zero)
 			{
-				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 2);
+				temp_ptr = LibGBHawk.GB_get_ppu_pntrs(GB_Pntr, 3);
 			}
 
 			return temp_ptr;
@@ -278,6 +278,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			if (line == -2)
 			{
 				_scanlineCallback(0);
+			}
+			else
+			{
+				LibGBHawk.GB_setscanlinecallback(GB_Pntr, _scanlineCallback, _scanlineCallbackLine);
 			}
 		}
 
