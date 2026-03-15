@@ -2100,7 +2100,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		}
 
 
-		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out uint mppr_num, out bool has_bat, out int RAM_Size)
+		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out uint mppr_num, out bool has_bat, out uint RAM_Size)
 		{
 			has_bat = false;
 			RAM_Size = 0;

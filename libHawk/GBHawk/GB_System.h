@@ -650,11 +650,13 @@ namespace GBHawk
 					break;
 
 				case 0xFF72:
-					ret = undoc_72;
+					if (Is_GBC) { ret = undoc_72; }
+					else { ret = 0xFF; }
 					break;
 
 				case 0xFF73:
-					ret = undoc_73;
+					if (Is_GBC) { ret = undoc_73; }
+					else { ret = 0xFF; }
 					break;
 
 				case 0xFF74:
@@ -663,7 +665,8 @@ namespace GBHawk
 					break;
 
 				case 0xFF75:
-					ret = undoc_75;
+					if (Is_GBC) { ret = undoc_75; }
+					else { ret = 0xFF; }
 					break;
 
 				case 0xFF76:
@@ -673,7 +676,8 @@ namespace GBHawk
 					ret2 = snd_SQ2_output >= snd_DAC_OFST
 						? (uint8_t)(snd_SQ2_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					ret = (uint8_t)(ret1 | (ret2 << 4));
+					if (Is_GBC) { ret = (uint8_t)(ret1 | (ret2 << 4)); }
+					else { ret = 0xFF; }
 					break;
 
 				case 0xFF77:
@@ -683,7 +687,8 @@ namespace GBHawk
 					retW = snd_WAVE_output >= snd_DAC_OFST
 						? (uint8_t)(snd_WAVE_output - snd_DAC_OFST)
 						: (uint8_t)0;
-					ret = (uint8_t)(retN | (retW << 4));
+					if (Is_GBC) { ret = (uint8_t)(retN | (retW << 4)); }
+					else { ret = 0xFF; }
 					break;
 
 					// interrupt control register
@@ -2233,6 +2238,7 @@ namespace GBHawk
 				// call interrupt processor
 				// lowest bit set is highest priority
 				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
+				cpu_Instr_Cycle = -1;
 			}
 			else
 			{
@@ -3817,9 +3823,9 @@ namespace GBHawk
 					uint8_t timer_control_old = tim_Control;
 
 					// Console.WriteLine("tac: " + timer_control + " " + value + " " + timer + " " + divider_reg);
-					tim_Control = (uint8_t)((tim_Control & 0xf8) | (value & 0x7)); // only bottom 3 bits function
+					tim_Control = (uint8_t)((tim_Control & 0xF8) | (value & 0x7)); // only bottom 3 bits function
 
-					if (!((timer_control_old & 4) == 4) && ((tim_Control & 4) == 4) && Is_GBC_GBA)
+					if (!((timer_control_old & 4) == 4) && ((tim_Control & 4) == 4) && Is_GBC && Is_GBC_GBA)
 					{
 						bool temp_check_old = false;
 						bool temp_check = false;
@@ -3827,7 +3833,7 @@ namespace GBHawk
 						switch (timer_control_old & 3)
 						{
 							case 0:
-								temp_check_old = ((tim_Divider_Reg & 0x100) == 0x100);
+								temp_check_old = ((tim_Divider_Reg & 0x200) == 0x200);
 								break;
 							case 1:
 								temp_check_old = ((tim_Divider_Reg & 8) == 8);
@@ -3843,7 +3849,7 @@ namespace GBHawk
 						switch (tim_Control & 3)
 						{
 							case 0:
-								temp_check = ((tim_Divider_Reg & 0x100) == 0x100);
+								temp_check = ((tim_Divider_Reg & 0x200) == 0x200);
 								break;
 							case 1:
 								temp_check = ((tim_Divider_Reg & 8) == 8);
@@ -3888,7 +3894,7 @@ namespace GBHawk
 			switch (tim_Control & 3)
 			{
 				case 0:
-					tim_State = ((tim_Divider_Reg & 0x100) == 0x100);
+					tim_State = ((tim_Divider_Reg & 0x200) == 0x200);
 					break;
 				case 1:
 					tim_State = ((tim_Divider_Reg & 8) == 8);
@@ -3950,7 +3956,7 @@ namespace GBHawk
 
 		void tim_Reset()
 		{
-			tim_Divider_Reg = 0xFFFE;
+			tim_Divider_Reg = Is_GBC ? 0xFFFE : 0xFFFE;
 			tim_Reload = 0;
 			tim_Timer = 0;
 			tim_Timer_Old = 0;

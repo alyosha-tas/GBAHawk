@@ -31,7 +31,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public byte[] cart_RAM;
 		public byte[] cart_RAM_vbls;
 		public bool has_bat;
-		public int Cart_RAM_Size;
+		public uint Cart_RAM_Size;
 		public bool Use_MT;
 
 		public bool is_subframe_core = false;
@@ -85,7 +85,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				cart_RAM = new byte[Cart_RAM_Size];
 				cart_RAM_vbls = new byte[Cart_RAM_Size];
 
-				Console.Write("SRAM: "); Console.WriteLine(Cart_RAM_Size);
+				Console.WriteLine("SRAM: " + Cart_RAM_Size);
 			}
 
 			_controllerDeck = new(mppr is "MBC7"
@@ -155,6 +155,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			LibGBHawk.GB_load_bios(GB_Pntr, BIOS, Is_GBC, SyncSettings.GBACGB);
 
 			LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length, mppr_num);
+
+			LibGBHawk.GB_create_SRAM(GB_Pntr, cart_RAM, Cart_RAM_Size);
 
 			if (mppr == "MBC3")
 			{

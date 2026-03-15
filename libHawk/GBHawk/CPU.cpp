@@ -933,7 +933,7 @@ namespace GBHawk
 						{
 							case 0x146: cpu_BIT_Func(0, cpu_Z); break;
 							case 0x14E: cpu_BIT_Func(1, cpu_Z); break;
-							case 0x156: cpu_BIT_Func(3, cpu_Z); break;
+							case 0x156: cpu_BIT_Func(2, cpu_Z); break;
 							case 0x15E: cpu_BIT_Func(3, cpu_Z); break;
 							case 0x166: cpu_BIT_Func(4, cpu_Z); break;
 							case 0x16E: cpu_BIT_Func(5, cpu_Z); break;
@@ -959,7 +959,7 @@ namespace GBHawk
 						{
 							case 0x186: cpu_RES_Func(0, cpu_Z); break;
 							case 0x18E: cpu_RES_Func(1, cpu_Z); break;
-							case 0x196: cpu_RES_Func(3, cpu_Z); break;
+							case 0x196: cpu_RES_Func(2, cpu_Z); break;
 							case 0x19E: cpu_RES_Func(3, cpu_Z); break;
 							case 0x1A6: cpu_RES_Func(4, cpu_Z); break;
 							case 0x1AE: cpu_RES_Func(5, cpu_Z); break;
