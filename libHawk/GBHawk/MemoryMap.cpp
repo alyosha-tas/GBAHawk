@@ -128,7 +128,7 @@ namespace GBHawk
 			if (addr >= 0x200)
 			{
 				// return Either BIOS ROM or Game ROM
-				if ((GB_bios_register & 0x1) == 0)
+				if (((GB_bios_register & 0x1) == 0) && Is_GBC)
 				{
 					return BIOS[addr]; // Return BIOS
 				}
@@ -377,7 +377,7 @@ namespace GBHawk
 				}
 				else if (addr >= 0x200)
 				{
-					if ((GB_bios_register & 0x1) == 0)
+					if (((GB_bios_register & 0x1) == 0) && Is_GBC)
 					{
 						// No Writing to BIOS
 					}
@@ -482,7 +482,7 @@ namespace GBHawk
 			if (addr >= 0x200)
 			{
 				// return Either BIOS ROM or Game ROM
-				if ((GB_bios_register & 0x1) == 0)
+				if (((GB_bios_register & 0x1) == 0) && Is_GBC)
 				{
 					return BIOS[addr]; // Return BIOS
 				}

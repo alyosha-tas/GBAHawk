@@ -159,7 +159,7 @@ namespace GBHawk
 				if (cycle == 456)
 				{
 					// scanline callback
-					if ((LY + LY_inc) == ScanlineCallbackLine[0])
+					if ((LY + LY_inc) == *ScanlineCallbackLine)
 					{
 						if (ScanlineCallback) { ScanlineCallback(LCDC); }
 					}
@@ -324,7 +324,7 @@ namespace GBHawk
 							}
 
 							// render the screen and handle hblank
-							render(cycle - 85);
+							//render(cycle - 85);
 						}
 					}
 					else
@@ -388,7 +388,7 @@ namespace GBHawk
 							}
 
 							// render the screen and handle hblank
-							render(cycle - 83);
+							//render(cycle - 83);
 						}
 					}
 				}
@@ -1276,6 +1276,7 @@ namespace GBHawk
 			OAM_access_write = true;
 			VRAM_access_write = true;
 			DMA_OAM_access = true;
+			DMA_bus_control = false;
 
 			cycle = 0;
 			LYC_INT = false;

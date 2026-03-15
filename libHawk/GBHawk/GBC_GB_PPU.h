@@ -482,7 +482,7 @@ namespace GBHawk
 				if (cycle == 456)
 				{
 					// scanline callback
-					if ((LY + LY_inc) == ScanlineCallbackLine[0])
+					if ((LY + LY_inc) == *ScanlineCallbackLine)
 					{
 						if (ScanlineCallback) { ScanlineCallback(LCDC); }
 					}
@@ -1815,6 +1815,7 @@ namespace GBHawk
 			VRAM_access_write_PPU = true;
 			VRAM_access_write_HDMA = true;
 			DMA_OAM_access = true;
+			DMA_bus_control = false;
 
 			cycle = 0;
 			LYC_INT = false;

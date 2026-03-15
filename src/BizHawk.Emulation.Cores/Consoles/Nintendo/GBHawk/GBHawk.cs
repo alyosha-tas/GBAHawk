@@ -317,7 +317,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			LibGBHawk.GB_getdisassembly(GB_Pntr, new_d, t, Disasm_Length);
 			LibGBHawk.GB_getregisterstate(GB_Pntr, new_r, t, Reg_String_Length);
 
-			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
+			Tracer.Put(new(disassembly: new_d.ToString().PadRight(50), registerInfo: new_r.ToString()));
 		}
 	}
 }

@@ -2260,7 +2260,7 @@ namespace GBHawk
 			if (cpu_CB_Prefix)
 			{
 				cpu_Opcode += 256;
-				cpu_Instr_Type = cpu_Instr_Type_List[op];
+				cpu_Instr_Type = cpu_Instr_Type_List[cpu_Opcode];
 			}
 
 			cpu_CB_Prefix = false;
@@ -2885,9 +2885,13 @@ namespace GBHawk
 			
 			val_char_1 = replacer;
 
+			uint16_t dis_pc = cpu_RegPCget();
+
+			sprintf_s(val_char_1, 5, "%04X", dis_pc);
+			trace_string.append(val_char_1, 4);
+
 			trace_string.append(":  ");
 
-			uint16_t dis_pc = cpu_RegPCget();
 			for (uint32_t i = 0; i < op_size; i++)
 			{
 				sprintf_s(val_char_1, 3, "%02X", Peek_Memory(dis_pc++));

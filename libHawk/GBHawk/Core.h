@@ -193,6 +193,8 @@ namespace GBHawk
 				PPU = new GB_PPU();
 			}
 
+			GB.ppu_pntr = &PPU[0];
+
 			PPU->sys_pntr = &GB;
 
 			// set up all the pointers
@@ -254,6 +256,10 @@ namespace GBHawk
 
 			GB.PPU_Read_Regs = &PPUs::ReadReg;
 			GB.PPU_Write_Regs = &PPUs::WriteReg;
+
+			GB.Message_String = "Initialization Successful";
+
+			GB.MessageCallback(GB.Message_String.length());
 		}
 
 		void Set_RTC(int32_t val, uint32_t param)
@@ -473,6 +479,8 @@ namespace GBHawk
 			{
 				if (addr < 0xA0) { return GB.OAM[addr]; }
 			}
+
+			return 0;
 		}
 
 		uint8_t GetPALRAM(uint32_t addr, bool vbl_sync)
