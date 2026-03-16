@@ -913,7 +913,7 @@ namespace GBHawk
 				{
 					if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 						(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-						!Get_Bit(evaled_sprites, i))
+						!Get_Bit_Int(evaled_sprites, i))
 					{
 						going_to_fetch = true;
 						fetch_sprite = true;
@@ -1428,7 +1428,7 @@ namespace GBHawk
 					{
 						if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 								(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-								!Get_Bit(evaled_sprites, i))
+								!Get_Bit_Int(evaled_sprites, i))
 						{
 							sprite_fetch_counter += 6;
 							evaled_sprites |= (1 << i);
@@ -1640,11 +1640,12 @@ namespace GBHawk
 					if (OAM_scan_index < 40)
 					{
 						uint16_t temp = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
-						int32_t LY_check = (int32_t)(LY - temp);
-						int32_t comp_val = LCDC_Bit(2) ? 0 : -8;
+
 						// (sprite Y - 16) equals LY, we have a sprite
-						if ((temp - 16) <= LY &&
-							((temp - 16) + 8 + (LCDC_Bit(2) ? 8 : 0)) > LY)
+						bool check1 = (((int32_t)LY) >= temp - 16);
+						bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+
+						if (check1 && check2)
 						{
 							// always pick the first 10 in range sprites
 							if (SL_sprites_index < 10)

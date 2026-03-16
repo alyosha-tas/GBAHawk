@@ -86,7 +86,7 @@ namespace GBHawk
 							}
 						}
 					}
-					STAT = (uint8_t )((value & 0xF8) | (STAT & 7) | 0x80);
+					STAT = (uint8_t)((value & 0xF8) | (STAT & 7) | 0x80);
 
 					if (!STAT_Bit(4)) { VBL_INT = false; }
 					if (!STAT_Bit(3)) { HBL_INT = false; }
@@ -533,7 +533,7 @@ namespace GBHawk
 				window_counter = 0;
 				render_counter = 0;
 
-				window_x_tile = (uint32_t)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
+				window_x_tile = (int32_t)floor((float)(pixel_counter - (window_x_latch - 7)) / 8);
 
 				window_tile_inc = 0;
 				window_started = true;
@@ -551,7 +551,7 @@ namespace GBHawk
 				// Also, on DMG only, this process only runs if sprites are on in the LCDC (on GBC it always runs)
 				for (int i = 0; i < SL_sprites_index; i++)
 				{
-					if (!Get_Bit(evaled_sprites, i) &&
+					if (!Get_Bit_Int(evaled_sprites, i) &&
 						(pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 						(pixel_counter < (SL_sprites[i * 4 + 1])))
 					{
@@ -974,7 +974,7 @@ namespace GBHawk
 					// at this time it is unknown what each cycle does, but we only need to accurately keep track of cycles
 					for (int i = 0; i < SL_sprites_index; i++)
 					{
-						if (!Get_Bit(evaled_sprites, i) && 
+						if (!Get_Bit_Int(evaled_sprites, i) &&
 							(pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 							(pixel_counter < (SL_sprites[i * 4 + 1])))
 						{
@@ -997,7 +997,7 @@ namespace GBHawk
 						else if (((last_eval + sprite_scroll_offset) % 8) == 6) { sprite_fetch_counter += 0; }
 						else if (((last_eval + sprite_scroll_offset) % 8) == 7) { sprite_fetch_counter += 0; }
 
-						consecutive_sprite = (uint32_t)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
+						consecutive_sprite = (int32_t)floor((double)(last_eval + sprite_scroll_offset) / 8) * 8 + 8 - sprite_scroll_offset;
 
 						// special case exists here for sprites at zero with non-zero x-scroll. Not sure exactly the reason for it.
 						if (last_eval == 0)
@@ -1097,12 +1097,12 @@ namespace GBHawk
 				}
 			}
 
-			uint8_t  s_pixel = 0;
-			uint8_t  sprite_attr = 0;
+			uint8_t s_pixel = 0;
+			uint8_t sprite_attr = 0;
 
-			int low_bound = 0;
-			int high_bound = 0;
-			int t_index = 0;
+			int32_t low_bound = 0;
+			int32_t high_bound = 0;
+			int32_t t_index = 0;
 
 			for (int i = 0; i < 160; i++)
 			{
@@ -1120,11 +1120,11 @@ namespace GBHawk
 					{
 						t_index = 7 - j;
 
-						sprite_data[0] = (uint8_t )((SL_sprites_ordered[i * 4 + 1] >> t_index) & 1);
-						sprite_data[1] = (uint8_t )(((SL_sprites_ordered[i * 4 + 2] >> t_index) & 1) << 1);
+						sprite_data[0] = (uint8_t)((SL_sprites_ordered[i * 4 + 1] >> t_index) & 1);
+						sprite_data[1] = (uint8_t)(((SL_sprites_ordered[i * 4 + 2] >> t_index) & 1) << 1);
 
-						s_pixel = (uint8_t )(sprite_data[0] + sprite_data[1]);
-						sprite_attr = (uint8_t )SL_sprites_ordered[i * 4 + 3];
+						s_pixel = (uint8_t)(sprite_data[0] + sprite_data[1]);
+						sprite_attr = (uint8_t)SL_sprites_ordered[i * 4 + 3];
 
 						// pixel color of 0 is transparent, so if this is the case we don't have a pixel
 						if (s_pixel != 0)
@@ -1167,10 +1167,12 @@ namespace GBHawk
 				{
 					if (OAM_scan_index < 40)
 					{
-						uint16_t temp = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+						int32_t temp = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
 						// (sprite Y - 16) equals LY, we have a sprite
-						if ((temp - 16) <= LY &&
-							((temp - 16) + 8 + (LCDC_Bit(2) ? 8 : 0)) > LY)
+						bool check1 = (((int32_t)LY) >= temp - 16);
+						bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+
+						if (check1 && check2)
 						{
 							// always pick the first 10 in range sprites
 							if (SL_sprites_index < 10)
@@ -1195,12 +1197,21 @@ namespace GBHawk
 				{
 					uint16_t temp2 = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
 					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
+
+					if (SL_sprites_index > 8)
+					{
+						Core_Message_String->assign("Bad?: " + to_string(SL_sprites_index * 4 + write_sprite));
+
+						MessageCallback(Core_Message_String->length());
+					}
+					
 					write_sprite++;
 
 					if (write_sprite == 4)
 					{
 						write_sprite = 0;
 						SL_sprites_index++;
+
 						OAM_scan_index++;
 					}
 				}

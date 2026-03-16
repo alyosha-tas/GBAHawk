@@ -89,13 +89,13 @@ namespace GBHawk
 
 	#pragma region State Save / Load
 
-		uint8_t* SaveState(uint8_t* saver)
+		virtual uint8_t* SaveState(uint8_t* saver)
 		{
 
 			return saver;
 		}
 
-		uint8_t* LoadState(uint8_t* loader)
+		virtual uint8_t* LoadState(uint8_t* loader)
 		{
 
 			return loader;

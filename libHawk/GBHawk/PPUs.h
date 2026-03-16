@@ -79,44 +79,43 @@ namespace GBHawk
 
 
 		// TODO: need a test ROM for the details here
-		uint32_t bus_address;
-		uint32_t cycle;
-		uint32_t OAM_scan_index;
-		uint32_t SL_sprites_index;
-		uint32_t write_sprite;
-		uint32_t read_case;
-		uint32_t internal_cycle;
-		uint32_t y_tile;
-		uint32_t y_scroll_offset;
-		uint32_t x_tile;
-		uint32_t x_scroll_offset;
-		uint32_t sprite_fetch_counter;
-		uint32_t temp_fetch;
-		uint32_t tile_inc;
-		uint32_t latch_counter;
-		uint32_t render_counter;
-		uint32_t render_offset;
-		uint32_t scroll_offset;
-		uint32_t pixel;
-		uint32_t sl_use_index;
-		uint32_t evaled_sprites;
-		uint32_t sprite_ordered_index;
-		uint32_t consecutive_sprite;
-		uint32_t last_eval;
-		uint32_t window_counter;
-		uint32_t window_tile_inc;
-		uint32_t window_y_tile;
-		uint32_t window_x_tile;
-		uint32_t window_y_tile_inc;
-		uint32_t window_x_latch;
-		uint32_t window_y_latch;
-		uint32_t hbl_countdown;
-		uint32_t sprite_scroll_offset;
-		uint32_t read_case_prev;
-		uint32_t LYC_offset; // in double speed mode it appears timing changes for LYC int
-		uint32_t LY_153_change; // the timing of LYC chaning to 153 looks like it varies with speed mode
-		uint32_t total_counter;
-
+		int32_t bus_address;
+		int32_t cycle;
+		int32_t OAM_scan_index;
+		int32_t SL_sprites_index;
+		int32_t write_sprite;
+		int32_t read_case;
+		int32_t internal_cycle;
+		int32_t y_tile;
+		int32_t y_scroll_offset;
+		int32_t x_tile;
+		int32_t x_scroll_offset;
+		int32_t sprite_fetch_counter;
+		int32_t temp_fetch;
+		int32_t tile_inc;
+		int32_t latch_counter;
+		int32_t render_counter;
+		int32_t render_offset;
+		int32_t scroll_offset;
+		int32_t pixel;
+		int32_t sl_use_index;
+		int32_t evaled_sprites;
+		int32_t sprite_ordered_index;
+		int32_t consecutive_sprite;
+		int32_t last_eval;
+		int32_t window_counter;
+		int32_t window_tile_inc;
+		int32_t window_y_tile;
+		int32_t window_x_tile;
+		int32_t window_y_tile_inc;
+		int32_t window_x_latch;
+		int32_t window_y_latch;
+		int32_t hbl_countdown;
+		int32_t sprite_scroll_offset;
+		int32_t read_case_prev;
+		int32_t LYC_offset; // in double speed mode it appears timing changes for LYC int
+		int32_t LY_153_change; // the timing of LYC changing to 153 looks like it varies with speed mode
+		int32_t total_counter;
 		int32_t pixel_counter;
 		int32_t tile_byte;
 
@@ -130,8 +129,9 @@ namespace GBHawk
 
 		uint32_t BG_palette[32] = { };
 		uint32_t OBJ_palette[32] = { };
-		uint32_t SL_sprites[40] = { };
-		uint32_t SL_sprites_ordered[40] = { }; // (x_end, data_low, data_high, attr)
+
+		int32_t SL_sprites[40] = { };
+		int32_t SL_sprites_ordered[40] = { }; // (x_end, data_low, data_high, attr)
 
 		// These variables only relate to GBC PPUs
 		bool BG_bytes_inc;
@@ -213,6 +213,11 @@ namespace GBHawk
 		}
 
 		inline bool Get_Bit(uint8_t val, uint8_t bit)
+		{
+			return ((val & (1 << bit)) == (1 << bit));
+		}
+
+		inline bool Get_Bit_Int(int32_t val, int32_t bit)
 		{
 			return ((val & (1 << bit)) == (1 << bit));
 		}
@@ -408,8 +413,8 @@ namespace GBHawk
 
 			saver = int_array_saver(BG_palette, saver, 32);
 			saver = int_array_saver(OBJ_palette, saver, 32);
-			saver = int_array_saver(SL_sprites, saver, 40);
-			saver = int_array_saver(SL_sprites_ordered, saver, 40);
+			saver = sint_array_saver(SL_sprites, saver, 40);
+			saver = sint_array_saver(SL_sprites_ordered, saver, 40);
 
 			// GBC specific
 			saver = bool_saver(BG_bytes_inc, saver);
@@ -508,43 +513,43 @@ namespace GBHawk
 			loader = byte_loader(&window_x_read, loader);
 
 			// TODO: need a test ROM for the details here
-			loader = int_loader(&bus_address, loader);
-			loader = int_loader(&cycle, loader);
-			loader = int_loader(&OAM_scan_index, loader);
-			loader = int_loader(&SL_sprites_index, loader);
-			loader = int_loader(&write_sprite, loader);
-			loader = int_loader(&read_case, loader);
-			loader = int_loader(&internal_cycle, loader);
-			loader = int_loader(&y_tile, loader);
-			loader = int_loader(&y_scroll_offset, loader);
-			loader = int_loader(&x_tile, loader);
-			loader = int_loader(&x_scroll_offset, loader);
-			loader = int_loader(&sprite_fetch_counter, loader);
-			loader = int_loader(&temp_fetch, loader);
-			loader = int_loader(&tile_inc, loader);
-			loader = int_loader(&latch_counter, loader);
-			loader = int_loader(&render_counter, loader);
-			loader = int_loader(&render_offset, loader);
-			loader = int_loader(&scroll_offset, loader);
-			loader = int_loader(&pixel, loader);
-			loader = int_loader(&sl_use_index, loader);
-			loader = int_loader(&evaled_sprites, loader);
-			loader = int_loader(&sprite_ordered_index, loader);
-			loader = int_loader(&consecutive_sprite, loader);
-			loader = int_loader(&last_eval, loader);
-			loader = int_loader(&window_counter, loader);
-			loader = int_loader(&window_tile_inc, loader);
-			loader = int_loader(&window_y_tile, loader);
-			loader = int_loader(&window_x_tile, loader);
-			loader = int_loader(&window_y_tile_inc, loader);
-			loader = int_loader(&window_x_latch, loader);
-			loader = int_loader(&window_y_latch, loader);
-			loader = int_loader(&hbl_countdown, loader);
-			loader = int_loader(&sprite_scroll_offset, loader);
-			loader = int_loader(&read_case_prev, loader);
-			loader = int_loader(&LYC_offset, loader); // in double speed mode it appears timing changes for LYC int
-			loader = int_loader(&LY_153_change, loader); // the timing of LYC chaning to 153 looks like it varies with speed mode
-			loader = int_loader(&total_counter, loader);
+			loader = sint_loader(&bus_address, loader);
+			loader = sint_loader(&cycle, loader);
+			loader = sint_loader(&OAM_scan_index, loader);
+			loader = sint_loader(&SL_sprites_index, loader);
+			loader = sint_loader(&write_sprite, loader);
+			loader = sint_loader(&read_case, loader);
+			loader = sint_loader(&internal_cycle, loader);
+			loader = sint_loader(&y_tile, loader);
+			loader = sint_loader(&y_scroll_offset, loader);
+			loader = sint_loader(&x_tile, loader);
+			loader = sint_loader(&x_scroll_offset, loader);
+			loader = sint_loader(&sprite_fetch_counter, loader);
+			loader = sint_loader(&temp_fetch, loader);
+			loader = sint_loader(&tile_inc, loader);
+			loader = sint_loader(&latch_counter, loader);
+			loader = sint_loader(&render_counter, loader);
+			loader = sint_loader(&render_offset, loader);
+			loader = sint_loader(&scroll_offset, loader);
+			loader = sint_loader(&pixel, loader);
+			loader = sint_loader(&sl_use_index, loader);
+			loader = sint_loader(&evaled_sprites, loader);
+			loader = sint_loader(&sprite_ordered_index, loader);
+			loader = sint_loader(&consecutive_sprite, loader);
+			loader = sint_loader(&last_eval, loader);
+			loader = sint_loader(&window_counter, loader);
+			loader = sint_loader(&window_tile_inc, loader);
+			loader = sint_loader(&window_y_tile, loader);
+			loader = sint_loader(&window_x_tile, loader);
+			loader = sint_loader(&window_y_tile_inc, loader);
+			loader = sint_loader(&window_x_latch, loader);
+			loader = sint_loader(&window_y_latch, loader);
+			loader = sint_loader(&hbl_countdown, loader);
+			loader = sint_loader(&sprite_scroll_offset, loader);
+			loader = sint_loader(&read_case_prev, loader);
+			loader = sint_loader(&LYC_offset, loader); // in double speed mode it appears timing changes for LYC int
+			loader = sint_loader(&LY_153_change, loader); // the timing of LYC chaning to 153 looks like it varies with speed mode
+			loader = sint_loader(&total_counter, loader);
 
 			loader = sint_loader(&pixel_counter, loader);
 			loader = sint_loader(&tile_byte, loader);
@@ -559,8 +564,9 @@ namespace GBHawk
 
 			loader = int_array_loader(BG_palette, loader, 32);
 			loader = int_array_loader(OBJ_palette, loader, 32);
-			loader = int_array_loader(SL_sprites, loader, 40);
-			loader = int_array_loader(SL_sprites_ordered, loader, 40);
+
+			loader = sint_array_loader(SL_sprites, loader, 40);
+			loader = sint_array_loader(SL_sprites_ordered, loader, 40);
 
 			// GBC specific
 			loader = bool_loader(&BG_bytes_inc, loader);
@@ -653,6 +659,17 @@ namespace GBHawk
 			return saver;
 		}
 
+		uint8_t* sint_array_saver(int32_t* to_save, uint8_t* saver, uint32_t length)
+		{
+			for (uint32_t i = 0; i < length; i++)
+			{
+				*saver = (uint8_t)(to_save[i] & 0xFF); saver++; *saver = (uint8_t)((to_save[i] >> 8) & 0xFF); saver++;
+				*saver = (uint8_t)((to_save[i] >> 16) & 0xFF); saver++; *saver = (uint8_t)((to_save[i] >> 24) & 0xFF); saver++;
+			}
+
+			return saver;
+		}
+
 		uint8_t* long_saver(uint64_t to_save, uint8_t* saver)
 		{
 			*saver = (uint8_t)(to_save & 0xFF); saver++; *saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
@@ -719,6 +736,17 @@ namespace GBHawk
 		}
 
 		uint8_t* int_array_loader(uint32_t* to_load, uint8_t* loader, uint32_t length)
+		{
+			for (uint32_t i = 0; i < length; i++)
+			{
+				to_load[i] = *loader; loader++; to_load[i] |= ((uint32_t)(*loader) << 8); loader++;
+				to_load[i] |= ((uint32_t)(*loader) << 16); loader++; to_load[i] |= ((uint32_t)(*loader) << 24); loader++;
+			}
+
+			return loader;
+		}
+
+		uint8_t* sint_array_loader(int32_t* to_load, uint8_t* loader, uint32_t length)
 		{
 			for (uint32_t i = 0; i < length; i++)
 			{
