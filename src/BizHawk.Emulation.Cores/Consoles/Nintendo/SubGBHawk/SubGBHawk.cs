@@ -8,7 +8,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 	[Core(CoreNames.SubGBHawk, "", isReleased: false)]
 	public partial class SubGBHawk : IEmulator, IStatable, IInputPollable, ICycleTiming, ISettable<GBHawk.GBHawk.GBHawkSettings, GBHawk.GBHawk.GBHawkSyncSettings>
 	{
-		[CoreConstructor(VSystemID.Raw.NES)]
+		[CoreConstructor(VSystemID.Raw.GB)]
+		[CoreConstructor(VSystemID.Raw.GBC)]
 		public SubGBHawk(CoreComm comm, GameInfo game, byte[] rom, /*string gameDbFn,*/ GBHawk.GBHawk.GBHawkSettings settings, GBHawk.GBHawk.GBHawkSyncSettings syncSettings)
 		{
 			var SubGBSettings = settings ?? new GBHawk.GBHawk.GBHawkSettings();
@@ -40,7 +41,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 
 		private int _frame;
 
-		public double ClockRate => 5369318.18181;
+		public double ClockRate => 4194304;
 
 		public ulong CycleCount => LibGBHawk.GB_subframe_cycles(_gbCore.GB_Pntr);
 

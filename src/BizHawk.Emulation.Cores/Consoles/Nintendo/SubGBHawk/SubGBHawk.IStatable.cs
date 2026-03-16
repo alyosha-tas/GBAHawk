@@ -31,9 +31,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 			ser.Sync(nameof(pass_a_frame), ref pass_a_frame);
 			ser.Sync(nameof(reset_frame), ref reset_frame);
 			ser.Sync(nameof(pass_new_input), ref pass_new_input);
-			ser.Sync(nameof(current_cycle), ref current_cycle);
-			ser.Sync(nameof(reset_cycle), ref reset_cycle);
-			ser.Sync(nameof(reset_cycle_int), ref reset_cycle_int);
+			ser.Sync(nameof(input_cycle), ref input_cycle);
+			ser.Sync(nameof(input_cycle_int), ref input_cycle_int);
 		}
 	}
 }

@@ -102,6 +102,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
+		/// <param name="ctrl1">controller</param>
+		/// <param name="accx">accelerometer x</param>
+		/// <param name="accy">accelerometer y</param>
 		/// <param name="render">length of romdata in bytes</param>
 		/// <param name="sound">Mapper number to load core with</param>
 		/// <returns>0 on success, negative value on failure.</returns>
@@ -120,14 +123,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// Advance a frame and send controller data.
 		/// </summary>
 		/// <param name="core">opaque state pointer</param>
+		/// <param name="ctrl1">controller</param>
+		/// <param name="accx">accelerometer x</param>
+		/// <param name="accy">accelerometer y</param>
 		/// <param name="render">length of romdata in bytes</param>
 		/// <param name="sound">Mapper number to load core with</param>
 		/// <param name="do_reset">length of romdata in bytes</param>
-		/// <param name="reset_cycle">Mapper number to load core with</param>
+		/// <param name="input_cycle">Mapper number to load core with</param>
 		/// <returns>true if a frame was rendered or a reset occured, false if a poll occured.</returns>
 		[DllImport(lib, CallingConvention = cc)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern bool GB_subframe_advance(IntPtr core, bool render, bool sound, bool do_reset, uint reset_cycle);
+		public static extern bool GB_subframe_advance(IntPtr core, byte ctrl1, ushort accx, ushort accy, bool render, bool sound, bool do_reset, uint input_cycle);
 
 		/// <summary>
 		/// get subframe cycles
@@ -399,6 +405,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		/// <param name="sl">0-153 inclusive</param>
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GB_setscanlinecallback(IntPtr core, ScanlineCallback callback, int sl);
+
+
+		/// <summary>
+		/// Immediately execute the calllback
+		/// </summary>
+		/// <param name="core">opaque state pointer</param>
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GB_executescanlinecallback(IntPtr core);
 
 		#endregion
 	}

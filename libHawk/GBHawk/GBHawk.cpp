@@ -79,10 +79,10 @@ GBHawk_EXPORT bool GB_frame_advance(GBCore* p, uint8_t ctrl1, uint16_t accx, uin
 	return p->FrameAdvance(ctrl1, accx, accy, render, sound);
 }
 
-// advance a frame and possibly subframe reset
-GBHawk_EXPORT bool GB_subframe_advance(GBCore* p, uint8_t ctrl1, uint16_t accx, uint16_t accy, bool render, bool sound, bool do_reset, uint32_t reset_cycle)
+// subframe mode, input cycle is how long current input is applied for in the current frame
+GBHawk_EXPORT bool GB_subframe_advance(GBCore* p, uint8_t ctrl1, uint16_t accx, uint16_t accy, bool render, bool sound, bool do_reset, uint32_t input_cycle)
 {
-	return p->SubFrameAdvance(ctrl1, accx, accy, render, sound, do_reset, reset_cycle);
+	return p->SubFrameAdvance(ctrl1, accx, accy, render, sound, do_reset, input_cycle);
 }
 
 // send video data to external video provider
@@ -124,31 +124,38 @@ GBHawk_EXPORT uint8_t GB_getsysbus(GBCore* p, uint32_t addr) {
 	return p->GetSysBus(addr);
 }
 
-GBHawk_EXPORT uint8_t GB_getvram(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_getvram(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetVRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getram(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_getram(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_gethram(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_gethram(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetHRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getoam(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_getoam(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetOAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getpalram(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_getpalram(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetPALRAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getregisters(GBCore* p, uint32_t addr) {
+GBHawk_EXPORT uint8_t GB_getregisters(GBCore* p, uint32_t addr)
+{
 	return p->GetRegisters(addr);
 }
 
-GBHawk_EXPORT uint8_t GB_getsram(GBCore* p, uint32_t addr, bool vbl_sync) {
+GBHawk_EXPORT uint8_t GB_getsram(GBCore* p, uint32_t addr, bool vbl_sync)
+{
 	return p->GetSRAM(addr, vbl_sync);
 }
 
@@ -157,37 +164,44 @@ GBHawk_EXPORT uint8_t GB_getsram(GBCore* p, uint32_t addr, bool vbl_sync) {
 #pragma region Tracer
 
 // set tracer callback
-GBHawk_EXPORT void GB_settracecallback(GBCore* p, void (*callback)(int)) {
+GBHawk_EXPORT void GB_settracecallback(GBCore* p, void (*callback)(int))
+{
 	p->SetTraceCallback(callback);
 }
 
 // return the cpu trace header length
-GBHawk_EXPORT int GB_getheaderlength(GBCore* p) {
+GBHawk_EXPORT int GB_getheaderlength(GBCore* p)
+{
 	return p->GetHeaderLength();
 }
 
 // return the cpu disassembly length
-GBHawk_EXPORT int GB_getdisasmlength(GBCore* p) {
+GBHawk_EXPORT int GB_getdisasmlength(GBCore* p)
+{
 	return p->GetDisasmLength();
 }
 
 // return the cpu register string length
-GBHawk_EXPORT int GB_getregstringlength(GBCore* p) {
+GBHawk_EXPORT int GB_getregstringlength(GBCore* p)
+{
 	return p->GetRegStringLength();
 }
 
 // return the cpu trace header
-GBHawk_EXPORT void GB_getheader(GBCore* p, char* h, int l) {
+GBHawk_EXPORT void GB_getheader(GBCore* p, char* h, int l)
+{
 	p->GetHeader(h, l);
 }
 
 // return the cpu register state
-GBHawk_EXPORT void GB_getregisterstate(GBCore* p, char* r, int t, int l) {
+GBHawk_EXPORT void GB_getregisterstate(GBCore* p, char* r, int t, int l)
+{
 	p->GetRegisterState(r, t, l);
 }
 
 // return the cpu disassembly
-GBHawk_EXPORT void GB_getdisassembly(GBCore* p, char* d, int t, int l) {
+GBHawk_EXPORT void GB_getdisassembly(GBCore* p, char* d, int t, int l)
+{
 	p->GetDisassembly(d, t, l);
 }
 
@@ -196,12 +210,14 @@ GBHawk_EXPORT void GB_getdisassembly(GBCore* p, char* d, int t, int l) {
 #pragma region Messages
 
 // set message callback
-GBHawk_EXPORT void GB_setmessagecallback(GBCore* p, void (*callback)(int)) {
+GBHawk_EXPORT void GB_setmessagecallback(GBCore* p, void (*callback)(int))
+{
 	p->SetMessageCallback(callback);
 }
 
 // get message
-GBHawk_EXPORT void GB_getmessage(GBCore* p, char* d) {
+GBHawk_EXPORT void GB_getmessage(GBCore* p, char* d)
+{
 	p->GetMessage(d);
 }
 
@@ -216,9 +232,16 @@ GBHawk_EXPORT void* GB_get_ppu_pntrs(GBCore* p, int sel)
 }
 
 // set scanline callback
-GBHawk_EXPORT void GB_setscanlinecallback(GBCore* p, void (*callback)(uint8_t), int sl) {
+GBHawk_EXPORT void GB_setscanlinecallback(GBCore* p, void (*callback)(uint8_t), int sl)
+{
 	p->SetScanlineCallback(callback, sl);
 }
+
+GBHawk_EXPORT void GB_executescanlinecallback(GBCore* p)
+{
+	p->ExecuteScanlineCallback();
+}
+
 
 #pragma endregion
 

@@ -301,7 +301,8 @@ namespace GBHawk
 			saver = int_saver(RTC_low_clock, saver);
 			saver = int_saver(RTC_offset, saver);
 
-
+			saver = byte_array_saver(RTC_regs, saver, 5);
+			saver = byte_array_saver(RTC_regs_latch, saver, 5);
 
 			return saver;
 		}

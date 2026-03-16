@@ -353,7 +353,7 @@ namespace GBHawk
 			return GB.Is_Lag;
 		}
 
-		bool SubFrameAdvance(uint8_t controller_1, uint16_t accx, uint16_t accy,  bool render, bool rendersound, bool do_reset, uint32_t reset_cycle)
+		bool SubFrameAdvance(uint8_t controller_1, uint16_t accx, uint16_t accy,  bool render, bool rendersound, bool do_reset, uint32_t input_cycle)
 		{
 			GB.New_Controller = controller_1;
 			GB.New_Acc_X = accx;
@@ -364,22 +364,27 @@ namespace GBHawk
 			GB.num_samples_L = 0;
 			GB.num_samples_R = 0;
 
-			GB.Is_Lag = true;
-
 			GB.VBlank_Rise = false;
 
-			bool reset_was_done = false;
+			bool frame_was_passed = false;
 
-			if (!do_reset) { reset_cycle = -1; }
+			frame_was_passed = GB.SubFrame_Advance(input_cycle);
 
-			reset_was_done = GB.SubFrame_Advance(reset_cycle);
-
-			if (reset_was_done)
+			if (frame_was_passed)
 			{
-				Hard_Reset();
+				GB.Frame_Cycle = 0;
 			}
+			
+			if (!frame_was_passed || (input_cycle == 70223))
+			{
+				// controller input is always applied here
+				GB.Get_Controller_State();
+				GB.do_controller_check();
 
-			return GB.Is_Lag;
+				if (do_reset) { Hard_Reset(); }
+			}
+			
+			return frame_was_passed;
 		}
 
 		void GetVideo(uint32_t* dest) 
@@ -664,6 +669,14 @@ namespace GBHawk
 			PPU->ScanlineCallback = callback;
 
 			PPU->ScanlineCallbackLine = sl;
+		}
+
+		void ExecuteScanlineCallback()
+		{
+			if (PPU->ScanlineCallback)
+			{
+				PPU->ScanlineCallback(PPU->LCDC);
+			}
 		}
 	};
 }

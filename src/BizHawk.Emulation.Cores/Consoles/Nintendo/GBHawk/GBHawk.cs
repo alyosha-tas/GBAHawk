@@ -277,13 +277,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			_scanlineCallback = callback;
 			_scanlineCallbackLine = line;
 
+			LibGBHawk.GB_setscanlinecallback(GB_Pntr, _scanlineCallback, _scanlineCallbackLine);
+
 			if (line == -2)
 			{
-				_scanlineCallback(0);
-			}
-			else
-			{
-				LibGBHawk.GB_setscanlinecallback(GB_Pntr, _scanlineCallback, _scanlineCallbackLine);
+				LibGBHawk.GB_executescanlinecallback(GB_Pntr);
 			}
 		}
 

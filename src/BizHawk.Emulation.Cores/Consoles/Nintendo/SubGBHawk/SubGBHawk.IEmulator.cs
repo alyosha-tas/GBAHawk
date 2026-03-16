@@ -1,5 +1,6 @@
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using BizHawk.Emulation.Cores.Nintendo.GBHawk;
 using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
@@ -12,7 +13,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 
 		public bool FrameAdvance(IController controller, bool render, bool renderSound)
 		{
+			//Update the color palette if a setting changed
+			if (_gbCore.Settings.Palette == GBHawk.GBHawk.GBHawkSettings.PaletteType.BW)
+			{
+				LibGBHawk.GB_load_Palette(_gbCore.GB_Pntr, true);
+			}
+			else
+			{
+				LibGBHawk.GB_load_Palette(_gbCore.GB_Pntr, false);
+			}
+
 			_gbCore.Controller = controller;
+
+			// update the controller state on VBlank
+			_gbCore.GetControllerState(controller);
 
 			//Console.WriteLine("-----------------------FRAME-----------------------");
 			if (_gbCore.Tracer.IsEnabled())
@@ -28,20 +42,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 
 			reset_frame = false;
 
-			if (controller.IsPressed("Power"))
+			if (controller.IsPressed("P1 Power"))
 			{
 				reset_frame = true;
 			}
 
-			reset_cycle = controller.AxisValue("Reset Cycle");
-			reset_cycle_int = (uint)Math.Floor(reset_cycle);
+			input_cycle = controller.AxisValue("Input Cycle");
+			input_cycle_int = (uint)Math.Floor(input_cycle);
 
-			pass_a_frame = LibGBHawk.GB_subframe_advance(_gbCore.GB_Pntr, true, true, reset_frame, reset_cycle_int);
+			pass_a_frame = false;
+
+			pass_a_frame = LibGBHawk.GB_subframe_advance(_gbCore.GB_Pntr, _gbCore.controller_state, _gbCore.Acc_X_state, _gbCore.Acc_Y_state, true, true, reset_frame, input_cycle_int);
 
 			if (pass_a_frame)
 			{
 				LibGBHawk.GB_get_video(_gbCore.GB_Pntr, _gbCore._vidbuffer);
-				current_cycle = 0;
 			}
 
 			_isLag = pass_a_frame;
@@ -51,8 +66,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 				_lagCount++;
 			}
 
-			reset_frame = false;
-
 			_frame++;
 
 			return pass_a_frame;
@@ -61,9 +74,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 		private bool pass_new_input;
 		private bool pass_a_frame;
 		private bool reset_frame;
-		private int current_cycle;
-		private float reset_cycle;
-		private uint reset_cycle_int;
+		private float input_cycle;
+		private uint input_cycle_int;
 
 		public int Frame => _frame;
 

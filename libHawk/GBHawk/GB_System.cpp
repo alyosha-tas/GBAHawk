@@ -46,23 +46,22 @@ namespace GBHawk
 		}
 	}
 
-	bool GB_System::SubFrame_Advance(uint32_t reset_cycle)
+	bool GB_System::SubFrame_Advance(uint32_t input_cycle)
 	{
-		Frame_Cycle = 0;
-		
-		while (!VBlank_Rise)
+		while (Frame_Cycle < 70224)
 		{
-			Single_Step();
+			Sub_Single_Step();
 
-			if (reset_cycle == Frame_Cycle)
+			if (input_cycle == Frame_Cycle)
 			{
-				return true;
+				Frame_Cycle += 1;
+				return false;
 			}
 
 			Frame_Cycle += 1;
 		}
 
-		return false;
+		return true;
 	}
 
 	inline void GB_System::Single_Step()
@@ -112,6 +111,14 @@ namespace GBHawk
 
 		if (ppu_pntr->In_Vblank && !In_Vblank_old)
 		{
+			if (ppu_pntr->ScanlineCallbackLine == -1)
+			{
+				if (ppu_pntr->ScanlineCallback)
+				{
+					ppu_pntr->ScanlineCallback(ppu_pntr->LCDC);
+				}
+			}
+			
 			Is_Lag = false;
 
 			controller_was_checked = true;
@@ -135,6 +142,78 @@ namespace GBHawk
 
 		In_Vblank_old = ppu_pntr->In_Vblank;
 	}
+
+	inline void GB_System::Sub_Single_Step()
+	{
+		// These things do not change speed in GBC double speed mode
+		snd_Tick();
+		ppu_pntr->Tick();
+		if (Use_MT) { mapper_pntr->Mapper_Tick(); }
+
+		// These things all tick twice as fast in GBC double speed mode
+		// Note that DMA is halted when the CPU is halted
+
+		if (Double_Speed)
+		{
+			if (dma_Start && !cpu_Halted && !cpu_Stopped) { dma_Tick(); }
+			ser_Tick();
+
+			// check state before changes from cpu writes
+			DIV_edge_old = (tim_Divider_Reg & 0x2000) == 0x2000;
+
+			tim_Tick();
+			cpu_Execute_One();
+			tim_Divider_Reg++;
+
+			DIV_falling_edge |= DIV_edge_old & ((tim_Divider_Reg & 0x2000) == 0);
+
+			if (delays_to_process) { process_delays(); }
+
+			REG_FF0F_OLD = REG_FF0F;
+		}
+
+		if (dma_Start && !cpu_Halted && !cpu_Stopped) { dma_Tick(); }
+		ser_Tick();
+
+		// check state before changes from cpu writes
+		DIV_edge_old = Double_Speed ? ((tim_Divider_Reg & 0x2000) == 0x2000) : ((tim_Divider_Reg & 0x1000) == 0x1000);
+
+		tim_Tick();
+		cpu_Execute_One();
+		tim_Divider_Reg++;
+
+		DIV_falling_edge |= DIV_edge_old & (Double_Speed ? ((tim_Divider_Reg & 0x2000) == 0) : ((tim_Divider_Reg & 0x1000) == 0));
+
+		if (delays_to_process) { process_delays(); }
+
+		Cycle_Count++;
+
+		if (ppu_pntr->In_Vblank && !In_Vblank_old)
+		{
+			if (ppu_pntr->ScanlineCallbackLine == -1)
+			{
+				if (ppu_pntr->ScanlineCallback)
+				{
+					ppu_pntr->ScanlineCallback(ppu_pntr->LCDC);
+				}
+			}
+
+			// send the image on VBlank
+			Send_Video_Buffer();
+
+			// input is not checked on vblank in subframe mode
+			if (Sync_Domains_VBL)
+			{
+				Sync_Domains_VBL_Func();
+			}
+		}
+
+		REG_FF0F_OLD = REG_FF0F;
+
+		In_Vblank_old = ppu_pntr->In_Vblank;
+	}
+
+
 
 	void GB_System::Send_Video_Buffer()
 	{

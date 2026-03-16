@@ -11,8 +11,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
 
-		byte controller_state;
-		ushort Acc_X_state, Acc_Y_state;
+		public byte controller_state;
+		public ushort Acc_X_state, Acc_Y_state;
 
 		public bool Current_sync_on_vbl;
 

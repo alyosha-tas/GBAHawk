@@ -80,6 +80,7 @@ namespace GBHawk
 		void Frame_Advance();
 		bool SubFrame_Advance(uint32_t reset_cycle);
 		inline void Single_Step();
+		inline void Sub_Single_Step();
 
 		uint8_t Read_Memory(uint16_t addr);
 
