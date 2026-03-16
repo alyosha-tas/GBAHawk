@@ -85,7 +85,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			}
 
 			[DisplayName("Console Mode")]
-			[Description("Deprecated, only left for compatibility")]
+			[Description("Physical device used.")]
 			[DefaultValue(ConsoleModeType.GBC)]
 			public ConsoleModeType ConsoleMode { get; set; }
 
