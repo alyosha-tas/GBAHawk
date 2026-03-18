@@ -146,13 +146,11 @@ namespace GBHawk
 
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
 		uint8_t ZP_RAM[0x80] = { };
-		uint8_t PALRAM[0x400] = { };
 		uint8_t VRAM[0x4000] = { };
 		uint8_t OAM[0xA0] = { };
 
 		uint8_t RAM_vbls[0x8000] = { };
 		uint8_t ZP_RAM_vbls[0x80] = { };
-		uint8_t PALRAM_vbls[0x400] = { };
 		uint8_t VRAM_vbls[0x4000] = { };
 		uint8_t OAM_vbls[0xA0] = { };
 
@@ -335,7 +333,6 @@ namespace GBHawk
 		{
 			for (int j = 0; j < 0x8000; j++) { RAM_vbls[j] = RAM[j]; }
 			for (int j = 0; j < 0x4000; j++) { VRAM_vbls[j] = VRAM[j]; }
-			for (int j = 0; j < 0x400; j++) { PALRAM_vbls[j] = PALRAM[j]; }
 			for (int j = 0; j < 0x80; j++) { ZP_RAM_vbls[j] = ZP_RAM[j]; }
 			for (int j = 0; j < 0xA0; j++) { OAM_vbls[j] = OAM[j]; }
 
@@ -5545,13 +5542,11 @@ namespace GBHawk
 
 			saver = byte_array_saver(RAM, saver, 0x8000);
 			saver = byte_array_saver(ZP_RAM, saver, 0x80);
-			saver = byte_array_saver(PALRAM, saver, 0x400);
 			saver = byte_array_saver(VRAM, saver, 0x4000);
 			saver = byte_array_saver(OAM, saver, 0xA0);
 
 			saver = byte_array_saver(RAM_vbls, saver, 0x8000);
 			saver = byte_array_saver(ZP_RAM_vbls, saver, 0x80);
-			saver = byte_array_saver(PALRAM_vbls, saver, 0x400);
 			saver = byte_array_saver(VRAM_vbls, saver, 0x4000);
 			saver = byte_array_saver(OAM_vbls, saver, 0xA0);
 
@@ -5629,13 +5624,11 @@ namespace GBHawk
 			
 			loader = byte_array_loader(RAM, loader, 0x8000);
 			loader = byte_array_loader(ZP_RAM, loader, 0x80);
-			loader = byte_array_loader(PALRAM, loader, 0x400);
 			loader = byte_array_loader(VRAM, loader, 0x4000);
 			loader = byte_array_loader(OAM, loader, 0xA0);
 
 			loader = byte_array_loader(RAM_vbls, loader, 0x8000);
 			loader = byte_array_loader(ZP_RAM_vbls, loader, 0x80);
-			loader = byte_array_loader(PALRAM_vbls, loader, 0x400);
 			loader = byte_array_loader(VRAM_vbls, loader, 0x4000);
 			loader = byte_array_loader(OAM_vbls, loader, 0xA0);
 

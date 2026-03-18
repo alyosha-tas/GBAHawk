@@ -1,5 +1,5 @@
 ﻿using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
 using System;
 using System.Text;
 
@@ -11,15 +11,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public ControllerDefinition ControllerDefinition => _controllerDeck.Definition;
 
-		public IController Controller;
+		// not stated used to load data to cores
+		bool[] do_Resets = new bool[4];
+		bool[] do_Renders = new bool[4];
+		bool[] do_Sounds = new bool[4];
+		byte[] f_cntrls = new byte[4];
+		ushort[] f_accxs = new ushort[4];
+		ushort[] f_accys = new ushort[4];
+
+		bool[] get_console_audios = new bool[4];
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
-			Controller = controller;
-			
-			// update the controller state on VBlank
-			GetControllerState(controller);
-
 			if (Tracer.IsEnabled())
 			{
 				tracecb = MakeTrace;
@@ -31,63 +34,43 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 			uint tracer_core = (uint)Settings.TraceSet;
 
-			LibGBHawkLink.GBLink_settracecallback(GB_Pntr, tracecb, tracer_core);
+			LibGBHawkLink.GBLink_settracecallback(GBLink_Pntr, tracecb, tracer_core);
 
-			bool L_Reset = false;
-			bool R_Reset = false;
+			InputCallbacks.Call();
 
-			if (controller.IsPressed("P1 Power"))
+			for (int i = 0; i < Num_ROMS; i++)
 			{
-				L_Reset = true;
-			}
-			if (controller.IsPressed("P2 Power"))
-			{
-				R_Reset = true;
+				f_cntrls[i] = _controllerDeck.ReadPort(controller, i);
+				(f_accxs[i], f_accys[i]) = _controllerDeck.ReadAcc(controller, i);
+
+				do_Renders[i] = true;
+				do_Sounds[i] = true;
 			}
 
-			Is_Lag = LibGBHawkLink.GBLink_frame_advance(GB_Pntr, controller_state_1, Acc_X_state_1, Acc_Y_state_1, true, true,
-																	controller_state_2, Acc_X_state_2, Acc_Y_state_2, true, true,
-																	L_Reset, R_Reset);
+			do_Resets[0] = controller.IsPressed("P1 Power");
+			do_Resets[1] = controller.IsPressed("P2 Power");
+			do_Resets[2] = controller.IsPressed("P3 Power");
+			do_Resets[3] = controller.IsPressed("P4 Power");
+
+			Is_Lag = LibGBHawkLink.GBLink_frame_advance(GBLink_Pntr, f_cntrls, f_accxs, f_accys, do_Renders, do_Sounds, do_Resets);
 
 			if (Is_Lag) { Lag_Count++; }
 
-			LibGBHawkLink.GBLink_get_video(GB_Pntr, _vidbuffer_L, 0);
-			LibGBHawkLink.GBLink_get_video(GB_Pntr, _vidbuffer_R, 1);
-
-			for (int i = 0; i < 160; i++)
+			for (uint i = 0; i < Num_ROMS; i++)
 			{
-				for (int j = 0; j < 240; j++)
-				{
-					_vidbuffer[482 * i + j] = _vidbuffer_L[240 *i + j];
-				}
-
-				_vidbuffer[482 * i + 240] = (int)0xFAFAFA;
-				_vidbuffer[482 * i + 241] = (int)0xFAFAFA;
-
-				for (int j = 0; j < 240; j++)
-				{
-					_vidbuffer[482 * i + 242 + j] = _vidbuffer_R[240 * i + j];
-				}
+				LibGBHawkLink.GBLink_get_video(GBLink_Pntr, video_buffers[i], i);
 			}
+
+			get_video_from_Sources();
 
 			_frame++;
 
 			return true;
 		}
 
-		public void GetControllerState(IController controller)
-		{
-			InputCallbacks.Call();
-			controller_state_1 = _controllerDeck.ReadPort1(controller);
-			(Acc_X_state_1, Acc_Y_state_1) = _controllerDeck.ReadAcc1(controller);
-
-			controller_state_2 = _controllerDeck.ReadPort2(controller);
-			(Acc_X_state_2, Acc_Y_state_2) = _controllerDeck.ReadAcc2(controller);
-		}
-
 		public int Frame => _frame;
 
-		public string SystemId => VSystemID.Raw.GBAL;
+		public string SystemId => VSystemID.Raw.GBL;
 
 		public void ResetCounters()
 		{
@@ -98,10 +81,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public void Dispose()
 		{
-			if (GB_Pntr != IntPtr.Zero)
+			if (GBLink_Pntr != IntPtr.Zero)
 			{
-				LibGBHawkLink.GBLink_destroy(GB_Pntr);
-				GB_Pntr = IntPtr.Zero;
+				LibGBHawkLink.GBLink_destroy(GBLink_Pntr);
+				GBLink_Pntr = IntPtr.Zero;
 			}
 
 			DisposeSound();
@@ -136,9 +119,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			uint audio_core = (uint)Settings.AudioSet;
+			get_console_audios[0] = Settings.A_AudioSet;
+			get_console_audios[1] = Settings.B_AudioSet;
+			get_console_audios[2] = Settings.C_AudioSet;
+			get_console_audios[3] = Settings.D_AudioSet;
 
-			uint f_clock = LibGBHawkLink.GBLink_get_audio(GB_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, audio_core);
+			uint f_clock = LibGBHawkLink.GBLink_get_audio(GBLink_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, get_console_audios);
 
 			for (int i = 0; i < num_samp_L; i++)
 			{
@@ -181,30 +167,187 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			blip_R = null;
 		}
 
-		public int[] _vidbuffer_L = new int[240 * 160];
-		public int[] _vidbuffer_R = new int[240 * 160];
+		public int[][] video_buffers = new int[4][];
 
-		public int[] _vidbuffer = new int[482 * 160];
+		public int[] _vidbuffer;
+
 		public int[] GetVideoBuffer()
 		{
-			if (Settings.VideoSet == GBLinkSettings.VideoSrc.Both)
+			return _vidbuffer;
+		}
+
+		public void get_video_from_Sources()
+		{
+			if (SyncSettings.OneScreenMode)
 			{
-				return _vidbuffer;
+				if (Settings.A_VideoSet == GBLinkSettings.VideoSrc.Enable)
+				{
+					for (int i = 0; i < 160 * 144; i++)
+					{
+						_vidbuffer[i] = video_buffers[0][i];
+					}
+				}
+				else if (Settings.B_VideoSet == GBLinkSettings.VideoSrc.Enable)
+				{
+					for (int i = 0; i < 160 * 144; i++)
+					{
+						_vidbuffer[i] = video_buffers[1][i];
+					}
+				}
+				else if (Settings.C_VideoSet == GBLinkSettings.VideoSrc.Enable)
+				{
+					for (int i = 0; i < 160 * 144; i++)
+					{
+						_vidbuffer[i] = video_buffers[2][i];
+					}
+				}
+				else if (Settings.D_VideoSet == GBLinkSettings.VideoSrc.Enable)
+				{
+					for (int i = 0; i < 160 * 144; i++)
+					{
+						_vidbuffer[i] = video_buffers[3][i];
+					}
+				}
+				else
+				{
+					for (int i = 0; i < 160 * 144; i++)
+					{
+						_vidbuffer[i] = (int)0x000000;
+					}
+				}
 			}
-			else if (Settings.VideoSet == GBLinkSettings.VideoSrc.Left)
+			else if (Num_ROMS == 2)
 			{
-				return _vidbuffer_L;
+				for (int i = 0; i < 144; i++)
+				{
+					for (int j = 0; j < 160; j++)
+					{
+						if (Settings.A_VideoSet == GBLinkSettings.VideoSrc.Enable)
+						{
+							_vidbuffer[i * 322 + j] = video_buffers[0][i * 160 + j];
+						}
+						else
+						{
+							_vidbuffer[i * 322 + j] = 0;
+						}
+
+						if (Settings.B_VideoSet == GBLinkSettings.VideoSrc.Enable)
+						{
+							_vidbuffer[i * 322 + 162 + j] = video_buffers[1][i * 160 + j];
+						}
+						else
+						{
+							_vidbuffer[i * 322 + 162 + j] = 0;
+						}
+					}
+
+					_vidbuffer[322 * i + 160] = (int)0xFAFAFA;
+					_vidbuffer[322 * i + 161] = (int)0xFAFAFA;
+				}
 			}
 			else
 			{
-				return _vidbuffer_R;
+				if (Num_ROMS == 3)
+				{
+					for (int i = 0; i < 144; i++)
+					{
+						for (int j = 0; j < 160; j++)
+						{
+							if (Settings.A_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[i * 322 + j] = video_buffers[0][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[i * 322 + j] = 0;
+							}
+
+							if (Settings.B_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[i * 322 + 162 + j] = video_buffers[1][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[i * 322 + 162 + j] = 0;
+							}
+
+							if (Settings.C_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[(i + 146) * 322 + j + 81] = video_buffers[2][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[(i + 146) * 322 + j + 81] = 0;
+							}
+						}
+					}
+				}
+				else
+				{
+					for (int i = 0; i < 144; i++)
+					{
+						for (int j = 0; j < 160; j++)
+						{
+							if (Settings.A_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[i * 322 + j] = video_buffers[0][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[i * 322 + j] = 0;
+							}
+
+							if (Settings.B_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[i * 322 + 162 + j] = video_buffers[1][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[i * 322 + 162 + j] = 0;
+							}
+
+							if (Settings.C_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[(i + 146) * 322 + j] = video_buffers[2][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[(i + 146) * 322 + j] = 0;
+							}
+
+							if (Settings.D_VideoSet == GBLinkSettings.VideoSrc.Enable)
+							{
+								_vidbuffer[(i + 146) * 322 + j + 162] = video_buffers[3][i * 160 + j];
+							}
+							else
+							{
+								_vidbuffer[(i + 146) * 322 + j + 162] = 0;
+							}
+						}
+					}
+				}
+
+				for (int i = 0; i < 144; i++)
+				{
+					_vidbuffer[322 * i + 160] = (int)0xFAFAFA;
+					_vidbuffer[322 * i + 161] = (int)0xFAFAFA;
+
+					_vidbuffer[322 * i + 322 * 146 + 160] = (int)0xFAFAFA;
+					_vidbuffer[322 * i + 322 * 146 + 161] = (int)0xFAFAFA;
+				}
+
+				for (int i = 0; i < 322; i++)
+				{
+					_vidbuffer[322 * 144 + i] = (int)0xFAFAFA;
+					_vidbuffer[322 * 145 + i] = (int)0xFAFAFA;
+				}
 			}
 		}
 
-		public int VirtualWidth => (Settings.VideoSet == GBLinkSettings.VideoSrc.Both) ? 482 : 240;
-		public int VirtualHeight => 160;
-		public int BufferWidth => (Settings.VideoSet == GBLinkSettings.VideoSrc.Both) ? 482 : 240;
-		public int BufferHeight => 160;
+		public int VirtualWidth => Actual_Width;
+		public int VirtualHeight => Actual_Height;
+		public int BufferWidth => Actual_Width;
+		public int BufferHeight => Actual_Height;
 		public int BackgroundColor => unchecked((int)0xFF000000);
 		public int VsyncNumerator => 262144;
 		public int VsyncDenominator => 4389;

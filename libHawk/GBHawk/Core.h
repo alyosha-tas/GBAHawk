@@ -495,18 +495,6 @@ namespace GBHawk
 			return 0;
 		}
 
-		uint8_t GetPALRAM(uint32_t addr, bool vbl_sync)
-		{
-			if (vbl_sync)
-			{
-				return GB.PALRAM_vbls[addr & 0x3FF];
-			}
-			else
-			{
-				return GB.PALRAM[addr & 0x3FF];
-			}
-		}
-
 		uint8_t GetRegisters(uint32_t addr)
 		{
 			return GB.Get_Registers_Internal(addr);

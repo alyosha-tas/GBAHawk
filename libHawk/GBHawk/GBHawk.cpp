@@ -144,11 +144,6 @@ GBHawk_EXPORT uint8_t GB_getoam(GBCore* p, uint32_t addr, bool vbl_sync)
 	return p->GetOAM(addr, vbl_sync);
 }
 
-GBHawk_EXPORT uint8_t GB_getpalram(GBCore* p, uint32_t addr, bool vbl_sync)
-{
-	return p->GetPALRAM(addr, vbl_sync);
-}
-
 GBHawk_EXPORT uint8_t GB_getregisters(GBCore* p, uint32_t addr)
 {
 	return p->GetRegisters(addr);
@@ -355,10 +350,6 @@ GBHawk_EXPORT uint8_t GBLink_getiwram(GBLinkCore* p, uint32_t addr, uint32_t num
 
 GBHawk_EXPORT uint8_t GBLink_getoam(GBLinkCore* p, uint32_t addr, uint32_t num) {
 	return p->GetOAM(addr, num);
-}
-
-GBHawk_EXPORT uint8_t GBLink_getpalram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetPALRAM(addr, num);
 }
 
 GBHawk_EXPORT uint8_t GBLink_getsram(GBLinkCore* p, uint32_t addr, uint32_t num) {

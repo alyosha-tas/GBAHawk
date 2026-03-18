@@ -51,13 +51,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
-					"PALRAM",
-					0x400,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawk.GB_getpalram(GB_Pntr, (int)(addr & 0x3FF), Current_sync_on_vbl),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
 					"Registers",
 					0x400,
 					MemoryDomain.Endian.Little,

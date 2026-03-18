@@ -2350,59 +2350,88 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 	public class GBLink_ControllerDeck
 	{
-		public GBLink_ControllerDeck(string controller1Name, string controller2Name)
+		// NOTE: can't get here with less than 2 or more than 4 ROMs
+		public GBLink_ControllerDeck(string[] controllerNames, int num_consoles)
 		{
-			Port1 = GBHawkControllerDeck.ControllerCtors.TryGetValue(controller1Name, out var ctor1)
-				? ctor1(1)
-				: throw new InvalidOperationException($"Invalid controller type: {controller1Name}");
-			Port2 = GBHawkControllerDeck.ControllerCtors.TryGetValue(controller2Name, out var ctor2)
-				? ctor2(2)
-				: throw new InvalidOperationException($"Invalid controller type: {controller2Name}");
+			Ports = new IPort[num_consoles];
 
-			Definition = new ControllerDefinition(Port1.Definition.Name)
+			for (uint i = 0; i < num_consoles; i++)
 			{
-				BoolButtons = Port1.Definition.BoolButtons
-					.Concat(Port2.Definition.BoolButtons)
-					.Concat(new[] { "Toggle Cable" })
-					.ToList()
-			};
+				Ports[i] = GBHawkControllerDeck.ControllerCtors.TryGetValue(controllerNames[i], out var ctor)
+				? ctor((int)(i + 1))
+				: throw new InvalidOperationException($"Invalid controller type: {controllerNames[i]}");
+			}
 
-			foreach (var kvp in Port1.Definition.Axes) Definition.Axes.Add(kvp);
-			foreach (var kvp in Port2.Definition.Axes) Definition.Axes.Add(kvp);
+			if (num_consoles == 2)
+			{
+				Definition = new ControllerDefinition(Ports[0].Definition.Name)
+				{
+					BoolButtons = Ports[0].Definition.BoolButtons
+						.Concat(Ports[1].Definition.BoolButtons)
+						.Concat(new[] { "Toggle Cable" })
+						.ToList()
+				};
+			}
+			else if (num_consoles == 3)
+			{
+				Definition = new ControllerDefinition(Ports[0].Definition.Name)
+				{
+					BoolButtons = Ports[0].Definition.BoolButtons
+						.Concat(Ports[1].Definition.BoolButtons)
+						.Concat(Ports[2].Definition.BoolButtons)
+						.Concat(new[] { "Toggle Cable LC" })
+						.Concat(new[] { "Toggle Cable CR" })
+						.Concat(new[] { "Toggle Cable RL" })
+						.ToList()
+				};
+			}
+			else
+			{
+				Definition = new ControllerDefinition(Ports[0].Definition.Name)
+				{
+					BoolButtons = Ports[0].Definition.BoolButtons
+						.Concat(Ports[1].Definition.BoolButtons)
+						.Concat(Ports[2].Definition.BoolButtons)
+						.Concat(Ports[3].Definition.BoolButtons)
+						.Concat(new[] { "Toggle Cable UD" })
+						.Concat(new[] { "Toggle Cable LR" })
+						.Concat(new[] { "Toggle Cable X" })
+						.Concat(new[] { "Toggle Cable 4x" })
+						.ToList()
+				};
+			}
 
-			Definition.HapticsChannels.Add("P1 Rumble");
-			Definition.HapticsChannels.Add("P2 Rumble");
+			foreach (var kvp in Ports[0].Definition.Axes) Definition.Axes.Add(kvp);
+			foreach (var kvp in Ports[1].Definition.Axes) Definition.Axes.Add(kvp);
+
+			if (num_consoles > 2)
+			{
+				foreach (var kvp in Ports[2].Definition.Axes) Definition.Axes.Add(kvp);
+			}
+
+			if (num_consoles == 4)
+			{
+				foreach (var kvp in Ports[3].Definition.Axes) Definition.Axes.Add(kvp);
+			}
 
 			Definition.MakeImmutable();
 		}
 
-		public ushort ReadPort1(IController c)
-		{
-			return Port1.Read(c);
-		}
+		public byte ReadPort(IController c, int console_num) { return Ports[console_num].Read(c); }
 
-		public ushort ReadPort2(IController c)
-		{
-			return Port2.Read(c);
-		}
-
-		public (ushort X, ushort Y) ReadAcc1(IController c)
-			=> Port1.ReadAcc(c);
-
-		public (ushort X, ushort Y) ReadAcc2(IController c)
-			=> Port2.ReadAcc(c);
+		public (ushort X, ushort Y) ReadAcc(IController c, int console_num) => Ports[console_num].ReadAcc(c);
 
 		public ControllerDefinition Definition { get; }
 
 		public void SyncState(Serializer ser)
 		{
-			Port1.SyncState(ser);
-
-			Port2.SyncState(ser);
+			for (uint i = 0; i < Ports.Length; i++)
+			{
+				Ports[i].SyncState(ser);
+			}
 		}
 
-		private readonly IPort Port1;
-		private readonly IPort Port2;
+		private readonly IPort[] Ports;
 	}
 
 	/// <summary>

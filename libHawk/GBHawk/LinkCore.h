@@ -279,18 +279,6 @@ namespace GBHawk
 			return 0;
 		}
 
-		uint8_t GetPALRAM(uint32_t addr, uint32_t num)
-		{
-			if (num == 0)
-			{
-				return L.GB.PALRAM[addr & 0x3FF];
-			}
-			else
-			{
-				return R.GB.PALRAM[addr & 0x3FF];
-			}
-		}
-
 		uint8_t GetSRAM(uint32_t addr, uint32_t num)
 		{
 			if (num == 0)

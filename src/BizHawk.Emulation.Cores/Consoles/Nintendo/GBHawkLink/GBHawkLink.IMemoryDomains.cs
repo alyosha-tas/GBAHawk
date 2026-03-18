@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
+using BizHawk.Emulation.Cores.Nintendo.GB.Common;
 using BizHawk.Emulation.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBLink
@@ -12,130 +12,83 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		private void SetupMemoryDomains()
 		{
-			var domains = new List<MemoryDomain>
+			var domains = new List<MemoryDomain> { };
+
+			string[] con_list = {"A", "B", "C", "D" };
+
+			for (int i = 0; i <Num_ROMS; i++)
 			{
-				new MemoryDomainDelegate(
-					"L WRAM",
-					0x40000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getwram(GB_Pntr, (int)(addr & 0x3FFFF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R WRAM",
-					0x40000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getwram(GB_Pntr, (int)(addr & 0x3FFFF), 1),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"L IWRAM",
-					0x8000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getiwram(GB_Pntr, (int)(addr & 0x7FFF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R IWRAM",
-					0x8000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getiwram(GB_Pntr, (int)(addr & 0x7FFF), 1),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"ROM L",
-					ROMS[0].Length,
-					MemoryDomain.Endian.Little,
-					addr => ROMS[0][addr],
-					(addr, value) => ROMS[0][addr] = value,
-					1),
-				new MemoryDomainDelegate(
-					"ROM R",
-					ROMS[1].Length,
-					MemoryDomain.Endian.Little,
-					addr => ROMS[1][addr],
-					(addr, value) => ROMS[1][addr] = value,
-					1),
-				new MemoryDomainDelegate(
-					"L VRAM",
-					0x18000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getvram(GB_Pntr, (int)(addr & 0x1FFFF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R VRAM",
-					0x18000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getvram(GB_Pntr, (int)(addr & 0x1FFFF), 1),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"L OAM",
-					0x400,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getoam(GB_Pntr, (int)(addr & 0x3FF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R OAM",
-					0x400,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getoam(GB_Pntr, (int)(addr & 0x3FF), 1),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"L PALRAM",
-					0x400,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getpalram(GB_Pntr, (int)(addr & 0x3FF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R PALRAM",
-					0x400,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getpalram(GB_Pntr, (int)(addr & 0x3FF), 1),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"L System Bus",
-					0x10000000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getsysbus(GB_Pntr, (int)(addr & 0xFFFFFFF), 0),
-					(addr, value) => { },
-					1),
-				new MemoryDomainDelegate(
-					"R System Bus",
-					0x10000000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawkLink.GBLink_getsysbus(GB_Pntr, (int)(addr & 0xFFFFFFF), 1),
-					(addr, value) => { },
-					1)
-			};
-			
-			if (cart_RAMS[0] != null)
-			{
-				var CartRam0 = new MemoryDomainDelegate(
-					"CartRAM 0",
-					cart_RAMS[0].Length,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getsram(GB_Pntr, (int)(addr & (cart_RAMS[0].Length - 1)), 0),
-					(addr, value) => cart_RAMS[0][addr] = value,
-					1);
-				domains.Add(CartRam0);
+				var domain= new MemoryDomainDelegate(
+								con_list[i] + " RAM",
+								0x8000,
+								MemoryDomain.Endian.Little,
+								(addr) => LibGBHawkLink.GBLink_getram(GBLink_Pntr, (int)(addr & 0x7FFF), Current_sync_on_vbl[i], (uint)i),
+								(addr, value) => { },
+								1);
+				domains.Add(domain);
 			}
 
-			if (cart_RAMS[1] != null)
+			for (int i = 0; i < Num_ROMS; i++)
 			{
-				var CartRam1 = new MemoryDomainDelegate(
-					"CartRAM 1",
-					cart_RAMS[1].Length,
-					MemoryDomain.Endian.Little,
-					addr => LibGBHawkLink.GBLink_getsram(GB_Pntr, (int)(addr & (cart_RAMS[1].Length - 1)), 1),
-					(addr, value) => cart_RAMS[1][addr] = value,
-					1);
-				domains.Add(CartRam1);
+				var domain = new MemoryDomainDelegate(
+								con_list[i] + " HRAM",
+								0x80,
+								MemoryDomain.Endian.Little,
+								(addr) => LibGBHawkLink.GBLink_gethram(GBLink_Pntr, (int)(addr & 0x7F), Current_sync_on_vbl[i], (uint)i),
+								(addr, value) => { },
+								1);
+				domains.Add(domain);
+			}
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				var domain = new MemoryDomainDelegate(
+								con_list[i] + " ROM",
+								ROM[i].Length,
+								MemoryDomain.Endian.Little,
+								addr => ROM[i][addr],
+								(addr, value) => ROM[i][addr] = value,
+								1);
+				domains.Add(domain);
+			}
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				var domain = new MemoryDomainDelegate(
+								con_list[i] + " VRAM",
+								0x4000,
+								MemoryDomain.Endian.Little,
+								(addr) => LibGBHawkLink.GBLink_getvram(GBLink_Pntr, (int)(addr & 0x3FFF), Current_sync_on_vbl[i], (uint)i),
+								(addr, value) => { },
+								1);
+				domains.Add(domain);
+			}
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				var domain = new MemoryDomainDelegate(
+								con_list[i] + " OAM",
+								0xA0,
+								MemoryDomain.Endian.Little,
+								(addr) => LibGBHawkLink.GBLink_getoam(GBLink_Pntr, (int)(addr & 0xFF), Current_sync_on_vbl[i], (uint)i),
+								(addr, value) => { },
+								1);
+				domains.Add(domain);
+			}
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				if (cart_RAM[i] != null)
+				{
+					var CartRam = new MemoryDomainDelegate(
+						con_list[i] + " CartRAM",
+						cart_RAM[i].Length,
+						MemoryDomain.Endian.Little,
+						addr => LibGBHawkLink.GBLink_getsram(GBLink_Pntr, (int)(addr & (cart_RAM[i].Length - 1)), Current_sync_on_vbl[i], (uint)i),
+						(addr, value) => cart_RAM[i][addr] = value,
+						1);
+					domains.Add(CartRam);
+				}
 			}
 
 			MemoryDomains = new MemoryDomainList(_byteArrayDomains.Values.Concat(domains).ToList());

@@ -1,5 +1,5 @@
 ﻿using System;
-
+using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Emulation.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink

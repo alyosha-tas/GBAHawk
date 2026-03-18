@@ -52,12 +52,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			[DefaultValue(TraceSrc.A)]
 			public TraceSrc TraceSet { get; set; }
 
-			public enum AudioSrc
-			{
-				Enable,
-				Disable
-			}
-
 			public enum VideoSrc
 			{
 				Enable,
@@ -66,23 +60,23 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 			[DisplayName("Enable Audio Console A")]
 			[Description("Output audio if console is active.")]
-			[DefaultValue(AudioSrc.Enable)]
-			public AudioSrc A_AudioSet { get; set; }
+			[DefaultValue(true)]
+			public bool A_AudioSet { get; set; }
 
 			[DisplayName("Enable Audio Console B")]
 			[Description("Output audio if console is active.")]
-			[DefaultValue(AudioSrc.Disable)]
-			public AudioSrc B_AudioSet { get; set; }
+			[DefaultValue(false)]
+			public bool B_AudioSet { get; set; }
 
 			[DisplayName("Enable Audio Console C")]
 			[Description("Output audio if console is active.")]
-			[DefaultValue(AudioSrc.Disable)]
-			public AudioSrc C_AudioSet { get; set; }
+			[DefaultValue(false)]
+			public bool C_AudioSet { get; set; }
 
 			[DisplayName("Enable Audio Console D")]
 			[Description("Output audio if console is active.")]
-			[DefaultValue(AudioSrc.Disable)]
-			public AudioSrc D_AudioSet { get; set; }
+			[DefaultValue(false)]
+			public bool D_AudioSet { get; set; }
 
 			[DisplayName("Enable Video Consola A")]
 			[Description("Output video if console is active.")]
@@ -136,10 +130,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				GBI
 			}
 
-			[DisplayName("Read Domains on VBlank")]
+			[DisplayName("Read Domains on VBlank Console A")]
 			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
 			[DefaultValue(false)]
-			public bool VBL_sync { get; set; }
+			public bool A_VBL_sync { get; set; }
+
+			[DisplayName("Read Domains on VBlank Console B")]
+			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
+			[DefaultValue(false)]
+			public bool B_VBL_sync { get; set; }
+
+			[DisplayName("Read Domains on VBlank Console C")]
+			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
+			[DefaultValue(false)]
+			public bool C_VBL_sync { get; set; }
+
+			[DisplayName("Read Domains on VBlank Console D")]
+			[Description("When true, memory domains are only updated on VBlank. More consistent for LUA. NOTE: Does not work for system bus, does not apply to writes.")]
+			[DefaultValue(false)]
+			public bool D_VBL_sync { get; set; }
 
 			[DisplayName("TotalExecutedCycles Return Value")]
 			[Description("CPU returns the actual CPU cycles executed, GBI returns the values needed for console verification")]
@@ -308,6 +317,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			public ushort C_DivIT = 8;
 			[JsonIgnore]
 			public ushort D_DivIT = 8;
+
+			[DisplayName("One Screen Mode")]
+			[Description("Only display one console, based on setting selection.)")]
+			[DefaultValue(false)]
+			public bool OneScreenMode { get; set; }
 
 			public GBLinkSyncSettings Clone()
 			{
