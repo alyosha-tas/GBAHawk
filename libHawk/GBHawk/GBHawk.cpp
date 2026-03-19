@@ -23,6 +23,8 @@ GBHawk_EXPORT GBCore* GB_create()
 GBHawk_EXPORT void GB_destroy(GBCore* p)
 {
 	delete p->GB.Cart_RAM;
+	delete p->GB.mapper_pntr;
+	delete p->GB.ppu_pntr;
 
 	std::free(p);
 }
@@ -244,37 +246,45 @@ GBHawk_EXPORT void GB_executescanlinecallback(GBCore* p)
 
 #pragma region Link Core
 // Create pointer to a core instance
-GBHawk_EXPORT GBLinkCore* GBLink_create()
+GBHawk_EXPORT GBLinkCore* GBLink_create(uint32_t Num_ROMs)
 {
-	return new GBLinkCore();
+	return new GBLinkCore(Num_ROMs);
 }
 
 // free the memory from the core pointer
 GBHawk_EXPORT void GBLink_destroy(GBLinkCore* p)
 {
-	delete p->L.GB.Cart_RAM;
-	delete p->R.GB.Cart_RAM;
+	if (p != nullptr)
+	{
+		for (int i = 0; i < p->Num_ROMs; i++)
+		{
+			delete p->GBL[i].GB.Cart_RAM;
+			delete p->GBL[i].GB.mapper_pntr;
+			delete p->GBL[i].GB.ppu_pntr;
+		}
+
+		delete p->GBL;
+	}
 
 	std::free(p);
 }
 
 // load bios and basic into the core
-GBHawk_EXPORT void GBLink_load_bios(GBLinkCore* p, uint8_t* bios)
+GBHawk_EXPORT void GBLink_load_bios(GBLinkCore* p, uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 {
-	p->Load_BIOS(bios);
+	p->Load_BIOS(bios, gbcflag, gbc_gba_flag, console_num);
 }
 
 // load a rom into the core
-GBHawk_EXPORT void GBLink_load(GBLinkCore* p, uint8_t* rom_0, uint32_t size_0, uint32_t mapper_0,
-												 uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1)
+GBHawk_EXPORT void GBLink_load(GBLinkCore* p, uint8_t* rom, uint32_t size, uint32_t mapper, uint32_t console_num)
 {
-	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1);
+	p->Load_ROM(rom, size, mapper, console_num);
 }
 
 // Create a default SRAM
-GBHawk_EXPORT void GBLink_create_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size, uint32_t num)
+GBHawk_EXPORT void GBLink_create_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size, uint32_t console_num)
 {
-	p->Create_SRAM(sram, size, num);
+	p->Create_SRAM(sram, size, console_num);
 }
 
 // load sram into the core
@@ -284,9 +294,9 @@ GBHawk_EXPORT void GBLink_load_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size,
 }
 
 // reset the system
-GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p)
+GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p, uint32_t console_num)
 {
-	p->Hard_Reset();
+	p->Hard_Reset(console_num);
 }
 
 // advance a frame
@@ -304,9 +314,10 @@ GBHawk_EXPORT void GBLink_get_video(GBLinkCore* p, uint32_t* dest, uint32_t num)
 }
 
 // send audio data to external audio provider
-GBHawk_EXPORT uint32_t GBLink_get_audio(GBLinkCore* p, int32_t* dest_L, int32_t* n_samp_L, int32_t* dest_R, int32_t* n_samp_R, uint32_t num)
+GBHawk_EXPORT uint32_t GBLink_get_audio(GBLinkCore* p, int32_t* dest_L_0, int32_t* n_samp_L_0, int32_t* dest_R_0, int32_t* n_samp_R_0, 
+													   int32_t* dest_L_1, int32_t* n_samp_L_1, int32_t* dest_R_1, int32_t* n_samp_R_1, bool* enables)
 {
-	return p->GetAudio(dest_L, n_samp_L, dest_R, n_samp_R, num);
+	return p->GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0, dest_L_1, n_samp_L_1, dest_R_1, n_samp_R_1, enables);
 }
 
 #pragma region State Save / Load
@@ -323,11 +334,6 @@ GBHawk_EXPORT void GBLink_load_state(GBLinkCore* p, uint8_t* loader)
 	p->LoadState(loader);
 }
 
-// set rumble callback
-GBHawk_EXPORT void GBLink_setrumblecallback(GBLinkCore* p, void (*callback)(bool), uint32_t num) {
-	p->SetRumbleCallback(callback, num);
-}
-
 #pragma endregion
 
 #pragma region Memory Domain Functions
@@ -336,24 +342,29 @@ GBHawk_EXPORT uint8_t GBLink_getsysbus(GBLinkCore* p, uint32_t addr, uint32_t nu
 	return p->GetSysBus(addr, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getvram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetVRAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_getvram(GBLinkCore* p, uint32_t addr, bool vbl_sync, uint32_t num) {
+	return p->GetVRAM(addr, vbl_sync, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetRAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_getram(GBLinkCore* p, uint32_t addr, bool vbl_sync, uint32_t num) {
+	return p->GetRAM(addr, vbl_sync, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getiwram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetHRAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_gethram(GBLinkCore* p, uint32_t addr, bool vbl_sync, uint32_t num) {
+	return p->GetHRAM(addr, vbl_sync, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getoam(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetOAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_getoam(GBLinkCore* p, uint32_t addr, bool vbl_sync, uint32_t num) {
+	return p->GetOAM(addr, vbl_sync, num);
 }
 
-GBHawk_EXPORT uint8_t GBLink_getsram(GBLinkCore* p, uint32_t addr, uint32_t num) {
-	return p->GetSRAM(addr, num);
+GBHawk_EXPORT uint8_t GBLink_getregisters(GBLinkCore* p, uint32_t addr, uint32_t num)
+{
+	return p->GetRegisters(addr, num);
+}
+
+GBHawk_EXPORT uint8_t GBLink_getsram(GBLinkCore* p, uint32_t addr, bool vbl_sync, uint32_t num) {
+	return p->GetSRAM(addr, vbl_sync, num);
 }
 
 #pragma endregion

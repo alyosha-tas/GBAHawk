@@ -422,18 +422,22 @@ namespace GBHawk
 
 		#pragma region State Save / Load
 
-		void SaveState(uint8_t* saver)
+		uint8_t* SaveState(uint8_t* saver)
 		{	
 			saver = GB.SaveState(saver);
 			saver = Mapper->SaveState(saver);
 			saver = PPU->SaveState(saver);
+
+			return saver;
 		}
 
-		void LoadState(uint8_t* loader)
+		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = GB.LoadState(loader);
 			loader = Mapper->LoadState(loader);
 			loader = PPU->LoadState(loader);
+
+			return loader;
 		}
 
 		#pragma endregion

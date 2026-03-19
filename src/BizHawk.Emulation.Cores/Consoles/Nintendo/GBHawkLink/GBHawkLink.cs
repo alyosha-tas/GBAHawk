@@ -290,8 +290,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				LibGBHawkLink.GBLink_Hard_Reset(GBLink_Pntr, (uint)i);
 			}
 
-			blip_L.SetRates(4194304 * 2, 44100);
-			blip_R.SetRates(4194304 * 2, 44100);
+			blip_L_0.SetRates(4194304 * 2, 44100);
+			blip_R_0.SetRates(4194304 * 2, 44100);
+			blip_L_1.SetRates(4194304 * 2, 44100);
+			blip_R_1.SetRates(4194304 * 2, 44100);
 
 			(ServiceProvider as BasicServiceProvider).Register<ISoundProvider>(this);
 

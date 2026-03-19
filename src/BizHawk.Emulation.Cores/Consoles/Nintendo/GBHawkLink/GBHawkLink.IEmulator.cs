@@ -90,15 +90,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			DisposeSound();
 		}
 
-		public BlipBuffer blip_L = new BlipBuffer(25000);
-		public BlipBuffer blip_R = new BlipBuffer(25000);
+		public BlipBuffer blip_L_0 = new BlipBuffer(15000);
+		public BlipBuffer blip_R_0 = new BlipBuffer(15000);
+		public BlipBuffer blip_L_1 = new BlipBuffer(15000);
+		public BlipBuffer blip_R_1 = new BlipBuffer(15000);
 
-		public int[] Aud_L = new int[25000];
-		public int[] Aud_R = new int[25000];
-		public uint num_samp_L;
-		public uint num_samp_R;
+		public int[] Aud_L_0 = new int[15000];
+		public int[] Aud_R_0 = new int[15000];
+		public uint num_samp_L_0;
+		public uint num_samp_R_0;
 
-		const int blipbuffsize = 9000;
+		public int[] Aud_L_1 = new int[15000];
+		public int[] Aud_R_1 = new int[15000];
+		public uint num_samp_L_1;
+		public uint num_samp_R_1;
+
+		const int blipbuffsize = 15000;
 
 		public bool CanProvideAsync => false;
 
@@ -124,47 +131,134 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			get_console_audios[2] = Settings.C_AudioSet;
 			get_console_audios[3] = Settings.D_AudioSet;
 
-			uint f_clock = LibGBHawkLink.GBLink_get_audio(GBLink_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R, get_console_audios);
+			uint f_clock = LibGBHawkLink.GBLink_get_audio(GBLink_Pntr, Aud_L_0, ref num_samp_L_0, Aud_R_0, ref num_samp_R_0,
+																	   Aud_L_1, ref num_samp_L_1, Aud_R_1, ref num_samp_R_1, get_console_audios);
 
-			for (int i = 0; i < num_samp_L; i++)
+			int counts = 0;
+
+			for (int i = 0; i < 4; i++)
 			{
-				blip_L.AddDelta((uint)Aud_L[i * 2], Aud_L[i * 2 + 1]);
+				if (get_console_audios[i]) { counts++; }
 			}
 
-			for (int i = 0; i < num_samp_R; i++)
+			if (counts == 0)
 			{
-				blip_R.AddDelta((uint)Aud_R[i * 2], Aud_R[i * 2 + 1]);
+				nsamp = 0;
+				samples = Array.Empty<short>();
+			}
+			else if (counts == 1)
+			{
+				// everything stored in '0' entries
+				for (int i = 0; i < num_samp_L_0; i++)
+				{
+					blip_L_0.AddDelta((uint)Aud_L_0[i * 2], Aud_L_0[i * 2 + 1]);
+				}
+
+				for (int i = 0; i < num_samp_R_0; i++)
+				{
+					blip_R_0.AddDelta((uint)Aud_R_0[i * 2], Aud_R_0[i * 2 + 1]);
+				}
+
+				//Console.WriteLine(num_samp_L + " " + num_samp_R + " " + f_clock);
+
+				blip_L_0.EndFrame(f_clock);
+				blip_R_0.EndFrame(f_clock);
+
+				nsamp = blip_L_0.SamplesAvailable();
+				samples = new short[nsamp * 2];
+
+				if (nsamp != 0)
+				{
+					blip_L_0.ReadSamplesLeft(samples, nsamp);
+					blip_R_0.ReadSamplesRight(samples, nsamp);
+				}
+			}
+			else
+			{
+				// map everything in '0' to left audio and '1' to right audio
+				for (int i = 0; i < num_samp_L_0; i++)
+				{
+					blip_L_0.AddDelta((uint)Aud_L_0[i * 2], Aud_L_0[i * 2 + 1]);
+				}
+
+				for (int i = 0; i < num_samp_R_0; i++)
+				{
+					blip_R_0.AddDelta((uint)Aud_R_0[i * 2], Aud_R_0[i * 2 + 1]);
+				}
+
+				for (int i = 0; i < num_samp_L_1; i++)
+				{
+					blip_L_1.AddDelta((uint)Aud_L_1[i * 2], Aud_L_1[i * 2 + 1]);
+				}
+
+				for (int i = 0; i < num_samp_R_1; i++)
+				{
+					blip_R_1.AddDelta((uint)Aud_R_1[i * 2], Aud_R_1[i * 2 + 1]);
+				}
+
+				//Console.WriteLine(num_samp_L + " " + num_samp_R + " " + f_clock);
+
+				blip_L_0.EndFrame(f_clock);
+				blip_R_0.EndFrame(f_clock);
+				blip_L_1.EndFrame(f_clock);
+				blip_R_1.EndFrame(f_clock);
+
+				int nsamp_0 = blip_L_0.SamplesAvailable();
+				int nsamp_1 = blip_L_1.SamplesAvailable();
+
+				nsamp = nsamp_0;
+
+				if (nsamp_1 > nsamp_0)
+				{
+					nsamp = nsamp_1;
+				}
+
+
+				short[] samples_0 = new short[nsamp * 2];
+				short[] samples_1 = new short[nsamp * 2];
+
+				samples = new short[nsamp * 2];
+
+				if (nsamp != 0)
+				{
+					blip_L_0.ReadSamplesLeft(samples_0, nsamp);
+					blip_R_0.ReadSamplesRight(samples_0, nsamp);
+
+					blip_L_1.ReadSamplesLeft(samples_1, nsamp);
+					blip_R_1.ReadSamplesRight(samples_1, nsamp);
+
+					for (int i = 0; i < nsamp * 2; i++)
+					{
+						samples[i] = (short)(samples_0[i] + samples_1[i]);
+					}
+				}
 			}
 
-			//Console.WriteLine(num_samp_L + " " + num_samp_R + " " + f_clock);
-
-			blip_L.EndFrame(f_clock);
-			blip_R.EndFrame(f_clock);
-
-			nsamp = blip_L.SamplesAvailable();
-			samples = new short[nsamp * 2];
-
-			if (nsamp != 0)
-			{
-				blip_L.ReadSamplesLeft(samples, nsamp);
-				blip_R.ReadSamplesRight(samples, nsamp);
-			}
 		}
 
 		public void DiscardSamples()
 		{
-			blip_L.Clear();
-			blip_R.Clear();
+			blip_L_0.Clear();
+			blip_R_0.Clear();
+			blip_L_1.Clear();
+			blip_R_1.Clear();
 		}
 
 		public void DisposeSound()
 		{
-			blip_L.Clear();
-			blip_R.Clear();
-			blip_L.Dispose();
-			blip_R.Dispose();
-			blip_L = null;
-			blip_R = null;
+			blip_L_0.Clear();
+			blip_R_0.Clear();
+			blip_L_0.Dispose();
+			blip_R_0.Dispose();
+			blip_L_0 = null;
+			blip_R_0 = null;
+
+			blip_L_1.Clear();
+			blip_R_1.Clear();
+			blip_L_1.Dispose();
+			blip_R_1.Dispose();
+			blip_L_1 = null;
+			blip_R_1 = null;
 		}
 
 		public int[][] video_buffers = new int[4][];

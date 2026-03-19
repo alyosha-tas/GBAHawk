@@ -18,69 +18,53 @@ namespace GBHawk
 	class GBLinkCore
 	{
 	public:
-		GBLinkCore()
+		GBLinkCore(uint32_t num_roms)
 		{
-			L.GB.System_Reset();
-			L.Mapper = nullptr;
-
-			R.GB.System_Reset();
-			R.Mapper = nullptr;
+			GBL = new GBCore[num_roms];
+			Num_ROMs = num_roms;
 		};
 
-		GBCore L;
-		GBCore R;
+		GBCore* GBL;
+		uint32_t Num_ROMs;
 
-		void Load_BIOS(uint8_t* bios)
+		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 		{
-			std::memcpy(L.GB.BIOS, bios, 0x4000);
-			std::memcpy(R.GB.BIOS, bios, 0x4000);
-		}
-
-		void Load_ROM(uint8_t* ext_rom_0, uint32_t ext_rom_size_0, uint32_t mapper_0,
-						uint8_t* ext_rom_1, uint32_t ext_rom_size_1, uint32_t mapper_1)
-		{
-			L.Load_ROM(ext_rom_0, ext_rom_size_0, mapper_0);
-			R.Load_ROM(ext_rom_1, ext_rom_size_1, mapper_1);
-		}
-
-		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)
-		{
-			if (num == 0)
+			if (console_num < Num_ROMs)
 			{
-				L.Create_SRAM(ext_sram, ext_sram_size);
-			}
-			else
-			{
-				R.Create_SRAM(ext_sram, ext_sram_size);
+				GBL[console_num].Load_BIOS(bios, gbcflag, gbc_gba_flag);
 			}
 		}
 
-		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper, uint32_t console_num)
 		{
-			if (num == 0)
+			if (console_num < Num_ROMs)
 			{
-				std::memcpy(L.GB.Cart_RAM, ext_sram, ext_sram_size);
+				GBL[console_num].Load_ROM(ext_rom, ext_rom_size, mapper);
 			}
-			else
-			{
-				std::memcpy(R.GB.Cart_RAM, ext_sram, ext_sram_size);
-			}	
 		}
 
-		void Hard_Reset()
+		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t console_num)
 		{
-			L.Mapper->Reset();
-			R.Mapper->Reset();
+			if (console_num < Num_ROMs)
+			{
+				GBL[console_num].Create_SRAM(ext_sram, ext_sram_size);
+			}
+		}
 
-			L.GB.System_Reset();
-			R.GB.System_Reset();
+		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				std::memcpy(GBL[console_num].GB.Cart_RAM, ext_sram, ext_sram_size);
+			}
+		}
 
-			// system starts connected
-			L.GB.ext_num = 1;
-			R.GB.ext_num = 2;
-
-			L.GB.is_linked_system = true;
-			R.GB.is_linked_system = true;
+		void Hard_Reset(uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				GBL[console_num].Hard_Reset();
+			}
 		}
 
 		bool FrameAdvance(uint16_t controller_0, uint16_t accx_0, uint16_t accy_0, bool render_0, bool rendersound_0,
@@ -92,121 +76,71 @@ namespace GBHawk
 
 		void GetVideo(uint32_t* dest, uint32_t num)
 		{
-			if (num == 0)
+			if (num < Num_ROMs)
 			{
-				uint32_t* src = L.GB.video_buffer;
-				uint32_t* dst = dest;
-
-				std::memcpy(dst, src, sizeof(uint32_t) * 160 * 144);
-
-				// blank the screen
-				for (int i = 0; i < 160 * 144; i++)
-				{
-					L.GB.video_buffer[i] = 0xFFF8F8F8;
-				}
-			}
-			else
-			{
-				uint32_t* src = R.GB.video_buffer;
-				uint32_t* dst = dest;
-
-				std::memcpy(dst, src, sizeof(uint32_t) * 160 * 144);
-
-				// blank the screen
-				for (int i = 0; i < 160 * 144; i++)
-				{
-					R.GB.video_buffer[i] = 0xFFF8F8F8;
-				}
-			}		
+				GBL[num].GetVideo(dest);
+			}	
 		}
 
-		uint32_t GetAudio(int32_t* dest_L, int32_t* n_samp_L, int32_t* dest_R, int32_t* n_samp_R, uint32_t num)
+		uint32_t GetAudio(int32_t* dest_L_0, int32_t* n_samp_L_0, int32_t* dest_R_0, int32_t* n_samp_R_0,
+						  int32_t* dest_L_1, int32_t* n_samp_L_1, int32_t* dest_R_1, int32_t* n_samp_R_1, bool* enables)
 		{
-			if (num == 0)
+			uint32_t counts = 0;
+			uint32_t one_en = 5;
+			uint32_t two_en = 5;
+
+			uint32_t clock = 0;
+
+			for (int i = 0; i < Num_ROMs; i++)
 			{
-				int32_t* src = L.GB.samples_L;
-				int32_t* dst = dest_L;
+				if (enables[i])
+				{
+					counts += 1;
 
-				std::memcpy(dst, src, sizeof int32_t * L.GB.num_samples_L * 2);
-				n_samp_L[0] = L.GB.num_samples_L;
-
-				src = L.GB.samples_R;
-				dst = dest_R;
-
-				std::memcpy(dst, src, sizeof int32_t * L.GB.num_samples_R * 2);
-				n_samp_R[0] = L.GB.num_samples_R;
-
-				uint32_t temp_int = L.GB.snd_Master_Clock;
-
-				return temp_int;
+					if ((one_en != 5) && (two_en == 5))
+					{
+						two_en = (uint32_t)i;
+					}
+					
+					if (one_en == 5)
+					{
+						one_en = (uint32_t)i;
+					}
+				}
 			}
-			else if (num == 1)
+			
+			if (counts == 1)
 			{
-				int32_t* src = R.GB.samples_L;
-				int32_t* dst = dest_L;
-
-				std::memcpy(dst, src, sizeof int32_t * R.GB.num_samples_L * 2);
-				n_samp_L[0] = R.GB.num_samples_L;
-
-				src = R.GB.samples_R;
-				dst = dest_R;
-
-				std::memcpy(dst, src, sizeof int32_t * R.GB.num_samples_R * 2);
-				n_samp_R[0] = R.GB.num_samples_R;
-
-				uint32_t temp_int = R.GB.snd_Master_Clock;
-
-				return temp_int;
+				// only one system audio enables, send to both left and right channel
+				return GBL[one_en].GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0);
 			}
-			else
+
+			if (counts == 2)
 			{
-				int32_t* src = L.GB.samples_L;
-				int32_t* dst = dest_L;
+				// send left audio to console 1, right to console 2
+				GBL[one_en].GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0);
 
-				std::memcpy(dst, src, sizeof int32_t * L.GB.num_samples_L * 2);
-				n_samp_L[0] = L.GB.num_samples_L;
-
-				src = R.GB.samples_R;
-				dst = dest_R;
-
-				std::memcpy(dst, src, sizeof int32_t * R.GB.num_samples_R * 2);
-				n_samp_R[0] = R.GB.num_samples_R;
-
-				uint32_t temp_int = (R.GB.snd_Master_Clock > L.GB.snd_Master_Clock) ? R.GB.snd_Master_Clock : L.GB.snd_Master_Clock;
-
-				return temp_int;
+				return GBL[two_en].GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0);
 			}
+
+			return 0;
 		}
 
 #pragma region State Save / Load
 
 		void SaveState(uint8_t* saver)
 		{
-			saver = L.GB.SaveState(saver);
-			saver = L.Mapper->SaveState(saver);
-
-			saver = R.GB.SaveState(saver);
-			saver = R.Mapper->SaveState(saver);
+			for (int i = 0; i < Num_ROMs; i++)
+			{
+				saver = GBL[i].SaveState(saver);
+			}
 		}
 
 		void LoadState(uint8_t* loader)
 		{
-			loader = L.GB.LoadState(loader);
-			loader = L.Mapper->LoadState(loader);
-
-			loader = R.GB.LoadState(loader);
-			loader = R.Mapper->LoadState(loader);
-		}
-
-		void SetRumbleCallback(void (*callback)(bool), uint32_t num)
-		{
-			if (num == 0)
+			for (int i = 0; i < Num_ROMs; i++)
 			{
-				L.GB.RumbleCallback = callback;
-			}
-			else
-			{
-				R.GB.RumbleCallback = callback;
+				loader = GBL[i].LoadState(loader);
 			}
 		}
 
@@ -214,91 +148,68 @@ namespace GBHawk
 
 #pragma region Memory Domain Functions
 
-		uint8_t GetSysBus(uint32_t addr, uint32_t num)
+		uint8_t GetSysBus(uint32_t addr, uint32_t console_num)
 		{
-			if (num == 0)
+			if (console_num < Num_ROMs)
 			{
-				return L.GB.Peek_Memory(addr);
+				return GBL[console_num].GetSysBus(addr);
 			}
-			else
-			{
-				return R.GB.Peek_Memory(addr);
-			}
-		}
-
-		uint8_t GetVRAM(uint32_t addr, uint32_t num)
-		{
-			if (num == 0)
-			{
-				return L.GB.VRAM[(addr & 0x3FFF)];
-			}
-			else
-			{
-				return R.GB.VRAM[(addr & 0x3FFF)];
-			}			
-		}
-
-		uint8_t GetRAM(uint32_t addr, uint32_t num)
-		{
-			if (num == 0)
-			{
-				return L.GB.RAM[addr & 0x7FFF];
-			}
-			else
-			{
-				return R.GB.RAM[addr & 0x7FFF];
-			}
-		}
-
-		uint8_t GetHRAM(uint32_t addr, uint32_t num)
-		{
-			if (num == 0)
-			{
-				return L.GB.ZP_RAM[addr & 0x7F];
-			}
-			else
-			{
-				return R.GB.ZP_RAM[addr & 0x7F];
-			}
-		}
-
-		uint8_t GetOAM(uint32_t addr, uint32_t num)
-		{
-			if (addr < 0xA0)
-			{
-				if (num == 0)
-				{
-					return L.GB.OAM[addr];
-				}
-				else
-				{
-					return R.GB.OAM[addr];
-				}
-			}
-
 			return 0;
 		}
 
-		uint8_t GetSRAM(uint32_t addr, uint32_t num)
+		uint8_t GetVRAM(uint32_t addr, bool vbl_sync, uint32_t console_num)
 		{
-			if (num == 0)
+			if (console_num < Num_ROMs)
 			{
-				if (L.GB.Cart_RAM_Length != 0)
-				{
-					return L.GB.Cart_RAM[addr & (L.GB.Cart_RAM_Length - 1)];
-				}
-
-				return 0;
+				return GBL[console_num].GetVRAM(addr, vbl_sync);
 			}
-			else
+			return 0;
+		}
+
+		uint8_t GetRAM(uint32_t addr, bool vbl_sync, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
 			{
-				if (R.GB.Cart_RAM_Length != 0)
-				{
-					return R.GB.Cart_RAM[addr & (R.GB.Cart_RAM_Length - 1)];
-				}
-
-				return 0;
+				return GBL[console_num].GetRAM(addr, vbl_sync);
 			}
+			return 0;
+		}
+
+		uint8_t GetHRAM(uint32_t addr, bool vbl_sync, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				return GBL[console_num].GetHRAM(addr, vbl_sync);
+			}
+			return 0;
+		}
+
+		uint8_t GetOAM(uint32_t addr, bool vbl_sync, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				return GBL[console_num].GetOAM(addr, vbl_sync);
+			}
+			return 0;
+		}
+
+		uint8_t GetRegisters(uint32_t addr, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				return GBL[console_num].GetRegisters(addr);
+			}
+			return 0;
+		}
+
+		uint8_t GetSRAM(uint32_t addr, bool vbl_sync, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				return GBL[console_num].GetSRAM(addr, vbl_sync);
+			}
+
+			return 0;
 		}
 
 #pragma endregion
@@ -307,16 +218,18 @@ namespace GBHawk
 
 		void SetTraceCallback(void (*callback)(int), uint32_t num)
 		{
-			if (num == 0)
+			if (num < Num_ROMs)
 			{
-				L.GB.TraceCallback = callback;
-				R.GB.TraceCallback = nullptr;
+				GBL[num].GB.TraceCallback = callback;
 			}
-			else
+
+			for (int i = 0; i < Num_ROMs; i++)
 			{
-				R.GB.TraceCallback = callback;
-				L.GB.TraceCallback = nullptr;
-			}		
+				if (i != num)
+				{
+					GBL[i].GB.TraceCallback = nullptr;
+				}
+			}	
 		}
 
 		int GetHeaderLength()
@@ -336,93 +249,25 @@ namespace GBHawk
 
 		void GetHeader(char* h, int l)
 		{
-			std::memcpy(h, L.GB.TraceHeader, l);
+			std::memcpy(h, GBL[0].GB.TraceHeader, l);
 		}
 
 		// the copy length l must be supplied ahead of time from GetRegStrngLength
 		void GetRegisterState(char* r, int t, int l, uint32_t num)
 		{
-			if (num == 0)
+			if (num < Num_ROMs)
 			{
-				if (t == 0)
-				{
-					std::memcpy(r, L.GB.CPURegisterState().c_str(), l);
-				}
-				else
-				{
-					std::memcpy(r, L.GB.No_Reg, l);
-				}
-			}
-			else
-			{
-				if (t == 0)
-				{
-					std::memcpy(r, R.GB.CPURegisterState().c_str(), l);
-				}
-				else
-				{
-					std::memcpy(r, R.GB.No_Reg, l);
-				}
+				GBL[num].GetRegisterState(r, t, l);
 			}
 		}
 
 		// the copy length l must be supplied ahead of time from GetDisasmLength
 		void GetDisassembly(char* d, int t, int l, uint32_t num)
 		{
-			if (num == 0)
+			if (num < Num_ROMs)
 			{
-				if (t == 0)
-				{
-					std::memcpy(d, L.GB.CPUDisassembly().c_str(), l);
-				}
-				else if (t == 1)
-				{
-					std::memcpy(d, L.GB.UNS_event, l);
-				}
-				else if (t == 2)
-				{
-					std::memcpy(d, L.GB.UNH_event, l);
-				}
-				else if (t == 3)
-				{
-					std::memcpy(d, L.GB.IRQ_event, l);
-				}
-				else if (t == 4)
-				{
-					std::memcpy(d, L.GB.HALT_event, l);
-				}
-				else if (t == 5)
-				{
-					std::memcpy(d, L.GB.DMA_event, l);
-				}
+				GBL[num].GetDisassembly(d, t, l);
 			}
-			else
-			{
-				if (t == 0)
-				{
-					std::memcpy(d, R.GB.CPUDisassembly().c_str(), l);
-				}
-				else if (t == 1)
-				{
-					std::memcpy(d, R.GB.UNS_event, l);
-				}
-				else if (t == 2)
-				{
-					std::memcpy(d, R.GB.UNH_event, l);
-				}
-				else if (t == 3)
-				{
-					std::memcpy(d, R.GB.IRQ_event, l);
-				}
-				else if (t == 4)
-				{
-					std::memcpy(d, R.GB.HALT_event, l);
-				}
-				else if (t == 5)
-				{
-					std::memcpy(d, R.GB.DMA_event, l);
-				}
-			}	
 		}
 
 #pragma endregion
