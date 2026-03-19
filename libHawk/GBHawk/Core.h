@@ -262,9 +262,12 @@ namespace GBHawk
 			GB.PPU_Read_Regs = &PPUs::ReadReg;
 			GB.PPU_Write_Regs = &PPUs::WriteReg;
 
-			GB.Message_String = "Initialization Successful";
+			if (GB.MessageCallback)
+			{
+				GB.Message_String = "Initialization Successful";
 
-			GB.MessageCallback(GB.Message_String.length());
+				GB.MessageCallback(GB.Message_String.length());
+			}
 
 			GB.System_Reset();
 		}

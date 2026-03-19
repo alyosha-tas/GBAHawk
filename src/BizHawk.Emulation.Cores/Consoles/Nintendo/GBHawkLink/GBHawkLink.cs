@@ -96,6 +96,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 			for (int i = 0; i < Num_ROMS; i++)
 			{
+				Console.WriteLine("Start load step: " + i + " of: " + Num_ROMS);
+
 				Buffer.BlockCopy(lp.Roms[i].RomData, 0x100, header, 0, 0x50);
 
 				if ((header[0x43] != 0x80) && (header[0x43] != 0xC0))
@@ -165,7 +167,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 				for (int j = 0; j < ROM[i].Length; j++)
 				{
-					ROM[i][j] = ROM[i][j];
+					ROM[i][j] = lp.Roms[i].RomData[j];
 				}
 
 				string mppr;
@@ -255,9 +257,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					minutes_upper = (minutes >> 8) & 0xF;
 				}
 
+				Console.WriteLine(ROM[i].Length + " " + mppr_num + " " + i);
+
 				LibGBHawkLink.GBLink_load(GBLink_Pntr, ROM[i], (uint)ROM[i].Length, mppr_num, (uint)i);
 
 				LibGBHawkLink.GBLink_create_SRAM(GBLink_Pntr, cart_RAM[i], Cart_RAM_Size[i], (uint)i);
+
+				Console.WriteLine("Core: " + i + " of: " + Num_ROMS + " created.");
 
 				if (mppr == "MBC3")
 				{
@@ -285,9 +291,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					LibGBHawkLink.GBLink_set_rtc(GBLink_Pntr, remaining & 0xFF, 0, (uint)i);
 				}
 
+				Console.WriteLine("RTC for core: " + i + " of: " + Num_ROMS + " loaded.");
+
 				LibGBHawkLink.GBLink_Sync_Domain_VBL(GBLink_Pntr, Current_sync_on_vbl[i], (uint)i);
 
 				LibGBHawkLink.GBLink_Hard_Reset(GBLink_Pntr, (uint)i);
+
+				Console.WriteLine("End load step: " + i + " of: " + Num_ROMS);
 			}
 
 			blip_L_0.SetRates(4194304 * 2, 44100);

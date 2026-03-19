@@ -22,10 +22,15 @@ namespace GBHawk
 		{
 			GBL = new GBCore[num_roms];
 			Num_ROMs = num_roms;
+			MessageCallback = nullptr;
 		};
 
 		GBCore* GBL;
 		uint32_t Num_ROMs;
+
+		string Message_String = "";
+
+		void (*MessageCallback)(int);
 
 		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 		{
@@ -56,6 +61,14 @@ namespace GBHawk
 			if (console_num < Num_ROMs)
 			{
 				std::memcpy(GBL[console_num].GB.Cart_RAM, ext_sram, ext_sram_size);
+			}
+		}
+
+		void Sync_Domain_VBL(bool on_vbl, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				GBL[console_num].Sync_Domain_VBL(on_vbl);
 			}
 		}
 
@@ -126,7 +139,7 @@ namespace GBHawk
 			return 0;
 		}
 
-#pragma region State Save / Load
+	#pragma region State Save / Load
 
 		void SaveState(uint8_t* saver)
 		{
@@ -144,9 +157,9 @@ namespace GBHawk
 			}
 		}
 
-#pragma endregion
+	#pragma endregion
 
-#pragma region Memory Domain Functions
+	#pragma region Memory Domain Functions
 
 		uint8_t GetSysBus(uint32_t addr, uint32_t console_num)
 		{
@@ -212,9 +225,9 @@ namespace GBHawk
 			return 0;
 		}
 
-#pragma endregion
+	#pragma endregion
 
-#pragma region Tracer
+	#pragma region Tracer
 
 		void SetTraceCallback(void (*callback)(int), uint32_t num)
 		{
@@ -270,7 +283,17 @@ namespace GBHawk
 			}
 		}
 
-#pragma endregion
+	#pragma endregion
+
+		void SetMessageCallback(void (*callback)(int))
+		{
+			MessageCallback = callback;
+		}
+
+		void GetMessage(char* d)
+		{
+			std::memcpy(d, Message_String.c_str(), Message_String.length() + 1);
+		}
 
 	};
 }

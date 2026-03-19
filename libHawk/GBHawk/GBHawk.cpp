@@ -263,7 +263,7 @@ GBHawk_EXPORT void GBLink_destroy(GBLinkCore* p)
 			delete p->GBL[i].GB.ppu_pntr;
 		}
 
-		delete p->GBL;
+		delete[] p->GBL;
 	}
 
 	std::free(p);
@@ -291,6 +291,11 @@ GBHawk_EXPORT void GBLink_create_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t siz
 GBHawk_EXPORT void GBLink_load_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size, uint32_t num)
 {
 	p->Load_SRAM(sram, size, num);
+}
+
+GBHawk_EXPORT void GBLink_Sync_Domain_VBL(GBLinkCore* p, bool on_vbl, uint32_t console_num)
+{
+	p->Sync_Domain_VBL(on_vbl, console_num);
 }
 
 // reset the system
@@ -404,6 +409,22 @@ GBHawk_EXPORT void GBLink_getregisterstate(GBLinkCore* p, char* r, int t, int l,
 // return the cpu disassembly
 GBHawk_EXPORT void GBLink_getdisassembly(GBLinkCore* p, char* d, int t, int l, uint32_t num) {
 	p->GetDisassembly(d, t, l, num);
+}
+
+#pragma endregion
+
+#pragma region Messages
+
+// set message callback
+GBHawk_EXPORT void GBLink_setmessagecallback(GBLinkCore* p, void (*callback)(int))
+{
+	p->SetMessageCallback(callback);
+}
+
+// get message
+GBHawk_EXPORT void GBLink_getmessage(GBLinkCore* p, char* d)
+{
+	p->GetMessage(d);
 }
 
 #pragma endregion
