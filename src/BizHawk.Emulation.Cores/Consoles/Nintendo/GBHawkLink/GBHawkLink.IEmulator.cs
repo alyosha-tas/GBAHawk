@@ -23,6 +23,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public bool FrameAdvance(IController controller, bool render, bool rendersound)
 		{
+			//Update the color palette if a setting changed
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				switch (i)
+				{
+					case 0: LibGBHawkLink.GBLink_load_Palette(GBLink_Pntr, Settings.A_Palette == GBLinkSettings.PaletteType.BW, (uint)i); break;
+					case 1: LibGBHawkLink.GBLink_load_Palette(GBLink_Pntr, Settings.B_Palette == GBLinkSettings.PaletteType.BW, (uint)i); break;
+					case 2: LibGBHawkLink.GBLink_load_Palette(GBLink_Pntr, Settings.C_Palette == GBLinkSettings.PaletteType.BW, (uint)i); break;
+					case 3: LibGBHawkLink.GBLink_load_Palette(GBLink_Pntr, Settings.D_Palette == GBLinkSettings.PaletteType.BW, (uint)i); break;
+				}
+			}
+
 			if (Tracer.IsEnabled())
 			{
 				tracecb = MakeTrace;

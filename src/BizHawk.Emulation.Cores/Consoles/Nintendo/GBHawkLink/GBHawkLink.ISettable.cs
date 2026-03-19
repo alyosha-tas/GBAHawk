@@ -184,7 +184,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			[DefaultValue(ConsoleModeType.GBC)]
 			public ConsoleModeType A_ConsoleMode { get; set; }
 
-			[DisplayName("Console Mode D")]
+			[DisplayName("Console Mode B")]
 			[Description("Physical device used.")]
 			[DefaultValue(ConsoleModeType.GBC)]
 			public ConsoleModeType B_ConsoleMode { get; set; }

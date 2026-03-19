@@ -64,6 +64,14 @@ namespace GBHawk
 			}
 		}
 
+		void Set_Palette(bool palette, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				GBL[console_num].Set_Palette(palette);
+			}
+		}
+
 		void Sync_Domain_VBL(bool on_vbl, uint32_t console_num)
 		{
 			if (console_num < Num_ROMs)
@@ -80,11 +88,67 @@ namespace GBHawk
 			}
 		}
 
-		bool FrameAdvance(uint16_t controller_0, uint16_t accx_0, uint16_t accy_0, bool render_0, bool rendersound_0,
-						uint16_t controller_1, uint16_t accx_1, uint16_t accy_1, bool render_1, bool rendersound_1,
-						bool l_reset, bool r_reset)
+		bool FrameAdvance(uint8_t* ctrls, uint16_t* accxs, uint16_t* accys, bool* renders, bool* sounds, bool* resets)
 		{
+			for (int i = 0; i < Num_ROMs; i++)
+			{
+				GBL[i].GB.New_Controller = ctrls[i];
+				GBL[i].GB.New_Acc_X = accxs[i];
+				GBL[i].GB.New_Acc_Y = accys[i];
+
+				GBL[i].GB.snd_Master_Clock = 0;
+
+				GBL[i].GB.num_samples_L = 0;
+				GBL[i].GB.num_samples_R = 0;
+
+				GBL[i].GB.Is_Lag = true;
+
+				GBL[i].GB.VBlank_Rise = false;
+
+				if (resets[i]) { GBL[i].Hard_Reset(); }
+
+				GBL[i].GB.Frame_Cycle = 0;
+			}
+
+			// do a full frame of cycles for all consoles
+			for (int i = 0; i < 70224; i++)
+			{
+				for (int i = 0; i < Num_ROMs; i++)
+				{
+					GBL[i].GB.Single_Step();
+					GBL[i].GB.Frame_Cycle += 1;
+				}
+
+				if (Num_ROMs == 2)
+				{
+					Linking2x();
+				}
+				else if (Num_ROMs == 3)
+				{
+					Linking3x();
+				}
+				else
+				{
+					Linking4x();
+				}
+			}
+			
 			return false;
+		}
+
+		void Linking2x()
+		{
+
+		}
+
+		void Linking3x()
+		{
+
+		}
+
+		void Linking4x()
+		{
+
 		}
 
 		void GetVideo(uint32_t* dest, uint32_t num)

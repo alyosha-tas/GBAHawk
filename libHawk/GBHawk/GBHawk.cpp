@@ -293,6 +293,11 @@ GBHawk_EXPORT void GBLink_load_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size,
 	p->Load_SRAM(sram, size, num);
 }
 
+GBHawk_EXPORT void GBLink_load_Palette(GBLinkCore* p, bool palette, uint32_t console_num)
+{
+	p->Set_Palette(palette, console_num);
+}
+
 GBHawk_EXPORT void GBLink_Sync_Domain_VBL(GBLinkCore* p, bool on_vbl, uint32_t console_num)
 {
 	p->Sync_Domain_VBL(on_vbl, console_num);
@@ -305,11 +310,9 @@ GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p, uint32_t console_num)
 }
 
 // advance a frame
-GBHawk_EXPORT bool GBLink_frame_advance(GBLinkCore* p, uint16_t ctrl_0, uint16_t accx_0, uint16_t accy_0,  bool render_0, bool sound_0,
-														  uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, bool render_1, bool sound_1,
-														  bool l_reset, bool r_reset)
+GBHawk_EXPORT bool GBLink_frame_advance(GBLinkCore* p, uint8_t* ctrls, uint16_t* accxs, uint16_t* accys, bool* renders, bool* sounds, bool* resets)
 {
-	return p->FrameAdvance(ctrl_0, accx_0, accy_0, render_0, sound_0, ctrl_1, accx_1, accy_1, render_1, sound_1, l_reset, r_reset);
+	return p->FrameAdvance(ctrls, accxs, accys, renders, sounds, resets);
 }
 
 // send video data to external video provider

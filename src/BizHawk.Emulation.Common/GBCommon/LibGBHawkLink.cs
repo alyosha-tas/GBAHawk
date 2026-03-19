@@ -42,7 +42,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GB_load_Palette(IntPtr core, bool palette, uint console_num);
+		public static extern void GBLink_load_Palette(IntPtr core, bool palette, uint console_num);
 
 
 		[DllImport(lib, CallingConvention = cc)]
