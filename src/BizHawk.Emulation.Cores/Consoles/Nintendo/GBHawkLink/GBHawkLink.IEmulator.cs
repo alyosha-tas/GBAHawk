@@ -78,6 +78,36 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 				_cablediscosignal = cablediscosignalNew;
 			}
+			else if (Num_ROMS == 3)
+			{
+				if (controller.IsPressed("Toggle Cable AC") | controller.IsPressed("Toggle Cable BC") | controller.IsPressed("Toggle Cable AB"))
+				{
+					// if any connection exists, disconnect it
+					// otherwise connect in order of precedence
+					// only one event can happen per frame, either a connection or disconnection
+					if (_cableconnected_AC | _cableconnected_BC | _cableconnected_AB)
+					{
+						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, false, 1);
+					}
+					else if (controller.IsPressed("Toggle Cable AC"))
+					{
+						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 4);
+					}
+					else if (controller.IsPressed("Toggle Cable BC"))
+					{
+						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 3);
+					}
+					else if (controller.IsPressed("Toggle Cable AB"))
+					{
+						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 2);
+					}
+
+					Console.WriteLine("Cable connect status:");
+					Console.WriteLine("AC: " + _cableconnected_AC);
+					Console.WriteLine("BC: " + _cableconnected_BC);
+					Console.WriteLine("AB: " + _cableconnected_AB);
+				}
+			}
 
 			Is_Lag = LibGBHawkLink.GBLink_frame_advance(GBLink_Pntr, f_cntrls, f_accxs, f_accys, do_Renders, do_Sounds, do_Resets);
 
@@ -454,15 +484,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				{
 					_vidbuffer[322 * i + 160] = (int)0xFAFAFA;
 					_vidbuffer[322 * i + 161] = (int)0xFAFAFA;
-
-					_vidbuffer[322 * i + 322 * 146 + 160] = (int)0xFAFAFA;
-					_vidbuffer[322 * i + 322 * 146 + 161] = (int)0xFAFAFA;
 				}
 
 				for (int i = 0; i < 322; i++)
 				{
 					_vidbuffer[322 * 144 + i] = (int)0xFAFAFA;
 					_vidbuffer[322 * 145 + i] = (int)0xFAFAFA;
+				}
+
+				if (Num_ROMS == 4)
+				{
+					for (int i = 0; i < 144; i++)
+					{
+						_vidbuffer[322 * i + 322 * 146 + 160] = (int)0xFAFAFA;
+						_vidbuffer[322 * i + 322 * 146 + 161] = (int)0xFAFAFA;
+					}
 				}
 			}
 		}

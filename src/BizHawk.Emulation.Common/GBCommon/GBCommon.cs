@@ -2379,9 +2379,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 					BoolButtons = Ports[0].Definition.BoolButtons
 						.Concat(Ports[1].Definition.BoolButtons)
 						.Concat(Ports[2].Definition.BoolButtons)
-						.Concat(new[] { "Toggle Cable LC" })
-						.Concat(new[] { "Toggle Cable CR" })
-						.Concat(new[] { "Toggle Cable RL" })
+						.Concat(new[] { "Toggle Cable AC" })
+						.Concat(new[] { "Toggle Cable BC" })
+						.Concat(new[] { "Toggle Cable AB" })
 						.ToList()
 				};
 			}

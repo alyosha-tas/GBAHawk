@@ -34,6 +34,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 		public int Num_ROMS = 0;
 		public bool Is_OneScreenMode = false;
 		public bool _cablediscosignal, _cableconnected;
+		public bool _cableconnected_AC, _cableconnected_BC, _cableconnected_AB;
 
 		public bool[] Is_GBC = new bool[4];
 		public bool[] Is_GB_in_GBC = new bool[4];
@@ -55,7 +56,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 			Is_OneScreenMode = SyncSettings.OneScreenMode;
 
-			_cablediscosignal = _cableconnected = false;
+			_cablediscosignal = false;
+			_cableconnected = false;
+
+			_cableconnected_AC = _cableconnected_BC = _cableconnected_AB = false;
 
 			Num_ROMS = lp.Roms.Count;
 
@@ -354,7 +358,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 		}
 
 		private IntPtr GBLink_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GB_core = new byte[0xA0000 * 2];
+		private byte[] GB_core = new byte[0x80000 * 4];
 
 		private readonly GBLink_ControllerDeck _controllerDeck;
 

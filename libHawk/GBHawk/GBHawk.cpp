@@ -281,6 +281,12 @@ GBHawk_EXPORT void GBLink_load(GBLinkCore* p, uint8_t* rom, uint32_t size, uint3
 	p->Load_ROM(rom, size, mapper, console_num);
 }
 
+// set RTC
+GBHawk_EXPORT void GBLink_set_rtc(GBLinkCore* p, int32_t val, uint32_t param, uint32_t console_num)
+{
+	p->Set_RTC(val, param, console_num);
+}
+
 // Create a default SRAM
 GBHawk_EXPORT void GBLink_create_SRAM(GBLinkCore* p, uint8_t* sram, uint32_t size, uint32_t console_num)
 {

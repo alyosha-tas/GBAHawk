@@ -39,7 +39,8 @@ namespace GBHawk
 		bool AC_Connected;
 		bool BD_Connected;
 		bool X4_Connected;
-		bool do_B_Next;
+		bool do_Opp_Next;
+		bool do_Opp_Next_2;
 
 		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 		{
@@ -54,6 +55,14 @@ namespace GBHawk
 			if (console_num < Num_ROMs)
 			{
 				GBL[console_num].Load_ROM(ext_rom, ext_rom_size, mapper);
+			}
+		}
+
+		void Set_RTC(int32_t val, uint32_t param, uint32_t console_num)
+		{
+			if (console_num < Num_ROMs)
+			{
+				GBL[console_num].Set_RTC(val, param);
 			}
 		}
 
@@ -99,7 +108,8 @@ namespace GBHawk
 			BD_Connected = false;
 			X4_Connected = false;
 
-			do_B_Next = false;
+			do_Opp_Next = false;
+			do_Opp_Next_2 = false;
 			
 			if (console_num < Num_ROMs)
 			{
@@ -168,7 +178,7 @@ namespace GBHawk
 			if (AB_Connected)
 			{
 				// the signal to shift out a bit is when serial_clock = 1
-				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_B_Next)
+				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
 				{
 					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
 
@@ -184,7 +194,7 @@ namespace GBHawk
 				}
 				else if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0))
 				{
-					do_B_Next = false;
+					do_Opp_Next = false;
 
 					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
 
@@ -198,11 +208,11 @@ namespace GBHawk
 					GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
 					GBL[1].GB.ser_Can_Pulse = false;
 
-					if (GBL[1].GB.ser_Clock == 2) { do_B_Next = true; }
+					if (GBL[1].GB.ser_Clock == 2) { do_Opp_Next = true; }
 				}
 				else
 				{
-					do_B_Next = false;
+					do_Opp_Next = false;
 				}
 
 				// do IR transfer
@@ -236,7 +246,207 @@ namespace GBHawk
 
 		void Linking3x()
 		{
+			if (AC_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
 
+					if ((GBL[2].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[2].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+						GBL[2].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[2].GB.ser_Clock == 1) || (GBL[2].GB.ser_Clock == 2)) && (GBL[2].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[2].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[2].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					}
+
+					GBL[2].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[2].GB.ser_Can_Pulse = false;
+
+					if (GBL[2].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// do IR transfer
+				if (GBL[0].GB.IR_write > 0)
+				{
+					GBL[0].GB.IR_write--;
+					if (GBL[0].GB.IR_write == 0)
+					{
+						GBL[2].GB.IR_receive = GBL[0].GB.IR_signal;
+						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
+						else { GBL[2].GB.IR_reg &= 0xFD; }
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+					}
+				}
+
+				if (GBL[2].GB.IR_write > 0)
+				{
+					GBL[2].GB.IR_write--;
+					if (GBL[2].GB.IR_write == 0)
+					{
+						GBL[0].GB.IR_receive = GBL[2].GB.IR_signal;
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
+						else { GBL[2].GB.IR_reg &= 0xFD; }
+					}
+				}
+			}
+			else if (BC_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[2].GB.ser_Clock == 1) || (GBL[2].GB.ser_Clock == 2)) && (GBL[2].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[2].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[2].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					}
+
+					GBL[2].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[2].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[2].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[2].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+						GBL[2].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+
+					if (GBL[1].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// do IR transfer
+				if (GBL[2].GB.IR_write > 0)
+				{
+					GBL[2].GB.IR_write--;
+					if (GBL[2].GB.IR_write == 0)
+					{
+						GBL[1].GB.IR_receive = GBL[2].GB.IR_signal;
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
+						else { GBL[2].GB.IR_reg &= 0xFD; }
+					}
+				}
+
+				if (GBL[1].GB.IR_write > 0)
+				{
+					GBL[1].GB.IR_write--;
+					if (GBL[1].GB.IR_write == 0)
+					{
+						GBL[2].GB.IR_receive = GBL[1].GB.IR_signal;
+						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
+						else { GBL[2].GB.IR_reg &= 0xFD; }
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+					}
+				}
+			}
+			else if (AB_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+
+					if (GBL[0].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// do IR transfer
+				if (GBL[1].GB.IR_write > 0)
+				{
+					GBL[1].GB.IR_write--;
+					if (GBL[1].GB.IR_write == 0)
+					{
+						GBL[0].GB.IR_receive = GBL[1].GB.IR_signal;
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+					}
+				}
+
+				if (GBL[0].GB.IR_write > 0)
+				{
+					GBL[0].GB.IR_write--;
+					if (GBL[0].GB.IR_write == 0)
+					{
+						GBL[1].GB.IR_receive = GBL[0].GB.IR_signal;
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+					}
+				}
+			}
 		}
 
 		void Linking4x()
@@ -248,11 +458,62 @@ namespace GBHawk
 		{
 			if (link_type == 0)
 			{
+				// 2 player linking
 				AB_Connected = link_status;
+
+				if (!AB_Connected) { do_Opp_Next = false; }
 			}
 			else if (link_type == 1)
 			{
-				AB_Connected = link_status;
+				// 3 or 4 player disconnect all connections
+				AB_Connected = false;
+				BC_Connected = false;
+				CD_Connected = false;
+				AD_Connected = false;
+				AC_Connected = false;
+				BD_Connected = false;
+				X4_Connected = false;
+
+				do_Opp_Next = false;
+				do_Opp_Next_2 = false;
+			}
+			else if (link_type == 2)
+			{
+				// 3 player set AB
+				AB_Connected = true;
+			}
+			else if (link_type == 3)
+			{
+				// 3 player set BC
+				BC_Connected = true;
+			}
+			else if (link_type == 4)
+			{
+				// 3 player set AC
+				AC_Connected = true;
+			}
+			else if (link_type == 5)
+			{
+				// 4 player set AB, CD
+				AB_Connected = true;
+				CD_Connected = true;
+			}
+			else if (link_type == 6)
+			{
+				// 4 player set AC, BD
+				BD_Connected = true;
+				AC_Connected = true;
+			}
+			else if (link_type == 7)
+			{
+				// 4 player set AD, BC
+				AD_Connected = true;
+				BC_Connected = true;
+			}
+			else if (link_type == 8)
+			{
+				// 4 player set 4x
+				X4_Connected = true;
 			}
 		}
 
@@ -320,7 +581,8 @@ namespace GBHawk
 			saver = bool_saver(BD_Connected, saver);
 			saver = bool_saver(X4_Connected, saver);
 
-			saver = bool_saver(do_B_Next, saver);
+			saver = bool_saver(do_Opp_Next, saver);
+			saver = bool_saver(do_Opp_Next_2, saver);
 
 			for (int i = 0; i < Num_ROMs; i++)
 			{
@@ -338,7 +600,8 @@ namespace GBHawk
 			loader = bool_loader(&BD_Connected, loader);
 			loader = bool_loader(&X4_Connected, loader);
 
-			loader = bool_loader(&do_B_Next, loader);
+			loader = bool_loader(&do_Opp_Next, loader);
+			loader = bool_loader(&do_Opp_Next_2, loader);
 
 			for (int i = 0; i < Num_ROMs; i++)
 			{

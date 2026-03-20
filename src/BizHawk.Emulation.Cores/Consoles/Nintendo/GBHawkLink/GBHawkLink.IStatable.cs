@@ -19,6 +19,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			ser.Sync(nameof(_cableconnected), ref _cableconnected);
 			ser.Sync(nameof(_cablediscosignal), ref _cablediscosignal);
 
+			ser.Sync(nameof(_cableconnected_AC), ref _cableconnected_AC);
+			ser.Sync(nameof(_cableconnected_BC), ref _cableconnected_BC);
+			ser.Sync(nameof(_cableconnected_AB), ref _cableconnected_AB);
+
 			if (ser.IsReader)
 			{
 				ser.Sync(nameof(GB_core), ref GB_core, false);
