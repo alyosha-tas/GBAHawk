@@ -50,7 +50,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBLink_Hard_Reset(IntPtr core, uint console_num);
+		public static extern void GBLink_Hard_Reset(IntPtr core);
 
 
 		[DllImport(lib, CallingConvention = cc)]

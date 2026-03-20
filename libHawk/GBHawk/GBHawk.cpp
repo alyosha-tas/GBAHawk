@@ -310,9 +310,9 @@ GBHawk_EXPORT void GBLink_Sync_Domain_VBL(GBLinkCore* p, bool on_vbl, uint32_t c
 }
 
 // reset the system
-GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p, uint32_t console_num)
+GBHawk_EXPORT void GBLink_Hard_Reset(GBLinkCore* p)
 {
-	p->Hard_Reset(console_num);
+	p->Hard_Reset();
 }
 
 // advance a frame

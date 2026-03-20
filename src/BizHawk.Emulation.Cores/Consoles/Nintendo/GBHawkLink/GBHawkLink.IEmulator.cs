@@ -88,18 +88,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					if (_cableconnected_AC | _cableconnected_BC | _cableconnected_AB)
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, false, 1);
+						_cableconnected_AC = _cableconnected_BC = _cableconnected_AB = false;
 					}
 					else if (controller.IsPressed("Toggle Cable AC"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 4);
+						_cableconnected_AC = true;
 					}
 					else if (controller.IsPressed("Toggle Cable BC"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 3);
+						_cableconnected_BC = true;
 					}
 					else if (controller.IsPressed("Toggle Cable AB"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 2);
+						_cableconnected_AB = true;
 					}
 
 					Console.WriteLine("Cable connect status:");
@@ -118,22 +122,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					if (_cableconnected_UD | _cableconnected_LR | _cableconnected_X | _cableconnected_4x)
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, false, 1);
+						_cableconnected_UD = _cableconnected_LR = _cableconnected_X = _cableconnected_4x = false;
 					}
 					else if (controller.IsPressed("Toggle Cable UD"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 6);
+						_cableconnected_UD = true;
 					}
 					else if (controller.IsPressed("Toggle Cable LR"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 5);
+						_cableconnected_LR = true;
 					}
 					else if (controller.IsPressed("Toggle Cable X"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 7);
+						_cableconnected_X = true;
 					}
 					else if (controller.IsPressed("Toggle Cable 4x"))
 					{
 						LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 8);
+						_cableconnected_4x = true;
 					}
 
 					Console.WriteLine("Cable connect status:");

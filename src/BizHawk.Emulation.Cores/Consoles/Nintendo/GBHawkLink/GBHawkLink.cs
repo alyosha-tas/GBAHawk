@@ -307,10 +307,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 				LibGBHawkLink.GBLink_Sync_Domain_VBL(GBLink_Pntr, Current_sync_on_vbl[i], (uint)i);
 
-				LibGBHawkLink.GBLink_Hard_Reset(GBLink_Pntr, (uint)i);
-
 				Console.WriteLine("End load step: " + i + " of: " + Num_ROMS);
 			}
+
+			HardReset();
 
 			blip_L_0.SetRates(4194304 * 2, 44100);
 			blip_R_0.SetRates(4194304 * 2, 44100);
@@ -337,6 +337,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
 			_controllerDeck = new(controller_strings, Num_ROMS);
+
+			// default to 4x linking in 4 player mode
+			if (Num_ROMS == 4) { _cableconnected_4x = true; LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, true, 8); }
 		}
 
 		public ulong TotalExecutedCycles => 0;
@@ -353,10 +356,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public void HardReset()
 		{
-			for (uint i = 0; i < Num_ROMS; i++)
-			{
-				LibGBHawkLink.GBLink_Hard_Reset(GBLink_Pntr, i);
-			}
+			LibGBHawkLink.GBLink_Hard_Reset(GBLink_Pntr);
 		}
 
 		private IntPtr GBLink_Pntr { get; set; } = IntPtr.Zero;

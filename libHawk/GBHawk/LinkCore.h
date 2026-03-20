@@ -121,7 +121,7 @@ namespace GBHawk
 			}
 		}
 
-		void Hard_Reset(uint32_t console_num)
+		void Hard_Reset()
 		{
 			AB_Connected = false;
 			BC_Connected = false;
@@ -141,14 +141,14 @@ namespace GBHawk
 			buffer_parity = false;
 			pre_transmit = false;
 
-			status_byte = 0;
+			status_byte = 1;
 			received_byte = 0;
 			temp1_rec = temp2_rec = temp3_rec = temp4_rec = 0;
 
-			x4_clock = 0;
-			ping_player = 0;
+			x4_clock = 64;
+			ping_player = 1;
 			ping_byte = 0;
-			bit_count = 0;
+			bit_count = 7;
 			begin_transmitting_cnt = 0;
 			transmit_speed = 0;
 			num_bytes_transmit = 0;
@@ -159,9 +159,9 @@ namespace GBHawk
 				x4_buffer[i] = 0;
 			}
 			
-			if (console_num < Num_ROMs)
+			for (int i = 0; i < Num_ROMs; i++)
 			{
-				GBL[console_num].Hard_Reset();
+				GBL[i].Hard_Reset();
 			}
 		}
 
