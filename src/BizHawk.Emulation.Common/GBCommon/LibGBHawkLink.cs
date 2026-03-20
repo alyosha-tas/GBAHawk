@@ -71,6 +71,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern uint GBLink_get_audio(IntPtr core, int[] aud_buf_L_0, ref uint n_samp_L_0, int[] aud_buf_R_0, ref uint n_samp_R_0,
 																int[] aud_buf_L_1, ref uint n_samp_L_1, int[] aud_buf_R_1, ref uint n_samp_R_1, bool[] audio_enables);
 
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBLink_change_linking(IntPtr core, bool link_status, uint link_type);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBLink_save_state(IntPtr core, byte[] saver);

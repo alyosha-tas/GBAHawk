@@ -16,6 +16,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			ser.Sync("IsLag", ref Is_Lag);
 
 			ser.Sync(nameof(Current_sync_on_vbl), ref Current_sync_on_vbl, false);
+			ser.Sync(nameof(_cableconnected), ref _cableconnected);
+			ser.Sync(nameof(_cablediscosignal), ref _cablediscosignal);
 
 			if (ser.IsReader)
 			{

@@ -65,6 +65,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			do_Resets[2] = controller.IsPressed("P3 Power");
 			do_Resets[3] = controller.IsPressed("P4 Power");
 
+			if (Num_ROMS == 2)
+			{
+				bool cablediscosignalNew = controller.IsPressed("Toggle Cable");
+				if (cablediscosignalNew && !_cablediscosignal)
+				{
+					_cableconnected = !_cableconnected;
+					Console.WriteLine("Cable connect status to {0}", _cableconnected);
+
+					LibGBHawkLink.GBLink_change_linking(GBLink_Pntr, _cableconnected, 0);
+				}
+
+				_cablediscosignal = cablediscosignalNew;
+			}
+
 			Is_Lag = LibGBHawkLink.GBLink_frame_advance(GBLink_Pntr, f_cntrls, f_accxs, f_accys, do_Renders, do_Sounds, do_Resets);
 
 			if (Is_Lag) { Lag_Count++; }
@@ -142,7 +156,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			nsamp = 0;
 			samples = Array.Empty<short>();
 
-			/*
 			get_console_audios[0] = Settings.A_AudioSet;
 			get_console_audios[1] = Settings.B_AudioSet;
 			get_console_audios[2] = Settings.C_AudioSet;
@@ -250,7 +263,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					}
 				}
 			}
-			*/
 		}
 
 		public void DiscardSamples()

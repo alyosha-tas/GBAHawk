@@ -1198,13 +1198,6 @@ namespace GBHawk
 					uint16_t temp2 = *Core_DMA_OAM_Access ? Core_OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
 					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
 
-					if (SL_sprites_index > 8)
-					{
-						Core_Message_String->assign("Bad?: " + to_string(SL_sprites_index * 4 + write_sprite));
-
-						MessageCallback(Core_Message_String->length());
-					}
-					
 					write_sprite++;
 
 					if (write_sprite == 4)

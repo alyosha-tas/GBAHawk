@@ -32,6 +32,15 @@ namespace GBHawk
 
 		void (*MessageCallback)(int);
 
+		bool AB_Connected;
+		bool BC_Connected;
+		bool CD_Connected;
+		bool AD_Connected;
+		bool AC_Connected;
+		bool BD_Connected;
+		bool X4_Connected;
+		bool do_B_Next;
+
 		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 		{
 			if (console_num < Num_ROMs)
@@ -82,6 +91,16 @@ namespace GBHawk
 
 		void Hard_Reset(uint32_t console_num)
 		{
+			AB_Connected = false;
+			BC_Connected = false;
+			CD_Connected = false;
+			AD_Connected = false;
+			AC_Connected = false;
+			BD_Connected = false;
+			X4_Connected = false;
+
+			do_B_Next = false;
+			
 			if (console_num < Num_ROMs)
 			{
 				GBL[console_num].Hard_Reset();
@@ -132,13 +151,87 @@ namespace GBHawk
 					Linking4x();
 				}
 			}
-			
+
+			for (int i = 0; i < Num_ROMs; i++)
+			{
+				if (GBL[i].GB.ppu_pntr->clear_screen)
+				{
+					GBL[i].GB.clear_screen_func();
+				}
+			}
+
 			return false;
 		}
 
 		void Linking2x()
 		{
+			if (AB_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_B_Next)
+				{
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
 
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0))
+				{
+					do_B_Next = false;
+
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+
+					if (GBL[1].GB.ser_Clock == 2) { do_B_Next = true; }
+				}
+				else
+				{
+					do_B_Next = false;
+				}
+
+				// do IR transfer
+				if (GBL[0].GB.IR_write > 0)
+				{
+					GBL[0].GB.IR_write--;
+					if (GBL[0].GB.IR_write == 0)
+					{
+						GBL[1].GB.IR_receive = GBL[0].GB.IR_signal;
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+					}
+				}
+
+				if (GBL[1].GB.IR_write > 0)
+				{
+					GBL[1].GB.IR_write--;
+					if (GBL[1].GB.IR_write == 0)
+					{
+						GBL[0].GB.IR_receive = GBL[1].GB.IR_signal;
+						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
+						else { GBL[0].GB.IR_reg &= 0xFD; }
+						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
+						else { GBL[1].GB.IR_reg &= 0xFD; }
+					}
+				}
+			}
 		}
 
 		void Linking3x()
@@ -149,6 +242,18 @@ namespace GBHawk
 		void Linking4x()
 		{
 
+		}
+
+		void Change_Linking(bool link_status, uint32_t link_type)
+		{
+			if (link_type == 0)
+			{
+				AB_Connected = link_status;
+			}
+			else if (link_type == 1)
+			{
+				AB_Connected = link_status;
+			}
 		}
 
 		void GetVideo(uint32_t* dest, uint32_t num)
@@ -207,34 +312,52 @@ namespace GBHawk
 
 		void SaveState(uint8_t* saver)
 		{
-			uint64_t start = (uint64_t)(saver);
-			
+			saver = bool_saver(AB_Connected, saver);
+			saver = bool_saver(BC_Connected, saver);
+			saver = bool_saver(CD_Connected, saver);
+			saver = bool_saver(AD_Connected, saver);
+			saver = bool_saver(AC_Connected, saver);
+			saver = bool_saver(BD_Connected, saver);
+			saver = bool_saver(X4_Connected, saver);
+
+			saver = bool_saver(do_B_Next, saver);
+
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				saver = GBL[i].SaveState(saver);
 			}
-
-			uint64_t end = (uint64_t)(saver);
-
-			Message_String = "save: " + to_string(end - start);
-
-			MessageCallback(Message_String.length());
 		}
 
 		void LoadState(uint8_t* loader)
 		{
-			uint64_t start = (uint64_t)(loader);
-			
+			loader = bool_loader(&AB_Connected, loader);
+			loader = bool_loader(&BC_Connected, loader);
+			loader = bool_loader(&CD_Connected, loader);
+			loader = bool_loader(&AD_Connected, loader);
+			loader = bool_loader(&AC_Connected, loader);
+			loader = bool_loader(&BD_Connected, loader);
+			loader = bool_loader(&X4_Connected, loader);
+
+			loader = bool_loader(&do_B_Next, loader);
+
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				loader = GBL[i].LoadState(loader);
 			}
+		}
 
-			uint64_t end = (uint64_t)(loader);
+		uint8_t* bool_saver(bool to_save, uint8_t* saver)
+		{
+			*saver = (uint8_t)(to_save ? 1 : 0); saver++;
 
-			Message_String = "loader: " + to_string(end - start);
+			return saver;
+		}
 
-			MessageCallback(Message_String.length());
+		uint8_t* bool_loader(bool* to_load, uint8_t* loader)
+		{
+			to_load[0] = *loader == 1; loader++;
+
+			return loader;
 		}
 
 	#pragma endregion

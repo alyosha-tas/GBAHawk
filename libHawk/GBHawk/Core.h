@@ -375,6 +375,14 @@ namespace GBHawk
 
 			if (frame_was_passed)
 			{
+				// turn off the screen so the image doesnt persist
+				// but don't turn off blank_frame yet, it still needs to be true until the next VBL
+				// GBC games need to clear slow enough that games that turn the screen off briefly for cinematics still look smooth
+				if (GB.ppu_pntr->clear_screen)
+				{
+					GB.clear_screen_func();
+				}
+				
 				GB.Frame_Cycle = 0;
 			}
 			
