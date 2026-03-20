@@ -58,6 +58,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public static extern bool GBLink_frame_advance(IntPtr core, byte[] ctrls, ushort[] accxs, ushort[] accys,
 																	bool[] renders, bool[] sounds, bool[] resets);
 

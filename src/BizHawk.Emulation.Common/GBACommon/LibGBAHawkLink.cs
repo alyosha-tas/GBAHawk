@@ -56,6 +56,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public static extern bool GBALink_frame_advance(IntPtr core, ushort ctrl0, ushort accx0, ushort accy0, byte solar0, bool render0, bool sound0,
 																	 ushort ctrl1, ushort accx1, ushort accy1, byte solar1, bool render1, bool sound1,
 																	 bool l_reset, bool r_reset);

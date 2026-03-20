@@ -139,6 +139,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
+			nsamp = 0;
+			samples = Array.Empty<short>();
+
+			/*
 			get_console_audios[0] = Settings.A_AudioSet;
 			get_console_audios[1] = Settings.B_AudioSet;
 			get_console_audios[2] = Settings.C_AudioSet;
@@ -246,7 +250,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					}
 				}
 			}
-
+			*/
 		}
 
 		public void DiscardSamples()
@@ -285,7 +289,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public void get_video_from_Sources()
 		{
-			if (SyncSettings.OneScreenMode)
+			if (Is_OneScreenMode)
 			{
 				if (Settings.A_VideoSet == GBLinkSettings.VideoSrc.Enable)
 				{

@@ -400,7 +400,6 @@ namespace GBHawk
 			saver = int_saver(LYC_offset, saver); // in double speed mode it appears timing changes for LYC int
 			saver = int_saver(LY_153_change, saver); // the timing of LYC chaning to 153 looks like it varies with speed mode
 			saver = int_saver(total_counter, saver);
-
 			saver = int_saver(tile_byte, saver);
 
 			saver = byte_array_saver(sprite_attr_list, saver, 160);
@@ -413,6 +412,7 @@ namespace GBHawk
 
 			saver = int_array_saver(BG_palette, saver, 32);
 			saver = int_array_saver(OBJ_palette, saver, 32);
+
 			saver = sint_array_saver(SL_sprites, saver, 40);
 			saver = sint_array_saver(SL_sprites_ordered, saver, 40);
 
@@ -531,6 +531,7 @@ namespace GBHawk
 			loader = sint_loader(&render_counter, loader);
 			loader = sint_loader(&render_offset, loader);
 			loader = sint_loader(&scroll_offset, loader);
+			loader = sint_loader(&pixel_counter, loader);
 			loader = sint_loader(&pixel, loader);
 			loader = sint_loader(&sl_use_index, loader);
 			loader = sint_loader(&evaled_sprites, loader);
@@ -550,8 +551,6 @@ namespace GBHawk
 			loader = sint_loader(&LYC_offset, loader); // in double speed mode it appears timing changes for LYC int
 			loader = sint_loader(&LY_153_change, loader); // the timing of LYC chaning to 153 looks like it varies with speed mode
 			loader = sint_loader(&total_counter, loader);
-
-			loader = sint_loader(&pixel_counter, loader);
 			loader = sint_loader(&tile_byte, loader);
 	
 			loader = byte_array_loader(sprite_attr_list, loader, 160);
@@ -750,8 +749,8 @@ namespace GBHawk
 		{
 			for (uint32_t i = 0; i < length; i++)
 			{
-				to_load[i] = *loader; loader++; to_load[i] |= ((uint32_t)(*loader) << 8); loader++;
-				to_load[i] |= ((uint32_t)(*loader) << 16); loader++; to_load[i] |= ((uint32_t)(*loader) << 24); loader++;
+				to_load[i] = *loader; loader++; to_load[i] |= ((int32_t)(*loader) << 8); loader++;
+				to_load[i] |= ((int32_t)(*loader) << 16); loader++; to_load[i] |= ((int32_t)(*loader) << 24); loader++;
 			}
 
 			return loader;

@@ -32,6 +32,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 		int[] mapper = new int[4];
 
 		public int Num_ROMS = 0;
+		public bool Is_OneScreenMode = false;
 
 		public bool[] Is_GBC = new bool[4];
 		public bool[] Is_GB_in_GBC = new bool[4];
@@ -50,6 +51,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBLinkSettings)lp.Settings ?? new GBLinkSettings();
 			SyncSettings = (GBLinkSyncSettings)lp.SyncSettings ?? new GBLinkSyncSettings();
+
+			Is_OneScreenMode = SyncSettings.OneScreenMode;
 
 			Num_ROMS = lp.Roms.Count;
 

@@ -1,6 +1,7 @@
 ﻿using BizHawk.Common;
 
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 {
@@ -10,7 +11,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 		{
 			_controllerDeck.SyncState(ser);
 
-			
 			ser.Sync("Frame", ref _frame);
 			ser.Sync("LagCount", ref Lag_Count);
 			ser.Sync("IsLag", ref Is_Lag);

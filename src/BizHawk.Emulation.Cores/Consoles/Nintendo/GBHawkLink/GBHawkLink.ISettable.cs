@@ -291,6 +291,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				set => D_RTCOfst = Math.Max(-127, Math.Min(127, value));
 			}
 
+			[DisplayName("One Screen Mode")]
+			[Description("Only display one console, based on setting selection.)")]
+			[DefaultValue(false)]
+			public bool OneScreenMode { get; set; }
+
 			[JsonIgnore]
 			private int A_RTCIT;
 			[JsonIgnore]
@@ -318,10 +323,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			[JsonIgnore]
 			public ushort D_DivIT = 8;
 
-			[DisplayName("One Screen Mode")]
-			[Description("Only display one console, based on setting selection.)")]
-			[DefaultValue(false)]
-			public bool OneScreenMode { get; set; }
+
 
 			public GBLinkSyncSettings Clone()
 			{

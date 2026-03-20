@@ -207,18 +207,34 @@ namespace GBHawk
 
 		void SaveState(uint8_t* saver)
 		{
+			uint64_t start = (uint64_t)(saver);
+			
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				saver = GBL[i].SaveState(saver);
 			}
+
+			uint64_t end = (uint64_t)(saver);
+
+			Message_String = "save: " + to_string(end - start);
+
+			MessageCallback(Message_String.length());
 		}
 
 		void LoadState(uint8_t* loader)
 		{
+			uint64_t start = (uint64_t)(loader);
+			
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				loader = GBL[i].LoadState(loader);
 			}
+
+			uint64_t end = (uint64_t)(loader);
+
+			Message_String = "loader: " + to_string(end - start);
+
+			MessageCallback(Message_String.length());
 		}
 
 	#pragma endregion
