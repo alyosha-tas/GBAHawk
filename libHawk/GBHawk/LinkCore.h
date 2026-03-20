@@ -42,6 +42,29 @@ namespace GBHawk
 		bool do_Opp_Next;
 		bool do_Opp_Next_2;
 
+		// 4 player adapter variables
+		bool is_pinging;
+		bool is_transmitting;
+		bool time_out_check;
+		bool ready_to_transmit;
+		bool buffer_parity;
+		bool pre_transmit;
+
+		uint8_t status_byte;
+		uint8_t received_byte;
+		uint8_t temp1_rec, temp2_rec, temp3_rec, temp4_rec;
+
+		uint32_t x4_clock;
+		uint32_t ping_player;
+		uint32_t ping_byte;
+		uint32_t bit_count;
+		uint32_t begin_transmitting_cnt;
+		uint32_t transmit_speed;
+		uint32_t num_bytes_transmit;
+		uint32_t transmit_byte;
+
+		uint8_t x4_buffer[0x400 * 2] = { };
+
 		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
 		{
 			if (console_num < Num_ROMs)
@@ -110,6 +133,31 @@ namespace GBHawk
 
 			do_Opp_Next = false;
 			do_Opp_Next_2 = false;
+
+			is_pinging = false;
+			is_transmitting = false;
+			time_out_check = false;
+			ready_to_transmit = false;
+			buffer_parity = false;
+			pre_transmit = false;
+
+			status_byte = 0;
+			received_byte = 0;
+			temp1_rec = temp2_rec = temp3_rec = temp4_rec = 0;
+
+			x4_clock = 0;
+			ping_player = 0;
+			ping_byte = 0;
+			bit_count = 0;
+			begin_transmitting_cnt = 0;
+			transmit_speed = 0;
+			num_bytes_transmit = 0;
+			transmit_byte = 0;
+
+			for (int i = 0; i < 0x800; i++)
+			{
+				x4_buffer[i] = 0;
+			}
 			
 			if (console_num < Num_ROMs)
 			{
@@ -158,7 +206,14 @@ namespace GBHawk
 				}
 				else
 				{
-					Linking4x();
+					if (X4_Connected)
+					{
+						Linking4x();
+					}
+					else
+					{
+						Linking2x2();
+					}
 				}
 			}
 
@@ -449,10 +504,663 @@ namespace GBHawk
 			}
 		}
 
+		void Linking2x2()
+		{
+			if (AC_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+
+					if (GBL[1].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[2].GB.ser_Clock == 1) || (GBL[2].GB.ser_Clock == 2)) && (GBL[2].GB.ser_Clk_Rate > 0) && !do_Opp_Next_2)
+				{
+					GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+
+					if ((GBL[3].GB.ser_Clk_Rate == -1) && GBL[2].GB.ser_Can_Pulse)
+					{
+						GBL[3].GB.ser_Clock = GBL[2].GB.ser_Clock;
+						GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+						GBL[3].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					}
+
+					GBL[2].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					GBL[2].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[3].GB.ser_Clock == 1) || (GBL[3].GB.ser_Clock == 2)) && (GBL[3].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next_2 = false;
+
+					GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+
+					if ((GBL[2].GB.ser_Clk_Rate == -1) && GBL[3].GB.ser_Can_Pulse)
+					{
+						GBL[2].GB.ser_Clock = GBL[3].GB.ser_Clock;
+						GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+						GBL[2].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					}
+
+					GBL[3].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					GBL[3].GB.ser_Can_Pulse = false;
+
+					if (GBL[3].GB.ser_Clock == 2) { do_Opp_Next_2 = true; }
+				}
+				else
+				{
+					do_Opp_Next_2 = false;
+				}
+			}
+			else if (AB_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+
+					if ((GBL[3].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[3].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+						GBL[3].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[3].GB.ser_Clock == 1) || (GBL[3].GB.ser_Clock == 2)) && (GBL[3].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[3].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[3].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					}
+
+					GBL[3].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[3].GB.ser_Can_Pulse = false;
+
+					if (GBL[3].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0) && !do_Opp_Next_2)
+				{
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[2].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[2].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+						GBL[2].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[2].GB.ser_Clock == 1) || (GBL[2].GB.ser_Clock == 2)) && (GBL[2].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next_2 = false;
+
+					GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[2].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[2].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					}
+
+					GBL[2].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[2].GB.ser_Can_Pulse = false;
+
+					if (GBL[2].GB.ser_Clock == 2) { do_Opp_Next_2 = true; }
+				}
+				else
+				{
+					do_Opp_Next_2 = false;
+				}
+			}
+			else if (AD_Connected)
+			{
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[2].GB.ser_Clock == 1) || (GBL[2].GB.ser_Clock == 2)) && (GBL[2].GB.ser_Clk_Rate > 0) && !do_Opp_Next)
+				{
+					GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+
+					if ((GBL[0].GB.ser_Clk_Rate == -1) && GBL[2].GB.ser_Can_Pulse)
+					{
+						GBL[0].GB.ser_Clock = GBL[2].GB.ser_Clock;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					}
+
+					GBL[2].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					GBL[2].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[0].GB.ser_Clock == 1) || (GBL[0].GB.ser_Clock == 2)) && (GBL[0].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next = false;
+
+					GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+
+					if ((GBL[2].GB.ser_Clk_Rate == -1) && GBL[0].GB.ser_Can_Pulse)
+					{
+						GBL[2].GB.ser_Clock = GBL[0].GB.ser_Clock;
+						GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+						GBL[2].GB.ser_Coming_In = GBL[0].GB.ser_Going_Out;
+					}
+
+					GBL[0].GB.ser_Coming_In = GBL[2].GB.ser_Going_Out;
+					GBL[0].GB.ser_Can_Pulse = false;
+
+					if (GBL[0].GB.ser_Clock == 2) { do_Opp_Next = true; }
+				}
+				else
+				{
+					do_Opp_Next = false;
+				}
+
+				// the signal to shift out a bit is when serial_clock = 1
+				if (((GBL[1].GB.ser_Clock == 1) || (GBL[1].GB.ser_Clock == 2)) && (GBL[1].GB.ser_Clk_Rate > 0) && !do_Opp_Next_2)
+				{
+					GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+
+					if ((GBL[3].GB.ser_Clk_Rate == -1) && GBL[1].GB.ser_Can_Pulse)
+					{
+						GBL[3].GB.ser_Clock = GBL[1].GB.ser_Clock;
+						GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+						GBL[3].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					}
+
+					GBL[1].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					GBL[1].GB.ser_Can_Pulse = false;
+				}
+				else if (((GBL[3].GB.ser_Clock == 1) || (GBL[3].GB.ser_Clock == 2)) && (GBL[3].GB.ser_Clk_Rate > 0))
+				{
+					do_Opp_Next_2 = false;
+
+					GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+
+					if ((GBL[1].GB.ser_Clk_Rate == -1) && GBL[3].GB.ser_Can_Pulse)
+					{
+						GBL[1].GB.ser_Clock = GBL[3].GB.ser_Clock;
+						GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+						GBL[1].GB.ser_Coming_In = GBL[3].GB.ser_Going_Out;
+					}
+
+					GBL[3].GB.ser_Coming_In = GBL[1].GB.ser_Going_Out;
+					GBL[3].GB.ser_Can_Pulse = false;
+
+					if (GBL[3].GB.ser_Clock == 2) { do_Opp_Next_2 = true; }
+				}
+				else
+				{
+					do_Opp_Next_2 = false;
+				}
+			}
+		}
+
 		void Linking4x()
 		{
+			x4_clock--;
 
+			if (x4_clock == 0)
+			{
+				if (is_transmitting)
+				{
+					if (ready_to_transmit)
+					{
+						// fill the buffer on the second pass
+						GBL[0].GB.ser_Clock = 1;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = (uint8_t)((x4_buffer[transmit_byte + (buffer_parity ? 0x400 : 0)] >> bit_count) & 1);
+						temp1_rec = (uint8_t)((temp1_rec << 1) | GBL[0].GB.ser_Going_Out);
+
+						if ((status_byte & 0x20) == 0x20)
+						{
+							GBL[1].GB.ser_Clock = 1;
+							GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+							GBL[1].GB.ser_Coming_In = (uint8_t)((x4_buffer[transmit_byte + (buffer_parity ? 0x400 : 0)] >> bit_count) & 1);
+
+							temp2_rec = (uint8_t)((temp2_rec << 1) | GBL[1].GB.ser_Going_Out);
+						}
+						else
+						{
+							temp2_rec = (uint8_t)((temp2_rec << 1) | 0);
+						}
+
+						if ((status_byte & 0x40) == 0x40)
+						{
+							GBL[2].GB.ser_Clock = 1;
+							GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+							GBL[2].GB.ser_Coming_In = (uint8_t)((x4_buffer[transmit_byte + (buffer_parity ? 0x400 : 0)] >> bit_count) & 1);
+
+							temp3_rec = (uint8_t)((temp3_rec << 1) | GBL[2].GB.ser_Going_Out);
+						}
+						else
+						{
+							temp3_rec = (uint8_t)((temp3_rec << 1) | 0);
+						}
+
+						if ((status_byte & 0x80) == 0x80)
+						{
+							GBL[3].GB.ser_Clock = 1;
+							GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+							GBL[3].GB.ser_Coming_In = (uint8_t)((x4_buffer[transmit_byte + (buffer_parity ? 0x400 : 0)] >> bit_count) & 1);
+
+							temp4_rec = (uint8_t)((temp4_rec << 1) | GBL[3].GB.ser_Going_Out);
+						}
+						else
+						{
+							temp4_rec = (uint8_t)((temp4_rec << 1) | 0);
+						}
+
+						bit_count--;
+						x4_clock = 512 + transmit_speed * 8;
+
+						if (bit_count == -1)
+						{
+							bit_count = 7;
+							x4_clock = 64;
+							ready_to_transmit = false;
+
+							if ((transmit_byte >= 1) && (transmit_byte < (num_bytes_transmit + 1)))
+							{
+								x4_buffer[(buffer_parity ? 0 : 0x400) + (transmit_byte - 1)] = temp1_rec;
+								x4_buffer[(buffer_parity ? 0 : 0x400) + num_bytes_transmit + (transmit_byte - 1)] = temp2_rec;
+								x4_buffer[(buffer_parity ? 0 : 0x400) + num_bytes_transmit * 2 + (transmit_byte - 1)] = temp3_rec;
+								x4_buffer[(buffer_parity ? 0 : 0x400) + num_bytes_transmit * 3 + (transmit_byte - 1)] = temp4_rec;
+							}
+
+							//Console.WriteLine(temp1_rec + " " + temp2_rec + " " + temp3_rec + " " + temp4_rec + " " + transmit_byte);
+
+							transmit_byte++;
+
+							if (transmit_byte == num_bytes_transmit * 4)
+							{
+								transmit_byte = 0;
+								buffer_parity = !buffer_parity;
+							}
+						}
+					}
+					else
+					{
+						if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+						{
+							ready_to_transmit = true;
+
+							if ((status_byte & 0x20) == 0x20)
+							{
+								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+							if ((status_byte & 0x40) == 0x40)
+							{
+								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+							if ((status_byte & 0x80) == 0x80)
+							{
+								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+						}
+
+						if (ready_to_transmit)
+						{
+							x4_clock = 512 + transmit_speed * 8;
+						}
+						else
+						{
+							x4_clock = 64;
+						}
+					}
+				}
+				else if (is_pinging)
+				{
+					if (ping_byte == 0)
+					{
+						// first byte sent is 0xFE
+						if (ping_player == 1)
+						{
+							if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+							{
+								GBL[0].GB.ser_Clock = 1;
+								GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+								GBL[0].GB.ser_Coming_In = (uint8_t)((0xFE >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[0].GB.ser_Going_Out << bit_count);
+						}
+						else if (ping_player == 2)
+						{
+							if ((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))
+							{
+								GBL[1].GB.ser_Clock = 1;
+								GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+								GBL[1].GB.ser_Coming_In = (uint8_t)((0xFE >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[1].GB.ser_Going_Out << bit_count);
+						}
+						else if (ping_player == 3)
+						{
+							if ((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))
+							{
+								GBL[2].GB.ser_Clock = 1;
+								GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+								GBL[2].GB.ser_Coming_In = (uint8_t)((0xFE >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[2].GB.ser_Going_Out << bit_count);
+						}
+						else
+						{
+							if ((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))
+							{
+								GBL[3].GB.ser_Clock = 1;
+								GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+								GBL[3].GB.ser_Coming_In = (uint8_t)((0xFE >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[3].GB.ser_Going_Out << bit_count);
+						}
+
+						bit_count--;
+						x4_clock = 512;
+
+						if (bit_count == -1)
+						{
+							// player one can start the transmission phase
+							if (ping_player == 1)
+							{
+								begin_transmitting_cnt = 0;
+								num_bytes_transmit = received_byte;
+							}
+
+							//Console.WriteLine(ping_player + " " + ping_byte + " " + status_byte + " " + received_byte);
+
+							bit_count = 7;
+							received_byte = 0;
+
+							ping_byte++;
+							x4_clock = 64;
+							is_pinging = false;
+						}
+					}
+					else
+					{
+						// the next 3 bytes are the status byte (which may be updated in between each transfer)
+						if (ping_player == 1)
+						{
+							if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+							{
+								GBL[0].GB.ser_Clock = 1;
+								GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+								GBL[0].GB.ser_Coming_In = (uint8_t)((status_byte >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[0].GB.ser_Going_Out << bit_count);
+						}
+						else if (ping_player == 2)
+						{
+							if ((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))
+							{
+								GBL[1].GB.ser_Clock = 1;
+								GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+								GBL[1].GB.ser_Coming_In = (uint8_t)((status_byte >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[1].GB.ser_Going_Out << bit_count);
+						}
+						else if (ping_player == 3)
+						{
+							if ((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))
+							{
+								GBL[2].GB.ser_Clock = 1;
+								GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+								GBL[2].GB.ser_Coming_In = (uint8_t)((status_byte >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[2].GB.ser_Going_Out << bit_count);
+						}
+						else
+						{
+							if ((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))
+							{
+								GBL[3].GB.ser_Clock = 1;
+								GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+								GBL[3].GB.ser_Coming_In = (uint8_t)((status_byte >> bit_count) & 1);
+							}
+
+							received_byte |= (uint8_t)(GBL[3].GB.ser_Going_Out << bit_count);
+						}
+
+						bit_count--;
+						x4_clock = 512;
+
+						if (bit_count == -1)
+						{
+							is_pinging = false;
+							x4_clock = 64;
+
+							// player one can start the transmission phase
+							if ((received_byte == 0xAA) && (ping_player == 1))
+							{
+								begin_transmitting_cnt += 1;
+
+								if ((begin_transmitting_cnt >= 1) && (ping_byte == 3))
+								{
+									pre_transmit = true;
+									is_pinging = false;
+									ready_to_transmit = false;
+									transmit_byte = 0;
+									bit_count = 7;
+								}
+							}
+
+							if (((received_byte & 0x88) == 0x88) && (ping_byte <= 2))
+							{
+								status_byte |= (uint8_t)(1 << (3 + ping_player));
+							}
+
+							if ((ping_player == 1) && (ping_byte == 3) && !pre_transmit)
+							{
+								transmit_speed = received_byte;
+							}
+
+							//Console.WriteLine(ping_player + " " + ping_byte + " " + status_byte + " " + received_byte);
+
+							bit_count = 7;
+							received_byte = 0;
+
+							ping_byte++;
+
+							if (ping_byte == 4)
+							{
+								ping_byte = 0;
+								ping_player++;
+
+								if (ping_player == 5) { ping_player = 1; }
+
+								begin_transmitting_cnt = 0;
+
+								status_byte &= 0xF0;
+								status_byte |= (uint8_t)ping_player;
+
+								time_out_check = true;
+								x4_clock = 64;
+							}
+						}
+					}
+				}
+				else if (pre_transmit)
+				{
+					if (ready_to_transmit)
+					{
+						// send four byte of 0xCC to signal start of transmitting
+
+						// fill the buffer
+						GBL[0].GB.ser_Clock = 1;
+						GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
+						GBL[0].GB.ser_Coming_In = (uint8_t)((0xCC >> bit_count) & 1);
+
+						if ((status_byte & 0x20) == 0x20)
+						{
+							GBL[1].GB.ser_Clock = 1;
+							GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
+							GBL[1].GB.ser_Coming_In = (uint8_t)((0xCC >> bit_count) & 1);
+						}
+
+						if ((status_byte & 0x40) == 0x40)
+						{
+							GBL[2].GB.ser_Clock = 1;
+							GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
+							GBL[2].GB.ser_Coming_In = (uint8_t)((0xCC >> bit_count) & 1);
+						}
+
+						if ((status_byte & 0x80) == 0x80)
+						{
+							GBL[3].GB.ser_Clock = 1;
+							GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
+							GBL[3].GB.ser_Coming_In = (uint8_t)((0xCC >> bit_count) & 1);
+						}
+
+						bit_count--;
+						x4_clock = 512;
+
+						if (bit_count == -1)
+						{
+							bit_count = 7;
+							x4_clock = 64;
+							ready_to_transmit = false;
+
+							transmit_byte++;
+
+							if (transmit_byte == 4)
+							{
+								pre_transmit = false;
+								is_transmitting = true;
+								transmit_byte = 0;
+								buffer_parity = false;
+							}
+						}
+					}
+					else
+					{
+						if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+						{
+							ready_to_transmit = true;
+
+							if ((status_byte & 0x20) == 0x20)
+							{
+								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+							if ((status_byte & 0x40) == 0x40)
+							{
+								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+							if ((status_byte & 0x80) == 0x80)
+							{
+								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
+							}
+						}
+
+						if (ready_to_transmit)
+						{
+							x4_clock = 512;
+						}
+						else
+						{
+							x4_clock = 64;
+						}
+					}
+				}
+				else
+				{
+					x4_clock = 64;
+
+					// wiat for a gameboy to request a ping. Timeout and go to the next one if nothing happening for some time.
+					if ((ping_player == 1) && ((GBL[0].GB.ser_Control & 0x81) == 0x80))
+					{
+						is_pinging = true;
+						x4_clock = 512;
+						time_out_check = false;
+					}
+					else if ((ping_player == 2) && ((GBL[1].GB.ser_Control & 0x81) == 0x80))
+					{
+						is_pinging = true;
+						x4_clock = 512;
+						time_out_check = false;
+					}
+					else if ((ping_player == 3) && ((GBL[2].GB.ser_Control & 0x81) == 0x80))
+					{
+						is_pinging = true;
+						x4_clock = 512;
+						time_out_check = false;
+					}
+					else if ((ping_player == 4) && ((GBL[3].GB.ser_Control & 0x81) == 0x80))
+					{
+						is_pinging = true;
+						x4_clock = 512;
+						time_out_check = false;
+					}
+
+					if (time_out_check)
+					{
+						ping_player++;
+
+						if (ping_player == 5) { ping_player = 1; }
+
+						status_byte &= 0xF0;
+						status_byte |= (uint8_t)ping_player;
+
+						x4_clock = 64;
+					}
+				}
+			}
 		}
+
+		inline bool Get_Bit(uint8_t val, uint8_t bit) { return (val & (0x1 << bit)) == (0x1 << bit); }
 
 		void Change_Linking(bool link_status, uint32_t link_type)
 		{
@@ -476,6 +1184,9 @@ namespace GBHawk
 
 				do_Opp_Next = false;
 				do_Opp_Next_2 = false;
+
+				is_pinging = false;
+				is_transmitting = false;
 			}
 			else if (link_type == 2)
 			{
@@ -584,6 +1295,31 @@ namespace GBHawk
 			saver = bool_saver(do_Opp_Next, saver);
 			saver = bool_saver(do_Opp_Next_2, saver);
 
+			saver = bool_saver(is_pinging, saver);
+			saver = bool_saver(is_transmitting, saver);
+			saver = bool_saver(time_out_check, saver);
+			saver = bool_saver(ready_to_transmit, saver);
+			saver = bool_saver(buffer_parity, saver);
+			saver = bool_saver(pre_transmit, saver);
+
+			saver = byte_saver(status_byte, saver);
+			saver = byte_saver(received_byte, saver);
+			saver = byte_saver(temp1_rec, saver);
+			saver = byte_saver(temp2_rec, saver);
+			saver = byte_saver(temp3_rec, saver);
+			saver = byte_saver(temp4_rec, saver);
+
+			saver = int_saver(x4_clock, saver);
+			saver = int_saver(ping_player, saver);
+			saver = int_saver(ping_byte, saver);
+			saver = int_saver(bit_count, saver);
+			saver = int_saver(begin_transmitting_cnt, saver);
+			saver = int_saver(transmit_speed, saver);
+			saver = int_saver(num_bytes_transmit, saver);
+			saver = int_saver(transmit_byte, saver);
+
+			saver = byte_array_saver(x4_buffer, saver, 0x800);
+
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				saver = GBL[i].SaveState(saver);
@@ -603,6 +1339,31 @@ namespace GBHawk
 			loader = bool_loader(&do_Opp_Next, loader);
 			loader = bool_loader(&do_Opp_Next_2, loader);
 
+			loader = bool_loader(&is_pinging, loader);
+			loader = bool_loader(&is_transmitting, loader);
+			loader = bool_loader(&time_out_check, loader);
+			loader = bool_loader(&ready_to_transmit, loader);
+			loader = bool_loader(&buffer_parity, loader);
+			loader = bool_loader(&pre_transmit, loader);
+
+			loader = byte_loader(&status_byte, loader);
+			loader = byte_loader(&received_byte, loader);
+			loader = byte_loader(&temp1_rec, loader);
+			loader = byte_loader(&temp2_rec, loader);
+			loader = byte_loader(&temp3_rec, loader);
+			loader = byte_loader(&temp4_rec, loader);
+
+			loader = int_loader(&x4_clock, loader);
+			loader = int_loader(&ping_player, loader);
+			loader = int_loader(&ping_byte, loader);
+			loader = int_loader(&bit_count, loader);
+			loader = int_loader(&begin_transmitting_cnt, loader);
+			loader = int_loader(&transmit_speed, loader);
+			loader = int_loader(&num_bytes_transmit, loader);
+			loader = int_loader(&transmit_byte, loader);
+
+			loader = byte_array_loader(x4_buffer, loader, 0x800);
+
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				loader = GBL[i].LoadState(loader);
@@ -616,9 +1377,53 @@ namespace GBHawk
 			return saver;
 		}
 
+		uint8_t* byte_saver(uint8_t to_save, uint8_t* saver)
+		{
+			*saver = to_save; saver++;
+
+			return saver;
+		}
+
+		uint8_t* int_saver(uint32_t to_save, uint8_t* saver)
+		{
+			*saver = (uint8_t)(to_save & 0xFF); saver++; *saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
+			*saver = (uint8_t)((to_save >> 16) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 24) & 0xFF); saver++;
+
+			return saver;
+		}
+
+		uint8_t* byte_array_saver(uint8_t* to_save, uint8_t* saver, int length)
+		{
+			for (int i = 0; i < length; i++) { *saver = to_save[i]; saver++; }
+
+			return saver;
+		}
+
 		uint8_t* bool_loader(bool* to_load, uint8_t* loader)
 		{
 			to_load[0] = *loader == 1; loader++;
+
+			return loader;
+		}
+
+		uint8_t* byte_loader(uint8_t* to_load, uint8_t* loader)
+		{
+			to_load[0] = *loader; loader++;
+
+			return loader;
+		}
+
+		uint8_t* int_loader(uint32_t* to_load, uint8_t* loader)
+		{
+			to_load[0] = *loader; loader++; to_load[0] |= ((uint32_t)(*loader) << 8); loader++;
+			to_load[0] |= ((uint32_t)(*loader) << 16); loader++; to_load[0] |= ((uint32_t)(*loader) << 24); loader++;
+
+			return loader;
+		}
+
+		uint8_t* byte_array_loader(uint8_t* to_load, uint8_t* loader, int length)
+		{
+			for (int i = 0; i < length; i++) { to_load[i] = *loader; loader++; }
 
 			return loader;
 		}

@@ -5551,6 +5551,7 @@ namespace GBHawk
 			saver = byte_array_saver(OAM_vbls, saver, 0xA0);
 
 			saver = int_array_saver(color_palette, saver, 4);
+			saver = int_array_saver(video_buffer, saver, 160*144);
 
 			if (Cart_RAM_Length != 0)
 			{
@@ -5633,6 +5634,7 @@ namespace GBHawk
 			loader = byte_array_loader(OAM_vbls, loader, 0xA0);
 
 			loader = int_array_loader(color_palette, loader, 4);
+			loader = int_array_loader(video_buffer, loader, 160 * 144);
 
 			if (Cart_RAM_Length != 0)
 			{	
