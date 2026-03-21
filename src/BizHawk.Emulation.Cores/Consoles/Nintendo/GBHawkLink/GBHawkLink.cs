@@ -101,15 +101,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 			string[] controller_strings = new string[4];
 
-			Current_sync_on_vbl[0] = Settings.A_VBL_sync;
-			Current_sync_on_vbl[1] = Settings.B_VBL_sync;
-			Current_sync_on_vbl[2] = Settings.C_VBL_sync;
-			Current_sync_on_vbl[3] = Settings.D_VBL_sync;
+			Current_sync_on_vbl[0] = Settings.A_VBL_sync == true;
+			Current_sync_on_vbl[1] = Settings.B_VBL_sync == true;
+			Current_sync_on_vbl[2] = Settings.C_VBL_sync == true;
+			Current_sync_on_vbl[3] = Settings.D_VBL_sync == true;
 
 			for (int i = 0; i < Num_ROMS; i++)
 			{
-				Console.WriteLine("Start load step: " + i + " of: " + Num_ROMS);
-
 				Buffer.BlockCopy(lp.Roms[i].RomData, 0x100, header, 0, 0x50);
 
 				if ((header[0x43] != 0x80) && (header[0x43] != 0xC0))
@@ -303,11 +301,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					LibGBHawkLink.GBLink_set_rtc(GBLink_Pntr, remaining & 0xFF, 0, (uint)i);
 				}
 
-				Console.WriteLine("RTC for core: " + i + " of: " + Num_ROMS + " loaded.");
-
 				LibGBHawkLink.GBLink_Sync_Domain_VBL(GBLink_Pntr, Current_sync_on_vbl[i], (uint)i);
-
-				Console.WriteLine("End load step: " + i + " of: " + Num_ROMS);
 			}
 
 			HardReset();

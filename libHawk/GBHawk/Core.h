@@ -59,6 +59,8 @@ namespace GBHawk
 		Mappers* Mapper;
 		PPUs* PPU;
 
+		uint32_t Console_ID = 5;
+
 		void Load_BIOS(uint8_t* bios, bool cgb_flag, bool cgb_gba_flag)
 		{
 			if (cgb_flag)

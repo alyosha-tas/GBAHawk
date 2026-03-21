@@ -23,6 +23,11 @@ namespace GBHawk
 			GBL = new GBCore[num_roms];
 			Num_ROMs = num_roms;
 			MessageCallback = nullptr;
+
+			for (int i = 0; i < Num_ROMs; i++)
+			{
+				GBL[i].Console_ID = (uint32_t)i;
+			}
 		};
 
 		GBCore* GBL;
@@ -1559,6 +1564,11 @@ namespace GBHawk
 		void SetMessageCallback(void (*callback)(int))
 		{
 			MessageCallback = callback;
+
+			for (int i = 0; i < Num_ROMs; i++)
+			{
+				GBL[i].SetMessageCallback(callback);
+			}
 		}
 
 		void GetMessage(char* d)
