@@ -197,7 +197,6 @@ namespace BizHawk.Client.GBAHawk
 			this.BasicBotMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator29 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.MultiDiskBundlerFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.dummyExternalTool = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.KeypadMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.LoadTIFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator13 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
@@ -1264,10 +1263,6 @@ namespace BizHawk.Client.GBAHawk
 			this.MultiDiskBundlerFileMenuItem.Text = "Multi-disk Bundler";
 			this.MultiDiskBundlerFileMenuItem.Click += new System.EventHandler(this.MultidiskBundlerMenuItem_Click);
 			// 
-			// dummyExternalTool
-			// 
-			this.dummyExternalTool.Text = "None";
-			// 
 			// GBSubMenu
 			// 
 			this.GBSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1959,7 +1954,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx Speed400MenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BasicBotMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayMessagesMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx dummyExternalTool;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RecordAVMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveConfigAsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx LoadConfigFromMenuItem;

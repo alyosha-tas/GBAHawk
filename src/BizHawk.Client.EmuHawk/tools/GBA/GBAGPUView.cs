@@ -7,9 +7,8 @@ using BizHawk.Client.Common;
 using BizHawk.Common.NumberExtensions;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Cores.Nintendo.Gameboy;
 
-namespace BizHawk.Emulation.Cores.Nintendo.Gameboy
+namespace BizHawk.Client.GBAHawk
 {
 	public static class GBColors
 	{
