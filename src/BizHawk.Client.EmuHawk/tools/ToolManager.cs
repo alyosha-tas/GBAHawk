@@ -75,12 +75,7 @@ namespace BizHawk.Client.GBAHawk
 				throw new ArgumentException($"Type {toolType.Name} does not implement {nameof(IToolForm)}.");
 			}
 
-			Console.WriteLine(toolType.FullName);
-
 			var mi = typeof(ToolManager).GetMethod(nameof(Load), new[] { typeof(bool) })!.MakeGenericMethod(toolType);
-
-			Console.WriteLine(mi.Name);
-
 
 			return (IToolForm) mi.Invoke(this, new object[] { focus });
 		}

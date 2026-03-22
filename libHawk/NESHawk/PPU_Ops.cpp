@@ -49,7 +49,14 @@ namespace NESHawk
 		if ((addr & 0x3F00) == 0x3F00)
 		{
 			// TODO apply greyscale shit?
-			ret = (uint8_t)(PALRAM[addr & 0x1F] + ((uint8_t)(ppu_Open_Bus & 0xC0)));
+			ret = PALRAM[addr & 0x1F];
+
+			if (ppu_Color_Disable)
+			{
+				ret &= 0x30;
+			}
+			
+			ret += (ppu_Open_Bus & 0xC0);
 			bus_case = 1;
 		}
 
@@ -89,9 +96,9 @@ namespace NESHawk
 
 		if ((addr & 0x3F00) == 0x3F00)
 		{
-			// handle palette. this is being done nestopia style, because i found some documentation for it (appendix 1)
+			// handle palette writes, note greyscale does not effect written value
 			addr &= 0x1F;
-			uint8_t color = (uint8_t)(value & 0x3F); //are these bits really unwired? can they be read back somehow?
+			uint8_t color = (uint8_t)(value & 0x3F);
 
 			// this little hack will help you debug things while the screen is black
 			// color = (uint8_t)(addr & 0x3F);

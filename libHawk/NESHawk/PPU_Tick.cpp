@@ -813,8 +813,8 @@ namespace NESHawk
 						}
 					}
 
-					if (NTViewCallback && yp == NTView_Scanline) { NTViewCallback(); }
-					if (PPUViewCallback && yp == PPUView_Scanline) { PPUViewCallback(); }
+					if (NTViewCallback && (yp == NTView_Scanline)) { NTViewCallback(); }
+					if (PPUViewCallback && (yp == PPUView_Scanline)) { PPUViewCallback(); }
 
 					// set up intial values to use later
 					yp_shift = yp << 8;
