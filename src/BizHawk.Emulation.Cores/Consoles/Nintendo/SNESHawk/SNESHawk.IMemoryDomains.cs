@@ -17,9 +17,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				new MemoryDomainDelegate(
 					"RAM",
-					0x800,
+					0x20000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getram(SNES_Pntr, (int)(addr & 0x7FF)),
+					(addr) => LibSNESHawk.SNES_getram(SNES_Pntr, (int)(addr & 0x1FFFF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(

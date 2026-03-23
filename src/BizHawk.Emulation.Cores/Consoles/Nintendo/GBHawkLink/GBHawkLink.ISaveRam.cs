@@ -9,78 +9,59 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 	{
 		public byte[] CloneSaveRam()
 		{
-			if (cart_RAM[0] != null || cart_RAM[1] != null)
+			// calculate total RAM present and set up buffer of that size
+			uint size_total = 0;
+
+			for (int i = 0; i < 4; i++)
 			{
-				int len1 = 0;
-				int len2 = 0;
-				int index = 0;
-
-				if (cart_RAM[0] != null)
+				if (Cart_RAM_Size[i] != 0)
 				{
-					len1 = cart_RAM[0].Length;
-
-					for (int i = 0; i < cart_RAM[0].Length; i++)
-					{
-						cart_RAM[0][i] = LibGBHawkLink.GBLink_getsram(GBLink_Pntr, i, Current_sync_on_vbl[0], 0);
-					}		
+					size_total += Cart_RAM_Size[i];
 				}
+			}
 
-				if (cart_RAM[1] != null)
+			if (size_total != 0)
+			{ 
+				byte[] temp = new byte[size_total];
+
+				uint index = 0;
+
+				for (int i = 0; i < 4; i++)
 				{
-					len2 = cart_RAM[1].Length;
-
-					for (int i = 0; i < cart_RAM[1].Length; i++)
+					if (Cart_RAM_Size[i] != 0)
 					{
-						cart_RAM[1][i] = LibGBHawkLink.GBLink_getsram(GBLink_Pntr, i, Current_sync_on_vbl[1], 1);
-					}
-				}
+						for (int j = 0; j < cart_RAM[0].Length; j++)
+						{
+							cart_RAM[i][j] = LibGBHawkLink.GBLink_getsram(GBLink_Pntr, j, Current_sync_on_vbl[i], 0);
 
-				byte[] temp = new byte[len1 + len2];
+							temp[index] = cart_RAM[i][j];
+							index++;
 
-				if (cart_RAM[0] != null)
-				{
-					for (int i = 0; i < cart_RAM[0].Length; i++)
-					{
-						temp[index] = cart_RAM[0][i];
-						index++;
-					}
-				}
-
-				if (cart_RAM[1] != null)
-				{
-					for (int i = 0; i < cart_RAM[1].Length; i++)
-					{
-						temp[index] = cart_RAM[1][i];
-						index++;
+						}
 					}
 				}
 
 				return temp;
 			}
+
 			return null;
 		}
 
 		public void StoreSaveRam(byte[] data)
 		{
-			if (cart_RAM[0] != null && cart_RAM[1] == null)
+			int offset = 0;
+			
+			for (int i = 0; i < 4; i++)
 			{
-				Buffer.BlockCopy(data, 0, cart_RAM[0], 0, cart_RAM[0].Length);
+				if (Cart_RAM_Size[i] != 0)
+				{
+					Buffer.BlockCopy(data, offset, cart_RAM[i], 0, cart_RAM[i].Length);
 
-				LibGBHawkLink.GBLink_load_SRAM(GBLink_Pntr, cart_RAM[0], (uint)cart_RAM[0].Length, 0);
-			}
-			else if (cart_RAM[1] != null && cart_RAM[0] == null)
-			{
-				Buffer.BlockCopy(data, 0, cart_RAM[1], 0, cart_RAM[1].Length);
+					LibGBHawkLink.GBLink_load_SRAM(GBLink_Pntr, cart_RAM[i], (uint)cart_RAM[i].Length, (uint)i);
 
-				LibGBHawkLink.GBLink_load_SRAM(GBLink_Pntr, cart_RAM[1], (uint)cart_RAM[1].Length, 1);
-			}
-			else if (cart_RAM[1] != null && cart_RAM[0] != null)
-			{
-				Buffer.BlockCopy(data, 0, cart_RAM[0], 0, cart_RAM[0].Length);
-				Buffer.BlockCopy(data, cart_RAM[0].Length, cart_RAM[1], 0, cart_RAM[1].Length);
+					offset += cart_RAM[i].Length;
+				}
 
-				LibGBHawkLink.GBLink_load_SRAM(GBLink_Pntr, cart_RAM[0], (uint)cart_RAM[0].Length, 0);
-				LibGBHawkLink.GBLink_load_SRAM(GBLink_Pntr, cart_RAM[1], (uint)cart_RAM[1].Length, 1);
 			}
 		}
 

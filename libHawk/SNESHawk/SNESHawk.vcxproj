@@ -142,6 +142,7 @@
     <ClInclude Include="Mappers.h" />
     <ClInclude Include="SNESHawk.h" />
     <ClInclude Include="SNES_System.h" />
+    <ClInclude Include="APU.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />

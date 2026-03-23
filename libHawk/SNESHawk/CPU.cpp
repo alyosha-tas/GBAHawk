@@ -6,14 +6,6 @@
 
 #include "SNES_System.h"
 
-/*
-*	Notes:
-*	In order to pass accuracy coin tests we need the address updated even if RDY is false
-*	Need to do the same IRQ behavior to interrupts as branch?
-*   check timing of interaction of NMI hijacking interrrupt when RDY low
-* 
-*/
-
 namespace SNESHawk
 {
 	void SNES_System::ExecuteOneOp()

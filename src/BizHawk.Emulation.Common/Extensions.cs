@@ -23,7 +23,6 @@ namespace BizHawk.Emulation.Common
 			[VSystemID.Raw.GBC] = "Gameboy Color",
 			[VSystemID.Raw.NES] = "NES",
 			[VSystemID.Raw.SNES] = "SNES",
-			[VSystemID.Raw.N64] = "N64",
 		};
 
 		public static CoreAttribute Attributes(this IEmulator core)

@@ -161,7 +161,7 @@ namespace SNESHawk
 		uint64_t Last_Controller_Poll_2;
 
 		//hardware/state
-		uint8_t RAM[0x800] = { };
+		uint8_t RAM[0x20000] = { };
 		uint8_t CIRAM[0x800] = { }; //AKA nametables
 
 		uint8_t Header[0x10] = { };
@@ -214,7 +214,7 @@ namespace SNESHawk
 			saver = long_saver(Last_Controller_Poll_1, saver);
 			saver = long_saver(Last_Controller_Poll_2, saver);
 			
-			saver = byte_array_saver(RAM, saver, 0x800);
+			saver = byte_array_saver(RAM, saver, 0x20000);
 			saver = byte_array_saver(CIRAM, saver, 0x800);
 
 			if (Cart_RAM_Length != 0)
@@ -267,7 +267,7 @@ namespace SNESHawk
 			loader = long_loader(&Last_Controller_Poll_1, loader);
 			loader = long_loader(&Last_Controller_Poll_2, loader);
 
-			loader = byte_array_loader(RAM, loader, 0x800);
+			loader = byte_array_loader(RAM, loader, 0x20000);
 			loader = byte_array_loader(CIRAM, loader, 0x800);
 
 			if (Cart_RAM_Length != 0)
