@@ -11,7 +11,6 @@ namespace BizHawk.Emulation.Common
 			new(VSystemID.Raw.GB, "Gameboy"),
 			new(VSystemID.Raw.GBA, "Gameboy Advance"),
 			new(VSystemID.Raw.NES, "Nintendo Entertainment System"),
-			new(VSystemID.Raw.SNES, "Super Nintendo Entertainment System"),
 		};
 
 		public IEnumerable<SystemInfo> AllSystems => _systems;
@@ -40,7 +39,6 @@ namespace BizHawk.Emulation.Common
 			public const string GBC = "GBC";
 			public const string GBL = "GBL";
 			public const string NES = "NES";
-			public const string SNES = "SNES";
 			public const string NULL = "NULL";
 		}
 	}

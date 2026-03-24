@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <string>
 
+#include "../Common/Savestate.h"
+
 using namespace std;
 
 namespace GBAHawk
@@ -1422,86 +1424,6 @@ namespace GBAHawk
 			Core_ROM[0xC7] = Current_C7;
 			Core_ROM[0xC8] = Current_C8;
 			Core_ROM[0xC9] = Current_C9;
-
-			return loader;
-		}
-
-		uint8_t* bool_saver(bool to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save ? 1 : 0); saver++;
-
-			return saver;
-		}
-
-		uint8_t* byte_saver(uint8_t to_save, uint8_t* saver)
-		{
-			*saver = to_save; saver++;
-
-			return saver;
-		}
-
-		uint8_t* short_saver(uint16_t to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
-
-			return saver;
-		}
-
-		uint8_t* int_saver(uint32_t to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save & 0xFF); saver++; *saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 16) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 24) & 0xFF); saver++;
-
-			return saver;
-		}
-
-		uint8_t* long_saver(uint64_t to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save & 0xFF); saver++; *saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 16) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 24) & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 32) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 40) & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 48) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 56) & 0xFF); saver++;
-
-			return saver;
-		}
-
-		uint8_t* bool_loader(bool* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader == 1; loader++;
-
-			return loader;
-		}
-
-		uint8_t* byte_loader(uint8_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++;
-
-			return loader;
-		}
-
-		uint8_t* short_loader(uint16_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++;
-			to_load[0] |= ((uint16_t)(*loader) << 8); loader++;
-
-			return loader;
-		}
-
-		uint8_t* int_loader(uint32_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++; to_load[0] |= (uint32_t)(*loader << 8); loader++;
-			to_load[0] |= (uint32_t)(*loader << 16); loader++; to_load[0] |= (uint32_t)(*loader << 24); loader++;
-
-			return loader;
-		}
-
-		uint8_t* long_loader(uint64_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++; to_load[0] |= (uint64_t)(*loader) << 8; loader++;
-			to_load[0] |= (uint64_t)(*loader) << 16; loader++; to_load[0] |= (uint64_t)(*loader) << 24; loader++;
-			to_load[0] |= (uint64_t)(*loader) << 32; loader++; to_load[0] |= (uint64_t)(*loader) << 40; loader++;
-			to_load[0] |= (uint64_t)(*loader) << 48; loader++; to_load[0] |= (uint64_t)(*loader) << 56; loader++;
 
 			return loader;
 		}

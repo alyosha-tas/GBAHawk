@@ -11,6 +11,8 @@
 
 #include "Core.h"
 
+#include "../Common/Savestate.h"
+
 using namespace std;
 
 namespace GBHawk
@@ -1373,64 +1375,6 @@ namespace GBHawk
 			{
 				loader = GBL[i].LoadState(loader);
 			}
-		}
-
-		uint8_t* bool_saver(bool to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save ? 1 : 0); saver++;
-
-			return saver;
-		}
-
-		uint8_t* byte_saver(uint8_t to_save, uint8_t* saver)
-		{
-			*saver = to_save; saver++;
-
-			return saver;
-		}
-
-		uint8_t* int_saver(uint32_t to_save, uint8_t* saver)
-		{
-			*saver = (uint8_t)(to_save & 0xFF); saver++; *saver = (uint8_t)((to_save >> 8) & 0xFF); saver++;
-			*saver = (uint8_t)((to_save >> 16) & 0xFF); saver++; *saver = (uint8_t)((to_save >> 24) & 0xFF); saver++;
-
-			return saver;
-		}
-
-		uint8_t* byte_array_saver(uint8_t* to_save, uint8_t* saver, int length)
-		{
-			for (int i = 0; i < length; i++) { *saver = to_save[i]; saver++; }
-
-			return saver;
-		}
-
-		uint8_t* bool_loader(bool* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader == 1; loader++;
-
-			return loader;
-		}
-
-		uint8_t* byte_loader(uint8_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++;
-
-			return loader;
-		}
-
-		uint8_t* int_loader(uint32_t* to_load, uint8_t* loader)
-		{
-			to_load[0] = *loader; loader++; to_load[0] |= ((uint32_t)(*loader) << 8); loader++;
-			to_load[0] |= ((uint32_t)(*loader) << 16); loader++; to_load[0] |= ((uint32_t)(*loader) << 24); loader++;
-
-			return loader;
-		}
-
-		uint8_t* byte_array_loader(uint8_t* to_load, uint8_t* loader, int length)
-		{
-			for (int i = 0; i < length; i++) { to_load[i] = *loader; loader++; }
-
-			return loader;
 		}
 
 	#pragma endregion

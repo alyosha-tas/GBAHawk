@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#pragma once
+
 #include <iostream>
 #include <cstdint>
 #include <iomanip>
