@@ -113,8 +113,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public uint num_samp_L;
 		public uint num_samp_R;
 
-		const int blipbuffsize = 9000;
-
 		public bool CanProvideAsync => false;
 
 		public void SetSyncMode(SyncSoundMode mode)

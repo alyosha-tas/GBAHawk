@@ -73,8 +73,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		public int[] Aud = new int[25000];
 		public uint num_samp;
 
-		const int blipbuffsize = 9000;
-
 		public bool CanProvideAsync => false;
 
 		public void SetSyncMode(SyncSoundMode mode)
