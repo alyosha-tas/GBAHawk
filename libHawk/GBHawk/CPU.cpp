@@ -470,10 +470,8 @@ namespace GBHawk
 					case 5: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
 					case 6: break;
 					case 7: cpu_Regs[cpu_W] = GB_System::Read_Memory(cpu_RegPCget()); break;
-					case 8: break;
-					case 9: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
-					case 10: break;
-					case 11: 
+					case 8: cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1)); break;
+					case 9: 
 						cd_chk_call = false;
 						switch (cpu_Opcode)
 						{
@@ -485,9 +483,11 @@ namespace GBHawk
 						}
 						if (!cd_chk_call)
 						{
-							cpu_Instr_Cycle += 10;
+							cpu_Instr_Cycle += 12;
 						}
 						break;
+					case 10: break;
+					case 11: break;
 					case 12: break;
 					case 13: cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
 					case 14: break;

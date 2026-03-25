@@ -165,128 +165,128 @@ namespace GBHawk
 					window_x_read = window_x;
 					break;
 
-					// These are GBC specific Regs
-					case 0xFF51: // HDMA1
-						HDMA_src_hi = value;
-						cur_DMA_src = (uint16_t)(((HDMA_src_hi & 0xFF) << 8) | (cur_DMA_src & 0xF0));
-						if (cur_DMA_src >= 0xE000) { cur_DMA_src &= 0xBFFF; }
-						break;
-					case 0xFF52: // HDMA2
-						HDMA_src_lo = value;
-						cur_DMA_src = (uint16_t)((cur_DMA_src & 0xFF00) | (HDMA_src_lo & 0xF0));
-						break;
-					case 0xFF53: // HDMA3
-						HDMA_dest_hi = value;
-						cur_DMA_dest = (uint16_t)(((HDMA_dest_hi & 0xFF) << 8) | (cur_DMA_dest & 0xF0));
-						break;
-					case 0xFF54: // HDMA4
-						HDMA_dest_lo = value;
-						cur_DMA_dest = (uint16_t)((cur_DMA_dest & 0xFF00) | (HDMA_dest_lo & 0xF0));
-						break;
-					case 0xFF55: // HDMA5
-						if (!HDMA_active)
+				// These are GBC specific Regs
+				case 0xFF51: // HDMA1
+					HDMA_src_hi = value;
+					cur_DMA_src = (uint16_t)(((HDMA_src_hi & 0xFF) << 8) | (cur_DMA_src & 0xF0));
+					if (cur_DMA_src >= 0xE000) { cur_DMA_src &= 0xBFFF; }
+					break;
+				case 0xFF52: // HDMA2
+					HDMA_src_lo = value;
+					cur_DMA_src = (uint16_t)((cur_DMA_src & 0xFF00) | (HDMA_src_lo & 0xF0));
+					break;
+				case 0xFF53: // HDMA3
+					HDMA_dest_hi = value;
+					cur_DMA_dest = (uint16_t)(((HDMA_dest_hi & 0xFF) << 8) | (cur_DMA_dest & 0xF0));
+					break;
+				case 0xFF54: // HDMA4
+					HDMA_dest_lo = value;
+					cur_DMA_dest = (uint16_t)((cur_DMA_dest & 0xFF00) | (HDMA_dest_lo & 0xF0));
+					break;
+				case 0xFF55: // HDMA5
+					if (!HDMA_active)
+					{
+						HDMA_countdown = *Core_Double_Speed ? 2 : 4; // run one cpu cycle, then wait another cycle to start transfer
+						HDMA_mode = ((value & 0x80) == 0x80);
+						HDMA_tick = 0;
+
+						if (((value & 0x80) == 0x80))
 						{
-							HDMA_countdown = *Core_Double_Speed ? 2 : 4; // run one cpu cycle, then wait another cycle to start transfer
-							HDMA_mode = ((value & 0x80) == 0x80);
-							HDMA_tick = 0;
+							// HDMA during HBlank only, but only if screen is on, otherwise DMA immediately one block of data
+							// worms armaggedon requires HDMA to fire in hblank mode even if the screen is off.
+							HDMA_active = true;
+							HBL_HDMA_count = 0x10;
 
-							if (((value & 0x80) == 0x80))
-							{
-								// HDMA during HBlank only, but only if screen is on, otherwise DMA immediately one block of data
-								// worms armaggedon requires HDMA to fire in hblank mode even if the screen is off.
-								HDMA_active = true;
-								HBL_HDMA_count = 0x10;
+							last_HBL = LY_read - 1;
 
-								last_HBL = LY_read - 1;
+							HBL_test = true;
+							HBL_HDMA_go = false;
 
-								HBL_test = true;
-								HBL_HDMA_go = false;
-
-								if (!LCDC_Bit(7)) { HDMA_run_once = true; }
-								else { HDMA_run_once = false; }
-							}
-							else
-							{
-								// HDMA immediately
-								HDMA_active = true;
-							}
-
-							HDMA_length = ((value & 0x7F) + 1) * 16;
-
-							if (!LCDC_Bit(7) && (cur_DMA_src >= 0x8000) && (cur_DMA_src < 0xA000))
-							{
-								// NOTE: GBA SP apparently only has one glitched access, not sure what gameboy player is
-								HDMA_VRAM_access_glitch = 2;
-							}
-							else
-							{
-								HDMA_VRAM_access_glitch = 0;
-							}
+							if (!LCDC_Bit(7)) { HDMA_run_once = true; }
+							else { HDMA_run_once = false; }
 						}
 						else
 						{
-							// terminate the transfer if disabling
-							if (!((value & 0x80) == 0x80))
+							// HDMA immediately
+							HDMA_active = true;
+						}
+
+						HDMA_length = ((value & 0x7F) + 1) * 16;
+
+						if (!LCDC_Bit(7) && (cur_DMA_src >= 0x8000) && (cur_DMA_src < 0xA000))
+						{
+							// NOTE: GBA SP apparently only has one glitched access, not sure what gameboy player is
+							HDMA_VRAM_access_glitch = 2;
+						}
+						else
+						{
+							HDMA_VRAM_access_glitch = 0;
+						}
+					}
+					else
+					{
+						// terminate the transfer if disabling
+						if (!((value & 0x80) == 0x80))
+						{
+							if (HDMA_active && HDMA_mode && HDMA_can_start)
 							{
-								if (HDMA_active && HDMA_mode && HDMA_can_start)
+								// too late to stop the next trnasfer, so make it the last one instead
+								if (((STAT & 3) == 0) && (LY_read != last_HBL) && HBL_test && (LY_inc == 1) && !glitch_state)
 								{
-									// too late to stop the next trnasfer, so make it the last one instead
-									if (((STAT & 3) == 0) && (LY_read != last_HBL) && HBL_test && (LY_inc == 1) && !glitch_state)
-									{
-										HDMA_length = 1;
-									}
-									else if (HBL_HDMA_go)
-									{
-										HDMA_length = 1;
-									}
-									else
-									{
-										HDMA_active = false;
-									}
+									HDMA_length = 1;
+								}
+								else if (HBL_HDMA_go)
+								{
+									HDMA_length = 1;
 								}
 								else
 								{
 									HDMA_active = false;
 								}
 							}
-
-							// always update length
-							HDMA_length = ((value & 0x7F) + 1) * 16;
+							else
+							{
+								HDMA_active = false;
+							}
 						}
 
-						break;
-					case 0xFF68: // BGPI
-						BG_bytes_index = (uint8_t)(value & 0x3F);
-						BG_bytes_inc = ((value & 0x80) == 0x80);
-						break;
-					case 0xFF69: // BGPD
-						if (VRAM_access_write_PPU)
-						{
-							BG_transfer_byte = value;
-							BG_bytes[BG_bytes_index] = value;
-						}
+						// always update length
+						HDMA_length = ((uint32_t)((value & 0x7F) + 1)) * 16;
+					}
 
-						// change the appropriate palette color
-						color_compute_BG();
-						if (BG_bytes_inc) { BG_bytes_index++; BG_bytes_index &= 0x3F; }
-						break;
-					case 0xFF6A: // OBPI
-						OBJ_bytes_index = (uint8_t)(value & 0x3F);
-						OBJ_bytes_inc = ((value & 0x80) == 0x80);
-						break;
-					case 0xFF6B: // OBPD
-						if (VRAM_access_write_PPU)
-						{
-							OBJ_transfer_byte = value;
-							OBJ_bytes[OBJ_bytes_index] = value;
-						}
+					break;
+				case 0xFF68: // BGPI
+					BG_bytes_index = (uint8_t)(value & 0x3F);
+					BG_bytes_inc = ((value & 0x80) == 0x80);
+					break;
+				case 0xFF69: // BGPD
+					if (VRAM_access_write_PPU)
+					{
+						BG_transfer_byte = value;
+						BG_bytes[BG_bytes_index] = value;
+					}
 
-						// change the appropriate palette color
-						color_compute_OBJ();
+					// change the appropriate palette color
+					color_compute_BG();
+					if (BG_bytes_inc) { BG_bytes_index++; BG_bytes_index &= 0x3F; }
+					break;
+				case 0xFF6A: // OBPI
+					OBJ_bytes_index = (uint8_t)(value & 0x3F);
+					OBJ_bytes_inc = ((value & 0x80) == 0x80);
+					break;
+				case 0xFF6B: // OBPD
+					if (VRAM_access_write_PPU)
+					{
+						OBJ_transfer_byte = value;
+						OBJ_bytes[OBJ_bytes_index] = value;
+					}
 
-						if (OBJ_bytes_inc) { OBJ_bytes_index++; OBJ_bytes_index &= 0x3F; }
-						break;
-				}
+					// change the appropriate palette color
+					color_compute_OBJ();
+
+					if (OBJ_bytes_inc) { OBJ_bytes_index++; OBJ_bytes_index &= 0x3F; }
+					break;
+			}
 		}
 
 		void Tick()
@@ -303,10 +303,10 @@ namespace GBHawk
 							HDMA_countdown--;
 
 							if (HDMA_countdown == (*Core_Double_Speed ? 1 : 3))
-							{
+							{							
 								if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 								{
-									if (!Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
+									if (!*Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
 									VRAM_access_read_HDMA = false;
 									VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 									VRAM_access_write_HDMA = false;
@@ -386,7 +386,7 @@ namespace GBHawk
 								{
 									if ((*Core_Cycle_Count - *Core_Instruction_Start) == 0)
 									{
-										if (!Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
+										if (!*Core_HDMA_Transfer) { (sys_pntr->*Core_HDMA_Start_Stop)(true); }
 										VRAM_access_read_HDMA = false;
 										VRAM_access_read = VRAM_access_read_PPU && VRAM_access_read_HDMA;
 										VRAM_access_write_HDMA = false;

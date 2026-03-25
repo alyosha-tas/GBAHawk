@@ -1201,6 +1201,8 @@ namespace NESHawk
 		uint8_t ppu_temp_oam_y;
 		uint8_t ppu_temp_oam_ind = 0;
 		uint8_t ppu_BG_NT_Addr;
+		uint8_t ppu_Buffer_Fill_CD;
+		uint8_t ppu_Last_Read_Value;
 
 		// this uint8_t is used to simulate open bus reads and writes
 		// it should be modified by every read and write to a ppu register
@@ -1320,6 +1322,8 @@ namespace NESHawk
 			ppu_temp_oam_y = 0;
 			ppu_temp_oam_ind = 0;
 			ppu_BG_NT_Addr = 0;
+			ppu_Buffer_Fill_CD = 0;
+			ppu_Last_Read_Value = 0;
 
 			double_2007_read = 0;
 			start_up_offset = 5;
@@ -2141,6 +2145,8 @@ namespace NESHawk
 			saver = byte_saver(ppu_temp_oam_y, saver);
 			saver = byte_saver(ppu_temp_oam_ind, saver);
 			saver = byte_saver(ppu_BG_NT_Addr, saver);
+			saver = byte_saver(ppu_Buffer_Fill_CD, saver);
+			saver = byte_saver(ppu_Last_Read_Value, saver);
 
 			saver = byte_saver(ppu_Open_Bus, saver);
 
@@ -2268,6 +2274,8 @@ namespace NESHawk
 			loader = byte_loader(&ppu_temp_oam_y, loader);
 			loader = byte_loader(&ppu_temp_oam_ind, loader);
 			loader = byte_loader(&ppu_BG_NT_Addr, loader);
+			loader = byte_loader(&ppu_Buffer_Fill_CD, loader);
+			loader = byte_loader(&ppu_Last_Read_Value, loader);
 
 			loader = byte_loader(&ppu_Open_Bus, loader);
 

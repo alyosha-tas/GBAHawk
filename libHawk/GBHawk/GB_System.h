@@ -4040,7 +4040,15 @@ namespace GBHawk
 		
 		void dma_Reset()
 		{
-			dma_Addr = 0xFF;
+			if (Is_GBC)
+			{
+				dma_Addr = 0;
+			}
+			else
+			{
+				dma_Addr = 0xFF;
+			}
+
 			dma_Byte = 0;
 
 			dma_OAM_Access = true;

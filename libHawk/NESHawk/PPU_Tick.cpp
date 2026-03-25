@@ -26,14 +26,14 @@ namespace NESHawk
 		{		
 			if (status_sl == 240)
 			{
-				if (PPUON() && (status_cycle == 0))
+				if ((status_cycle == 0) && PPUON())
 				{
 					// here the address bus temporarily has the PT fetch address on it
 					ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
 					mapper_pntr->AddressPPU(ppu_VRAM_Address);
 				}
 
-				if (status_cycle == 1)
+				if ((status_cycle == 1) && PPUON())
 				{
 					// Now Reg_v gets put onto the bus
 					ppu_VRAM_Address = ppu_Reg_v;
@@ -403,7 +403,7 @@ namespace NESHawk
 							}
 						}
 
-						if (xp == 7 && PPUON())
+						if ((xp == 7) && PPUON())
 						{
 							ppu_Increment_hsc();
 
@@ -456,7 +456,7 @@ namespace NESHawk
 						// if scanline is the pre-render line, we just read BG data
 						Read_bgdata(xp, xt + 2);
 
-						if (xp == 7 && PPUON())
+						if ((xp == 7) && PPUON())
 						{
 							ppu_Increment_hsc();
 
@@ -677,12 +677,9 @@ namespace NESHawk
 						// read first 2 tiles for next scanline
 						Read_bgdata(xp, xt);
 
-						if (xp == 7 && PPUON())
+						if ((xp == 7) && PPUON())
 						{
 							ppu_Increment_hsc();
-
-							if (status_cycle == 256)
-								ppu_Increment_vs();
 
 							// refill the BG shift registers here
 							if (xt == 0)

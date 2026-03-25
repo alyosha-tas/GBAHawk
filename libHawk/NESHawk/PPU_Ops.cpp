@@ -19,8 +19,10 @@ namespace NESHawk
 	{
 		// clock the address bus change
 		mapper_pntr->AddressPPU(addr);
+
+		ppu_Last_Read_Value = mapper_pntr->ReadPPU(addr);
 		
-		return mapper_pntr->ReadPPU(addr);
+		return ppu_Last_Read_Value;
 	}
 
 	void NES_System::ppubus_clock(uint32_t addr)
@@ -43,7 +45,15 @@ namespace NESHawk
 		uint8_t ret = VRAMBuffer;
 
 		// in any case, we read from the ppu bus
-		VRAMBuffer = mapper_pntr->ReadPPU(addr);
+		if (!ppu_Is_Rendering() || !PPUON())
+		{
+			VRAMBuffer = mapper_pntr->ReadPPU(addr);
+		}
+		else
+		{
+			ppu_Buffer_Fill_CD = 3;
+			//VRAMBuffer = ppu_Last_Read_Value;
+		}
 
 		// but reads from the palette are implemented in the PPU and return immediately
 		if ((addr & 0x3F00) == 0x3F00)
@@ -205,10 +215,27 @@ namespace NESHawk
 
 	void NES_System::ppu_Run()
 	{
+		if (ppu_Buffer_Fill_CD > 0)
+		{
+			ppu_Buffer_Fill_CD--;
+
+			if (ppu_Buffer_Fill_CD == 0)
+			{
+				VRAMBuffer = ppu_Last_Read_Value;
+			}
+		}
+
+
+		
 		//run one ppu cycle at a time so we can interact with the ppu and clockPPU at high granularity			
 		if (install_2006 > 0)
 		{
 			install_2006--;
+
+			//Message_String = "2006 sl " + to_string(status_sl) + " cyc: " + to_string(status_cycle);
+
+			//MessageCallback(Message_String.length());
+
 			if (install_2006 == 0)
 			{
 				if (!race_2006)
@@ -246,9 +273,16 @@ namespace NESHawk
 			if (install_2001 == 0)
 			{
 				bool ppu_was_on_temp = PPUON();
-				
+
 				show_bg_new = ppu_Show_BG;
 				show_obj_new = ppu_Show_OBJ;
+
+				if (PPUON())
+				{
+					Message_String = "on sl " + to_string(status_sl) + " cyc: " + to_string(status_cycle);
+
+					MessageCallback(Message_String.length());
+				}
 
 				// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
 				if (ppu_was_on_temp && ppu_Is_Rendering() && !PPUON())
