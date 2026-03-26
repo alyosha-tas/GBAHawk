@@ -98,6 +98,8 @@ namespace GBHawk
 
 			if (delays_to_process) { process_delays(); }
 
+			Cycle_Count++;
+
 			REG_FF0F_OLD = REG_FF0F;
 		}
 
@@ -116,6 +118,7 @@ namespace GBHawk
 		if (delays_to_process) { process_delays(); }
 
 		Cycle_Count++;
+		Single_Cycle_Count++;
 
 		if (ppu_pntr->In_Vblank && !In_Vblank_old)
 		{
@@ -177,6 +180,8 @@ namespace GBHawk
 
 			if (delays_to_process) { process_delays(); }
 
+			Cycle_Count++;
+
 			REG_FF0F_OLD = REG_FF0F;
 		}
 
@@ -195,6 +200,7 @@ namespace GBHawk
 		if (delays_to_process) { process_delays(); }
 
 		Cycle_Count++;
+		Single_Cycle_Count++;
 
 		if (ppu_pntr->In_Vblank && !In_Vblank_old)
 		{

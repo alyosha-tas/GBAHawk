@@ -105,6 +105,7 @@ namespace GBHawk
 			else if (mapper == 3)
 			{
 				Mapper = new Mapper_MBC3();
+				GB.Use_MT = true;
 			}
 			else if (mapper == 4)
 			{
@@ -129,10 +130,12 @@ namespace GBHawk
 			else if (mapper == 9)
 			{
 				Mapper = new Mapper_TAMA5();
+				GB.Use_MT = true;
 			}
 			else if (mapper == 10)
 			{
 				Mapper = new Mapper_HuC3();
+				GB.Use_MT = true;
 			}
 			else if (mapper == 11)
 			{
@@ -188,7 +191,7 @@ namespace GBHawk
 			// repeat for the ppu
 			if (GB.Is_GBC)
 			{
-				if ((GB.ROM[0x43] != 0x80) && (GB.ROM[0x43] != 0xC0))
+				if ((GB.ROM[0x143] != 0x80) && (GB.ROM[0x143] != 0xC0))
 				{
 					PPU = new GBC_GB_PPU();
 				}
@@ -290,6 +293,8 @@ namespace GBHawk
 			Mapper->Core_Cart_RAM = &GB.Cart_RAM[0];
 
 			Mapper->Core_Cart_RAM_Length = &GB.Cart_RAM_Length;
+
+			Mapper->Reset();
 		}
 
 		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -431,6 +436,18 @@ namespace GBHawk
 			uint32_t temp_int = GB.snd_Master_Clock;
 			
 			return temp_int;
+		}
+
+		uint64_t GetCycles(bool cycle_type)
+		{
+			if (cycle_type)
+			{
+				return GB.Cycle_Count;
+			}
+			else
+			{
+				return GB.Single_Cycle_Count;
+			}
 		}
 
 		#pragma region State Save / Load

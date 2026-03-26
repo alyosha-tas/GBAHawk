@@ -144,6 +144,7 @@ namespace GBHawk
 
 		uint64_t bus_access_time; // also need to keep track of the time of the access since it doesn't last very long
 		uint64_t Cycle_Count;
+		uint64_t Single_Cycle_Count;
 		uint64_t Frame_Cycle;
 
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
@@ -209,6 +210,7 @@ namespace GBHawk
 			clear_counter = 0;
 
 			Cycle_Count = 0;
+			Single_Cycle_Count = 0;
 			Frame_Cycle = 0;
 
 			input_register = 0xCF; // not reading any input
@@ -5548,6 +5550,7 @@ namespace GBHawk
 
 			saver = long_saver(bus_access_time, saver);
 			saver = long_saver(Cycle_Count, saver);
+			saver = long_saver(Single_Cycle_Count, saver);
 			saver = long_saver(Frame_Cycle, saver);
 
 			saver = byte_array_saver(RAM, saver, 0x8000);
@@ -5631,6 +5634,7 @@ namespace GBHawk
 
 			loader = long_loader(&bus_access_time, loader);
 			loader = long_loader(&Cycle_Count, loader);
+			loader = long_loader(&Single_Cycle_Count, loader);
 			loader = long_loader(&Frame_Cycle, loader);
 			
 			loader = byte_array_loader(RAM, loader, 0x8000);

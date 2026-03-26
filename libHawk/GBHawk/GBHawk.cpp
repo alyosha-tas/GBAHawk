@@ -104,6 +104,11 @@ GBHawk_EXPORT void GB_setrumblecallback(GBCore* p, void (*callback)(bool))
 	p->SetRumbleCallback(callback);
 }
 
+GBHawk_EXPORT uint64_t GB_get_cycles(GBCore* p, bool cycle_type)
+{
+	return p->GetCycles(cycle_type);
+}
+
 #pragma region State Save / Load
 
 // save state

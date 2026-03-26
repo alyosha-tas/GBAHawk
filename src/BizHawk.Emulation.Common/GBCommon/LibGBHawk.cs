@@ -59,7 +59,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern ulong GB_get_cycles(IntPtr core);
+		public static extern ulong GB_get_cycles(IntPtr core, bool cycle_type);
 
 
 		[DllImport(lib, CallingConvention = cc)]

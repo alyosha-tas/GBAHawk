@@ -205,7 +205,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public IntPtr GB_Pntr { get; set; } = IntPtr.Zero;
 		private byte[] GB_core = new byte[0x80000];
 
-		public ulong TotalExecutedCycles => 0;//Settings.cycle_return_setting == GBHawkSettings.Cycle_Return.CPU ? 0 : 0;
+		public ulong TotalExecutedCycles => LibGBHawk.GB_get_cycles(GB_Pntr, Settings.cycle_return_setting == GBHawkSettings.Cycle_Return.CPU);
 
 		public bool IsCGBMode() => Is_GBC;
 
