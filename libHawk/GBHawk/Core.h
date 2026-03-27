@@ -279,20 +279,23 @@ namespace GBHawk
 
 		void Set_RTC(int32_t val, uint32_t param)
 		{
-			Mapper->Set_RTC(val, param);
+			Mapper->RTC_Set(val, param);
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
 		{
-			GB.Cart_RAM = new uint8_t[ext_sram_size];
+			if (ext_sram_size > 0)
+			{
+				GB.Cart_RAM = new uint8_t[ext_sram_size];
 
-			GB.Cart_RAM_Length = ext_sram_size;
+				GB.Cart_RAM_Length = ext_sram_size;
 
-			std::memcpy(GB.Cart_RAM, ext_sram, ext_sram_size);
+				std::memcpy(GB.Cart_RAM, ext_sram, ext_sram_size);
 
-			Mapper->Core_Cart_RAM = &GB.Cart_RAM[0];
+				Mapper->Core_Cart_RAM = &GB.Cart_RAM[0];
 
-			Mapper->Core_Cart_RAM_Length = &GB.Cart_RAM_Length;
+				Mapper->Core_Cart_RAM_Length = &GB.Cart_RAM_Length;
+			}
 
 			Mapper->Reset();
 		}

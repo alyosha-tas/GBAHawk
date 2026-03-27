@@ -78,7 +78,7 @@ namespace GBHawk
 
 		virtual void PokeMemory(uint16_t addr, uint8_t value) { }
 
-		virtual void Set_RTC(int32_t val, uint32_t param) { }
+		virtual void RTC_Set(int32_t val, uint32_t param) { }
 
 		virtual void Dispose() { }
 

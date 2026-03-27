@@ -53,6 +53,12 @@ namespace GBHawk
 			RTC_regs_latch[4] = 0;
 
 			RTC_regs_latch_wr = true;
+
+			RTC_timer = 0;
+			RTC_low_clock = 0;
+			RTC_offset = 0;
+
+			halt = false;
 		}
 
 		uint8_t ReadMemoryLow(uint16_t addr)
@@ -232,7 +238,7 @@ namespace GBHawk
 					RTC_low_clock++;
 
 					if (RTC_low_clock == 32768)
-					{
+					{					
 						RTC_low_clock = 0;
 						RTC_timer = RTC_offset;
 
