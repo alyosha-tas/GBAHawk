@@ -828,7 +828,7 @@ namespace GBAHawk
 							{
 								// semi transparent pixels with highest priority always enable alpha blending if possible, even if otherwise disabled.
 								// alpha blend if possible
-								if ((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0)
+								if (Bit_Test(ppu_Special_FX, cur_BG_layer + 8))
 								{
 									// Alpha blending Sprite - BG
 									ppu_Final_Pixel = spr_pixel;
@@ -868,7 +868,7 @@ namespace GBAHawk
 								else
 								{
 									// alpha blend if possible
-									if (((ppu_Special_FX & (1 << (cur_BG_layer + 8))) != 0) && ppu_SFX_OBJ_Target_1)
+									if (Bit_Test(ppu_Special_FX, cur_BG_layer + 8) && ppu_SFX_OBJ_Target_1)
 									{
 										// Alpha blending Sprite - BG
 										ppu_Final_Pixel = spr_pixel;
@@ -905,7 +905,7 @@ namespace GBAHawk
 
 									ppu_Fetch_Target_1 = ppu_Fetch_BG;
 
-									if ((ppu_SFX_mode != 0) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
+									if ((ppu_SFX_mode != 0) && Bit_Test(ppu_Special_FX, cur_BG_layer ))
 									{
 										ppu_Brighten_Final_Pixel = true;
 									}
@@ -914,9 +914,9 @@ namespace GBAHawk
 								{
 									// alpha blend if possible
 									// check if another bg layer has a higher priority pixel than the sprite
-									if ((ppu_Special_FX & (1 << cur_BG_layer)) != 0)
+									if (Bit_Test(ppu_Special_FX, cur_BG_layer))
 									{
-										if ((second_layer_priority < spr_priority) && ((ppu_Special_FX & (1 << (second_BG_layer + 8))) != 0))
+										if ((second_layer_priority < spr_priority) && Bit_Test(ppu_Special_FX, second_BG_layer + 8))
 										{
 											// Alpha blending BG - BG
 											ppu_Final_Pixel = ppu_BG_Pixel_F;
@@ -972,7 +972,7 @@ namespace GBAHawk
 
 								ppu_Fetch_Target_1 = ppu_Fetch_BG;
 
-								if ((ppu_SFX_mode >= 2) && ((ppu_Special_FX & (1 << cur_BG_layer)) != 0))
+								if ((ppu_SFX_mode >= 2) && Bit_Test(ppu_Special_FX, cur_BG_layer))
 								{
 									ppu_Brighten_Final_Pixel = true;
 								}
@@ -981,7 +981,7 @@ namespace GBAHawk
 							{
 								// alpha blend if possible
 								// check if the top two layers are targets for blending
-								if (((ppu_Special_FX & (1 << cur_BG_layer)) != 0) && ((ppu_Special_FX & (1 << (second_BG_layer + 8))) != 0))
+								if (Bit_Test(ppu_Special_FX, cur_BG_layer) && Bit_Test(ppu_Special_FX, second_BG_layer + 8))
 								{
 									// Alpha blending BG - BG
 									ppu_Final_Pixel = ppu_BG_Pixel_F;

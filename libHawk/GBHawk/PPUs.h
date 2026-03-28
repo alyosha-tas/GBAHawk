@@ -8,6 +8,7 @@
 #include <string>
 
 #include "../Common/Savestate.h"
+#include "../Common/Common_Ops.h"
 
 using namespace std;
 
@@ -191,43 +192,7 @@ namespace GBHawk
 
 		inline uint8_t HDMA_ctrl() { return (uint8_t)(((HDMA_active ? 0 : 1) << 7) | ((HDMA_length >> 4) - 1)); }
 
-		uint8_t BitReverse(uint8_t b)
-		{
-			uint8_t ret = (uint8_t)(b >> 7);
-
-			uint8_t bit_0 = (uint8_t)(b & 1);
-			uint8_t bit_1 = (uint8_t)(b & 2);
-			uint8_t bit_2 = (uint8_t)(b & 4);
-			uint8_t bit_3 = (uint8_t)(b & 8);
-			uint8_t bit_4 = (uint8_t)(b & 0x10);
-			uint8_t bit_5 = (uint8_t)(b & 0x20);
-			uint8_t bit_6 = (uint8_t)(b & 0x40);
-
-			ret |= (uint8_t)(bit_0 << 7);
-			ret |= (uint8_t)(bit_1 << 5);
-			ret |= (uint8_t)(bit_2 << 3);
-			ret |= (uint8_t)(bit_3 << 1);
-			ret |= (uint8_t)(bit_4 >> 1);
-			ret |= (uint8_t)(bit_5 >> 3);
-			ret |= (uint8_t)(bit_6 >> 5);
-
-			return ret;
-		}
-
-		inline bool Get_Bit(uint8_t val, uint8_t bit)
-		{
-			return ((val & (1 << bit)) == (1 << bit));
-		}
-
-		inline bool Get_Bit_Int(int32_t val, int32_t bit)
-		{
-			return ((val & (1 << bit)) == (1 << bit));
-		}
-
-		virtual uint8_t ReadReg(uint16_t addr)
-		{
-			return 0;
-		}
+		virtual uint8_t ReadReg(uint16_t addr) { return 0; }
 
 		virtual void WriteReg(uint16_t addr, uint8_t value) { }
 

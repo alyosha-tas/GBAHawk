@@ -469,7 +469,7 @@ namespace GBAHawk
 					{
 						for (int i = 0; i < 4; i++)
 						{
-							ppu_BG_On[i] = (ppu_CTRL & (0x100 << i)) == (0x100 << i);
+							ppu_BG_On[i] = Bit_Test(ppu_CTRL, i + 8);
 						}
 
 						ppu_Ctrl_Latch_Delay = false;

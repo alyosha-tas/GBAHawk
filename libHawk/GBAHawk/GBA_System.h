@@ -11,6 +11,7 @@
 #include <inttypes.h>
 #include <cmath>
 #include "../Common/Savestate.h"
+#include "../Common/Common_Ops.h"
 
 #ifndef _WIN32
 #define sprintf_s snprintf
@@ -6709,7 +6710,7 @@ namespace GBAHawk
 
 			for (int i = 0; i < 4; i++)
 			{
-				ppu_BG_On[i] = (value & (0x100 << i)) == (0x100 << i);
+				ppu_BG_On[i] = Bit_Test(value, i+8);
 			}
 
 			// sprites require one scanline to turn on
@@ -7112,7 +7113,7 @@ namespace GBAHawk
 			if ((C & 0x8000) == 0x8000) { C |= 0xFFFFFFFFFFFF0000; }
 			if ((D & 0x8000) == 0x8000) { D |= 0xFFFFFFFFFFFF0000; }
 
-			if (((ppu_Sprite_Attr_0 >> 9) & 0x1) == 1)
+			if (Bit_Test(ppu_Sprite_Attr_0, 9))
 			{
 				for (int j = 0; j < 2 * ppu_Sprite_X_Size; j++)
 				{

@@ -9,6 +9,7 @@
 #include <string>
 
 #include "../Common/Savestate.h"
+#include "../Common/Common_Ops.h"
 
 using namespace std;
 

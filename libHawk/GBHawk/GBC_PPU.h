@@ -921,7 +921,7 @@ namespace GBHawk
 				{
 					if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 						(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-						!Get_Bit_Int(evaled_sprites, i))
+						!Bit_Test(evaled_sprites, i))
 					{
 						going_to_fetch = true;
 						fetch_sprite = true;
@@ -948,9 +948,9 @@ namespace GBHawk
 							bus_address = 0x3800 + (LCDC_Bit(3) ? 1 : 0) * 0x400 + temp_fetch;
 							tile_data[2] = Core_VRAM[bus_address];
 
-							VRAM_sel = Get_Bit(tile_data[2], 3) ? 1 : 0;
+							VRAM_sel = Bit_Test(tile_data[2], 3) ? 1 : 0;
 
-							BG_V_flip = Get_Bit(tile_data[2], 6);
+							BG_V_flip = Bit_Test(tile_data[2], 6);
 
 							read_case = 1;
 							if (!pre_render)
@@ -1080,8 +1080,8 @@ namespace GBHawk
 							bus_address = 0x3800 + (LCDC_Bit(6) ? 1 : 0) * 0x400 + temp_fetch;
 							tile_data[2] = Core_VRAM[bus_address];
 
-							VRAM_sel = Get_Bit(tile_data[2], 3) ? 1 : 0;
-							BG_V_flip = Get_Bit(tile_data[2], 6);
+							VRAM_sel = Bit_Test(tile_data[2], 3) ? 1 : 0;
+							BG_V_flip = Bit_Test(tile_data[2], 6);
 
 							window_tile_inc++;
 
@@ -1265,15 +1265,15 @@ namespace GBHawk
 					// start shifting data into the LCD
 					if (render_counter >= (render_offset + 8))
 					{
-						if (Get_Bit(tile_data_latch[2], 5))
+						if (Bit_Test(tile_data_latch[2], 5))
 						{
-							pixel = Get_Bit(tile_data_latch[0], render_counter % 8) ? 1 : 0;
-							pixel |= Get_Bit(tile_data_latch[1], render_counter % 8) ? 2 : 0;
+							pixel = Bit_Test(tile_data_latch[0], render_counter % 8) ? 1 : 0;
+							pixel |= Bit_Test(tile_data_latch[1], render_counter % 8) ? 2 : 0;
 						}
 						else
 						{
-							pixel = Get_Bit(tile_data_latch[0], (7 - (render_counter % 8))) ? 1 : 0;
-							pixel |= Get_Bit(tile_data_latch[1], (7 - (render_counter % 8))) ? 2 : 0;
+							pixel = Bit_Test(tile_data_latch[0], (7 - (render_counter % 8))) ? 1 : 0;
+							pixel |= Bit_Test(tile_data_latch[1], (7 - (render_counter % 8))) ? 2 : 0;
 						}
 
 						int ref_pixel = pixel;
@@ -1301,7 +1301,7 @@ namespace GBHawk
 							{
 								if (LCDC_Bit(1))
 								{
-									if (!Get_Bit(sprite_attr, 7))
+									if (!Bit_Test(sprite_attr, 7))
 									{
 										use_sprite = true;
 									}
@@ -1316,7 +1316,7 @@ namespace GBHawk
 									}
 
 									// There is another priority bit in GBC, that can still sprite priority
-									if (LCDC_Bit(0) && Get_Bit(tile_data_latch[2], 7) && (ref_pixel != 0))
+									if (LCDC_Bit(0) && Bit_Test(tile_data_latch[2], 7) && (ref_pixel != 0))
 									{
 										use_sprite = false;
 									}
@@ -1398,7 +1398,7 @@ namespace GBHawk
 					{
 						if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
 								(pixel_counter < (SL_sprites[i * 4 + 1])) &&
-								!Get_Bit_Int(evaled_sprites, i))
+								!Bit_Test(evaled_sprites, i))
 						{
 							sprite_fetch_counter += 6;
 							evaled_sprites |= (1 << i);
@@ -1455,7 +1455,7 @@ namespace GBHawk
 		void process_sprite()
 		{
 			int y;
-			int VRAM_temp = (Get_Bit(SL_sprites[sl_use_index * 4 + 3], 3)) ? 1 : 0;
+			int VRAM_temp = (Bit_Test(SL_sprites[sl_use_index * 4 + 3], 3)) ? 1 : 0;
 
 			if ((SL_sprites[sl_use_index * 4 + 3] & 0x40) == 0x40)
 			{

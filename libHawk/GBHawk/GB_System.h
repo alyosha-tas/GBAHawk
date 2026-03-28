@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include "../Common/Savestate.h"
+#include "../Common/Common_Ops.h"
 
 #ifndef _WIN32
 #define sprintf_s snprintf

@@ -834,21 +834,21 @@ namespace GBHawk
 					}
 					else
 					{
-						if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+						if ((GBL[0].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[0].GB.ser_Control, 7))
 						{
 							ready_to_transmit = true;
 
 							if ((status_byte & 0x20) == 0x20)
 							{
-								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 							if ((status_byte & 0x40) == 0x40)
 							{
-								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 							if ((status_byte & 0x80) == 0x80)
 							{
-								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 						}
 
@@ -869,7 +869,7 @@ namespace GBHawk
 						// first byte sent is 0xFE
 						if (ping_player == 1)
 						{
-							if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+							if ((GBL[0].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[0].GB.ser_Control, 7))
 							{
 								GBL[0].GB.ser_Clock = 1;
 								GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
@@ -880,7 +880,7 @@ namespace GBHawk
 						}
 						else if (ping_player == 2)
 						{
-							if ((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))
+							if ((GBL[1].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[1].GB.ser_Control, 7))
 							{
 								GBL[1].GB.ser_Clock = 1;
 								GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
@@ -891,7 +891,7 @@ namespace GBHawk
 						}
 						else if (ping_player == 3)
 						{
-							if ((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))
+							if ((GBL[2].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[2].GB.ser_Control, 7))
 							{
 								GBL[2].GB.ser_Clock = 1;
 								GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
@@ -902,7 +902,7 @@ namespace GBHawk
 						}
 						else
 						{
-							if ((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))
+							if ((GBL[3].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[3].GB.ser_Control, 7))
 							{
 								GBL[3].GB.ser_Clock = 1;
 								GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
@@ -939,7 +939,7 @@ namespace GBHawk
 						// the next 3 bytes are the status byte (which may be updated in between each transfer)
 						if (ping_player == 1)
 						{
-							if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+							if ((GBL[0].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[0].GB.ser_Control, 7))
 							{
 								GBL[0].GB.ser_Clock = 1;
 								GBL[0].GB.ser_Going_Out = (uint8_t)(GBL[0].GB.ser_Data >> 7);
@@ -950,7 +950,7 @@ namespace GBHawk
 						}
 						else if (ping_player == 2)
 						{
-							if ((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))
+							if ((GBL[1].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[1].GB.ser_Control, 7))
 							{
 								GBL[1].GB.ser_Clock = 1;
 								GBL[1].GB.ser_Going_Out = (uint8_t)(GBL[1].GB.ser_Data >> 7);
@@ -961,7 +961,7 @@ namespace GBHawk
 						}
 						else if (ping_player == 3)
 						{
-							if ((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))
+							if ((GBL[2].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[2].GB.ser_Control, 7))
 							{
 								GBL[2].GB.ser_Clock = 1;
 								GBL[2].GB.ser_Going_Out = (uint8_t)(GBL[2].GB.ser_Data >> 7);
@@ -972,7 +972,7 @@ namespace GBHawk
 						}
 						else
 						{
-							if ((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))
+							if ((GBL[3].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[3].GB.ser_Control, 7))
 							{
 								GBL[3].GB.ser_Clock = 1;
 								GBL[3].GB.ser_Going_Out = (uint8_t)(GBL[3].GB.ser_Data >> 7);
@@ -1094,21 +1094,21 @@ namespace GBHawk
 					}
 					else
 					{
-						if ((GBL[0].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[0].GB.ser_Control, 7))
+						if ((GBL[0].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[0].GB.ser_Control, 7))
 						{
 							ready_to_transmit = true;
 
 							if ((status_byte & 0x20) == 0x20)
 							{
-								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[1].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[1].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 							if ((status_byte & 0x40) == 0x40)
 							{
-								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[2].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[2].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 							if ((status_byte & 0x80) == 0x80)
 							{
-								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Get_Bit(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
+								if (!((GBL[3].GB.ser_Clk_Rate == -1) && Bit_Test(GBL[3].GB.ser_Control, 7))) { ready_to_transmit = false; }
 							}
 						}
 
@@ -1166,8 +1166,6 @@ namespace GBHawk
 				}
 			}
 		}
-
-		inline bool Get_Bit(uint8_t val, uint8_t bit) { return (val & (0x1 << bit)) == (0x1 << bit); }
 
 		void Change_Linking(bool link_status, uint32_t link_type)
 		{
