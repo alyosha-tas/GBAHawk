@@ -66,7 +66,13 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						End_ISpecial();
+						address_bus = PC;
+
+						alu_temp = ReadMemory(address_bus);
+						break;
+
+					case 2:
+						End();
 						break;
 				}
 				break;
@@ -132,14 +138,7 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						if (spc_ALU_Type == ALU::PLP)
-						{
-							End_ISpecial();
-						}
-						else
-						{
-							End();
-						}
+						End();
 					break;
 				}
 				break;
@@ -373,13 +372,6 @@ namespace SNESHawk
 						alu_temp = ((uint8_t)PC + (int8_t)opcode2);
 						PC &= 0xFF00;
 						PC |= (uint16_t)(alu_temp & 0xFF);
-
-						if (!((alu_temp & 0x100) == 0x100))
-						{								
-							branch_irq_hack = true;
-
-							spc_Instr_Cycle++;
-						}
 						break;
 
 					case 2:
@@ -859,54 +851,8 @@ namespace SNESHawk
 						H = 0; // In preparation for SHY, set H to 0.
 						break;
 
-					case 2:
-						
+					case 2:						
 						address_bus = (uint16_t)ea;
-
-						if (spc_ALU_Type == ALU::SHS)
-						{
-							H |= (uint8_t)((ea >> 8) + 1);
-							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
-
-							if (adjust)
-							{
-								ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & ((A & X) << 8)));
-							}
-						}
-						else if (spc_ALU_Type == ALU::SHY)
-						{
-							H |= (uint8_t)((ea >> 8) + 1);
-							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
-
-							if (adjust)
-							{
-								ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & (Y << 8)));
-							}
-						}
-						else if (spc_ALU_Type == ALU::SHX)
-						{
-							H |= (uint8_t)((ea >> 8) + 1);
-							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
-
-							if (adjust)
-							{
-								ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & (X << 8)));
-							}
-						}
-						else // SHA
-						{
-							H |= (uint8_t)((ea >> 8) + 1);
-							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
-
-							if (adjust)
-							{
-								ea = (uint16_t)((ea & 0xFF) | ((ea + 0x100) & 0xFF00 & ((A & X) << 8)));
-							}
-						}
 						break;
 
 					case 3:
@@ -1073,8 +1019,113 @@ namespace SNESHawk
 				}
 				break;
 
-			case OpT::Jam:
-				// do nothing, stuck
+			case OpT::TCAL:
+				switch (spc_Instr_Cycle)
+				{
+					case 0: break;
+					case 1: WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8)); break;
+					case 2: break;
+					case 3: WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC); break;
+					case 4: break;
+					case 5:
+						switch (opcode & 0xF)
+						{
+							case 0x0: PC = 0xFFDE; break;
+							case 0x1: PC = 0xFFDC; break;
+							case 0x2: PC = 0xFFDA; break;
+							case 0x3: PC = 0xFFD8; break;
+							case 0x4: PC = 0xFFD6; break;
+							case 0x5: PC = 0xFFD4; break;
+							case 0x6: PC = 0xFFD2; break;
+							case 0x7: PC = 0xFFD0; break;
+							case 0x8: PC = 0xFFCE; break;
+							case 0x9: PC = 0xFFCC; break;
+							case 0xA: PC = 0xFFCA; break;
+							case 0xB: PC = 0xFFC8; break;
+							case 0xC: PC = 0xFFC6; break;
+							case 0xD: PC = 0xFFC4; break;
+							case 0xE: PC = 0xFFC2; break;
+							case 0xF: PC = 0xFFC0; break;
+						}
+						break;
+					case 6: break;
+					case 7: End(); break;
+				}
+				break;
+
+			case OpT::SECLB:
+				switch (spc_Instr_Cycle)
+				{
+					case 0:
+						ea = ReadMemory(PC);
+						PC++;
+						if (spc_FlagPget()) { ea += 0x100; }
+						break;
+
+					case 1: 
+						alu_temp = ReadMemory(ea);
+						Bit = (opcode >> 5) & 7;
+
+						if (((opcode >> 4) & 1) == 1)
+						{
+							Bit = 0xFF - (1 << Bit);
+							alu_temp &= Bit;
+						}
+						else
+						{
+							alu_temp |= (1 << Bit);
+						}
+						break;
+
+					case 2: WriteMemory(ea, alu_temp); break;
+					case 3: End(); break;
+				}
+				break;
+
+			case OpT::BBSC:
+				switch (spc_Instr_Cycle)
+				{
+					case 0:
+						ea = ReadMemory(PC);
+						PC++;
+						if (spc_FlagPget()) { ea += 0x100; }
+						break;
+
+					case 1:
+						alu_temp = ReadMemory(ea);
+						Bit = (opcode >> 5) & 7;
+
+						if (((opcode >> 4) & 1) == 1)
+						{
+							branch_taken = !Bit_Test(alu_temp, Bit);
+						}
+						else
+						{
+							branch_taken = Bit_Test(alu_temp, Bit);
+						}
+						break;
+
+					case 2:
+						opcode2 = ReadMemory(PC);
+						PC++;
+						break;
+					case 3:
+						if (branch_taken)
+						{
+							alu_temp = PC;
+							PC = (PC + (int8_t)opcode2);
+							branch_taken = false;
+						}
+						else
+						{
+							spc_Instr_Cycle += 2;
+						}
+						break;
+
+					case 4: WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(alu_temp >> 8)); break;
+					case 5: WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)alu_temp); break;
+					case 6: End(); break;
+				}
 				break;
 
 			case OpT::INT:
@@ -1272,17 +1323,6 @@ namespace SNESHawk
 				NZ_Y();
 				break;
 
-			case ALU::LAX:
-				A = X = (uint8_t)alu_temp;
-				NZ_A();
-				break;
-
-			case ALU::ANC:
-				A &= (uint8_t)alu_temp;
-				spc_FlagCset((A & 0x80) == 0x80);
-				NZ_A();
-				break;
-
 			case ALU::ASR:
 				A &= (uint8_t)alu_temp;
 				spc_FlagCset((A & 0x1) == 0x1);
@@ -1411,31 +1451,16 @@ namespace SNESHawk
 				spc_FlagCset(false);
 				break;
 
-			case ALU::SED:
-				spc_FlagDset(true);
+			case ALU::SEP:
+				spc_FlagPset(true);
 				break;
 
-			case ALU::CLD:
-				spc_FlagDset(false);
+			case ALU::CLP:
+				spc_FlagPset(false);
 				break;
 
 			case ALU::CLV:
 				spc_FlagVset(false);
-				break;
-
-			case ALU::LAS:
-				S &= (uint8_t)alu_temp;
-				X = S;
-				A = S;
-				P = (uint8_t)((P & 0x7D) | TableNZ[S]);
-				break;
-
-			case ALU::AXS:
-				X &= A;
-				alu_temp = X - (uint8_t)alu_temp;
-				X = (uint8_t)alu_temp;
-				spc_FlagCset((alu_temp & 0x100) == 0x0);
-				NZ_X();
 				break;
 
 			case ALU::BIT:
@@ -1443,12 +1468,6 @@ namespace SNESHawk
 				spc_FlagVset((alu_temp & 0x40) != 0);
 				spc_FlagZset((A & alu_temp) == 0);
 				break;
-
-			case ALU::DCP:
-				value8 = temp8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)(value8 - 1);
-				spc_FlagCset((temp8 & 1) != 0);
-				// pass through to cmp
 
 			case ALU::CMP:
 				value8 = (uint8_t)alu_temp;
@@ -1505,11 +1524,6 @@ namespace SNESHawk
 				}
 				break;
 
-			case ALU::ISC:
-				value8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)(value8 + 1);
-				// pass through to sbc
-
 			case ALU::SBC:
 				value8 = (uint8_t)alu_temp;
 				tempint = A - value8 - (spc_FlagCget() ? 0 : 1);
@@ -1535,95 +1549,6 @@ namespace SNESHawk
 				}
 				break;
 
-			case ALU::ARR:
-				A &= (uint8_t)alu_temp;
-
-				if (spc_FlagDget() && BCD_Enabled)
-				{
-					// Shift logic
-					uint8_t next = (A >> 1) | (spc_FlagCget() ? 0x80 : 0x00);
-					spc_FlagVset(((A ^ next) & 0x40) != 0);
-					spc_FlagNset(spc_FlagCget());
-					spc_FlagZset((next & 0xFF) == 0);
-
-					// BCD fixup
-					if ((A & 0x0F) + (A & 0x01) > 0x05)
-					{
-						next = (next & 0xF0) | ((next + 0x06) & 0x0F);
-					}
-					if ((A & 0xF0) + (A & 0x10) > 0x50)
-					{
-						next = (next & 0x0F) | ((next + 0x60) & 0xF0);
-						spc_FlagCset(true);
-					}
-					else
-					{
-						spc_FlagCset(false);
-					}
-
-					A = (uint8_t)next;
-				}
-				else
-				{
-					booltemp = (A & 1) == 1;
-					A = (uint8_t)((A >> 1) | (spc_FlagCget() ? 0x80 : 0x00));
-					spc_FlagCset(booltemp);
-					if ((A & 0x20) == 0x20)
-						if ((A & 0x40) == 0x40)
-						{
-							spc_FlagCset(true); spc_FlagVset(false);
-						}
-						else { spc_FlagVset(true); spc_FlagCset(false); }
-					else if ((A & 0x40) == 0x40)
-					{
-						spc_FlagVset(true); spc_FlagCset(true);
-					}
-					else { spc_FlagVset(false); spc_FlagCset(false); }
-					NZ_A();
-				}
-				break;
-
-			case ALU::RLA:
-				value8 = temp8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)((value8 << 1) | (P & 1));
-				spc_FlagCset((temp8 & 0x80) != 0);
-				A &= value8;
-				NZ_A();
-				break;
-
-			case ALU::SLO:
-				value8 = (uint8_t)alu_temp;
-				spc_FlagCset((value8 & 0x80) != 0);
-				alu_temp = value8 = (uint8_t)((value8 << 1));
-				A |= value8;
-				NZ_A();
-				break;
-
-			case ALU::ANE:
-				// Many varied reports on what this should be.
-				// safe value is 0xFF. Commodore 64 needs 0xEF.
-				A |= AneConstant;
-				A &= (uint8_t)(X & alu_temp);
-				NZ_A();
-				break;
-
-			case ALU::LXA:
-				//there is some debate about what this should be. it may depend on the 6502 variant.
-				//this is suggested by qeed's doc for the SNES and passes blargg's instruction test
-				A |= LxaConstant;
-				A &= (uint8_t)alu_temp;
-				X = A;
-				NZ_A();
-				break;
-
-			case ALU::SRE:
-				value8 = (uint8_t)alu_temp;
-				spc_FlagCset((value8 & 1) != 0);
-				alu_temp = value8 = (uint8_t)(value8 >> 1);
-				A ^= value8;
-				NZ_A();
-				break;
-
 			default:
 				throw exception("bad op");
 
@@ -1644,31 +1569,6 @@ namespace SNESHawk
 
 			case ALU::STX:
 				WriteMemory((uint16_t)ea, X);
-				break;
-
-			case ALU::SAX:
-				alu_temp = A & X;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHA:
-				alu_temp = A & X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHX:
-				alu_temp = X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHY:
-				alu_temp = Y & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHS:
-				S = (uint8_t)(X & A);
-				WriteMemory((uint16_t)ea, (uint8_t)(S & H));
 				break;
 		}
 	}
@@ -1699,11 +1599,8 @@ namespace SNESHawk
 	{
 		spc_Instr_Type = OpT::FONI;
 		spc_Instr_Cycle = -1;
-		
-		
+				
 		address_bus = PC;
-
-		branch_irq_hack = false;
 
 		if (TraceCallback) TraceCallback(0);
 		opcode = ReadMemory(address_bus);
