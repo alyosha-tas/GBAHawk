@@ -288,6 +288,7 @@ namespace BizHawk.Client.Common
 			[VSystemID.Raw.GBA] = CoreNames.GBAHawk,
 			[VSystemID.Raw.GBAL] = CoreNames.GBAHawkLink,
 			[VSystemID.Raw.NES] = CoreNames.NESHawk2,
+			[VSystemID.Raw.SNES] = CoreNames.SNESHawk,
 		};
 
 		public bool DontTryOtherCores { get; set; }
