@@ -47,16 +47,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			// only 16 byte header size supported
 			if ((rom.Length & 0xFF) == 0x0)
 			{
-				// can only load if the game is in the db
-				Build_Header(romHashMD5, romHashSHA1);
-
-				GamePack = new byte[rom.Length];
-				Buffer.BlockCopy(rom, 0, GamePack, 0, rom.Length);
+				throw new Exception("NES 2.0 Header required.");
 			}
 			else if ((rom.Length & 0xFF) == 0x10)
 			{
-				Console.WriteLine("ines header detected");
-
 				if (rom.Length > 16)
 				{
 					GamePack = new byte[rom.Length - 0x10];
@@ -68,19 +62,50 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 
 				Buffer.BlockCopy(rom, 0x10, GamePack, 0, rom.Length - 0x10);
 				Buffer.BlockCopy(rom, 0, Header, 0, 0x10);
+
+				// make sure the header is an iNES 2.0 header
+				if ((Header[0] != 0x4E) || (Header[1] != 0x45)|| (Header[2] != 0x53) || (Header[3] != 0x1A) || ((Header[7] & 0x0C) != 0x08))
+				{
+					throw new Exception("Only NES 2.0 Header is supported.");
+				}
 			}
 			else
 			{
-				throw new Exception("Header size not supported");
+				throw new Exception("Header size not supported / unsupported ROM layout.");
 			}
 
-			has_bat = ((Header[6] & 0x04) == 0x04);
+			has_bat = ((Header[6] & 0x02) == 0x02);
 
 			// now we have a header and rom file to send to the core
 			// still need to deal with save ram
-			if (Header[8] != 0)
+			// for now don't differentiate between which RAM is savable or not
+			// but still respect the requirement that 'has bat' flag must corespond to non-zero bits of save RAM
+			if (has_bat)
 			{
-				cart_RAM = new byte[(int)(Header[8])*0x2000];
+				if ((Header[10] & 0xF0) != 0)
+				{
+					if ((Header[10] & 0xF) != 0)
+					{
+						cart_RAM = new byte[((int)64 << (Header[10] & 0xF)) + ((int)64 << ((Header[10] >> 4) & 0xF))];
+					}
+					else
+					{
+						cart_RAM = new byte[((int)64 << ((Header[10] >> 4) & 0xF))];
+					}
+				}
+				else
+				{
+					has_bat = false;
+
+					if ((Header[10] & 0xF) != 0)
+					{
+						cart_RAM = new byte[(int)64 << (Header[10] & 0xF)];
+					}
+				}
+			}
+			else if ((Header[10] & 0xF) != 0)
+			{
+				cart_RAM = new byte[(int) 64 << (Header[10] & 0xF)];
 			}
 
 			if (cart_RAM != null)
@@ -91,9 +116,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				}
 			}
 
-			ROM_Length = (uint)Header[4] * 0x4000;
+			ROM_Length = ((uint)Header[4] + (((uint)Header[9] & 0xF) << 8)) * 0x4000;
 
-			CHR_ROM_Length = (uint)Header[5] * 0x2000;
+			CHR_ROM_Length = ((uint)Header[5] + (((uint)Header[9] & 0xF0) << 4)) * 0x2000;
 
 			if (GamePack.Length != (CHR_ROM_Length + ROM_Length))
 			{
@@ -110,7 +135,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 
 			mapper |= (Header[7] & 0xF0);
 
-			Console.WriteLine("Mapper: (ines) " + mapper);
+			mapper |= ((int)Header[8] & 0xF) << 8;
+
+			Console.WriteLine("Mapper: (iNES 2.0) " + mapper);
 
 			if (mapper == 9)
 			{
@@ -261,14 +288,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		{
 			var si = new StrobeInfo(latched_4016, new_val);
 			ControllerDeck.Strobe(si, Controller);
-		}
-
-		public int Build_Header(string romHashMD5, string romHashSHA1)
-		{
-			int mppr = 0;
-			has_bat = false;
-
-			return mppr;
 		}
 
 		public ulong TotalExecutedCycles => 0;

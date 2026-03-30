@@ -58,9 +58,11 @@ namespace NESHawk
 
 			mapper_num |= (NES.Header[7] & 0xF0);
 
-			NES.ROM_Length = (uint32_t)NES.Header[4] * 0x4000;
+			mapper_num |= ((uint16_t)NES.Header[8] & 0xF) << 8;
 
-			NES.CHR_ROM_Length = (uint32_t)NES.Header[5] * 0x2000;
+			NES.ROM_Length = ((uint32_t)NES.Header[4] + (((uint32_t)NES.Header[9] & 0xF) << 8)) * 0x4000;
+
+			NES.CHR_ROM_Length = ((uint32_t)NES.Header[5] + (((uint32_t)NES.Header[9] & 0xF0) << 4)) * 0x2000;
 
 			int ofst_to_chr = NES.ROM_Length;
 
