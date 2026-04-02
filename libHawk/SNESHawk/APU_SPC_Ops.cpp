@@ -8,7 +8,7 @@
 
 namespace SNESHawk
 {
-	void APU::ExecuteOneOp()
+	void APU_System::ExecuteOneOp()
 	{
 		switch (spc_Instr_Type)
 		{
@@ -1286,7 +1286,7 @@ namespace SNESHawk
 		spc_Instr_Cycle++;
 	}
 
-	void APU::spc_ALU_Operation()
+	void APU_System::spc_ALU_Operation()
 	{
 		switch (spc_ALU_Type)
 		{
@@ -1555,7 +1555,7 @@ namespace SNESHawk
 		}
 	}
 
-	void APU::spc_Write_Operation()
+	void APU_System::spc_Write_Operation()
 	{
 		switch (spc_ALU_Type)
 		{
@@ -1573,7 +1573,7 @@ namespace SNESHawk
 		}
 	}
 
-	void APU::Execute(int cycles)
+	void APU_System::Execute(int cycles)
 	{
 		for (int i = 0; i < cycles; i++)
 		{
@@ -1581,21 +1581,21 @@ namespace SNESHawk
 		}
 	}
 
-	void APU::Fetch1()
+	void APU_System::Fetch1()
 	{
 		spc_Instr_Cycle = -1;
 
 		Fetch_Opcode_No_Interrupt();
 	}
 
-	void APU::Fetch1_Branch()
+	void APU_System::Fetch1_Branch()
 	{
 		spc_Instr_Cycle = -1;
 
 		Fetch_Opcode_No_Interrupt();
 	}
 
-	void APU::Fetch_Opcode_No_Interrupt()
+	void APU_System::Fetch_Opcode_No_Interrupt()
 	{
 		spc_Instr_Type = OpT::FONI;
 		spc_Instr_Cycle = -1;
@@ -1608,7 +1608,7 @@ namespace SNESHawk
 		spc_Decode(opcode);
 	}
 
-	void APU::Fetch_Dummy_Interrupt()
+	void APU_System::Fetch_Dummy_Interrupt()
 	{
 		spc_Instr_Type = OpT::DRMI;
 		spc_Instr_Cycle = -1;
@@ -1620,7 +1620,7 @@ namespace SNESHawk
 		spc_Instr_Type = OpT::INT;
 	}
 
-	void APU::Fetch2()
+	void APU_System::Fetch2()
 	{
 		address_bus = PC;
 
@@ -1628,7 +1628,7 @@ namespace SNESHawk
 		PC++;
 	}
 
-	void APU::Fetch3()
+	void APU_System::Fetch3()
 	{
 		address_bus = PC;
 

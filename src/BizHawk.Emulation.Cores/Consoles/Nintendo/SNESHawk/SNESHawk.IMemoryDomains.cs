@@ -56,6 +56,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					MemoryDomain.Endian.Little,
 					(addr) => LibSNESHawk.SNES_getsysbus(SNES_Pntr, (int)(addr & 0xFFFF)),
 					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
+					"APU Bus",
+					0x10000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibSNESHawk.SNES_getoambus(SNES_Pntr, (int)(addr & 0xFFFF)),
+					(addr, value) => { },
 					1)
 			};
 

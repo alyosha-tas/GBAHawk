@@ -13,7 +13,7 @@ namespace SNESHawk
 {
 #pragma region APU Memory Map
 
-	uint8_t APU::ReadMemory(uint32_t addr)
+	uint8_t APU_System::ReadMemory(uint32_t addr)
 	{
 		uint8_t ret;
 
@@ -44,7 +44,7 @@ namespace SNESHawk
 		return ret;
 	}
 
-	void APU::WriteMemory(uint32_t addr, uint8_t value)
+	void APU_System::WriteMemory(uint32_t addr, uint8_t value)
 	{
 		if (addr < 0xF0)
 		{
@@ -61,7 +61,7 @@ namespace SNESHawk
 		}
 	}
 
-	uint8_t APU::ReadReg(uint32_t addr)
+	uint8_t APU_System::ReadReg(uint32_t addr)
 	{
 		switch (addr)
 		{
@@ -84,7 +84,7 @@ namespace SNESHawk
 		}
 	}
 
-	void APU::WriteReg(uint32_t addr, uint8_t value)
+	void APU_System::WriteReg(uint32_t addr, uint8_t value)
 	{
 		switch (addr)
 		{
@@ -139,7 +139,7 @@ namespace SNESHawk
 		}
 	}
 
-	uint8_t APU::PeekMemory(uint32_t addr)
+	uint8_t APU_System::PeekMemory(uint32_t addr)
 	{
 		uint8_t ret;
 
@@ -170,7 +170,7 @@ namespace SNESHawk
 		return ret;
 	}
 
-	uint8_t APU::PeekReg(uint32_t addr)
+	uint8_t APU_System::PeekReg(uint32_t addr)
 	{
 		switch (addr)
 		{
@@ -193,7 +193,7 @@ namespace SNESHawk
 		}
 	}
 
-	uint16_t APU::Peek_Memory_16(uint32_t addr)
+	uint16_t APU_System::Peek_Memory_16(uint32_t addr)
 	{
 		uint16_t ret = 0;
 
@@ -204,7 +204,7 @@ namespace SNESHawk
 		return ret;
 	}
 
-	uint16_t APU::Peek_Memory_8_Branch(uint32_t addr)
+	uint16_t APU_System::Peek_Memory_8_Branch(uint32_t addr)
 	{
 		int16_t ret = 0;
 

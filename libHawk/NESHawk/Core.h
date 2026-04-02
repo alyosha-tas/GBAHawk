@@ -20,6 +20,7 @@
 #include "MMC2.h"
 #include "MMC1.h"
 #include "Mapper_030.h"
+#include "Mapper_232.h"
 #pragma endregion
 
 
@@ -102,6 +103,7 @@ namespace NESHawk
 				case 0x07: Mapper = new Mapper_AxROM(); break;
 				case 0x09: Mapper = new Mapper_MMC2(); break;
 				case 0x1E: Mapper = new Mapper_030(); break;
+				case 0xE8: Mapper = new Mapper_232(); break;
 				
 				default: Mapper = new Mapper_NROM(); break;
 			}

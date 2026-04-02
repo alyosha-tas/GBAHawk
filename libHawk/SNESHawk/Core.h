@@ -10,6 +10,7 @@
 #include "SNES_System.h"
 #include "Memory.h"
 #include "Mappers.h"
+#include "APU_System.h"
 
 #pragma region Mapper list includes
 
@@ -33,6 +34,7 @@ namespace SNESHawk
 
 		SNES_System SNES;
 		Mappers* Mapper;
+		APU_System APU;
 
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset)
 		{
@@ -307,6 +309,11 @@ namespace SNESHawk
 		uint8_t GetSysBus(uint32_t addr)
 		{
 			return SNES.PeekMemory(addr & 0xFFFF);
+		}
+
+		uint8_t GetOAMBus(uint32_t addr)
+		{
+			return APU.PeekMemory(addr & 0xFFFF);
 		}
 
 		uint8_t GetVRAM(uint32_t addr) 

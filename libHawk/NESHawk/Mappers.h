@@ -63,6 +63,7 @@ namespace NESHawk
 		uint32_t CHR_Bank_4;
 		uint32_t CHR_Mask;
 		uint32_t PRG_Bank;
+		uint32_t PRG_Block;
 		uint32_t PRG_Mask;
 		uint32_t WRAM_Bank;
 		uint32_t WRAM_Mask;
@@ -349,6 +350,7 @@ namespace NESHawk
 			saver = int_saver(CHR_Bank_4, saver);
 			saver = int_saver(CHR_Mask, saver);
 			saver = int_saver(PRG_Bank, saver);
+			saver = int_saver(PRG_Block, saver);
 			saver = int_saver(PRG_Mask, saver);
 			saver = int_saver(WRAM_Bank, saver);
 			saver = int_saver(WRAM_Mask, saver);
@@ -469,6 +471,7 @@ namespace NESHawk
 			loader = int_loader(&CHR_Bank_4, loader);
 			loader = int_loader(&CHR_Mask, loader);
 			loader = int_loader(&PRG_Bank, loader);
+			loader = int_loader(&PRG_Block, loader);
 			loader = int_loader(&PRG_Mask, loader);
 			loader = int_loader(&WRAM_Bank, loader);
 			loader = int_loader(&WRAM_Mask, loader);

@@ -30,6 +30,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="CNROM.h" />
     <ClInclude Include="AxROM.h" />
+    <ClInclude Include="Mapper_232.h" />
     <ClInclude Include="MMC2.h" />
     <ClInclude Include="MMC5.h" />
     <ClInclude Include="Mapper_030.h" />

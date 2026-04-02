@@ -32,7 +32,7 @@ using namespace std;
 
 namespace SNESHawk
 {
-	class APU
+	class APU_System
 	{
 	public:
 
