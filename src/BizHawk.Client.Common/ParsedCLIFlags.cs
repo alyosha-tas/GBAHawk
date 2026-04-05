@@ -32,8 +32,6 @@ namespace BizHawk.Client.Common
 
 		public readonly string? MMFFilename;
 
-		public readonly bool? audiosync;
-
 		public readonly string? cmdRom;
 
 		public ParsedCLIFlags(string? cmdLoadSlot,
@@ -65,7 +63,6 @@ namespace BizHawk.Client.Common
 			this.luaScript = luaScript;
 			this.luaConsole = luaConsole;
 			MMFFilename = mmfFilename;
-			this.audiosync = audiosync;
 			this.cmdRom = cmdRom;
 		}
 	}

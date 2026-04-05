@@ -103,19 +103,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public uint num_samp_L;
 		public uint num_samp_R;
 
-		public bool CanProvideAsync => false;
-
 		public void SetSyncMode(SyncSoundMode mode)
 		{
 			if (mode != SyncSoundMode.Sync)
 			{
 				throw new NotSupportedException("Only sync mode is supported");
 			}
-		}
-
-		public void GetSamplesAsync(short[] samples)
-		{
-			throw new NotSupportedException("Async not supported");
 		}
 
 		public SyncSoundMode SyncMode => SyncSoundMode.Sync;

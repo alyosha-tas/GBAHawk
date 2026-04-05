@@ -396,11 +396,6 @@ namespace BizHawk.Client.GBAHawk
 				LoadRomFromRecent(Config.RecentRoms.MostRecent);
 			}
 
-			if (_argParser.audiosync.HasValue)
-			{
-				Config.VideoWriterAudioSync = _argParser.audiosync.Value;
-			}
-
 			_autoDumpLength = _argParser._autoDumpLength;
 			if (_argParser.cmdMovie != null)
 			{
@@ -1188,7 +1183,6 @@ namespace BizHawk.Client.GBAHawk
 		private ISoundProvider _aviSoundInputAsync; // Note: This sound provider must be in async mode!
 
 		private SimpleSyncSoundProvider _dumpProxy; // an audio proxy used for dumping
-		private bool _dumpaudiosync; // set true to for experimental AV dumping
 		private int _avwriterResizew;
 		private int _avwriterResizeh;
 		private bool _avwriterpad;
@@ -1501,8 +1495,7 @@ namespace BizHawk.Client.GBAHawk
 			}
 			else
 			{
-				bool useAsyncMode = _currentSoundProvider.CanProvideAsync && !Config.SoundThrottle;
-				_currentSoundProvider.SetSyncMode(useAsyncMode ? SyncSoundMode.Async : SyncSoundMode.Sync);
+				_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
 				Sound.SetInputPin(_currentSoundProvider);
 			}
 		}
@@ -2714,7 +2707,6 @@ namespace BizHawk.Client.GBAHawk
 				videoWriterName = Config.VideoWriter;
 			}
 
-			_dumpaudiosync = Config.VideoWriterAudioSync;
 			if (unattended && !string.IsNullOrEmpty(videoWriterName))
 			{
 				aw = VideoWriterInventory.GetVideoWriter(videoWriterName, this);
@@ -2728,8 +2720,7 @@ namespace BizHawk.Client.GBAHawk
 					Config,
 					out _avwriterResizew,
 					out _avwriterResizeh,
-					out _avwriterpad,
-					ref _dumpaudiosync);
+					out _avwriterpad);
 			}
 
 			if (aw == null)
@@ -2748,14 +2739,7 @@ namespace BizHawk.Client.GBAHawk
 				const bool usingAvi = false;
 #endif
 
-				if (_dumpaudiosync)
-				{
-					aw = new VideoStretcher(aw);
-				}
-				else
-				{
-					aw = new AudioStretcher(aw);
-				}
+				aw = new VideoStretcher(aw);
 
 				aw.SetMovieParameters(Emulator.VsyncNumerator(), Emulator.VsyncDenominator());
 				if (_avwriterResizew > 0 && _avwriterResizeh > 0)
@@ -2859,23 +2843,7 @@ namespace BizHawk.Client.GBAHawk
 				throw;
 			}
 
-			if (_dumpaudiosync)
-			{
-				_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
-			}
-			else
-			{
-				if (_currentSoundProvider.CanProvideAsync)
-				{
-					_currentSoundProvider.SetSyncMode(SyncSoundMode.Async);
-					_aviSoundInputAsync = _currentSoundProvider;
-				}
-				else
-				{
-					_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
-					_aviSoundInputAsync = new SyncToAsyncProvider(() => Emulator.VsyncRate(), _currentSoundProvider);
-				}
-			}
+			_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
 
 			_dumpProxy = new SimpleSyncSoundProvider();
 			RewireSound();
@@ -2994,14 +2962,8 @@ namespace BizHawk.Client.GBAHawk
 
 					short[] samp;
 					int nsamp;
-					if (_dumpaudiosync)
-					{
-						((VideoStretcher) _currAviWriter).DumpAV(output, _currentSoundProvider, out samp, out nsamp);
-					}
-					else
-					{
-						((AudioStretcher) _currAviWriter).DumpAV(output, _aviSoundInputAsync, out samp, out nsamp);
-					}
+					
+					((VideoStretcher) _currAviWriter).DumpAV(output, _currentSoundProvider, out samp, out nsamp);
 
 					disposableOutput?.Dispose();
 

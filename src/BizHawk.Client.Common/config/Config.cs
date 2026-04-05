@@ -246,7 +246,6 @@ namespace BizHawk.Client.Common
 		public string AviCodecToken { get; set; } = "";
 		public int GifWriterFrameskip { get; set; } = 3;
 		public int GifWriterDelay { get; set; } = -1;
-		public bool VideoWriterAudioSync { get; set; } = true;
 
 		// Emulation core settings
 		internal Dictionary<string, JToken> CoreSettings { get; set; } = new Dictionary<string, JToken>();

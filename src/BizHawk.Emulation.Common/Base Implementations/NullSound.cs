@@ -40,8 +40,6 @@ namespace BizHawk.Emulation.Common
 			_spfDenominator = fpsNum;
 		}
 
-		public bool CanProvideAsync => true;
-
 		public SyncSoundMode SyncMode { get; private set; }
 
 		/// <exception cref="InvalidOperationException"><see cref="SyncMode"/> is not <see cref="SyncSoundMode.Sync"/> (call <see cref="SetSyncMode"/>)</exception>
@@ -71,17 +69,6 @@ namespace BizHawk.Emulation.Common
 		public void SetSyncMode(SyncSoundMode mode)
 		{
 			SyncMode = mode;
-		}
-
-		/// <exception cref="InvalidOperationException"><see cref="SyncMode"/> is not <see cref="SyncSoundMode.Async"/> (call <see cref="SetSyncMode"/>)</exception>
-		public void GetSamplesAsync(short[] samples)
-		{
-			if (SyncMode != SyncSoundMode.Async)
-			{
-				throw new InvalidOperationException("Wrong sound mode");
-			}
-
-			Array.Clear(samples, 0, samples.Length);
 		}
 	}
 }

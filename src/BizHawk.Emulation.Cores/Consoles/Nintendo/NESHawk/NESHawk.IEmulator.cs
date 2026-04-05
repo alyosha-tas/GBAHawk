@@ -73,19 +73,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		public int[] Aud = new int[25000];
 		public uint num_samp;
 
-		public bool CanProvideAsync => false;
-
 		public void SetSyncMode(SyncSoundMode mode)
 		{
 			if (mode != SyncSoundMode.Sync)
 			{
 				throw new NotSupportedException("Only sync mode is supported");
 			}
-		}
-
-		public void GetSamplesAsync(short[] samples)
-		{
-			throw new NotSupportedException("Async not supported");
 		}
 
 		public SyncSoundMode SyncMode => SyncSoundMode.Sync;

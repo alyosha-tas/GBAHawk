@@ -64,8 +64,7 @@ namespace BizHawk.Client.GBAHawk
 			Config config,
 			out int resizeW,
 			out int resizeH,
-			out bool pad,
-			ref bool audioSync)
+			out bool pad)
 				where T : IMainFormForTools, IDialogParent
 		{
 			var dlg = new VideoWriterChooserForm(owner, emulator, config)
@@ -95,7 +94,6 @@ namespace BizHawk.Client.GBAHawk
 				c.Enabled = false;
 			}
 
-			dlg.checkBoxASync.Checked = audioSync;
 			var result = owner.ShowDialogAsChild(dlg);
 
 			IVideoWriter ret;
@@ -123,7 +121,6 @@ namespace BizHawk.Client.GBAHawk
 			}
 
 			pad = dlg.checkBoxPad.Checked;
-			audioSync = dlg.checkBoxASync.Checked;
 
 			dlg.Dispose();
 			return ret;

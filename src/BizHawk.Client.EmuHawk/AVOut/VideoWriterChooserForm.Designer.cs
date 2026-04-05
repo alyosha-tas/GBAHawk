@@ -44,7 +44,6 @@
 			this.numericTextBoxW = new BizHawk.Client.GBAHawk.NumericTextBox();
 			this.numericTextBoxH = new BizHawk.Client.GBAHawk.NumericTextBox();
 			this.checkBoxPad = new System.Windows.Forms.CheckBox();
-			this.checkBoxASync = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.lblResolutionWarning = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.toolTip1 = new System.Windows.Forms.ToolTip();
@@ -204,17 +203,6 @@
 			this.checkBoxPad.Text = "Pad";
 			this.checkBoxPad.UseVisualStyleBackColor = true;
 			// 
-			// checkBoxASync
-			// 
-			this.checkBoxASync.AutoSize = true;
-			this.checkBoxASync.Location = new System.Drawing.Point(347, 12);
-			this.checkBoxASync.Name = "checkBoxASync";
-			this.checkBoxASync.Size = new System.Drawing.Size(95, 17);
-			this.checkBoxASync.TabIndex = 16;
-			this.checkBoxASync.Text = "Sync to Audio";
-			this.checkBoxASync.UseVisualStyleBackColor = true;
-			toolTip1.SetToolTip(checkBoxASync, "Configures A/V Sync strategy for Variable Frame Rate movies. If checked, drops or repeats frames to match audio sync. If unchecked, stretches audio to match video sync, resulting in pitch issues");
-			// 
 			// panel1
 			// 
 			this.panel1.Controls.Add(this.lblResolutionWarning);
@@ -241,7 +229,6 @@
 			this.ClientSize = new System.Drawing.Size(521, 440);
 			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.checkBoxPad);
-			this.Controls.Add(this.checkBoxASync);
 			this.Controls.Add(this.panelSizeSelect);
 			this.Controls.Add(this.tableLayoutPanel4);
 			this.Controls.Add(this.listBox1);
@@ -281,7 +268,6 @@
 		private System.Windows.Forms.Button buttonAuto;
 		private System.Windows.Forms.Panel panelSizeSelect;
 		private System.Windows.Forms.CheckBox checkBoxPad;
-		private System.Windows.Forms.CheckBox checkBoxASync;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private BizHawk.WinForms.Controls.LocLabelEx lblSize;
 		private System.Windows.Forms.Panel panel1;

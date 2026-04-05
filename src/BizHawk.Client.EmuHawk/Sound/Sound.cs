@@ -25,7 +25,6 @@ namespace BizHawk.Client.GBAHawk
 		private bool _disposed;
 		private readonly ISoundOutput _outputDevice;
 		private readonly SoundOutputProvider _outputProvider; // Buffer for Sync sources
-		private readonly BufferedAsync _bufferedAsync = new BufferedAsync(); // Buffer for Async sources
 		private IBufferedSoundProvider _bufferedProvider; // One of the preceding buffers, or null if no source is set
 
 		public Config Config;
@@ -116,11 +115,6 @@ namespace BizHawk.Client.GBAHawk
 			{
 				_bufferedProvider = _outputProvider;
 			}
-			else if (source.SyncMode == SyncSoundMode.Async)
-			{
-				_bufferedAsync.RecalculateMagic(_getCoreVsyncRateCallback());
-				_bufferedProvider = _bufferedAsync;
-			}
 			else throw new InvalidOperationException("Unsupported sync mode.");
 
 			_bufferedProvider.BaseSoundProvider = source;
@@ -210,15 +204,6 @@ namespace BizHawk.Client.GBAHawk
 					_outputProvider.GetSamples(samplesNeeded, out samples, out sampleCount);
 					sampleOffset = 0;
 				}
-			}
-			else if (_bufferedProvider == _bufferedAsync)
-			{
-				samples = new short[samplesNeeded * ChannelCount];
-
-				_bufferedAsync.GetSamplesAsync(samples);
-
-				sampleOffset = 0;
-				sampleCount = samplesNeeded;
 			}
 			else
 			{

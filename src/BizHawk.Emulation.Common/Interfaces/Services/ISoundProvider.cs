@@ -4,7 +4,7 @@ namespace BizHawk.Emulation.Common
 {
 	public enum SyncSoundMode
 	{
-		Sync, Async
+		Sync
 	}
 
 	/// <summary>
@@ -15,11 +15,6 @@ namespace BizHawk.Emulation.Common
 	/// </summary>
 	public interface ISoundProvider : IEmulatorService
 	{
-		/// <summary>
-		/// Gets a value indicating whether a core can provide Async sound
-		/// </summary>
-		bool CanProvideAsync { get; }
-
 		/// <summary>
 		/// Sets sync or async sound mode,
 		/// Sync should be the default mode if not set
@@ -41,13 +36,6 @@ namespace BizHawk.Emulation.Common
 		/// </summary>
 		/// <exception cref="InvalidOperationException"></exception>
 		void GetSamplesSync(out short[] samples, out int nsamp);
-
-		/// <summary>
-		/// Provides samples in async mode
-		/// If the core is not in async mode, this should throw an InvalidOperationException
-		/// </summary>
-		/// <exception cref="InvalidOperationException"></exception>
-		void GetSamplesAsync(short[] samples);
 
 		/// <summary>
 		/// Discards stuff, is there anything more to say here?

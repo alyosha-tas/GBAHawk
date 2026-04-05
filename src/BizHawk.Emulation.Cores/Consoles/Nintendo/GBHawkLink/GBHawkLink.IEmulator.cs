@@ -208,19 +208,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		const int blipbuffsize = 15000;
 
-		public bool CanProvideAsync => false;
-
 		public void SetSyncMode(SyncSoundMode mode)
 		{
 			if (mode != SyncSoundMode.Sync)
 			{
 				throw new NotSupportedException("Only sync mode is supported");
 			}
-		}
-
-		public void GetSamplesAsync(short[] samples)
-		{
-			throw new NotSupportedException("Async not supported");
 		}
 
 		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
