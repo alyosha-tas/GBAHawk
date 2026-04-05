@@ -42,7 +42,6 @@ namespace BizHawk.Client.GBAHawk
 			}
 		}
 
-		/// <exception cref="InvalidOperationException"><paramref name="syncSoundProvider"/>'s mode is not <see cref="SyncSoundMode.Sync"/></exception>
 		public void DumpAV(IVideoProvider v, ISoundProvider syncSoundProvider, out short[] samples, out int samplesProvided)
 		{
 			VerifyParams();

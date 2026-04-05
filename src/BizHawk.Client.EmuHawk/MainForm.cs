@@ -1179,9 +1179,6 @@ namespace BizHawk.Client.GBAHawk
 
 		private AutofireController _autofireNullControls;
 
-		// Sound refactor TODO: we can enforce async mode here with a property that gets/sets this but does an async check
-		private ISoundProvider _aviSoundInputAsync; // Note: This sound provider must be in async mode!
-
 		private SimpleSyncSoundProvider _dumpProxy; // an audio proxy used for dumping
 		private int _avwriterResizew;
 		private int _avwriterResizeh;
@@ -1489,7 +1486,7 @@ namespace BizHawk.Client.GBAHawk
 		{
 			if (_dumpProxy != null)
 			{
-				// we're video dumping, so async mode only and use the DumpProxy.
+				// we're video dumping, so sync mode only and use the DumpProxy.
 				// note that the avi dumper has already rewired the emulator itself in this case.
 				Sound.SetInputPin(_dumpProxy);
 			}
@@ -2861,7 +2858,6 @@ namespace BizHawk.Client.GBAHawk
 			AVIStatusLabel.Image = Properties.Resources.Blank;
 			AVIStatusLabel.ToolTipText = "";
 			AVIStatusLabel.Visible = false;
-			_aviSoundInputAsync = null;
 			_dumpProxy = null; // return to normal sound output
 			RewireSound();
 		}
@@ -2882,7 +2878,6 @@ namespace BizHawk.Client.GBAHawk
 			AVIStatusLabel.Image = Properties.Resources.Blank;
 			AVIStatusLabel.ToolTipText = "";
 			AVIStatusLabel.Visible = false;
-			_aviSoundInputAsync = null;
 			_dumpProxy = null; // return to normal sound output
 			RewireSound();
 		}
