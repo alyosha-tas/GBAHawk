@@ -21,6 +21,7 @@
 #include "MMC1.h"
 #include "Mapper_030.h"
 #include "Mapper_232.h"
+#include "NROM_RetroCoders.h"
 #pragma endregion
 
 
@@ -42,7 +43,7 @@ namespace NESHawk
 		NES_System NES;
 		Mappers* Mapper;
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
 		{
 			NES.Use_APU_Test_Regs = apu_test_regs;
 			
@@ -92,8 +93,10 @@ namespace NESHawk
 				std::memcpy(NES.CHR_ROM, ext_rom + ofst_to_chr, NES.CHR_ROM_Length);
 			}
 
-			switch (mapper_num)
+			if (special_flag == 0)
 			{
+				switch (mapper_num)
+				{
 				case 0x00: Mapper = new Mapper_NROM(); break;
 				case 0x01: Mapper = new Mapper_MMC1(); break;
 				case 0x02: Mapper = new Mapper_UxROM(); break;
@@ -104,8 +107,16 @@ namespace NESHawk
 				case 0x09: Mapper = new Mapper_MMC2(); break;
 				case 0x1E: Mapper = new Mapper_030(); break;
 				case 0xE8: Mapper = new Mapper_232(); break;
-				
+
 				default: Mapper = new Mapper_NROM(); break;
+				}
+			}
+			else
+			{
+				if (special_flag == 1)
+				{
+					Mapper = new NROM_RetroCoders(); // ROM expects to be able to read chip ID
+				}
 			}
 
 			Mapper->Mirroring = ((NES.Header[6] & 0x1) == 1);

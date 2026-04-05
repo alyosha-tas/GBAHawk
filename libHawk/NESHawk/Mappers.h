@@ -40,6 +40,8 @@ namespace NESHawk
 		bool Alt_Mirroring;
 		bool In_Frame;
 
+		bool Chip_ID_Active;
+
 		uint8_t Command;
 		uint8_t IRQ_Reload;
 		uint8_t IRQ_Counter;
@@ -326,6 +328,7 @@ namespace NESHawk
 			saver = bool_saver(Old_IRQ_Type, saver);
 			saver = bool_saver(Alt_Mirroring, saver);
 			saver = bool_saver(In_Frame, saver);
+			saver = bool_saver(Chip_ID_Active, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(IRQ_Reload, saver);
@@ -447,6 +450,7 @@ namespace NESHawk
 			loader = bool_loader(&Old_IRQ_Type, loader);
 			loader = bool_loader(&Alt_Mirroring, loader);
 			loader = bool_loader(&In_Frame, loader);
+			loader = bool_loader(&Chip_ID_Active, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&IRQ_Reload, loader);

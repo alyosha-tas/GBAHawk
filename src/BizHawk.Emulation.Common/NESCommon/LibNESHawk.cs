@@ -22,7 +22,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int NES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool Old_MMC3_IRQ, bool bus_conflicts, bool apu_test_regs, bool cpu_zero);
+		public static extern int NES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool Old_MMC3_IRQ, bool bus_conflicts, bool apu_test_regs, bool cpu_zero, byte special_flag);
 
 
 		[DllImport(lib, CallingConvention = cc)]

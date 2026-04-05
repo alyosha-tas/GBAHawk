@@ -39,11 +39,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			LeftController = SyncSettings.LeftController;
 			RightController = SyncSettings.RightController;
 
-			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
-			Console.WriteLine(romHashMD5);
-			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
-			Console.WriteLine(romHashSHA1);
-
 			// only 16 byte header size supported
 			if ((rom.Length & 0xFF) == 0x0)
 			{
@@ -157,7 +152,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
 			bool cpu_zero = SyncSettings.CPU_Zero_Reset == true;
 
-			LibNESHawk.NES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, mmc3_irq, bus_conflicts, apu_test_regs, cpu_zero);
+			var romHashMD5 = MD5Checksum.ComputePrefixedHex(GamePack);
+			Console.WriteLine(romHashMD5);
+			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(GamePack);
+			Console.WriteLine(romHashSHA1);
+
+
+			// some ROMs require unique features, use hash check to pick them out
+			byte special_flag = 0;
+
+			if (romHashSHA1 == "SHA1:4A894BFA13E720AB6BC79BB57864DEA686E9E068")
+			{
+				special_flag = 1; // Retrocoders demo that expects to read chip ID from CHR ROM flash chip
+			}
+
+			LibNESHawk.NES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, mmc3_irq, bus_conflicts, apu_test_regs, cpu_zero, special_flag);
 
 			if (cart_RAM != null) { LibNESHawk.NES_create_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 

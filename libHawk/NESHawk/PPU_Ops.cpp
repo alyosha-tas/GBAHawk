@@ -277,13 +277,6 @@ namespace NESHawk
 				show_bg_new = ppu_Show_BG;
 				show_obj_new = ppu_Show_OBJ;
 
-				if (PPUON())
-				{
-					Message_String = "on sl " + to_string(status_sl) + " cyc: " + to_string(status_cycle);
-
-					MessageCallback(Message_String.length());
-				}
-
 				// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
 				if (ppu_was_on_temp && ppu_Is_Rendering() && !PPUON())
 				{

@@ -26,9 +26,9 @@ NESHawk_EXPORT void NES_destroy(NESCore* p)
 }
 
 // load a rom into the core
-NESHawk_EXPORT void NES_load(NESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset)
+NESHawk_EXPORT void NES_load(NESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
 {
-	p->Load_ROM(rom, size, header, mmc3_old_irq, mapper_bus_conflicts, apu_test_regs, cpu_zero_reset);
+	p->Load_ROM(rom, size, header, mmc3_old_irq, mapper_bus_conflicts, apu_test_regs, cpu_zero_reset, special_flag);
 }
 
 // Create a default SRAM

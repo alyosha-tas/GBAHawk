@@ -36,6 +36,7 @@
     <ClInclude Include="Mapper_030.h" />
     <ClInclude Include="MMC1.h" />
     <ClInclude Include="MMC3.h" />
+    <ClInclude Include="NROM_RetroCoders.h" />
     <ClInclude Include="UxROM.h" />
     <ClInclude Include="NESHawk.h" />
     <ClInclude Include="Mappers.h" />
