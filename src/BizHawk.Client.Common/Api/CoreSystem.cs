@@ -11,6 +11,5 @@
 		GameBoyAdvance,
 		GameBoyAdvanceLink,
 		NES,
-		SNES,
 	}
 }

@@ -32,7 +32,6 @@ namespace BizHawk.Client.Common
 				VSystemID.Raw.GBA => CoreSystem.GameBoyAdvance,
 				VSystemID.Raw.GBAL => CoreSystem.GameBoyAdvanceLink,
 				VSystemID.Raw.NES => CoreSystem.NES,
-				VSystemID.Raw.SNES => CoreSystem.SNES,
 				VSystemID.Raw.NULL => CoreSystem.Null,
 				_ => throw new IndexOutOfRangeException($"{value} is missing in convert list")
 			};
@@ -69,7 +68,6 @@ namespace BizHawk.Client.Common
 				CoreSystem.GameBoyAdvance => VSystemID.Raw.GBA,
 				CoreSystem.GameBoyAdvanceLink => VSystemID.Raw.GBAL,
 				CoreSystem.NES => VSystemID.Raw.NES,
-				CoreSystem.SNES => VSystemID.Raw.SNES,
 				CoreSystem.Null => VSystemID.Raw.NULL,
 				_ => throw new IndexOutOfRangeException($"{value} is missing in convert list")
 			};
