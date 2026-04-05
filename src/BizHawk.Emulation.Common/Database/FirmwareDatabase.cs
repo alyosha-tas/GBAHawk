@@ -60,11 +60,6 @@ namespace BizHawk.Emulation.Common
 			Firmware("GB", "World", "Game Boy Boot Rom");
 			Option("GB", "World", File("4ED31EC6B0B175BB109C0EB5FD3D193DA823339F", 256, "GB_dmg.bin", "Game Boy Boot Rom"), FirmwareOptionStatus.Ideal);
 
-			// SNES
-			Firmware("SNES IPL", "World", "SNES IPL Rom");
-			Option("SNES IPL", "World", File("97E352553E94242AE823547CD853EECDA55C20F0", 64, "IPL.bin", "SNES IPL Rom"), FirmwareOptionStatus.Ideal);
-
-
 			AllPatches = allPatches;
 			FirmwareFilesByHash = filesByHash;
 			FirmwareOptions = options;
