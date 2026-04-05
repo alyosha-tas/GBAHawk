@@ -5,7 +5,7 @@ using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubNESHawk
 {
-	[Core(CoreNames.SubNESHawk2, "", isReleased: false)]
+	[Core(CoreNames.SubNESHawk2, isReleased: false)]
 	public partial class SubNESHawk : IEmulator, IStatable, IInputPollable, ICycleTiming, ISettable<NESHawk.NESHawk.NESHawkSettings, NESHawk.NESHawk.NESHawkSyncSettings>
 	{
 		[CoreConstructor(VSystemID.Raw.NES)]

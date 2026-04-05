@@ -19,7 +19,7 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
-	[Core(CoreNames.SubGBAHawk, "", isReleased: true)]
+	[Core(CoreNames.SubGBAHawk, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class SubGBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
 								ISettable<SubGBAHawk.SubGBASettings, SubGBAHawk.SubGBASyncSettings>

@@ -5,7 +5,7 @@ using System;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 {
-	[Core(CoreNames.SubGBHawk, "", isReleased: false)]
+	[Core(CoreNames.SubGBHawk, isReleased: true)]
 	public partial class SubGBHawk : IEmulator, IStatable, IInputPollable, ICycleTiming, ISettable<GBHawk.GBHawk.GBHawkSettings, GBHawk.GBHawk.GBHawkSyncSettings>
 	{
 		[CoreConstructor(VSystemID.Raw.GB)]

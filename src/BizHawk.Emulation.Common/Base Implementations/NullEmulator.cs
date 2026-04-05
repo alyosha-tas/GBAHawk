@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace BizHawk.Emulation.Common
 {
-	[Core("NullHawk", "")]
+	[Core("NullHawk")]
 	[ServiceNotApplicable(new[] {
 		typeof(IVideoProvider),
 		typeof(IDisassemblable),

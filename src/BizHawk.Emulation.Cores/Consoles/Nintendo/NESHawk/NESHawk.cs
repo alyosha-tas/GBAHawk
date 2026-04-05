@@ -9,7 +9,7 @@ using BizHawk.Emulation.Cores.Nintendo.NES.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 {
-	[Core(CoreNames.NESHawk2, "", isReleased: false)]
+	[Core(CoreNames.NESHawk2, isReleased: false)]
 	public partial class NESHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<NESHawk.NESHawkSettings, NESHawk.NESHawkSyncSettings>
 	{

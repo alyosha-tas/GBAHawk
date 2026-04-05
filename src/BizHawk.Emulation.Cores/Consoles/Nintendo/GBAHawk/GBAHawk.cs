@@ -19,7 +19,7 @@ using System.Security.Cryptography;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBA
 {
-	[Core(CoreNames.GBAHawk, "", isReleased: true)]
+	[Core(CoreNames.GBAHawk, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
 								ISettable<GBAHawk.GBASettings, GBAHawk.GBASyncSettings>

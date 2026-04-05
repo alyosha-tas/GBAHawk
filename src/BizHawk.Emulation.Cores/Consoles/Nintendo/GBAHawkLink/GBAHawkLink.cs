@@ -18,7 +18,7 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
-	[Core(CoreNames.GBAHawkLink, "", isReleased: true)]
+	[Core(CoreNames.GBAHawkLink, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable,
 								ISettable<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings>

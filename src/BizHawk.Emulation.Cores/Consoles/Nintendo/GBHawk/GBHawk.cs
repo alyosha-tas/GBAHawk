@@ -16,7 +16,7 @@ using System.Text;
 
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
-	[Core(CoreNames.GBHawk, "")]
+	[Core(CoreNames.GBHawk, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGBPPUViewable,
 	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
