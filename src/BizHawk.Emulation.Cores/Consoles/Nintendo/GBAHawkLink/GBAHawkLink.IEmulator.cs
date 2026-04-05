@@ -175,16 +175,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		const int blipbuffsize = 9000;
 
-		public void SetSyncMode(SyncSoundMode mode)
-		{
-			if (mode != SyncSoundMode.Sync)
-			{
-				throw new NotSupportedException("Only sync mode is supported");
-			}
-		}
-
-		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
-
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
 			uint audio_core = (uint)Settings.AudioSet;

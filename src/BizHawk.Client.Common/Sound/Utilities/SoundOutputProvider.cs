@@ -206,10 +206,6 @@ namespace BizHawk.Client.Common
 
 		private void GetSamplesFromBase(ref double scaleFactor)
 		{
-			if (BaseSoundProvider.SyncMode != SyncSoundMode.Sync)
-			{
-				throw new InvalidOperationException("Base sound provider must be in sync mode.");
-			}
 			BaseSoundProvider.GetSamplesSync(out var samples, out var count);
 
 			bool correctedEmptyFrame = false;

@@ -73,16 +73,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		public int[] Aud = new int[25000];
 		public uint num_samp;
 
-		public void SetSyncMode(SyncSoundMode mode)
-		{
-			if (mode != SyncSoundMode.Sync)
-			{
-				throw new NotSupportedException("Only sync mode is supported");
-			}
-		}
-
-		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
-
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
 			uint f_clock = LibNESHawk.NES_get_audio(NES_Pntr, Aud, ref num_samp);

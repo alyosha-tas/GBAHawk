@@ -10,19 +10,6 @@ namespace BizHawk.Emulation.Common.Base_Implementations
 		private short[] _buffer = Array.Empty<short>();
 		private int _nsamp;
 
-		public bool CanProvideAsync => false;
-
-		/// <exception cref="ArgumentException"><paramref name="mode"/> is not <see cref="SyncSoundMode.Sync"/></exception>
-		public void SetSyncMode(SyncSoundMode mode)
-		{
-			if (mode != SyncSoundMode.Sync)
-			{
-				throw new ArgumentException("Only supports Sync mode");
-			}
-		}
-
-		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
-
 		/// <summary>
 		/// Add samples to be output.  no queueing; must be drained every frame
 		/// </summary>

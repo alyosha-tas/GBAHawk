@@ -111,11 +111,7 @@ namespace BizHawk.Client.GBAHawk
 
 			if (source == null) return;
 
-			if (source.SyncMode == SyncSoundMode.Sync)
-			{
-				_bufferedProvider = _outputProvider;
-			}
-			else throw new InvalidOperationException("Unsupported sync mode.");
+			_bufferedProvider = _outputProvider;
 
 			_bufferedProvider.BaseSoundProvider = source;
 		}

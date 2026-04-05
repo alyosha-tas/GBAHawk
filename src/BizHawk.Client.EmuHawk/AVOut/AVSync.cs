@@ -45,12 +45,6 @@ namespace BizHawk.Client.GBAHawk
 		/// <exception cref="InvalidOperationException"><paramref name="syncSoundProvider"/>'s mode is not <see cref="SyncSoundMode.Sync"/></exception>
 		public void DumpAV(IVideoProvider v, ISoundProvider syncSoundProvider, out short[] samples, out int samplesProvided)
 		{
-			// Sound refactor TODO: we could just set it here, but we want the client to be responsible for mode switching? There may be non-trivial complications with when to switch modes that we don't want this object worrying about
-			if (syncSoundProvider.SyncMode != SyncSoundMode.Sync)
-			{
-				throw new InvalidOperationException("Only sync mode is supported, set sync mode before passing in the sound provider");
-			}
-
 			VerifyParams();
 			syncSoundProvider.GetSamplesSync(out samples, out samplesProvided);
 			_exAudioNum += samplesProvided * (long)FpsNum;

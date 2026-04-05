@@ -1495,7 +1495,6 @@ namespace BizHawk.Client.GBAHawk
 			}
 			else
 			{
-				_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
 				Sound.SetInputPin(_currentSoundProvider);
 			}
 		}
@@ -2842,8 +2841,6 @@ namespace BizHawk.Client.GBAHawk
 				aw.Dispose();
 				throw;
 			}
-
-			_currentSoundProvider.SetSyncMode(SyncSoundMode.Sync);
 
 			_dumpProxy = new SimpleSyncSoundProvider();
 			RewireSound();

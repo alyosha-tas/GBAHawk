@@ -103,16 +103,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 		public uint num_samp_L;
 		public uint num_samp_R;
 
-		public void SetSyncMode(SyncSoundMode mode)
-		{
-			if (mode != SyncSoundMode.Sync)
-			{
-				throw new NotSupportedException("Only sync mode is supported");
-			}
-		}
-
-		public SyncSoundMode SyncMode => SyncSoundMode.Sync;
-
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
 			uint f_clock = LibGBHawk.GB_get_audio(GB_Pntr, Aud_L, ref num_samp_L, Aud_R, ref num_samp_R);

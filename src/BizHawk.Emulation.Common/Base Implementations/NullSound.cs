@@ -16,7 +16,7 @@ namespace BizHawk.Emulation.Common
 
 		private NullSound()
 		{
-			SyncMode = SyncSoundMode.Sync;
+
 		}
 
 		/// <summary>
@@ -40,16 +40,8 @@ namespace BizHawk.Emulation.Common
 			_spfDenominator = fpsNum;
 		}
 
-		public SyncSoundMode SyncMode { get; private set; }
-
-		/// <exception cref="InvalidOperationException"><see cref="SyncMode"/> is not <see cref="SyncSoundMode.Sync"/> (call <see cref="SetSyncMode"/>)</exception>
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{
-			if (SyncMode != SyncSoundMode.Sync)
-			{
-				throw new InvalidOperationException("Wrong sound mode");
-			}
-
 			int s = (int)((_spfNumerator + _remainder) / _spfDenominator);
 			_remainder = (_spfNumerator + _remainder) % _spfDenominator;
 
@@ -64,11 +56,6 @@ namespace BizHawk.Emulation.Common
 
 		public void DiscardSamples()
 		{
-		}
-
-		public void SetSyncMode(SyncSoundMode mode)
-		{
-			SyncMode = mode;
 		}
 	}
 }
