@@ -217,7 +217,7 @@ namespace NESHawk
 					// setting up the address clocks certain registers, when the DMA changes it, it is like reading from the adress
 					if (((address_bus & 0xF007) == 0x2007) || ((address_bus & 0xF007) == 0x3007))
 					{
-						// double read intended
+						// double read intended, note timing is off but adjusted in the read function
 						read_2007();
 						read_2007();
 					}

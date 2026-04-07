@@ -491,6 +491,8 @@ namespace NESHawk
 
 						last_pipeline = target > 0;
 
+						ppu_Old_Low_Byte = ppu_Reg_v & 0xFF;
+
 						if (PPUON()) { ppu_Install_h_Latches(); }
 					}
 
@@ -520,6 +522,14 @@ namespace NESHawk
 							if (ppu_Commit_Read)
 							{
 								ppu_VRAM_Address = ppu_Get_NT_Read();
+
+								// upper bits are the old values
+								if (status_cycle == 258)
+								{
+									ppu_VRAM_Address &= 0xFF00;
+									ppu_VRAM_Address |= ppu_Old_Low_Byte;
+								}
+
 								ppubus_read(ppu_VRAM_Address);
 							}
 

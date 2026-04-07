@@ -44,16 +44,15 @@ namespace NESHawk
 		// ordinarily we return the buffered values
 		uint8_t ret = VRAMBuffer;
 
-		// in any case, we read from the ppu bus
-		if (!ppu_Is_Rendering() || !PPUON())
+		ppu_Buffer_Fill_Go = true;
+
+		// this indicates a DMA reread 
+		if (ppu_Buffer_Fill_CD[0])
 		{
-			VRAMBuffer = mapper_pntr->ReadPPU(addr);
+			ppu_Buffer_Fill_CD[3] = true;
 		}
-		else
-		{
-			ppu_Buffer_Fill_CD = 3;
-			//VRAMBuffer = ppu_Last_Read_Value;
-		}
+		
+		ppu_Buffer_Fill_CD[0] = true;
 
 		// but reads from the palette are implemented in the PPU and return immediately
 		if ((addr & 0x3F00) == 0x3F00)
@@ -68,15 +67,6 @@ namespace NESHawk
 			
 			ret += (ppu_Open_Bus & 0xC0);
 			bus_case = 1;
-		}
-
-		ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
-
-		// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
-		if (!ppu_Is_Rendering() || !PPUON())
-		{
-			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_Reg_v);
 		}
 
 		// update open bus here
@@ -96,13 +86,14 @@ namespace NESHawk
 	void NES_System::write_2007(uint8_t value)
 	{
 		int addr = ppu_VRAM_Address & 0x3FFF;
-		if (ppuphase == PPU_PHASE_BG)
-		{
-			if (show_bg_new)
-			{
-				addr = ppu_Get_NT_Read();
-			}
-		}
+
+		ppu_Buffer_Write_Go = true;
+
+		ppu_Buffer_Write_CD[0] = true;
+
+		ppu_Buffer_Write_Values[0] = value;
+
+		ppu_Buffer_Write_Glitch[0] = 0; // 0 = no glitch
 
 		if ((addr & 0x3F00) == 0x3F00)
 		{
@@ -110,122 +101,186 @@ namespace NESHawk
 			addr &= 0x1F;
 			uint8_t color = (uint8_t)(value & 0x3F);
 
-			// this little hack will help you debug things while the screen is black
-			// color = (uint8_t)(addr & 0x3F);
-
 			PALRAM[addr] = color;
 			if ((addr & 3) == 0)
 			{
 				PALRAM[addr ^ 0x10] = color;
 			}
+
+			ppu_Buffer_Write_Apply[0] = false;
 		}
 		else
 		{
-			addr &= 0x3FFF;
-
-			mapper_pntr->WritePPU(addr, value);
-		}
-
-		ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
-
-		// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
-		if (!ppu_Is_Rendering() || !PPUON())
-		{
-			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_VRAM_Address);
+			ppu_Buffer_Write_Apply[0] = true;
 		}
 	}
 
 	void NES_System::write_2007_Glitch(uint8_t value)
 	{
 		int addr = ppu_VRAM_Address & 0x3FFF;
-		if (ppuphase == PPU_PHASE_BG)
-		{
-			if (show_bg_new)
-			{
-				addr = ppu_Get_NT_Read();
-			}
-		}
 
-		if (glitch_2007_iter == 0)
+		ppu_Buffer_Write_Go = true;
+
+		ppu_Buffer_Write_CD[0] = true;
+
+		ppu_Buffer_Write_Values[0] = value;
+
+		ppu_Buffer_Write_Glitch[0] = glitch_2007_iter;
+
+		if (glitch_2007_iter == 1)
 		{
 			if ((addr & 0x3F00) == 0x3F00)
 			{
-				// handle palette. this is being done nestopia style, because i found some documentation for it (appendix 1)
+				// handle palette, note greyscale does not effect written value
 				addr &= 0x1F;
-				uint8_t color = (uint8_t)(value & 0x3F); //are these bits really unwired? can they be read back somehow?
-
-				// this little hack will help you debug things while the screen is black
-				// color = (uint8_t)(addr & 0x3F);
+				uint8_t color = (uint8_t)(value & 0x3F);
 
 				PALRAM[addr] = color;
 				if ((addr & 3) == 0)
 				{
 					PALRAM[addr ^ 0x10] = color;
 				}
+
+				ppu_Buffer_Write_Apply[0] = false;
 			}
 			else
 			{
-				addr &= 0x3FFF;
-
-				glitch_2007_addr = addr & 0xFF;
-
-				mapper_pntr->WritePPU(addr, glitch_2007_addr);
+				ppu_Buffer_Write_Apply[0] = true;
 			}
 		}
 		else
 		{
 			if ((addr & 0x3F00) == 0x3F00)
 			{
-				// handle palette. this is being done nestopia style, because i found some documentation for it (appendix 1)
+				// handle palette, note greyscale does not effect written value
 				addr &= 0x1F;
-				uint8_t color = (uint8_t)(value & 0x3F); //are these bits really unwired? can they be read back somehow?
-
-				// this little hack will help you debug things while the screen is black
-				// color = (uint8_t)(addr & 0x3F);
+				uint8_t color = (uint8_t)(value & 0x3F);
 
 				PALRAM[addr] = color;
 				if ((addr & 3) == 0)
 				{
 					PALRAM[addr ^ 0x10] = color;
 				}
+
+				ppu_Buffer_Write_Apply[0] = false;
 			}
 			else
 			{
-				addr &= 0x3FFF;
-
-				addr &= 0xFF00;
-
-				addr |= value;
-
-				mapper_pntr->WritePPU(addr, value);
+				ppu_Buffer_Write_Apply[0] = true;
 			}
-
-		}
-
-		ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
-
-		// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
-		if (!ppu_Is_Rendering() || !PPUON())
-		{
-			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_VRAM_Address);
 		}
 	}
 
 	void NES_System::ppu_Run()
 	{
-		if (ppu_Buffer_Fill_CD > 0)
+		if (ppu_Buffer_Fill_Go)
 		{
-			ppu_Buffer_Fill_CD--;
+			if (ppu_Buffer_Fill_CD[5])
+			{			
+				if (!ppu_Is_Rendering() || !PPUON())
+				{
+					VRAMBuffer = mapper_pntr->ReadPPU(ppu_VRAM_Address & 0x3FFF);
+				}
+				else
+				{
+					VRAMBuffer = ppu_Last_Read_Value;
+				}
 
-			if (ppu_Buffer_Fill_CD == 0)
-			{
-				VRAMBuffer = ppu_Last_Read_Value;
+				//Message_String = "read 2007: " + to_string(VRAMBuffer) + " cyc: " + to_string(TotalExecutedCycles);
+
+				//MessageCallback(Message_String.length());
+
+				ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
+
+				// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
+				if (!ppu_Is_Rendering() || !PPUON())
+				{
+					ppu_VRAM_Address = ppu_Reg_v;
+					mapper_pntr->AddressPPU(ppu_Reg_v);
+				}
 			}
+
+			bool all_empty = true;
+			
+			for (int i = 0; i < 5; i++)
+			{
+				all_empty &= ppu_Buffer_Fill_CD[4-i];
+
+				ppu_Buffer_Fill_CD[5 - i] = ppu_Buffer_Fill_CD[4 - i];
+			}
+
+			ppu_Buffer_Fill_CD[0] = false;
+			
+			if (all_empty) { ppu_Buffer_Fill_Go = false; }
 		}
 
+		if (ppu_Buffer_Write_Go)
+		{
+			if (ppu_Buffer_Write_CD[5])
+			{
+				uint16_t addr = ppu_VRAM_Address & 0x3FFF;
+				
+				addr &= 0x3FFF;
 
+				if (ppu_Buffer_Write_Glitch[5] == 1)
+				{
+					addr &= 0x3FFF;
+
+					addr &= 0xFF;
+				}
+				else if (ppu_Buffer_Write_Glitch[5] == 2)
+				{
+					addr &= 0x3FFF;
+
+					addr &= 0xFF00;
+
+					addr |= ppu_Buffer_Write_Values[5];
+				}
+
+				if (ppu_Buffer_Write_Apply[5])
+				{
+					mapper_pntr->WritePPU(addr, ppu_Buffer_Write_Values[5]);
+				}
+
+				//Message_String = "write 2007: " + to_string(VRAMBuffer) + " cyc: " + to_string(TotalExecutedCycles);
+
+				//MessageCallback(Message_String.length());
+
+				ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
+
+				// Clock the new VRAM address if not rendering (because Reg_v is on the bus)
+				if (!ppu_Is_Rendering() || !PPUON())
+				{
+					ppu_VRAM_Address = ppu_Reg_v;
+					mapper_pntr->AddressPPU(ppu_Reg_v);
+				}
+			}
+
+			bool all_empty = true;
+
+			for (int i = 0; i < 5; i++)
+			{
+				all_empty &= ppu_Buffer_Write_CD[4 - i];
+
+				ppu_Buffer_Write_CD[5 - i] = ppu_Buffer_Write_CD[4 - i];
+
+				ppu_Buffer_Write_Apply[5 - i] = ppu_Buffer_Write_Apply[4 - i];
+
+				ppu_Buffer_Write_Values[5 - i] = ppu_Buffer_Write_Values[4 - i];
+
+				ppu_Buffer_Write_Values[5 - i] = ppu_Buffer_Write_Values[4 - i];
+			}
+
+			ppu_Buffer_Write_CD[0] = false;
+
+			ppu_Buffer_Write_Apply[0] = false;
+
+			ppu_Buffer_Write_Values[0] = 0;
+
+			ppu_Buffer_Write_Values[0] = 0;
+
+			if (all_empty) { ppu_Buffer_Fill_Go = false; }
+		}
 		
 		//run one ppu cycle at a time so we can interact with the ppu and clockPPU at high granularity			
 		if (install_2006 > 0)

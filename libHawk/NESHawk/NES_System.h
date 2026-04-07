@@ -1192,17 +1192,17 @@ namespace NESHawk
 		bool ppu_Commit_Read;
 		bool ppu_Can_Corrupt;
 		bool ppu_Sprite_Draw_Glitch;
+		bool ppu_Buffer_Fill_Go;
+		bool ppu_Buffer_Write_Go;
 
 		uint8_t ppu_OAM_Corrupt_Addr;
 		uint8_t VRAMBuffer;
 		uint8_t read_value;
 		uint8_t reg_2003;
 		uint8_t glitch_2007_iter;
-		uint8_t glitch_2007_addr;
 		uint8_t ppu_temp_oam_y;
 		uint8_t ppu_temp_oam_ind = 0;
 		uint8_t ppu_BG_NT_Addr;
-		uint8_t ppu_Buffer_Fill_CD;
 		uint8_t ppu_Last_Read_Value;
 
 		// this uint8_t is used to simulate open bus reads and writes
@@ -1218,6 +1218,7 @@ namespace NESHawk
 		uint16_t ppu_BG_Pattern_1;
 		uint16_t ppu_Next_BG_Pt_0;
 		uint16_t ppu_Next_BG_Pt_1;
+		uint16_t ppu_Old_Low_Byte;
 
 		uint32_t cpu_step, cpu_stepcounter;
 		uint32_t ppuphase;
@@ -1257,6 +1258,12 @@ namespace NESHawk
 
 		uint64_t Total_PPU_Clock_Cycles;
 
+		bool ppu_Buffer_Fill_CD[6] = { };
+		bool ppu_Buffer_Write_CD[6] = { };
+		bool ppu_Buffer_Write_Apply[6] = { };
+
+		uint8_t ppu_Buffer_Write_Glitch[6] = { };
+		uint8_t ppu_Buffer_Write_Values[6] = { };
 		uint8_t glitchy_reads_2003[8] = { };
 		uint8_t OAM[0x100] = { };
 		uint8_t PALRAM[0x20] = { };
@@ -1316,6 +1323,8 @@ namespace NESHawk
 			ppu_BG_Pattern_1 = 0;
 			ppu_Next_BG_Pt_0 = 0;
 			ppu_Next_BG_Pt_1 = 0;
+			ppu_Old_Low_Byte = 0;
+
 			ppu_BG_Attr[0] = 0;
 			ppu_BG_Attr[1] = 0;
 			ppu_BG_Attr[2] = 0;
@@ -1323,7 +1332,6 @@ namespace NESHawk
 			ppu_temp_oam_y = 0;
 			ppu_temp_oam_ind = 0;
 			ppu_BG_NT_Addr = 0;
-			ppu_Buffer_Fill_CD = 0;
 			ppu_Last_Read_Value = 0;
 
 			double_2007_read = 0;
@@ -1347,6 +1355,8 @@ namespace NESHawk
 			ppu_Commit_Read = false;
 			ppu_Can_Corrupt = false;
 			ppu_Sprite_Draw_Glitch = false;
+			ppu_Buffer_Fill_Go = false;
+			ppu_Buffer_Write_Go = false;
 
 			ppu_OAM_Corrupt_Addr = 0;
 			intensity_lsl_6 = 0;
@@ -1356,7 +1366,6 @@ namespace NESHawk
 			ppu_Reg2002_vblank_active = false;
 			reg_2003 = 0;
 			glitch_2007_iter = 0;
-			glitch_2007_addr = 0;
 			ppu_Toggle_w = false;
 			VRAMBuffer = 0;
 
@@ -1411,6 +1420,16 @@ namespace NESHawk
 			patternNumber = 0;
 			patternAddress = 0;
 			ppu_Sprite_Draw_Cycle = 0;
+
+			
+			for (int i = 0; i < 6; i++)
+			{
+				ppu_Buffer_Fill_CD[i] = false;
+				ppu_Buffer_Write_CD[i] = false;
+				ppu_Buffer_Write_Apply[i] = false;
+				ppu_Buffer_Write_Values[i] = false;
+				ppu_Buffer_Write_Glitch[i] = false;
+			}
 
 			for (int i = 0; i < 8; i++)
 			{
@@ -1564,7 +1583,7 @@ namespace NESHawk
 
 						//MessageCallback(Message_String.length());
 
-						glitch_2007_iter = 0;
+						glitch_2007_iter = 1;
 
 						double_2007_read = TotalExecutedCycles + 1;
 
@@ -1679,7 +1698,7 @@ namespace NESHawk
 						{
 							write_2007_Glitch(value);
 
-							glitch_2007_iter = 1;
+							glitch_2007_iter = 2;
 						}
 						else
 						{
@@ -2113,17 +2132,17 @@ namespace NESHawk
 			saver = bool_saver(ppu_Commit_Read, saver);
 			saver = bool_saver(ppu_Can_Corrupt, saver);
 			saver = bool_saver(ppu_Sprite_Draw_Glitch, saver);
+			saver = bool_saver(ppu_Buffer_Fill_Go, saver);
+			saver = bool_saver(ppu_Buffer_Write_Go, saver);
 
 			saver = byte_saver(ppu_OAM_Corrupt_Addr, saver);
 			saver = byte_saver(VRAMBuffer, saver);
 			saver = byte_saver(read_value, saver);
 			saver = byte_saver(reg_2003, saver);
 			saver = byte_saver(glitch_2007_iter, saver);
-			saver = byte_saver(glitch_2007_addr, saver);
 			saver = byte_saver(ppu_temp_oam_y, saver);
 			saver = byte_saver(ppu_temp_oam_ind, saver);
 			saver = byte_saver(ppu_BG_NT_Addr, saver);
-			saver = byte_saver(ppu_Buffer_Fill_CD, saver);
 			saver = byte_saver(ppu_Last_Read_Value, saver);
 
 			saver = byte_saver(ppu_Open_Bus, saver);
@@ -2137,6 +2156,8 @@ namespace NESHawk
 			saver = short_saver(ppu_BG_Pattern_1, saver);
 			saver = short_saver(ppu_Next_BG_Pt_0, saver);
 			saver = short_saver(ppu_Next_BG_Pt_1, saver);
+			saver = short_saver(ppu_Old_Low_Byte, saver);
+
 
 			saver = int_saver(cpu_step, saver);
 			saver = int_saver(cpu_stepcounter, saver);
@@ -2174,6 +2195,12 @@ namespace NESHawk
 			saver = long_saver(double_2007_read, saver);
 			saver = long_saver(Total_PPU_Clock_Cycles, saver);
 
+			saver = bool_array_saver(ppu_Buffer_Fill_CD, saver, 6);
+			saver = bool_array_saver(ppu_Buffer_Write_CD, saver, 6);
+			saver = bool_array_saver(ppu_Buffer_Write_Apply, saver, 6);
+
+			saver = byte_array_saver(ppu_Buffer_Write_Glitch, saver, 6);
+			saver = byte_array_saver(ppu_Buffer_Write_Values, saver, 6);
 			saver = byte_array_saver(glitchy_reads_2003, saver, 8);
 			saver = byte_array_saver(OAM, saver, 256);
 			saver = byte_array_saver(PALRAM, saver, 32);
@@ -2242,17 +2269,17 @@ namespace NESHawk
 			loader = bool_loader(&ppu_Commit_Read, loader);
 			loader = bool_loader(&ppu_Can_Corrupt, loader);
 			loader = bool_loader(&ppu_Sprite_Draw_Glitch, loader);
+			loader = bool_loader(&ppu_Buffer_Fill_Go, loader);
+			loader = bool_loader(&ppu_Buffer_Write_Go, loader);
 
 			loader = byte_loader(&ppu_OAM_Corrupt_Addr, loader);
 			loader = byte_loader(&VRAMBuffer, loader);
 			loader = byte_loader(&read_value, loader);
 			loader = byte_loader(&reg_2003, loader);
 			loader = byte_loader(&glitch_2007_iter, loader);
-			loader = byte_loader(&glitch_2007_addr, loader);
 			loader = byte_loader(&ppu_temp_oam_y, loader);
 			loader = byte_loader(&ppu_temp_oam_ind, loader);
 			loader = byte_loader(&ppu_BG_NT_Addr, loader);
-			loader = byte_loader(&ppu_Buffer_Fill_CD, loader);
 			loader = byte_loader(&ppu_Last_Read_Value, loader);
 
 			loader = byte_loader(&ppu_Open_Bus, loader);
@@ -2266,6 +2293,7 @@ namespace NESHawk
 			loader = short_loader(&ppu_BG_Pattern_1, loader);
 			loader = short_loader(&ppu_Next_BG_Pt_0, loader);
 			loader = short_loader(&ppu_Next_BG_Pt_1, loader);
+			loader = short_loader(&ppu_Old_Low_Byte, loader);
 
 			loader = int_loader(&cpu_step, loader);
 			loader = int_loader(&cpu_stepcounter, loader);
@@ -2303,6 +2331,12 @@ namespace NESHawk
 			loader = long_loader(&double_2007_read, loader);
 			loader = long_loader(&Total_PPU_Clock_Cycles, loader);
 
+			loader = bool_array_loader(ppu_Buffer_Fill_CD, loader, 6);
+			loader = bool_array_loader(ppu_Buffer_Write_CD, loader, 6);
+			loader = bool_array_loader(ppu_Buffer_Write_Apply, loader, 6);
+
+			loader = byte_array_loader(ppu_Buffer_Write_Glitch, loader, 6);
+			loader = byte_array_loader(ppu_Buffer_Write_Values, loader, 6);
 			loader = byte_array_loader(glitchy_reads_2003, loader, 8);
 			loader = byte_array_loader(OAM, loader, 256);
 			loader = byte_array_loader(PALRAM, loader, 32);

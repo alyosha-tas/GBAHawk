@@ -9,9 +9,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Security.AccessControl;
-using System.Security.Principal;
-using System.IO.Pipes;
 
 using BizHawk.Common;
 using BizHawk.Common.BufferExtensions;
@@ -511,13 +508,6 @@ namespace BizHawk.Client.GBAHawk
 					OSTailoredCode.WindowsVersion._8_1 => null, // still CBB
 					_ => $"Quick reminder: Windows {winVersion.ToString().RemovePrefix('_').Replace("_", ".")} is no longer supported by Microsoft. EmuHawk will continue to work, but please get a new operating system for increased security (either Windows 8.1, Windows 10, or a GNU+Linux distro)."
 				};
-#if false
-				if (message != null)
-				{
-					using var box = new ExceptionBox(message);
-					box.ShowDialog();
-				}
-#endif
 			}
 		}
 
