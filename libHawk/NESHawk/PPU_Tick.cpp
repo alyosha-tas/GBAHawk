@@ -712,6 +712,12 @@ namespace NESHawk
 								ppu_BG_Pattern_0 |= ((uint16_t)BitReverse(ppu_Next_BG_Pt_0) << 8);
 								ppu_BG_Pattern_1 |= ((uint16_t)BitReverse(ppu_Next_BG_Pt_1) << 8);
 							}
+
+							// reset sprite comparers
+							for (int i = 0; i < 8; i++)
+							{
+								ppu_Sprite_Shifters[i].X_Start = false;
+							}
 						}
 
 						xp++;
@@ -773,12 +779,6 @@ namespace NESHawk
 					soam_index = 0;
 					oam_index = 0;
 					sprite_eval_write = true;
-
-					// reset sprite comparers
-					for (int i = 0; i < 8; i++)
-					{
-						ppu_Sprite_Shifters[i].X_Start = false;
-					}
 
 					sprite_zero_go = sprite_zero_in_range;
 
