@@ -224,9 +224,7 @@ namespace NESHawk
 
 				if (ppu_Buffer_Write_Glitch[5] == 1)
 				{
-					addr &= 0x3FFF;
-
-					addr &= 0xFF;
+					ppu_Buffer_Write_Values[5] = addr & 0xFF;
 				}
 				else if (ppu_Buffer_Write_Glitch[5] == 2)
 				{
@@ -268,7 +266,7 @@ namespace NESHawk
 
 				ppu_Buffer_Write_Values[5 - i] = ppu_Buffer_Write_Values[4 - i];
 
-				ppu_Buffer_Write_Values[5 - i] = ppu_Buffer_Write_Values[4 - i];
+				ppu_Buffer_Write_Glitch[5 - i] = ppu_Buffer_Write_Glitch[4 - i];
 			}
 
 			ppu_Buffer_Write_CD[0] = false;
@@ -277,7 +275,7 @@ namespace NESHawk
 
 			ppu_Buffer_Write_Values[0] = 0;
 
-			ppu_Buffer_Write_Values[0] = 0;
+			ppu_Buffer_Write_Glitch[0] = 0;
 
 			if (all_empty) { ppu_Buffer_Fill_Go = false; }
 		}
