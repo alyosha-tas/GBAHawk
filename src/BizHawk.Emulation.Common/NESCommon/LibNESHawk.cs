@@ -66,6 +66,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 		[UnmanagedFunctionPointer(cc)]
 		public delegate byte ControllerReadCallback(bool read_4016);
 
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern byte NES_getzapperstate(IntPtr core, int zapper_x, int zapper_y);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void NES_setcontrollercallback(IntPtr core, ControllerReadCallback callback);

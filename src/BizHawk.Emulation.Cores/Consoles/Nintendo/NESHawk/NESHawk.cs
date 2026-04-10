@@ -248,6 +248,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			{
 				left = typeof(NESController).DisplayName();
 			}
+			else if (LeftController == NESHawkSyncSettings.ControllerType.Zapper)
+			{
+				left = typeof(NESZapper).DisplayName();
+			}
 			else if (LeftController == NESHawkSyncSettings.ControllerType.SNES)
 			{
 				left = typeof(SNESController).DisplayName();
@@ -265,6 +269,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			{
 				right = typeof(NESController).DisplayName();
 			}
+			else if (RightController == NESHawkSyncSettings.ControllerType.Zapper)
+			{
+				right = typeof(NESZapper).DisplayName();
+			}
 			else if (RightController == NESHawkSyncSettings.ControllerType.SNES)
 			{
 				right = typeof(SNESController).DisplayName();
@@ -279,7 +287,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			}
 
 
-			NES_ControllerDeck ret = new NES_ControllerDeck(left, right, subframe);
+			NES_ControllerDeck ret = new NES_ControllerDeck(left, right, Get_Zapper_State, subframe);
 
 			return ret;
 		}
@@ -289,6 +297,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		public byte Read_Controller(bool addr_4016)
 		{
 			return addr_4016 ? ControllerDeck.ReadPort1(Controller) : ControllerDeck.ReadPort2(Controller);
+		}
+
+		public byte Get_Zapper_State(int zapper_x, int zapper_y)
+		{
+			return LibNESHawk.NES_getzapperstate(NES_Pntr, zapper_x, zapper_y);
 		}
 
 		public LibNESHawk.ControllerStrobeCallback NES_Controller_Strobe;

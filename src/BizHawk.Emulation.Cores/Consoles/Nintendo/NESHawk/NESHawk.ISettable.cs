@@ -70,6 +70,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			public enum ControllerType
 			{
 				Standard,
+				Zapper,
 				SNES,
 				FourScore,
 				Unplugged

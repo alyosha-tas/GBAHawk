@@ -116,9 +116,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 		}
 	}
 
+	public delegate byte ZapperCallback(int zapper_x, int zapper_y);
+
 	public class NES_ControllerDeck
 	{
-		public NES_ControllerDeck(string controller1Name, string controller2Name, bool is_subrame = false)
+		public NES_ControllerDeck(string controller1Name, string controller2Name, ZapperCallback zapper_cb, bool is_subrame = false)
 		{
 			Port1 = ControllerCtors.TryGetValue(controller1Name, out var ctor1)
 				? ctor1(1)
@@ -157,6 +159,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 				Definition.AddAxis("Reset Cycle", 0.RangeTo(280896), 280896);
 			}
 
+			Port1.Zapper_Callback = zapper_cb;
+			Port2.Zapper_Callback = zapper_cb;
+
 			Definition.MakeImmutable();
 		}
 
@@ -194,6 +199,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			??= new Dictionary<string, Func<int, IPort>>
 			{
 				[typeof(NESController).DisplayName()] = portNum => new NESController(portNum),
+				[typeof(NESZapper).DisplayName()] = portNum => new NESZapper(portNum),
 				[typeof(SNESController).DisplayName()] = portNum => new SNESController(portNum),
 				[typeof(FourScore).DisplayName()] = portNum => new FourScore(portNum),
 				[typeof(UnpluggedNES).DisplayName()] = portNum => new UnpluggedNES(portNum)
@@ -219,6 +225,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 		void SyncState(Serializer ser);
 
 		int PortNum { get; }
+
+		ZapperCallback? Zapper_Callback { get; set; }
 	}
 
 	[DisplayName("NES Controller")]
@@ -285,7 +293,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 		};
 
 		private static readonly int[] BaseDefinitionOrder =
-{
+		{
 			7, 6, 5, 4, 0, 1, 2, 3
 		};
 
@@ -294,6 +302,69 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			ser.Sync(nameof(_resetting), ref _resetting);
 			ser.Sync(nameof(_latchedValue), ref _latchedValue);
 		}
+
+		public ZapperCallback? Zapper_Callback { get; set; }
+	}
+
+	[DisplayName("NES Zapper")]
+	public class NESZapper : IPort
+	{
+		public NESZapper(int portNum)
+		{
+			PortNum = portNum;
+			Definition = new("NES Zapper")
+			{
+				BoolButtons = BaseDefinition
+				.Select(b => "P" + PortNum + " " + b)
+				.ToList()
+			};
+			Definition.AddXYPair($"P{PortNum} Zapper {{0}}", AxisPairOrientation.RightAndUp, 0.RangeTo(255), 128, 0.RangeTo(239), 120);
+		}
+
+		public int PortNum { get; }
+
+		public ControllerDefinition Definition { get; }
+
+		public void Latch(IController c)
+		{
+
+		}
+
+		public void Strobe(StrobeInfo s, IController c)
+		{
+
+		}
+
+		public byte Read(IController c)
+		{
+			byte ret = 0;
+			byte zapper_Latch = 0;
+
+			if (Zapper_Callback != null)
+			{
+				zapper_Latch = Zapper_Callback(c.AxisValue(Definition.Axes[0]), c.AxisValue(Definition.Axes[1]));
+
+				Console.WriteLine(zapper_Latch);
+			}
+
+			if (c.IsPressed(Definition.BoolButtons[0])) { ret |= 0x10; }
+
+			ret |= zapper_Latch;
+
+			return ret;
+		}
+
+		private static readonly string[] BaseDefinition =
+		{
+			"Fire"
+		};
+
+		public void SyncState(Serializer ser)
+		{
+
+		}
+
+		public ZapperCallback? Zapper_Callback { get; set; }
 	}
 
 	[DisplayName("SNES Controller")]
@@ -369,6 +440,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			ser.Sync(nameof(_resetting), ref _resetting);
 			ser.Sync(nameof(_latchedValue), ref _latchedValue);
 		}
+
+		public ZapperCallback? Zapper_Callback { get; set; }
 	}
 
 
@@ -447,6 +520,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			ser.Sync(nameof(_resetting), ref _resetting);
 			ser.Sync(nameof(_latchedValue), ref _latchedValue);
 		}
+
+		public ZapperCallback? Zapper_Callback { get; set; }
 	}
 
 
@@ -496,5 +571,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			ser.Sync(nameof(_resetting), ref _resetting);
 			ser.Sync(nameof(_latchedValue), ref _latchedValue);
 		}
+
+		public ZapperCallback? Zapper_Callback { get; set; }
 	}
 }

@@ -85,6 +85,11 @@ NESHawk_EXPORT uint64_t NES_subframe_cycles(NESCore* p)
 	return p->NES.Total_CPU_Clock_Cycles;
 }
 
+NESHawk_EXPORT uint8_t NES_getzapperstate(NESCore* p, int zapper_x, int zapper_y)
+{
+	return p->GetZapperState(zapper_x, zapper_y);
+}
+
 // set controller read callback
 NESHawk_EXPORT void NES_setcontrollercallback(NESCore* p, uint8_t (*callback)(bool)) {
 	p->SetControllerCallback(callback);

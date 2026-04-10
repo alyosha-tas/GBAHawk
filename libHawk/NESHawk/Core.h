@@ -284,6 +284,53 @@ namespace NESHawk
 			NES.StrobeController = callback;
 		}
 
+		uint8_t GetZapperState(int x, int y)
+		{
+			// assume radius 10 for now
+			int radius = 10;
+
+			int rad = 0;
+
+			int bright = 0;
+
+			int total = 0;
+
+			// how to deal with blanking?
+			/*
+			if (!NES.ppu_Is_Rendering())
+			{
+				return 0x08;
+			}
+			*/
+			for (int i = -10; i <= 10; i++)
+			{
+				for (int j = -10; j <= 10; j++)
+				{
+					if (((x + i) >= 0) && ((x + i) <= 255))
+					{
+						if (((y + j) >= 0) && ((y + j) <= 239))
+						{
+							rad = NES.Compiled_Palette[NES.xbuf[(y + j) * 256 + (x + i)]];
+
+							bright = rad & 0xFF;
+							bright += (rad >> 8) & 0xFF;
+							bright += (rad >> 16) & 0xFF;
+
+							total += bright;
+
+						}
+					}
+				}
+			}
+
+			if (total > 2000)
+			{
+				return 0;
+			}
+			
+			return 0x08;
+		}
+
 		void GetVideo(uint32_t* dest) 
 		{
 			for (int i = 0; i < 256 * 240; i++)
@@ -300,6 +347,7 @@ namespace NESHawk
 			for (int i = 0; i < 256 * 240; i++)
 			{
 				NES.video_buffer[i] = 0xFF000000;
+				//NES.xbuf[i] = 0;
 			}
 		}
 
