@@ -343,8 +343,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NES.Common
 			if (Zapper_Callback != null)
 			{
 				zapper_Latch = Zapper_Callback(c.AxisValue(Definition.Axes[0]), c.AxisValue(Definition.Axes[1]));
-
-				Console.WriteLine(zapper_Latch);
 			}
 
 			if (c.IsPressed(Definition.BoolButtons[0])) { ret |= 0x10; }

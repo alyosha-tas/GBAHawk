@@ -286,8 +286,8 @@ namespace NESHawk
 
 		uint8_t GetZapperState(int x, int y)
 		{
-			// assume radius 10 for now
-			int radius = 10;
+			// assume radius 8 for now
+			int radius = 8;
 
 			int rad = 0;
 
@@ -295,20 +295,30 @@ namespace NESHawk
 
 			int total = 0;
 
-			// how to deal with blanking?
-			/*
-			if (!NES.ppu_Is_Rendering())
+			int max_line = 0;
+
+			int min_line = 0;
+
+			if (NES.status_sl < 239)
 			{
-				return 0x08;
+				max_line = (int)NES.status_sl;
 			}
-			*/
-			for (int i = -10; i <= 10; i++)
+			else
 			{
-				for (int j = -10; j <= 10; j++)
+				max_line = 239;
+			}
+
+			min_line = (int)NES.status_sl - 10;
+
+			if (min_line < 0) { min_line = 0; }
+
+			for (int i = -radius; i <= radius; i++)
+			{
+				for (int j = -radius; j <= radius; j++)
 				{
 					if (((x + i) >= 0) && ((x + i) <= 255))
 					{
-						if (((y + j) >= 0) && ((y + j) <= 239))
+						if (((y + j) >= min_line) && ((y + j) <= max_line))
 						{
 							rad = NES.Compiled_Palette[NES.xbuf[(y + j) * 256 + (x + i)]];
 
@@ -317,13 +327,12 @@ namespace NESHawk
 							bright += (rad >> 16) & 0xFF;
 
 							total += bright;
-
 						}
 					}
 				}
 			}
 
-			if (total > 2000)
+			if (total > 20000)
 			{
 				return 0;
 			}
