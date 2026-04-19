@@ -57,10 +57,13 @@ namespace GBAHawk
 			L.GBA.Ext_SC = &R.GBA.ser_SC;
 			L.GBA.Ext_SD = &R.GBA.ser_SD;
 
+
 			R.GBA.Ext_SI = &L.GBA.ser_SO;
 			R.GBA.Ext_SO = &L.GBA.ser_SI;
 			R.GBA.Ext_SC = &L.GBA.ser_SC;
 			R.GBA.Ext_SD = &L.GBA.ser_SD;
+
+			R.GBA.Ext_Multi_Start = &L.GBA.ser_Multi_Start;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)

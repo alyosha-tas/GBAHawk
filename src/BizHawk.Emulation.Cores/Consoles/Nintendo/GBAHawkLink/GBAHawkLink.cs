@@ -626,12 +626,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		private void MakeRumble0(bool rumble_on)
 		{
-			Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0);
+			if (Controller != null) { Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0); }
 		}
 
 		private void MakeRumble1(bool rumble_on)
 		{
-			Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0);
+			if (Controller != null) { Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0); }
 		}
 
 		// GBA PPU Viewer

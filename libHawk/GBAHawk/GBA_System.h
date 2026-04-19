@@ -58,6 +58,7 @@ namespace GBAHawk
 		uint8_t* Ext_SO = nullptr;
 		uint8_t* Ext_SC = nullptr;
 		uint8_t* Ext_SD = nullptr;
+		uint8_t* Ext_Multi_Start = nullptr;
 
 		uint8_t Ext_Disconnect = 1;
 
@@ -5203,6 +5204,7 @@ namespace GBAHawk
 		uint8_t ser_SO_Inactive;
 		uint8_t ser_UART_Is_Empty;
 		uint8_t ser_Multi_ID;
+		uint8_t ser_Multi_Start;
 
 		bool ser_Ext_Tick;
 
@@ -5472,34 +5474,34 @@ namespace GBAHawk
 
 		void ser_CTRL_Update(uint16_t value)
 		{
-			ser_CTRL = value & 0x7F8F;
-			
 			ser_Ctrl_Mode_State = (uint8_t)((value & 0x3000) >> 12);
 
 			if (ser_Mode_State == 3)
 			{
 				// joy bus
-
+				ser_CTRL = value & 0x7F8F;
 			}
 			else if (ser_Mode_State == 2)
 			{
 				// general purpose
-
+				ser_CTRL = value & 0x7F8F;
 			}
 			else
 			{
 				if (ser_Ctrl_Mode_State == 3)
 				{
 					// uart
-
+					ser_CTRL = value & 0x7F8F;
 				}
 				else if (ser_Ctrl_Mode_State == 2)
 				{
 					// multiplayer
-					ser_CTRL = (uint16_t)((value & 0x7F83) | (ser_CTRL & 0x70));
+					//ser_CTRL = (uint16_t)((value & 0x7F83) | (ser_CTRL & 0x70));
 
-					if (ext_num == 1)
+					if (ext_num < 2)
 					{
+						ser_CTRL = value & 0x7F8F;
+						
 						// actiavte the port
 						if (!ser_Start && ((value & 0x80) == 0x80))
 						{
@@ -5530,26 +5532,30 @@ namespace GBAHawk
 
 							ser_Start = true;
 
-							ser_CTRL |= 0x80;
+							ser_Multi_Start = 1;
 
-							Message_String = Message_ID + "start multiplayer " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total_Send);
+							Message_String = Message_ID + "start multiplayer " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total_Send) + " " + to_string(CycleCount);
 
 							MessageCallback(Message_String.length());
 						}
 
-						if ((value & 0x80) != 0x80) { ser_Start = false; }
+						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
 					}
 					else
 					{
-						if ((value & 0x80) != 0x80) { ser_Start = false; }
+						ser_CTRL = value & 0x7F0F;
+						
+						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
 
-						Message_String = Message_ID + "start multiplayer " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total_Send);
+						Message_String = Message_ID + "start multiplayer " + to_string(false) + " " + to_string(ser_Bit_Total_Send) + " " + to_string(CycleCount);
 
 						MessageCallback(Message_String.length());
 					}
 				}
 				else
 				{
+					ser_CTRL = value & 0x7F8F;
+					
 					// normal
 					ser_Bit_Total = (uint8_t)((value & 0x1000) == 0x1000 ? 32 : 8);
 
@@ -5570,7 +5576,7 @@ namespace GBAHawk
 
 						ser_Start = true;
 
-						Message_String = Message_ID + "start normal " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total);
+						Message_String = Message_ID + "start normal " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total) + " " + to_string(CycleCount);
 
 						MessageCallback(Message_String.length());
 					}
@@ -5693,11 +5699,6 @@ namespace GBAHawk
 			}
 		}
 
-		void ser_JoyCnt_Update(uint16_t value)
-		{
-			ser_CTRL_J = value & 0x40;
-		}
-
 		uint16_t ser_Read_Mode()
 		{
 			if (ser_Mode_State == 3)
@@ -5767,8 +5768,19 @@ namespace GBAHawk
 				}
 				else if (ser_Ctrl_Mode_State == 2)
 				{
+					Message_String = Message_ID + "read multi " + to_string(ser_SI);
+
+					MessageCallback(Message_String.length());
+					
 					// multiplayer
-					return (ser_CTRL & 0xFF83) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
+					if (ext_num < 2)
+					{
+						return (ser_CTRL & 0xFF83) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
+					}
+					else
+					{
+						return (ser_CTRL & 0xFF03) | (*Ext_Multi_Start << 7) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
+					}
 				}
 				else
 				{
@@ -5777,6 +5789,13 @@ namespace GBAHawk
 				}
 			}
 		}
+
+
+		void ser_JoyCnt_Update(uint16_t value)
+		{
+			ser_CTRL_J = value & 0x40;
+		}
+
 
 		void ser_Reset()
 		{
@@ -5810,6 +5829,7 @@ namespace GBAHawk
 
 			ser_UART_Is_Empty = 1;
 			ser_Multi_ID = 0;
+			ser_Multi_Start = 0;
 
 			ser_GBP_Next_Start_Time = 0;
 
@@ -5837,6 +5857,7 @@ namespace GBAHawk
 			saver = byte_saver(ser_SO_Inactive, saver);
 			saver = byte_saver(ser_UART_Is_Empty, saver);
 			saver = byte_saver(ser_Multi_ID, saver);
+			saver = byte_saver(ser_Multi_Start, saver);
 
 			saver = short_saver(ser_Data_0, saver);
 			saver = short_saver(ser_Data_1, saver);
@@ -5881,6 +5902,7 @@ namespace GBAHawk
 			loader = byte_loader(&ser_SO_Inactive, loader);
 			loader = byte_loader(&ser_UART_Is_Empty, loader);
 			loader = byte_loader(&ser_Multi_ID, loader);
+			loader = byte_loader(&ser_Multi_Start, loader);
 
 			loader = short_loader(&ser_Data_0, loader);
 			loader = short_loader(&ser_Data_1, loader);
