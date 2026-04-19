@@ -60,7 +60,8 @@ namespace GBAHawk
 		uint8_t* Ext_SD = nullptr;
 		uint8_t* Ext_Multi_Start = nullptr;
 
-		uint8_t Ext_Disconnect = 1;
+		uint8_t Ext_Disconnect_1 = 1;
+		uint8_t Ext_Disconnect_0 = 0;
 
 	# pragma region General System and Prefetch
 
@@ -5498,7 +5499,7 @@ namespace GBAHawk
 					// multiplayer
 					//ser_CTRL = (uint16_t)((value & 0x7F83) | (ser_CTRL & 0x70));
 
-					if (ext_num < 2)
+					if (ext_num == 1)
 					{
 						ser_CTRL = value & 0x7F8F;
 						
@@ -5533,10 +5534,6 @@ namespace GBAHawk
 							ser_Start = true;
 
 							ser_Multi_Start = 1;
-
-							Message_String = Message_ID + "start multiplayer " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total_Send) + " " + to_string(CycleCount);
-
-							MessageCallback(Message_String.length());
 						}
 
 						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
@@ -5546,10 +5543,6 @@ namespace GBAHawk
 						ser_CTRL = value & 0x7F0F;
 						
 						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
-
-						Message_String = Message_ID + "start multiplayer " + to_string(false) + " " + to_string(ser_Bit_Total_Send) + " " + to_string(CycleCount);
-
-						MessageCallback(Message_String.length());
 					}
 				}
 				else
@@ -5575,10 +5568,6 @@ namespace GBAHawk
 						ser_Internal_Clock = (value & 0x1) == 0x1;
 
 						ser_Start = true;
-
-						Message_String = Message_ID + "start normal " + to_string(ser_Internal_Clock) + " " + to_string(ser_Bit_Total) + " " + to_string(CycleCount);
-
-						MessageCallback(Message_String.length());
 					}
 
 					if ((value & 0x80) != 0x80) { ser_Start = false; }
@@ -5610,6 +5599,9 @@ namespace GBAHawk
 
 					//MessageCallback(Message_String.length());
 				}
+
+				// TODO: what value should go here when changing state from CTRL write?
+				ser_Update_Pins(0);
 			}
 		}
 
@@ -5622,6 +5614,15 @@ namespace GBAHawk
 			ser_CTRL_Update(ser_CTRL);
 
 			// update serial port bits
+			ser_Update_Pins(value);
+
+			//Message_String = Message_ID + "mode upd " + to_string(ser_SI) + " " + to_string(ser_Mode_State) + " " + to_string(ser_Ctrl_Mode_State) ;
+
+			//MessageCallback(Message_String.length());
+		}
+
+		void ser_Update_Pins(uint8_t value)
+		{
 			if (ser_Mode_State == 3)
 			{
 				// joy bus (all external control)
@@ -5654,7 +5655,7 @@ namespace GBAHawk
 					ser_SO = (value & 8) >> 3;
 
 					// SI = 0 for master (how is it decided?)
-					if (ext_num < 2)
+					if (ext_num == 1)
 					{
 						ser_SI = 0;
 					}
@@ -5674,7 +5675,7 @@ namespace GBAHawk
 					{
 						ser_SC = 1;
 					}
-					
+
 				}
 				else
 				{
@@ -5768,12 +5769,8 @@ namespace GBAHawk
 				}
 				else if (ser_Ctrl_Mode_State == 2)
 				{
-					Message_String = Message_ID + "read multi " + to_string(ser_SI);
-
-					MessageCallback(Message_String.length());
-					
 					// multiplayer
-					if (ext_num < 2)
+					if (ext_num  == 1)
 					{
 						return (ser_CTRL & 0xFF83) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
 					}
