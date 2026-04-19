@@ -63,6 +63,8 @@ namespace GBAHawk
 			R.GBA.Ext_SC = &L.GBA.ser_SC;
 			R.GBA.Ext_SD = &L.GBA.ser_SD;
 
+			L.GBA.Ext_Multi_Start = &R.GBA.ser_Multi_Start;
+
 			R.GBA.Ext_Multi_Start = &L.GBA.ser_Multi_Start;
 		}
 

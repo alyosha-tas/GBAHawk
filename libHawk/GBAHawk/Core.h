@@ -209,7 +209,7 @@ namespace GBAHawk
 			GBA.Ext_SO = &GBA.Ext_Disconnect_1;
 			GBA.Ext_SC = &GBA.Ext_Disconnect_1;
 			GBA.Ext_SD = &GBA.Ext_Disconnect_0;
-			GBA.Ext_Multi_Start = &GBA.Ext_Disconnect_1;
+			GBA.Ext_Multi_Start = &GBA.ser_Multi_Start;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)

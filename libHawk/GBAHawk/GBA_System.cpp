@@ -1439,6 +1439,7 @@ namespace GBAHawk
 						ser_Start = false;
 						ser_CTRL &= 0xFF7F;
 						ser_Multi_Start = 0;
+						*Ext_Multi_Start = 0;
 						ser_Ext_Tick = true;
 
 						//Message_String = Message_ID + "complete " + to_string(ser_Mode_State) + " " + to_string(ser_Ctrl_Mode_State) + " " + to_string(CycleCount);

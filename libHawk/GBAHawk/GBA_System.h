@@ -5534,13 +5534,22 @@ namespace GBAHawk
 							ser_Start = true;
 
 							ser_Multi_Start = 1;
+
+							*Ext_Multi_Start = 1;
 						}
 
-						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
+						if ((value & 0x80) != 0x80)
+						{
+							ser_Start = false;
+							ser_Multi_Start = 0;
+							*Ext_Multi_Start = 0;
+						}
 					}
 					else
 					{
 						ser_CTRL = value & 0x7F0F;
+
+						if ((value & 0x80) == 0x80) { ser_Multi_Start = 1; }
 						
 						if ((value & 0x80) != 0x80) { ser_Start = false; ser_Multi_Start = 0; }
 					}
@@ -5776,7 +5785,7 @@ namespace GBAHawk
 					}
 					else
 					{
-						return (ser_CTRL & 0xFF03) | (*Ext_Multi_Start << 7) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
+						return (ser_CTRL & 0xFF03) | (ser_Multi_Start << 7) | (ser_Multi_ID << 4) | ((ser_SD & *Ext_SD) << 3) | (ser_SI << 2);
 					}
 				}
 				else
