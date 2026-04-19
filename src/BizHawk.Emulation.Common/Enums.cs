@@ -6,8 +6,7 @@
 	public enum DisplayType
 	{
 		NTSC,
-		PAL,
-		Dendy
+		PAL
 	}
 
 	/// <summary>

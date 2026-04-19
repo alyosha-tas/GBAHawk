@@ -314,6 +314,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb0, 0);
 			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb1, 1);
 
+			GBA_message_L = GetMessage_L;
+			GBA_message_R = GetMessage_R;
+
+			LibGBAHawkLink.GBALink_setmessagecallback(GBA_Pntr, GBA_message_L, GBA_message_R);
+
 			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1]);
 
 			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0],
@@ -642,6 +647,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			{
 				_scanlineCallback();
 			}
+		}
+
+		private LibGBAHawkLink.MessageCallback GBA_message_L;
+		private LibGBAHawkLink.MessageCallback GBA_message_R;
+
+		private void GetMessage_L(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 0);
+
+			Console.WriteLine(new_m);
+		}
+
+		private void GetMessage_R(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 1);
+
+			Console.WriteLine(new_m);
 		}
 	}
 }

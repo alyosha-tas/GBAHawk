@@ -144,5 +144,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBALink_getdisassembly(IntPtr core, StringBuilder h, int t, int l, uint core_num);
+
+		[UnmanagedFunctionPointer(cc)]
+		public delegate void MessageCallback(int str_length);
+
+
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBALink_setmessagecallback(IntPtr core, MessageCallback callback_L, MessageCallback callback_R);
+
+
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBALink_getmessage(IntPtr core, StringBuilder h, int s);
 	}
 }

@@ -1440,6 +1440,10 @@ namespace GBAHawk
 						ser_CTRL &= 0xFF7F;
 						ser_Ext_Tick = true;
 
+						Message_String = Message_ID + "complete " + to_string(ser_Mode_State) + " " + to_string(ser_Ctrl_Mode_State);
+
+						MessageCallback(Message_String.length());
+
 						if (ext_num == 0)
 						{
 							if (ser_Mode_State < 2)

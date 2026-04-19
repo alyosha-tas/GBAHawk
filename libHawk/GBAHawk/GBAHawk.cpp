@@ -390,4 +390,18 @@ GBAHawk_EXPORT void GBALink_getdisassembly(GBALinkCore* p, char* d, int t, int l
 
 #pragma endregion
 
+#pragma region Messages
+
+// set message callback
+GBAHawk_EXPORT void GBALink_setmessagecallback(GBALinkCore* p, void (*callback_L)(int), void (*callback_R)(int)) {
+	p->SetMessageCallback(callback_L, callback_R);
+}
+
+// get message
+GBAHawk_EXPORT void GBALink_getmessage(GBALinkCore* p, char* d, int s) {
+	p->GetMessage(d, s);
+}
+
+#pragma endregion
+
 #pragma endregion

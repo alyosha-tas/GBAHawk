@@ -50,6 +50,17 @@ namespace GBAHawk
 					   flash_type_64_value_0, flash_type_128_value_0, flash_write_offset_0, flash_sector_offset_0, flash_chip_offset_0, is_GBP_0);
 			R.Load_ROM(ext_rom_1, ext_rom_size_1, mapper_1, datetime_1, rtc_functional_1, EEPROM_offset_1,
 					   flash_type_64_value_1, flash_type_128_value_1, flash_write_offset_1, flash_sector_offset_1, flash_chip_offset_1, is_GBP_1);
+
+			// override pointers to serial port pins
+			L.GBA.Ext_SI = &R.GBA.ser_SO;
+			L.GBA.Ext_SO = &R.GBA.ser_SI;
+			L.GBA.Ext_SC = &R.GBA.ser_SC;
+			L.GBA.Ext_SD = &R.GBA.ser_SD;
+
+			R.GBA.Ext_SI = &L.GBA.ser_SO;
+			R.GBA.Ext_SO = &L.GBA.ser_SI;
+			R.GBA.Ext_SC = &L.GBA.ser_SC;
+			R.GBA.Ext_SD = &L.GBA.ser_SD;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)
@@ -90,10 +101,6 @@ namespace GBAHawk
 
 			L.GBA.is_linked_system = true;
 			R.GBA.is_linked_system = true;
-
-			// change ser control state since its plugged in
-			L.GBA.ser_CTRL = 0;
-			R.GBA.ser_CTRL = 0;
 		}
 
 		void Set_GBP_Enable(int num)
@@ -172,112 +179,6 @@ namespace GBAHawk
 				{
 					R.GBA.Single_Step();
 
-					// sync up state bits
-					if (L.GBA.ser_Ext_Update)
-					{
-						if (L.GBA.ser_Mode_State == 3)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (L.GBA.ser_Mode_State == 2)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else
-						{
-							if (L.GBA.ser_Ctrl_Mode_State == 3)
-							{
-								// uart
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-							else if (L.GBA.ser_Ctrl_Mode_State == 2)
-							{
-								// multiplayer
-								if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
-								{
-									L.GBA.ser_CTRL |= 8;
-									R.GBA.ser_CTRL |= 8;
-
-									if ((L.GBA.ser_CTRL & 0x80) == 0x80)
-									{
-										R.GBA.ser_CTRL |= 0x80;
-									}
-									else
-									{
-										R.GBA.ser_CTRL &= 0xFF7F;
-									}
-								}
-								else
-								{
-									L.GBA.ser_CTRL &= 0xFFF7;
-									R.GBA.ser_CTRL &= 0xFFF7;
-								}
-							}
-							else
-							{
-								// normal
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-
-						L.GBA.ser_Ext_Update = false;
-					}
-
-					if (R.GBA.ser_Ext_Update)
-					{
-						if (R.GBA.ser_Mode_State == 3)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (R.GBA.ser_Mode_State == 2)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else
-						{
-							if (R.GBA.ser_Ctrl_Mode_State == 3)
-							{
-								// uart
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-							else if (R.GBA.ser_Ctrl_Mode_State == 2)
-							{
-								// multiplayer
-								if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
-								{
-									L.GBA.ser_CTRL |= 8;
-									R.GBA.ser_CTRL |= 8;
-									/*
-									if ((L.ser_CTRL & 0x80) == 0x80)
-									{
-										R.ser_CTRL |= 0x80;
-									}
-									*/
-								}
-								else
-								{
-									L.GBA.ser_CTRL &= 0xFFF7;
-									R.GBA.ser_CTRL &= 0xFFF7;
-								}
-							}
-							else
-							{
-								// normal
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-
-						R.GBA.ser_Ext_Update = false;
-					}
-
 					// transfer a bit
 					if (L.GBA.ser_Ext_Tick)
 					{
@@ -319,7 +220,7 @@ namespace GBAHawk
 							L.GBA.ser_CTRL &= 0xFF7F;
 							R.GBA.ser_CTRL &= 0xFF7F;
 
-							R.GBA.ser_CTRL |= 0x10;
+							R.GBA.ser_Multi_ID = 1;
 
 							// trigger interrupt if needed
 							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
@@ -343,112 +244,6 @@ namespace GBAHawk
 				{
 					L.GBA.Single_Step();
 
-					// sync up state bits
-					if (L.GBA.ser_Ext_Update)
-					{
-						if (L.GBA.ser_Mode_State == 3)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (L.GBA.ser_Mode_State == 2)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else
-						{
-							if (L.GBA.ser_Ctrl_Mode_State == 3)
-							{
-								// uart
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-							else if (L.GBA.ser_Ctrl_Mode_State == 2)
-							{
-								// multiplayer
-								if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
-								{
-									L.GBA.ser_CTRL |= 8;
-									R.GBA.ser_CTRL |= 8;
-
-									if ((L.GBA.ser_CTRL & 0x80) == 0x80)
-									{
-										R.GBA.ser_CTRL |= 0x80;
-									}
-									else
-									{
-										R.GBA.ser_CTRL &= 0xFF7F;
-									}
-								}
-								else
-								{
-									L.GBA.ser_CTRL &= 0xFFF7;
-									R.GBA.ser_CTRL &= 0xFFF7;
-								}
-							}
-							else
-							{
-								// normal
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-
-						L.GBA.ser_Ext_Update = false;
-					}
-
-					if (R.GBA.ser_Ext_Update)
-					{
-						if (R.GBA.ser_Mode_State == 3)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (R.GBA.ser_Mode_State == 2)
-						{
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else
-						{
-							if (R.GBA.ser_Ctrl_Mode_State == 3)
-							{
-								// uart
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-							else if (R.GBA.ser_Ctrl_Mode_State == 2)
-							{
-								// multiplayer
-								if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
-								{
-									L.GBA.ser_CTRL |= 8;
-									R.GBA.ser_CTRL |= 8;
-									/*
-									if ((L.ser_CTRL & 0x80) == 0x80)
-									{
-										R.ser_CTRL |= 0x80;
-									}
-									*/
-								}
-								else
-								{
-									L.GBA.ser_CTRL &= 0xFFF7;
-									R.GBA.ser_CTRL &= 0xFFF7;
-								}
-							}
-							else
-							{
-								// normal
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-
-						R.GBA.ser_Ext_Update = false;
-					}
-
 					// transfer a bit
 					if (L.GBA.ser_Ext_Tick)
 					{
@@ -490,7 +285,7 @@ namespace GBAHawk
 							L.GBA.ser_CTRL &= 0xFF7F;
 							R.GBA.ser_CTRL &= 0xFF7F;
 
-							R.GBA.ser_CTRL |= 0x10;
+							R.GBA.ser_Multi_ID = 1;
 
 							// trigger interrupt if needed
 							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
@@ -509,112 +304,6 @@ namespace GBAHawk
 			{
 				L.GBA.Single_Step();
 				R.GBA.Single_Step();
-
-				// sync up state bits
-				if (L.GBA.ser_Ext_Update)
-				{
-					if (L.GBA.ser_Mode_State == 3)
-					{
-						L.GBA.ser_CTRL &= 0xFFF7;
-						R.GBA.ser_CTRL &= 0xFFF7;
-					}
-					else if (L.GBA.ser_Mode_State == 2)
-					{
-						L.GBA.ser_CTRL &= 0xFFF7;
-						R.GBA.ser_CTRL &= 0xFFF7;
-					}
-					else
-					{
-						if (L.GBA.ser_Ctrl_Mode_State == 3)
-						{
-							// uart
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (L.GBA.ser_Ctrl_Mode_State == 2)
-						{
-							// multiplayer
-							if ((R.GBA.ser_Mode_State < 2) && (R.GBA.ser_Ctrl_Mode_State == 2))
-							{
-								L.GBA.ser_CTRL |= 8;
-								R.GBA.ser_CTRL |= 8;
-
-								if ((L.GBA.ser_CTRL & 0x80) == 0x80)
-								{
-									R.GBA.ser_CTRL |= 0x80;
-								}
-								else
-								{
-									R.GBA.ser_CTRL &= 0xFF7F;
-								}
-							}
-							else
-							{
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-						else
-						{
-							// normal
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-					}
-
-					L.GBA.ser_Ext_Update = false;
-				}
-
-				if (R.GBA.ser_Ext_Update)
-				{
-					if (R.GBA.ser_Mode_State == 3)
-					{
-						L.GBA.ser_CTRL &= 0xFFF7;
-						R.GBA.ser_CTRL &= 0xFFF7;
-					}
-					else if (R.GBA.ser_Mode_State == 2)
-					{
-						L.GBA.ser_CTRL &= 0xFFF7;
-						R.GBA.ser_CTRL &= 0xFFF7;
-					}
-					else
-					{
-						if (R.GBA.ser_Ctrl_Mode_State == 3)
-						{
-							// uart
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-						else if (R.GBA.ser_Ctrl_Mode_State == 2)
-						{
-							// multiplayer
-							if ((L.GBA.ser_Mode_State < 2) && (L.GBA.ser_Ctrl_Mode_State == 2))
-							{
-								L.GBA.ser_CTRL |= 8;
-								R.GBA.ser_CTRL |= 8;
-								/*
-								if ((L.ser_CTRL & 0x80) == 0x80)
-								{
-									R.ser_CTRL |= 0x80;
-								}
-								*/
-							}
-							else
-							{
-								L.GBA.ser_CTRL &= 0xFFF7;
-								R.GBA.ser_CTRL &= 0xFFF7;
-							}
-						}
-						else
-						{
-							// normal
-							L.GBA.ser_CTRL &= 0xFFF7;
-							R.GBA.ser_CTRL &= 0xFFF7;
-						}
-					}
-
-					R.GBA.ser_Ext_Update = false;
-				}
 
 				// transfer a bit
 				if (L.GBA.ser_Ext_Tick)
@@ -657,7 +346,7 @@ namespace GBAHawk
 						L.GBA.ser_CTRL &= 0xFF7F;
 						R.GBA.ser_CTRL &= 0xFF7F;
 
-						R.GBA.ser_CTRL |= 0x10;
+						R.GBA.ser_Multi_ID = 1;
 
 						// trigger interrupt if needed
 						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
@@ -668,7 +357,6 @@ namespace GBAHawk
 						L.GBA.ser_Ext_Tick = false;
 					}
 				}
-
 			}
 
 			return L.GBA.Is_Lag && R.GBA.Is_Lag;
@@ -1018,8 +706,28 @@ namespace GBAHawk
 			}	
 		}
 
-#pragma endregion
+	#pragma endregion
 
+		void SetMessageCallback(void (*callback_L)(int), void (*callback_R)(int))
+		{
+			L.GBA.MessageCallback = callback_L;
+			R.GBA.MessageCallback = callback_R;
+
+			L.GBA.Message_ID = "L: ";
+			R.GBA.Message_ID = "R: ";
+		}
+
+		void GetMessage(char* d, int s)
+		{
+			if (s == 0)
+			{
+				std::memcpy(d, L.GBA.Message_String.c_str(), L.GBA.Message_String.length() + 1);
+			}
+			else
+			{
+				std::memcpy(d, R.GBA.Message_String.c_str(), R.GBA.Message_String.length() + 1);
+			}
+		}
 	};
 }
 

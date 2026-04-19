@@ -203,6 +203,12 @@ namespace GBAHawk
 			GBA.Clock_Update_Cycle = 0;
 
 			GBA.Is_GBP = is_GBP;
+
+			// external pin state is pull up when disconnected
+			GBA.Ext_SI = &GBA.Ext_Disconnect;
+			GBA.Ext_SO = &GBA.Ext_Disconnect;
+			GBA.Ext_SC = &GBA.Ext_Disconnect;
+			GBA.Ext_SD = &GBA.Ext_Disconnect;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
