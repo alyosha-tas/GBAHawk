@@ -189,16 +189,33 @@ namespace GBAHawk
 					{
 						if (L.GBA.ser_Ctrl_Mode_State != 2)
 						{
-							uint16_t temp_t = L.GBA.ser_Data_0;
-							L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
-							R.GBA.ser_Data_0 = temp_t;
+							if (L.GBA.ser_Bit_Total == 32)
+							{
+								uint16_t temp_t = L.GBA.ser_Data_0;
+								L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+								R.GBA.ser_Data_0 = temp_t;
 
-							temp_t = L.GBA.ser_Data_1;
-							L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
-							R.GBA.ser_Data_1 = temp_t;
+								temp_t = L.GBA.ser_Data_1;
+								L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+								R.GBA.ser_Data_1 = temp_t;
+							}
+							else
+							{
+								uint16_t temp_t8 = (L.GBA.ser_Data_M & 0xFF);
+								L.GBA.ser_Data_M &= 0xFF00;
+								L.GBA.ser_Data_M |= R.GBA.ser_Data_M & 0xFF;
+								R.GBA.ser_Data_M &= 0xFF00;
+								R.GBA.ser_Data_M |= temp_t8;
+							}
 
 							L.GBA.ser_CTRL &= 0xFF7F;
 							R.GBA.ser_CTRL &= 0xFF7F;
+
+							R.GBA.ser_Start = false;
+
+							// set SO to expected state
+							R.GBA.ser_SO = R.GBA.ser_SO_Inactive;
+							L.GBA.ser_SO = L.GBA.ser_SO_Inactive;
 
 							// trigger interrupt if needed
 							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
@@ -254,16 +271,33 @@ namespace GBAHawk
 					{
 						if (L.GBA.ser_Ctrl_Mode_State != 2)
 						{
-							uint16_t temp_t = L.GBA.ser_Data_0;
-							L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
-							R.GBA.ser_Data_0 = temp_t;
+							if (L.GBA.ser_Bit_Total == 32)
+							{
+								uint16_t temp_t = L.GBA.ser_Data_0;
+								L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+								R.GBA.ser_Data_0 = temp_t;
 
-							temp_t = L.GBA.ser_Data_1;
-							L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
-							R.GBA.ser_Data_1 = temp_t;
+								temp_t = L.GBA.ser_Data_1;
+								L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+								R.GBA.ser_Data_1 = temp_t;
+							}
+							else
+							{
+								uint16_t temp_t8 = (L.GBA.ser_Data_M & 0xFF);
+								L.GBA.ser_Data_M &= 0xFF00;
+								L.GBA.ser_Data_M |= R.GBA.ser_Data_M & 0xFF;
+								R.GBA.ser_Data_M &= 0xFF00;
+								R.GBA.ser_Data_M |= temp_t8;
+							}
 
 							L.GBA.ser_CTRL &= 0xFF7F;
 							R.GBA.ser_CTRL &= 0xFF7F;
+
+							// set SO to expected state
+							R.GBA.ser_SO = R.GBA.ser_SO_Inactive;
+							L.GBA.ser_SO = L.GBA.ser_SO_Inactive;
+
+							R.GBA.ser_Start = false;
 
 							// trigger interrupt if needed
 							if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)
@@ -315,16 +349,33 @@ namespace GBAHawk
 				{
 					if (L.GBA.ser_Ctrl_Mode_State != 2)
 					{
-						uint16_t temp_t = L.GBA.ser_Data_0;
-						L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
-						R.GBA.ser_Data_0 = temp_t;
+						if (L.GBA.ser_Bit_Total == 32)
+						{
+							uint16_t temp_t = L.GBA.ser_Data_0;
+							L.GBA.ser_Data_0 = R.GBA.ser_Data_0;
+							R.GBA.ser_Data_0 = temp_t;
 
-						temp_t = L.GBA.ser_Data_1;
-						L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
-						R.GBA.ser_Data_1 = temp_t;
+							temp_t = L.GBA.ser_Data_1;
+							L.GBA.ser_Data_1 = R.GBA.ser_Data_1;
+							R.GBA.ser_Data_1 = temp_t;
+						}
+						else
+						{
+							uint16_t temp_t8 = (L.GBA.ser_Data_M & 0xFF);
+							L.GBA.ser_Data_M &= 0xFF00;
+							L.GBA.ser_Data_M |= R.GBA.ser_Data_M & 0xFF;
+							R.GBA.ser_Data_M &= 0xFF00;
+							R.GBA.ser_Data_M |= temp_t8;
+						}
 
 						L.GBA.ser_CTRL &= 0xFF7F;
 						R.GBA.ser_CTRL &= 0xFF7F;
+
+						// set SO to expected state
+						R.GBA.ser_SO = R.GBA.ser_SO_Inactive;
+						L.GBA.ser_SO = L.GBA.ser_SO_Inactive;
+
+						R.GBA.ser_Start = false;
 
 						// trigger interrupt if needed
 						if ((R.GBA.ser_CTRL & 0x4000) == 0x4000)

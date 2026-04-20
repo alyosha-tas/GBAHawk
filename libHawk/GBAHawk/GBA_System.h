@@ -5536,6 +5536,10 @@ namespace GBAHawk
 							ser_Multi_Start = 1;
 
 							*Ext_Multi_Start = 1;
+
+							//Message_String = Message_ID + "multi start " + to_string(ser_Bit_Total) + " " + to_string(ser_Internal_Clock) + " " + to_string(ser_Reload);
+
+							//MessageCallback(Message_String.length());
 						}
 
 						if ((value & 0x80) != 0x80)
@@ -5577,6 +5581,10 @@ namespace GBAHawk
 						ser_Internal_Clock = (value & 0x1) == 0x1;
 
 						ser_Start = true;
+
+						//Message_String = Message_ID + "normal start " + to_string(ser_Bit_Total) + " " + to_string(ser_Internal_Clock) + " " + to_string(ser_Reload);
+
+						//MessageCallback(Message_String.length());
 					}
 
 					if ((value & 0x80) != 0x80) { ser_Start = false; }
@@ -5746,11 +5754,11 @@ namespace GBAHawk
 
 					if (ser_Internal_Clock)
 					{
-						return ser_Mode | (ser_SO << 3) | (*Ext_SO << 2) | (ser_SD << 1) | ser_SC;
+						return ser_Mode | (ser_SO << 3) | (*Ext_SI << 2) | (ser_SD << 1) | ser_SC;
 					}
 					else
 					{
-						return ser_Mode | (ser_SO << 3) | (*Ext_SO << 2) | (ser_SD << 1) | *Ext_SC;
+						return ser_Mode | (ser_SO << 3) | (*Ext_SI << 2) | (ser_SD << 1) | *Ext_SC;
 					}
 				}
 			}
@@ -5791,7 +5799,7 @@ namespace GBAHawk
 				else
 				{
 					// normal
-					return (ser_CTRL & 0xFF8B) | (*Ext_SO << 2);
+					return (ser_CTRL & 0xFF8B) | (*Ext_SI << 2);
 				}
 			}
 		}
