@@ -538,8 +538,20 @@ namespace GBAHawk
 						else
 						{
 							if (ppu_Sprite_Mosaic_Latch)
-							{
+							{						
 								OBJ_Has_Pixel = ppu_Sprite_Pixel_Occupied_Latch && ppu_OBJ_On_Disp;
+
+								// pixel can still change baed on priority bit
+								if (ppu_Sprite_Pixel_Occupied[ppu_Sprite_ofst_draw + ppu_Display_Cycle])
+								{
+									if (ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle] < ppu_Sprite_Priority_Latch)
+									{
+										ppu_Sprite_Priority_Latch = ppu_Sprite_Priority[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										ppu_Sprite_Pixel_Latch = ppu_Sprite_Pixels[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+										ppu_Sprite_Semi_Transparent_Latch = ppu_Sprite_Semi_Transparent[ppu_Sprite_ofst_draw + ppu_Display_Cycle];
+									}
+								}
+
 								spr_pixel = ppu_Sprite_Pixel_Latch;
 								spr_priority = ppu_Sprite_Priority_Latch;
 								spr_semi_transparent = ppu_Sprite_Semi_Transparent_Latch;
