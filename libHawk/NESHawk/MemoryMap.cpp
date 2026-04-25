@@ -53,7 +53,8 @@ namespace NESHawk
 		{
 			// This register is internal to the CPU and so the external CPU data bus is disconnected when reading it.
 			// Therefore the returned value cannot be seen by external devices and the value does not affect open bus.
-			DB = ret;
+			DB_Ext = ret;
+			DB_Int = ret;
 		}
 
 		return ret;
@@ -117,9 +118,10 @@ namespace NESHawk
 
 			// when $4015 is activated, the underlying read is what updates the data bus
 			// however, the returned value is what is in $4015
+			// additionally, the internal and external busses are diconnected, so do not influence eachother
 			if (addr != 0x4015)
 			{
-				DB = ret;
+				DB_Ext = ret;
 			}
 
 			if ((addr & 0x1F) == 0x15)
@@ -155,7 +157,8 @@ namespace NESHawk
 				ret = mapper_pntr->ReadWRAM(addr - 0x6000);
 			}
 
-			DB = ret;
+			DB_Ext = ret;
+			DB_Int = ret;
 		}
 
 		return ret;
@@ -204,7 +207,8 @@ namespace NESHawk
 			mapper_pntr->WritePRG(addr - 0x8000, value);
 		}
 
-		DB = value;
+		DB_Ext = value;
+		DB_Int = value;
 	}
 
 	uint8_t NES_System::ReadReg(uint32_t addr)
@@ -232,10 +236,10 @@ namespace NESHawk
 			case 0x4011:
 			case 0x4012:
 			case 0x4013:
-				return DB;
+				return DB_Ext;
 				//return apu.ReadReg(addr);
 			case 0x4014: /*OAM DMA*/ break;
-			case 0x4015: return (uint8_t)((uint8_t)(apu_ReadReg(addr) & 0xDF) + (uint8_t)(DB & 0x20));
+			case 0x4015: return (uint8_t)((uint8_t)(apu_ReadReg(addr) & 0xDF) + (uint8_t)(DB_Int & 0x20));
 			case 0x4016:
 				// don't clock controllers from reads on consectuive cycles
 				// this includes from DMC DMA
@@ -290,7 +294,7 @@ namespace NESHawk
 				}
 				else
 				{
-					return DB;
+					return DB_Ext;
 				}
 
 			default:
@@ -299,7 +303,7 @@ namespace NESHawk
 
 		}
 
-		return DB;
+		return DB_Ext;
 	}
 
 	uint8_t NES_System::read_joyport(uint32_t addr)
@@ -308,7 +312,7 @@ namespace NESHawk
 		ret = ReadController(addr == 0x4016);
 
 		ret &= 0x1F;
-		ret |= (uint8_t)(0xE0 & DB);
+		ret |= (uint8_t)(0xE0 & DB_Ext);
 		return ret;
 	}
 

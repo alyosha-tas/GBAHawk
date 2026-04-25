@@ -140,7 +140,8 @@ namespace NESHawk
 		bool OAM_DMA_Exec = false;
 		bool dmc_realign;
 
-		uint8_t DB; //old data bus values from previous reads
+		uint8_t DB_Ext;
+		uint8_t DB_Int;
 		uint8_t oam_dma_byte;
 		uint8_t latched4016;
 		uint8_t Controller_Strobed_Value;
@@ -195,7 +196,8 @@ namespace NESHawk
 			saver = bool_saver(OAM_DMA_Exec, saver);
 			saver = bool_saver(dmc_realign, saver);
 
-			saver = byte_saver(DB, saver);
+			saver = byte_saver(DB_Ext, saver);
+			saver = byte_saver(DB_Int, saver);
 			saver = byte_saver(oam_dma_byte, saver);
 			saver = byte_saver(latched4016, saver);
 			saver = byte_saver(Controller_Strobed_Value, saver);
@@ -248,7 +250,8 @@ namespace NESHawk
 			loader = bool_loader(&OAM_DMA_Exec, loader);
 			loader = bool_loader(&dmc_realign, loader);
 
-			loader = byte_loader(&DB, loader);
+			loader = byte_loader(&DB_Ext, loader);
+			loader = byte_loader(&DB_Int, loader);
 			loader = byte_loader(&oam_dma_byte, loader);
 			loader = byte_loader(&latched4016, loader);
 			loader = byte_loader(&Controller_Strobed_Value, loader);
@@ -3482,7 +3485,7 @@ namespace NESHawk
 					return ret;
 				}
 				default:
-					return DB;
+					return DB_Ext;
 			}
 		}
 
@@ -3600,7 +3603,7 @@ namespace NESHawk
 					return (uint8_t)ret;
 				}
 				default:
-					return DB;
+					return DB_Ext;
 			}
 		}
 

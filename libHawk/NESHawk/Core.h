@@ -152,7 +152,7 @@ namespace NESHawk
 				Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
 			}
 
-			Mapper->Core_DB = &NES.DB;
+			Mapper->Core_DB = &NES.DB_Ext;
 
 			Mapper->Core_Message_String = &NES.Message_String;
 			Mapper->MessageCallback = NES.MessageCallback;
