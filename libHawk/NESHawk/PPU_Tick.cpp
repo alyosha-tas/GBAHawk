@@ -234,26 +234,19 @@ namespace NESHawk
 
 												soam_index++;
 												spr_true_count = 0;
+
+												sprite_eval_write = false;
 											}
 										}
 										else
 										{
-											if (soam_index == 8)
-											{
-												// glitchy increments
-												oam_index += 1;
+											// glitchy increments
+											oam_index += 1;
 
-												if ((oam_index & 3) != 0)
-												{
-													oam_index += 4;
-												}
-											}
-											else
+											if ((oam_index & 3) != 0)
 											{
 												oam_index += 4;
-												oam_index &= 0xFFC;
 											}
-
 										}
 
 										read_value = soam[0]; //writes change to reads
@@ -695,17 +688,17 @@ namespace NESHawk
 							if (xt == 0)
 							{
 								ppu_BG_Attr[0] = ppu_BG_Attr[2];
-								
+
 								ppu_BG_Pattern_0 &= 0xFF;
 								ppu_BG_Pattern_1 &= 0xFF;
-								
+
 								ppu_BG_Pattern_0 |= ((uint16_t)BitReverse(ppu_Next_BG_Pt_0) << 8);
 								ppu_BG_Pattern_1 |= ((uint16_t)BitReverse(ppu_Next_BG_Pt_1) << 8);
 							}
 							else
 							{
 								ppu_BG_Attr[1] = ppu_BG_Attr[2];
-								
+
 								ppu_BG_Pattern_0 >>= 8;
 								ppu_BG_Pattern_1 >>= 8;
 
@@ -713,10 +706,13 @@ namespace NESHawk
 								ppu_BG_Pattern_1 |= ((uint16_t)BitReverse(ppu_Next_BG_Pt_1) << 8);
 							}
 
-							// reset sprite comparers
-							for (int i = 0; i < 8; i++)
+							if (status_cycle == 336)
 							{
-								ppu_Sprite_Shifters[i].X_Start = false;
+								// reset sprite comparers
+								for (int i = 0; i < 8; i++)
+								{
+									ppu_Sprite_Shifters[i].X_Start = false;
+								}
 							}
 						}
 

@@ -13,6 +13,10 @@
 
 #include "../Common/Savestate.h"
 
+//Message_String = "Complete: " + to_string(ser_GBP_Transfer_Count) + " " + to_string(ser_Data_0 & 0xFF) + " " + to_string(CycleCount);
+
+//MessageCallback(Message_String.length());
+
 using namespace std;
 
 namespace GBHawk
@@ -823,6 +827,10 @@ namespace GBHawk
 
 							//Console.WriteLine(temp1_rec + " " + temp2_rec + " " + temp3_rec + " " + temp4_rec + " " + transmit_byte);
 
+							Message_String = "Transmit: " + to_string(temp1_rec) + " " + to_string(temp2_rec) + " " + to_string(temp3_rec) + " " + to_string(temp4_rec) + " " + to_string(transmit_byte);
+
+							MessageCallback(Message_String.length());
+
 							transmit_byte++;
 
 							if (transmit_byte == num_bytes_transmit * 4)
@@ -926,6 +934,10 @@ namespace GBHawk
 
 							//Console.WriteLine(ping_player + " " + ping_byte + " " + status_byte + " " + received_byte);
 
+							Message_String = "Pinging: " + to_string(ping_player) + " " + to_string(ping_byte) + " " + to_string(status_byte) + " " + to_string(received_byte);
+
+							MessageCallback(Message_String.length());
+
 							bit_count = 7;
 							received_byte = 0;
 
@@ -1017,6 +1029,10 @@ namespace GBHawk
 
 							//Console.WriteLine(ping_player + " " + ping_byte + " " + status_byte + " " + received_byte);
 
+							Message_String = "Pinging: " + to_string(ping_player) + " " + to_string(ping_byte) + " " + to_string(status_byte) + " " + to_string(received_byte);
+
+							MessageCallback(Message_String.length());
+
 							bit_count = 7;
 							received_byte = 0;
 
@@ -1089,6 +1105,10 @@ namespace GBHawk
 								is_transmitting = true;
 								transmit_byte = 0;
 								buffer_parity = false;
+
+								Message_String = "Starting new transfer";
+
+								MessageCallback(Message_String.length());
 							}
 						}
 					}
@@ -1506,11 +1526,6 @@ namespace GBHawk
 		void SetMessageCallback(void (*callback)(int))
 		{
 			MessageCallback = callback;
-
-			for (int i = 0; i < Num_ROMs; i++)
-			{
-				GBL[i].SetMessageCallback(callback);
-			}
 		}
 
 		void GetMessage(char* d)
