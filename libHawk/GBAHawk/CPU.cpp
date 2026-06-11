@@ -294,9 +294,9 @@ namespace GBAHawk
 					{
 						for (int i = 1; i <= cpu_Shift_Imm; i++)
 						{
-							cpu_ALU_Shift_Carry = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
+							cpu_ALU_Shift_Carry = (uint32_t)(cpu_ALU_Long_Result & 1);
 							cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
-							cpu_ALU_Long_Result |= cpu_ALU_Shift_Carry;
+							cpu_ALU_Long_Result |= (cpu_ALU_Shift_Carry << 31);
 						}
 					}
 					break;
@@ -2558,9 +2558,9 @@ namespace GBAHawk
 
 			for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
 			{
-				cpu_ALU_Temp_S_Val = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
+				cpu_ALU_Temp_S_Val = (uint32_t)(cpu_ALU_Long_Result & 1);
 				cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
-				cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
+				cpu_ALU_Long_Result |= (cpu_ALU_Temp_S_Val << 31);
 			}
 
 			if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset(cpu_ALU_Temp_S_Val == 1); }
@@ -3295,9 +3295,9 @@ namespace GBAHawk
 							{
 								for (int i = 1; i <= cpu_Shift_Imm; i++)
 								{
-									cpu_ALU_Shift_Carry = (uint32_t)((cpu_ALU_Long_Result & 1) << 31);
+									cpu_ALU_Shift_Carry = (uint32_t)(cpu_ALU_Long_Result & 1);
 									cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
-									cpu_ALU_Long_Result |= cpu_ALU_Shift_Carry;
+									cpu_ALU_Long_Result |= (cpu_ALU_Shift_Carry << 31);
 								}
 							}
 							break;
