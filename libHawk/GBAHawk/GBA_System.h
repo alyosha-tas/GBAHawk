@@ -82,16 +82,33 @@ namespace GBAHawk
 		void Write_Memory_16(uint32_t addr, uint16_t value);
 		void Write_Memory_32(uint32_t addr, uint32_t value);
 
+		void Update_Bus_Read_8(uint32_t addr, uint8_t value);
+		void Update_Bus_Read_16(uint32_t addr, uint16_t value);
+		void Update_Bus_Read_32(uint32_t addr, uint32_t value);
+
+		// writes alwys update the bus
+		void Update_Bus_Write_8(uint32_t addr, uint8_t value);
+		void Update_Bus_Write_16(uint32_t addr, uint16_t value);
+		void Update_Bus_Write_32(uint32_t addr, uint32_t value);
+
 		void Read_Memory_16_DMA(uint32_t addr, uint32_t chan);
 		void Read_Memory_32_DMA(uint32_t addr, uint32_t chan);
 
 		void Write_Memory_16_DMA(uint32_t addr, uint16_t value, uint32_t chan);
 		void Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
 
+		void Update_Bus_Read_16_DMA(uint32_t addr, uint16_t value, uint32_t chan);
+		void Update_Bus_Read_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
+
+		// writes alwys update the bus
+		void Update_Bus_Write_16_DMA(uint32_t addr, uint16_t value, uint32_t chan);
+		void Update_Bus_Write_32_DMA(uint32_t addr, uint32_t value, uint32_t chan);
+
 		uint8_t Peek_Memory_8(uint32_t addr);
 
 		// General Variables
 		bool Is_Lag;
+		bool Update_Bus;
 		bool VBlank_Rise;
 		bool All_RAM_Disable, WRAM_Enable;
 
@@ -206,6 +223,8 @@ namespace GBAHawk
 
 		void System_Reset() 
 		{
+			Update_Bus = false;
+			
 			delays_to_process = false;
 
 			IRQ_Write_Delay = false;
@@ -464,7 +483,7 @@ namespace GBAHawk
 				case 0x302: ret = 0; break;
 				case 0x303: ret = 0; break;
 
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); Update_Bus = false; break; // open bus;
 			}
 
 			return ret;
@@ -507,7 +526,7 @@ namespace GBAHawk
 				case 0x300: ret = (uint16_t)((Halt_CTRL << 8) | Post_Boot); break;
 				case 0x302: ret = 0; break;
 
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
+				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -547,7 +566,7 @@ namespace GBAHawk
 
 				case 0x300: ret = (uint32_t)(0x00000000 | (Halt_CTRL << 8) | Post_Boot); break;
 
-				default: ret = cpu_Last_Bus_Value; break;
+				default: ret = cpu_Last_Bus_Value; Update_Bus = false; break; // Open Bus
 			}
 
 			return ret;
@@ -1228,7 +1247,8 @@ namespace GBAHawk
 		uint32_t cpu_Write_Back_Addr;
 		uint32_t cpu_Addr_Offset;
 		uint32_t cpu_Last_Bus_Value;
-		uint32_t cpu_Last_Bus_Value_Old;
+		uint32_t cpu_IWRAM_Last_Bus_Value;
+		uint32_t cpu_OAM_Last_Bus_Value;
 
 		uint32_t cpu_ALU_Temp_Val, cpu_ALU_Temp_S_Val, cpu_ALU_Shift_Carry;
 
@@ -3477,7 +3497,8 @@ namespace GBAHawk
 			saver = int_saver(cpu_Write_Back_Addr, saver);
 			saver = int_saver(cpu_Addr_Offset, saver);
 			saver = int_saver(cpu_Last_Bus_Value, saver);
-			saver = int_saver(cpu_Last_Bus_Value_Old, saver);
+			saver = int_saver(cpu_IWRAM_Last_Bus_Value, saver);
+			saver = int_saver(cpu_OAM_Last_Bus_Value, saver);
 
 			saver = int_saver(cpu_ALU_Temp_Val, saver);
 			saver = int_saver(cpu_ALU_Temp_S_Val, saver);
@@ -3601,7 +3622,8 @@ namespace GBAHawk
 			loader = int_loader(&cpu_Write_Back_Addr, loader);
 			loader = int_loader(&cpu_Addr_Offset, loader);
 			loader = int_loader(&cpu_Last_Bus_Value, loader);
-			loader = int_loader(&cpu_Last_Bus_Value_Old, loader);
+			loader = int_loader(&cpu_IWRAM_Last_Bus_Value, loader);
+			loader = int_loader(&cpu_OAM_Last_Bus_Value, loader);
 
 			loader = int_loader(&cpu_ALU_Temp_Val, loader);
 			loader = int_loader(&cpu_ALU_Temp_S_Val, loader);
@@ -4739,7 +4761,7 @@ namespace GBAHawk
 				case 0xDE: ret = (uint8_t)(dma_CTRL[3] & 0xFF); break;
 				case 0xDF: ret = (uint8_t)((dma_CTRL[3] & 0xFF00) >> 8); break;
 
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -4763,7 +4785,7 @@ namespace GBAHawk
 				case 0xDC: ret = 0; break;
 				case 0xDE: ret = dma_CTRL[3]; break;
 
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
+				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -4783,7 +4805,7 @@ namespace GBAHawk
 
 				case 0xDC: ret = (uint32_t)((dma_CTRL[3] << 16) | 0); break;
 
-				default: ret = cpu_Last_Bus_Value; break; // open bus
+				default: ret = cpu_Last_Bus_Value; Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -5258,7 +5280,7 @@ namespace GBAHawk
 				case 0x15A: ret = 0; break;
 				case 0x15B: ret = 0; break;
 
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -5294,7 +5316,7 @@ namespace GBAHawk
 				case 0x15A: ret = 0; break;
 
 
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
+				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -5320,7 +5342,7 @@ namespace GBAHawk
 				case 0x154: ret = ser_TRANS_J; break;
 				case 0x158: ret = (uint32_t)((0x00000000) | ser_STAT_J); break;
 
-				default: ret = cpu_Last_Bus_Value; break;
+				default: ret = cpu_Last_Bus_Value; Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -5997,7 +6019,7 @@ namespace GBAHawk
 				case 0x10E: ret = (uint8_t)(tim_Control[3] & 0xFF); break;
 				case 0x10F: ret = (uint8_t)((tim_Control[3] & 0xFF00) >> 8); break;
 
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -6021,7 +6043,7 @@ namespace GBAHawk
 				case 0x10C: ret = tim_Timer[3]; break;
 				case 0x10E: ret = tim_Control[3]; break;
 
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
+				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -6041,7 +6063,7 @@ namespace GBAHawk
 
 				case 0x10C: ret = (uint32_t)((tim_Control[3] << 16) | tim_Timer[3]); break;
 
-				default: ret = cpu_Last_Bus_Value; break;
+				default: ret = cpu_Last_Bus_Value; Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -6564,7 +6586,7 @@ namespace GBAHawk
 				case 0x52: ret = (uint8_t)(ppu_Alpha & 0xFF); break;
 				case 0x53: ret = (uint8_t)((ppu_Alpha & 0xFF00) >> 8); break;
 
-				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); break; // open bus;
+				default: ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); Update_Bus = false; break; // open bus;
 			}
 
 			return ret;
@@ -6592,7 +6614,7 @@ namespace GBAHawk
 				case 0x50: ret = ppu_Special_FX; break;
 				case 0x52: ret = ppu_Alpha; break;
 
-				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break; // open bus
+				default: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -6614,7 +6636,7 @@ namespace GBAHawk
 
 				case 0x50: ret = (uint32_t)((ppu_Alpha << 16) | ppu_Special_FX); break;
 
-				default: ret = cpu_Last_Bus_Value; break;
+				default: ret = cpu_Last_Bus_Value; Update_Bus = false; break; // open bus
 			}
 
 			return ret;
@@ -7983,7 +8005,7 @@ namespace GBAHawk
 			else
 			{
 				// FIFO not readable, other addresses are open bus
-				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus;
+				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); Update_Bus = false; // open bus;
 			}
 
 			return ret;
@@ -8006,7 +8028,7 @@ namespace GBAHawk
 			else
 			{
 				// FIFO not readable, other addresses are open bus
-				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); // open bus
+				ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); Update_Bus = false; // open bus
 			}
 
 			return ret;
@@ -8029,7 +8051,7 @@ namespace GBAHawk
 			else
 			{
 				// FIFO not readable, other addresses are open bus
-				ret = cpu_Last_Bus_Value; // open bus
+				ret = cpu_Last_Bus_Value; Update_Bus = false; // open bus
 			}
 
 			return ret;
@@ -9186,6 +9208,7 @@ namespace GBAHawk
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(Is_Lag, saver);
+			saver = bool_saver(Update_Bus, saver);
 			saver = bool_saver(VBlank_Rise, saver);
 			saver = bool_saver(All_RAM_Disable, saver);
 			saver = bool_saver(WRAM_Enable, saver);
@@ -9294,6 +9317,7 @@ namespace GBAHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&Is_Lag, loader);
+			loader = bool_loader(&Update_Bus, loader);
 			loader = bool_loader(&VBlank_Rise, loader);
 			loader = bool_loader(&All_RAM_Disable, loader);
 			loader = bool_loader(&WRAM_Enable, loader);

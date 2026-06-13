@@ -22,7 +22,9 @@ namespace GBAHawk
 
 		cpu_Temp_Reg = cpu_Temp_Addr = cpu_Temp_Data = cpu_Temp_Mode = cpu_Bit_To_Check = 0;
 
-		cpu_Write_Back_Addr = cpu_Addr_Offset = cpu_Last_Bus_Value = cpu_Last_Bus_Value_Old = 0;
+		cpu_Write_Back_Addr = cpu_Addr_Offset = cpu_Last_Bus_Value = 0;
+		
+		cpu_IWRAM_Last_Bus_Value = cpu_OAM_Last_Bus_Value = 0;
 
 		cpu_ALU_Temp_Val = cpu_ALU_Temp_S_Val = cpu_ALU_Shift_Carry = 0;
 

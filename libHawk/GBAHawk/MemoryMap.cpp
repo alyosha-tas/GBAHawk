@@ -39,39 +39,35 @@ namespace GBAHawk
 	{
 		uint8_t ret = 0;
 
+		Update_Bus = true;
+
 		if (addr >= 0x08000000)
 		{
 			if (addr < 0x0D000000)
 			{
-				addr -= 0x08000000;
-
-				ret = ROM[addr];
+				ret = ROM[(addr - 0x08000000)];
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					addr -= 0x08000000;
-
-					ret = ROM[addr];
+					ret = ROM[(addr - 0x08000000)];
 				}
 				else
 				{
 					if (EEPROM_Wiring)
 					{
-						ret = (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
+						ret = (uint8_t)((cpu_Last_Bus_Value & 0xFE) | mapper_pntr->Mapper_EEPROM_Read());
 					}
 					else
 					{
 						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
-							ret = (uint8_t)mapper_pntr->Mapper_EEPROM_Read();
+							ret = (uint8_t)((cpu_Last_Bus_Value & 0xFE) | mapper_pntr->Mapper_EEPROM_Read());
 						}
 						else
 						{
-							addr -= 0x08000000;
-
-							ret = ROM[addr];
+							ret = ROM[(addr - 0x08000000)];
 						}
 					}
 				}
@@ -83,6 +79,7 @@ namespace GBAHawk
 			else
 			{
 				ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (uint32_t)(addr & 3))) & 0xFF); // open bus
+				Update_Bus = false;
 			}
 
 			// ROM access complete, re-enable prefetcher
@@ -148,6 +145,7 @@ namespace GBAHawk
 				else
 				{
 					ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+					Update_Bus = false;
 				}
 			}
 		}
@@ -162,7 +160,7 @@ namespace GBAHawk
 		else if (addr < 0x4000)
 		{
 			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
+			if (cpu_Regs[15] >= 0x4000)
 			{
 				ret = (uint8_t)((Last_BIOS_Read >> (8 * (int)(addr & 3))) & 0xFF);
 			}
@@ -173,11 +171,11 @@ namespace GBAHawk
 		}
 		else
 		{
-			ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus	
+			ret = (uint8_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 3))) & 0xFF); // open bus
+			Update_Bus = false;
 		}
 
-		cpu_Last_Bus_Value &= (uint32_t)~(0xFF << (((int)addr & 3) * 8));
-		cpu_Last_Bus_Value |= (uint32_t)ret << (((int)addr & 3) * 8);
+		Update_Bus_Read_8(addr, ret);
 
 		return ret;
 	}
@@ -186,27 +184,21 @@ namespace GBAHawk
 	{
 		uint16_t ret = 0;
 
+		Update_Bus = true;
+
 		if (addr >= 0x08000000)
 		{
 			if (addr < 0x0D000000)
 			{
-				addr -= 0x08000000;
 				// Forced Align
-				ret = ROM_16[addr >> 1];
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
+				ret = ROM_16[(addr - 0x08000000) >> 1];
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					addr -= 0x08000000;
 					// Forced Align
-					addr &= 0xFFFFFFFE;
-
-					ret = ROM_16[addr >> 1];
+					ret = ROM_16[(addr - 0x08000000) >> 1];
 				}
 				else
 				{
@@ -222,30 +214,20 @@ namespace GBAHawk
 						}
 						else
 						{
-							addr -= 0x08000000;
 							// Forced Align
-							addr &= 0xFFFFFFFE;
-
-							ret = ROM_16[addr >> 1];
+							ret = ROM_16[(addr - 0x08000000) >> 1];
 						}
 					}
 				}
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr < 0x10000000)
 			{
 				ret = mapper_pntr->Read_Memory_16(addr - 0x0E000000);
-
-				// in ROM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
 			}
 			else
 			{
 				ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
+				Update_Bus = false;
 			}
 
 			// ROM access complete, re-enable prefetcher
@@ -257,18 +239,6 @@ namespace GBAHawk
 			if (addr >= 0x07000000)
 			{
 				ret = OAM_16[(addr & 0x3FE) >> 1];
-
-				// in OAM area, upper bits in bus depend on alignment
-				if ((addr & 2) == 0)
-				{
-					cpu_Last_Bus_Value = (uint32_t)(OAM_16[((addr & 0x3FE) >> 1) + 1] << 16);
-					cpu_Last_Bus_Value |= ret;
-				}
-				else
-				{
-					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-					cpu_Last_Bus_Value |= OAM_16[((addr & 0x3FE) >> 1) - 1];
-				}
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -298,20 +268,12 @@ namespace GBAHawk
 
 				ppu_VRAM_High_In_Use = false;
 				ppu_VRAM_In_Use = false;
-
-				// in VRAM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
 			}
 			else if (addr >= 0x05000000)
 			{
 				ret = PALRAM_16[(addr & 0x3FE) >> 1];
 
 				ppu_PALRAM_In_Use = false;
-
-				// in PALRAM area, upper bits in bus are set same as return value
-				cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-				cpu_Last_Bus_Value |= ret;
 			}
 			else
 			{
@@ -336,6 +298,7 @@ namespace GBAHawk
 				else
 				{
 					ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
+					Update_Bus = false;
 				}
 			}
 		}
@@ -343,32 +306,16 @@ namespace GBAHawk
 		{
 			// Forced Align
 			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
-
-			// in IWRAM area, upper bits in bus depend on alignment
-			if ((addr & 2) == 0)
-			{
-				cpu_Last_Bus_Value &= 0xFFFF0000;
-				cpu_Last_Bus_Value |= ret;
-			}
-			else
-			{
-				cpu_Last_Bus_Value &= 0xFFFF;
-				cpu_Last_Bus_Value |= (uint32_t)(ret << 16);
-			}
 		}
 		else if (addr >= 0x02000000)
 		{
 			// Forced Align
 			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
-
-			// in WRAM area, upper bits in bus are set same as return value
-			cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-			cpu_Last_Bus_Value |= ret;
 		}
 		else if (addr < 0x4000)
 		{
 			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
+			if (cpu_Regs[15] >= 0x4000)
 			{
 				if ((addr & 2) == 0)
 				{
@@ -383,26 +330,15 @@ namespace GBAHawk
 			{
 				// Forced Align
 				ret = BIOS_16[addr >> 1];
-
-				// in BIOS area, upper bits in bus depend on alignment
-				if ((addr & 2) == 0)
-				{
-					cpu_Last_Bus_Value = (uint32_t)(BIOS_16[(addr >> 1) + 1] << 16);
-					cpu_Last_Bus_Value |= ret;
-				}
-				else
-				{
-					cpu_Last_Bus_Value = (uint32_t)(ret << 16);
-					cpu_Last_Bus_Value |= BIOS_16[(addr >> 1) - 1];
-				}
-
-				Last_BIOS_Read = cpu_Last_Bus_Value;
 			}
 		}
 		else
 		{
 			ret = (uint16_t)((cpu_Last_Bus_Value >> (8 * (int)(addr & 2))) & 0xFFFF); // open bus
+			Update_Bus = false;
 		}
+
+		Update_Bus_Read_16(addr, ret);
 
 		return ret;
 	}
@@ -411,23 +347,21 @@ namespace GBAHawk
 	{
 		uint32_t ret = 0;
 
+		Update_Bus = true;
+
 		if (addr >= 0x08000000)
-		{
+		{		
 			if (addr < 0x0D000000)
 			{
-				addr -= 0x08000000;
 				// Forced Align
-				ret = ROM_32[addr >> 2];
+				ret = ROM_32[(addr - 0x08000000) >> 2];
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					addr -= 0x08000000;
 					// Forced Align
-					addr &= 0xFFFFFFFC;
-
-					ret = ROM_32[addr >> 2];
+					ret = ROM_32[(addr - 0x08000000) >> 2];
 				}
 				else
 				{
@@ -443,11 +377,8 @@ namespace GBAHawk
 						}
 						else
 						{
-							addr -= 0x08000000;
 							// Forced Align
-							addr &= 0xFFFFFFFC;
-
-							ret = ROM_32[addr >> 2];
+							ret = ROM_32[(addr - 0x08000000) >> 2];
 						}
 					}
 				}
@@ -458,7 +389,8 @@ namespace GBAHawk
 			}
 			else
 			{
-				ret = cpu_Last_Bus_Value; // open bus			
+				ret = cpu_Last_Bus_Value; // open bus	
+				Update_Bus = false;
 			}
 
 			// ROM access complete, re-enable prefetcher
@@ -525,6 +457,7 @@ namespace GBAHawk
 				else
 				{
 					ret = cpu_Last_Bus_Value; // open bus
+					Update_Bus = false;
 				}
 			}
 		}
@@ -541,33 +474,29 @@ namespace GBAHawk
 		else if (addr < 0x4000)
 		{
 			// BIOS is protected against reading from memory beyond the BIOS range
-			if (cpu_Regs[15] > 0x4000)
+			if (cpu_Regs[15] >= 0x4000)
 			{
 				ret = Last_BIOS_Read;
 			}
 			else
 			{
 				// Forced Align
-				Last_BIOS_Read = BIOS_32[addr >> 2];
-
-				ret = Last_BIOS_Read;
+				ret = BIOS_32[addr >> 2];
 			}
 		}
 		else
 		{
 			ret = cpu_Last_Bus_Value; // open bus
+			Update_Bus = false;
 		}
 
-		cpu_Last_Bus_Value = ret;
+		Update_Bus_Read_32(addr, ret);
 
 		return ret;
 	}
 
 	void GBA_System::Write_Memory_8(uint32_t addr, uint8_t value)
 	{
-		cpu_Last_Bus_Value &= 0xFFFFFF00;
-		cpu_Last_Bus_Value |= value;
-
 		if (addr < 0x03000000)
 		{
 			if (addr >= 0x02000000)
@@ -689,13 +618,12 @@ namespace GBAHawk
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
 		}
+
+		Update_Bus_Write_8(addr, value);
 	}
 
 	void GBA_System::Write_Memory_16(uint32_t addr, uint16_t value)
 	{
-		cpu_Last_Bus_Value &= 0xFFFF0000;
-		cpu_Last_Bus_Value |= value;
-
 		if (addr < 0x03000000)
 		{
 			if (addr >= 0x02000000)
@@ -799,12 +727,12 @@ namespace GBAHawk
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
 		}
+
+		Update_Bus_Write_16(addr, value);
 	}
 
 	void GBA_System::Write_Memory_32(uint32_t addr, uint32_t value)
 	{
-		cpu_Last_Bus_Value = value;
-
 		if (addr < 0x03000000)
 		{
 			if (addr >= 0x02000000)
@@ -812,14 +740,6 @@ namespace GBAHawk
 				// Forced Align
 				WRAM_32[(addr & 0x3FFFC) >> 2] = value;
 			}
-			/*
-			if (addr == 0x02009860)
-			{
-				Message_String = to_string(value) + " " + to_string(CycleCount);
-
-				MessageCallback(Message_String.length());
-			}
-			*/
 		}
 		else if (addr < 0x04000000)
 		{
@@ -914,6 +834,8 @@ namespace GBAHawk
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
 		}
+
+		Update_Bus_Write_32(addr, value);
 	}
 
 	uint8_t GBA_System::Peek_Memory_8(uint32_t addr)
@@ -1021,6 +943,8 @@ namespace GBAHawk
 	{
 		uint16_t ret = 0;
 
+		Update_Bus = true;
+
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
 
@@ -1031,16 +955,14 @@ namespace GBAHawk
 
 			if (addr < 0x0D000000)
 			{
-				addr -= 0x08000000;
-				ret = ROM_16[addr >> 1];
+				ret = ROM_16[(addr - 0x08000000) >> 1];
 				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					addr -= 0x08000000;
-					ret = ROM_16[addr >> 1];
+					ret = ROM_16[(addr - 0x08000000) >> 1];
 				}
 				else
 				{
@@ -1056,8 +978,7 @@ namespace GBAHawk
 						}
 						else
 						{
-							addr -= 0x08000000;
-							ret = ROM_16[addr >> 1];
+							ret = ROM_16[(addr - 0x08000000) >> 1];
 						}
 					}
 				}
@@ -1153,6 +1074,8 @@ namespace GBAHawk
 
 	void GBA_System::Read_Memory_32_DMA(uint32_t addr, uint32_t chan)
 	{
+		Update_Bus = true;
+		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
 
@@ -1163,15 +1086,13 @@ namespace GBAHawk
 
 			if (addr < 0x0D000000)
 			{
-				addr -= 0x08000000;
-				dma_Last_Bus_Value[chan] = ROM_32[addr >> 2];
+				dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					addr -= 0x08000000;
-					dma_Last_Bus_Value[chan] = ROM_32[addr >> 2];
+					dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
 				}
 				else
 				{
@@ -1187,8 +1108,7 @@ namespace GBAHawk
 						}
 						else
 						{
-							addr -= 0x08000000;
-							dma_Last_Bus_Value[chan] = ROM_32[addr >> 2];
+							dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
 						}
 					}
 				}
@@ -1269,6 +1189,8 @@ namespace GBAHawk
 
 	void GBA_System::Write_Memory_16_DMA(uint32_t addr, uint16_t value, uint32_t chan)
 	{
+		Update_Bus = true;
+		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
 
@@ -1371,6 +1293,8 @@ namespace GBAHawk
 
 	void GBA_System::Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan)
 	{
+		Update_Bus = true;
+		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
 

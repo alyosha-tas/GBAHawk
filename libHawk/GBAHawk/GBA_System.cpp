@@ -2663,7 +2663,6 @@ namespace GBAHawk
 								cpu_ALU_Temp_Val = (uint32_t)((cpu_ALU_Temp_Val >> 8) | ((cpu_ALU_Temp_Val & 0xFF) << 24));
 							}
 
-							cpu_Last_Bus_Value = cpu_ALU_Temp_Val;
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
 					}
@@ -2778,7 +2777,6 @@ namespace GBAHawk
 
 								cpu_ALU_Temp_Val = (uint32_t)((cpu_ALU_Temp_Val >> 8) | ((cpu_ALU_Temp_Val & 0xFF) << 24));
 
-								cpu_Last_Bus_Value = cpu_ALU_Temp_Val;
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 							}
 						}
@@ -3219,7 +3217,6 @@ namespace GBAHawk
 									cpu_ALU_Temp_Val = (uint32_t)((cpu_ALU_Temp_Val >> 8) | ((cpu_ALU_Temp_Val & 0xFF) << 24));
 								}
 
-								cpu_Last_Bus_Value = cpu_ALU_Temp_Val;
 								cpu_Temp_Data = cpu_ALU_Temp_Val;
 							}
 						}
@@ -3499,7 +3496,6 @@ namespace GBAHawk
 								cpu_ALU_Temp_Val = (uint32_t)((cpu_ALU_Temp_Val >> 8) | ((cpu_ALU_Temp_Val & 0xFF) << 24));
 							}
 
-							cpu_Last_Bus_Value = cpu_ALU_Temp_Val;
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
 					}
@@ -3598,7 +3594,6 @@ namespace GBAHawk
 
 								cpu_ALU_Temp_Val = (uint32_t)((cpu_ALU_Temp_Val >> 8) | ((cpu_ALU_Temp_Val & 0xFF) << 24));
 
-								cpu_Last_Bus_Value = cpu_ALU_Temp_Val;
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 							}
 						}
