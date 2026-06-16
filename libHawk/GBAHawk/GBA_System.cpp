@@ -2758,7 +2758,9 @@ namespace GBAHawk
 						{
 							if (cpu_Sign_Extend_Load)
 							{
-								cpu_ALU_Temp_Val = Read_Memory_8(cpu_Temp_Addr);
+								cpu_ALU_Temp_Val = Read_Memory_16(cpu_Temp_Addr);
+
+								cpu_ALU_Temp_Val >>= 8;
 
 								if ((cpu_ALU_Temp_Val & 0x80) == 0x80)
 								{
@@ -3575,7 +3577,9 @@ namespace GBAHawk
 						{
 							if (cpu_Sign_Extend_Load)
 							{
-								cpu_ALU_Temp_Val = Read_Memory_8(cpu_Temp_Addr);
+								cpu_ALU_Temp_Val = Read_Memory_16(cpu_Temp_Addr);
+
+								cpu_ALU_Temp_Val >>= 8;
 
 								if ((cpu_ALU_Temp_Val & 0x80) == 0x80)
 								{
