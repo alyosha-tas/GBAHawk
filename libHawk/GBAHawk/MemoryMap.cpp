@@ -956,7 +956,6 @@ namespace GBAHawk
 			if (addr < 0x0D000000)
 			{
 				ret = ROM_16[(addr - 0x08000000) >> 1];
-				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 			}
 			else if (addr < 0x0E000000)
 			{
@@ -982,13 +981,15 @@ namespace GBAHawk
 						}
 					}
 				}
-
-				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 			}
 			else if (addr < 0x10000000)
 			{
 				ret = mapper_pntr->Read_Memory_16(addr - 0x0E000000);
-				dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
+			}
+			else
+			{
+				// DMA cannot update upper address range
+				Update_Bus = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1055,25 +1056,28 @@ namespace GBAHawk
 					}
 				}
 			}
-
-			dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 		}
 		else if (addr >= 0x03000000)
 		{
 			ret = IWRAM_16[(addr & 0x7FFE) >> 1];
-			dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
 		}
 		else if (addr >= 0x02000000)
 		{
 			ret = WRAM_16[(addr & 0x3FFFE) >> 1];
-			dma_Last_Bus_Value[chan] = (uint32_t)((ret << 16) | ret);
+		}
+		else
+		{
+			// DMA cannot access BIOS, or other invalid addresses in this range, so nothing here	
+			Update_Bus = false;
 		}
 
-		// DMA cannot access BIOS, nothing here	
+		Update_Bus_Read_16_DMA(addr, ret, chan);
 	}
 
 	void GBA_System::Read_Memory_32_DMA(uint32_t addr, uint32_t chan)
 	{
+		uint32_t ret = 0;
+		
 		Update_Bus = true;
 		
 		// DMA always force aligned
@@ -1086,43 +1090,47 @@ namespace GBAHawk
 
 			if (addr < 0x0D000000)
 			{
-				dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
+				ret = ROM_32[(addr - 0x08000000) >> 2];
 			}
 			else if (addr < 0x0E000000)
 			{
 				if (!Is_EEPROM)
 				{
-					dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
+					ret = ROM_32[(addr - 0x08000000) >> 2];
 				}
 				else
 				{
 					if (EEPROM_Wiring)
 					{
-						dma_Last_Bus_Value[chan] = (uint32_t)((dma_Last_Bus_Value[chan] & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
+						ret = (uint32_t)((dma_Last_Bus_Value[chan] & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
 					}
 					else
 					{
 						if ((addr & 0xDFFFE00) == 0xDFFFE00)
 						{
-							dma_Last_Bus_Value[chan] = (uint32_t)((dma_Last_Bus_Value[chan] & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
+							ret = (uint32_t)((dma_Last_Bus_Value[chan] & 0xFFFFFFFE) | mapper_pntr->Mapper_EEPROM_Read());
 						}
 						else
 						{
-							dma_Last_Bus_Value[chan] = ROM_32[(addr - 0x08000000) >> 2];
+							ret = ROM_32[(addr - 0x08000000) >> 2];
 						}
 					}
 				}
 			}
 			else if (addr < 0x10000000)
 			{
-				dma_Last_Bus_Value[chan] = mapper_pntr->Read_Memory_32(addr - 0x0E000000);
+				ret = mapper_pntr->Read_Memory_32(addr - 0x0E000000);
+			}
+			else
+			{
+				Update_Bus = false;
 			}
 		}
 		else if (addr >= 0x04000000)
 		{
 			if (addr >= 0x07000000)
 			{
-				dma_Last_Bus_Value[chan] = OAM_32[(addr & 0x3FC) >> 2];
+				ret = OAM_32[(addr & 0x3FC) >> 2];
 			}
 			else if (addr >= 0x06000000)
 			{
@@ -1133,21 +1141,21 @@ namespace GBAHawk
 					{
 						if ((ppu_BG_Mode < 3) || ((addr & 0x00004000) == 0x00004000))
 						{
-							dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0x17FFC) >> 2];
+							ret = VRAM_32[(addr & 0x17FFC) >> 2];
 						}
 						else
 						{
-							dma_Last_Bus_Value[chan] = 0;
+							ret = 0;
 						}
 					}
 					else
 					{
-						dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0x17FFC) >> 2];
+						ret = VRAM_32[(addr & 0x17FFC) >> 2];
 					}
 				}
 				else
 				{
-					dma_Last_Bus_Value[chan] = VRAM_32[(addr & 0xFFFC) >> 2];
+					ret = VRAM_32[(addr & 0xFFFC) >> 2];
 				}
 
 				ppu_VRAM_High_In_Use = false;
@@ -1155,7 +1163,7 @@ namespace GBAHawk
 			}
 			else if (addr >= 0x05000000)
 			{
-				dma_Last_Bus_Value[chan] = PALRAM_32[(addr & 0x3FC) >> 2];
+				ret = PALRAM_32[(addr & 0x3FC) >> 2];
 
 				ppu_PALRAM_In_Use = false;
 			}
@@ -1163,34 +1171,37 @@ namespace GBAHawk
 			{
 				if (addr < 0x04000800)
 				{
-					dma_Last_Bus_Value[chan] = Read_Registers_32(addr - 0x04000000);
+					ret = Read_Registers_32(addr - 0x04000000);
 				}
 				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
-					dma_Last_Bus_Value[chan] = Memory_CTRL;
+					ret = Memory_CTRL;
 				}
 				else
 				{
-					dma_Last_Bus_Value[chan] = cpu_Last_Bus_Value;
+					ret = cpu_Last_Bus_Value;
 				}
 			}
 		}
 		else if (addr >= 0x03000000)
 		{
-			dma_Last_Bus_Value[chan] = IWRAM_32[(addr & 0x7FFC) >> 2];
+			ret = IWRAM_32[(addr & 0x7FFC) >> 2];
 		}
 		else if (addr >= 0x02000000)
 		{
-			dma_Last_Bus_Value[chan] = WRAM_32[(addr & 0x3FFFC) >> 2];
+			ret = WRAM_32[(addr & 0x3FFFC) >> 2];
+		}
+		else
+		{
+			// DMA cannot access the BIOS, so nothing here	
+			Update_Bus = false;
 		}
 
-		// DMA cannot access the BIOS, so nothing here	
+		Update_Bus_Read_32_DMA(addr, ret, chan);
 	}
 
 	void GBA_System::Write_Memory_16_DMA(uint32_t addr, uint16_t value, uint32_t chan)
 	{
-		Update_Bus = true;
-		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
 
@@ -1289,12 +1300,12 @@ namespace GBAHawk
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
 		}
+
+		Update_Bus_Write_16_DMA(addr, value, chan);
 	}
 
 	void GBA_System::Write_Memory_32_DMA(uint32_t addr, uint32_t value, uint32_t chan)
 	{
-		Update_Bus = true;
-		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
 
@@ -1391,6 +1402,8 @@ namespace GBAHawk
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
 		}
+
+		Update_Bus_Write_32_DMA(addr, value, chan);
 	}
 	#pragma endregion
 }

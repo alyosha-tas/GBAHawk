@@ -1995,8 +1995,6 @@ namespace GBAHawk
 							}
 							// The transfer value is now whatever the bus value is.
 							dma_TFR_Word = dma_Last_Bus_Value[dma_Chan_Exec];
-							// also update the cpu open bus state
-							cpu_Last_Bus_Value = dma_TFR_Word;
 						}
 						else
 						{
@@ -2023,8 +2021,6 @@ namespace GBAHawk
 								// does it also update the bus?
 								dma_TFR_HWord = (uint16_t)((dma_Last_Bus_Value[dma_Chan_Exec] >> 16) & 0xFFFF);
 							}
-							// also update the cpu open bus state
-							cpu_Last_Bus_Value = dma_TFR_HWord;
 						}
 
 						dma_SRC_intl[dma_Chan_Exec] += dma_SRC_INC[dma_Chan_Exec];
