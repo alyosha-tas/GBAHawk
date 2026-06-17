@@ -942,6 +942,8 @@ namespace GBAHawk
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
 
+		Update_Bus = true;
+
 		if (addr >= 0x08000000)
 		{
 			// ROM access complete, re-enable prefetcher
@@ -983,6 +985,8 @@ namespace GBAHawk
 			else
 			{
 				ret = (uint16_t)((dma_Last_Bus_Value[chan] >> ((addr & 2) * 8)) & 0xFFFF);
+
+				Update_Bus = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1040,6 +1044,9 @@ namespace GBAHawk
 				{
 					ret = (uint16_t)((cpu_Last_Bus_Value >> ((addr & 2) * 8)) & 0xFFFF);
 				}
+
+				// all of these cases update the DMA bus, this overrides the setting from Read_Registers
+				Update_Bus = true;
 			}
 		}
 		else if (addr >= 0x03000000)
@@ -1054,10 +1061,9 @@ namespace GBAHawk
 		{
 			// DMA cannot access BIOS, or other invalid addresses in this range, so nothing here	
 			ret = (uint16_t)((dma_Last_Bus_Value[chan] >> ((addr & 2) * 8)) & 0xFFFF);
-		}
 
-		// DMA always updates the bus
-		Update_Bus = true;
+			Update_Bus = false;
+		}
 
 		Update_Bus_Read_16_DMA(addr, ret, chan);
 	}
@@ -1068,6 +1074,8 @@ namespace GBAHawk
 		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
+
+		Update_Bus = true;
 
 		if (addr >= 0x08000000)
 		{
@@ -1110,6 +1118,8 @@ namespace GBAHawk
 			else
 			{
 				ret = dma_Last_Bus_Value[chan];
+
+				Update_Bus = false;
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1167,6 +1177,8 @@ namespace GBAHawk
 				{
 					ret = cpu_Last_Bus_Value;
 				}
+
+				Update_Bus = true;
 			}
 		}
 		else if (addr >= 0x03000000)
@@ -1181,10 +1193,9 @@ namespace GBAHawk
 		{
 			// DMA cannot access the BIOS, so nothing here	
 			ret = dma_Last_Bus_Value[chan];
-		}
 
-		// DMA always updates the bus
-		Update_Bus = true;
+			Update_Bus = false;
+		}
 
 		Update_Bus_Read_32_DMA(addr, ret, chan);
 	}

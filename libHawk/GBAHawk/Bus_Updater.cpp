@@ -209,23 +209,23 @@ namespace GBAHawk
 			{
 				cpu_IWRAM_Last_Bus_Value &= (uint32_t)~(0xFFFF << (((int)addr & 2) * 8));
 				cpu_IWRAM_Last_Bus_Value |= (uint32_t)value << (((int)addr & 2) * 8);
-
-				dma_Last_Bus_Value[chan] = cpu_IWRAM_Last_Bus_Value;
 			}
 			else if ((addr & 0xFF000000) == 0x07000000)
 			{
 				// Update OAM bus (entire word goes on the bus)
 				cpu_OAM_Last_Bus_Value = OAM_32[(addr & 0x3FC) >> 2];
+			}
 
-				dma_Last_Bus_Value[chan] = cpu_OAM_Last_Bus_Value;
-			}
-			else
-			{
-				dma_Last_Bus_Value[chan] = (uint32_t)value | (value << 16);
-			}
+			// DMA bus always gets updated in this way
+			dma_Last_Bus_Value[chan] = (uint32_t)value | (value << 16);
 
 			// also update cpu bus
 			cpu_Last_Bus_Value = dma_Last_Bus_Value[chan];
+		}
+		else
+		{
+			// always update cpu bus
+			cpu_Last_Bus_Value = (uint32_t)value | (value << 16);
 		}
 	}
 
@@ -237,21 +237,22 @@ namespace GBAHawk
 			if ((addr & 0xFF000000) == 0x03000000)
 			{
 				cpu_IWRAM_Last_Bus_Value = value;
-				dma_Last_Bus_Value[chan] = cpu_IWRAM_Last_Bus_Value;
 			}
 			else if ((addr & 0xFF000000) == 0x07000000)
 			{
 				// Update OAM bus (entire word goes on the bus)
-				cpu_OAM_Last_Bus_Value = OAM_32[(addr & 0x3FC) >> 2];
-				dma_Last_Bus_Value[chan] = cpu_OAM_Last_Bus_Value;
+				cpu_OAM_Last_Bus_Value = value;
 			}
-			else
-			{
-				dma_Last_Bus_Value[chan] = value;
-			}
+
+			dma_Last_Bus_Value[chan] = value;
 
 			// also update cpu bus
 			cpu_Last_Bus_Value = dma_Last_Bus_Value[chan];
+		}
+		else
+		{
+			// always update cpu bus
+			cpu_Last_Bus_Value = value;
 		}
 	}
 
