@@ -136,10 +136,10 @@ namespace GBAHawk
 				{
 					switch (addr & 3)
 					{
-					case 0: ret = (uint8_t)(Memory_CTRL & 0xFF); break;
-					case 1: ret = (uint8_t)((Memory_CTRL >> 8) & 0xFF); break;
-					case 2: ret = (uint8_t)((Memory_CTRL >> 16) & 0xFF); break;
-					default: ret = (uint8_t)((Memory_CTRL >> 24) & 0xFF); break;
+						case 0: ret = (uint8_t)(Memory_CTRL & 0xFF); break;
+						case 1: ret = (uint8_t)((Memory_CTRL >> 8) & 0xFF); break;
+						case 2: ret = (uint8_t)((Memory_CTRL >> 16) & 0xFF); break;
+						default: ret = (uint8_t)((Memory_CTRL >> 24) & 0xFF); break;
 					}
 				}
 				else
@@ -289,11 +289,7 @@ namespace GBAHawk
 					// Forced Align
 					addr &= 0xFFFFFFFE;
 
-					switch (addr & 3)
-					{
-					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
-					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
-					}
+					ret = (uint16_t)((Memory_CTRL >> ((addr & 2) * 8)) & 0xFFFF);
 				}
 				else
 				{
@@ -518,10 +514,10 @@ namespace GBAHawk
 			{
 				switch (addr & 3)
 				{
-				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFFFF00) | value)); break;
-				case 0x01: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
-				case 0x02: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
-				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
+					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFFFF00) | value)); break;
+					case 0x01: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF00FF) | (value << 8))); break;
+					case 0x02: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFF00FFFF) | (value << 16))); break;
+					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x00FFFFFF) | (value << 24))); break;
 				}
 			}
 		}
@@ -648,10 +644,10 @@ namespace GBAHawk
 			}
 			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
-				switch (addr & 3)
+				switch (addr & 2)
 				{
-				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
-				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
+					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
+					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 				}
 			}
 		}
@@ -910,10 +906,10 @@ namespace GBAHawk
 			{
 				switch (addr & 3)
 				{
-				case 0: return (uint8_t)(Memory_CTRL & 0xFF);
-				case 1: return (uint8_t)((Memory_CTRL >> 8) & 0xFF);
-				case 2: return (uint8_t)((Memory_CTRL >> 16) & 0xFF);
-				default: return (uint8_t)((Memory_CTRL >> 24) & 0xFF);
+					case 0: return (uint8_t)(Memory_CTRL & 0xFF);
+					case 1: return (uint8_t)((Memory_CTRL >> 8) & 0xFF);
+					case 2: return (uint8_t)((Memory_CTRL >> 16) & 0xFF);
+					default: return (uint8_t)((Memory_CTRL >> 24) & 0xFF);
 				}
 			}
 
@@ -942,8 +938,6 @@ namespace GBAHawk
 	void GBA_System::Read_Memory_16_DMA(uint32_t addr, uint32_t chan)
 	{
 		uint16_t ret = 0;
-
-		Update_Bus = true;
 
 		// DMA always force aligned
 		addr &= 0xFFFFFFFE;
@@ -988,8 +982,7 @@ namespace GBAHawk
 			}
 			else
 			{
-				// DMA cannot update upper address range
-				Update_Bus = false;
+				ret = (uint16_t)((dma_Last_Bus_Value[chan] >> ((addr & 2) * 8)) & 0xFFFF);
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1041,19 +1034,11 @@ namespace GBAHawk
 				}
 				else if ((addr & 0x0400FFFC) == 0x04000800)
 				{
-					switch (addr & 3)
-					{
-					case 0: ret = (uint16_t)(Memory_CTRL & 0xFFFF); break;
-					default: ret = (uint16_t)((Memory_CTRL >> 16) & 0xFFFF); break;
-					}
+					ret = (uint16_t)((Memory_CTRL >> ((addr & 2) * 8)) & 0xFFFF);
 				}
 				else
 				{
-					switch (addr & 3)
-					{
-					case 0: ret = (uint16_t)(cpu_Last_Bus_Value & 0xFFFF); break;
-					default: ret = (uint16_t)((cpu_Last_Bus_Value >> 16) & 0xFFFF); break;
-					}
+					ret = (uint16_t)((cpu_Last_Bus_Value >> ((addr & 2) * 8)) & 0xFFFF);
 				}
 			}
 		}
@@ -1068,8 +1053,11 @@ namespace GBAHawk
 		else
 		{
 			// DMA cannot access BIOS, or other invalid addresses in this range, so nothing here	
-			Update_Bus = false;
+			ret = (uint16_t)((dma_Last_Bus_Value[chan] >> ((addr & 2) * 8)) & 0xFFFF);
 		}
+
+		// DMA always updates the bus
+		Update_Bus = true;
 
 		Update_Bus_Read_16_DMA(addr, ret, chan);
 	}
@@ -1077,8 +1065,6 @@ namespace GBAHawk
 	void GBA_System::Read_Memory_32_DMA(uint32_t addr, uint32_t chan)
 	{
 		uint32_t ret = 0;
-		
-		Update_Bus = true;
 		
 		// DMA always force aligned
 		addr &= 0xFFFFFFFC;
@@ -1123,7 +1109,7 @@ namespace GBAHawk
 			}
 			else
 			{
-				Update_Bus = false;
+				ret = dma_Last_Bus_Value[chan];
 			}
 		}
 		else if (addr >= 0x04000000)
@@ -1194,8 +1180,11 @@ namespace GBAHawk
 		else
 		{
 			// DMA cannot access the BIOS, so nothing here	
-			Update_Bus = false;
+			ret = dma_Last_Bus_Value[chan];
 		}
+
+		// DMA always updates the bus
+		Update_Bus = true;
 
 		Update_Bus_Read_32_DMA(addr, ret, chan);
 	}
@@ -1224,10 +1213,10 @@ namespace GBAHawk
 			}
 			else if ((addr & 0x0400FFFC) == 0x04000800)
 			{
-				switch (addr & 3)
+				switch (addr & 2)
 				{
-				case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
-				default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
+					case 0x00: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0xFFFF0000) | value)); break;
+					default: Update_Memory_CTRL((uint32_t)((Memory_CTRL & 0x0000FFFF) | (value << 16))); break;
 				}
 			}
 		}
