@@ -2244,10 +2244,10 @@ namespace GBAHawk
 			cpu_Next_IRQ_Input = cpu_Next_IRQ_Input_2;
 		}
 
+		cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
+
 		cpu_Trigger_Unhalt = cpu_Trigger_Unhalt_2;
 		cpu_Trigger_Unhalt_2 = cpu_Trigger_Unhalt_3;
-
-		cpu_Next_IRQ_Input_2 = cpu_Next_IRQ_Input_3;
 		cpu_Trigger_Unhalt_3 = cpu_Trigger_Unhalt_4;
 		
 		switch (cpu_Instr_Type)
@@ -2674,6 +2674,7 @@ namespace GBAHawk
 						{
 							// Invalidate instruction pipeline
 							// address uses pre-incremented value
+							cpu_Regs[15] += 4;
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 						}
