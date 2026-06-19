@@ -1305,6 +1305,8 @@ namespace GBAHawk
 
 					cpu_Temp_Reg_Ptr = (uint32_t)((cpu_Instr_ARM_2 >> 12) & 0xF);
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
 					{
 						// increment first
@@ -1316,19 +1318,22 @@ namespace GBAHawk
 						{
 							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] - cpu_Addr_Offset);
 						}
+
+						if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+						{
+							// write back, but don't write back a loaded register
+							cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
+							
+							cpu_Write_Back_Addr = cpu_Temp_Addr;
+						}
 					}
 					else
 					{
 						// increment last
 						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
-					}
 
-					cpu_Overwrite_Base_Reg = false;
-
-					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
+						// write back, but don't write back a loaded register
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
 
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
@@ -1339,22 +1344,9 @@ namespace GBAHawk
 							cpu_Write_Back_Addr = (uint32_t)(cpu_Temp_Addr - cpu_Addr_Offset);
 						}
 					}
-					else if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
-						cpu_Write_Back_Addr = cpu_Temp_Addr;
-					}
 
 					// use incremented address
 					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
-
-					// don't write back a loaded register
-					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
-					{
-						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
-					}
-
 					break;
 
 				case cpu_ARM_Reg_LS:
@@ -1409,6 +1401,8 @@ namespace GBAHawk
 						break;
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
 					{
 						// increment first
@@ -1420,19 +1414,22 @@ namespace GBAHawk
 						{
 							cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] - cpu_Temp_Data);
 						}
+
+						if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+						{
+							// write back, but don't write back a loaded register
+							cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
+
+							cpu_Write_Back_Addr = cpu_Temp_Addr;
+						}
 					}
 					else
 					{
 						// increment last
 						cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
-					}
 
-					cpu_Overwrite_Base_Reg = false;
-
-					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
+						// write back, but don't write back a loaded register
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
 
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
@@ -1443,21 +1440,9 @@ namespace GBAHawk
 							cpu_Write_Back_Addr = (uint32_t)(cpu_Temp_Addr - cpu_Temp_Data);
 						}
 					}
-					else if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
-						cpu_Write_Back_Addr = cpu_Temp_Addr;
-					}
 
 					// use incremented address
 					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
-
-					// don't write back a loaded register
-					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
-					{
-						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
-					}
 					break;
 
 				case cpu_ARM_Multi_1:
@@ -2073,6 +2058,8 @@ namespace GBAHawk
 
 					cpu_Temp_Reg_Ptr = ((cpu_Instr_ARM_2 >> 12) & 0xF);
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
 					{
 						// increment first
@@ -2084,19 +2071,22 @@ namespace GBAHawk
 						{
 							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) - cpu_Addr_Offset);
 						}
+
+						if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+						{
+							// write back, but don't write back a loaded register
+							cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
+
+							cpu_Write_Back_Addr = cpu_Temp_Addr;
+						}
 					}
 					else
 					{
 						// increment last
 						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
-					}
 
-					cpu_Overwrite_Base_Reg = false;
-
-					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
+						// write back, but don't write back a loaded register
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
 
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
@@ -2107,22 +2097,9 @@ namespace GBAHawk
 							cpu_Write_Back_Addr = (uint32_t)(cpu_Temp_Addr - cpu_Addr_Offset);
 						}
 					}
-					else if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
-						cpu_Write_Back_Addr = cpu_Temp_Addr;
-					}
 
 					// use incremented address
 					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
-
-					// don't write back a loaded register
-					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
-					{
-						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
-					}
-
 					break;
 
 				case cpu_ARM_Reg_LS_LDM:
@@ -2177,6 +2154,8 @@ namespace GBAHawk
 						break;
 					}
 
+					cpu_Overwrite_Base_Reg = false;
+
 					if ((cpu_Instr_ARM_2 & 0x1000000) == 0x1000000)
 					{
 						// increment first
@@ -2188,19 +2167,22 @@ namespace GBAHawk
 						{
 							cpu_Temp_Addr = (uint32_t)(cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg) - cpu_Temp_Data);
 						}
+
+						if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+						{
+							// write back, but don't write back a loaded register
+							cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
+
+							cpu_Write_Back_Addr = cpu_Temp_Addr;
+						}
 					}
 					else
 					{
 						// increment last
 						cpu_Temp_Addr = cpu_LDM_Glitch_Get_Reg(cpu_Base_Reg);
-					}
 
-					cpu_Overwrite_Base_Reg = false;
-
-					if ((cpu_Instr_ARM_2 & 0x1000000) == 0)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
+						// write back, but don't write back a loaded register
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (cpu_Base_Reg != cpu_Temp_Reg_Ptr);
 
 						if ((cpu_Instr_ARM_2 & 0x800000) == 0x800000)
 						{
@@ -2211,21 +2193,9 @@ namespace GBAHawk
 							cpu_Write_Back_Addr = (uint32_t)(cpu_Temp_Addr - cpu_Temp_Data);
 						}
 					}
-					else if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
-					{
-						// write back
-						cpu_Overwrite_Base_Reg = true;
-						cpu_Write_Back_Addr = cpu_Temp_Addr;
-					}
 
 					// use incremented address
 					//if (cpu_Base_Reg == 15) { cpu_Write_Back_Addr += 4; }
-
-					// don't write back a loaded register
-					if (cpu_Overwrite_Base_Reg && cpu_LS_Is_Load)
-					{
-						if (cpu_Base_Reg == cpu_Temp_Reg_Ptr) { cpu_Overwrite_Base_Reg = false; }
-					}
 					break;
 
 				case cpu_ARM_Multi_1_LDM:
