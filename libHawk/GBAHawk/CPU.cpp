@@ -154,25 +154,9 @@ namespace GBAHawk
 				// slightly different code path for R15 as destination, since it's closer to a branch
 				cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
 
-				switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-				{
-					case 0x0: cpu_Exec_ARM = cpu_ARM_AND; cpu_Clear_Pipeline = true; break;
-					case 0x1: cpu_Exec_ARM = cpu_ARM_EOR; cpu_Clear_Pipeline = true; break;
-					case 0x2: cpu_Exec_ARM = cpu_ARM_SUB; cpu_Clear_Pipeline = true; break;
-					case 0x3: cpu_Exec_ARM = cpu_ARM_RSB; cpu_Clear_Pipeline = true; break;
-					case 0x4: cpu_Exec_ARM = cpu_ARM_ADD; cpu_Clear_Pipeline = true; break;
-					case 0x5: cpu_Exec_ARM = cpu_ARM_ADC; cpu_Clear_Pipeline = true; break;
-					case 0x6: cpu_Exec_ARM = cpu_ARM_SBC; cpu_Clear_Pipeline = true; break;
-					case 0x7: cpu_Exec_ARM = cpu_ARM_RSC; cpu_Clear_Pipeline = true; break;
-					case 0x8: cpu_Exec_ARM = cpu_ARM_TST; cpu_Clear_Pipeline = false; break;
-					case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ; cpu_Clear_Pipeline = false; break;
-					case 0xA: cpu_Exec_ARM = cpu_ARM_CMP; cpu_Clear_Pipeline = false; break;
-					case 0xB: cpu_Exec_ARM = cpu_ARM_CMN; cpu_Clear_Pipeline = false; break;
-					case 0xC: cpu_Exec_ARM = cpu_ARM_ORR; cpu_Clear_Pipeline = true; break;
-					case 0xD: cpu_Exec_ARM = cpu_ARM_MOV; cpu_Clear_Pipeline = true; break;
-					case 0xE: cpu_Exec_ARM = cpu_ARM_BIC; cpu_Clear_Pipeline = true; break;
-					case 0xF: cpu_Exec_ARM = cpu_ARM_MVN; cpu_Clear_Pipeline = true; break;
-				}
+				cpu_Exec_ARM = (uint16_t)((cpu_Instr_ARM_2 >> 21) & 0xF);
+
+				cpu_Clear_Pipeline = (cpu_Exec_ARM < 8) || (cpu_Exec_ARM >= 12);
 
 				// even TST / TEQ / CMP / CMN take the branch path, but don't reset the pipeline
 				cpu_Instr_Type = cpu_Dest_Is_R15 ? cpu_Internal_And_Branch_2_ARM : cpu_Internal_And_Prefetch_ARM;
@@ -362,25 +346,9 @@ namespace GBAHawk
 			// slightly different code path for R15 as destination, since it's closer to a branch
 			cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
 
-			switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-			{
-				case 0x0: cpu_Exec_ARM = cpu_ARM_AND; cpu_Clear_Pipeline = true; break;
-				case 0x1: cpu_Exec_ARM = cpu_ARM_EOR; cpu_Clear_Pipeline = true; break;
-				case 0x2: cpu_Exec_ARM = cpu_ARM_SUB; cpu_Clear_Pipeline = true; break;
-				case 0x3: cpu_Exec_ARM = cpu_ARM_RSB; cpu_Clear_Pipeline = true; break;
-				case 0x4: cpu_Exec_ARM = cpu_ARM_ADD; cpu_Clear_Pipeline = true; break;
-				case 0x5: cpu_Exec_ARM = cpu_ARM_ADC; cpu_Clear_Pipeline = true; break;
-				case 0x6: cpu_Exec_ARM = cpu_ARM_SBC; cpu_Clear_Pipeline = true; break;
-				case 0x7: cpu_Exec_ARM = cpu_ARM_RSC; cpu_Clear_Pipeline = true; break;
-				case 0x8: cpu_Exec_ARM = cpu_ARM_TST; cpu_Clear_Pipeline = false; break;
-				case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ; cpu_Clear_Pipeline = false; break;
-				case 0xA: cpu_Exec_ARM = cpu_ARM_CMP; cpu_Clear_Pipeline = false; break;
-				case 0xB: cpu_Exec_ARM = cpu_ARM_CMN; cpu_Clear_Pipeline = false; break;
-				case 0xC: cpu_Exec_ARM = cpu_ARM_ORR; cpu_Clear_Pipeline = true; break;
-				case 0xD: cpu_Exec_ARM = cpu_ARM_MOV; cpu_Clear_Pipeline = true; break;
-				case 0xE: cpu_Exec_ARM = cpu_ARM_BIC; cpu_Clear_Pipeline = true; break;
-				case 0xF: cpu_Exec_ARM = cpu_ARM_MVN; cpu_Clear_Pipeline = true; break;
-			}
+			cpu_Exec_ARM = (uint16_t)((cpu_Instr_ARM_2 >> 21) & 0xF);
+
+			cpu_Clear_Pipeline = (cpu_Exec_ARM < 8) || (cpu_Exec_ARM >= 12);
 
 			// even TST / TEQ / CMP / CMN take the branch path, but don't reset the pipeline
 			cpu_Instr_Type = cpu_Dest_Is_R15 ? cpu_Internal_And_Branch_2_ARM : cpu_Internal_And_Prefetch_ARM;
@@ -802,10 +770,10 @@ namespace GBAHawk
 		int64_t sf2 = 0;
 
 		// Condition code check
-		if (cpu_ARM_Condition_Check())
-		{
-			cpu_ARM_Cond_Passed = true;
+		cpu_ARM_Cond_Passed = cpu_ARM_Condition_Check();
 
+		if (cpu_ARM_Cond_Passed)
+		{
 			// Do Tracer stuff here
 			switch (cpu_Exec_ARM)
 			{
@@ -2327,10 +2295,6 @@ namespace GBAHawk
 					break;
 			}
 		}
-		else
-		{
-			cpu_ARM_Cond_Passed = false;
-		}
 	}
 
 	void GBA_System::cpu_Execute_Internal_Only_TMB()
@@ -3148,25 +3112,11 @@ namespace GBAHawk
 					// slightly different code path for R15 as destination, since it's closer to a branch
 					cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
 
-					switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-					{
-						case 0x0: cpu_Exec_ARM = cpu_ARM_AND_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x1: cpu_Exec_ARM = cpu_ARM_EOR_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x2: cpu_Exec_ARM = cpu_ARM_SUB_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x3: cpu_Exec_ARM = cpu_ARM_RSB_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x4: cpu_Exec_ARM = cpu_ARM_ADD_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x5: cpu_Exec_ARM = cpu_ARM_ADC_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x6: cpu_Exec_ARM = cpu_ARM_SBC_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x7: cpu_Exec_ARM = cpu_ARM_RSC_LDM; cpu_Clear_Pipeline = true; break;
-						case 0x8: cpu_Exec_ARM = cpu_ARM_TST_LDM; cpu_Clear_Pipeline = false; break;
-						case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ_LDM; cpu_Clear_Pipeline = false; break;
-						case 0xA: cpu_Exec_ARM = cpu_ARM_CMP_LDM; cpu_Clear_Pipeline = false; break;
-						case 0xB: cpu_Exec_ARM = cpu_ARM_CMN_LDM; cpu_Clear_Pipeline = false; break;
-						case 0xC: cpu_Exec_ARM = cpu_ARM_ORR_LDM; cpu_Clear_Pipeline = true; break;
-						case 0xD: cpu_Exec_ARM = cpu_ARM_MOV_LDM; cpu_Clear_Pipeline = true; break;
-						case 0xE: cpu_Exec_ARM = cpu_ARM_BIC_LDM; cpu_Clear_Pipeline = true; break;
-						case 0xF: cpu_Exec_ARM = cpu_ARM_MVN_LDM; cpu_Clear_Pipeline = true; break;
-					}
+					cpu_Exec_ARM = (uint16_t)((cpu_Instr_ARM_2 >> 21) & 0xF);
+
+					cpu_Clear_Pipeline = (cpu_Exec_ARM < 8) || (cpu_Exec_ARM >= 12);
+
+					cpu_Exec_ARM += 50; // add 50 to use the LDM versions
 
 					// even TST / TEQ / CMP / CMN take the branch path, but don't reset the pipeline
 					cpu_Instr_Type = cpu_Dest_Is_R15 ? cpu_Internal_And_Branch_2_ARM : cpu_Internal_And_Prefetch_ARM;
@@ -3363,25 +3313,11 @@ namespace GBAHawk
 				// slightly different code path for R15 as destination, since it's closer to a branch
 				cpu_Dest_Is_R15 = (cpu_ALU_Reg_Dest == 15);
 
-				switch ((cpu_Instr_ARM_2 >> 21) & 0xF)
-				{
-					case 0x0: cpu_Exec_ARM = cpu_ARM_AND_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x1: cpu_Exec_ARM = cpu_ARM_EOR_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x2: cpu_Exec_ARM = cpu_ARM_SUB_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x3: cpu_Exec_ARM = cpu_ARM_RSB_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x4: cpu_Exec_ARM = cpu_ARM_ADD_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x5: cpu_Exec_ARM = cpu_ARM_ADC_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x6: cpu_Exec_ARM = cpu_ARM_SBC_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x7: cpu_Exec_ARM = cpu_ARM_RSC_LDM; cpu_Clear_Pipeline = true; break;
-					case 0x8: cpu_Exec_ARM = cpu_ARM_TST_LDM; cpu_Clear_Pipeline = false; break;
-					case 0x9: cpu_Exec_ARM = cpu_ARM_TEQ_LDM; cpu_Clear_Pipeline = false; break;
-					case 0xA: cpu_Exec_ARM = cpu_ARM_CMP_LDM; cpu_Clear_Pipeline = false; break;
-					case 0xB: cpu_Exec_ARM = cpu_ARM_CMN_LDM; cpu_Clear_Pipeline = false; break;
-					case 0xC: cpu_Exec_ARM = cpu_ARM_ORR_LDM; cpu_Clear_Pipeline = true; break;
-					case 0xD: cpu_Exec_ARM = cpu_ARM_MOV_LDM; cpu_Clear_Pipeline = true; break;
-					case 0xE: cpu_Exec_ARM = cpu_ARM_BIC_LDM; cpu_Clear_Pipeline = true; break;
-					case 0xF: cpu_Exec_ARM = cpu_ARM_MVN_LDM; cpu_Clear_Pipeline = true; break;
-				}
+				cpu_Exec_ARM = (uint16_t)((cpu_Instr_ARM_2 >> 21) & 0xF);
+
+				cpu_Clear_Pipeline = (cpu_Exec_ARM < 8) || (cpu_Exec_ARM >= 12);
+
+				cpu_Exec_ARM += 50; // add 50 to use the LDM versions
 
 				cpu_LDM_Glitch_Store = true;
 
