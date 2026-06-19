@@ -2661,25 +2661,14 @@ namespace GBAHawk
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
-					}
-					else
-					{
-						Write_Memory_32(cpu_Temp_Addr, cpu_Regs[cpu_Temp_Reg_Ptr]);
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
@@ -2687,21 +2676,22 @@ namespace GBAHawk
 							// address uses pre-incremented value
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_32(cpu_Temp_Addr, cpu_Regs[cpu_Temp_Reg_Ptr]);
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
 							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
@@ -2712,11 +2702,10 @@ namespace GBAHawk
 
 							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 							else { cpu_Decode_ARM(); }
-
-							cpu_Seq_Access = false;
 						}
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -2778,25 +2767,14 @@ namespace GBAHawk
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 							}
 						}
-					}
-					else
-					{
-						Write_Memory_16(cpu_Temp_Addr, (uint16_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFFFF));
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
@@ -2805,22 +2783,23 @@ namespace GBAHawk
 							cpu_Regs[15] += 4;
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_16(cpu_Temp_Addr, (uint16_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFFFF));
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
 							cpu_Regs[15] += 4;
 							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
@@ -2831,11 +2810,10 @@ namespace GBAHawk
 
 							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 							else { cpu_Decode_ARM(); }
-
-							cpu_Seq_Access = false;
 						}
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -2869,25 +2847,14 @@ namespace GBAHawk
 						}
 
 						cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
-					}
-					else
-					{
-						Write_Memory_8(cpu_Temp_Addr, (uint8_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFF));
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
@@ -2896,22 +2863,23 @@ namespace GBAHawk
 							cpu_Regs[15] += 4;
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_8(cpu_Temp_Addr, (uint8_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFF));
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						if (cpu_Overwrite_Base_Reg && (cpu_Base_Reg == 15))
 						{
 							cpu_Regs[15] += 4;
 							cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
@@ -2922,11 +2890,10 @@ namespace GBAHawk
 
 							if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 							else { cpu_Decode_ARM(); }
-
-							cpu_Seq_Access = false;
 						}
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -3496,35 +3463,27 @@ namespace GBAHawk
 
 							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 						}
-					}
-					else
-					{
-						Write_Memory_32(cpu_Temp_Addr, cpu_Regs[cpu_Temp_Reg_Ptr]);
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_32(cpu_Temp_Addr, cpu_Regs[cpu_Temp_Reg_Ptr]);
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						// when writing, there is no last internal cycle, proceed to the next instruction
 						// also check for interrupts
 						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -3532,10 +3491,9 @@ namespace GBAHawk
 
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_TMB(); }
-
-						cpu_Seq_Access = false;
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -3597,35 +3555,27 @@ namespace GBAHawk
 								cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
 							}
 						}
-					}
-					else
-					{
-						Write_Memory_16(cpu_Temp_Addr, (uint16_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFFFF));
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_16(cpu_Temp_Addr, (uint16_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFFFF));
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						// when writing, there is no last internal cycle, proceed to the next instruction
 						// also check for interrupts
 						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -3633,10 +3583,9 @@ namespace GBAHawk
 
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_TMB(); }
-
-						cpu_Seq_Access = false;
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -3670,35 +3619,27 @@ namespace GBAHawk
 						}
 
 						cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
-					}
-					else
-					{
-						Write_Memory_8(cpu_Temp_Addr, (uint8_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFF));
-					}
 
-					if (cpu_Overwrite_Base_Reg)
-					{
-						cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr;
-					}
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
 
-					if (cpu_LS_Is_Load)
-					{
 						if (cpu_Temp_Reg_Ptr == 15)
 						{
 							// Invalidate instruction pipeline
 							cpu_Invalidate_Pipeline = true;
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 						else
 						{
 							// if the next cycle is a memory access, one cycle can be saved
 							cpu_Instr_Type = cpu_Internal_Can_Save_TMB;
-							cpu_Seq_Access = false;
 						}
 					}
 					else
 					{
+						Write_Memory_8(cpu_Temp_Addr, (uint8_t)(cpu_Regs[cpu_Temp_Reg_Ptr] & 0xFF));
+
+						if (cpu_Overwrite_Base_Reg) { cpu_Regs[cpu_Base_Reg] = cpu_Write_Back_Addr; }
+
 						// when writing, there is no last internal cycle, proceed to the next instruction
 						// also check for interrupts
 						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
@@ -3706,10 +3647,9 @@ namespace GBAHawk
 
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_TMB(); }
-
-						cpu_Seq_Access = false;
 					}
 
+					cpu_Seq_Access = false; // sequential access always false after memory access
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 				}
@@ -3778,10 +3718,7 @@ namespace GBAHawk
 					// if done, the next cycle depends on whether or not Reg 15 was written to
 					if (cpu_Multi_List_Ptr == cpu_Multi_List_Size)
 					{
-						if (cpu_Multi_Swap)
-						{
-							cpu_Swap_Regs(cpu_Temp_Mode, false, false);
-						}
+						// NOTE: Reg swapping not possible as in ARM mode, so nothing here
 
 						if (cpu_LS_Is_Load)
 						{

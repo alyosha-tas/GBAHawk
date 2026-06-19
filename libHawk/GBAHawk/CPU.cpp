@@ -1446,7 +1446,13 @@ namespace GBAHawk
 
 					cpu_LS_First_Access = true;
 
-					cpu_Overwrite_Base_Reg = (cpu_Instr_ARM_2 & 0x200000) == 0x200000;
+					cpu_Overwrite_Base_Reg = false;
+					
+					if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+					{
+						// The documentation gives this case as unpredictable for now copy Thumb logic
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (((cpu_Instr_ARM_2 >> cpu_Base_Reg) & 1) == 0);
+					}
 
 					cpu_Multi_Before = (cpu_Instr_ARM_2 & 0x1000000) == 0x1000000;
 
@@ -1462,17 +1468,11 @@ namespace GBAHawk
 
 					for (int i = 0; i < 16; i++)
 					{
-						if (((cpu_Instr_ARM_2 >> i) & 1) == 1)
-						{
-							cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-							if ((i == 15) && cpu_LS_Is_Load) { Use_Reg_15 = true; }
-
-							cpu_Multi_List_Size += 1;
-
-							// The documentation gives this case as unpredictable for now copy Thumb logic
-							if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
-						}
+						cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+						cpu_Multi_List_Size += ((cpu_Instr_ARM_2 >> i) & 1);
 					}
+
+					if (((cpu_Instr_ARM_2 & 0x8000) != 0) && cpu_LS_Is_Load) { Use_Reg_15 = true; }
 
 					cpu_Special_Inc = false;
 
@@ -2199,7 +2199,13 @@ namespace GBAHawk
 
 					cpu_LS_First_Access = true;
 
-					cpu_Overwrite_Base_Reg = (cpu_Instr_ARM_2 & 0x200000) == 0x200000;
+					cpu_Overwrite_Base_Reg = false;
+
+					if ((cpu_Instr_ARM_2 & 0x200000) == 0x200000)
+					{
+						// The documentation gives this case as unpredictable for now copy Thumb logic
+						cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (((cpu_Instr_ARM_2 >> cpu_Base_Reg) & 1) == 0);
+					}
 
 					cpu_Multi_Before = (cpu_Instr_ARM_2 & 0x1000000) == 0x1000000;
 
@@ -2212,21 +2218,14 @@ namespace GBAHawk
 					// then swap back afterwards, but only if reg15 is not accessed in a load
 					cpu_Multi_S_Bit = (cpu_Instr_ARM_2 & 0x400000) == 0x400000;
 					cpu_Multi_Swap = false;
-					Use_Reg_15 = false;
 
 					for (int i = 0; i < 16; i++)
 					{
-						if (((cpu_Instr_ARM_2 >> i) & 1) == 1)
-						{
-							cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-							if ((i == 15) && cpu_LS_Is_Load) { Use_Reg_15 = true; }
-
-							cpu_Multi_List_Size += 1;
-
-							// The documentation gives this case as unpredictable for now copy Thumb logic
-							if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
-						}
+						cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+						cpu_Multi_List_Size += ((cpu_Instr_ARM_2 >> i) & 1);
 					}
+
+					if (((cpu_Instr_ARM_2 & 0x8000) != 0) && cpu_LS_Is_Load) { Use_Reg_15 = true; }
 
 					cpu_Special_Inc = false;
 
@@ -2872,13 +2871,8 @@ namespace GBAHawk
 
 				for (int i = 0; i < 8; i++)
 				{
-					if (((cpu_Instr_TMB_2 >> i) & 1) == 1)
-					{
-						cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-						cpu_Multi_List_Size += 1;
-
-						if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
-					}
+					cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+					cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
 				}
 
 				// additionally, may impact reg 14 (Link), or 15 (PC)
@@ -2924,8 +2918,8 @@ namespace GBAHawk
 
 				cpu_LS_First_Access = true;
 
-				// always overwrite base reg
-				cpu_Overwrite_Base_Reg = true;
+				// always overwrite base reg, unless reading and including base reg
+				cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (((cpu_Instr_TMB_2 >> cpu_Base_Reg) & 1) == 0);
 
 				// always increment after
 				cpu_Multi_Before = false;
@@ -2942,13 +2936,8 @@ namespace GBAHawk
 
 				for (int i = 0; i < 8; i++)
 				{
-					if (((cpu_Instr_TMB_2 >> i) & 1) == 1)
-					{
-						cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-						cpu_Multi_List_Size += 1;
-
-						if (cpu_LS_Is_Load && (i == cpu_Base_Reg)) { cpu_Overwrite_Base_Reg = false; }
-					}
+					cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+					cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
 				}
 
 				cpu_Special_Inc = false;
