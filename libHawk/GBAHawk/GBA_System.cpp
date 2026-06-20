@@ -2304,24 +2304,10 @@ namespace GBAHawk
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 					cpu_Regs[15] += 4;
 
-					if (cpu_ARM_Cond_Passed)
-					{
-						cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+					cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
 
-						// instructions with internal cycles revert to non-sequential accesses 
-						cpu_Seq_Access = false;
-					}
-					else
-					{
-						// do interrupt check and proceed to next instruction
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-
-						cpu_Seq_Access = true;
-					}
+					// instructions with internal cycles revert to non-sequential accesses 
+					cpu_Seq_Access = false;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;			
@@ -2438,46 +2424,31 @@ namespace GBAHawk
 
 					cpu_Execute_Internal_Only_ARM();
 
-					if (cpu_ARM_Cond_Passed)
+					// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
+					if (cpu_ALU_S_Bit)
 					{
-						// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
-						if (cpu_ALU_S_Bit)
+						if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
 						{
-							if (((cpu_Regs[16] & 0x1F) == 0x10) || ((cpu_Regs[16] & 0x1F) == 0x1F))
-							{
-								// nothing to swap
-							}
-							else
-							{
-								//upper bit of mode must always be set
-								cpu_Swap_Regs((cpu_Regs[17] & 0x1F) | 0x10, false, true);
-							}
-
-							if (cpu_FlagTget()) { cpu_Thumb_Mode = true; cpu_Clear_Pipeline = true; }
-							else { cpu_Thumb_Mode = false; }
-
-							cpu_ALU_S_Bit = false;
-						}
-
-						// Invalidate instruction pipeline if necessary
-						if (cpu_Clear_Pipeline)
-						{
-							if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
-							else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
-							cpu_Seq_Access = false;
+							// nothing to swap
 						}
 						else
 						{
-							cpu_Regs[15] += 4;
-
-							cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-							cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-							if (cpu_IRQ_Input_Use && !cpu_FlagI_Old) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-							else { cpu_Decode_ARM(); }
-
-							cpu_Seq_Access = true;
+							//upper bit of mode must always be set
+							cpu_Swap_Regs((cpu_Regs[17] & 0x1F) | 0x10, false, true);
 						}
+
+						if (cpu_FlagTget()) { cpu_Thumb_Mode = true; cpu_Clear_Pipeline = true; }
+						else { cpu_Thumb_Mode = false; }
+
+						cpu_ALU_S_Bit = false;
+					}
+
+					// Invalidate instruction pipeline if necessary
+					if (cpu_Clear_Pipeline)
+					{
+						if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
+						else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
+						cpu_Seq_Access = false;
 					}
 					else
 					{
@@ -2513,22 +2484,7 @@ namespace GBAHawk
 				{
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 
-					if (cpu_ARM_Cond_Passed)
-					{
-						cpu_Instr_Type = cpu_Internal_And_Branch_4_ARM;
-					}
-					else
-					{
-						cpu_Regs[15] += 4;
-
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-
-						cpu_Seq_Access = true;
-					}
+					cpu_Instr_Type = cpu_Internal_And_Branch_4_ARM;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
@@ -2608,20 +2564,8 @@ namespace GBAHawk
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 					cpu_Regs[15] += 4;
 
-					if (cpu_ARM_Cond_Passed)
-					{
-						cpu_Instr_Type = cpu_Next_Load_Store_Type;
-						cpu_Seq_Access = false;
-					}
-					else
-					{
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-						cpu_Seq_Access = true;
-					}
+					cpu_Instr_Type = cpu_Next_Load_Store_Type;
+					cpu_Seq_Access = false;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
@@ -3062,12 +3006,7 @@ namespace GBAHawk
 					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
 					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
 
-					if (cpu_ARM_Cond_Passed) { cpu_Instr_Type = cpu_Multiply_Cycles; }
-					else
-					{
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-					}
+					cpu_Instr_Type = cpu_Multiply_Cycles;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
@@ -3094,23 +3033,11 @@ namespace GBAHawk
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 					cpu_Regs[15] += 4;
 
-					if (cpu_ARM_Cond_Passed)
-					{
-						cpu_Instr_Type = cpu_Next_Load_Store_Type;
-						cpu_Seq_Access = false;
+					cpu_Instr_Type = cpu_Next_Load_Store_Type;
+					cpu_Seq_Access = false;
 
-						// Lock the bus
-						cpu_Swap_Lock = true;
-					}
-					else
-					{
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-						cpu_Seq_Access = true;
-					}
+					// Lock the bus
+					cpu_Swap_Lock = true;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
@@ -3216,37 +3143,50 @@ namespace GBAHawk
 
 				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 				{
-					if (cpu_ARM_Cond_Passed)
-					{
-						cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
+					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 
-						cpu_Regs[15] = cpu_Temp_Reg & 0xFFFFFFFE;
+					cpu_Regs[15] = cpu_Temp_Reg & 0xFFFFFFFE;
 
-						cpu_FlagTset((cpu_Temp_Reg & 1) == 1);
-						cpu_Thumb_Mode = cpu_FlagTget();
+					cpu_FlagTset((cpu_Temp_Reg & 1) == 1);
+					cpu_Thumb_Mode = cpu_FlagTget();
 
-						// Invalidate instruction pipeline
-						if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
-						else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
+					// Invalidate instruction pipeline
+					if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
+					else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 
-						cpu_Seq_Access = false;
-					}
-					else
-					{
-						cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
-						cpu_Regs[15] += 4;
-
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-
-						cpu_Seq_Access = true;
-					}
+					cpu_Seq_Access = false;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
+				}
+				break;
+
+			case cpu_Prefetch_Condition_Fail_ARM:
+				// In this code path the ARM coniditon check failed, so no action takes place aside from prefetch
+				if (cpu_Fetch_Cnt == 0)
+				{
+					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
+
+					cpu_IRQ_Input_Use = cpu_IRQ_Input;
+				}
+
+				cpu_Fetch_Cnt += 1;
+
+				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
+				{
+					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
+					cpu_Regs[15] += 4;
+
+					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
+
+					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+					else { cpu_Decode_ARM(); }
+
+					cpu_Fetch_Cnt = 0;
+					cpu_Fetch_Wait = 0;
+
+					cpu_Seq_Access = true;
 				}
 				break;
 
@@ -3802,70 +3742,53 @@ namespace GBAHawk
 
 				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
 				{
-					if (cpu_Thumb_Mode || cpu_ARM_Cond_Passed)
+					if (cpu_Thumb_Mode)
 					{
-						if (cpu_Thumb_Mode)
-						{
-							cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
-						}
-						else
-						{
-							cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
-						}
-
-						cpu_Seq_Access = false;
-
-						if (cpu_Exception_Type == cpu_SWI_Exc)
-						{
-							if (TraceCallback) TraceCallback(1); // SWI
-
-							// supervisor mode
-							cpu_Swap_Regs(0x13, true, false);
-
-							// R14 becomes return address
-							cpu_Regs[14] = cpu_Thumb_Mode ? (cpu_Regs[15] - 2) : (cpu_Regs[15] - 4);
-
-							// take exception vector 0x8
-							cpu_Regs[15] = 0x00000008;
-						}
-						else
-						{
-							if (TraceCallback) TraceCallback(2); // UDF
-
-							// undefined instruction mode
-							cpu_Swap_Regs(0x1B, true, false);
-
-							// R14 becomes return address
-							cpu_Regs[14] = cpu_Thumb_Mode ? (cpu_Regs[15] - 2) : (cpu_Regs[15] - 4);
-
-							// take exception vector 0x4
-							cpu_Regs[15] = 0x00000004;
-						}
-
-						// Normal Interrupts disabled
-						cpu_FlagIset(true);
-
-						// switch into ARM mode
-						cpu_Thumb_Mode = false;
-						cpu_FlagTset(false);
-
-						// Invalidate instruction pipeline
-						cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
+						cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
 					}
 					else
 					{
 						cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
-
-						cpu_Regs[15] += 4;
-
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						cpu_Decode_ARM();
-						cpu_Seq_Access = true;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 					}
+
+					cpu_Seq_Access = false;
+
+					if (cpu_Exception_Type == cpu_SWI_Exc)
+					{
+						if (TraceCallback) TraceCallback(1); // SWI
+
+						// supervisor mode
+						cpu_Swap_Regs(0x13, true, false);
+
+						// R14 becomes return address
+						cpu_Regs[14] = cpu_Thumb_Mode ? (cpu_Regs[15] - 2) : (cpu_Regs[15] - 4);
+
+						// take exception vector 0x8
+						cpu_Regs[15] = 0x00000008;
+					}
+					else
+					{
+						if (TraceCallback) TraceCallback(2); // UDF
+
+						// undefined instruction mode
+						cpu_Swap_Regs(0x1B, true, false);
+
+						// R14 becomes return address
+						cpu_Regs[14] = cpu_Thumb_Mode ? (cpu_Regs[15] - 2) : (cpu_Regs[15] - 4);
+
+						// take exception vector 0x4
+						cpu_Regs[15] = 0x00000004;
+					}
+
+					// Normal Interrupts disabled
+					cpu_FlagIset(true);
+
+					// switch into ARM mode
+					cpu_Thumb_Mode = false;
+					cpu_FlagTset(false);
+
+					// Invalidate instruction pipeline
+					cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;

@@ -1691,6 +1691,7 @@ namespace GBAHawk
 		const static uint16_t cpu_Prefetch_Swap_ARM = 14;
 		const static uint16_t cpu_Swap_ARM = 15;
 		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 16;
+		const static uint16_t cpu_Prefetch_Condition_Fail_ARM = 17;
 
 		const static uint16_t cpu_Prefetch_TMB = 20;
 		const static uint16_t cpu_Prefetch_Ex_TMB = 21;
