@@ -2354,7 +2354,7 @@ namespace GBAHawk
 					if (cpu_Thumb_Mode)
 					{
 						// invalidate the instruction pipeline
-						cpu_Instr_Type = cpu_Prefetch_Only_1_TMB;
+						cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
 
 						cpu_Seq_Access = false;
 					}
@@ -2462,7 +2462,7 @@ namespace GBAHawk
 						// Invalidate instruction pipeline if necessary
 						if (cpu_Clear_Pipeline)
 						{
-							if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Only_1_TMB; }
+							if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
 							else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 							cpu_Seq_Access = false;
 						}
@@ -3226,7 +3226,7 @@ namespace GBAHawk
 						cpu_Thumb_Mode = cpu_FlagTget();
 
 						// Invalidate instruction pipeline
-						if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Only_1_TMB; }
+						if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
 						else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 
 						cpu_Seq_Access = false;
@@ -3250,13 +3250,12 @@ namespace GBAHawk
 				}
 				break;
 
-			case cpu_Internal_And_Prefetch_TMB:
-				// In this code path the instruction takes only one internal cycle, a pretech is also done
+			case cpu_Prefetch_TMB:
+				// In this code path all operations were already done during decode, a pretech is also done
+				// this path is also used for second stage of pipeline refill
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -3281,13 +3280,11 @@ namespace GBAHawk
 				}
 				break;
 
-			case cpu_Internal_And_Prefetch_2_TMB:
+			case cpu_Prefetch_Ex_TMB:
 				// In this code path the instruction takes 2 internal cycles, a pretech is also done
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 				}
 
 				cpu_Fetch_Cnt += 1;
@@ -3311,12 +3308,7 @@ namespace GBAHawk
 				// decide whether or not to branch. If no branch taken, interrupts may occur
 				if (cpu_Fetch_Cnt == 0)
 				{
-					// whether or not to take the branch is determined in the instruction execution
-					cpu_Take_Branch = false;
-
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -3332,7 +3324,7 @@ namespace GBAHawk
 						cpu_Regs[15] = (cpu_Temp_Reg & 0xFFFFFFFE);
 
 						// Invalidate instruction pipeline
-						cpu_Instr_Type = cpu_Prefetch_Only_1_TMB;
+						cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
 					}
 					else
 					{
@@ -3352,7 +3344,7 @@ namespace GBAHawk
 				}
 				break;
 
-			case cpu_Prefetch_Only_1_TMB:
+			case cpu_Prefetch_Pipeline_Refill_TMB:
 				// In this code path the instruction pipeline is being refilled, and is part of an atomic instruction (cannot be interrupted)
 				// so no instruction execution takes place
 				if (cpu_Fetch_Cnt == 0)
@@ -3373,36 +3365,7 @@ namespace GBAHawk
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 
-					cpu_Instr_Type = cpu_Prefetch_Only_2_TMB;
-					cpu_Seq_Access = true;
-				}
-				break;
-
-			case cpu_Prefetch_Only_2_TMB:
-				// This code path is the last cycle of pipeline refill, no instruction execution but interrupts may occur
-				if (cpu_Fetch_Cnt == 0)
-				{
-					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_IRQ_Input_Use = cpu_IRQ_Input;
-				}
-
-				cpu_Fetch_Cnt += 1;
-
-				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
-				{
-					cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
-					cpu_Regs[15] += 2;
-
-					cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
-					cpu_Instr_TMB_1 = cpu_Instr_TMB_0;
-
-					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-					else { cpu_Decode_TMB(); }
-
-					cpu_Fetch_Cnt = 0;
-					cpu_Fetch_Wait = 0;
-
+					cpu_Instr_Type = cpu_Prefetch_TMB;
 					cpu_Seq_Access = true;
 				}
 				break;
@@ -3412,8 +3375,6 @@ namespace GBAHawk
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 				}
 
 				cpu_Fetch_Cnt += 1;
@@ -3768,8 +3729,6 @@ namespace GBAHawk
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 				}
 
 				cpu_Fetch_Cnt += 1;
@@ -3795,12 +3754,7 @@ namespace GBAHawk
 				// Branch from Thumb mode to ARM mode, no interrupt check due to pipeline invalidation
 				if (cpu_Fetch_Cnt == 0)
 				{
-					// start in thumb mode, always branch
-					cpu_Take_Branch = true;
-
 					cpu_Fetch_Wait = Wait_State_Access_16_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_TMB();
 				}
 
 				cpu_Fetch_Cnt += 1;
@@ -3815,7 +3769,7 @@ namespace GBAHawk
 					cpu_Thumb_Mode = cpu_FlagTget();
 
 					// Invalidate instruction pipeline
-					if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Only_1_TMB; }
+					if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
 					else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 
 					cpu_Fetch_Cnt = 0;
@@ -4025,7 +3979,7 @@ namespace GBAHawk
 				// Invalidate instruction pipeline if necessary
 				if (cpu_Clear_Pipeline)
 				{
-					if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Only_1_TMB; }
+					if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
 					else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 					cpu_Seq_Access = false;
 				}
@@ -4086,7 +4040,7 @@ namespace GBAHawk
 
 				if (cpu_Invalidate_Pipeline)
 				{
-					cpu_Instr_Type = cpu_Prefetch_Only_1_TMB;
+					cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
 				}
 				else
 				{
@@ -4172,7 +4126,7 @@ namespace GBAHawk
 							// Invalidate instruction pipeline if necessary
 							if (cpu_Clear_Pipeline)
 							{
-								if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Only_1_TMB; }
+								if (cpu_Thumb_Mode) { cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB; }
 								else { cpu_Instr_Type = cpu_Prefetch_Only_1_ARM; }
 								cpu_Seq_Access = false;
 							}
@@ -4233,7 +4187,7 @@ namespace GBAHawk
 
 							if (cpu_Invalidate_Pipeline)
 							{
-								cpu_Instr_Type = cpu_Prefetch_Only_1_TMB;
+								cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
 							}
 							else
 							{

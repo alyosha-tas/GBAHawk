@@ -1692,18 +1692,17 @@ namespace GBAHawk
 		const static uint16_t cpu_Swap_ARM = 15;
 		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 16;
 
-		const static uint16_t cpu_Internal_And_Prefetch_TMB = 20;
-		const static uint16_t cpu_Internal_And_Prefetch_2_TMB = 21;
+		const static uint16_t cpu_Prefetch_TMB = 20;
+		const static uint16_t cpu_Prefetch_Ex_TMB = 21;
 		const static uint16_t cpu_Internal_And_Branch_1_TMB = 22;
-		const static uint16_t cpu_Prefetch_Only_1_TMB = 23;
-		const static uint16_t cpu_Prefetch_Only_2_TMB = 24;
-		const static uint16_t cpu_Prefetch_And_Load_Store_TMB = 25;
-		const static uint16_t cpu_Load_Store_Word_TMB = 26;
-		const static uint16_t cpu_Load_Store_Half_TMB = 27;
-		const static uint16_t cpu_Load_Store_Byte_TMB = 28;
-		const static uint16_t cpu_Multi_Load_Store_TMB = 29;
-		const static uint16_t cpu_Multiply_TMB = 30;
-		const static uint16_t cpu_Prefetch_And_Branch_Ex_TMB = 31;
+		const static uint16_t cpu_Prefetch_Pipeline_Refill_TMB = 23;
+		const static uint16_t cpu_Prefetch_And_Load_Store_TMB = 24;
+		const static uint16_t cpu_Load_Store_Word_TMB = 25;
+		const static uint16_t cpu_Load_Store_Half_TMB = 26;
+		const static uint16_t cpu_Load_Store_Byte_TMB = 27;
+		const static uint16_t cpu_Multi_Load_Store_TMB = 28;
+		const static uint16_t cpu_Multiply_TMB = 29;
+		const static uint16_t cpu_Prefetch_And_Branch_Ex_TMB = 30;
 
 		// SWI and undefined opcode cycles, same for both Thumb and ARM
 		const static uint16_t cpu_Prefetch_And_SWI_Undef = 38;
@@ -1781,43 +1780,23 @@ namespace GBAHawk
 		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 138;
 
 		// Instruction Operations Thumb
-		const static uint16_t cpu_Thumb_Shift = 5;
-		const static uint16_t cpu_Thumb_Add_Sub_Reg = 6;
-		const static uint16_t cpu_Thumb_AND = 10;
-		const static uint16_t cpu_Thumb_EOR = 11;
-		const static uint16_t cpu_Thumb_LSL = 12;
-		const static uint16_t cpu_Thumb_LSR = 13;
-		const static uint16_t cpu_Thumb_ASR = 14;
-		const static uint16_t cpu_Thumb_ADC = 15;
-		const static uint16_t cpu_Thumb_SBC = 16;
-		const static uint16_t cpu_Thumb_ROR = 17;
-		const static uint16_t cpu_Thumb_TST = 18;
-		const static uint16_t cpu_Thumb_NEG = 19;
-		const static uint16_t cpu_Thumb_CMP = 20;
-		const static uint16_t cpu_Thumb_CMN = 21;
-		const static uint16_t cpu_Thumb_ORR = 22;
-		const static uint16_t cpu_Thumb_MUL = 23;
-		const static uint16_t cpu_Thumb_BIC = 24;
-		const static uint16_t cpu_Thumb_MVN = 25;
+		const static uint16_t cpu_Thumb_AND = 0;
+		const static uint16_t cpu_Thumb_EOR = 1;
+		const static uint16_t cpu_Thumb_LSL = 2;
+		const static uint16_t cpu_Thumb_LSR = 3;
+		const static uint16_t cpu_Thumb_ASR = 4;
+		const static uint16_t cpu_Thumb_ADC = 5;
+		const static uint16_t cpu_Thumb_SBC = 6;
+		const static uint16_t cpu_Thumb_ROR = 7;
+		const static uint16_t cpu_Thumb_TST = 8;
+		const static uint16_t cpu_Thumb_NEG = 9;
+		const static uint16_t cpu_Thumb_CMP = 10;
+		const static uint16_t cpu_Thumb_CMN = 11;
+		const static uint16_t cpu_Thumb_ORR = 12;
+		const static uint16_t cpu_Thumb_MUL = 13;
+		const static uint16_t cpu_Thumb_BIC = 14;
+		const static uint16_t cpu_Thumb_MVN = 15;
 
-		const static uint16_t cpu_Thumb_High_Add = 30;
-		const static uint16_t cpu_Thumb_High_Cmp = 31;
-		const static uint16_t cpu_Thumb_High_Bx = 32;
-		const static uint16_t cpu_Thumb_High_MOV = 33;
-		const static uint16_t cpu_Thumb_ALU_Imm = 34;
-		const static uint16_t cpu_Thumb_PC_Rel_LS = 35;
-		const static uint16_t cpu_Thumb_Rel_LS = 36;
-		const static uint16_t cpu_Thumb_Imm_LS = 37;
-		const static uint16_t cpu_Thumb_Half_LS = 38;
-		const static uint16_t cpu_Thumb_SP_REL_LS = 39;
-		const static uint16_t cpu_Thumb_Add_SP_PC = 40;
-		const static uint16_t cpu_Thumb_Add_Sub_Stack = 41;
-		const static uint16_t cpu_Thumb_Push_Pop = 50;
-		const static uint16_t cpu_Thumb_Multi_1 = 60;
-		const static uint16_t cpu_Thumb_Branch = 100;
-		const static uint16_t cpu_Thumb_Branch_Cond = 101;
-		const static uint16_t cpu_Thumb_Branch_Link_1 = 102;
-		const static uint16_t cpu_Thumb_Branch_Link_2 = 103;
 
 		// Exception Types
 		const static uint16_t cpu_IRQ_Exc = 0;
@@ -2107,8 +2086,6 @@ namespace GBAHawk
 		}
 
 		void cpu_Execute_Internal_Only_ARM();
-
-		void cpu_Execute_Internal_Only_TMB();
 
 		bool cpu_ARM_Condition_Check()
 		{

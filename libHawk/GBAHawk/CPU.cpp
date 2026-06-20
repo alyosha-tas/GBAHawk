@@ -512,26 +512,192 @@ namespace GBAHawk
 
 	void GBA_System::cpu_Decode_TMB()
 	{
+		if (TraceCallback) TraceCallback(0);
+		
+		int ofst = 0;
+
+		// whether or not to take the branch is determined as part of decode
+		cpu_Take_Branch = false;
+		
 		switch ((cpu_Instr_TMB_2 >> 13) & 7)
 		{
-			case 0:
-				// shift / add / sub
+			case 0:			
 				if ((cpu_Instr_TMB_2 & 0x1800) == 0x1800)
 				{
-					cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-					cpu_Exec_TMB = cpu_Thumb_Add_Sub_Reg;
+					//  add / sub
+					cpu_Instr_Type = cpu_Prefetch_TMB;
+
+					cpu_ALU_Reg_Dest = cpu_Instr_TMB_2 & 0x7;
+
+					cpu_ALU_Reg_Src = (cpu_Instr_TMB_2 >> 3) & 0x7;
+
+					if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
+					{
+						cpu_ALU_Temp_Val = (uint32_t)((cpu_Instr_TMB_2 >> 6) & 0x7);
+					}
+					else
+					{
+						cpu_ALU_Temp_Val = cpu_Regs[(cpu_Instr_TMB_2 >> 6) & 0x7];
+					}
+
+					if ((cpu_Instr_TMB_2 & 0x200) == 0x200)
+					{
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+						cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
+
+						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+						cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+						cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Src], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					}
+					else
+					{
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+						cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
+
+						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
+
+						cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+						cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Src], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+					}
 				}
 				else
-				{
-					cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-					cpu_Exec_TMB = cpu_Thumb_Shift;
+				{				
+					// Shift
+					cpu_Instr_Type = cpu_Prefetch_TMB;
+
+					cpu_ALU_Reg_Dest = cpu_Instr_TMB_2 & 0x7;
+
+					cpu_ALU_Reg_Src = (cpu_Instr_TMB_2 >> 3) & 0x7;
+
+					cpu_ALU_Temp_Val = (uint32_t)((cpu_Instr_TMB_2 >> 6) & 0x1F);
+
+					switch ((cpu_Instr_TMB_2 >> 11) & 0x3)
+					{
+						case 0:
+							cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+							cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
+
+							if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
+							cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+
+							cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+							cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+							cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+							break;
+
+						case 1:
+							if (cpu_ALU_Temp_Val != 0)
+							{
+								cpu_FlagCset(((cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
+								cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)cpu_ALU_Temp_Val;
+							}
+							else
+							{
+								cpu_FlagCset((cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare) == cpu_Neg_Compare);
+								cpu_ALU_Long_Result = 0;
+							}
+
+							cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+							cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+							cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+							break;
+
+						case 2:
+							cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare;
+
+							cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
+
+							if (cpu_ALU_Temp_Val == 0) { cpu_ALU_Temp_Val = 32; }
+
+							for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
+							{
+								cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
+								cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
+								cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
+							}
+
+							cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+							cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+							cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+							break;
+					}
 				}
 				break;
 
 			case 1:
 				// data ops (immedaite)
-				cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-				cpu_Exec_TMB = cpu_Thumb_ALU_Imm;
+				cpu_Instr_Type = cpu_Prefetch_TMB;
+
+				cpu_ALU_Reg_Dest = (cpu_Instr_TMB_2 >> 8) & 7;
+
+				cpu_ALU_Temp_Val = (uint32_t)(cpu_Instr_TMB_2 & 0xFF);
+
+				switch ((cpu_Instr_TMB_2 >> 11) & 3)
+				{
+					case 0:			// MOV
+						cpu_Regs[cpu_ALU_Reg_Dest] = cpu_ALU_Temp_Val;
+						cpu_FlagNset(false);
+						cpu_FlagZset(cpu_ALU_Temp_Val == 0);
+						break;
+
+					case 1:         // CMP
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+						cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
+
+						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+						cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+						cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_FlagZset(cpu_ALU_Long_Result == 0);
+						break;
+
+					case 2:         // ADD
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+						cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
+
+						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
+
+						cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+						cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+						break;
+
+					case 3:         // SUB
+						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+						cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
+
+						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+						cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+						cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
+						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+						cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+						break;
+				}
 				break;
 
 			case 2:
@@ -549,29 +715,253 @@ namespace GBAHawk
 
 							switch ((cpu_Instr_TMB_2 >> 6) & 0xF)
 							{
-								case 0x0: cpu_Exec_TMB = cpu_Thumb_AND; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0x1: cpu_Exec_TMB = cpu_Thumb_EOR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0x2: cpu_Exec_TMB = cpu_Thumb_LSL; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-								case 0x3: cpu_Exec_TMB = cpu_Thumb_LSR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-								case 0x4: cpu_Exec_TMB = cpu_Thumb_ASR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-								case 0x5: cpu_Exec_TMB = cpu_Thumb_ADC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0x6: cpu_Exec_TMB = cpu_Thumb_SBC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0x7: cpu_Exec_TMB = cpu_Thumb_ROR; cpu_Instr_Type = cpu_Internal_And_Prefetch_2_TMB; break;
-								case 0x8: cpu_Exec_TMB = cpu_Thumb_TST; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0x9: cpu_Exec_TMB = cpu_Thumb_NEG; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xA: cpu_Exec_TMB = cpu_Thumb_CMP; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xB: cpu_Exec_TMB = cpu_Thumb_CMN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xC: cpu_Exec_TMB = cpu_Thumb_ORR; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xD: cpu_Exec_TMB = cpu_Thumb_MUL; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xE: cpu_Exec_TMB = cpu_Thumb_BIC; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-								case 0xF: cpu_Exec_TMB = cpu_Thumb_MVN; cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB; break;
-							}
+								case cpu_Thumb_AND:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
 
-							// special case for multiply
-							if (((cpu_Instr_TMB_2 >> 6) & 0xF) == 0xD)
-							{
-								cpu_Instr_Type = cpu_Multiply_TMB;
-								cpu_Calculate_Mul_Cycles();
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_EOR:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] ^ cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_LSL:
+									cpu_Instr_Type = cpu_Prefetch_Ex_TMB; // extra internal cycle
+
+									cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+									cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
+
+									if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_LSR:
+									cpu_Instr_Type = cpu_Prefetch_Ex_TMB; // extra internal cycle
+
+									cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
+
+									// NOTE: This is necessary due to C# only using lower 5 bits of shift count on integer sized values.
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+
+									if (cpu_ALU_Temp_Val != 0)
+									{
+										cpu_FlagCset(((cpu_ALU_Long_Result >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
+									}
+
+									cpu_ALU_Long_Result = cpu_ALU_Long_Result >> (uint32_t)cpu_ALU_Temp_Val;
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_ASR:
+									cpu_Instr_Type = cpu_Prefetch_Ex_TMB; // extra internal cycle
+
+									cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
+									cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Neg_Compare;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+
+									for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
+									{
+										cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
+										cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
+										cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
+									}
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_ADC:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+									cpu_ALU_Long_Result += cpu_Regs[cpu_ALU_Reg_Src];
+									cpu_ALU_Long_Result += (uint64_t)(cpu_FlagCget() ? 1 : 0);
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_SBC:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+									cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
+									cpu_ALU_Long_Result -= (uint64_t)(cpu_FlagCget() ? 0 : 1);
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_ROR:
+									cpu_Instr_Type = cpu_Prefetch_Ex_TMB; // extra internal cycle
+
+									cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+
+									for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
+									{
+										cpu_ALU_Temp_S_Val = (uint32_t)(cpu_ALU_Long_Result & 1);
+										cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
+										cpu_ALU_Long_Result |= (cpu_ALU_Temp_S_Val << 31);
+									}
+
+									if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset(cpu_ALU_Temp_S_Val == 1); }
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_TST:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+									break;
+
+								case cpu_Thumb_NEG:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = 0;
+									cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Sub(0, cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_CMP:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+									cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+									break;
+
+								case cpu_Thumb_CMN:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
+									cpu_ALU_Long_Result += cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+									break;
+
+								case cpu_Thumb_ORR:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] | cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_MUL:
+									cpu_Instr_Type = cpu_Multiply_TMB;
+
+									cpu_Calculate_Mul_Cycles();
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] * cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_BIC:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & (~cpu_Regs[cpu_ALU_Reg_Src]);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
+
+								case cpu_Thumb_MVN:
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+
+									cpu_ALU_Long_Result = ~(uint64_t)cpu_Regs[cpu_ALU_Reg_Src];
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
+
+									cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
+									break;
 							}
 						}
 						else
@@ -581,12 +971,46 @@ namespace GBAHawk
 							{
 								case 0:
 									cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-									cpu_Exec_TMB = cpu_Thumb_High_Add;
+
+									// Add but no flags change
+									// unpredictable if both registers are low registers?
+									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
+
+									cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 3) & 0xF);
+
+									if (cpu_Base_Reg == 15)
+									{
+										// this becomes a branch
+										cpu_Take_Branch = true;
+
+										cpu_Temp_Reg = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
+									}
+									else
+									{
+										cpu_Take_Branch = false;
+										cpu_Regs[cpu_Base_Reg] = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
+									}
 									break;
 
 								case 1:
-									cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-									cpu_Exec_TMB = cpu_Thumb_High_Cmp;
+									cpu_Instr_Type = cpu_Prefetch_TMB;
+									
+									// Sub but no flags change
+									// unpredictable if first register is 15?
+									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
+
+									cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 3) & 0xF);
+
+									cpu_ALU_Long_Result = cpu_Regs[cpu_Base_Reg];
+									cpu_ALU_Long_Result -= cpu_Regs[cpu_Base_Reg_2];
+
+									cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
+
+									cpu_ALU_Long_Result &= cpu_Cast_Int;
+
+									cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Base_Reg_2], (uint32_t)cpu_ALU_Long_Result));
+									cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
+									cpu_FlagZset(cpu_ALU_Long_Result == 0);
 									break;
 
 								case 2:
@@ -596,16 +1020,35 @@ namespace GBAHawk
 									}
 									else
 									{
-										cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
+										cpu_Instr_Type = cpu_Prefetch_TMB;
 									}
 
-									cpu_Exec_TMB = cpu_Thumb_High_MOV;
+									cpu_Temp_Reg = cpu_Regs[((cpu_Instr_TMB_2 >> 3) & 0xF)];
+
+									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
+
+									// don't change the read address before branching if destination is a branch
+									if (cpu_Base_Reg != 0xF)
+									{
+										cpu_Regs[cpu_Base_Reg] = cpu_Temp_Reg;
+									}
+									else
+									{
+										cpu_Take_Branch = true;
+									}
 									break;
 
 								case 3:
 									// Decodes correctly even if bit 7 is set
 									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
-									cpu_Exec_TMB = cpu_Thumb_High_Bx;
+
+									// start in thumb mode, always branch
+									cpu_Take_Branch = true;
+
+									// Branch and exchange mode (possibly)
+									cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 0xF);
+
+									cpu_Temp_Reg = (cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFE);
 									break;
 							}
 						}
@@ -615,28 +1058,43 @@ namespace GBAHawk
 						// PC relative load
 						cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
 						cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB;
-						cpu_Exec_TMB = cpu_Thumb_PC_Rel_LS;
+
+						cpu_LS_Is_Load = true;
+
+						cpu_Overwrite_Base_Reg = false;
+
+						cpu_Base_Reg = 15;
+
+						cpu_Temp_Addr = (uint32_t)((cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFC) + ((cpu_Instr_TMB_2 & 0xFF) << 2));
+
+						cpu_Temp_Reg_Ptr = (cpu_Instr_TMB_2 >> 8) & 7;
 					}
 				}
 				else
 				{
 					// Load / store Relative offset
 					cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
-					cpu_Sign_Extend_Load = false;
 
 					switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
 					{
-						case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-						case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
-						case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-						case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-						case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; break;
-						case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
-						case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; break;
-						case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; break;
+						case 0: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+						case 1: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+						case 2: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
+						case 3: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
+						case 4: cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB; cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+						case 5: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+						case 6: cpu_Next_Load_Store_Type = cpu_Load_Store_Byte_TMB; cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
+						case 7: cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB; cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
 					}
 
-					cpu_Exec_TMB = cpu_Thumb_Rel_LS;
+					cpu_Overwrite_Base_Reg = false;
+
+					cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
+					cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 6) & 7);
+
+					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
+
+					cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
 				}
 				break;
 
@@ -654,7 +1112,22 @@ namespace GBAHawk
 					cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB;
 				}
 
-				cpu_Exec_TMB = cpu_Thumb_Imm_LS;
+				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+				cpu_Overwrite_Base_Reg = false;
+
+				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
+
+				if ((cpu_Instr_TMB_2 & 0x1000) == 0x1000)
+				{
+					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 6) & 0x1F));
+				}
+				else
+				{
+					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 4) & 0x7C));
+				}
+
+				cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
 				break;
 
 			case 4:
@@ -664,14 +1137,30 @@ namespace GBAHawk
 					cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
 					cpu_Next_Load_Store_Type = cpu_Load_Store_Half_TMB;
 					cpu_Sign_Extend_Load = false;
-					cpu_Exec_TMB = cpu_Thumb_Half_LS;
+
+					cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+					cpu_Overwrite_Base_Reg = false;
+
+					cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
+
+					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 5) & 0x3E));
+
+					cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
 				}
 				else
 				{
 					// SP relative load store
 					cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
 					cpu_Next_Load_Store_Type = cpu_Load_Store_Word_TMB;
-					cpu_Exec_TMB = cpu_Thumb_SP_REL_LS;
+
+					cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+					cpu_Overwrite_Base_Reg = false;
+
+					cpu_Temp_Addr = (uint32_t)(cpu_Regs[13] + ((cpu_Instr_TMB_2 & 0xFF) << 2));
+
+					cpu_Temp_Reg_Ptr = (cpu_Instr_TMB_2 >> 8) & 7;
 				}
 				break;
 
@@ -679,16 +1168,36 @@ namespace GBAHawk
 				if ((cpu_Instr_TMB_2 & 0x1000) == 0)
 				{
 					// Load Address
-					cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-					cpu_Exec_TMB = cpu_Thumb_Add_SP_PC;
+					cpu_Instr_Type = cpu_Prefetch_TMB;
+
+					cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 8) & 7);
+
+					cpu_Overwrite_Base_Reg = false;
+
+					if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
+					{
+						cpu_Regs[cpu_Base_Reg] = (uint32_t)(cpu_Regs[13] + ((cpu_Instr_TMB_2 & 0xFF) << 2));
+					}
+					else
+					{
+						cpu_Regs[cpu_Base_Reg] = (uint32_t)((cpu_Regs[15] & 0xFFFFFFFC) + ((cpu_Instr_TMB_2 & 0xFF) << 2));
+					}
 				}
 				else
 				{
 					if ((cpu_Instr_TMB_2 & 0xF00) == 0x0)
 					{
 						// Add offset to stack
-						cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-						cpu_Exec_TMB = cpu_Thumb_Add_Sub_Stack;
+						cpu_Instr_Type = cpu_Prefetch_TMB;
+						
+						if ((cpu_Instr_TMB_2 & 0x80) == 0x0)
+						{
+							cpu_Regs[13] += (uint32_t)((cpu_Instr_TMB_2 & 0x7F) << 2);
+						}
+						else
+						{
+							cpu_Regs[13] -= (uint32_t)((cpu_Instr_TMB_2 & 0x7F) << 2);
+						}
 					}
 					else
 					{
@@ -697,7 +1206,70 @@ namespace GBAHawk
 							// Push / Pop
 							cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
 							cpu_Next_Load_Store_Type = cpu_Multi_Load_Store_TMB;
-							cpu_Exec_TMB = cpu_Thumb_Push_Pop;
+
+							cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+							// base reg is always 13 for push / pop
+							cpu_Base_Reg = 13;
+
+							cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+
+							cpu_LS_First_Access = true;
+
+							// always overwrite base reg
+							cpu_Overwrite_Base_Reg = true;
+
+							// Increment timing depends on it being a push or a pop
+							cpu_Multi_Before = !cpu_LS_Is_Load;
+
+							// Increment / Decrement depends on it being a push or a pop
+							cpu_Multi_Inc = cpu_LS_Is_Load;
+
+							// No analog to ARM S Bit here
+							cpu_Multi_S_Bit = false;
+							cpu_Multi_Swap = false;
+
+							// build list of registers to access
+							cpu_Multi_List_Size = cpu_Multi_List_Ptr = 0;
+
+							for (int i = 0; i < 8; i++)
+							{
+								cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+								cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
+							}
+
+							// additionally, may impact reg 14 (Link), or 15 (PC)
+							if ((cpu_Instr_TMB_2 & 0x100) == 0x100)
+							{
+								if (cpu_LS_Is_Load)
+								{
+									cpu_Regs_To_Access[cpu_Multi_List_Size] = 15;
+								}
+								else
+								{
+									cpu_Regs_To_Access[cpu_Multi_List_Size] = 14;
+								}
+
+								cpu_Multi_List_Size += 1;
+							}
+
+							cpu_Special_Inc = false;
+
+							// For Pop, start address is at the bottom
+							if (!cpu_Multi_Inc)
+							{
+								cpu_Temp_Addr -= (uint32_t)((cpu_Multi_List_Size - 1) * 4);
+								cpu_Temp_Addr -= 4;
+								cpu_Write_Back_Addr = cpu_Temp_Addr;
+							}
+
+							// No registers selected is unpredictable
+							if (cpu_Multi_List_Size == 0)
+							{
+								cpu_Multi_List_Size = 1;
+								cpu_Regs_To_Access[0] = 15;
+								cpu_Special_Inc = true;
+							}
 						}
 						else
 						{
@@ -715,7 +1287,47 @@ namespace GBAHawk
 					// Multiple Load/Store
 					cpu_Instr_Type = cpu_Prefetch_And_Load_Store_TMB;
 					cpu_Next_Load_Store_Type = cpu_Multi_Load_Store_TMB;
-					cpu_Exec_TMB = cpu_Thumb_Multi_1;
+					
+					cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
+
+					cpu_Base_Reg = (cpu_Instr_TMB_2 >> 8) & 7;
+
+					cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
+
+					cpu_LS_First_Access = true;
+
+					// always overwrite base reg, unless reading and including base reg
+					cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (((cpu_Instr_TMB_2 >> cpu_Base_Reg) & 1) == 0);
+
+					// always increment after
+					cpu_Multi_Before = false;
+
+					// always increment
+					cpu_Multi_Inc = true;
+
+					// No analog to ARM S Bit here
+					cpu_Multi_S_Bit = false;
+					cpu_Multi_Swap = false;
+
+					// build list of registers to access
+					cpu_Multi_List_Size = cpu_Multi_List_Ptr = 0;
+
+					for (int i = 0; i < 8; i++)
+					{
+						cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
+						cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
+					}
+
+					cpu_Special_Inc = false;
+
+					// No registers selected loads R15 instead
+					if (cpu_Multi_List_Size == 0)
+					{
+						cpu_Multi_List_Size = 1;
+						cpu_Regs_To_Access[0] = 15;
+						cpu_Special_Inc = true;
+					}
+					break;
 				}
 				else
 				{
@@ -735,7 +1347,15 @@ namespace GBAHawk
 					{
 						// Conditional Branch
 						cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-						cpu_Exec_TMB = cpu_Thumb_Branch_Cond;
+						
+						ofst = (uint32_t)((cpu_Instr_TMB_2 & 0xFF) << 1);
+
+						// offset is signed
+						if ((ofst & 0x100) == 0x100) { ofst = (uint32_t)(ofst | 0xFFFFFE00); }
+
+						cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
+
+						cpu_Take_Branch = cpu_TMB_Condition_Check();
 					}
 				}
 
@@ -748,7 +1368,15 @@ namespace GBAHawk
 					{
 						// Unconditional branch
 						cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-						cpu_Exec_TMB = cpu_Thumb_Branch;
+						
+						ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 1);
+
+						// offset is signed
+						if ((ofst & 0x800) == 0x800) { ofst = (uint32_t)(ofst | 0xFFFFF000); }
+
+						cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
+
+						cpu_Take_Branch = true;
 					}
 					else
 					{
@@ -763,25 +1391,36 @@ namespace GBAHawk
 					if ((cpu_Instr_TMB_2 & 0x800) == 0)
 					{
 						// A standard data operation assigning the upper part of the branch
-						cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-						cpu_Exec_TMB = cpu_Thumb_Branch_Link_1;
+						cpu_Instr_Type = cpu_Prefetch_TMB;
+
+						ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 12);
+
+						// offset is signed
+						if ((ofst & 0x400000) == 0x400000) { ofst = (uint32_t)(ofst | 0xFF800000); }
+
+						cpu_Regs[14] = (uint32_t)(cpu_Regs[15] + ofst);
 					}
 					else
 					{
 						// Actual branch operation (can it occur without the first one?)
 						cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-						cpu_Exec_TMB = cpu_Thumb_Branch_Link_2;
+						
+						ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 1);
+
+						cpu_Temp_Reg = (uint32_t)(cpu_Regs[14] + ofst);
+
+						// NOTE: OR with 1, probably reuses the same cpu circuitry that triggers switch to Thumb mode when writing to R[15] directly?
+						cpu_Regs[14] = (uint32_t)((cpu_Regs[15] - 2) | 1);
+
+						cpu_Take_Branch = true;
 					}
 				}
 				break;
 		}
-
-		if (TraceCallback) TraceCallback(0);
 	}
 
 	void GBA_System::cpu_Execute_Internal_Only_ARM()
 	{
-		// Do Tracer Stuff here
 		int ofst = 0;
 
 		// local variables not stated (evaluated each time)
@@ -2287,711 +2926,6 @@ namespace GBAHawk
 					cpu_Take_Branch = true;
 					break;
 			}
-		}
-	}
-
-	void GBA_System::cpu_Execute_Internal_Only_TMB()
-	{
-		int ofst = 0;
-
-		// Do Tracer stuff here
-		switch (cpu_Exec_TMB)
-		{
-			case cpu_Thumb_Shift:
-				cpu_ALU_Reg_Dest = cpu_Instr_TMB_2 & 0x7;
-
-				cpu_ALU_Reg_Src = (cpu_Instr_TMB_2 >> 3) & 0x7;
-
-				cpu_ALU_Temp_Val = (uint32_t)((cpu_Instr_TMB_2 >> 6) & 0x1F);
-
-				switch ((cpu_Instr_TMB_2 >> 11) & 0x3)
-				{
-					case 0:
-						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
-						cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
-
-						if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-
-						cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-						break;
-
-					case 1:
-						if (cpu_ALU_Temp_Val != 0)
-						{
-							cpu_FlagCset(((cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
-							cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src] >> (uint32_t)cpu_ALU_Temp_Val;
-						}
-						else
-						{
-							cpu_FlagCset((cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare) == cpu_Neg_Compare);
-							cpu_ALU_Long_Result = 0;
-						}
-
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-						break;
-
-					case 2:
-						cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Src] & cpu_Neg_Compare;
-
-						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
-
-						if (cpu_ALU_Temp_Val == 0) { cpu_ALU_Temp_Val = 32; }
-
-						for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
-						{
-							cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
-							cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
-							cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
-						}
-
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-						break;
-				}
-				break;
-
-			case cpu_Thumb_Add_Sub_Reg:
-				cpu_ALU_Reg_Dest = cpu_Instr_TMB_2 & 0x7;
-
-				cpu_ALU_Reg_Src = (cpu_Instr_TMB_2 >> 3) & 0x7;
-
-				if ((cpu_Instr_TMB_2 & 0x400) == 0x400)
-				{
-					cpu_ALU_Temp_Val = (uint32_t)((cpu_Instr_TMB_2 >> 6) & 0x7);
-				}
-				else
-				{
-					cpu_ALU_Temp_Val = cpu_Regs[(cpu_Instr_TMB_2 >> 6) & 0x7];
-				}
-
-				if ((cpu_Instr_TMB_2 & 0x200) == 0x200)
-				{
-					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
-					cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
-
-					cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-					cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-					cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Src], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-					cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				}
-				else
-				{
-					cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Src];
-					cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
-
-					cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
-
-					cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-					cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Src], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-					cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-					cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-					cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				}
-				break;
-
-			case cpu_Thumb_AND:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_EOR:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] ^ cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_LSL:
-				cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
-
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result = cpu_ALU_Long_Result << (uint32_t)cpu_ALU_Temp_Val;
-
-				if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare); }
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_LSR:
-				cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
-
-				// NOTE: This is necessary due to C# only using lower 5 bits of shift count on integer sized values.
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-
-				if (cpu_ALU_Temp_Val != 0)
-				{
-					cpu_FlagCset(((cpu_ALU_Long_Result >> (uint32_t)(cpu_ALU_Temp_Val - 1)) & 1) == 1);
-				}
-
-				cpu_ALU_Long_Result = cpu_ALU_Long_Result >> (uint32_t)cpu_ALU_Temp_Val;
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_ASR:
-				cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
-				cpu_ALU_Temp_S_Val = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Neg_Compare;
-
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-
-				for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
-				{
-					cpu_FlagCset((cpu_ALU_Long_Result & 1) == 1);
-					cpu_ALU_Long_Result = (cpu_ALU_Long_Result >> 1);
-					cpu_ALU_Long_Result |= cpu_ALU_Temp_S_Val;
-				}
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_ADC:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result += cpu_Regs[cpu_ALU_Reg_Src];
-				cpu_ALU_Long_Result += (uint64_t)(cpu_FlagCget() ? 1 : 0);
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_SBC:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
-				cpu_ALU_Long_Result -= (uint64_t)(cpu_FlagCget() ? 0 : 1);
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_ROR:
-				cpu_ALU_Temp_Val = cpu_Regs[cpu_ALU_Reg_Src] & 0xFF;
-
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-
-				for (int i = 1; i <= cpu_ALU_Temp_Val; i++)
-				{
-					cpu_ALU_Temp_S_Val = (uint32_t)(cpu_ALU_Long_Result & 1);
-					cpu_ALU_Long_Result = cpu_ALU_Long_Result >> 1;
-					cpu_ALU_Long_Result |= (cpu_ALU_Temp_S_Val << 31);
-				}
-
-				if (cpu_ALU_Temp_Val != 0) { cpu_FlagCset(cpu_ALU_Temp_S_Val == 1); }
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_TST:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-				break;
-
-			case cpu_Thumb_NEG:
-				cpu_ALU_Long_Result = 0;
-				cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(0, cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_CMP:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result -= cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-				break;
-
-			case cpu_Thumb_CMN:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-				cpu_ALU_Long_Result += cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_Regs[cpu_ALU_Reg_Src], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-				break;
-
-			case cpu_Thumb_ORR:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] | cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_MUL:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] * cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_BIC:
-				cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest] & (~cpu_Regs[cpu_ALU_Reg_Src]);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_MVN:
-				cpu_ALU_Long_Result = ~(uint64_t)cpu_Regs[cpu_ALU_Reg_Src];
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-				cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-				break;
-
-			case cpu_Thumb_High_Add:
-				// Add but no flags change
-				// unpredictable if both registers are low registers?
-				cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
-
-				cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 3) & 0xF);
-
-				if (cpu_Base_Reg == 15)
-				{
-					// this becomes a branch
-					cpu_Take_Branch = true;
-
-					cpu_Temp_Reg = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
-				}
-				else
-				{
-					cpu_Take_Branch = false;
-					cpu_Regs[cpu_Base_Reg] = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
-				}
-				break;
-
-			case cpu_Thumb_High_Cmp:
-				// Sub but no flags change
-				// unpredictable if first register is 15?
-				cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
-
-				cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 3) & 0xF);
-
-				cpu_ALU_Long_Result = cpu_Regs[cpu_Base_Reg];
-				cpu_ALU_Long_Result -= cpu_Regs[cpu_Base_Reg_2];
-
-				cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-				cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-				cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_Base_Reg], cpu_Regs[cpu_Base_Reg_2], (uint32_t)cpu_ALU_Long_Result));
-				cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-				cpu_FlagZset(cpu_ALU_Long_Result == 0);
-				break;
-
-			case cpu_Thumb_High_Bx:
-				// Branch and exchange mode (possibly)
-				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 0xF);
-
-				cpu_Temp_Reg = (cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFE);
-				break;
-
-			case cpu_Thumb_High_MOV:
-				cpu_Temp_Reg = cpu_Regs[((cpu_Instr_TMB_2 >> 3) & 0xF)];
-
-				cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
-
-				// don't change the read address before branching if destination is a branch
-				if (cpu_Base_Reg != 0xF)
-				{
-					cpu_Regs[cpu_Base_Reg] = cpu_Temp_Reg;
-				}
-				else
-				{
-					cpu_Take_Branch = true;
-				}
-				break;
-
-			case cpu_Thumb_ALU_Imm:
-				cpu_ALU_Reg_Dest = (cpu_Instr_TMB_2 >> 8) & 7;
-
-				cpu_ALU_Temp_Val = (uint32_t)(cpu_Instr_TMB_2 & 0xFF);
-
-				switch ((cpu_Instr_TMB_2 >> 11) & 3)
-				{
-					case 0:			// MOV
-						cpu_Regs[cpu_ALU_Reg_Dest] = cpu_ALU_Temp_Val;
-						cpu_FlagNset(false);
-						cpu_FlagZset(cpu_ALU_Temp_Val == 0);
-						break;
-
-					case 1:         // CMP
-						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-						cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
-
-						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-						cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-						cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-						break;
-
-					case 2:         // ADD
-						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-						cpu_ALU_Long_Result += cpu_ALU_Temp_Val;
-
-						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) == cpu_Carry_Compare);
-
-						cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-						cpu_FlagVset(cpu_Calc_V_Flag_Add(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-						break;
-
-					case 3:         // SUB
-						cpu_ALU_Long_Result = cpu_Regs[cpu_ALU_Reg_Dest];
-						cpu_ALU_Long_Result -= cpu_ALU_Temp_Val;
-
-						cpu_FlagCset((cpu_ALU_Long_Result & cpu_Carry_Compare) != cpu_Carry_Compare);
-
-						cpu_ALU_Long_Result &= cpu_Cast_Int;
-
-						cpu_FlagVset(cpu_Calc_V_Flag_Sub(cpu_Regs[cpu_ALU_Reg_Dest], cpu_ALU_Temp_Val, (uint32_t)cpu_ALU_Long_Result));
-						cpu_FlagNset((cpu_ALU_Long_Result & cpu_Neg_Compare) == cpu_Neg_Compare);
-						cpu_FlagZset(cpu_ALU_Long_Result == 0);
-
-						cpu_Regs[cpu_ALU_Reg_Dest] = (uint32_t)cpu_ALU_Long_Result;
-						break;
-				}
-				break;
-
-			case cpu_Thumb_PC_Rel_LS:
-				cpu_LS_Is_Load = true;
-
-				cpu_Overwrite_Base_Reg = false;
-
-				cpu_Base_Reg = 15;
-
-				cpu_Temp_Addr = (uint32_t)((cpu_Regs[cpu_Base_Reg] & 0xFFFFFFFC) + ((cpu_Instr_TMB_2 & 0xFF) << 2));
-
-				cpu_Temp_Reg_Ptr = (cpu_Instr_TMB_2 >> 8) & 7;
-				break;
-
-			case cpu_Thumb_Rel_LS:
-				switch ((cpu_Instr_TMB_2 & 0xE00) >> 9)
-				{
-					case 0: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-					case 1: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-					case 2: cpu_LS_Is_Load = false; cpu_Sign_Extend_Load = false; break;
-					case 3: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
-					case 4: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-					case 5: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-					case 6: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = false; break;
-					case 7: cpu_LS_Is_Load = true; cpu_Sign_Extend_Load = true; break;
-				}
-
-				cpu_Overwrite_Base_Reg = false;
-
-				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
-				cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 6) & 7);
-
-				cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
-
-				cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
-				break;
-
-			case cpu_Thumb_Imm_LS:
-				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
-
-				cpu_Overwrite_Base_Reg = false;
-
-				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
-
-				if ((cpu_Instr_TMB_2 & 0x1000) == 0x1000)
-				{
-					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 6) & 0x1F));
-				}
-				else
-				{
-					cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 4) & 0x7C));
-				}
-
-				cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
-				break;
-
-			case cpu_Thumb_Half_LS:
-				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
-
-				cpu_Overwrite_Base_Reg = false;
-
-				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 7);
-
-				cpu_Temp_Addr = (uint32_t)(cpu_Regs[cpu_Base_Reg] + ((cpu_Instr_TMB_2 >> 5) & 0x3E));
-
-				cpu_Temp_Reg_Ptr = cpu_Instr_TMB_2 & 7;
-				break;
-
-			case cpu_Thumb_SP_REL_LS:
-				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
-
-				cpu_Overwrite_Base_Reg = false;
-
-				cpu_Temp_Addr = (uint32_t)(cpu_Regs[13] + ((cpu_Instr_TMB_2 & 0xFF) << 2));
-
-				cpu_Temp_Reg_Ptr = (cpu_Instr_TMB_2 >> 8) & 7;
-				break;
-
-			case cpu_Thumb_Add_SP_PC:
-				cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 8) & 7);
-
-				cpu_Overwrite_Base_Reg = false;
-
-				if ((cpu_Instr_TMB_2 & 0x800) == 0x800)
-				{
-					cpu_Regs[cpu_Base_Reg] = (uint32_t)(cpu_Regs[13] + ((cpu_Instr_TMB_2 & 0xFF) << 2));
-				}
-				else
-				{
-					cpu_Regs[cpu_Base_Reg] = (uint32_t)((cpu_Regs[15] & 0xFFFFFFFC) + ((cpu_Instr_TMB_2 & 0xFF) << 2));
-				}
-				break;
-
-			case cpu_Thumb_Add_Sub_Stack:
-				if ((cpu_Instr_TMB_2 & 0x80) == 0x0)
-				{
-					cpu_Regs[13] += (uint32_t)((cpu_Instr_TMB_2 & 0x7F) << 2);
-				}
-				else
-				{
-					cpu_Regs[13] -= (uint32_t)((cpu_Instr_TMB_2 & 0x7F) << 2);
-				}
-				break;
-
-			case cpu_Thumb_Push_Pop:
-				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
-
-				// base reg is always 13 for push / pop
-				cpu_Base_Reg = 13;
-
-				cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
-
-				cpu_LS_First_Access = true;
-
-				// always overwrite base reg
-				cpu_Overwrite_Base_Reg = true;
-
-				// Increment timing depends on it being a push or a pop
-				cpu_Multi_Before = !cpu_LS_Is_Load;
-
-				// Increment / Decrement depends on it being a push or a pop
-				cpu_Multi_Inc = cpu_LS_Is_Load;
-
-				// No analog to ARM S Bit here
-				cpu_Multi_S_Bit = false;
-				cpu_Multi_Swap = false;
-
-				// build list of registers to access
-				cpu_Multi_List_Size = cpu_Multi_List_Ptr = 0;
-
-				for (int i = 0; i < 8; i++)
-				{
-					cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-					cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
-				}
-
-				// additionally, may impact reg 14 (Link), or 15 (PC)
-				if ((cpu_Instr_TMB_2 & 0x100) == 0x100)
-				{
-					if (cpu_LS_Is_Load)
-					{
-						cpu_Regs_To_Access[cpu_Multi_List_Size] = 15;
-					}
-					else
-					{
-						cpu_Regs_To_Access[cpu_Multi_List_Size] = 14;
-					}
-
-					cpu_Multi_List_Size += 1;
-				}
-
-				cpu_Special_Inc = false;
-
-				// For Pop, start address is at the bottom
-				if (!cpu_Multi_Inc)
-				{
-					cpu_Temp_Addr -= (uint32_t)((cpu_Multi_List_Size - 1) * 4);
-					cpu_Temp_Addr -= 4;
-					cpu_Write_Back_Addr = cpu_Temp_Addr;
-				}
-
-				// No registers selected is unpredictable
-				if (cpu_Multi_List_Size == 0)
-				{
-					cpu_Multi_List_Size = 1;
-					cpu_Regs_To_Access[0] = 15;
-					cpu_Special_Inc = true;
-				}
-				break;
-
-			case cpu_Thumb_Multi_1:
-				cpu_LS_Is_Load = (cpu_Instr_TMB_2 & 0x800) == 0x800;
-
-				cpu_Base_Reg = (cpu_Instr_TMB_2 >> 8) & 7;
-
-				cpu_Temp_Addr = cpu_Regs[cpu_Base_Reg];
-
-				cpu_LS_First_Access = true;
-
-				// always overwrite base reg, unless reading and including base reg
-				cpu_Overwrite_Base_Reg = !cpu_LS_Is_Load || (((cpu_Instr_TMB_2 >> cpu_Base_Reg) & 1) == 0);
-
-				// always increment after
-				cpu_Multi_Before = false;
-
-				// always increment
-				cpu_Multi_Inc = true;
-
-				// No analog to ARM S Bit here
-				cpu_Multi_S_Bit = false;
-				cpu_Multi_Swap = false;
-
-				// build list of registers to access
-				cpu_Multi_List_Size = cpu_Multi_List_Ptr = 0;
-
-				for (int i = 0; i < 8; i++)
-				{
-					cpu_Regs_To_Access[cpu_Multi_List_Size] = i;
-					cpu_Multi_List_Size += ((cpu_Instr_TMB_2 >> i) & 1);
-				}
-
-				cpu_Special_Inc = false;
-
-				// No registers selected loads R15 instead
-				if (cpu_Multi_List_Size == 0)
-				{
-					cpu_Multi_List_Size = 1;
-					cpu_Regs_To_Access[0] = 15;
-					cpu_Special_Inc = true;
-				}
-				break;
-
-			case cpu_Thumb_Branch:
-				ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 1);
-
-				// offset is signed
-				if ((ofst & 0x800) == 0x800) { ofst = (uint32_t)(ofst | 0xFFFFF000); }
-
-				cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
-
-				cpu_Take_Branch = true;
-				break;
-
-			case cpu_Thumb_Branch_Cond:
-				ofst = (uint32_t)((cpu_Instr_TMB_2 & 0xFF) << 1);
-
-				// offset is signed
-				if ((ofst & 0x100) == 0x100) { ofst = (uint32_t)(ofst | 0xFFFFFE00); }
-
-				cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
-
-				cpu_Take_Branch = cpu_TMB_Condition_Check();
-				break;
-
-			case cpu_Thumb_Branch_Link_1:
-				ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 12);
-
-				// offset is signed
-				if ((ofst & 0x400000) == 0x400000) { ofst = (uint32_t)(ofst | 0xFF800000); }
-
-				cpu_Regs[14] = (uint32_t)(cpu_Regs[15] + ofst);
-				break;
-
-			case cpu_Thumb_Branch_Link_2:
-				ofst = (uint32_t)((cpu_Instr_TMB_2 & 0x7FF) << 1);
-
-				cpu_Temp_Reg = (uint32_t)(cpu_Regs[14] + ofst);
-
-				// NOTE: OR with 1, probably reuses the same cpu circuitry that triggers switch to Thumb mode when writing to R[15] directly?
-				cpu_Regs[14] = (uint32_t)((cpu_Regs[15] - 2) | 1);
-
-				cpu_Take_Branch = true;
-				break;
 		}
 	}
 
