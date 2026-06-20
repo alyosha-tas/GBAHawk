@@ -30,7 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bus_Updater.cpp" />
-    <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="CPU_ARM.cpp" />
+    <ClCompile Include="CPU_LDM_Glitch.cpp" />
+    <ClCompile Include="CPU_Thumb.cpp" />
     <ClCompile Include="GBAHawk.cpp" />
     <ClCompile Include="GBA_System.cpp" />
     <ClCompile Include="MemoryMap.cpp" />

@@ -1270,7 +1270,7 @@ namespace GBAHawk
 		int64_t cpu_ALU_Signed_Long_Result;
 
 		uint32_t cpu_Regs_To_Access[16] = { };
-		uint32_t cpu_Regs[18] = { };
+		uint32_t cpu_Regs[19] = { };
 
 		inline bool cpu_FlagNget() { return (cpu_Regs[16] & 0x80000000) != 0; }
 		inline void cpu_FlagNset(bool value) { cpu_Regs[16] = (uint32_t)((cpu_Regs[16] & ~0x80000000) | (value ? 0x80000000 : 0x00000000)); }
@@ -1302,7 +1302,7 @@ namespace GBAHawk
 			cpu_intr_R13 = cpu_intr_R14 = cpu_intr_S = 0;
 			cpu_fiq_R8 = cpu_fiq_R9 = cpu_fiq_R10 = cpu_fiq_R11 = cpu_fiq_R12 = cpu_fiq_R13 = cpu_fiq_R14 = cpu_fiq_S = 0;
 
-			for (int i = 0; i < 18; i++)
+			for (int i = 0; i < 19; i++)
 			{
 				cpu_Regs[i] = 0;
 			}
@@ -1681,19 +1681,17 @@ namespace GBAHawk
 		const static uint16_t cpu_Internal_And_Branch_2_ARM = 4;
 		const static uint16_t cpu_Internal_And_Branch_3_ARM = 5;
 		const static uint16_t cpu_Prefetch_Only_1_ARM = 6;
-		const static uint16_t cpu_Prefetch_Only_2_ARM = 7;
-		const static uint16_t cpu_Prefetch_And_Load_Store_ARM = 8;
-		const static uint16_t cpu_Load_Store_Word_ARM = 9;
-		const static uint16_t cpu_Load_Store_Half_ARM = 10;
-		const static uint16_t cpu_Load_Store_Byte_ARM = 11;
-		const static uint16_t cpu_Multi_Load_Store_ARM = 12;
-		const static uint16_t cpu_Multiply_ARM = 13;
-		const static uint16_t cpu_Prefetch_Swap_ARM = 14;
-		const static uint16_t cpu_Swap_ARM = 15;
-		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 16;
-		const static uint16_t cpu_Prefetch_Condition_Fail_ARM = 17;
+		const static uint16_t cpu_Prefetch_And_Load_Store_ARM = 7;
+		const static uint16_t cpu_Load_Store_Word_ARM = 8;
+		const static uint16_t cpu_Load_Store_Half_ARM = 9;
+		const static uint16_t cpu_Load_Store_Byte_ARM = 10;
+		const static uint16_t cpu_Multi_Load_Store_ARM = 11;
+		const static uint16_t cpu_Multiply_ARM = 12;
+		const static uint16_t cpu_Prefetch_Swap_ARM = 13;
+		const static uint16_t cpu_Swap_ARM = 14;
+		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 15;
 
-		const static uint16_t cpu_Prefetch_TMB = 20;
+		const static uint16_t cpu_Internal_And_Prefetch_TMB = 20;
 		const static uint16_t cpu_Prefetch_Ex_TMB = 21;
 		const static uint16_t cpu_Internal_And_Branch_1_TMB = 22;
 		const static uint16_t cpu_Prefetch_Pipeline_Refill_TMB = 23;
@@ -1720,65 +1718,45 @@ namespace GBAHawk
 		const static uint16_t cpu_Pause_For_DMA = 47;
 		
 		// Instruction Operations ARM
-		const static uint16_t cpu_ARM_AND = 10;
-		const static uint16_t cpu_ARM_EOR = 11;
-		const static uint16_t cpu_ARM_SUB = 12;
-		const static uint16_t cpu_ARM_RSB = 13;
-		const static uint16_t cpu_ARM_ADD = 14;
-		const static uint16_t cpu_ARM_ADC = 15;
-		const static uint16_t cpu_ARM_SBC = 16;
-		const static uint16_t cpu_ARM_RSC = 17;
-		const static uint16_t cpu_ARM_TST = 18;
-		const static uint16_t cpu_ARM_TEQ = 19;
-		const static uint16_t cpu_ARM_CMP = 20;
-		const static uint16_t cpu_ARM_CMN = 21;
-		const static uint16_t cpu_ARM_ORR = 22;
-		const static uint16_t cpu_ARM_MOV = 23;
-		const static uint16_t cpu_ARM_BIC = 24;
-		const static uint16_t cpu_ARM_MVN = 25;
-		const static uint16_t cpu_ARM_MSR = 26;
-		const static uint16_t cpu_ARM_MSR_Glitchy = 27;
-		const static uint16_t cpu_ARM_MRS = 28;
-		const static uint16_t cpu_ARM_Bx = 29;
-		const static uint16_t cpu_ARM_MUL = 30;
-		const static uint16_t cpu_ARM_MUL_UL = 31;
-		const static uint16_t cpu_ARM_MUL_SL = 32;
-		const static uint16_t cpu_ARM_Swap = 33;
-		const static uint16_t cpu_ARM_Imm_LS = 34;
-		const static uint16_t cpu_ARM_Reg_LS = 35;
-		const static uint16_t cpu_ARM_Multi_1 = 36;
-		const static uint16_t cpu_ARM_Branch = 37;
-		const static uint16_t cpu_ARM_Cond_Check_Only = 38;
+		const static uint16_t cpu_ARM_AND = 0;
+		const static uint16_t cpu_ARM_EOR = 1;
+		const static uint16_t cpu_ARM_SUB = 2;
+		const static uint16_t cpu_ARM_RSB = 3;
+		const static uint16_t cpu_ARM_ADD = 4;
+		const static uint16_t cpu_ARM_ADC = 5;
+		const static uint16_t cpu_ARM_SBC = 6;
+		const static uint16_t cpu_ARM_RSC = 7;
+		const static uint16_t cpu_ARM_TST = 8;
+		const static uint16_t cpu_ARM_TEQ = 9;
+		const static uint16_t cpu_ARM_CMP = 10;
+		const static uint16_t cpu_ARM_CMN = 11;
+		const static uint16_t cpu_ARM_ORR = 12;
+		const static uint16_t cpu_ARM_MOV = 13;
+		const static uint16_t cpu_ARM_BIC = 14;
+		const static uint16_t cpu_ARM_MVN = 15;
+		const static uint16_t cpu_ARM_MSR = 16;
+		const static uint16_t cpu_ARM_MSR_Glitchy = 17;
+		const static uint16_t cpu_ARM_MRS = 18;
 
-		const static uint16_t cpu_ARM_AND_LDM = 110;
-		const static uint16_t cpu_ARM_EOR_LDM = 111;
-		const static uint16_t cpu_ARM_SUB_LDM = 112;
-		const static uint16_t cpu_ARM_RSB_LDM = 113;
-		const static uint16_t cpu_ARM_ADD_LDM = 114;
-		const static uint16_t cpu_ARM_ADC_LDM = 115;
-		const static uint16_t cpu_ARM_SBC_LDM = 116;
-		const static uint16_t cpu_ARM_RSC_LDM = 117;
-		const static uint16_t cpu_ARM_TST_LDM = 118;
-		const static uint16_t cpu_ARM_TEQ_LDM = 119;
-		const static uint16_t cpu_ARM_CMP_LDM = 120;
-		const static uint16_t cpu_ARM_CMN_LDM = 121;
-		const static uint16_t cpu_ARM_ORR_LDM = 122;
-		const static uint16_t cpu_ARM_MOV_LDM = 123;
-		const static uint16_t cpu_ARM_BIC_LDM = 124;
-		const static uint16_t cpu_ARM_MVN_LDM = 125;
-		const static uint16_t cpu_ARM_MSR_LDM = 126;
-		const static uint16_t cpu_ARM_MSR_LDM_Glitchy = 127;
-		const static uint16_t cpu_ARM_MRS_LDM = 128;
-		const static uint16_t cpu_ARM_Bx_LDM = 129;
-		const static uint16_t cpu_ARM_MUL_LDM = 130;
-		const static uint16_t cpu_ARM_MUL_UL_LDM = 131;
-		const static uint16_t cpu_ARM_MUL_SL_LDM = 132;
-		const static uint16_t cpu_ARM_Swap_LDM = 133;
-		const static uint16_t cpu_ARM_Imm_LS_LDM = 134;
-		const static uint16_t cpu_ARM_Reg_LS_LDM = 135;
-		const static uint16_t cpu_ARM_Multi_1_LDM = 136;
-		const static uint16_t cpu_ARM_Branch_LDM = 137;
-		const static uint16_t cpu_ARM_Cond_Check_Only_LDM = 138;
+		const static uint16_t cpu_ARM_AND_LDM = 0;
+		const static uint16_t cpu_ARM_EOR_LDM = 1;
+		const static uint16_t cpu_ARM_SUB_LDM = 2;
+		const static uint16_t cpu_ARM_RSB_LDM = 3;
+		const static uint16_t cpu_ARM_ADD_LDM = 4;
+		const static uint16_t cpu_ARM_ADC_LDM = 5;
+		const static uint16_t cpu_ARM_SBC_LDM = 6;
+		const static uint16_t cpu_ARM_RSC_LDM = 7;
+		const static uint16_t cpu_ARM_TST_LDM = 8;
+		const static uint16_t cpu_ARM_TEQ_LDM = 9;
+		const static uint16_t cpu_ARM_CMP_LDM = 10;
+		const static uint16_t cpu_ARM_CMN_LDM = 11;
+		const static uint16_t cpu_ARM_ORR_LDM = 12;
+		const static uint16_t cpu_ARM_MOV_LDM = 13;
+		const static uint16_t cpu_ARM_BIC_LDM = 14;
+		const static uint16_t cpu_ARM_MVN_LDM = 15;
+		const static uint16_t cpu_ARM_MSR_LDM = 16;
+		const static uint16_t cpu_ARM_MSR_LDM_Glitchy = 17;
+		const static uint16_t cpu_ARM_MRS_LDM = 18;
 
 		// Instruction Operations Thumb
 		const static uint16_t cpu_Thumb_AND = 0;
@@ -2086,7 +2064,11 @@ namespace GBAHawk
 			}
 		}
 
+		void cpu_Mul_Swap_Decode_ARM();
+		void cpu_Mul_Swap_Decode_ARM_LDM();
+
 		void cpu_Execute_Internal_Only_ARM();
+		void cpu_Execute_Internal_Only_ARM_LDM();
 
 		bool cpu_ARM_Condition_Check()
 		{
@@ -3508,7 +3490,7 @@ namespace GBAHawk
 
 			saver = int_array_saver(cpu_Regs_To_Access, saver, 16);
 
-			saver = int_array_saver(cpu_Regs, saver, 18);
+			saver = int_array_saver(cpu_Regs, saver, 19);
 
 			return saver;
 		}
@@ -3633,7 +3615,7 @@ namespace GBAHawk
 
 			loader = int_array_loader(cpu_Regs_To_Access, loader, 16);
 
-			loader = int_array_loader(cpu_Regs, loader, 18);
+			loader = int_array_loader(cpu_Regs, loader, 19);
 
 			return loader;
 		}

@@ -2254,12 +2254,10 @@ namespace GBAHawk
 		{
 			case cpu_Internal_And_Prefetch_ARM:
 				// In this code path the instruction takes only one internal cycle, a pretech is also done
-				// so necessarily the condition code check happens here, and interrupts may occur
+				// opcodes whose condition check fails also go here, as well as second cycle of pipeline refill
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -2292,8 +2290,6 @@ namespace GBAHawk
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
 
-					cpu_Execute_Internal_Only_ARM();
-
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
 
@@ -2324,8 +2320,6 @@ namespace GBAHawk
 					cpu_FlagI_Old = cpu_FlagIget();
 
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -2364,12 +2358,7 @@ namespace GBAHawk
 				// decide whether or not to branch. If no branch taken, interrupts may occur
 				if (cpu_Fetch_Cnt == 0)
 				{
-					// whether or not to take the branch is determined in the instruction execution
-					cpu_Take_Branch = false;
-
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -2380,28 +2369,15 @@ namespace GBAHawk
 				{
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 
-					if (cpu_Take_Branch)
-					{
-						cpu_Regs[15] = cpu_Temp_Reg;
+					cpu_Regs[15] = cpu_Temp_Reg;
 
-						// Invalidate instruction pipeline
-						cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
-					}
-					else
-					{
-						cpu_Regs[15] += 4;
-
-						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_ARM(); }
-					}
+					// Invalidate instruction pipeline
+					cpu_Instr_Type = cpu_Prefetch_Only_1_ARM;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 
-					cpu_Seq_Access = cpu_Take_Branch ? false : true;
+					cpu_Seq_Access = false;
 				}
 				break;
 
@@ -2422,7 +2398,7 @@ namespace GBAHawk
 				{
 					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
 
-					cpu_Execute_Internal_Only_ARM();
+					cpu_Regs[15] = cpu_Regs[18];
 
 					// if S bit set in the instruction (can only happen in ARM mode) copy SPSR to CPSR
 					if (cpu_ALU_S_Bit)
@@ -2512,36 +2488,7 @@ namespace GBAHawk
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 
-					cpu_Instr_Type = cpu_Prefetch_Only_2_ARM;
-					cpu_Seq_Access = true;
-				}
-				break;
-
-			case cpu_Prefetch_Only_2_ARM:
-				// This code path is the last cycle of pipeline refill, no instruction execution but interrupts may occur
-				if (cpu_Fetch_Cnt == 0)
-				{
-					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_IRQ_Input_Use = cpu_IRQ_Input;
-				}
-
-				cpu_Fetch_Cnt += 1;
-
-				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
-				{
-					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
-					cpu_Regs[15] += 4;
-
-					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-					else { cpu_Decode_ARM(); }
-
-					cpu_Fetch_Cnt = 0;
-					cpu_Fetch_Wait = 0;
-
+					cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
 					cpu_Seq_Access = true;
 				}
 				break;
@@ -2551,8 +2498,6 @@ namespace GBAHawk
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -2991,8 +2936,6 @@ namespace GBAHawk
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
 
-					cpu_Execute_Internal_Only_ARM();
-
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
 
@@ -3020,8 +2963,6 @@ namespace GBAHawk
 				if (cpu_Fetch_Cnt == 0)
 				{
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -3129,12 +3070,7 @@ namespace GBAHawk
 				// interrupt only if condition failed
 				if (cpu_Fetch_Cnt == 0)
 				{
-					// start in thumb mode, always branch
-					cpu_Take_Branch = true;
-
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_Execute_Internal_Only_ARM();
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
 				}
@@ -3161,36 +3097,7 @@ namespace GBAHawk
 				}
 				break;
 
-			case cpu_Prefetch_Condition_Fail_ARM:
-				// In this code path the ARM coniditon check failed, so no action takes place aside from prefetch
-				if (cpu_Fetch_Cnt == 0)
-				{
-					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-					cpu_IRQ_Input_Use = cpu_IRQ_Input;
-				}
-
-				cpu_Fetch_Cnt += 1;
-
-				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
-				{
-					cpu_Instr_ARM_0 = Read_Memory_32(cpu_Regs[15]);
-					cpu_Regs[15] += 4;
-
-					cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
-					cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
-
-					if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-					else { cpu_Decode_ARM(); }
-
-					cpu_Fetch_Cnt = 0;
-					cpu_Fetch_Wait = 0;
-
-					cpu_Seq_Access = true;
-				}
-				break;
-
-			case cpu_Prefetch_TMB:
+			case cpu_Internal_And_Prefetch_TMB:
 				// In this code path all operations were already done during decode, a pretech is also done
 				// this path is also used for second stage of pipeline refill
 				if (cpu_Fetch_Cnt == 0)
@@ -3265,6 +3172,8 @@ namespace GBAHawk
 
 						// Invalidate instruction pipeline
 						cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
+
+						cpu_Seq_Access = false;
 					}
 					else
 					{
@@ -3273,14 +3182,14 @@ namespace GBAHawk
 						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
 						cpu_Instr_TMB_1 = cpu_Instr_TMB_0;
 
+						cpu_Seq_Access = true;
+
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
 						else { cpu_Decode_TMB(); }
 					}
 
 					cpu_Fetch_Cnt = 0;
-					cpu_Fetch_Wait = 0;
-
-					cpu_Seq_Access = cpu_Take_Branch ? false : true;
+					cpu_Fetch_Wait = 0;			
 				}
 				break;
 
@@ -3305,7 +3214,7 @@ namespace GBAHawk
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;
 
-					cpu_Instr_Type = cpu_Prefetch_TMB;
+					cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
 					cpu_Seq_Access = true;
 				}
 				break;
@@ -3730,9 +3639,6 @@ namespace GBAHawk
 					else
 					{
 						cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
-
-						// In ARM mode, we might not actually generate an exception if the condition code fails
-						cpu_Execute_Internal_Only_ARM();
 					}
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
@@ -3874,7 +3780,7 @@ namespace GBAHawk
 			case cpu_Internal_And_Branch_4_ARM:
 				// This code path comes from an ALU instruction in ARM mode using R15 as the destination register
 				// and is the second half of the (implied) branch. No memory access, and no possible cycle save due to branch
-				cpu_Execute_Internal_Only_ARM();
+				cpu_Regs[15] = cpu_Regs[18];
 
 				cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
@@ -4021,7 +3927,7 @@ namespace GBAHawk
 						case cpu_Internal_And_Branch_4_ARM:
 							// This code path comes from an ALU instruction in ARM mode using R15 as the destination register
 							// and is the second half of the (implied) branch. No memory access, and no possible cycle save due to branch
-							cpu_Execute_Internal_Only_ARM();
+							cpu_Regs[15] = cpu_Regs[18];
 
 							cpu_IRQ_Input_Use = cpu_IRQ_Input;
 
