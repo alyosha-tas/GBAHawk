@@ -2314,11 +2314,9 @@ namespace GBAHawk
 				// This code path comes from instructions that modify CPSR (only from ARM mode)
 				// if we end up in thumb state, invalidate instruction pipeline
 				// otherwise check interrupts
-				// NOTE: Here we must use the old value of the I flag
+				// NOTE: Here we must use the old value of the I flag (taken care of during decode)
 				if (cpu_Fetch_Cnt == 0)
 				{
-					cpu_FlagI_Old = cpu_FlagIget();
-
 					cpu_Fetch_Wait = Wait_State_Access_32_Instr(cpu_Regs[15], cpu_Seq_Access);
 
 					cpu_IRQ_Input_Use = cpu_IRQ_Input;
@@ -3166,27 +3164,12 @@ namespace GBAHawk
 				{
 					cpu_Instr_TMB_0 = Read_Memory_16(cpu_Regs[15]);
 
-					if (cpu_Take_Branch)
-					{
-						cpu_Regs[15] = (cpu_Temp_Reg & 0xFFFFFFFE);
+					cpu_Regs[15] = (cpu_Temp_Reg & 0xFFFFFFFE);
 
-						// Invalidate instruction pipeline
-						cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
+					// Invalidate instruction pipeline
+					cpu_Instr_Type = cpu_Prefetch_Pipeline_Refill_TMB;
 
-						cpu_Seq_Access = false;
-					}
-					else
-					{
-						cpu_Regs[15] += 2;
-
-						cpu_Instr_TMB_2 = cpu_Instr_TMB_1;
-						cpu_Instr_TMB_1 = cpu_Instr_TMB_0;
-
-						cpu_Seq_Access = true;
-
-						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
-						else { cpu_Decode_TMB(); }
-					}
+					cpu_Seq_Access = false;
 
 					cpu_Fetch_Cnt = 0;
 					cpu_Fetch_Wait = 0;			

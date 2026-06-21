@@ -38,7 +38,7 @@ namespace GBAHawk
 
 		FrameCycle = 0;
 
-		cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = cpu_Take_Branch = false;
+		cpu_Seq_Access = cpu_IRQ_Input = cpu_IRQ_Input_Use = cpu_Is_Paused = false;
 
 		cpu_No_IRQ_Clock = cpu_Restore_IRQ_Clock = false;
 
@@ -1206,6 +1206,8 @@ namespace GBAHawk
 				break;
 
 			case cpu_ARM_MSR:
+				cpu_FlagI_Old = cpu_FlagIget();
+				
 				if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
 				if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
 				if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }
@@ -1256,6 +1258,8 @@ namespace GBAHawk
 				break;
 
 			case cpu_ARM_MSR_Glitchy:
+				cpu_FlagI_Old = cpu_FlagIget();
+				
 				if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
 				if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
 				if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }

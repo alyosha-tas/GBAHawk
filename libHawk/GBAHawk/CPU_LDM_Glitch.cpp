@@ -1189,6 +1189,8 @@ namespace GBAHawk
 				break;
 
 			case cpu_ARM_MSR_LDM:
+				cpu_FlagI_Old = cpu_FlagIget();
+				
 				if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
 				if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
 				if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }
@@ -1239,6 +1241,8 @@ namespace GBAHawk
 				break;
 
 			case cpu_ARM_MSR_LDM_Glitchy:
+				cpu_FlagI_Old = cpu_FlagIget();
+				
 				if ((cpu_Instr_ARM_2 & 0x10000) == 0x10000) { byte_mask |= 0x000000FF; }
 				if ((cpu_Instr_ARM_2 & 0x20000) == 0x20000) { byte_mask |= 0x0000FF00; }
 				if ((cpu_Instr_ARM_2 & 0x40000) == 0x40000) { byte_mask |= 0x00FF0000; }

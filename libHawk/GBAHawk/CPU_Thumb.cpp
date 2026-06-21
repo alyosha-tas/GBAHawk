@@ -15,9 +15,6 @@ namespace GBAHawk
 
 		int ofst = 0;
 
-		// whether or not to take the branch is determined as part of decode
-		cpu_Take_Branch = false;
-
 		switch ((cpu_Instr_TMB_2 >> 13) & 7)
 		{
 			case 0:
@@ -469,23 +466,21 @@ namespace GBAHawk
 							switch ((cpu_Instr_TMB_2 >> 8) & 3)
 							{
 								case 0:
-									cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
-
 									// Add but no flags change
 									// unpredictable if both registers are low registers?
 									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
 
 									cpu_Base_Reg_2 = ((cpu_Instr_TMB_2 >> 3) & 0xF);
 
-									if (cpu_Base_Reg == 15)
+									if (cpu_Base_Reg == 0xF)
 									{
 										// this becomes a branch
-										cpu_Take_Branch = true;
+										cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
 										cpu_Temp_Reg = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
 									}
 									else
 									{
-										cpu_Take_Branch = false;
+										cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
 										cpu_Regs[cpu_Base_Reg] = (uint32_t)(cpu_Regs[cpu_Base_Reg] + cpu_Regs[cpu_Base_Reg_2]);
 									}
 									break;
@@ -512,36 +507,26 @@ namespace GBAHawk
 									break;
 
 								case 2:
-									if (((cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8)) == 0xF)
+									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
+
+									cpu_Temp_Reg = cpu_Regs[((cpu_Instr_TMB_2 >> 3) & 0xF)];
+									
+									if (cpu_Base_Reg == 0xF)
 									{
+										// this becomes a branch
 										cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
 									}
 									else
 									{
 										cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
-									}
-
-									cpu_Temp_Reg = cpu_Regs[((cpu_Instr_TMB_2 >> 3) & 0xF)];
-
-									cpu_Base_Reg = (cpu_Instr_TMB_2 & 0x7) + ((cpu_Instr_TMB_2 >> 4) & 0x8);
-
-									// don't change the read address before branching if destination is a branch
-									if (cpu_Base_Reg != 0xF)
-									{
 										cpu_Regs[cpu_Base_Reg] = cpu_Temp_Reg;
-									}
-									else
-									{
-										cpu_Take_Branch = true;
 									}
 									break;
 
 								case 3:
+									// start in thumb mode, always branch
 									// Decodes correctly even if bit 7 is set
 									cpu_Instr_Type = cpu_Prefetch_And_Branch_Ex_TMB;
-
-									// start in thumb mode, always branch
-									cpu_Take_Branch = true;
 
 									// Branch and exchange mode (possibly)
 									cpu_Base_Reg = ((cpu_Instr_TMB_2 >> 3) & 0xF);
@@ -844,16 +829,21 @@ namespace GBAHawk
 					else
 					{
 						// Conditional Branch
-						cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
+						if (cpu_TMB_Condition_Check())
+						{
+							cpu_Instr_Type = cpu_Internal_And_Branch_1_TMB;
 
-						ofst = (uint32_t)((cpu_Instr_TMB_2 & 0xFF) << 1);
+							ofst = (uint32_t)((cpu_Instr_TMB_2 & 0xFF) << 1);
 
-						// offset is signed
-						if ((ofst & 0x100) == 0x100) { ofst = (uint32_t)(ofst | 0xFFFFFE00); }
+							// offset is signed
+							if ((ofst & 0x100) == 0x100) { ofst = (uint32_t)(ofst | 0xFFFFFE00); }
 
-						cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
-
-						cpu_Take_Branch = cpu_TMB_Condition_Check();
+							cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
+						}
+						else
+						{
+							cpu_Instr_Type = cpu_Internal_And_Prefetch_TMB;
+						}
 					}
 				}
 				break;
@@ -872,8 +862,6 @@ namespace GBAHawk
 						if ((ofst & 0x800) == 0x800) { ofst = (uint32_t)(ofst | 0xFFFFF000); }
 
 						cpu_Temp_Reg = (uint32_t)(cpu_Regs[15] + ofst);
-
-						cpu_Take_Branch = true;
 					}
 					else
 					{
@@ -908,8 +896,6 @@ namespace GBAHawk
 
 						// NOTE: OR with 1, probably reuses the same cpu circuitry that triggers switch to Thumb mode when writing to R[15] directly?
 						cpu_Regs[14] = (uint32_t)((cpu_Regs[15] - 2) | 1);
-
-						cpu_Take_Branch = true;
 					}
 				}
 				break;

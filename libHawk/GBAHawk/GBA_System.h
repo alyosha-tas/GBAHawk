@@ -1192,7 +1192,6 @@ namespace GBAHawk
 		bool cpu_Is_Paused;
 		bool cpu_No_IRQ_Clock;
 		bool cpu_Restore_IRQ_Clock;
-		bool cpu_Take_Branch;
 		bool cpu_LS_Is_Load;
 		bool cpu_LS_First_Access;
 		bool cpu_Invalidate_Pipeline;
@@ -3383,7 +3382,6 @@ namespace GBAHawk
 			saver = bool_saver(cpu_Is_Paused, saver);
 			saver = bool_saver(cpu_No_IRQ_Clock, saver);
 			saver = bool_saver(cpu_Restore_IRQ_Clock, saver);
-			saver = bool_saver(cpu_Take_Branch, saver);
 			saver = bool_saver(cpu_LS_Is_Load, saver);
 			saver = bool_saver(cpu_LS_First_Access, saver);
 			saver = bool_saver(cpu_Invalidate_Pipeline, saver);
@@ -3508,7 +3506,6 @@ namespace GBAHawk
 			loader = bool_loader(&cpu_Is_Paused, loader);
 			loader = bool_loader(&cpu_No_IRQ_Clock, loader);
 			loader = bool_loader(&cpu_Restore_IRQ_Clock, loader);
-			loader = bool_loader(&cpu_Take_Branch, loader);
 			loader = bool_loader(&cpu_LS_Is_Load, loader);
 			loader = bool_loader(&cpu_LS_First_Access, loader);
 			loader = bool_loader(&cpu_Invalidate_Pipeline, loader);
