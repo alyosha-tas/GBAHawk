@@ -28,7 +28,7 @@ namespace GBAHawk
 
 		cpu_ALU_Temp_Val = cpu_ALU_Temp_S_Val = cpu_ALU_Shift_Carry = 0;
 
-		cpu_Thumb_Mode = cpu_ARM_Cond_Passed = false; // Reset is exitted in ARM mode
+		cpu_Thumb_Mode = false; // Reset is exitted in ARM mode
 
 		cpu_Instr_Type = cpu_Internal_Reset_1; // 2 internal cycles pass after rest before instruction fetching begins
 
@@ -63,15 +63,16 @@ namespace GBAHawk
 	{
 		if (TraceCallback) TraceCallback(0);
 
-		cpu_ARM_Cond_Passed = cpu_ARM_Condition_Check();
-
 		// local variables not stated (evaluated each time)
 		int ofst = 0;
 		bool Use_Reg_15 = false;
 		uint32_t byte_mask = 0;
 		uint32_t total_mask = 0;
 
-		if (cpu_ARM_Cond_Passed)
+		// assuming condition check will fail
+		cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
+
+		if (cpu_ARM_Condition_Check())
 		{
 			switch ((cpu_Instr_ARM_2 >> 25) & 7)
 			{
@@ -784,16 +785,34 @@ namespace GBAHawk
 					}
 					else
 					{
-						// Coprocessor Instruction (treat as Undefined Opcode Exception)
-						cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
-						cpu_Exception_Type = cpu_Undef_Exc;
+						// Coprocessor Instruction (treat as Undefined Opcode Exception unless it is mrc / mcr to cp14)
+						if ((cpu_Instr_ARM_2 & 0x10) == 0x10)
+						{
+							// only cp14 responds
+							if ((cpu_Instr_ARM_2 & 0xF00) == 0xE00)
+							{
+								cpu_Instr_Type = cpu_Prefetch_And_Load_Store_ARM;
+								
+								// MRC load, MCR store
+								cpu_LS_Is_Load = ((cpu_Instr_ARM_2 & 0x100000) == 0x100000);
+								cpu_Next_Load_Store_Type = cpu_Load_Store_CPR_ARM;
+
+								cpu_Temp_Reg_Ptr = (cpu_Instr_ARM_2 >>12) & 0xF;
+							}
+							else
+							{
+								cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+								cpu_Exception_Type = cpu_Undef_Exc;
+							}
+						}
+						else
+						{
+							cpu_Instr_Type = cpu_Prefetch_And_SWI_Undef;
+							cpu_Exception_Type = cpu_Undef_Exc;
+						}
 					}
 					break;
 			}
-		}
-		else
-		{
-			cpu_Instr_Type = cpu_Internal_And_Prefetch_ARM;
 		}
 	}
 

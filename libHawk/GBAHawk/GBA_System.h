@@ -1182,7 +1182,6 @@ namespace GBAHawk
 		#pragma region Variables
 		// General Execution
 		bool cpu_Thumb_Mode;
-		bool cpu_ARM_Cond_Passed;
 		bool cpu_Seq_Access;
 		bool cpu_IRQ_Input;
 		bool cpu_IRQ_Input_Use;
@@ -1685,10 +1684,11 @@ namespace GBAHawk
 		const static uint16_t cpu_Load_Store_Half_ARM = 9;
 		const static uint16_t cpu_Load_Store_Byte_ARM = 10;
 		const static uint16_t cpu_Multi_Load_Store_ARM = 11;
-		const static uint16_t cpu_Multiply_ARM = 12;
-		const static uint16_t cpu_Prefetch_Swap_ARM = 13;
-		const static uint16_t cpu_Swap_ARM = 14;
-		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 15;
+		const static uint16_t cpu_Load_Store_CPR_ARM = 12;
+		const static uint16_t cpu_Multiply_ARM = 13;
+		const static uint16_t cpu_Prefetch_Swap_ARM = 14;
+		const static uint16_t cpu_Swap_ARM = 15;
+		const static uint16_t cpu_Prefetch_And_Branch_Ex_ARM = 16;
 
 		const static uint16_t cpu_Internal_And_Prefetch_TMB = 20;
 		const static uint16_t cpu_Prefetch_Ex_TMB = 21;
@@ -2980,8 +2980,33 @@ namespace GBAHawk
 				}
 				else
 				{
-					// Coprocessor Instruction (treat as Undefined Opcode Exception)
-					return "Undefined";
+					// Coprocessor Instruction (treat as Undefined Opcode Exception unless it is mrc / mcr to cp14)
+					if ((cpu_Instr_ARM_2 & 0x10) == 0x10)
+					{
+						// only cp14 responds
+						if ((cpu_Instr_ARM_2 & 0xF00) == 0xE00)
+						{
+							// MRC load, MCR store
+							if ((cpu_Instr_ARM_2 & 0x100000) == 0x100000)
+							{
+								sprintf_s(val_char_2, 40, "MRC 14 R%02d", (cpu_Instr_ARM_2 >> 12) & 0xF);
+							}
+							else
+							{
+								sprintf_s(val_char_2, 40, "MCR 14 R%02d", (cpu_Instr_ARM_2 >> 12) & 0xF);
+							}
+
+							return std::string(val_char_2);
+						}
+						else
+						{
+							return "Undefined";
+						}
+					}
+					else
+					{
+						return "Undefined";
+					}
 				}
 			}
 
@@ -3372,7 +3397,6 @@ namespace GBAHawk
 		uint8_t* cpu_SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(cpu_Thumb_Mode, saver);
-			saver = bool_saver(cpu_ARM_Cond_Passed, saver);
 			saver = bool_saver(cpu_Seq_Access, saver);
 			saver = bool_saver(cpu_IRQ_Input, saver);
 			saver = bool_saver(cpu_IRQ_Input_Use, saver);
@@ -3496,7 +3520,6 @@ namespace GBAHawk
 		uint8_t* cpu_LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&cpu_Thumb_Mode, loader);
-			loader = bool_loader(&cpu_ARM_Cond_Passed, loader);
 			loader = bool_loader(&cpu_Seq_Access, loader);
 			loader = bool_loader(&cpu_IRQ_Input, loader);
 			loader = bool_loader(&cpu_IRQ_Input_Use, loader);

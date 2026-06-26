@@ -2928,6 +2928,60 @@ namespace GBAHawk
 				}
 				break;
 
+			case cpu_Load_Store_CPR_ARM:
+				// Simulates loads/stores using CP14
+				if (cpu_Fetch_Cnt == 0)
+				{
+					cpu_Fetch_Wait = 1;
+
+					cpu_IRQ_Input_Use = cpu_IRQ_Input;
+				}
+
+				cpu_Fetch_Cnt += 1;
+
+				if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
+				{
+					if (cpu_LS_Is_Load)
+					{
+						cpu_ALU_Temp_Val = cpu_Last_Bus_Value;
+
+						if (cpu_Temp_Reg_Ptr == 15)
+						{
+							// update flags instead
+							cpu_FlagNset((cpu_ALU_Temp_Val & 0x80000000) == 0x80000000);
+							cpu_FlagZset((cpu_ALU_Temp_Val & 0x40000000) == 0x40000000);
+							cpu_FlagCset((cpu_ALU_Temp_Val & 0x20000000) == 0x20000000);
+							cpu_FlagVset((cpu_ALU_Temp_Val & 0x10000000) == 0x10000000);
+
+							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+						}
+						else
+						{
+							// if the next cycle is a memory access, one cycle can be saved
+							cpu_Regs[cpu_Temp_Reg_Ptr] = cpu_ALU_Temp_Val;
+							cpu_Instr_Type = cpu_Internal_Can_Save_ARM;
+						}
+					}
+					else
+					{
+						// nothing happens except a bus update
+						cpu_Last_Bus_Value = cpu_Regs[cpu_Temp_Reg_Ptr];
+
+						// when writing, there is no last internal cycle, proceed to the next instruction
+						// also check for interrupts
+						cpu_Instr_ARM_2 = cpu_Instr_ARM_1;
+						cpu_Instr_ARM_1 = cpu_Instr_ARM_0;
+
+						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; }
+						else { cpu_Decode_ARM(); }
+					}
+
+					cpu_Seq_Access = false; // sequential access always false after memory access
+					cpu_Fetch_Cnt = 0;
+					cpu_Fetch_Wait = 0;
+				}
+				break;
+
 			case cpu_Multiply_ARM:
 				// Multiplication with possibly early termination
 				if (cpu_Fetch_Cnt == 0)
@@ -3831,7 +3885,7 @@ namespace GBAHawk
 					if (cpu_LDM_Glitch_Mode)
 					{
 						if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; cpu_LDM_Glitch_Mode = false; }
-						else { cpu_LDM_Glitch_Decode_ARM(); }
+						else { cpu_LDM_Glitch_Decode_ARM(); cpu_LDM_Glitch_Mode = false; }
 					}
 					else
 					{
@@ -3978,7 +4032,7 @@ namespace GBAHawk
 								if (cpu_LDM_Glitch_Mode)
 								{
 									if (cpu_IRQ_Input_Use && !cpu_FlagIget()) { cpu_Instr_Type = cpu_Prefetch_IRQ; cpu_LDM_Glitch_Mode = false; }
-									else { cpu_LDM_Glitch_Decode_ARM(); }
+									else { cpu_LDM_Glitch_Decode_ARM(); cpu_LDM_Glitch_Mode = false; }
 								}
 								else
 								{
