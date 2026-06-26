@@ -354,13 +354,13 @@ namespace GBAHawk
 			int32_t* src = GBA.samples_L;
 			int32_t* dst = dest_L;
 
-			std::memcpy(dst, src, sizeof int32_t * GBA.num_samples_L * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * GBA.num_samples_L * 2);
 			n_samp_L[0] = GBA.num_samples_L;
 
 			src = GBA.samples_R;
 			dst = dest_R;
 
-			std::memcpy(dst, src, sizeof int32_t * GBA.num_samples_R * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * GBA.num_samples_R * 2);
 			n_samp_R[0] = GBA.num_samples_R;
 
 			uint32_t temp_int = GBA.snd_Master_Clock;

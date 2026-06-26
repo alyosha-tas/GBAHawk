@@ -427,13 +427,13 @@ namespace GBHawk
 			int32_t* src = GB.samples_L;
 			int32_t* dst = dest_L;
 
-			std::memcpy(dst, src, sizeof int32_t * GB.num_samples_L * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * GB.num_samples_L * 2);
 			n_samp_L[0] = GB.num_samples_L;
 
 			src = GB.samples_R;
 			dst = dest_R;
 
-			std::memcpy(dst, src, sizeof int32_t * GB.num_samples_R * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * GB.num_samples_R * 2);
 			n_samp_R[0] = GB.num_samples_R;
 
 			uint32_t temp_int = GB.snd_Master_Clock;
