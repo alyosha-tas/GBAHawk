@@ -225,7 +225,7 @@ namespace NESHawk
 
 		void Load_Palette(uint8_t* ext_palette)
 		{
-			std::memcpy(NES.Compiled_Palette, ext_palette, sizeof int32_t * 512);
+			std::memcpy(NES.Compiled_Palette, ext_palette, sizeof(int32_t) * 512);
 		}
 
 		void Hard_Reset() 
@@ -365,7 +365,7 @@ namespace NESHawk
 			int32_t* src = NES.apu_Audio_Samples;
 			int32_t* dst = dest;
 
-			std::memcpy(dst, src, sizeof int32_t * NES.apu_Audio_Num_Samples * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * NES.apu_Audio_Num_Samples * 2);
 			n_samp[0] = NES.apu_Audio_Num_Samples;
 
 			uint32_t temp_int = NES.apu_Audio_Sample_Clock;

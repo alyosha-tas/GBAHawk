@@ -455,13 +455,13 @@ namespace GBAHawk
 				int32_t* src = L.GBA.samples_L;
 				int32_t* dst = dest_L;
 
-				std::memcpy(dst, src, sizeof int32_t * L.GBA.num_samples_L * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * L.GBA.num_samples_L * 2);
 				n_samp_L[0] = L.GBA.num_samples_L;
 
 				src = L.GBA.samples_R;
 				dst = dest_R;
 
-				std::memcpy(dst, src, sizeof int32_t * L.GBA.num_samples_R * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * L.GBA.num_samples_R * 2);
 				n_samp_R[0] = L.GBA.num_samples_R;
 
 				uint32_t temp_int = L.GBA.snd_Master_Clock;
@@ -473,13 +473,13 @@ namespace GBAHawk
 				int32_t* src = R.GBA.samples_L;
 				int32_t* dst = dest_L;
 
-				std::memcpy(dst, src, sizeof int32_t * R.GBA.num_samples_L * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * R.GBA.num_samples_L * 2);
 				n_samp_L[0] = R.GBA.num_samples_L;
 
 				src = R.GBA.samples_R;
 				dst = dest_R;
 
-				std::memcpy(dst, src, sizeof int32_t * R.GBA.num_samples_R * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * R.GBA.num_samples_R * 2);
 				n_samp_R[0] = R.GBA.num_samples_R;
 
 				uint32_t temp_int = R.GBA.snd_Master_Clock;
@@ -491,13 +491,13 @@ namespace GBAHawk
 				int32_t* src = L.GBA.samples_L;
 				int32_t* dst = dest_L;
 
-				std::memcpy(dst, src, sizeof int32_t * L.GBA.num_samples_L * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * L.GBA.num_samples_L * 2);
 				n_samp_L[0] = L.GBA.num_samples_L;
 
 				src = R.GBA.samples_R;
 				dst = dest_R;
 
-				std::memcpy(dst, src, sizeof int32_t * R.GBA.num_samples_R * 2);
+				std::memcpy(dst, src, sizeof(int32_t) * R.GBA.num_samples_R * 2);
 				n_samp_R[0] = R.GBA.num_samples_R;
 
 				uint32_t temp_int = (R.GBA.snd_Master_Clock > L.GBA.snd_Master_Clock) ? R.GBA.snd_Master_Clock : L.GBA.snd_Master_Clock;
