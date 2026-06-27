@@ -10,17 +10,17 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.btnDialogOK = new BizHawk.WinForms.Controls.SzButtonEx();
-			this.btnDialogCancel = new BizHawk.WinForms.Controls.SzButtonEx();
-			this.nudPatternOn = new BizHawk.WinForms.Controls.SzNUDEx();
-			this.nudPatternOff = new BizHawk.WinForms.Controls.SzNUDEx();
-			this.lblPatternOn = new BizHawk.WinForms.Controls.LabelEx();
-			this.lblPatternOff = new BizHawk.WinForms.Controls.LabelEx();
-			this.flpDialogButtons = new BizHawk.WinForms.Controls.LocSzSingleRowFLP();
-			this.flpDialog = new BizHawk.WinForms.Controls.LocSzSingleColumnFLP();
-			this.flpPattern = new BizHawk.WinForms.Controls.SingleRowFLP();
-			this.lblPatternDesc = new BizHawk.WinForms.Controls.LabelEx();
-			this.cbConsiderLag = new BizHawk.WinForms.Controls.CheckBoxEx();
+			this.btnDialogOK = new System.Windows.Forms.Button();
+			this.btnDialogCancel = new System.Windows.Forms.Button();
+			this.nudPatternOn = new System.Windows.Forms.NumericUpDown();
+			this.nudPatternOff = new System.Windows.Forms.NumericUpDown();
+			this.lblPatternOn = new System.Windows.Forms.Label();
+			this.lblPatternOff = new System.Windows.Forms.Label();
+			this.flpDialogButtons = new System.Windows.Forms.FlowLayoutPanel();
+			this.flpDialog = new System.Windows.Forms.FlowLayoutPanel();
+			this.flpPattern = new System.Windows.Forms.FlowLayoutPanel();
+			this.lblPatternDesc = new System.Windows.Forms.Label();
+			this.cbConsiderLag = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.nudPatternOn)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudPatternOff)).BeginInit();
 			this.flpDialogButtons.SuspendLayout();
@@ -87,11 +87,15 @@
 			// 
 			this.lblPatternOn.Name = "lblPatternOn";
 			this.lblPatternOn.Text = "on,";
+			this.lblPatternOn.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.lblPatternOn.AutoSize = true;
 			// 
 			// lblPatternOff
 			// 
 			this.lblPatternOff.Name = "lblPatternOff";
 			this.lblPatternOff.Text = "off";
+			this.lblPatternOff.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.lblPatternOff.AutoSize = true;
 			// 
 			// flpDialogButtons
 			// 
@@ -101,6 +105,8 @@
 			this.flpDialogButtons.Location = new System.Drawing.Point(161, 61);
 			this.flpDialogButtons.Name = "flpDialogButtons";
 			this.flpDialogButtons.Size = new System.Drawing.Size(162, 29);
+			this.flpDialogButtons.WrapContents = false;
+			this.flpDialogButtons.Margin = System.Windows.Forms.Padding.Empty;
 			// 
 			// flpDialog
 			// 
@@ -112,6 +118,10 @@
 			this.flpDialog.Location = new System.Drawing.Point(0, 0);
 			this.flpDialog.Name = "flpDialog";
 			this.flpDialog.Size = new System.Drawing.Size(323, 55);
+			this.flpDialog.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+			this.flpDialog.WrapContents = false;
+			this.flpDialog.Margin = System.Windows.Forms.Padding.Empty;
+			this.flpDialog.MinimumSize = new System.Drawing.Size(24, 24);
 			// 
 			// flpPattern
 			// 
@@ -121,17 +131,25 @@
 			this.flpPattern.Controls.Add(this.nudPatternOff);
 			this.flpPattern.Controls.Add(this.lblPatternOff);
 			this.flpPattern.Name = "flpPattern";
+			this.flpPattern.AutoSize = true;
+			this.flpPattern.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.flpPattern.MinimumSize = new System.Drawing.Size(24, 24);
+			this.flpPattern.WrapContents = false;
+			this.flpPattern.Margin = System.Windows.Forms.Padding.Empty;
 			// 
 			// lblPatternDesc
 			// 
 			this.lblPatternDesc.Name = "lblPatternDesc";
 			this.lblPatternDesc.Text = "Pattern:";
+			this.lblPatternDesc.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.lblPatternDesc.AutoSize = true;
 			// 
 			// cbConsiderLag
 			// 
 			this.cbConsiderLag.Name = "cbConsiderLag";
 			this.cbConsiderLag.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
 			this.cbConsiderLag.Text = "Take lag frames into account";
+			this.cbConsiderLag.AutoSize = true;
 			// 
 			// AutofireConfig
 			// 
@@ -161,16 +179,16 @@
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.SzButtonEx btnDialogOK;
-		private BizHawk.WinForms.Controls.SzButtonEx btnDialogCancel;
-		private BizHawk.WinForms.Controls.SzNUDEx nudPatternOff;
-		private BizHawk.WinForms.Controls.LabelEx lblPatternOn;
-		private BizHawk.WinForms.Controls.LabelEx lblPatternOff;
-		private BizHawk.WinForms.Controls.SingleRowFLP flpPattern;
-		private BizHawk.WinForms.Controls.LocSzSingleColumnFLP flpDialog;
-		private BizHawk.WinForms.Controls.LocSzSingleRowFLP flpDialogButtons;
-		private BizHawk.WinForms.Controls.LabelEx lblPatternDesc;
-		public BizHawk.WinForms.Controls.SzNUDEx nudPatternOn;
-		private BizHawk.WinForms.Controls.CheckBoxEx cbConsiderLag;
+		private System.Windows.Forms.Button btnDialogOK;
+		private System.Windows.Forms.Button btnDialogCancel;
+		private System.Windows.Forms.NumericUpDown nudPatternOff;
+		private System.Windows.Forms.Label lblPatternOn;
+		private System.Windows.Forms.Label lblPatternOff;
+		private System.Windows.Forms.FlowLayoutPanel flpPattern;
+		private System.Windows.Forms.FlowLayoutPanel flpDialog;
+		private System.Windows.Forms.FlowLayoutPanel flpDialogButtons;
+		private System.Windows.Forms.Label lblPatternDesc;
+		public System.Windows.Forms.NumericUpDown nudPatternOn;
+		private System.Windows.Forms.CheckBox cbConsiderLag;
 	}
 }

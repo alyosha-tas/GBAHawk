@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 using System.Windows.Forms;
-
+using System.Drawing;
 using BizHawk.Client.Common;
 using BizHawk.Common.StringExtensions;
 using BizHawk.WinForms.Controls;
@@ -29,7 +29,7 @@ namespace BizHawk.Client.GBAHawk
 			Prescale = existingBind.IsZeroed ? 1.0f : existingBind.Prescale;
 			VChannelName = vChannel;
 
-			SzTextBoxEx txtBoundPrefix = new() { ReadOnly = true, Size = new(19, 19) };
+			TextBox txtBoundPrefix = new() { ReadOnly = true, Size = new(19, 19) };
 			ComboBox cbBoundChannel = new() { Enabled = false, Size = new(112, 24) };
 			void UpdateDropdownAndLabel(string newPrefix)
 			{
@@ -61,10 +61,16 @@ namespace BizHawk.Client.GBAHawk
 			UpdateDropdownAndLabel(BoundGamepadPrefix);
 			cbBoundChannel.SelectedIndexChanged += (changedSender, _)
 				=> BoundChannels = (string?) ((ComboBox) changedSender).SelectedItem ?? string.Empty;
-			SingleRowFLP flpBindReadout = new() { Controls = { txtBoundPrefix, cbBoundChannel, new LabelEx { Text = vChannel } } };
+			FlowLayoutPanel flpBindReadout = new() { Controls = { txtBoundPrefix, cbBoundChannel, new Label { Text = vChannel, Anchor = AnchorStyles.None, AutoSize = true } },
+														AutoSize = true,
+														AutoSizeMode = AutoSizeMode.GrowAndShrink,
+														MinimumSize = new Size(24, 24),
+														WrapContents = false,
+														Margin = Padding.Empty
+													};
 
 			Timer timer = new(_components);
-			SzButtonEx btnBind = new() { Size = new(75, 23), Text = "Bind!" };
+			Button btnBind = new() { Size = new(75, 23), Text = "Bind!" };
 			void UpdateListeningState(bool newState)
 			{
 				if (newState)
@@ -89,11 +95,18 @@ namespace BizHawk.Client.GBAHawk
 				UpdateDropdownAndLabel(BoundGamepadPrefix = bindValue.SubstringBefore(' ') + ' ');
 			};
 			btnBind.Click += (_, _) => UpdateListeningState(isListening = !isListening);
-			SzButtonEx btnUnbind = new() { Size = new(75, 23), Text = "Unbind!" };
+			Button btnUnbind = new() { Size = new(75, 23), Text = "Unbind!" };
 			btnUnbind.Click += (_, _) => UpdateDropdownAndLabel(BoundGamepadPrefix = string.Empty);
-			LocSingleColumnFLP flpButtons = new() { Controls = { btnBind, btnUnbind } };
+			FlowLayoutPanel flpButtons = new() { Controls = { btnBind, btnUnbind },
+												AutoSize = true,
+												AutoSizeMode = AutoSizeMode.GrowAndShrink,
+												FlowDirection = FlowDirection.TopDown,
+												MinimumSize = new Size(24, 24),
+												WrapContents = false,
+												Margin = Padding.Empty
+											};
 
-			LabelEx lblPrescale = new() { Margin = new(0, 0, 0, 24) };
+			Label lblPrescale = new() { Margin = new(0, 0, 0, 24), Anchor = AnchorStyles.None, AutoSize = true };
 			TransparentTrackBar tbPrescale = new() { Maximum = 20, Size = new(96, 45), TickFrequency = 5 };
 			tbPrescale.ValueChanged += (changedSender, _) =>
 			{
@@ -101,19 +114,35 @@ namespace BizHawk.Client.GBAHawk
 				lblPrescale.Text = $"Pre-scaled by: {Prescale:F1}x";
 			};
 			tbPrescale.Value = (int) (Prescale * 10.0f);
-			LocSzSingleRowFLP flpPrescale = new() { Controls = { lblPrescale, tbPrescale }, Size = new(200, 32) };
+			FlowLayoutPanel flpPrescale = new() { Controls = { lblPrescale, tbPrescale },
+													Size = new(200, 32),
+													WrapContents = false,
+													Margin = Padding.Empty
+												};
 
 			SuspendLayout();
 			AutoScaleDimensions = new(6.0f, 13.0f);
 			AutoScaleMode = AutoScaleMode.Font;
 			Size = new(378, 99);
-			Controls.Add(new SingleColumnFLP
+			Controls.Add(new FlowLayoutPanel
 			{
 				Controls =
 				{
 					flpBindReadout,
-					new SingleRowFLP { Controls = { flpButtons, flpPrescale } }
-				}
+					new FlowLayoutPanel { Controls = { flpButtons, flpPrescale },
+									AutoSize = true,
+									AutoSizeMode = AutoSizeMode.GrowAndShrink,
+									MinimumSize = new Size(24, 24),
+									WrapContents = false,
+									Margin = Padding.Empty
+								}
+				},
+				AutoSize = true,
+				AutoSizeMode = AutoSizeMode.GrowAndShrink,
+				FlowDirection = FlowDirection.TopDown,
+				MinimumSize = new Size(24, 24),
+				WrapContents = false,
+				Margin = Padding.Empty
 			});
 			ResumeLayout();
 		}

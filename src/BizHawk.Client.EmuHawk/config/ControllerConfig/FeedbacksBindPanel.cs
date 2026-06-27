@@ -11,14 +11,21 @@ namespace BizHawk.Client.GBAHawk
 {
 	public class FeedbacksBindPanel : UserControl
 	{
-		private readonly FlowLayoutPanel _flpMain = new SingleColumnFLP();
+		private readonly FlowLayoutPanel _flpMain = new FlowLayoutPanel();
 
 		private readonly IDictionary<string, FeedbackBind> _realConfigObject;
 
 		public FeedbacksBindPanel(IDictionary<string, FeedbackBind> realConfigObject, ICollection<string>? realConfigButtons = null)
 		{
 			_realConfigObject = realConfigObject;
-			_flpMain.Controls.Add(new LabelEx { Text = "To bind, click \"Bind!\", move an axis (e.g. analog stick) on the desired gamepad, and choose from the dropdown.\nNote: haptic feedback won't work if your gamepad is shown as \"J#\" or if your input method is OpenTK." });
+			_flpMain.AutoSize = true;
+			_flpMain.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+			_flpMain.FlowDirection = FlowDirection.TopDown;
+			_flpMain.MinimumSize = new System.Drawing.Size(24, 24);
+			_flpMain.WrapContents = false;
+			_flpMain.Margin = Padding.Empty;
+			Controls.Add(new Label { Text = "To bind, click \"Bind!\", move an axis (e.g. analog stick) on the desired gamepad, and choose from the dropdown.\nNote: haptic feedback won't work if your gamepad is shown as \"J#\" or if your input method is OpenTK." ,
+									Anchor = AnchorStyles.None, AutoSize = true});
 			var adapter = Input.Instance.Adapter;
 			foreach (var buttonName in realConfigButtons ?? realConfigObject.Keys)
 			{

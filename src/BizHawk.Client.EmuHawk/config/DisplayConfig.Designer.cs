@@ -83,8 +83,8 @@
             this.rbUseRaw = new System.Windows.Forms.RadioButton();
             this.rbUseSystem = new System.Windows.Forms.RadioButton();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.flpStaticWindowTitles = new BizHawk.WinForms.Controls.LocSzSingleColumnFLP();
-            this.cbStaticWindowTitles = new BizHawk.WinForms.Controls.CheckBoxEx();
+            this.flpStaticWindowTitles = new System.Windows.Forms.FlowLayoutPanel();
+            this.cbStaticWindowTitles = new System.Windows.Forms.CheckBox();
             this.lblStaticWindowTitles = new BizHawk.WinForms.Controls.LocLabelEx();
             this.tpDispMethod.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -626,15 +626,20 @@
             this.flpStaticWindowTitles.Location = new System.Drawing.Point(6, 280);
             this.flpStaticWindowTitles.Name = "flpStaticWindowTitles";
             this.flpStaticWindowTitles.Size = new System.Drawing.Size(490, 52);
-            // 
-            // cbStaticWindowTitles
-            // 
-            this.cbStaticWindowTitles.Name = "cbStaticWindowTitles";
+			this.flpStaticWindowTitles.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+			this.flpStaticWindowTitles.WrapContents = false;
+			this.flpStaticWindowTitles.Margin = System.Windows.Forms.Padding.Empty;
+			this.flpStaticWindowTitles.MinimumSize = new System.Drawing.Size(24, 24);
+			// 
+			// cbStaticWindowTitles
+			// 
+			this.cbStaticWindowTitles.Name = "cbStaticWindowTitles";
             this.cbStaticWindowTitles.Text = "Keep window titles static";
-            // 
-            // lblStaticWindowTitles
-            // 
-            this.lblStaticWindowTitles.Location = new System.Drawing.Point(19, 23);
+			this.cbStaticWindowTitles.AutoSize = true;
+			// 
+			// lblStaticWindowTitles
+			// 
+			this.lblStaticWindowTitles.Location = new System.Drawing.Point(19, 23);
             this.lblStaticWindowTitles.Margin = new System.Windows.Forms.Padding(19, 0, 3, 0);
             this.lblStaticWindowTitles.Name = "lblStaticWindowTitles";
             this.lblStaticWindowTitles.Text = "Some tools put filenames, status, etc. in their window titles.\nChecking this disa" +
@@ -732,8 +737,8 @@
 		private System.Windows.Forms.RadioButton rbUseRaw;
 		private System.Windows.Forms.RadioButton rbUseSystem;
 		private System.Windows.Forms.TabControl tabControl1;
-		private WinForms.Controls.LocSzSingleColumnFLP flpStaticWindowTitles;
-		private WinForms.Controls.CheckBoxEx cbStaticWindowTitles;
+		private System.Windows.Forms.FlowLayoutPanel flpStaticWindowTitles;
+		private System.Windows.Forms.CheckBox cbStaticWindowTitles;
 		private WinForms.Controls.LocLabelEx lblStaticWindowTitles;
 	}
 }

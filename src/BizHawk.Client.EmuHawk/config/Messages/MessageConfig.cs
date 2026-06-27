@@ -22,7 +22,7 @@ namespace BizHawk.Client.GBAHawk
 		private MessagePosition _autohold;
 		private MessagePosition _ramWatches;
 
-		private readonly SzNUDEx _nudDuration;
+		private readonly NumericUpDown _nudDuration;
 
 		private Dictionary<string, MessagePosition> Positions => new Dictionary<string, MessagePosition>
 		{
@@ -64,17 +64,19 @@ namespace BizHawk.Client.GBAHawk
 			// I'm done wasting my time w/ the Designer --yoshi
 			SuspendLayout();
 			_nudDuration = new() { Maximum = 10.0M, Minimum = 1.0M, Size = new(48, 20) };
-			Controls.Add(new LocSzSingleRowFLP
+			Controls.Add(new FlowLayoutPanel
 			{
 				Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
 				Controls =
 				{
-					new LabelEx { Text = "Messages fade after" },
+					new Label { Text = "Messages fade after", Anchor = AnchorStyles.None, AutoSize = true },
 					_nudDuration,
-					new LabelEx { Text = "seconds" },
+					new Label { Text = "seconds", Anchor = AnchorStyles.None, AutoSize = true },
 				},
 				Location = new(192, 360),
 				Size = new(300, 24),
+				Margin = Padding.Empty,
+				WrapContents = false
 			});
 			ResumeLayout();
 		}

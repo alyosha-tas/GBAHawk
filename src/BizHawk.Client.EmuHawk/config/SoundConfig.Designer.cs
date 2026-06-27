@@ -35,22 +35,22 @@
 			this.nudRWFF = new System.Windows.Forms.NumericUpDown();
 			this.cbEnableRWFF = new System.Windows.Forms.CheckBox();
 			this.tbRWFF = new System.Windows.Forms.TrackBar();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label1 = new System.Windows.Forms.Label();
 			this.tbNormal = new System.Windows.Forms.TrackBar();
 			this.nudNormal = new System.Windows.Forms.NumericUpDown();
 			this.listBoxSoundDevices = new System.Windows.Forms.ListBox();
-			this.SoundDeviceLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.BufferSizeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.SoundDeviceLabel = new System.Windows.Forms.Label();
+			this.BufferSizeLabel = new System.Windows.Forms.Label();
 			this.BufferSizeNumeric = new System.Windows.Forms.NumericUpDown();
-			this.BufferSizeUnitsLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.BufferSizeUnitsLabel = new System.Windows.Forms.Label();
 			this.grpOutputMethod = new System.Windows.Forms.GroupBox();
 			this.rbOutputMethodOpenAL = new System.Windows.Forms.RadioButton();
 			this.rbOutputMethodXAudio2 = new System.Windows.Forms.RadioButton();
 			this.rbOutputMethodDirectSound = new System.Windows.Forms.RadioButton();
 			this.cbMuteFrameAdvance = new System.Windows.Forms.CheckBox();
 			this.cbEnableMaster = new System.Windows.Forms.CheckBox();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label3 = new System.Windows.Forms.Label();
 			this.grpSoundVol.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudRWFF)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.tbRWFF)).BeginInit();
@@ -152,6 +152,7 @@
 			this.label2.Location = new System.Drawing.Point(56, 42);
 			this.label2.Name = "label2";
 			this.label2.Text = "RW && FF";
+			this.label2.AutoSize = true;
 			// 
 			// label1
 			// 
@@ -159,6 +160,7 @@
 			this.label1.Location = new System.Drawing.Point(6, 42);
 			this.label1.Name = "label1";
 			this.label1.Text = "Normal";
+			this.label1.AutoSize = true;
 			// 
 			// tbNormal
 			// 
@@ -201,6 +203,7 @@
 			this.SoundDeviceLabel.Location = new System.Drawing.Point(135, 89);
 			this.SoundDeviceLabel.Name = "SoundDeviceLabel";
 			this.SoundDeviceLabel.Text = "Sound Device:";
+			this.SoundDeviceLabel.AutoSize = true;
 			// 
 			// BufferSizeLabel
 			// 
@@ -208,6 +211,7 @@
 			this.BufferSizeLabel.Location = new System.Drawing.Point(135, 210);
 			this.BufferSizeLabel.Name = "BufferSizeLabel";
 			this.BufferSizeLabel.Text = "Buffer Size:";
+			this.BufferSizeLabel.AutoSize = true;
 			// 
 			// BufferSizeNumeric
 			// 
@@ -238,6 +242,7 @@
 			this.BufferSizeUnitsLabel.Location = new System.Drawing.Point(267, 210);
 			this.BufferSizeUnitsLabel.Name = "BufferSizeUnitsLabel";
 			this.BufferSizeUnitsLabel.Text = "milliseconds";
+			this.BufferSizeUnitsLabel.AutoSize = true;
 			// 
 			// grpOutputMethod
 			// 
@@ -314,6 +319,7 @@
 			this.label3.Location = new System.Drawing.Point(161, 35);
 			this.label3.Name = "label3";
 			this.label3.Text = "Controls whether cores\neven generate audio.";
+			this.label3.AutoSize = true;
 			// 
 			// SoundConfig
 			// 
@@ -364,10 +370,10 @@
 		private System.Windows.Forms.NumericUpDown nudNormal;
 		private System.Windows.Forms.TrackBar tbNormal;
 		private System.Windows.Forms.ListBox listBoxSoundDevices;
-		private BizHawk.WinForms.Controls.LocLabelEx SoundDeviceLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx BufferSizeLabel;
+		private System.Windows.Forms.Label SoundDeviceLabel;
+		private System.Windows.Forms.Label BufferSizeLabel;
 		private System.Windows.Forms.NumericUpDown BufferSizeNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx BufferSizeUnitsLabel;
+		private System.Windows.Forms.Label BufferSizeUnitsLabel;
 		private System.Windows.Forms.GroupBox grpOutputMethod;
 		private System.Windows.Forms.RadioButton rbOutputMethodXAudio2;
 		private System.Windows.Forms.RadioButton rbOutputMethodDirectSound;
@@ -375,10 +381,10 @@
 		private System.Windows.Forms.NumericUpDown nudRWFF;
 		private System.Windows.Forms.CheckBox cbEnableRWFF;
 		private System.Windows.Forms.TrackBar tbRWFF;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.CheckBox cbMuteFrameAdvance;
 		private System.Windows.Forms.CheckBox cbEnableMaster;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label3;
 	}
 }

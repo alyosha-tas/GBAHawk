@@ -1,4 +1,6 @@
-﻿namespace BizHawk.Client.GBAHawk
+﻿using System.Drawing;
+
+namespace BizHawk.Client.GBAHawk
 {
 	partial class RewindConfig
 	{
@@ -33,44 +35,44 @@
             this.Cancel = new System.Windows.Forms.Button();
             this.RewindEnabledBox = new System.Windows.Forms.CheckBox();
             this.UseCompression = new System.Windows.Forms.CheckBox();
-            this.label4 = new BizHawk.WinForms.Controls.LabelEx();
+            this.label4 = new System.Windows.Forms.Label();
             this.BufferSizeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.StateSizeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.FullnessLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.StateSizeLabel = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.FullnessLabel = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.TargetRewindIntervalRadioButton = new System.Windows.Forms.RadioButton();
             this.TargetFrameLengthRadioButton = new System.Windows.Forms.RadioButton();
-            this.locSingleRowFLP1 = new BizHawk.WinForms.Controls.LocSingleRowFLP();
-            this.labelEx3 = new BizHawk.WinForms.Controls.LabelEx();
-            this.labelEx2 = new BizHawk.WinForms.Controls.LabelEx();
-            this.labelEx1 = new BizHawk.WinForms.Controls.LabelEx();
+            this.locSingleRowFLP1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.labelEx3 = new System.Windows.Forms.Label();
+            this.labelEx2 = new System.Windows.Forms.Label();
+            this.labelEx1 = new System.Windows.Forms.Label();
             this.TargetFrameLengthNumeric = new System.Windows.Forms.NumericUpDown();
             this.TargetRewindIntervalNumeric = new System.Windows.Forms.NumericUpDown();
-            this.EstTimeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label11 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.ApproxFramesLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.RewindFramesUsedLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.EstTimeLabel = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.ApproxFramesLabel = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.RewindFramesUsedLabel = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnResetCompression = new System.Windows.Forms.Button();
             this.trackBarCompression = new System.Windows.Forms.TrackBar();
             this.nudCompression = new System.Windows.Forms.NumericUpDown();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.label20 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.KbLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label20 = new System.Windows.Forms.Label();
+            this.KbLabel = new System.Windows.Forms.Label();
             this.BigScreenshotNumeric = new System.Windows.Forms.NumericUpDown();
             this.LowResLargeScreenshotsCheckbox = new System.Windows.Forms.CheckBox();
-            this.label13 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
             this.ScreenshotInStatesCheckbox = new System.Windows.Forms.CheckBox();
-            this.label15 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label16 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.BackupSavestatesCheckbox = new System.Windows.Forms.CheckBox();
-            this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.BufferSizeUpDown)).BeginInit();
             this.groupBox4.SuspendLayout();
             this.locSingleRowFLP1.SuspendLayout();
@@ -131,10 +133,12 @@
             this.label4.Margin = new System.Windows.Forms.Padding(0);
             this.label4.Name = "label4";
             this.label4.Text = "MB";
-            // 
-            // BufferSizeUpDown
-            // 
-            this.BufferSizeUpDown.Location = new System.Drawing.Point(25, 3);
+			this.label4.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.label4.AutoSize = true;
+			// 
+			// BufferSizeUpDown
+			// 
+			this.BufferSizeUpDown.Location = new System.Drawing.Point(25, 3);
             this.BufferSizeUpDown.Maximum = new decimal(new int[] {
             15,
             0,
@@ -160,34 +164,39 @@
             this.label3.Location = new System.Drawing.Point(12, 112);
             this.label3.Name = "label3";
             this.label3.Text = "Max buffer size:";
-            // 
-            // label1
-            // 
-            this.label1.Location = new System.Drawing.Point(12, 17);
+			this.label3.AutoSize = true;
+			// 
+			// label1
+			// 
+			this.label1.Location = new System.Drawing.Point(12, 17);
             this.label1.Name = "label1";
             this.label1.Text = "Avg. State Size:";
+			this.label1.AutoSize = true;
             // 
             // StateSizeLabel
             // 
             this.StateSizeLabel.Location = new System.Drawing.Point(92, 17);
             this.StateSizeLabel.Name = "StateSizeLabel";
             this.StateSizeLabel.Text = "0 KB";
-            // 
-            // label6
-            // 
-            this.label6.Location = new System.Drawing.Point(67, 48);
+			this.StateSizeLabel.AutoSize = true;
+			// 
+			// label6
+			// 
+			this.label6.Location = new System.Drawing.Point(67, 48);
             this.label6.Name = "label6";
             this.label6.Text = "Full:";
-            // 
-            // FullnessLabel
-            // 
-            this.FullnessLabel.Location = new System.Drawing.Point(94, 48);
+			this.label6.AutoSize = true;
+			// 
+			// FullnessLabel
+			// 
+			this.FullnessLabel.Location = new System.Drawing.Point(94, 48);
             this.FullnessLabel.Name = "FullnessLabel";
             this.FullnessLabel.Text = "0%";
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.TargetRewindIntervalRadioButton);
+			this.FullnessLabel.AutoSize = true;
+			// 
+			// groupBox4
+			// 
+			this.groupBox4.Controls.Add(this.TargetRewindIntervalRadioButton);
             this.groupBox4.Controls.Add(this.TargetFrameLengthRadioButton);
             this.groupBox4.Controls.Add(this.locSingleRowFLP1);
             this.groupBox4.Controls.Add(this.TargetFrameLengthNumeric);
@@ -243,28 +252,39 @@
             this.locSingleRowFLP1.Controls.Add(this.label4);
             this.locSingleRowFLP1.Location = new System.Drawing.Point(100, 107);
             this.locSingleRowFLP1.Name = "locSingleRowFLP1";
-            // 
-            // labelEx3
-            // 
-            this.labelEx3.Margin = new System.Windows.Forms.Padding(0);
+			this.locSingleRowFLP1.AutoSize = true;
+			this.locSingleRowFLP1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.locSingleRowFLP1.MinimumSize = new Size(24, 24);
+			this.locSingleRowFLP1.WrapContents = false;
+			this.locSingleRowFLP1.Margin = System.Windows.Forms.Padding.Empty;
+			// 
+			// labelEx3
+			// 
+			this.labelEx3.Margin = new System.Windows.Forms.Padding(0);
             this.labelEx3.Name = "labelEx3";
             this.labelEx3.Text = "2 ^";
-            // 
-            // labelEx2
-            // 
-            this.labelEx2.Margin = new System.Windows.Forms.Padding(0);
+			this.labelEx3.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.labelEx3.AutoSize = true;
+			// 
+			// labelEx2
+			// 
+			this.labelEx2.Margin = new System.Windows.Forms.Padding(0);
             this.labelEx2.Name = "labelEx2";
             this.labelEx2.Text = "MB  =";
-            // 
-            // labelEx1
-            // 
-            this.labelEx1.Margin = new System.Windows.Forms.Padding(0);
+			this.labelEx2.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.labelEx2.AutoSize = true;
+			// 
+			// labelEx1
+			// 
+			this.labelEx1.Margin = new System.Windows.Forms.Padding(0);
             this.labelEx1.Name = "labelEx1";
             this.labelEx1.Text = "512";
-            // 
-            // TargetFrameLengthNumeric
-            // 
-            this.TargetFrameLengthNumeric.Location = new System.Drawing.Point(146, 138);
+			this.labelEx1.Anchor = System.Windows.Forms.AnchorStyles.None;
+			this.labelEx1.AutoSize = true;
+			// 
+			// TargetFrameLengthNumeric
+			// 
+			this.TargetFrameLengthNumeric.Location = new System.Drawing.Point(146, 138);
             this.TargetFrameLengthNumeric.Maximum = new decimal(new int[] {
             500000,
             0,
@@ -311,36 +331,42 @@
             this.EstTimeLabel.Location = new System.Drawing.Point(273, 32);
             this.EstTimeLabel.Name = "EstTimeLabel";
             this.EstTimeLabel.Text = "0 min";
-            // 
-            // label11
-            // 
-            this.label11.Location = new System.Drawing.Point(221, 32);
+			this.EstTimeLabel.AutoSize = true;
+			// 
+			// label11
+			// 
+			this.label11.Location = new System.Drawing.Point(221, 32);
             this.label11.Name = "label11";
             this.label11.Text = "Est. Time:";
-            // 
-            // ApproxFramesLabel
-            // 
-            this.ApproxFramesLabel.Location = new System.Drawing.Point(273, 17);
+			this.label11.AutoSize = true;
+			// 
+			// ApproxFramesLabel
+			// 
+			this.ApproxFramesLabel.Location = new System.Drawing.Point(273, 17);
             this.ApproxFramesLabel.Name = "ApproxFramesLabel";
             this.ApproxFramesLabel.Text = "0 frames";
-            // 
-            // label8
-            // 
-            this.label8.Location = new System.Drawing.Point(209, 17);
+			this.ApproxFramesLabel.AutoSize = true;
+			// 
+			// label8
+			// 
+			this.label8.Location = new System.Drawing.Point(209, 17);
             this.label8.Name = "label8";
             this.label8.Text = "Est. storage:";
-            // 
-            // RewindFramesUsedLabel
-            // 
-            this.RewindFramesUsedLabel.Location = new System.Drawing.Point(94, 32);
+			this.label8.AutoSize = true;
+			// 
+			// RewindFramesUsedLabel
+			// 
+			this.RewindFramesUsedLabel.Location = new System.Drawing.Point(94, 32);
             this.RewindFramesUsedLabel.Name = "RewindFramesUsedLabel";
             this.RewindFramesUsedLabel.Text = "0";
-            // 
-            // label7
-            // 
-            this.label7.Location = new System.Drawing.Point(15, 32);
+			this.RewindFramesUsedLabel.AutoSize = true;
+			// 
+			// label7
+			// 
+			this.label7.Location = new System.Drawing.Point(15, 32);
             this.label7.Name = "label7";
             this.label7.Text = "Frames Stored:";
+			this.label7.AutoSize = true;
             // 
             // btnResetCompression
             // 
@@ -411,16 +437,18 @@
             this.label20.Location = new System.Drawing.Point(21, 252);
             this.label20.Name = "label20";
             this.label20.Text = "Use a low resolution screenshot for better save/load performance";
-            // 
-            // KbLabel
-            // 
-            this.KbLabel.Location = new System.Drawing.Point(276, 232);
+			this.label20.AutoSize = true;
+			// 
+			// KbLabel
+			// 
+			this.KbLabel.Location = new System.Drawing.Point(276, 232);
             this.KbLabel.Name = "KbLabel";
             this.KbLabel.Text = "KB";
-            // 
-            // BigScreenshotNumeric
-            // 
-            this.BigScreenshotNumeric.Location = new System.Drawing.Point(212, 228);
+			this.KbLabel.AutoSize = true;
+			// 
+			// BigScreenshotNumeric
+			// 
+			this.BigScreenshotNumeric.Location = new System.Drawing.Point(212, 228);
             this.BigScreenshotNumeric.Maximum = new decimal(new int[] {
             8192,
             0,
@@ -455,16 +483,18 @@
             this.label13.Location = new System.Drawing.Point(21, 196);
             this.label13.Name = "label13";
             this.label13.Text = "black screen on the frame it is loaded.";
-            // 
-            // label14
-            // 
-            this.label14.Location = new System.Drawing.Point(19, 182);
+			this.label13.AutoSize = true;
+			// 
+			// label14
+			// 
+			this.label14.Location = new System.Drawing.Point(19, 182);
             this.label14.Name = "label14";
             this.label14.Text = "Saves a screenshot and loads it on loadstate so there isn\'t a";
-            // 
-            // ScreenshotInStatesCheckbox
-            // 
-            this.ScreenshotInStatesCheckbox.AutoSize = true;
+			this.label14.AutoSize = true;
+			// 
+			// ScreenshotInStatesCheckbox
+			// 
+			this.ScreenshotInStatesCheckbox.AutoSize = true;
             this.ScreenshotInStatesCheckbox.Location = new System.Drawing.Point(22, 162);
             this.ScreenshotInStatesCheckbox.Name = "ScreenshotInStatesCheckbox";
             this.ScreenshotInStatesCheckbox.Size = new System.Drawing.Size(180, 17);
@@ -478,12 +508,14 @@
             this.label15.Location = new System.Drawing.Point(39, 132);
             this.label15.Name = "label15";
             this.label15.Text = "before overwriting it.";
+			this.label15.AutoSize = true;
             // 
             // label16
             // 
             this.label16.Location = new System.Drawing.Point(39, 119);
             this.label16.Name = "label16";
             this.label16.Text = "When set, the client will make a backup copy of a savestate";
+			this.label16.AutoSize = true;
             // 
             // BackupSavestatesCheckbox
             // 
@@ -500,6 +532,7 @@
             this.label12.Location = new System.Drawing.Point(19, 21);
             this.label12.Name = "label12";
             this.label12.Text = "Compression Level";
+			this.label12.AutoSize = true;
             // 
             // RewindConfig
             // 
@@ -541,42 +574,42 @@
 		private System.Windows.Forms.Button Cancel;
 		private System.Windows.Forms.CheckBox RewindEnabledBox;
 		private System.Windows.Forms.CheckBox UseCompression;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx StateSizeLabel;
-		private BizHawk.WinForms.Controls.LabelEx label4;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label StateSizeLabel;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.NumericUpDown BufferSizeUpDown;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
-		private BizHawk.WinForms.Controls.LocLabelEx FullnessLabel;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Label FullnessLabel;
 		private System.Windows.Forms.GroupBox groupBox4;
-		private BizHawk.WinForms.Controls.LocLabelEx RewindFramesUsedLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx label7;
-        private BizHawk.WinForms.Controls.LocLabelEx ApproxFramesLabel;
-        private BizHawk.WinForms.Controls.LocLabelEx label8;
-        private BizHawk.WinForms.Controls.LocLabelEx EstTimeLabel;
-				private BizHawk.WinForms.Controls.LocLabelEx label11;
-				private System.Windows.Forms.ToolTip toolTip1;
-				private System.Windows.Forms.TrackBar trackBarCompression;
-				private System.Windows.Forms.NumericUpDown nudCompression;
-				private System.Windows.Forms.Button btnResetCompression;
-				private System.Windows.Forms.GroupBox groupBox7;
-				private BizHawk.WinForms.Controls.LocLabelEx label12;
-				private BizHawk.WinForms.Controls.LocLabelEx KbLabel;
-				private System.Windows.Forms.NumericUpDown BigScreenshotNumeric;
-				private System.Windows.Forms.CheckBox LowResLargeScreenshotsCheckbox;
-				private BizHawk.WinForms.Controls.LocLabelEx label13;
-				private BizHawk.WinForms.Controls.LocLabelEx label14;
-				private System.Windows.Forms.CheckBox ScreenshotInStatesCheckbox;
-				private BizHawk.WinForms.Controls.LocLabelEx label15;
-				private BizHawk.WinForms.Controls.LocLabelEx label16;
-				private System.Windows.Forms.CheckBox BackupSavestatesCheckbox;
-				private BizHawk.WinForms.Controls.LocLabelEx label20;
+		private System.Windows.Forms.Label RewindFramesUsedLabel;
+		private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label ApproxFramesLabel;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label EstTimeLabel;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.ToolTip toolTip1;
+		private System.Windows.Forms.TrackBar trackBarCompression;
+		private System.Windows.Forms.NumericUpDown nudCompression;
+		private System.Windows.Forms.Button btnResetCompression;
+		private System.Windows.Forms.GroupBox groupBox7;
+		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.Label KbLabel;
+		private System.Windows.Forms.NumericUpDown BigScreenshotNumeric;
+		private System.Windows.Forms.CheckBox LowResLargeScreenshotsCheckbox;
+		private System.Windows.Forms.Label label13;
+		private System.Windows.Forms.Label label14;
+		private System.Windows.Forms.CheckBox ScreenshotInStatesCheckbox;
+		private System.Windows.Forms.Label label15;
+		private System.Windows.Forms.Label label16;
+		private System.Windows.Forms.CheckBox BackupSavestatesCheckbox;
+		private System.Windows.Forms.Label label20;
 		private System.Windows.Forms.NumericUpDown TargetFrameLengthNumeric;
 		private System.Windows.Forms.NumericUpDown TargetRewindIntervalNumeric;
-		private WinForms.Controls.LocSingleRowFLP locSingleRowFLP1;
-		private WinForms.Controls.LabelEx labelEx3;
-		private WinForms.Controls.LabelEx labelEx2;
-		private WinForms.Controls.LabelEx labelEx1;
+		private System.Windows.Forms.FlowLayoutPanel locSingleRowFLP1;
+		private System.Windows.Forms.Label labelEx3;
+		private System.Windows.Forms.Label labelEx2;
+		private System.Windows.Forms.Label labelEx1;
 		private System.Windows.Forms.RadioButton TargetFrameLengthRadioButton;
 		private System.Windows.Forms.RadioButton TargetRewindIntervalRadioButton;
 	}

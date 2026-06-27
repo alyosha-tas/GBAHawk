@@ -28,22 +28,22 @@ namespace BizHawk.Client.GBAHawk
         /// </summary>
         private void InitializeComponent()
         {
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.OK = new System.Windows.Forms.Button();
 			this.Cancel = new System.Windows.Forms.Button();
-			this.OutputLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.ValeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.OutputLabel = new System.Windows.Forms.Label();
+			this.ValeLabel = new System.Windows.Forms.Label();
 			this.ValueBox = new BizHawk.Client.GBAHawk.WatchValueBox();
-			this.ValueHexLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.DisplayTypeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.SizeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.BigEndianLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.ValueHexLabel = new System.Windows.Forms.Label();
+			this.DisplayTypeLabel = new System.Windows.Forms.Label();
+			this.SizeLabel = new System.Windows.Forms.Label();
+			this.BigEndianLabel = new System.Windows.Forms.Label();
 			this.AddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.DomainLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
+			this.label4 = new System.Windows.Forms.Label();
+			this.label5 = new System.Windows.Forms.Label();
+			this.DomainLabel = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -51,6 +51,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label1.Location = new System.Drawing.Point(20, 33);
 			this.label1.Name = "label1";
 			this.label1.Text = "Address: 0x";
+			this.label1.AutoSize = true;
 			// 
 			// OK
 			// 
@@ -80,12 +81,14 @@ namespace BizHawk.Client.GBAHawk
 			this.OutputLabel.Location = new System.Drawing.Point(12, 7);
 			this.OutputLabel.Name = "OutputLabel";
 			this.OutputLabel.Text = "Enter an address to poke:";
+			this.OutputLabel.AutoSize = true;
 			// 
 			// ValeLabel
 			// 
 			this.ValeLabel.Location = new System.Drawing.Point(31, 59);
 			this.ValeLabel.Name = "ValeLabel";
 			this.ValeLabel.Text = "Value:";
+			this.ValeLabel.AutoSize = true;
 			// 
 			// ValueBox
 			// 
@@ -105,24 +108,28 @@ namespace BizHawk.Client.GBAHawk
 			this.ValueHexLabel.Location = new System.Drawing.Point(64, 60);
 			this.ValueHexLabel.Name = "ValueHexLabel";
 			this.ValueHexLabel.Text = "0x";
+			this.ValueHexLabel.AutoSize = true;
 			// 
 			// DisplayTypeLabel
 			// 
 			this.DisplayTypeLabel.Location = new System.Drawing.Point(81, 118);
 			this.DisplayTypeLabel.Name = "DisplayTypeLabel";
 			this.DisplayTypeLabel.Text = "Unsigned";
+			this.DisplayTypeLabel.AutoSize = true;
 			// 
 			// SizeLabel
 			// 
 			this.SizeLabel.Location = new System.Drawing.Point(82, 101);
 			this.SizeLabel.Name = "SizeLabel";
 			this.SizeLabel.Text = "Byte";
+			this.SizeLabel.AutoSize = true;
 			// 
 			// BigEndianLabel
 			// 
 			this.BigEndianLabel.Location = new System.Drawing.Point(82, 135);
 			this.BigEndianLabel.Name = "BigEndianLabel";
 			this.BigEndianLabel.Text = "Big Endian";
+			this.BigEndianLabel.AutoSize = true;
 			// 
 			// AddressBox
 			// 
@@ -141,30 +148,35 @@ namespace BizHawk.Client.GBAHawk
 			this.label2.Location = new System.Drawing.Point(39, 135);
 			this.label2.Name = "label2";
 			this.label2.Text = "Endian:";
+			this.label2.AutoSize = true;
 			// 
 			// label3
 			// 
 			this.label3.Location = new System.Drawing.Point(11, 118);
 			this.label3.Name = "label3";
 			this.label3.Text = "Display Type:";
+			this.label3.AutoSize = true;
 			// 
 			// label4
 			// 
 			this.label4.Location = new System.Drawing.Point(52, 101);
 			this.label4.Name = "label4";
 			this.label4.Text = "Size:";
+			this.label4.AutoSize = true;
 			// 
 			// label5
 			// 
 			this.label5.Location = new System.Drawing.Point(36, 84);
 			this.label5.Name = "label5";
 			this.label5.Text = "Domain:";
+			this.label5.AutoSize = true;
 			// 
 			// DomainLabel
 			// 
 			this.DomainLabel.Location = new System.Drawing.Point(82, 84);
 			this.DomainLabel.Name = "DomainLabel";
 			this.DomainLabel.Text = "Main Memory";
+			this.DomainLabel.AutoSize = true;
 			// 
 			// RamPoke
 			// 
@@ -203,21 +215,21 @@ namespace BizHawk.Client.GBAHawk
 
         #endregion
 
-        private BizHawk.WinForms.Controls.LocLabelEx label1;
+        private System.Windows.Forms.Label label1;
         private HexTextBox AddressBox;
         private System.Windows.Forms.Button OK;
         private System.Windows.Forms.Button Cancel;
-        private BizHawk.WinForms.Controls.LocLabelEx OutputLabel;
-        private BizHawk.WinForms.Controls.LocLabelEx ValeLabel;
+        private System.Windows.Forms.Label OutputLabel;
+        private System.Windows.Forms.Label ValeLabel;
         private WatchValueBox ValueBox;
-		private BizHawk.WinForms.Controls.LocLabelEx ValueHexLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx DisplayTypeLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx SizeLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx BigEndianLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private BizHawk.WinForms.Controls.LocLabelEx DomainLabel;
+		private System.Windows.Forms.Label ValueHexLabel;
+		private System.Windows.Forms.Label DisplayTypeLabel;
+		private System.Windows.Forms.Label SizeLabel;
+		private System.Windows.Forms.Label BigEndianLabel;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label DomainLabel;
     }
 }

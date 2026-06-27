@@ -59,60 +59,60 @@ namespace BizHawk.Client.GBAHawk
 			this.btnCopyBestInput = new System.Windows.Forms.Button();
 			this.PlayBestButton = new System.Windows.Forms.Button();
 			this.ClearBestButton = new System.Windows.Forms.Button();
-			this.BestAttemptNumberLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label17 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.BestAttemptNumberLabel = new System.Windows.Forms.Label();
+			this.label17 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.BestAttemptLogLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.BestAttemptLogLabel = new System.Windows.Forms.Label();
 			this.BestTieBreak3Box = new System.Windows.Forms.TextBox();
 			this.BestTieBreak2Box = new System.Windows.Forms.TextBox();
 			this.BestTieBreak1Box = new System.Windows.Forms.TextBox();
 			this.BestMaximizeBox = new System.Windows.Forms.TextBox();
-			this.label16 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label15 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label13 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.AttemptsLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.FramesLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label16 = new System.Windows.Forms.Label();
+			this.label15 = new System.Windows.Forms.Label();
+			this.label14 = new System.Windows.Forms.Label();
+			this.label13 = new System.Windows.Forms.Label();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.AttemptsLabel = new System.Windows.Forms.Label();
+			this.FramesLabel = new System.Windows.Forms.Label();
 			this.GoalGroupBox = new System.Windows.Forms.GroupBox();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label4 = new System.Windows.Forms.Label();
 			this.FrameLengthNumeric = new System.Windows.Forms.NumericUpDown();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label3 = new System.Windows.Forms.Label();
 			this.panel3 = new System.Windows.Forms.Panel();
 			this.MainValueNumeric = new System.Windows.Forms.NumericUpDown();
 			this.MainValueRadio = new System.Windows.Forms.RadioButton();
 			this.MainBestRadio = new System.Windows.Forms.RadioButton();
 			this.MainOperator = new System.Windows.Forms.ComboBox();
-			this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label9 = new System.Windows.Forms.Label();
 			this.MaximizeAddressBox = new BizHawk.Client.GBAHawk.HexTextBox();
-			this.maximizeLabeltext = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.maximizeLabeltext = new System.Windows.Forms.Label();
 			this.panel4 = new System.Windows.Forms.Panel();
 			this.TieBreak1Numeric = new System.Windows.Forms.NumericUpDown();
 			this.TieBreak1ValueRadio = new System.Windows.Forms.RadioButton();
 			this.Tiebreak1Operator = new System.Windows.Forms.ComboBox();
 			this.TieBreak1BestRadio = new System.Windows.Forms.RadioButton();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label5 = new System.Windows.Forms.Label();
 			this.TieBreaker1Box = new BizHawk.Client.GBAHawk.HexTextBox();
-			this.label10 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label10 = new System.Windows.Forms.Label();
 			this.panel5 = new System.Windows.Forms.Panel();
 			this.TieBreak2Numeric = new System.Windows.Forms.NumericUpDown();
 			this.Tiebreak2Operator = new System.Windows.Forms.ComboBox();
 			this.TieBreak2ValueRadio = new System.Windows.Forms.RadioButton();
 			this.TieBreak2BestRadio = new System.Windows.Forms.RadioButton();
-			this.label11 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label11 = new System.Windows.Forms.Label();
+			this.label6 = new System.Windows.Forms.Label();
 			this.TieBreaker2Box = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.panel6 = new System.Windows.Forms.Panel();
-			this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label12 = new System.Windows.Forms.Label();
+			this.label7 = new System.Windows.Forms.Label();
 			this.TieBreaker3Box = new BizHawk.Client.GBAHawk.HexTextBox();
 			this.TieBreak3Numeric = new System.Windows.Forms.NumericUpDown();
 			this.TieBreak3ValueRadio = new System.Windows.Forms.RadioButton();
 			this.TieBreak3BestRadio = new System.Windows.Forms.RadioButton();
 			this.Tiebreak3Operator = new System.Windows.Forms.ComboBox();
 			this.StopBtn = new System.Windows.Forms.Button();
-			this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label8 = new System.Windows.Forms.Label();
 			this.StartFromSlotBox = new System.Windows.Forms.ComboBox();
 			this.ControlGroupBox = new System.Windows.Forms.GroupBox();
 			this.InvisibleEmulationCheckBox = new System.Windows.Forms.CheckBox();
@@ -281,6 +281,7 @@ namespace BizHawk.Client.GBAHawk
 			this.MessageLabel.Name = "MessageLabel";
 			this.MessageLabel.Size = new System.Drawing.Size(109, 17);
 			this.MessageLabel.Text = "          ";
+			this.MessageLabel.AutoSize = true;
 			// 
 			// ControlsBox
 			// 
@@ -373,12 +374,14 @@ namespace BizHawk.Client.GBAHawk
 			this.BestAttemptNumberLabel.Location = new System.Drawing.Point(59, 20);
 			this.BestAttemptNumberLabel.Name = "BestAttemptNumberLabel";
 			this.BestAttemptNumberLabel.Text = "0";
+			this.BestAttemptNumberLabel.AutoSize = true;
 			// 
 			// label17
 			// 
 			this.label17.Location = new System.Drawing.Point(17, 20);
 			this.label17.Name = "label17";
 			this.label17.Text = "Attempt:";
+			this.label17.AutoSize = true;
 			// 
 			// panel1
 			// 
@@ -399,6 +402,7 @@ namespace BizHawk.Client.GBAHawk
 			this.BestAttemptLogLabel.Location = new System.Drawing.Point(8, 8);
 			this.BestAttemptLogLabel.Name = "BestAttemptLogLabel";
 			this.BestAttemptLogLabel.Text = "     ";
+			this.BestAttemptLogLabel.AutoSize = true;
 			// 
 			// BestTieBreak3Box
 			// 
@@ -446,6 +450,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label16.Location = new System.Drawing.Point(96, 76);
 			this.label16.Name = "label16";
 			this.label16.Text = "Tiebreak 3:";
+			this.label16.AutoSize = true;
 			// 
 			// label15
 			// 
@@ -453,6 +458,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label15.Location = new System.Drawing.Point(96, 56);
 			this.label15.Name = "label15";
 			this.label15.Text = "Tiebreak 2:";
+			this.label15.AutoSize = true;
 			// 
 			// label14
 			// 
@@ -460,6 +466,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label14.Location = new System.Drawing.Point(96, 36);
 			this.label14.Name = "label14";
 			this.label14.Text = "Tiebreak 1:";
+			this.label14.AutoSize = true;
 			// 
 			// label13
 			// 
@@ -467,30 +474,35 @@ namespace BizHawk.Client.GBAHawk
 			this.label13.Location = new System.Drawing.Point(104, 16);
 			this.label13.Name = "label13";
 			this.label13.Text = "Main Value:";
+			this.label13.AutoSize = true;
 			// 
 			// label1
 			// 
 			this.label1.Location = new System.Drawing.Point(3, 2);
 			this.label1.Name = "label1";
 			this.label1.Text = "Attempts:";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(10, 17);
 			this.label2.Name = "label2";
 			this.label2.Text = "Frames:";
+			this.label2.AutoSize = true;
 			// 
 			// AttemptsLabel
 			// 
 			this.AttemptsLabel.Location = new System.Drawing.Point(61, 2);
 			this.AttemptsLabel.Name = "AttemptsLabel";
 			this.AttemptsLabel.Text = "0";
+			this.AttemptsLabel.AutoSize = true;
 			// 
 			// FramesLabel
 			// 
 			this.FramesLabel.Location = new System.Drawing.Point(61, 17);
 			this.FramesLabel.Name = "FramesLabel";
 			this.FramesLabel.Text = "0";
+			this.FramesLabel.AutoSize = true;
 			// 
 			// GoalGroupBox
 			// 
@@ -515,6 +527,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label4.Location = new System.Drawing.Point(113, 29);
 			this.label4.Name = "label4";
 			this.label4.Text = "frames";
+			this.label4.AutoSize = true;
 			// 
 			// FrameLengthNumeric
 			// 
@@ -539,6 +552,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label3.Location = new System.Drawing.Point(7, 29);
 			this.label3.Name = "label3";
 			this.label3.Text = "End after";
+			this.label3.AutoSize = true;
 			// 
 			// panel3
 			// 
@@ -617,6 +631,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label9.Location = new System.Drawing.Point(67, 7);
 			this.label9.Name = "label9";
 			this.label9.Text = "Address 0x";
+			this.label9.AutoSize = true;
 			// 
 			// MaximizeAddressBox
 			// 
@@ -635,6 +650,7 @@ namespace BizHawk.Client.GBAHawk
 			this.maximizeLabeltext.Location = new System.Drawing.Point(1, 7);
 			this.maximizeLabeltext.Name = "maximizeLabeltext";
 			this.maximizeLabeltext.Text = "Main Value:";
+			this.maximizeLabeltext.AutoSize = true;
 			// 
 			// panel4
 			// 
@@ -713,6 +729,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label5.Location = new System.Drawing.Point(1, 7);
 			this.label5.Name = "label5";
 			this.label5.Text = "Tiebreak 1:";
+			this.label5.AutoSize = true;
 			// 
 			// TieBreaker1Box
 			// 
@@ -730,6 +747,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label10.Location = new System.Drawing.Point(67, 7);
 			this.label10.Name = "label10";
 			this.label10.Text = "Address 0x";
+			this.label10.AutoSize = true;
 			// 
 			// panel5
 			// 
@@ -808,12 +826,14 @@ namespace BizHawk.Client.GBAHawk
 			this.label11.Location = new System.Drawing.Point(67, 7);
 			this.label11.Name = "label11";
 			this.label11.Text = "Address 0x";
+			this.label11.AutoSize = true;
 			// 
 			// label6
 			// 
 			this.label6.Location = new System.Drawing.Point(1, 7);
 			this.label6.Name = "label6";
 			this.label6.Text = "Tiebreak 2:";
+			this.label6.AutoSize = true;
 			// 
 			// TieBreaker2Box
 			// 
@@ -845,12 +865,14 @@ namespace BizHawk.Client.GBAHawk
 			this.label12.Location = new System.Drawing.Point(67, 7);
 			this.label12.Name = "label12";
 			this.label12.Text = "Address 0x";
+			this.label12.AutoSize = true;
 			// 
 			// label7
 			// 
 			this.label7.Location = new System.Drawing.Point(1, 7);
 			this.label7.Name = "label7";
 			this.label7.Text = "Tiebreak 3:";
+			this.label7.AutoSize = true;
 			// 
 			// TieBreaker3Box
 			// 
@@ -938,6 +960,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label8.Location = new System.Drawing.Point(7, 29);
 			this.label8.Name = "label8";
 			this.label8.Text = "Start From:";
+			this.label8.AutoSize = true;
 			// 
 			// StartFromSlotBox
 			// 
@@ -1077,36 +1100,36 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.GroupBox ControlsBox;
 		private System.Windows.Forms.Panel ControlProbabilityPanel;
 		private System.Windows.Forms.GroupBox BestGroupBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx AttemptsLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx FramesLabel;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label AttemptsLabel;
+		private System.Windows.Forms.Label FramesLabel;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OptionsSubMenu;
 		private System.Windows.Forms.GroupBox GoalGroupBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
+		private System.Windows.Forms.Label label6;
 		private HexTextBox TieBreaker1Box;
 		private HexTextBox TieBreaker2Box;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.NumericUpDown FrameLengthNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Button StopBtn;
-		private BizHawk.WinForms.Controls.LocLabelEx label8;
+		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.ComboBox StartFromSlotBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label11;
-		private BizHawk.WinForms.Controls.LocLabelEx label10;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.TextBox BestTieBreak3Box;
 		private System.Windows.Forms.TextBox BestTieBreak2Box;
 		private System.Windows.Forms.TextBox BestTieBreak1Box;
 		private System.Windows.Forms.TextBox BestMaximizeBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label16;
-		private BizHawk.WinForms.Controls.LocLabelEx label15;
-		private BizHawk.WinForms.Controls.LocLabelEx label14;
-		private BizHawk.WinForms.Controls.LocLabelEx label13;
+		private System.Windows.Forms.Label label16;
+		private System.Windows.Forms.Label label15;
+		private System.Windows.Forms.Label label14;
+		private System.Windows.Forms.Label label13;
 		private System.Windows.Forms.Panel panel1;
-		private BizHawk.WinForms.Controls.LocLabelEx BestAttemptNumberLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx label17;
-		private BizHawk.WinForms.Controls.LocLabelEx BestAttemptLogLabel;
+		private System.Windows.Forms.Label BestAttemptNumberLabel;
+		private System.Windows.Forms.Label label17;
+		private System.Windows.Forms.Label BestAttemptLogLabel;
 		private System.Windows.Forms.Button ClearBestButton;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveAsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator2;
@@ -1131,8 +1154,8 @@ namespace BizHawk.Client.GBAHawk
         private System.Windows.Forms.ComboBox Tiebreak1Operator;
 		private System.Windows.Forms.Panel panel6;
 		private System.Windows.Forms.ComboBox Tiebreak3Operator;
-		private BizHawk.WinForms.Controls.LocLabelEx label12;
-		private BizHawk.WinForms.Controls.LocLabelEx label7;
+		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.Label label7;
 		private HexTextBox TieBreaker3Box;
 		private System.Windows.Forms.NumericUpDown TieBreak3Numeric;
 		private System.Windows.Forms.RadioButton TieBreak3ValueRadio;
@@ -1150,9 +1173,9 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.RadioButton MainValueRadio;
 		private System.Windows.Forms.RadioButton MainBestRadio;
 		private System.Windows.Forms.ComboBox MainOperator;
-		private BizHawk.WinForms.Controls.LocLabelEx label9;
+		private System.Windows.Forms.Label label9;
 		private HexTextBox MaximizeAddressBox;
-		private BizHawk.WinForms.Controls.LocLabelEx maximizeLabeltext;
+		private System.Windows.Forms.Label maximizeLabeltext;
 		private System.Windows.Forms.Button btnCopyBestInput;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx helpToolStripMenuItem;

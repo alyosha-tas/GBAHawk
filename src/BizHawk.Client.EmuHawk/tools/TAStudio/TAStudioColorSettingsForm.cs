@@ -33,7 +33,7 @@ namespace BizHawk.Client.GBAHawk
 
 			ColorDialog picker = new() { FullOpen = true };
 			Size panelSize = new(20, 20);
-			SingleRowFLP Row(string key, string labelText) // can't use ref here because those aren't captured in closures :(
+			FlowLayoutPanel Row(string key, string labelText) // can't use ref here because those aren't captured in closures :(
 			{
 				Panel panel = new() { BackColor = colours[key], BorderStyle = BorderStyle.FixedSingle, Size = panelSize, Tag = key };
 				panel.Click += (_, _) =>
@@ -41,9 +41,15 @@ namespace BizHawk.Client.GBAHawk
 					picker.Color = colours[key];
 					if (picker.ShowDialog().IsOk()) panel.BackColor = colours[key] = picker.Color;
 				};
-				return new() { Controls = { panel, new LabelEx { Text = labelText } } };
+				return new() { Controls = { panel, new Label { Text = labelText, Anchor = AnchorStyles.None, AutoSize = true } },
+									AutoSize = true,
+									AutoSizeMode = AutoSizeMode.GrowAndShrink,
+									MinimumSize = new Size(24, 24),
+									WrapContents = false,
+									Margin = Padding.Empty
+								};
 			}
-			SingleColumnFLP flpPanels = new()
+			FlowLayoutPanel flpPanels = new()
 			{
 				Controls =
 				{
@@ -60,10 +66,16 @@ namespace BizHawk.Client.GBAHawk
 					Row("marker_FrameCol", "Marker: FrameCol"),
 					Row("analogEdit_Col", "AnalogEdit: Col"),
 				},
+				AutoSize = true,
+				AutoSizeMode = AutoSizeMode.GrowAndShrink,
+				FlowDirection = FlowDirection.TopDown,
+				MinimumSize = new Size(24, 24),
+				WrapContents = false,
+				Margin = Padding.Empty
 			};
 
 			Size btnSize = new(75, 23);
-			SzButtonEx btnOK = new() { Size = btnSize, Text = "OK" };
+			Button btnOK = new() { Size = btnSize, Text = "OK" };
 			btnOK.Click += (_, _) =>
 			{
 				save(new(
@@ -81,25 +93,39 @@ namespace BizHawk.Client.GBAHawk
 					analogEdit_Col: colours["analogEdit_Col"]));
 				Close();
 			};
-			SzButtonEx btnCancel = new() { Size = btnSize, Text = "Cancel" };
+			Button btnCancel = new() { Size = btnSize, Text = "Cancel" };
 			btnCancel.Click += (_, _) => Close();
-			SzButtonEx btnDefaults = new() { Size = btnSize, Text = "Defaults" };
+			Button btnDefaults = new() { Size = btnSize, Text = "Defaults" };
 			btnDefaults.Click += (_, _) =>
 			{
 				Init(TAStudioPalette.Default);
-				foreach (var panel in flpPanels.Controls.Cast<SingleRowFLP>().Select(flp => (Panel)flp.Controls[0]))
+				foreach (var panel in flpPanels.Controls.Cast<FlowLayoutPanel>().Select(flp => (Panel)flp.Controls[0]))
 				{
 					panel.BackColor = colours[(string) panel.Tag];
 				}
 			};
-			SingleRowFLP flpButtons = new() { Controls = { btnOK, btnCancel, btnDefaults } };
+			FlowLayoutPanel flpButtons = new() { Controls = { btnOK, btnCancel, btnDefaults },
+													AutoSize = true,
+													AutoSizeMode = AutoSizeMode.GrowAndShrink,
+													MinimumSize = new Size(24, 24),
+													WrapContents = false,
+													Margin = Padding.Empty
+												};
+
 			((FlowLayoutPanel) flpButtons).FlowDirection = FlowDirection.RightToLeft; // why did I disable this
 
 			SuspendLayout();
 			BackColor = Color.White;
 			ClientSize = new(240, 320);
 			Text = "Edit TAStudio Colors";
-			Controls.Add(new SingleColumnFLP { Controls = { flpButtons, flpPanels } });
+			Controls.Add(new FlowLayoutPanel { Controls = { flpButtons, flpPanels },
+														AutoSize = true,
+														AutoSizeMode = AutoSizeMode.GrowAndShrink,
+														FlowDirection = FlowDirection.TopDown,
+														MinimumSize = new Size(24, 24),
+														WrapContents = false,
+														Margin = Padding.Empty
+													});
 			ResumeLayout();
 		}
 	}

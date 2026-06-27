@@ -28,7 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.FileExtensionLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.FileExtensionLabel = new System.Windows.Forms.Label();
 			this.PlatformDropdown = new System.Windows.Forms.ComboBox();
 			this.SuspendLayout();
 			// 
@@ -37,6 +37,7 @@
 			this.FileExtensionLabel.Location = new System.Drawing.Point(3, 5);
 			this.FileExtensionLabel.Name = "FileExtensionLabel";
 			this.FileExtensionLabel.Text = ".bin";
+			this.FileExtensionLabel.AutoSize = true;
 			// 
 			// PlatformDropdown
 			// 
@@ -63,7 +64,7 @@
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.LocLabelEx FileExtensionLabel;
+		private System.Windows.Forms.Label FileExtensionLabel;
 		private System.Windows.Forms.ComboBox PlatformDropdown;
 	}
 }

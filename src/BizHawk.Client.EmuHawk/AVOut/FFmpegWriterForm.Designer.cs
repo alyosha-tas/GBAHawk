@@ -28,15 +28,15 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
-            this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -44,10 +44,11 @@
             this.label1.Location = new System.Drawing.Point(5, 5);
             this.label1.Name = "label1";
             this.label1.Text = "Formats:";
-            // 
-            // listBox1
-            // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+			this.label1.AutoSize = true;
+			// 
+			// listBox1
+			// 
+			this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBox1.FormattingEnabled = true;
@@ -63,6 +64,7 @@
             this.label2.Location = new System.Drawing.Point(7, 202);
             this.label2.Name = "label2";
             this.label2.Text = "Description:";
+			this.label2.AutoSize = true;
             // 
             // label3
             // 
@@ -70,13 +72,15 @@
             this.label3.Location = new System.Drawing.Point(6, 219);
             this.label3.MaximumSize = new System.Drawing.Size(260, 0);
             this.label3.Name = "label3";
-            // 
-            // label4
-            // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.label3.AutoSize = true;
+			// 
+			// label4
+			// 
+			this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.Location = new System.Drawing.Point(10, 281);
             this.label4.Name = "label4";
             this.label4.Text = "Command:";
+			this.label4.AutoSize = true;
             // 
             // textBox1
             // 
@@ -115,10 +119,11 @@
             this.label5.Location = new System.Drawing.Point(159, 202);
             this.label5.Name = "label5";
             this.label5.Text = "Extension:";
-            // 
-            // FFmpegWriterForm
-            // 
-            this.AcceptButton = this.button1;
+			this.label5.AutoSize = true;
+			// 
+			// FFmpegWriterForm
+			// 
+			this.AcceptButton = this.button1;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.button2;
@@ -144,14 +149,14 @@
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.ListBox listBox1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.Button button2;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
+		private System.Windows.Forms.Label label5;
 	}
 }

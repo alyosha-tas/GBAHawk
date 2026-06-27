@@ -32,15 +32,15 @@
 			this.OkBtn = new System.Windows.Forms.Button();
 			this.CancelBtn = new System.Windows.Forms.Button();
 			this.PlatformsGroupBox = new System.Windows.Forms.Panel();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.ExtensionLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.RomSizeLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
+			this.ExtensionLabel = new System.Windows.Forms.Label();
+			this.RomSizeLabel = new System.Windows.Forms.Label();
+			this.label6 = new System.Windows.Forms.Label();
 			this.AlwaysCheckbox = new System.Windows.Forms.CheckBox();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label4 = new System.Windows.Forms.Label();
+			this.label5 = new System.Windows.Forms.Label();
 			this.HashBox = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
@@ -99,12 +99,14 @@
 			this.label1.Location = new System.Drawing.Point(288, 50);
 			this.label1.Name = "label1";
 			this.label1.Text = "Rom Details:";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(12, 50);
 			this.label2.Name = "label2";
 			this.label2.Text = "Please choose the intended platform to use for this Rom";
+			this.label2.AutoSize = true;
 			// 
 			// label3
 			// 
@@ -112,6 +114,7 @@
 			this.label3.Location = new System.Drawing.Point(288, 74);
 			this.label3.Name = "label3";
 			this.label3.Text = "Extension:";
+			this.label3.AutoSize = true;
 			// 
 			// ExtensionLabel
 			// 
@@ -119,6 +122,7 @@
 			this.ExtensionLabel.Location = new System.Drawing.Point(288, 89);
 			this.ExtensionLabel.Name = "ExtensionLabel";
 			this.ExtensionLabel.Text = ".bin";
+			this.ExtensionLabel.AutoSize = true;
 			// 
 			// RomSizeLabel
 			// 
@@ -126,6 +130,7 @@
 			this.RomSizeLabel.Location = new System.Drawing.Point(288, 134);
 			this.RomSizeLabel.Name = "RomSizeLabel";
 			this.RomSizeLabel.Text = "4kb";
+			this.RomSizeLabel.AutoSize = true;
 			// 
 			// label6
 			// 
@@ -133,6 +138,7 @@
 			this.label6.Location = new System.Drawing.Point(288, 116);
 			this.label6.Name = "label6";
 			this.label6.Text = "Size:";
+			this.label6.AutoSize = true;
 			// 
 			// AlwaysCheckbox
 			// 
@@ -151,12 +157,14 @@
 			this.label4.Name = "label4";
 			this.label4.Text = "for this extension";
 			this.label4.Click += new System.EventHandler(this.label4_Click);
+			this.label4.AutoSize = true;
 			// 
 			// label5
 			// 
 			this.label5.Location = new System.Drawing.Point(288, 162);
 			this.label5.Name = "label5";
 			this.label5.Text = "Hash:";
+			this.label5.AutoSize = true;
 			// 
 			// HashBox
 			// 
@@ -204,15 +212,15 @@
 		private System.Windows.Forms.Button OkBtn;
 		private System.Windows.Forms.Button CancelBtn;
 		private System.Windows.Forms.Panel PlatformsGroupBox;
-        private BizHawk.WinForms.Controls.LocLabelEx label1;
-        private BizHawk.WinForms.Controls.LocLabelEx label2;
-        private BizHawk.WinForms.Controls.LocLabelEx label3;
-        private BizHawk.WinForms.Controls.LocLabelEx ExtensionLabel;
-        private BizHawk.WinForms.Controls.LocLabelEx RomSizeLabel;
-        private BizHawk.WinForms.Controls.LocLabelEx label6;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label ExtensionLabel;
+        private System.Windows.Forms.Label RomSizeLabel;
+        private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.CheckBox AlwaysCheckbox;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
+		private System.Windows.Forms.Label label4;
+		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.TextBox HashBox;
 	}
 }

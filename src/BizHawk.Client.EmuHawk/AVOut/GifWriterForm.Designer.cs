@@ -31,10 +31,10 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.numericUpDown2 = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
             this.SuspendLayout();
@@ -78,16 +78,18 @@
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
             this.label1.Text = "Number of frames to skip for each frame written:";
-            // 
-            // label2
-            // 
-            this.label2.Location = new System.Drawing.Point(12, 48);
+			this.label1.AutoSize = true;
+			// 
+			// label2
+			// 
+			this.label2.Location = new System.Drawing.Point(12, 48);
             this.label2.Name = "label2";
             this.label2.Text = "Frame delay:";
-            // 
-            // numericUpDown2
-            // 
-            this.numericUpDown2.Location = new System.Drawing.Point(12, 64);
+			this.label2.AutoSize = true;
+			// 
+			// numericUpDown2
+			// 
+			this.numericUpDown2.Location = new System.Drawing.Point(12, 64);
             this.numericUpDown2.Minimum = new decimal(new int[] {
             1,
             0,
@@ -103,6 +105,7 @@
             this.label3.Location = new System.Drawing.Point(118, 66);
             this.label3.Name = "label3";
             this.label3.Text = "label3";
+			this.label3.AutoSize = true;
             // 
             // GifWriterForm
             // 
@@ -134,9 +137,9 @@
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.Button button2;
 		private System.Windows.Forms.NumericUpDown numericUpDown1;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.NumericUpDown numericUpDown2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label3;
 	}
 }

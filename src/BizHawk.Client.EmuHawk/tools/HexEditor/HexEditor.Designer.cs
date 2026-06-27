@@ -83,9 +83,9 @@ namespace BizHawk.Client.GBAHawk
 			this.toolStripMenuItem1 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.MemoryViewerBox = new System.Windows.Forms.GroupBox();
 			this.HexScrollBar = new System.Windows.Forms.VScrollBar();
-			this.AddressLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.AddressesLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.Header = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.AddressLabel = new System.Windows.Forms.Label();
+			this.AddressesLabel = new System.Windows.Forms.Label();
+			this.Header = new System.Windows.Forms.Label();
 			this.HexMenuStrip.SuspendLayout();
 			this.ViewerContextMenuStrip.SuspendLayout();
 			this.MemoryViewerBox.SuspendLayout();
@@ -403,6 +403,7 @@ namespace BizHawk.Client.GBAHawk
 			this.AddressLabel.Location = new System.Drawing.Point(3, 30);
 			this.AddressLabel.Name = "AddressLabel";
 			this.AddressLabel.Text = "      ";
+			this.AddressLabel.AutoSize = true;
 			// 
 			// AddressesLabel
 			// 
@@ -414,6 +415,7 @@ namespace BizHawk.Client.GBAHawk
 			this.AddressesLabel.MouseLeave += new System.EventHandler(this.AddressesLabel_MouseLeave);
 			this.AddressesLabel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.AddressesLabel_MouseMove);
 			this.AddressesLabel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.AddressesLabel_MouseUp);
+			this.AddressesLabel.AutoSize = true;
 			// 
 			// Header
 			// 
@@ -421,6 +423,7 @@ namespace BizHawk.Client.GBAHawk
 			this.Header.Location = new System.Drawing.Point(28, 44);
 			this.Header.Name = "Header";
 			this.Header.Text = "label1";
+			this.Header.AutoSize = true;
 			// 
 			// HexEditor
 			// 
@@ -469,7 +472,7 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator2;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AddToRamWatchMenuItem;
 		public System.Windows.Forms.GroupBox MemoryViewerBox;
-		private BizHawk.WinForms.Controls.LocLabelEx AddressesLabel;
+		private System.Windows.Forms.Label AddressesLabel;
 		private System.Windows.Forms.VScrollBar HexScrollBar;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx ContextSeparator1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx IncrementContextItem;
@@ -488,8 +491,8 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetColorsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator8;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ResetColorsToDefaultMenuItem;
-		public BizHawk.WinForms.Controls.LocLabelEx Header;
-		private BizHawk.WinForms.Controls.LocLabelEx AddressLabel;
+		public System.Windows.Forms.Label Header;
+		private System.Windows.Forms.Label AddressLabel;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx CopyContextItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx PasteContextItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FindNextMenuItem;

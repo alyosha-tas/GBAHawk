@@ -29,8 +29,8 @@
 		private void InitializeComponent()
 		{
             this.OK = new System.Windows.Forms.Button();
-            this.MessageTypeBox = new BizHawk.WinForms.Controls.LocSzGroupBoxEx();
-            this.ColorBox = new BizHawk.WinForms.Controls.LocSzGroupBoxEx();
+            this.MessageTypeBox = new System.Windows.Forms.GroupBox();
+            this.ColorBox = new System.Windows.Forms.GroupBox();
             this.Cancel = new System.Windows.Forms.Button();
             this.ResetDefaultsButton = new System.Windows.Forms.Button();
             this.StackMessagesCheckbox = new System.Windows.Forms.CheckBox();
@@ -134,8 +134,8 @@
 		#endregion
 
 		private System.Windows.Forms.Button OK;
-		private BizHawk.WinForms.Controls.LocSzGroupBoxEx MessageTypeBox;
-		private BizHawk.WinForms.Controls.LocSzGroupBoxEx ColorBox;
+		private System.Windows.Forms.GroupBox MessageTypeBox;
+		private System.Windows.Forms.GroupBox ColorBox;
 		private System.Windows.Forms.Button Cancel;
 		private System.Windows.Forms.Button ResetDefaultsButton;
 		private System.Windows.Forms.CheckBox StackMessagesCheckbox;

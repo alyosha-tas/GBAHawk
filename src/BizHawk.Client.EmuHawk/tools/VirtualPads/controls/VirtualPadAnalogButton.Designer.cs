@@ -29,8 +29,8 @@
 		private void InitializeComponent()
 		{
             this.AnalogTrackBar = new System.Windows.Forms.TrackBar();
-            this.DisplayNameLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.ValueLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.DisplayNameLabel = new System.Windows.Forms.Label();
+            this.ValueLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.AnalogTrackBar)).BeginInit();
             this.SuspendLayout();
             // 
@@ -50,6 +50,7 @@
             this.DisplayNameLabel.Location = new System.Drawing.Point(6, 51);
             this.DisplayNameLabel.Name = "DisplayNameLabel";
             this.DisplayNameLabel.Text = "Slider";
+			this.DisplayNameLabel.AutoSize = true;
             // 
             // ValueLabel
             // 
@@ -57,6 +58,7 @@
             this.ValueLabel.Location = new System.Drawing.Point(257, 51);
             this.ValueLabel.Name = "ValueLabel";
             this.ValueLabel.Text = "99999";
+			this.ValueLabel.AutoSize = true;
             // 
             // VirtualPadAnalogButton
             // 
@@ -76,7 +78,7 @@
 		#endregion
 
 		private System.Windows.Forms.TrackBar AnalogTrackBar;
-		private BizHawk.WinForms.Controls.LocLabelEx DisplayNameLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx ValueLabel;
+		private System.Windows.Forms.Label DisplayNameLabel;
+		private System.Windows.Forms.Label ValueLabel;
 	}
 }

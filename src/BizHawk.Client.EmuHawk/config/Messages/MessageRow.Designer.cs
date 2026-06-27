@@ -28,7 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.RowRadio = new BizHawk.WinForms.Controls.RadioButtonEx();
+            this.RowRadio = new System.Windows.Forms.RadioButton();
             this.LocationLabel = new BizHawk.WinForms.Controls.LocLabelEx();
             this.SuspendLayout();
             // 
@@ -61,7 +61,7 @@
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.RadioButtonEx RowRadio;
+		private System.Windows.Forms.RadioButton RowRadio;
 		private WinForms.Controls.LocLabelEx LocationLabel;
 	}
 }
