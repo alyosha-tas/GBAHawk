@@ -32,20 +32,20 @@
 			this.OkBtn = new System.Windows.Forms.Button();
 			this.GoodRadio = new System.Windows.Forms.RadioButton();
 			this.pictureBox1 = new System.Windows.Forms.PictureBox();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
 			this.pictureBox2 = new System.Windows.Forms.PictureBox();
 			this.HomebrewRadio = new System.Windows.Forms.RadioButton();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label3 = new System.Windows.Forms.Label();
 			this.pictureBox3 = new System.Windows.Forms.PictureBox();
 			this.HackRadio = new System.Windows.Forms.RadioButton();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label4 = new System.Windows.Forms.Label();
 			this.pictureBox4 = new System.Windows.Forms.PictureBox();
 			this.TranslationRadio = new System.Windows.Forms.RadioButton();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label5 = new System.Windows.Forms.Label();
 			this.pictureBox5 = new System.Windows.Forms.PictureBox();
 			this.BadRadio = new System.Windows.Forms.RadioButton();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label6 = new System.Windows.Forms.Label();
 			this.pictureBox6 = new System.Windows.Forms.PictureBox();
 			this.OverdumpRadio = new System.Windows.Forms.RadioButton();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -103,12 +103,14 @@
 			this.label1.Location = new System.Drawing.Point(48, 12);
 			this.label1.Name = "label1";
 			this.label1.Text = "Good Dump";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(48, 37);
 			this.label2.Name = "label2";
 			this.label2.Text = "Homebrew";
+			this.label2.AutoSize = true;
 			// 
 			// pictureBox2
 			// 
@@ -132,6 +134,7 @@
 			this.label3.Location = new System.Drawing.Point(48, 62);
 			this.label3.Name = "label3";
 			this.label3.Text = "Hack";
+			this.label3.AutoSize = true;
 			// 
 			// pictureBox3
 			// 
@@ -155,6 +158,7 @@
 			this.label4.Location = new System.Drawing.Point(48, 87);
 			this.label4.Name = "label4";
 			this.label4.Text = "Translated ROM";
+			this.label4.AutoSize = true;
 			// 
 			// pictureBox4
 			// 
@@ -178,6 +182,7 @@
 			this.label5.Location = new System.Drawing.Point(48, 112);
 			this.label5.Name = "label5";
 			this.label5.Text = "Bad Dump";
+			this.label5.AutoSize = true;
 			// 
 			// pictureBox5
 			// 
@@ -201,6 +206,7 @@
 			this.label6.Location = new System.Drawing.Point(48, 137);
 			this.label6.Name = "label6";
 			this.label6.Text = "Over Dump";
+			this.label6.AutoSize = true;
 			// 
 			// pictureBox6
 			// 
@@ -271,20 +277,20 @@
 		private System.Windows.Forms.Button OkBtn;
 		private System.Windows.Forms.RadioButton GoodRadio;
 		private System.Windows.Forms.PictureBox pictureBox1;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.PictureBox pictureBox2;
 		private System.Windows.Forms.RadioButton HomebrewRadio;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.PictureBox pictureBox3;
 		private System.Windows.Forms.RadioButton HackRadio;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.PictureBox pictureBox4;
 		private System.Windows.Forms.RadioButton TranslationRadio;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
+		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.PictureBox pictureBox5;
 		private System.Windows.Forms.RadioButton BadRadio;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
+		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.PictureBox pictureBox6;
 		private System.Windows.Forms.RadioButton OverdumpRadio;
 	}

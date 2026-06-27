@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows.Forms;
 
 using BizHawk.Client.Common;
-using BizHawk.WinForms.Controls;
 
 namespace BizHawk.Client.GBAHawk
 {
@@ -25,7 +24,7 @@ namespace BizHawk.Client.GBAHawk
 			_flpMain.WrapContents = false;
 			_flpMain.Margin = Padding.Empty;
 			Controls.Add(new Label { Text = "To bind, click \"Bind!\", move an axis (e.g. analog stick) on the desired gamepad, and choose from the dropdown.\nNote: haptic feedback won't work if your gamepad is shown as \"J#\" or if your input method is OpenTK." ,
-									Anchor = AnchorStyles.None, AutoSize = true});
+									Anchor = AnchorStyles.Top, AutoSize = true});
 			var adapter = Input.Instance.Adapter;
 			foreach (var buttonName in realConfigButtons ?? realConfigObject.Keys)
 			{

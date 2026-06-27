@@ -34,18 +34,18 @@
 			this.buttonOK = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
 			this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-			this.labelDescription = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.labelDescriptionBody = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelDescription = new System.Windows.Forms.Label();
+			this.labelDescriptionBody = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
+			this.label4 = new System.Windows.Forms.Label();
 			this.buttonAuto = new System.Windows.Forms.Button();
 			this.panelSizeSelect = new System.Windows.Forms.Panel();
-			this.lblSize = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelSize = new System.Windows.Forms.Label();
 			this.numericTextBoxW = new BizHawk.Client.GBAHawk.NumericTextBox();
 			this.numericTextBoxH = new BizHawk.Client.GBAHawk.NumericTextBox();
 			this.checkBoxPad = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.lblResolutionWarning = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelResolutionWarning = new System.Windows.Forms.Label();
 			this.toolTip1 = new System.Windows.Forms.ToolTip();
 			this.tableLayoutPanel4.SuspendLayout();
 			this.panelSizeSelect.SuspendLayout();
@@ -121,6 +121,7 @@
 			this.labelDescription.Name = "labelDescription";
 			this.labelDescription.Padding = new System.Windows.Forms.Padding(0, 3, 0, 3);
 			this.labelDescription.Text = "Description:";
+			this.labelDescription.AutoSize = true;
 			// 
 			// labelDescriptionBody
 			// 
@@ -129,18 +130,21 @@
 			this.labelDescriptionBody.Name = "labelDescriptionBody";
 			this.labelDescriptionBody.Padding = new System.Windows.Forms.Padding(0, 3, 0, 3);
 			this.labelDescriptionBody.Text = resources.GetString("labelDescriptionBody.Text");
+			this.labelDescriptionBody.AutoSize = true;
 			// 
 			// label3
 			// 
 			this.label3.Location = new System.Drawing.Point(74, 23);
 			this.label3.Name = "label3";
 			this.label3.Text = "X";
+			this.label3.AutoSize = true;
 			// 
 			// label4
 			// 
 			this.label4.Location = new System.Drawing.Point(3, 0);
 			this.label4.Name = "label4";
 			this.label4.Text = "Resize:";
+			this.label4.AutoSize = true;
 			// 
 			// buttonAuto
 			// 
@@ -155,7 +159,7 @@
 			// panelSizeSelect
 			// 
 			this.panelSizeSelect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.panelSizeSelect.Controls.Add(this.lblSize);
+			this.panelSizeSelect.Controls.Add(this.labelSize);
 			this.panelSizeSelect.Controls.Add(this.label4);
 			this.panelSizeSelect.Controls.Add(this.buttonAuto);
 			this.panelSizeSelect.Controls.Add(this.numericTextBoxW);
@@ -166,12 +170,13 @@
 			this.panelSizeSelect.Size = new System.Drawing.Size(162, 84);
 			this.panelSizeSelect.TabIndex = 15;
 			// 
-			// lblSize
+			// labelSize
 			// 
-			this.lblSize.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-			this.lblSize.Location = new System.Drawing.Point(3, 42);
-			this.lblSize.Name = "lblSize";
-			this.lblSize.Text = "Size:\r\nTestxTest";
+			this.labelSize.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+			this.labelSize.Location = new System.Drawing.Point(3, 42);
+			this.labelSize.Name = "lblSize";
+			this.labelSize.Text = "Size:\r\nTestxTest";
+			this.labelSize.AutoSize = true;
 			// 
 			// numericTextBoxW
 			// 
@@ -205,20 +210,21 @@
 			// 
 			// panel1
 			// 
-			this.panel1.Controls.Add(this.lblResolutionWarning);
+			this.panel1.Controls.Add(this.labelResolutionWarning);
 			this.panel1.Location = new System.Drawing.Point(347, 148);
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(162, 93);
 			this.panel1.TabIndex = 17;
 			// 
-			// lblResolutionWarning
+			// labelResolutionWarning
 			// 
-			this.lblResolutionWarning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblResolutionWarning.Location = new System.Drawing.Point(4, 4);
-			this.lblResolutionWarning.Name = "lblResolutionWarning";
-			this.lblResolutionWarning.Text = "Resolution is not a multiple of 4! Odd or non-x4 resolutions breaks many codecs. " +
+			this.labelResolutionWarning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.labelResolutionWarning.Location = new System.Drawing.Point(4, 4);
+			this.labelResolutionWarning.Name = "lblResolutionWarning";
+			this.labelResolutionWarning.Text = "Resolution is not a multiple of 4! Odd or non-x4 resolutions breaks many codecs. " +
     "Check your output carefully and adjust the window size or codec settings if need" +
     "ed.";
+			this.labelResolutionWarning.AutoSize = true;
 			// 
 			// VideoWriterChooserForm
 			// 
@@ -259,18 +265,18 @@
 		private System.Windows.Forms.Button buttonOK;
 		private System.Windows.Forms.Button buttonCancel;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
-		private BizHawk.WinForms.Controls.LocLabelEx labelDescription;
-		private BizHawk.WinForms.Controls.LocLabelEx labelDescriptionBody;
+		private System.Windows.Forms.Label labelDescription;
+		private System.Windows.Forms.Label labelDescriptionBody;
 		private NumericTextBox numericTextBoxW;
 		private NumericTextBox numericTextBoxH;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.Button buttonAuto;
 		private System.Windows.Forms.Panel panelSizeSelect;
 		private System.Windows.Forms.CheckBox checkBoxPad;
 		private System.Windows.Forms.ToolTip toolTip1;
-		private BizHawk.WinForms.Controls.LocLabelEx lblSize;
+		private System.Windows.Forms.Label labelSize;
 		private System.Windows.Forms.Panel panel1;
-		private BizHawk.WinForms.Controls.LocLabelEx lblResolutionWarning;
+		private System.Windows.Forms.Label labelResolutionWarning;
 	}
 }

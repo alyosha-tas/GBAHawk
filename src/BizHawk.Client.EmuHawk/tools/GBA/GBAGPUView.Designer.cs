@@ -31,14 +31,14 @@
 			this.components = new System.ComponentModel.Container();
 			this.listBoxWidgets = new System.Windows.Forms.ListBox();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.buttonShowWidget = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.buttonRefresh = new System.Windows.Forms.Button();
 			this.hScrollBar1 = new System.Windows.Forms.HScrollBar();
 			this.radioButtonManual = new System.Windows.Forms.RadioButton();
 			this.radioButtonScanline = new System.Windows.Forms.RadioButton();
-			this.labelClipboard = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelClipboard = new System.Windows.Forms.Label();
 			this.timerMessage = new System.Windows.Forms.Timer(this.components);
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.groupBox1.SuspendLayout();
@@ -69,6 +69,7 @@
 			this.label1.Location = new System.Drawing.Point(12, 24);
 			this.label1.Name = "label1";
 			this.label1.Text = "Available widgets:";
+			this.label1.AutoSize = true;
 			// 
 			// buttonShowWidget
 			// 
@@ -142,6 +143,7 @@
 			this.labelClipboard.MaximumSize = new System.Drawing.Size(145, 0);
 			this.labelClipboard.Name = "labelClipboard";
 			this.labelClipboard.Text = "CTRL + C: Copy under mouse to clipboard.";
+			this.labelClipboard.AutoSize = true;
 			// 
 			// timerMessage
 			// 
@@ -186,14 +188,14 @@
 
 		private System.Windows.Forms.ListBox listBoxWidgets;
 		private System.Windows.Forms.Panel panel1;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Button buttonShowWidget;
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Button buttonRefresh;
 		private System.Windows.Forms.HScrollBar hScrollBar1;
 		private System.Windows.Forms.RadioButton radioButtonManual;
 		private System.Windows.Forms.RadioButton radioButtonScanline;
-		private BizHawk.WinForms.Controls.LocLabelEx labelClipboard;
+		private System.Windows.Forms.Label labelClipboard;
 		private System.Windows.Forms.Timer timerMessage;
 		private System.Windows.Forms.MenuStrip menuStrip1;
 

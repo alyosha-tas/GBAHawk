@@ -29,18 +29,18 @@
 		private void InitializeComponent()
 		{
             this.Ok = new System.Windows.Forms.Button();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label10 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label11 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // Ok
@@ -61,25 +61,29 @@
             this.label1.Location = new System.Drawing.Point(13, 13);
             this.label1.Name = "label1";
             this.label1.Text = "%recent%";
-            // 
-            // label2
-            // 
-            this.label2.Location = new System.Drawing.Point(72, 13);
+			this.label1.AutoSize = true;
+			// 
+			// label2
+			// 
+			this.label2.Location = new System.Drawing.Point(72, 13);
             this.label2.Name = "label2";
             this.label2.Text = "Sets the path to the Windows Recent Path";
-            // 
-            // label3
-            // 
-            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+			this.label2.AutoSize = true;
+			// 
+			// label3
+			// 
+			this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.label3.Location = new System.Drawing.Point(13, 33);
             this.label3.Name = "label3";
             this.label3.Text = "%exe%";
+			this.label3.AutoSize = true;
             // 
             // label4
             // 
             this.label4.Location = new System.Drawing.Point(72, 33);
             this.label4.Name = "label4";
             this.label4.Text = "Sets the path of the executable (EmuHawk.exe)";
+			this.label4.AutoSize = true;
             // 
             // label5
             // 
@@ -87,6 +91,7 @@
             this.label5.Location = new System.Drawing.Point(13, 68);
             this.label5.Name = "label5";
             this.label5.Text = ".\\";
+			this.label5.AutoSize = true;
             // 
             // label6
             // 
@@ -94,12 +99,14 @@
             this.label6.Location = new System.Drawing.Point(13, 88);
             this.label6.Name = "label6";
             this.label6.Text = "..\\";
+			this.label6.AutoSize = true;
             // 
             // label7
             // 
             this.label7.Location = new System.Drawing.Point(72, 68);
             this.label7.Name = "label7";
             this.label7.Text = "Sets the path to the base path";
+			this.label7.AutoSize = true;
             // 
             // label8
             // 
@@ -107,30 +114,35 @@
             this.label8.Name = "label8";
             this.label8.Text = "- Setting the global base path to one of these will set it to the path of the .ex" +
     "e";
+			this.label8.AutoSize = true;
             // 
             // label9
             // 
             this.label9.Location = new System.Drawing.Point(94, 121);
             this.label9.Name = "label9";
             this.label9.Text = "- Setting a platform base will set it to the global base";
+			this.label9.AutoSize = true;
             // 
             // label10
             // 
             this.label10.Location = new System.Drawing.Point(94, 136);
             this.label10.Name = "label10";
             this.label10.Text = "- Setting a platform folder will set it to the platform base";
+			this.label10.AutoSize = true;
             // 
             // label11
             // 
             this.label11.Location = new System.Drawing.Point(94, 151);
             this.label11.Name = "label11";
             this.label11.Text = "- Setting a tools folder will set it to the global base";
+			this.label11.AutoSize = true;
             // 
             // label12
             // 
             this.label12.Location = new System.Drawing.Point(72, 88);
             this.label12.Name = "label12";
             this.label12.Text = "Sets the path to the folder above the base path";
+			this.label12.AutoSize = true;
             // 
             // PathInfo
             // 
@@ -167,17 +179,17 @@
 		#endregion
 
 		private System.Windows.Forms.Button Ok;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
-		private BizHawk.WinForms.Controls.LocLabelEx label7;
-		private BizHawk.WinForms.Controls.LocLabelEx label8;
-		private BizHawk.WinForms.Controls.LocLabelEx label9;
-		private BizHawk.WinForms.Controls.LocLabelEx label10;
-		private BizHawk.WinForms.Controls.LocLabelEx label11;
-		private BizHawk.WinForms.Controls.LocLabelEx label12;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Label label7;
+		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.Label label9;
+		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.Label label12;
 	}
 }

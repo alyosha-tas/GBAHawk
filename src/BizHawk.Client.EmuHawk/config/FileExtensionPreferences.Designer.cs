@@ -31,9 +31,9 @@
 			this.OkBtn = new System.Windows.Forms.Button();
 			this.CancelBtn = new System.Windows.Forms.Button();
 			this.PrefPanel = new System.Windows.Forms.Panel();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// OkBtn
@@ -76,18 +76,21 @@
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
 			this.label1.Text = "Select a preferred Platform to run for the given file extensions.";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(12, 24);
 			this.label2.Name = "label2";
 			this.label2.Text = "Note: The game database overrides these options.  They only take effect";
+			this.label2.AutoSize = true;
 			// 
 			// label3
 			// 
 			this.label3.Location = new System.Drawing.Point(12, 39);
 			this.label3.Name = "label3";
 			this.label3.Text = "when a Rom is unable to be found in the database";
+			this.label3.AutoSize = true;
 			// 
 			// FileExtensionPreferences
 			// 
@@ -118,8 +121,8 @@
 		private System.Windows.Forms.Button OkBtn;
 		private System.Windows.Forms.Button CancelBtn;
 		private System.Windows.Forms.Panel PrefPanel;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label3;
 	}
 }

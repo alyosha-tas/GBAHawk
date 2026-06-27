@@ -529,7 +529,7 @@ namespace BizHawk.Client.GBAHawk
 
 			var fciDialog = new FirmwaresConfigInfo
 			{
-				lblFirmware =
+				labelFirmware =
 				{
 					Text = $"{fr.ID} ({fr.Description})"
 				}

@@ -23,7 +23,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="$(ProjectDir)../BizHawk.Bizware.DirectX/BizHawk.Bizware.DirectX.csproj" />
-		<ProjectReference Include="$(ProjectDir)../BizHawk.WinForms.Controls/BizHawk.WinForms.Controls.csproj" />
 		<Compile Remove="Properties/Settings.Designer.cs" />
 		<Content Include="images\GBAHawk_img.ico" />
 		<EmbeddedResource Include="images/**/*" />
@@ -194,6 +193,21 @@
 	<ItemGroup>
 		<Compile Update="ArchiveChooser.cs" SubType="Form" />
 		<Compile Update="ArchiveChooser.Designer.cs" DependentUpon="ArchiveChooser.cs" />
+		<Compile Update="CustomControls\MenuEx\MenuItemEx.cs">
+		  <SubType>Component</SubType>
+		</Compile>
+		<Compile Update="CustomControls\MenuEx\MenuStripEx.cs">
+		  <SubType>Component</SubType>
+		</Compile>
+		<Compile Update="CustomControls\MenuEx\StatusLabelEx.cs">
+		  <SubType>Component</SubType>
+		</Compile>
+		<Compile Update="CustomControls\MenuEx\StatusStripEx.cs">
+		  <SubType>Component</SubType>
+		</Compile>
+		<Compile Update="CustomControls\MenuEx\ToolStripEx.cs">
+		  <SubType>Component</SubType>
+		</Compile>
 		<EmbeddedResource Update="ArchiveChooser.resx" DependentUpon="ArchiveChooser.cs" SubType="Designer" />
 		<Compile Update="AVOut/GifWriterForm.cs" SubType="Form" />
 		<Compile Update="AVOut/GifWriterForm.Designer.cs" DependentUpon="GifWriterForm.cs" />

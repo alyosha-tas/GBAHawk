@@ -28,34 +28,34 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
+			this.label4 = new System.Windows.Forms.Label();
+			this.label5 = new System.Windows.Forms.Label();
+			this.label6 = new System.Windows.Forms.Label();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.groupBox3 = new System.Windows.Forms.GroupBox();
-			this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label7 = new System.Windows.Forms.Label();
+			this.label8 = new System.Windows.Forms.Label();
+			this.label9 = new System.Windows.Forms.Label();
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this.groupBox5 = new System.Windows.Forms.GroupBox();
 			this.hScrollBarScanline = new System.Windows.Forms.HScrollBar();
-			this.labelScanline = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelScanline = new System.Windows.Forms.Label();
 			this.buttonRefresh = new System.Windows.Forms.Button();
 			this.radioButtonRefreshManual = new System.Windows.Forms.RadioButton();
 			this.radioButtonRefreshScanline = new System.Windows.Forms.RadioButton();
 			this.radioButtonRefreshFrame = new System.Windows.Forms.RadioButton();
 			this.groupBoxDetails = new System.Windows.Forms.GroupBox();
-			this.labelDetails = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelDetails = new System.Windows.Forms.Label();
 			this.groupBoxMemory = new System.Windows.Forms.GroupBox();
-			this.labelMemory = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelMemory = new System.Windows.Forms.Label();
 			this.groupBox6 = new System.Windows.Forms.GroupBox();
-			this.labelClipboard = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelClipboard = new System.Windows.Forms.Label();
 			this.groupBox8 = new System.Windows.Forms.GroupBox();
-			this.labelSpriteBackColor = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelSpriteBackColor = new System.Windows.Forms.Label();
 			this.buttonChangeColor = new System.Windows.Forms.Button();
 			this.panelSpriteBackColor = new System.Windows.Forms.Panel();
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -85,36 +85,42 @@
 			this.label1.Location = new System.Drawing.Point(3, 16);
 			this.label1.Name = "label1";
 			this.label1.Text = "Background";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(265, 16);
 			this.label2.Name = "label2";
 			this.label2.Text = "Window";
+			this.label2.AutoSize = true;
 			// 
 			// label3
 			// 
 			this.label3.Location = new System.Drawing.Point(3, 16);
 			this.label3.Name = "label3";
 			this.label3.Text = "Bank 1";
+			this.label3.AutoSize = true;
 			// 
 			// label4
 			// 
 			this.label4.Location = new System.Drawing.Point(137, 16);
 			this.label4.Name = "label4";
 			this.label4.Text = "Bank 2 (CGB)";
+			this.label4.AutoSize = true;
 			// 
 			// label5
 			// 
 			this.label5.Location = new System.Drawing.Point(3, 16);
 			this.label5.Name = "label5";
 			this.label5.Text = "Background && Window";
+			this.label5.AutoSize = true;
 			// 
 			// label6
 			// 
 			this.label6.Location = new System.Drawing.Point(137, 16);
 			this.label6.Name = "label6";
 			this.label6.Text = "Sprite";
+			this.label6.AutoSize = true;
 			// 
 			// groupBox1
 			// 
@@ -161,18 +167,21 @@
 			this.label7.Location = new System.Drawing.Point(6, 99);
 			this.label7.Name = "label7";
 			this.label7.Text = "Left-click a palette to use it for drawing the tiles display.";
+			this.label7.AutoSize = true;
 			// 
 			// label8
 			// 
 			this.label8.Location = new System.Drawing.Point(3, 16);
 			this.label8.Name = "label8";
 			this.label8.Text = "Sprites";
+			this.label8.AutoSize = true;
 			// 
 			// label9
 			// 
 			this.label9.Location = new System.Drawing.Point(3, 52);
 			this.label9.Name = "label9";
 			this.label9.Text = "Objects";
+			this.label9.AutoSize = true;
 			// 
 			// groupBox4
 			// 
@@ -217,6 +226,7 @@
 			this.labelScanline.Name = "labelScanline";
 			this.labelScanline.Text = "SS";
 			this.labelScanline.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+			this.labelScanline.AutoSize = true;
 			// 
 			// buttonRefresh
 			// 
@@ -281,6 +291,7 @@
 			this.labelDetails.MaximumSize = new System.Drawing.Size(115, 0);
 			this.labelDetails.Name = "labelDetails";
 			this.labelDetails.Text = "Mouse over an item to see details about it.";
+			this.labelDetails.AutoSize = true;
 			// 
 			// groupBoxMemory
 			// 
@@ -299,6 +310,7 @@
 			this.labelMemory.MaximumSize = new System.Drawing.Size(115, 0);
 			this.labelMemory.Name = "labelMemory";
 			this.labelMemory.Text = "Right-click an item to display it here.";
+			this.labelMemory.AutoSize = true;
 			// 
 			// groupBox6
 			// 
@@ -315,6 +327,7 @@
 			this.labelClipboard.Location = new System.Drawing.Point(7, 23);
 			this.labelClipboard.Name = "labelClipboard";
 			this.labelClipboard.Text = "CTRL+C copies the pane under the mouse.";
+			this.labelClipboard.AutoSize = true;
 			// 
 			// groupBox8
 			// 
@@ -333,6 +346,7 @@
 			this.labelSpriteBackColor.Location = new System.Drawing.Point(67, 24);
 			this.labelSpriteBackColor.Name = "labelSpriteBackColor";
 			this.labelSpriteBackColor.Text = "label10";
+			this.labelSpriteBackColor.AutoSize = true;
 			// 
 			// buttonChangeColor
 			// 
@@ -529,18 +543,18 @@
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
 		private BmpView bmpViewBG;
 		private BmpView bmpViewWin;
 		private BmpView bmpViewTiles1;
 		private BmpView bmpViewTiles2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
 		private BmpView bmpViewBGPal;
 		private BmpView bmpViewSPPal;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label label6;
 		private BmpView bmpViewOAM;
 		private BmpView bmpViewOBJ;
 		private System.Windows.Forms.GroupBox groupBox1;
@@ -548,7 +562,7 @@
 		private System.Windows.Forms.GroupBox groupBox3;
 		private System.Windows.Forms.GroupBox groupBox4;
 		private System.Windows.Forms.GroupBox groupBox5;
-		private BizHawk.WinForms.Controls.LocLabelEx labelScanline;
+		private System.Windows.Forms.Label labelScanline;
 		private System.Windows.Forms.Button buttonRefresh;
 		private System.Windows.Forms.RadioButton radioButtonRefreshManual;
 		private System.Windows.Forms.RadioButton radioButtonRefreshScanline;
@@ -556,19 +570,19 @@
 		private System.Windows.Forms.HScrollBar hScrollBarScanline;
 		private System.Windows.Forms.GroupBox groupBoxDetails;
 		private BmpView bmpViewDetails;
-		private BizHawk.WinForms.Controls.LocLabelEx labelDetails;
+		private System.Windows.Forms.Label labelDetails;
 		private System.Windows.Forms.GroupBox groupBoxMemory;
-		private BizHawk.WinForms.Controls.LocLabelEx labelMemory;
+		private System.Windows.Forms.Label labelMemory;
 		private BmpView bmpViewMemory;
-		private BizHawk.WinForms.Controls.LocLabelEx label7;
-		private BizHawk.WinForms.Controls.LocLabelEx label8;
-		private BizHawk.WinForms.Controls.LocLabelEx label9;
+		private System.Windows.Forms.Label label7;
+		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.Label label9;
 		private System.Windows.Forms.GroupBox groupBox6;
-		private BizHawk.WinForms.Controls.LocLabelEx labelClipboard;
+		private System.Windows.Forms.Label labelClipboard;
 		private System.Windows.Forms.GroupBox groupBox8;
 		private System.Windows.Forms.Panel panelSpriteBackColor;
 		private System.Windows.Forms.Button buttonChangeColor;
-		private BizHawk.WinForms.Controls.LocLabelEx labelSpriteBackColor;
+		private System.Windows.Forms.Label labelSpriteBackColor;
 		private System.Windows.Forms.MenuStrip menuStrip1;
 	}
 }

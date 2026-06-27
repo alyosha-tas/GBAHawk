@@ -36,8 +36,8 @@
             this.YNumeric = new System.Windows.Forms.NumericUpDown();
             this.XNumeric = new System.Windows.Forms.NumericUpDown();
             this.PositionPanel = new System.Windows.Forms.Panel();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.PositionGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.YNumeric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.XNumeric)).BeginInit();
@@ -172,17 +172,19 @@
             this.label2.Location = new System.Drawing.Point(92, 219);
             this.label2.Name = "label2";
             this.label2.Text = "y";
-            // 
-            // label1
-            // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.label2.AutoSize = true;
+			// 
+			// label1
+			// 
+			this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.Location = new System.Drawing.Point(27, 220);
             this.label1.Name = "label1";
             this.label1.Text = "x";
-            // 
-            // MessageEdit
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.label1.AutoSize = true;
+			// 
+			// MessageEdit
+			// 
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.PositionGroupBox);
             this.Name = "MessageEdit";
@@ -202,8 +204,8 @@
 		private System.Windows.Forms.RadioButton BL;
 		private System.Windows.Forms.RadioButton TR;
 		private System.Windows.Forms.RadioButton TL;
-		private WinForms.Controls.LocLabelEx label2;
-		private WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown YNumeric;
 		private System.Windows.Forms.NumericUpDown XNumeric;
 		private System.Windows.Forms.Panel PositionPanel;

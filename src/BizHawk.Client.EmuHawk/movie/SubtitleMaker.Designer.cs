@@ -31,18 +31,18 @@
             this.OK = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.Message = new System.Windows.Forms.TextBox();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
             this.YNumeric = new System.Windows.Forms.NumericUpDown();
             this.XNumeric = new System.Windows.Forms.NumericUpDown();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.DurationNumeric = new System.Windows.Forms.NumericUpDown();
-            this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label4 = new System.Windows.Forms.Label();
             this.ColorPanel = new System.Windows.Forms.Panel();
-            this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label5 = new System.Windows.Forms.Label();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.FrameNumeric = new System.Windows.Forms.NumericUpDown();
-            this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label6 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.YNumeric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.XNumeric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.DurationNumeric)).BeginInit();
@@ -87,10 +87,11 @@
             this.label1.Location = new System.Drawing.Point(12, 50);
             this.label1.Name = "label1";
             this.label1.Text = "Message";
-            // 
-            // YNumeric
-            // 
-            this.YNumeric.Location = new System.Drawing.Point(15, 130);
+			this.label1.AutoSize = true;
+			// 
+			// YNumeric
+			// 
+			this.YNumeric.Location = new System.Drawing.Point(15, 130);
             this.YNumeric.Maximum = new decimal(new int[] {
             240,
             0,
@@ -117,12 +118,14 @@
             this.label2.Location = new System.Drawing.Point(77, 108);
             this.label2.Name = "label2";
             this.label2.Text = "X position";
+			this.label2.AutoSize = true;
             // 
             // label3
             // 
             this.label3.Location = new System.Drawing.Point(75, 133);
             this.label3.Name = "label3";
             this.label3.Text = "Y position";
+			this.label3.AutoSize = true;
             // 
             // DurationNumeric
             // 
@@ -141,6 +144,7 @@
             this.label4.Location = new System.Drawing.Point(215, 108);
             this.label4.Name = "label4";
             this.label4.Text = "Duration";
+			this.label4.AutoSize = true;
             // 
             // ColorPanel
             // 
@@ -158,6 +162,7 @@
             this.label5.Location = new System.Drawing.Point(215, 133);
             this.label5.Name = "label5";
             this.label5.Text = "Color";
+			this.label5.AutoSize = true;
             // 
             // FrameNumeric
             // 
@@ -182,6 +187,7 @@
             this.label6.Location = new System.Drawing.Point(12, 21);
             this.label6.Name = "label6";
             this.label6.Text = "Frame";
+			this.label6.AutoSize = true;
             // 
             // SubtitleMaker
             // 
@@ -223,17 +229,17 @@
 		private System.Windows.Forms.Button OK;
 		private System.Windows.Forms.Button Cancel;
 		private System.Windows.Forms.TextBox Message;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown YNumeric;
 		private System.Windows.Forms.NumericUpDown XNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.NumericUpDown DurationNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.Panel ColorPanel;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
+		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ColorDialog colorDialog1;
 		private System.Windows.Forms.NumericUpDown FrameNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
+		private System.Windows.Forms.Label label6;
 	}
 }

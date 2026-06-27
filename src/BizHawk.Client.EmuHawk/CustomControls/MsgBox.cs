@@ -34,13 +34,13 @@ namespace BizHawk.Client.GBAHawk.CustomControls
 			Icon = Properties.Resources.MsgBoxIcon;
 
 			ControlBox = false; // Do not set in designer (causes problems with auto scaling)
-			messageLbl.Text = message;
+			messageLabel.Text = message;
 			Text = title;
 			_msgIcon = icon;
 
 			if (_msgIcon == null)
 			{
-				messageLbl.Location = new Point(FormXMargin, FormYMargin);
+				messageLabel.Location = new Point(FormXMargin, FormYMargin);
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace BizHawk.Client.GBAHawk.CustomControls
 
 		public void SetMessageToAutoSize()
 		{
-			messageLbl.MaximumSize = new Size(MaximumSize.Width - _msgIcon.Width - UIHelper.ScaleX(25), MaximumSize.Height);
+			messageLabel.MaximumSize = new Size(MaximumSize.Width - _msgIcon.Width - UIHelper.ScaleX(25), MaximumSize.Height);
 		}
 
 		/// <summary>
@@ -144,10 +144,10 @@ namespace BizHawk.Client.GBAHawk.CustomControls
 		// Auto fits the dialog box to fit the text and the buttons.
 		private void SetDialogSize()
 		{
-			int requiredWidth = messageLbl.Location.X + messageLbl.Size.Width + FormXMargin;
+			int requiredWidth = messageLabel.Location.X + messageLabel.Size.Width + FormXMargin;
 			requiredWidth = requiredWidth > _minButtonRowWidth ? requiredWidth : _minButtonRowWidth;
 
-			int requiredHeight = messageLbl.Location.Y + messageLbl.Size.Height - btn2.Location.Y + ClientSize.Height + TextYMargin;
+			int requiredHeight = messageLabel.Location.Y + messageLabel.Size.Height - btn2.Location.Y + ClientSize.Height + TextYMargin;
 
 			int minSetWidth = ClientSize.Width;
 			int minSetHeight = ClientSize.Height;

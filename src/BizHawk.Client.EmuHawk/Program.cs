@@ -93,7 +93,6 @@ namespace BizHawk.Client.GBAHawk
 				Common.ReflectionCache.AsmVersion,
 				Emulation.Common.ReflectionCache.AsmVersion,
 				Emulation.Cores.ReflectionCache.AsmVersion,
-				WinForms.Controls.ReflectionCache.AsmVersion,
 			})
 			{
 				if (asmVer != thisAsmVer)

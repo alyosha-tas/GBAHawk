@@ -32,10 +32,10 @@
 			this.lvDiscs = new System.Windows.Forms.ListView();
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.btnClose = new BizHawk.Client.GBAHawk.VirtualPadButton();
 			this.btnOpen = new BizHawk.Client.GBAHawk.VirtualPadButton();
-			this.lblTimeZero = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelTimeZero = new System.Windows.Forms.Label();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -86,6 +86,7 @@
 			this.label1.Location = new System.Drawing.Point(6, 11);
 			this.label1.Name = "label1";
 			this.label1.Text = "Tray :";
+			this.label1.AutoSize = true;
 			// 
 			// btnClose
 			// 
@@ -117,18 +118,19 @@
 			this.btnOpen.UseVisualStyleBackColor = true;
 			this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
 			// 
-			// lblTimeZero
+			// labelTimeZero
 			// 
-			this.lblTimeZero.Location = new System.Drawing.Point(142, 11);
-			this.lblTimeZero.Name = "lblTimeZero";
-			this.lblTimeZero.Text = "(T=0: Freely set initial state)";
+			this.labelTimeZero.Location = new System.Drawing.Point(142, 11);
+			this.labelTimeZero.Name = "lblTimeZero";
+			this.labelTimeZero.Text = "(T=0: Freely set initial state)";
+			this.labelTimeZero.AutoSize = true;
 			// 
 			// VirtualPadDiscManager
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-			this.Controls.Add(this.lblTimeZero);
+			this.Controls.Add(this.labelTimeZero);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.btnClose);
 			this.Controls.Add(this.groupBox1);
@@ -149,7 +151,7 @@
 		private System.Windows.Forms.ColumnHeader columnHeader1;
 		private System.Windows.Forms.ColumnHeader columnHeader2;
 		private VirtualPadButton btnClose;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx lblTimeZero;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label labelTimeZero;
 	}
 }

@@ -31,7 +31,7 @@
 			this.chkBx = new System.Windows.Forms.CheckBox();
 			this.btn1 = new System.Windows.Forms.Button();
 			this.btn2 = new System.Windows.Forms.Button();
-			this.messageLbl = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.messageLabel = new System.Windows.Forms.Label();
 			this.btn3 = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
@@ -77,10 +77,11 @@
 			// 
 			// messageLbl
 			// 
-			this.messageLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.messageLbl.Location = new System.Drawing.Point(58, 10);
-			this.messageLbl.Name = "messageLbl";
-			this.messageLbl.Text = "[Message]";
+			this.messageLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.messageLabel.Location = new System.Drawing.Point(58, 10);
+			this.messageLabel.Name = "messageLbl";
+			this.messageLabel.Text = "[Message]";
+			this.messageLabel.AutoSize = true;
 			// 
 			// btn3
 			// 
@@ -105,7 +106,7 @@
 			this.Controls.Add(this.chkBx);
 			this.Controls.Add(this.btn1);
 			this.Controls.Add(this.btn2);
-			this.Controls.Add(this.messageLbl);
+			this.Controls.Add(this.messageLabel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
@@ -123,7 +124,7 @@
 		private System.Windows.Forms.CheckBox chkBx;
 		private System.Windows.Forms.Button btn1;
 		private System.Windows.Forms.Button btn2;
-		private BizHawk.WinForms.Controls.LocLabelEx messageLbl;
+		private System.Windows.Forms.Label messageLabel;
 		private System.Windows.Forms.Button btn3;
 	}
 }

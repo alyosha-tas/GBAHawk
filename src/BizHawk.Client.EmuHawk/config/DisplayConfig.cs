@@ -202,7 +202,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void RefreshState()
 		{
-			lblUserFilterName.Text = Path.GetFileNameWithoutExtension(_pathSelection);
+			labelUserFilterName.Text = Path.GetFileNameWithoutExtension(_pathSelection);
 		}
 
 		private void BtnSelectUserFilter_Click(object sender, EventArgs e)
@@ -274,7 +274,7 @@ namespace BizHawk.Client.GBAHawk
 		public void TbScanlineIntensity_Scroll(object sender, EventArgs e)
 		{
 			_config.TargetScanlineFilterIntensity = tbScanlineIntensity.Value;
-			lblScanlines.Text = $"{_config.TargetScanlineFilterIntensity / 256.0:P2}";
+			labelScanlines.Text = $"{_config.TargetScanlineFilterIntensity / 256.0:P2}";
 		}
 
 		private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

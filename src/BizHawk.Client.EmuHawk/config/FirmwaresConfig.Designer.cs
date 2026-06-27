@@ -62,8 +62,8 @@ namespace BizHawk.Client.GBAHawk
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.linkBasePath = new System.Windows.Forms.Label();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.lvFirmwaresContextMenuStrip.SuspendLayout();
 			this.panel1.SuspendLayout();
@@ -336,6 +336,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label1.Location = new System.Drawing.Point(3, 0);
 			this.label1.Name = "label1";
 			this.label1.Text = "Scan will look under (change in Config > Paths... > Global):";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
@@ -343,6 +344,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label2.Margin = new System.Windows.Forms.Padding(5, 5, 3, 0);
 			this.label2.Name = "label2";
 			this.label2.Text = "Firmware such as BIOS files are copyrighted material and not provided by BizHawk";
+			this.label2.AutoSize = true;
 			// 
 			// FirmwaresConfig
 			// 
@@ -371,37 +373,37 @@ namespace BizHawk.Client.GBAHawk
 
         #endregion
 
-				private System.Windows.Forms.ImageList imageList1;
-				private System.Windows.Forms.ListView lvFirmwares;
-				private System.Windows.Forms.ColumnHeader columnHeader5;
-				private System.Windows.Forms.ColumnHeader columnHeader1;
-				private System.Windows.Forms.ColumnHeader columnHeader4;
-				private System.Windows.Forms.Panel panel1;
-				private ToolStripEx toolStrip1;
-				private System.Windows.Forms.ToolStripButton tbbGroup;
-				private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator2;
-				private System.Windows.Forms.ToolStripButton tbbScan;
-				private System.Windows.Forms.ToolStripButton tbbOrganize;
-				private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-				private System.Windows.Forms.ColumnHeader columnHeader6;
-				private System.Windows.Forms.ColumnHeader columnHeader2;
-				private System.Windows.Forms.ToolTip toolTip1;
-				private System.Windows.Forms.ColumnHeader columnHeader3;
-				private System.Windows.Forms.ColumnHeader columnHeader7;
-				private System.Windows.Forms.ContextMenuStrip lvFirmwaresContextMenuStrip;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiSetCustomization;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiClearCustomization;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiInfo;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiCopy;
-				private System.Windows.Forms.Panel panel2;
-				private System.Windows.Forms.Label linkBasePath;
-				private BizHawk.WinForms.Controls.LocLabelEx label1;
-				private System.Windows.Forms.ToolStripButton tbbImport;
-				private System.Windows.Forms.ColumnHeader columnHeader8;
-				private System.Windows.Forms.ToolStripButton tbbClose;
-				private System.Windows.Forms.ToolStripButton tbbCloseReload;
-				private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.ImageList imageList1;
+		private System.Windows.Forms.ListView lvFirmwares;
+		private System.Windows.Forms.ColumnHeader columnHeader5;
+		private System.Windows.Forms.ColumnHeader columnHeader1;
+		private System.Windows.Forms.ColumnHeader columnHeader4;
+		private System.Windows.Forms.Panel panel1;
+		private ToolStripEx toolStrip1;
+		private System.Windows.Forms.ToolStripButton tbbGroup;
+		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator2;
+		private System.Windows.Forms.ToolStripButton tbbScan;
+		private System.Windows.Forms.ToolStripButton tbbOrganize;
+		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+		private System.Windows.Forms.ColumnHeader columnHeader6;
+		private System.Windows.Forms.ColumnHeader columnHeader2;
+		private System.Windows.Forms.ToolTip toolTip1;
+		private System.Windows.Forms.ColumnHeader columnHeader3;
+		private System.Windows.Forms.ColumnHeader columnHeader7;
+		private System.Windows.Forms.ContextMenuStrip lvFirmwaresContextMenuStrip;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiSetCustomization;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiClearCustomization;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiInfo;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx tsmiCopy;
+		private System.Windows.Forms.Panel panel2;
+		private System.Windows.Forms.Label linkBasePath;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.ToolStripButton tbbImport;
+		private System.Windows.Forms.ColumnHeader columnHeader8;
+		private System.Windows.Forms.ToolStripButton tbbClose;
+		private System.Windows.Forms.ToolStripButton tbbCloseReload;
+		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator1;
+		private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ToolStripButton tbbOpenFolder;
 		private System.Windows.Forms.ToolStripButton _cbAllowImport;
 	}

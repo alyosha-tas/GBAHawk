@@ -32,7 +32,7 @@
 			this.Cancel = new System.Windows.Forms.Button();
 			this.PathTabControl = new System.Windows.Forms.TabControl();
 			this.SaveBtn = new System.Windows.Forms.Button();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.SpecialCommandsBtn = new System.Windows.Forms.Button();
 			this.RecentForROMs = new System.Windows.Forms.CheckBox();
 			this.DefaultsBtn = new System.Windows.Forms.Button();
@@ -40,7 +40,7 @@
 			this.tpGlobal = new System.Windows.Forms.TabPage();
 			this.tpSystems = new System.Windows.Forms.TabPage();
 			this.comboSystem = new System.Windows.Forms.ComboBox();
-			this.lblSystem = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelSystem = new System.Windows.Forms.Label();
 			this.tcMain.SuspendLayout();
 			this.tpSystems.SuspendLayout();
 			this.SuspendLayout();
@@ -100,6 +100,7 @@
 			this.label1.Location = new System.Drawing.Point(672, 19);
 			this.label1.Name = "label1";
 			this.label1.Text = "Special Commands";
+			this.label1.AutoSize = true;
 			// 
 			// SpecialCommandsBtn
 			// 
@@ -159,7 +160,7 @@
 			// 
 			// tpSystems
 			// 
-			this.tpSystems.Controls.Add(this.lblSystem);
+			this.tpSystems.Controls.Add(this.labelSystem);
 			this.tpSystems.Controls.Add(this.comboSystem);
 			this.tpSystems.Controls.Add(this.PathTabControl);
 			this.tpSystems.Location = new System.Drawing.Point(4, 22);
@@ -181,9 +182,10 @@
 			// 
 			// lblSystem
 			// 
-			this.lblSystem.Location = new System.Drawing.Point(3, 7);
-			this.lblSystem.Name = "lblSystem";
-			this.lblSystem.Text = "System:";
+			this.labelSystem.Location = new System.Drawing.Point(3, 7);
+			this.labelSystem.Name = "lblSystem";
+			this.labelSystem.Text = "System:";
+			this.labelSystem.AutoSize = true;
 			// 
 			// PathConfig
 			// 
@@ -220,7 +222,7 @@
 		private System.Windows.Forms.Button Cancel;
 		private System.Windows.Forms.TabControl PathTabControl;
 		private System.Windows.Forms.Button SaveBtn;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Button SpecialCommandsBtn;
 		private System.Windows.Forms.CheckBox RecentForROMs;
 		private System.Windows.Forms.Button DefaultsBtn;
@@ -228,6 +230,6 @@
 		private System.Windows.Forms.TabPage tpGlobal;
 		private System.Windows.Forms.TabPage tpSystems;
 		private System.Windows.Forms.ComboBox comboSystem;
-		private WinForms.Controls.LocLabelEx lblSystem;
+		private System.Windows.Forms.Label labelSystem;
 	}
 }

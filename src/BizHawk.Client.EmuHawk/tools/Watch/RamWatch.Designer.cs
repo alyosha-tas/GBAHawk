@@ -31,7 +31,7 @@ namespace BizHawk.Client.GBAHawk
 		private void InitializeComponent()
 		{
             this.components = new System.ComponentModel.Container();
-            this.WatchCountLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.WatchCountLabel = new System.Windows.Forms.Label();
             this.ListViewContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.newToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
             this.EditContextMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -114,10 +114,11 @@ namespace BizHawk.Client.GBAHawk
             this.WatchCountLabel.Location = new System.Drawing.Point(16, 57);
             this.WatchCountLabel.Name = "WatchCountLabel";
             this.WatchCountLabel.Text = "0 watches";
-            // 
-            // ListViewContextMenu
-            // 
-            this.ListViewContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+			this.WatchCountLabel.AutoSize = true;
+			// 
+			// ListViewContextMenu
+			// 
+			this.ListViewContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolStripMenuItem,
             this.EditContextMenuItem,
             this.RemoveContextMenuItem,
@@ -700,7 +701,7 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator5;
 		private System.Windows.Forms.ToolStripButton moveUpToolStripButton;
 		private System.Windows.Forms.ToolStripButton moveDownToolStripButton;
-		private BizHawk.WinForms.Controls.LocLabelEx WatchCountLabel;
+		private System.Windows.Forms.Label WatchCountLabel;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx Separator2;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OriginalMenuItem;
 		private System.Windows.Forms.ContextMenuStrip ListViewContextMenu;

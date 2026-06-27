@@ -7,12 +7,20 @@ using System.Windows.Forms;
 
 using BizHawk.Client.Common;
 using BizHawk.Common;
-using BizHawk.WinForms.Controls;
 
 namespace BizHawk.Client.GBAHawk
 {
 	public class FormBase : Form
 	{
+		public sealed class LinuxColorTable : ProfessionalColorTable
+		{
+			public override Color MenuStripGradientBegin { get; } = Color.WhiteSmoke;
+
+			public override Color ToolStripDropDownBackground { get; } = Color.WhiteSmoke;
+
+			public override Color ToolStripGradientEnd { get; } = Color.WhiteSmoke;
+		}
+
 		private const string PLACEHOLDER_TITLE = "(will take value from WindowTitle/WindowTitleStatic)";
 
 		/// <summary>

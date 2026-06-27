@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
             this.RowRadio = new System.Windows.Forms.RadioButton();
-            this.LocationLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.LocationLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // RowRadio
@@ -45,10 +45,11 @@
             this.LocationLabel.Location = new System.Drawing.Point(167, 7);
             this.LocationLabel.Name = "LocationLabel";
             this.LocationLabel.Text = "255, 255";
-            // 
-            // MessageRow
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.LocationLabel.AutoSize = true;
+			// 
+			// MessageRow
+			// 
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.LocationLabel);
             this.Controls.Add(this.RowRadio);
@@ -62,6 +63,6 @@
 		#endregion
 
 		private System.Windows.Forms.RadioButton RowRadio;
-		private WinForms.Controls.LocLabelEx LocationLabel;
+		private System.Windows.Forms.Label LocationLabel;
 	}
 }

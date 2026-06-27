@@ -64,7 +64,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void btnClose_Click(object sender, EventArgs e)
 		{
-			if (lblTimeZero.Visible)
+			if (labelTimeZero.Visible)
 			{
 				btnOpen.Checked = !btnClose.Checked;
 				UpdateValues();
@@ -73,7 +73,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void btnOpen_Click(object sender, EventArgs e)
 		{
-			if (lblTimeZero.Visible)
+			if (labelTimeZero.Visible)
 			{
 				btnClose.Checked = !btnOpen.Checked;
 				UpdateValues();

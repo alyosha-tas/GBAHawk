@@ -36,48 +36,48 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnDefaults = new System.Windows.Forms.Button();
             this.tpDispMethod = new System.Windows.Forms.TabPage();
-            this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label6 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label13 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label13 = new System.Windows.Forms.Label();
             this.cbAlternateVsync = new System.Windows.Forms.CheckBox();
-            this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label8 = new System.Windows.Forms.Label();
             this.rbD3D9 = new System.Windows.Forms.RadioButton();
-            this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label7 = new System.Windows.Forms.Label();
             this.rbGDIPlus = new System.Windows.Forms.RadioButton();
-            this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label5 = new System.Windows.Forms.Label();
             this.rbOpenGL = new System.Windows.Forms.RadioButton();
             this.tpAR = new System.Windows.Forms.TabPage();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.label16 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label15 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.txtCropBottom = new System.Windows.Forms.TextBox();
-            this.label17 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label17 = new System.Windows.Forms.Label();
             this.txtCropRight = new System.Windows.Forms.TextBox();
             this.txtCropTop = new System.Windows.Forms.TextBox();
-            this.label14 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label14 = new System.Windows.Forms.Label();
             this.txtCropLeft = new System.Windows.Forms.TextBox();
-            this.label11 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label11 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.lblScanlines = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.lblUserFilterName = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.labelScanlines = new System.Windows.Forms.Label();
+            this.labelUserFilterName = new System.Windows.Forms.Label();
             this.btnSelectUserFilter = new System.Windows.Forms.Button();
             this.rbUser = new System.Windows.Forms.RadioButton();
             this.tbScanlineIntensity = new BizHawk.Client.GBAHawk.TransparentTrackBar();
             this.rbNone = new System.Windows.Forms.RadioButton();
             this.rbScanlines = new System.Windows.Forms.RadioButton();
             this.rbHq2x = new System.Windows.Forms.RadioButton();
-            this.label10 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label10 = new System.Windows.Forms.Label();
             this.checkLetterbox = new System.Windows.Forms.CheckBox();
             this.nudPrescale = new System.Windows.Forms.NumericUpDown();
             this.checkPadInteger = new System.Windows.Forms.CheckBox();
             this.grpARSelection = new System.Windows.Forms.GroupBox();
             this.txtCustomARY = new System.Windows.Forms.TextBox();
-            this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label12 = new System.Windows.Forms.Label();
             this.txtCustomARX = new System.Windows.Forms.TextBox();
             this.rbUseCustomRatio = new System.Windows.Forms.RadioButton();
-            this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label4 = new System.Windows.Forms.Label();
             this.txtCustomARHeight = new System.Windows.Forms.TextBox();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label3 = new System.Windows.Forms.Label();
             this.txtCustomARWidth = new System.Windows.Forms.TextBox();
             this.rbUseCustom = new System.Windows.Forms.RadioButton();
             this.rbUseRaw = new System.Windows.Forms.RadioButton();
@@ -85,7 +85,7 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.flpStaticWindowTitles = new System.Windows.Forms.FlowLayoutPanel();
             this.cbStaticWindowTitles = new System.Windows.Forms.CheckBox();
-            this.lblStaticWindowTitles = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.labelStaticWindowTitles = new System.Windows.Forms.Label();
             this.tpDispMethod.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tpAR.SuspendLayout();
@@ -159,10 +159,11 @@
             this.label6.Location = new System.Drawing.Point(3, 258);
             this.label6.Name = "label6";
             this.label6.Text = "Changes require restart of program to take effect.\r\n";
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.label13);
+			this.label6.AutoSize = true;
+			// 
+			// groupBox3
+			// 
+			this.groupBox3.Controls.Add(this.label13);
             this.groupBox3.Controls.Add(this.cbAlternateVsync);
             this.groupBox3.Controls.Add(this.label8);
             this.groupBox3.Controls.Add(this.rbD3D9);
@@ -183,10 +184,11 @@
             this.label13.Text = resources.GetString("label13.Text");
             this.label13.Click += new System.EventHandler(this.Label13_Click);
             this.label13.DoubleClick += new System.EventHandler(this.Label13_Click);
-            // 
-            // cbAlternateVsync
-            // 
-            this.cbAlternateVsync.AutoSize = true;
+			this.label13.AutoSize = true;
+			// 
+			// cbAlternateVsync
+			// 
+			this.cbAlternateVsync.AutoSize = true;
             this.cbAlternateVsync.Location = new System.Drawing.Point(28, 60);
             this.cbAlternateVsync.Name = "cbAlternateVsync";
             this.cbAlternateVsync.Size = new System.Drawing.Size(15, 14);
@@ -198,10 +200,11 @@
             this.label8.Location = new System.Drawing.Point(21, 30);
             this.label8.Name = "label8";
             this.label8.Text = " • Best compatibility\r\n • May have trouble with OpenGL-based cores (N64)\r\n";
-            // 
-            // rbD3D9
-            // 
-            this.rbD3D9.AutoSize = true;
+			this.label8.AutoSize = true;
+			// 
+			// rbD3D9
+			// 
+			this.rbD3D9.AutoSize = true;
             this.rbD3D9.Checked = true;
             this.rbD3D9.Location = new System.Drawing.Point(6, 10);
             this.rbD3D9.Name = "rbD3D9";
@@ -217,6 +220,7 @@
             this.label7.Name = "label7";
             this.label7.Text = " • Slow; Mainly for compatibility purposes\r\n • Missing many features\r\n • Works be" +
     "tter over Remote Desktop, etc.\r\n";
+			this.label7.AutoSize = true;
             // 
             // rbGDIPlus
             // 
@@ -236,6 +240,7 @@
             this.label5.Name = "label5";
             this.label5.Text = " • May malfunction on some systems.\r\n • May have increased performance for OpenGL" +
     "-based emulation cores.\r\n • May have reduced performance on some systems.\r\n";
+			this.label5.AutoSize = true;
             // 
             // rbOpenGL
             // 
@@ -290,16 +295,18 @@
             this.label16.Location = new System.Drawing.Point(217, 25);
             this.label16.Name = "label16";
             this.label16.Text = "Bottom:";
-            // 
-            // label15
-            // 
-            this.label15.Location = new System.Drawing.Point(74, 25);
+			this.label16.AutoSize = true;
+			// 
+			// label15
+			// 
+			this.label15.Location = new System.Drawing.Point(74, 25);
             this.label15.Name = "label15";
             this.label15.Text = "Top:";
-            // 
-            // txtCropBottom
-            // 
-            this.txtCropBottom.Location = new System.Drawing.Point(261, 22);
+			this.label15.AutoSize = true;
+			// 
+			// txtCropBottom
+			// 
+			this.txtCropBottom.Location = new System.Drawing.Point(261, 22);
             this.txtCropBottom.Name = "txtCropBottom";
             this.txtCropBottom.Size = new System.Drawing.Size(34, 20);
             this.txtCropBottom.TabIndex = 28;
@@ -310,6 +317,7 @@
             this.label17.Location = new System.Drawing.Point(144, 25);
             this.label17.Name = "label17";
             this.label17.Text = "Right:";
+			this.label17.AutoSize = true;
             // 
             // txtCropRight
             // 
@@ -332,6 +340,7 @@
             this.label14.Location = new System.Drawing.Point(6, 25);
             this.label14.Name = "label14";
             this.label14.Text = "Left:";
+			this.label14.AutoSize = true;
             // 
             // txtCropLeft
             // 
@@ -346,11 +355,12 @@
             this.label11.Location = new System.Drawing.Point(140, 11);
             this.label11.Name = "label11";
             this.label11.Text = "X";
+			this.label11.AutoSize = true;
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.lblScanlines);
-            this.groupBox1.Controls.Add(this.lblUserFilterName);
+            this.groupBox1.Controls.Add(this.labelScanlines);
+            this.groupBox1.Controls.Add(this.labelUserFilterName);
             this.groupBox1.Controls.Add(this.btnSelectUserFilter);
             this.groupBox1.Controls.Add(this.rbUser);
             this.groupBox1.Controls.Add(this.tbScanlineIntensity);
@@ -364,22 +374,24 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Scaling Filter";
             // 
-            // lblScanlines
+            // labelScanlines
             // 
-            this.lblScanlines.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblScanlines.Location = new System.Drawing.Point(104, 39);
-            this.lblScanlines.Name = "lblScanlines";
-            this.lblScanlines.Text = "%";
-            // 
-            // lblUserFilterName
-            // 
-            this.lblUserFilterName.Location = new System.Drawing.Point(6, 114);
-            this.lblUserFilterName.Name = "lblUserFilterName";
-            this.lblUserFilterName.Text = "Will contain user filter name";
-            // 
-            // btnSelectUserFilter
-            // 
-            this.btnSelectUserFilter.Location = new System.Drawing.Point(83, 88);
+            this.labelScanlines.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelScanlines.Location = new System.Drawing.Point(104, 39);
+            this.labelScanlines.Name = "lblScanlines";
+            this.labelScanlines.Text = "%";
+			this.labelScanlines.AutoSize = true;
+			// 
+			// labelUserFilterName
+			// 
+			this.labelUserFilterName.Location = new System.Drawing.Point(6, 114);
+            this.labelUserFilterName.Name = "lblUserFilterName";
+            this.labelUserFilterName.Text = "Will contain user filter name";
+			this.labelUserFilterName.AutoSize = true;
+			// 
+			// btnSelectUserFilter
+			// 
+			this.btnSelectUserFilter.Location = new System.Drawing.Point(83, 88);
             this.btnSelectUserFilter.Name = "btnSelectUserFilter";
             this.btnSelectUserFilter.Size = new System.Drawing.Size(75, 23);
             this.btnSelectUserFilter.TabIndex = 5;
@@ -449,10 +461,11 @@
             this.label10.Location = new System.Drawing.Point(7, 11);
             this.label10.Name = "label10";
             this.label10.Text = "User Prescale:";
-            // 
-            // checkLetterbox
-            // 
-            this.checkLetterbox.AutoSize = true;
+			this.label10.AutoSize = true;
+			// 
+			// checkLetterbox
+			// 
+			this.checkLetterbox.AutoSize = true;
             this.checkLetterbox.Location = new System.Drawing.Point(209, 12);
             this.checkLetterbox.Name = "checkLetterbox";
             this.checkLetterbox.Size = new System.Drawing.Size(173, 17);
@@ -526,10 +539,11 @@
             this.label12.Location = new System.Drawing.Point(202, 107);
             this.label12.Name = "label12";
             this.label12.Text = ":";
-            // 
-            // txtCustomARX
-            // 
-            this.txtCustomARX.Location = new System.Drawing.Point(124, 102);
+			this.label12.AutoSize = true;
+			// 
+			// txtCustomARX
+			// 
+			this.txtCustomARX.Location = new System.Drawing.Point(124, 102);
             this.txtCustomARX.Name = "txtCustomARX";
             this.txtCustomARX.Size = new System.Drawing.Size(72, 20);
             this.txtCustomARX.TabIndex = 18;
@@ -550,6 +564,7 @@
             this.label4.Location = new System.Drawing.Point(13, 41);
             this.label4.Name = "label4";
             this.label4.Text = "Allow pixel distortion (e.g. 2x1 pixels, for better AR fit):";
+			this.label4.AutoSize = true;
             // 
             // txtCustomARHeight
             // 
@@ -563,6 +578,7 @@
             this.label3.Location = new System.Drawing.Point(202, 84);
             this.label3.Name = "label3";
             this.label3.Text = "x";
+			this.label3.AutoSize = true;
             // 
             // txtCustomARWidth
             // 
@@ -622,7 +638,7 @@
             // flpStaticWindowTitles
             // 
             this.flpStaticWindowTitles.Controls.Add(this.cbStaticWindowTitles);
-            this.flpStaticWindowTitles.Controls.Add(this.lblStaticWindowTitles);
+            this.flpStaticWindowTitles.Controls.Add(this.labelStaticWindowTitles);
             this.flpStaticWindowTitles.Location = new System.Drawing.Point(6, 280);
             this.flpStaticWindowTitles.Name = "flpStaticWindowTitles";
             this.flpStaticWindowTitles.Size = new System.Drawing.Size(490, 52);
@@ -637,17 +653,18 @@
             this.cbStaticWindowTitles.Text = "Keep window titles static";
 			this.cbStaticWindowTitles.AutoSize = true;
 			// 
-			// lblStaticWindowTitles
+			// labelStaticWindowTitles
 			// 
-			this.lblStaticWindowTitles.Location = new System.Drawing.Point(19, 23);
-            this.lblStaticWindowTitles.Margin = new System.Windows.Forms.Padding(19, 0, 3, 0);
-            this.lblStaticWindowTitles.Name = "lblStaticWindowTitles";
-            this.lblStaticWindowTitles.Text = "Some tools put filenames, status, etc. in their window titles.\nChecking this disa" +
+			this.labelStaticWindowTitles.Location = new System.Drawing.Point(19, 23);
+            this.labelStaticWindowTitles.Margin = new System.Windows.Forms.Padding(19, 0, 3, 0);
+            this.labelStaticWindowTitles.Name = "lblStaticWindowTitles";
+            this.labelStaticWindowTitles.Text = "Some tools put filenames, status, etc. in their window titles.\nChecking this disa" +
     "bles those features, but may fix problems with window capture (i.e. in OBS).";
-            // 
-            // DisplayConfig
-            // 
-            this.AcceptButton = this.btnOk;
+			this.labelStaticWindowTitles.AutoSize = true;
+			// 
+			// DisplayConfig
+			// 
+			this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
@@ -689,49 +706,49 @@
 		private System.Windows.Forms.LinkLabel linkLabel1;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.TabPage tpDispMethod;
-		private WinForms.Controls.LocLabelEx label6;
+		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.GroupBox groupBox3;
-		private WinForms.Controls.LocLabelEx label13;
+		private System.Windows.Forms.Label label13;
 		private System.Windows.Forms.CheckBox cbAlternateVsync;
-		private WinForms.Controls.LocLabelEx label8;
+		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.RadioButton rbD3D9;
-		private WinForms.Controls.LocLabelEx label7;
+		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.RadioButton rbGDIPlus;
-		private WinForms.Controls.LocLabelEx label5;
+		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.RadioButton rbOpenGL;
 		private System.Windows.Forms.TabPage tpAR;
 		private System.Windows.Forms.GroupBox groupBox6;
-		private WinForms.Controls.LocLabelEx label16;
-		private WinForms.Controls.LocLabelEx label15;
+		private System.Windows.Forms.Label label16;
+		private System.Windows.Forms.Label label15;
 		private System.Windows.Forms.TextBox txtCropBottom;
-		private WinForms.Controls.LocLabelEx label17;
+		private System.Windows.Forms.Label label17;
 		private System.Windows.Forms.TextBox txtCropRight;
 		private System.Windows.Forms.TextBox txtCropTop;
-		private WinForms.Controls.LocLabelEx label14;
+		private System.Windows.Forms.Label label14;
 		private System.Windows.Forms.TextBox txtCropLeft;
 		private System.Windows.Forms.Button btnDefaults;
-		private WinForms.Controls.LocLabelEx label11;
+		private System.Windows.Forms.Label label11;
 		private System.Windows.Forms.GroupBox groupBox1;
-		private WinForms.Controls.LocLabelEx lblScanlines;
-		private WinForms.Controls.LocLabelEx lblUserFilterName;
+		private System.Windows.Forms.Label labelScanlines;
+		private System.Windows.Forms.Label labelUserFilterName;
 		private System.Windows.Forms.Button btnSelectUserFilter;
 		private System.Windows.Forms.RadioButton rbUser;
 		private TransparentTrackBar tbScanlineIntensity;
 		private System.Windows.Forms.RadioButton rbNone;
 		private System.Windows.Forms.RadioButton rbScanlines;
 		private System.Windows.Forms.RadioButton rbHq2x;
-		private WinForms.Controls.LocLabelEx label10;
+		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.CheckBox checkLetterbox;
 		private System.Windows.Forms.NumericUpDown nudPrescale;
 		private System.Windows.Forms.CheckBox checkPadInteger;
 		private System.Windows.Forms.GroupBox grpARSelection;
 		private System.Windows.Forms.TextBox txtCustomARY;
-		private WinForms.Controls.LocLabelEx label12;
+		private System.Windows.Forms.Label label12;
 		private System.Windows.Forms.TextBox txtCustomARX;
 		private System.Windows.Forms.RadioButton rbUseCustomRatio;
-		private WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.TextBox txtCustomARHeight;
-		private WinForms.Controls.LocLabelEx label3;
+		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.TextBox txtCustomARWidth;
 		private System.Windows.Forms.RadioButton rbUseCustom;
 		private System.Windows.Forms.RadioButton rbUseRaw;
@@ -739,6 +756,6 @@
 		private System.Windows.Forms.TabControl tabControl1;
 		private System.Windows.Forms.FlowLayoutPanel flpStaticWindowTitles;
 		private System.Windows.Forms.CheckBox cbStaticWindowTitles;
-		private WinForms.Controls.LocLabelEx lblStaticWindowTitles;
+		private System.Windows.Forms.Label labelStaticWindowTitles;
 	}
 }

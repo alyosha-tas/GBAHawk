@@ -31,7 +31,7 @@ namespace BizHawk.Client.GBAHawk
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this.TotalSearchLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.TotalSearchLabel = new System.Windows.Forms.Label();
 			this.WatchListView = new InputRoll();
 			this.ListViewContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.DoSearchContextMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -92,8 +92,8 @@ namespace BizHawk.Client.GBAHawk
 			this.toolStripSeparator9 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.ExcludeRamWatchMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.UseUndoHistoryMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.MemDomainLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.MessageLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.MemDomainLabel = new System.Windows.Forms.Label();
+			this.MessageLabel = new System.Windows.Forms.Label();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.AutoSearchCheckBox = new System.Windows.Forms.CheckBox();
 			this.CompareToBox = new System.Windows.Forms.GroupBox();
@@ -133,8 +133,8 @@ namespace BizHawk.Client.GBAHawk
 			this.LessThanRadio = new System.Windows.Forms.RadioButton();
 			this.SearchButton = new System.Windows.Forms.Button();
 			this.SizeDropdown = new System.Windows.Forms.ComboBox();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
 			this.DisplayTypeDropdown = new System.Windows.Forms.ComboBox();
 			this.SearchMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.ListViewContextMenu.SuspendLayout();
@@ -154,6 +154,7 @@ namespace BizHawk.Client.GBAHawk
 			this.TotalSearchLabel.Location = new System.Drawing.Point(12, 49);
 			this.TotalSearchLabel.Name = "TotalSearchLabel";
 			this.TotalSearchLabel.Text = "0 addresses";
+			this.TotalSearchLabel.AutoSize = true;
 			// 
 			// WatchListView
 			// 
@@ -508,6 +509,7 @@ namespace BizHawk.Client.GBAHawk
 			this.MemDomainLabel.Location = new System.Drawing.Point(135, 49);
 			this.MemDomainLabel.Name = "MemDomainLabel";
 			this.MemDomainLabel.Text = "Main Memory";
+			this.MemDomainLabel.AutoSize = true;
 			// 
 			// MessageLabel
 			// 
@@ -515,6 +517,7 @@ namespace BizHawk.Client.GBAHawk
 			this.MessageLabel.Location = new System.Drawing.Point(9, 434);
 			this.MessageLabel.Name = "MessageLabel";
 			this.MessageLabel.Text = " todo                         ";
+			this.MessageLabel.AutoSize = true;
 			// 
 			// AutoSearchCheckBox
 			// 
@@ -931,6 +934,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label1.Location = new System.Drawing.Point(244, 358);
 			this.label1.Name = "label1";
 			this.label1.Text = "Size";
+			this.label1.AutoSize = true;
 			// 
 			// label2
 			// 
@@ -938,6 +942,7 @@ namespace BizHawk.Client.GBAHawk
 			this.label2.Location = new System.Drawing.Point(327, 358);
 			this.label2.Name = "label2";
 			this.label2.Text = "Display";
+			this.label2.AutoSize = true;
 			// 
 			// DisplayTypeDropdown
 			// 
@@ -998,7 +1003,7 @@ namespace BizHawk.Client.GBAHawk
 
 		#endregion
 
-		private BizHawk.WinForms.Controls.LocLabelEx TotalSearchLabel;
+		private System.Windows.Forms.Label TotalSearchLabel;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SearchMenuItem;
 		private InputRoll WatchListView;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx fileToolStripMenuItem;
@@ -1006,8 +1011,8 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveAsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SettingsMenuItem;
-		private BizHawk.WinForms.Controls.LocLabelEx MemDomainLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx MessageLabel;
+		private System.Windows.Forms.Label MemDomainLabel;
+		private System.Windows.Forms.Label MessageLabel;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx RecentSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator2;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AppendFileMenuItem;
@@ -1097,8 +1102,8 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx RebootToolBarSeparator;
 		private System.Windows.Forms.ToolStripButton RebootToolbarButton;
 		private System.Windows.Forms.ComboBox SizeDropdown;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.ComboBox DisplayTypeDropdown;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GoToAddressMenuItem;
 		private System.Windows.Forms.ToolStripButton ErrorIconButton;

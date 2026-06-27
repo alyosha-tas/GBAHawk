@@ -38,17 +38,17 @@ namespace BizHawk.Client.GBAHawk
 			this.CancelBtn = new System.Windows.Forms.Button();
 			this.OkBtn = new System.Windows.Forms.Button();
 			this.AuthorTextBox = new System.Windows.Forms.TextBox();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.DefaultAuthorButton = new System.Windows.Forms.Button();
 			this.MakeDefaultCheckbox = new System.Windows.Forms.CheckBox();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label2 = new System.Windows.Forms.Label();
 			this.EmulatorVersionTextBox = new System.Windows.Forms.TextBox();
 			this.CoreTextBox = new System.Windows.Forms.TextBox();
-			this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label4 = new System.Windows.Forms.Label();
 			this.BoardNameTextBox = new System.Windows.Forms.TextBox();
-			this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label5 = new System.Windows.Forms.Label();
 			this.GameNameTextBox = new System.Windows.Forms.TextBox();
-			this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label6 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// CancelBtn

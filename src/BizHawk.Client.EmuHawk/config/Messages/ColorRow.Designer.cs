@@ -28,9 +28,9 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.DisplayNameLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.DisplayNameLabel = new System.Windows.Forms.Label();
             this.ColorPanel = new System.Windows.Forms.Panel();
-            this.HexLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.HexLabel = new System.Windows.Forms.Label();
             this.ColorText = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
@@ -39,10 +39,11 @@
             this.DisplayNameLabel.Location = new System.Drawing.Point(3, 0);
             this.DisplayNameLabel.Name = "DisplayNameLabel";
             this.DisplayNameLabel.Text = "Messages";
-            // 
-            // ColorPanel
-            // 
-            this.ColorPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.DisplayNameLabel.AutoSize = true;
+			// 
+			// ColorPanel
+			// 
+			this.ColorPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ColorPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.ColorPanel.Location = new System.Drawing.Point(6, 16);
@@ -58,10 +59,11 @@
             this.HexLabel.Margin = new System.Windows.Forms.Padding(0);
             this.HexLabel.Name = "HexLabel";
             this.HexLabel.Text = "0x";
-            // 
-            // ColorText
-            // 
-            this.ColorText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.HexLabel.AutoSize = true;
+			// 
+			// ColorText
+			// 
+			this.ColorText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ColorText.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.ColorText.Location = new System.Drawing.Point(75, 16);
             this.ColorText.MaxLength = 8;
@@ -87,9 +89,9 @@
 
 		#endregion
 
-		private WinForms.Controls.LocLabelEx DisplayNameLabel;
+		private System.Windows.Forms.Label DisplayNameLabel;
 		private System.Windows.Forms.Panel ColorPanel;
-		private WinForms.Controls.LocLabelEx HexLabel;
+		private System.Windows.Forms.Label HexLabel;
 		private System.Windows.Forms.TextBox ColorText;
 	}
 }

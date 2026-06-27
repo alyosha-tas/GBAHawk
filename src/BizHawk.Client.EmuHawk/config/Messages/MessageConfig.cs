@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows.Forms;
 using BizHawk.Client.Common;
 using BizHawk.Common;
-using BizHawk.WinForms.Controls;
 
 namespace BizHawk.Client.GBAHawk
 {

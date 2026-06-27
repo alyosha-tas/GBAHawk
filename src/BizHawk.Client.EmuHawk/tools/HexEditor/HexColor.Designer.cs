@@ -29,15 +29,15 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label6 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label5 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label4 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.HexHighlight = new System.Windows.Forms.Panel();
             this.HexForegrnd = new System.Windows.Forms.Panel();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.HexMenubar = new System.Windows.Forms.Panel();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label2 = new System.Windows.Forms.Label();
             this.HexBackgrnd = new System.Windows.Forms.Panel();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.groupBox1.SuspendLayout();
@@ -65,21 +65,24 @@
             // 
             this.label6.Location = new System.Drawing.Point(0, 0);
             this.label6.Name = "label6";
-            // 
-            // label5
-            // 
-            this.label5.Location = new System.Drawing.Point(0, 0);
+			this.label6.AutoSize = true;
+			// 
+			// label5
+			// 
+			this.label5.Location = new System.Drawing.Point(0, 0);
             this.label5.Name = "label5";
-            // 
-            // label4
-            // 
-            this.label4.Location = new System.Drawing.Point(30, 108);
+			this.label5.AutoSize = true;
+			// 
+			// label4
+			// 
+			this.label4.Location = new System.Drawing.Point(30, 108);
             this.label4.Name = "label4";
             this.label4.Text = "Highlight Color";
-            // 
-            // HexHighlight
-            // 
-            this.HexHighlight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this.label4.AutoSize = true;
+			// 
+			// HexHighlight
+			// 
+			this.HexHighlight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.HexHighlight.Location = new System.Drawing.Point(5, 104);
             this.HexHighlight.Name = "HexHighlight";
             this.HexHighlight.Size = new System.Drawing.Size(20, 20);
@@ -100,16 +103,18 @@
             this.label1.Location = new System.Drawing.Point(30, 15);
             this.label1.Name = "label1";
             this.label1.Text = "Background Color";
-            // 
-            // label3
-            // 
-            this.label3.Location = new System.Drawing.Point(30, 77);
+			this.label1.AutoSize = true;
+			// 
+			// label3
+			// 
+			this.label3.Location = new System.Drawing.Point(30, 77);
             this.label3.Name = "label3";
             this.label3.Text = "Menubar Color";
-            // 
-            // HexMenubar
-            // 
-            this.HexMenubar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this.label3.AutoSize = true;
+			// 
+			// HexMenubar
+			// 
+			this.HexMenubar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.HexMenubar.Location = new System.Drawing.Point(5, 73);
             this.HexMenubar.Name = "HexMenubar";
             this.HexMenubar.Size = new System.Drawing.Size(20, 20);
@@ -121,6 +126,7 @@
             this.label2.Location = new System.Drawing.Point(30, 46);
             this.label2.Name = "label2";
             this.label2.Text = "Font Color";
+			this.label2.AutoSize = true;
             // 
             // HexBackgrnd
             // 
@@ -153,16 +159,16 @@
         #endregion
 
         private System.Windows.Forms.GroupBox groupBox1;
-        private BizHawk.WinForms.Controls.LocLabelEx label3;
-        private BizHawk.WinForms.Controls.LocLabelEx label2;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel HexForegrnd;
         private System.Windows.Forms.Panel HexBackgrnd;
         private System.Windows.Forms.ColorDialog colorDialog1;
 		private System.Windows.Forms.Panel HexMenubar;
-		private BizHawk.WinForms.Controls.LocLabelEx label6;
-		private BizHawk.WinForms.Controls.LocLabelEx label5;
-		private BizHawk.WinForms.Controls.LocLabelEx label4;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.Panel HexHighlight;
 
     }

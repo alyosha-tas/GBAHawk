@@ -89,8 +89,8 @@ namespace BizHawk.Client.GBAHawk
 			this.ClearRegisteredFunctionsLogContextItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.InputBox = new System.Windows.Forms.TextBox();
-			this.NumberOfScripts = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.OutputMessages = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.NumberOfScripts = new System.Windows.Forms.Label();
+			this.OutputMessages = new System.Windows.Forms.Label();
 			this.toolStrip1 = new ToolStripEx();
 			this.NewScriptToolbarItem = new System.Windows.Forms.ToolStripButton();
 			this.OpenScriptToolbarItem = new System.Windows.Forms.ToolStripButton();
@@ -488,6 +488,7 @@ namespace BizHawk.Client.GBAHawk
 			this.OutputMessages.Location = new System.Drawing.Point(13, 329);
 			this.OutputMessages.Name = "OutputMessages";
 			this.OutputMessages.Text = "                                 ";
+			this.OutputMessages.AutoSize = true;
 			// 
 			// toolStrip1
 			// 
@@ -713,7 +714,7 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.GroupBox groupBox1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NewSessionMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SettingsSubMenu;
-		private BizHawk.WinForms.Controls.LocLabelEx NumberOfScripts;
+		private System.Windows.Forms.Label NumberOfScripts;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx InsertSeparatorMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx StopAllScriptsMenuItem;
 		private System.Windows.Forms.ContextMenuStrip ScriptListContextMenu;
@@ -754,7 +755,7 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.ToolStripButton PauseToolbarItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx PauseScriptContextItem;
 		public System.Windows.Forms.RichTextBox OutputBox;
-		private BizHawk.WinForms.Controls.LocLabelEx OutputMessages;
+		private System.Windows.Forms.Label OutputMessages;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx OnlineDocsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx NewScriptMenuItem;
 		private System.Windows.Forms.ToolStripButton NewScriptToolbarItem;

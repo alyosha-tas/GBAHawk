@@ -52,7 +52,7 @@
 			this.LastFrameCheckbox = new System.Windows.Forms.CheckBox();
 			this.TurboCheckbox = new System.Windows.Forms.CheckBox();
 			this.StopOnFrameTextBox = new BizHawk.Client.GBAHawk.WatchValueBox();
-			this.MovieCount = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.MovieCount = new System.Windows.Forms.Label();
 			this.editToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.groupBox1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
@@ -316,6 +316,7 @@
 			this.MovieCount.Location = new System.Drawing.Point(12, 9);
 			this.MovieCount.Name = "MovieCount";
 			this.MovieCount.Text = "        ";
+			this.MovieCount.AutoSize = true;
 			// 
 			// editToolStripMenuItem
 			// 
@@ -373,7 +374,7 @@
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Button SubtitlesBtn;
 		private System.Windows.Forms.Button CommentsBtn;
-		private BizHawk.WinForms.Controls.LocLabelEx MovieCount;
+		private System.Windows.Forms.Label MovieCount;
 		private System.Windows.Forms.CheckBox ReadOnlyCheckBox;
 		private System.Windows.Forms.CheckBox IncludeSubDirectories;
 		private System.Windows.Forms.Button Scan;

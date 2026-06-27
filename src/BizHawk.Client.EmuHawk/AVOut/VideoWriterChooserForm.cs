@@ -38,15 +38,15 @@ namespace BizHawk.Client.GBAHawk
 				_captureHeight = bb.Height;
 			}
 
-			lblSize.Text = $"Size:\r\n{_captureWidth}x{_captureHeight}";
+			labelSize.Text = $"Size:\r\n{_captureWidth}x{_captureHeight}";
 
 			if (_captureWidth % 4 != 0 || _captureHeight % 4 != 0)
 			{
-				lblResolutionWarning.Visible = true;
+				labelResolutionWarning.Visible = true;
 			}
 			else
 			{
-				lblResolutionWarning.Visible = false;
+				labelResolutionWarning.Visible = false;
 			}
 		}
 

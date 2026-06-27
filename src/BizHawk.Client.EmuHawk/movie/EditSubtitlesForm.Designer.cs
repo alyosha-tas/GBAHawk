@@ -40,7 +40,7 @@
 			this.Export = new System.Windows.Forms.Button();
 			this.ConcatMultilines = new System.Windows.Forms.CheckBox();
 			this.AddColorTag = new System.Windows.Forms.CheckBox();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.SubGrid)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -180,6 +180,7 @@
 			this.label1.Location = new System.Drawing.Point(120, 221);
 			this.label1.Name = "label1";
 			this.label1.Text = "On export:";
+			this.label1.AutoSize = true;
 			// 
 			// EditSubtitlesForm
 			// 
@@ -220,6 +221,6 @@
 		private System.Windows.Forms.DataGridViewTextBoxColumn Message;
 		private System.Windows.Forms.CheckBox ConcatMultilines;
 		private System.Windows.Forms.CheckBox AddColorTag;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 	}
 }

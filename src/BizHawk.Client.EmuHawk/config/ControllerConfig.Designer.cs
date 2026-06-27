@@ -44,9 +44,9 @@
 			this.loadDefaultsToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.clearToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.label3 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.label38 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label3 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label38 = new System.Windows.Forms.Label();
 			this.btnMisc = new BizHawk.Client.GBAHawk.MenuButton();
 			this.AllowUdCheckbox = new System.Windows.Forms.CheckBox();
 			this.tabControl1.SuspendLayout();
@@ -199,6 +199,7 @@
 			this.label3.Location = new System.Drawing.Point(11, 550);
 			this.label3.Name = "label3";
 			this.label3.Text = "Tips:";
+			this.label3.AutoSize = true;
 			// 
 			// label2
 			// 
@@ -206,6 +207,7 @@
 			this.label2.Location = new System.Drawing.Point(197, 550);
 			this.label2.Name = "label2";
 			this.label2.Text = "* Disable Auto Tab to multiply bind";
+			this.label2.AutoSize = true;
 			// 
 			// label38
 			// 
@@ -213,6 +215,7 @@
 			this.label38.Location = new System.Drawing.Point(41, 550);
 			this.label38.Name = "label38";
 			this.label38.Text = "* Escape clears a key mapping";
+			this.label38.AutoSize = true;
 			// 
 			// btnMisc
 			// 
@@ -282,12 +285,12 @@
 		private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private MenuButton btnMisc;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx testToolStripMenuItem;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx loadDefaultsToolStripMenuItem;
-				private BizHawk.WinForms.Controls.ToolStripMenuItemEx clearToolStripMenuItem;
-				private BizHawk.WinForms.Controls.LocLabelEx label3;
-				private BizHawk.WinForms.Controls.LocLabelEx label2;
-				private BizHawk.WinForms.Controls.LocLabelEx label38;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx testToolStripMenuItem;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx loadDefaultsToolStripMenuItem;
+		private BizHawk.WinForms.Controls.ToolStripMenuItemEx clearToolStripMenuItem;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label label38;
 		private System.Windows.Forms.CheckBox AllowUdCheckbox;
 	}
 }

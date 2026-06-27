@@ -30,13 +30,13 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			this.textBox1 = new System.Windows.Forms.TextBox();
-			this.labelButtonName = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelButtonName = new System.Windows.Forms.Label();
 			this.trackBarSensitivity = new System.Windows.Forms.TrackBar();
-			this.labelSensitivity = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelSensitivity = new System.Windows.Forms.Label();
 			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.buttonBind = new System.Windows.Forms.Button();
 			this.trackBarDeadzone = new System.Windows.Forms.TrackBar();
-			this.labelDeadzone = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.labelDeadzone = new System.Windows.Forms.Label();
 			this.buttonFlip = new System.Windows.Forms.Button();
 			this.buttonUnbind = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.trackBarSensitivity)).BeginInit();
@@ -56,6 +56,7 @@
 			this.labelButtonName.Location = new System.Drawing.Point(109, 6);
 			this.labelButtonName.Name = "labelButtonName";
 			this.labelButtonName.Text = "Bindname";
+			this.labelButtonName.AutoSize = true;
 			// 
 			// trackBarSensitivity
 			// 
@@ -75,6 +76,7 @@
 			this.labelSensitivity.Location = new System.Drawing.Point(166, 25);
 			this.labelSensitivity.Name = "labelSensitivity";
 			this.labelSensitivity.Text = "Sensitivity: 5 billion";
+			this.labelSensitivity.AutoSize = true;
 			// 
 			// timer1
 			// 
@@ -104,6 +106,7 @@
 			this.labelDeadzone.Location = new System.Drawing.Point(166, 60);
 			this.labelDeadzone.Name = "labelDeadzone";
 			this.labelDeadzone.Text = "Deadzone: 5 billion";
+			this.labelDeadzone.AutoSize = true;
 			// 
 			// buttonFlip
 			// 
@@ -150,13 +153,13 @@
 		#endregion
 
 		private System.Windows.Forms.TextBox textBox1;
-		private BizHawk.WinForms.Controls.LocLabelEx labelButtonName;
+		private System.Windows.Forms.Label labelButtonName;
 		private System.Windows.Forms.TrackBar trackBarSensitivity;
-		private BizHawk.WinForms.Controls.LocLabelEx labelSensitivity;
+		private System.Windows.Forms.Label labelSensitivity;
 		private System.Windows.Forms.Timer timer1;
 		private System.Windows.Forms.Button buttonBind;
 		private System.Windows.Forms.TrackBar trackBarDeadzone;
-		private BizHawk.WinForms.Controls.LocLabelEx labelDeadzone;
+		private System.Windows.Forms.Label labelDeadzone;
 		private System.Windows.Forms.Button buttonFlip;
 		private System.Windows.Forms.Button buttonUnbind;
 	}

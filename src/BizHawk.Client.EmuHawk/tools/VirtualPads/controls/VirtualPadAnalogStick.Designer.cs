@@ -28,17 +28,17 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.XLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.XLabel = new System.Windows.Forms.Label();
 			this.ManualX = new System.Windows.Forms.NumericUpDown();
-			this.YLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.YLabel = new System.Windows.Forms.Label();
 			this.ManualY = new System.Windows.Forms.NumericUpDown();
-			this.MaxLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.MaxLabel = new System.Windows.Forms.Label();
 			this.MaxXNumeric = new System.Windows.Forms.NumericUpDown();
 			this.MaxYNumeric = new System.Windows.Forms.NumericUpDown();
-			this.rLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.rLabel = new System.Windows.Forms.Label();
 			this.manualR = new System.Windows.Forms.NumericUpDown();
 			this.manualTheta = new System.Windows.Forms.NumericUpDown();
-			this.thetaLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.thetaLabel = new System.Windows.Forms.Label();
 			this.AnalogStick = new BizHawk.Client.GBAHawk.AnalogStickPanel();
 			((System.ComponentModel.ISupportInitialize)(this.ManualX)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ManualY)).BeginInit();
@@ -54,6 +54,7 @@
 			this.XLabel.Location = new System.Drawing.Point(187, 7);
 			this.XLabel.Name = "XLabel";
 			this.XLabel.Text = "X";
+			this.XLabel.AutoSize = true;
 			// 
 			// ManualX
 			// 
@@ -70,6 +71,7 @@
 			this.YLabel.Location = new System.Drawing.Point(187, 33);
 			this.YLabel.Name = "YLabel";
 			this.YLabel.Text = "Y";
+			this.YLabel.AutoSize = true;
 			// 
 			// ManualY
 			// 
@@ -87,6 +89,7 @@
 			this.MaxLabel.Location = new System.Drawing.Point(205, 107);
 			this.MaxLabel.Name = "MaxLabel";
 			this.MaxLabel.Text = "Range%";
+			this.MaxLabel.AutoSize = true;
 			// 
 			// MaxXNumeric
 			// 
@@ -115,6 +118,7 @@
 			this.rLabel.Location = new System.Drawing.Point(167, 60);
 			this.rLabel.Name = "rLabel";
 			this.rLabel.Text = "Ray";
+			this.rLabel.AutoSize = true;
 			// 
 			// manualR
 			// 
@@ -140,6 +144,7 @@
 			this.thetaLabel.Location = new System.Drawing.Point(167, 86);
 			this.thetaLabel.Name = "thetaLabel";
 			this.thetaLabel.Text = "θ (°)";
+			this.thetaLabel.AutoSize = true;
 			// 
 			// AnalogStick
 			// 
@@ -184,16 +189,16 @@
 		#endregion
 
 		private AnalogStickPanel AnalogStick;
-		private BizHawk.WinForms.Controls.LocLabelEx XLabel;
+		private System.Windows.Forms.Label XLabel;
 		private System.Windows.Forms.NumericUpDown ManualX;
-		private BizHawk.WinForms.Controls.LocLabelEx YLabel;
+		private System.Windows.Forms.Label YLabel;
 		private System.Windows.Forms.NumericUpDown ManualY;
-		private BizHawk.WinForms.Controls.LocLabelEx MaxLabel;
+		private System.Windows.Forms.Label MaxLabel;
 		private System.Windows.Forms.NumericUpDown MaxXNumeric;
 		private System.Windows.Forms.NumericUpDown MaxYNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx rLabel;
+		private System.Windows.Forms.Label rLabel;
 		private System.Windows.Forms.NumericUpDown manualR;
 		private System.Windows.Forms.NumericUpDown manualTheta;
-		private BizHawk.WinForms.Controls.LocLabelEx thetaLabel;
+		private System.Windows.Forms.Label thetaLabel;
 	}
 }

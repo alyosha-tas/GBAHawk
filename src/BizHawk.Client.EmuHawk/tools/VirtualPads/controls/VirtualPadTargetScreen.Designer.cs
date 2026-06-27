@@ -30,8 +30,8 @@
 		{
 			this.TargetPanel = new System.Windows.Forms.Panel();
 			this.XNumeric = new System.Windows.Forms.NumericUpDown();
-			this.XLabel = new BizHawk.WinForms.Controls.LocLabelEx();
-			this.YLabel = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.XLabel = new System.Windows.Forms.Label();
+			this.YLabel = new System.Windows.Forms.Label();
 			this.YNumeric = new System.Windows.Forms.NumericUpDown();
 			((System.ComponentModel.ISupportInitialize)(this.XNumeric)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.YNumeric)).BeginInit();
@@ -65,6 +65,7 @@
 			this.XLabel.Location = new System.Drawing.Point(3, 233);
 			this.XLabel.Name = "XLabel";
 			this.XLabel.Text = "X";
+			this.XLabel.AutoSize = true;
 			// 
 			// YLabel
 			// 
@@ -72,6 +73,7 @@
 			this.YLabel.Location = new System.Drawing.Point(91, 233);
 			this.YLabel.Name = "YLabel";
 			this.YLabel.Text = "Y";
+			this.YLabel.AutoSize = true;
 			// 
 			// YNumeric
 			// 
@@ -106,8 +108,8 @@
 
 		private System.Windows.Forms.Panel TargetPanel;
 		private System.Windows.Forms.NumericUpDown XNumeric;
-		private BizHawk.WinForms.Controls.LocLabelEx XLabel;
-		private BizHawk.WinForms.Controls.LocLabelEx YLabel;
+		private System.Windows.Forms.Label XLabel;
+		private System.Windows.Forms.Label YLabel;
 		private System.Windows.Forms.NumericUpDown YNumeric;
 	}
 }

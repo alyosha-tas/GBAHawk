@@ -33,10 +33,10 @@
 			this.InsertButton = new System.Windows.Forms.Button();
 			this.DeleteButton = new System.Windows.Forms.Button();
 			this.LagBox = new System.Windows.Forms.CheckBox();
-			this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label1 = new System.Windows.Forms.Label();
 			this.ValueNum = new System.Windows.Forms.NumericUpDown();
 			this.CountNum = new System.Windows.Forms.NumericUpDown();
-			this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+			this.label2 = new System.Windows.Forms.Label();
 			this.OnOffBox = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.ValueNum)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.CountNum)).BeginInit();
@@ -108,6 +108,7 @@
 			this.label1.Location = new System.Drawing.Point(9, 181);
 			this.label1.Name = "label1";
 			this.label1.Text = "Value:";
+			this.label1.AutoSize = true;
 			// 
 			// ValueNum
 			// 
@@ -136,6 +137,7 @@
 			this.label2.Location = new System.Drawing.Point(103, 181);
 			this.label2.Name = "label2";
 			this.label2.Text = "Count:";
+			this.label2.AutoSize = true;
 			// 
 			// OnOffBox
 			// 
@@ -181,10 +183,10 @@
 		private System.Windows.Forms.Button InsertButton;
 		private System.Windows.Forms.Button DeleteButton;
 		private System.Windows.Forms.CheckBox LagBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown ValueNum;
 		private System.Windows.Forms.NumericUpDown CountNum;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.CheckBox OnOffBox;
 	}
 }

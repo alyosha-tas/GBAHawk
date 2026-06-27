@@ -4,8 +4,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-using BizHawk.WinForms.Controls;
-
 namespace BizHawk.Client.GBAHawk
 {
 	public sealed class TAStudioColorSettingsForm : Form

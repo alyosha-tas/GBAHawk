@@ -35,10 +35,10 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.HandleAlternateKeyboardLayoutsCheckBox = new System.Windows.Forms.CheckBox();
             this.NeverAskSaveCheckbox = new System.Windows.Forms.CheckBox();
-            this.label2 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label2 = new System.Windows.Forms.Label();
             this.AcceptBackgroundInputCheckbox = new System.Windows.Forms.CheckBox();
             this.AcceptBackgroundInputControllerOnlyCheckBox = new System.Windows.Forms.CheckBox();
-            this.label1 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label1 = new System.Windows.Forms.Label();
             this.RunInBackgroundCheckbox = new System.Windows.Forms.CheckBox();
             this.SaveWindowPositionCheckbox = new System.Windows.Forms.CheckBox();
             this.EnableContextMenuCheckbox = new System.Windows.Forms.CheckBox();
@@ -52,21 +52,21 @@
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.NoMixedKeyPriorityCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label10 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label9 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
             this.AutosaveSRAMtextBox = new System.Windows.Forms.NumericUpDown();
             this.AutosaveSRAMradioButton1 = new System.Windows.Forms.RadioButton();
-            this.label8 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label8 = new System.Windows.Forms.Label();
             this.AutosaveSRAMradioButton2 = new System.Windows.Forms.RadioButton();
             this.AutosaveSRAMradioButton3 = new System.Windows.Forms.RadioButton();
             this.AutosaveSRAMCheckbox = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label7 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label7 = new System.Windows.Forms.Label();
             this.LuaInterfaceRadio = new System.Windows.Forms.RadioButton();
             this.NLuaRadio = new System.Windows.Forms.RadioButton();
             this.LuaDuringTurboCheckbox = new System.Windows.Forms.CheckBox();
-            this.label12 = new BizHawk.WinForms.Controls.LocLabelEx();
-            this.label13 = new BizHawk.WinForms.Controls.LocLabelEx();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             this.FrameAdvSkipLagCheckbox = new System.Windows.Forms.CheckBox();
             this.BackupSRamCheckbox = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -163,10 +163,11 @@
             this.label2.Location = new System.Drawing.Point(26, 112);
             this.label2.Name = "label2";
             this.label2.Text = "When this is set, the client will receive user input even when focus is lost";
-            // 
-            // AcceptBackgroundInputCheckbox
-            // 
-            this.AcceptBackgroundInputCheckbox.AutoSize = true;
+			this.label2.AutoSize = true;
+			// 
+			// AcceptBackgroundInputCheckbox
+			// 
+			this.AcceptBackgroundInputCheckbox.AutoSize = true;
             this.AcceptBackgroundInputCheckbox.Location = new System.Drawing.Point(6, 92);
             this.AcceptBackgroundInputCheckbox.Name = "AcceptBackgroundInputCheckbox";
             this.AcceptBackgroundInputCheckbox.Size = new System.Drawing.Size(146, 17);
@@ -191,10 +192,11 @@
             this.label1.Location = new System.Drawing.Point(26, 72);
             this.label1.Name = "label1";
             this.label1.Text = "When this is set, the client will continue to run when it loses focus";
-            // 
-            // RunInBackgroundCheckbox
-            // 
-            this.RunInBackgroundCheckbox.AutoSize = true;
+			this.label1.AutoSize = true;
+			// 
+			// RunInBackgroundCheckbox
+			// 
+			this.RunInBackgroundCheckbox.AutoSize = true;
             this.RunInBackgroundCheckbox.Location = new System.Drawing.Point(6, 52);
             this.RunInBackgroundCheckbox.Name = "RunInBackgroundCheckbox";
             this.RunInBackgroundCheckbox.Size = new System.Drawing.Size(117, 17);
@@ -346,16 +348,18 @@
             this.label10.Location = new System.Drawing.Point(9, 34);
             this.label10.Name = "label10";
             this.label10.Text = "every";
-            // 
-            // label9
-            // 
-            this.label9.Location = new System.Drawing.Point(6, 16);
+			this.label10.AutoSize = true;
+			// 
+			// label9
+			// 
+			this.label9.Location = new System.Drawing.Point(6, 16);
             this.label9.Name = "label9";
             this.label9.Text = "Save SaveRAM to .AutoSaveRAM.SaveRAM";
-            // 
-            // AutosaveSRAMtextBox
-            // 
-            this.AutosaveSRAMtextBox.Location = new System.Drawing.Point(151, 33);
+			this.label9.AutoSize = true;
+			// 
+			// AutosaveSRAMtextBox
+			// 
+			this.AutosaveSRAMtextBox.Location = new System.Drawing.Point(151, 33);
             this.AutosaveSRAMtextBox.Maximum = new decimal(new int[] {
             100000,
             0,
@@ -381,10 +385,11 @@
             this.label8.Location = new System.Drawing.Point(202, 35);
             this.label8.Name = "label8";
             this.label8.Text = "s";
-            // 
-            // AutosaveSRAMradioButton2
-            // 
-            this.AutosaveSRAMradioButton2.AutoSize = true;
+			this.label8.AutoSize = true;
+			// 
+			// AutosaveSRAMradioButton2
+			// 
+			this.AutosaveSRAMradioButton2.AutoSize = true;
             this.AutosaveSRAMradioButton2.Location = new System.Drawing.Point(90, 34);
             this.AutosaveSRAMradioButton2.Name = "AutosaveSRAMradioButton2";
             this.AutosaveSRAMradioButton2.Size = new System.Drawing.Size(39, 17);
@@ -430,10 +435,11 @@
             this.label7.Location = new System.Drawing.Point(3, 1);
             this.label7.Name = "label7";
             this.label7.Text = "Lua Core";
-            // 
-            // LuaInterfaceRadio
-            // 
-            this.LuaInterfaceRadio.AutoSize = true;
+			this.label7.AutoSize = true;
+			// 
+			// LuaInterfaceRadio
+			// 
+			this.LuaInterfaceRadio.AutoSize = true;
             this.LuaInterfaceRadio.Location = new System.Drawing.Point(4, 36);
             this.LuaInterfaceRadio.Name = "LuaInterfaceRadio";
             this.LuaInterfaceRadio.Size = new System.Drawing.Size(109, 17);
@@ -468,12 +474,14 @@
             this.label12.Location = new System.Drawing.Point(27, 135);
             this.label12.Name = "label12";
             this.label12.Text = "frames in which no input was polled (lag frames)";
-            // 
-            // label13
-            // 
-            this.label13.Location = new System.Drawing.Point(27, 122);
+			this.label12.AutoSize = true;
+			// 
+			// label13
+			// 
+			this.label13.Location = new System.Drawing.Point(27, 122);
             this.label13.Name = "label13";
             this.label13.Text = "When enabled, the frame advance button will skip over";
+			this.label13.AutoSize = true;
             // 
             // FrameAdvSkipLagCheckbox
             // 
@@ -538,28 +546,28 @@
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.CheckBox BackupSRamCheckbox;
 		private System.Windows.Forms.CheckBox FrameAdvSkipLagCheckbox;
-		private BizHawk.WinForms.Controls.LocLabelEx label12;
-		private BizHawk.WinForms.Controls.LocLabelEx label13;
+		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.Label label13;
 		private System.Windows.Forms.CheckBox LuaDuringTurboCheckbox;
 		private System.Windows.Forms.Panel panel1;
-		private BizHawk.WinForms.Controls.LocLabelEx label7;
+		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.RadioButton LuaInterfaceRadio;
 		private System.Windows.Forms.RadioButton NLuaRadio;
 		private System.Windows.Forms.CheckBox AutosaveSRAMCheckbox;
-		private BizHawk.WinForms.Controls.LocLabelEx label8;
+		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.RadioButton AutosaveSRAMradioButton3;
 		private System.Windows.Forms.RadioButton AutosaveSRAMradioButton2;
 		private System.Windows.Forms.RadioButton AutosaveSRAMradioButton1;
 		private System.Windows.Forms.GroupBox groupBox2;
 		private System.Windows.Forms.NumericUpDown AutosaveSRAMtextBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label10;
-		private BizHawk.WinForms.Controls.LocLabelEx label9;
+		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.Label label9;
 		private System.Windows.Forms.CheckBox HandleAlternateKeyboardLayoutsCheckBox;
 		private System.Windows.Forms.CheckBox NeverAskSaveCheckbox;
-		private BizHawk.WinForms.Controls.LocLabelEx label2;
+		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.CheckBox AcceptBackgroundInputCheckbox;
 		private System.Windows.Forms.CheckBox AcceptBackgroundInputControllerOnlyCheckBox;
-		private BizHawk.WinForms.Controls.LocLabelEx label1;
+		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.CheckBox RunInBackgroundCheckbox;
 		private System.Windows.Forms.CheckBox SaveWindowPositionCheckbox;
 		private System.Windows.Forms.CheckBox EnableContextMenuCheckbox;
