@@ -128,18 +128,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 				get => _Flash_Write_Offset;
 				set
 				{
-					if (value > 511)
-					{
-						_Flash_Write_Offset = 511;
-					}
-					else if (value < -512)
-					{
-						_Flash_Write_Offset = -512;
-					}
-					else
-					{
-						_Flash_Write_Offset = value;
-					}
+					if (value > 511) { _Flash_Write_Offset = 511; }
+					else if (value < -512) { _Flash_Write_Offset = -512; }
+					else { _Flash_Write_Offset = value; }
 				}
 			}
 
@@ -166,6 +157,82 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			[DefaultValue(false)]
 			public bool Use_GBP { get; set; }
 
+			[DisplayName("Use Discrete Solar Levels")]
+			[Description("When true, light levels are selected via hotkeys at user settable levels")]
+			[DefaultValue(false)]
+			public bool Use_Discrete_Solar { get; set; }
+
+			[DisplayName("Light Level 1")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(0)]
+			public short LightLevel1
+			{
+				get => _Light_Level_1;
+				set
+				{
+					if (value > 100) { _Light_Level_1 = 100; }
+					else if (value < 0) { _Light_Level_1 = 0; }
+					else { _Light_Level_1 = value; }
+				}
+			}
+
+			[DisplayName("Light Level 2")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(25)]
+			public short LightLevel2
+			{
+				get => _Light_Level_2;
+				set
+				{
+					if (value > 100) { _Light_Level_2 = 100; }
+					else if (value < 0) { _Light_Level_2 = 0; }
+					else { _Light_Level_2 = value; }
+				}
+			}
+
+			[DisplayName("Light Level 3")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(50)]
+			public short LightLevel3
+			{
+				get => _Light_Level_3;
+				set
+				{
+					if (value > 100) { _Light_Level_3 = 100; }
+					else if (value < 0) { _Light_Level_3 = 0; }
+					else { _Light_Level_3 = value; }
+				}
+			}
+
+			[DisplayName("Light Level 4")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(75)]
+			public short LightLevel4
+			{
+				get => _Light_Level_4;
+				set
+				{
+					if (value > 100) { _Light_Level_4 = 100; }
+					else if (value < 0) { _Light_Level_4 = 0; }
+					else { _Light_Level_4 = value; }
+				}
+			}
+
+
+			[DisplayName("Light Level 5")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(100)]
+			public short LightLevel5
+			{
+				get => _Light_Level_5;
+				set
+				{
+					if (value > 100) { _Light_Level_5 = 100; }
+					else if (value < 0) { _Light_Level_5 = 0; }
+					else { _Light_Level_5 = value; }
+				}
+			}
+
 			[JsonIgnore]
 			private DateTime _RTCInitialTime;
 			[JsonIgnore]
@@ -174,6 +241,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			private short _EEPROM_Offset;
 			[JsonIgnore]
 			private short _Flash_Write_Offset;
+			[JsonIgnore]
+			private short _Light_Level_1;
+			[JsonIgnore]
+			private short _Light_Level_2;
+			[JsonIgnore]
+			private short _Light_Level_3;
+			[JsonIgnore]
+			private short _Light_Level_4;
+			[JsonIgnore]
+			private short _Light_Level_5;
 			[JsonIgnore]
 			private int _Flash_Sector_Erase_Offset;
 			[JsonIgnore]

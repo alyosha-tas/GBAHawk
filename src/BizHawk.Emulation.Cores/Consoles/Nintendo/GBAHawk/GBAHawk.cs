@@ -34,7 +34,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 		public ushort controller_state;
 		public ushort Acc_X_state;
 		public ushort Acc_Y_state;
-		public byte Solar_state;
+		public byte Solar_state = 0x50;
 
 		public ushort Flash_Type_64_Value = 0;
 		public ushort Flash_Type_128_Value = 0;
@@ -263,7 +263,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA
 			}
 			else if (mapper == 6)
 			{
-				_controllerDeck = new(typeof(StandardSolar).DisplayName());
+				if (SyncSettings.Use_Discrete_Solar)
+				{
+					_controllerDeck = new(typeof(DiscreteSolar).DisplayName());
+				}
+				else
+				{
+					_controllerDeck = new(typeof(StandardSolar).DisplayName());
+				}
 			}
 			else
 			{

@@ -289,6 +289,158 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			[DefaultValue(false)]
 			public bool Use_GBP_R { get; set; }
 
+			[DisplayName("Use Discrete Solar Levels L")]
+			[Description("When true, light levels are selected via hotkeys at user settable levels")]
+			[DefaultValue(false)]
+			public bool Use_Discrete_Solar_L { get; set; }
+
+			[DisplayName("Use Discrete Solar Levels R")]
+			[Description("When true, light levels are selected via hotkeys at user settable levels")]
+			[DefaultValue(false)]
+			public bool Use_Discrete_Solar_R { get; set; }
+
+			[DisplayName("Light Level 1 L")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(0)]
+			public short LightLevel1_L
+			{
+				get => _Light_Level_1_L;
+				set
+				{
+					if (value > 100) { _Light_Level_1_L = 100; }
+					else if (value < 0) { _Light_Level_1_L = 0; }
+					else { _Light_Level_1_L = value; }
+				}
+			}
+
+			[DisplayName("Light Level 2 L")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(25)]
+			public short LightLevel2_L
+			{
+				get => _Light_Level_2_L;
+				set
+				{
+					if (value > 100) { _Light_Level_2_L = 100; }
+					else if (value < 0) { _Light_Level_2_L = 0; }
+					else { _Light_Level_2_L = value; }
+				}
+			}
+
+			[DisplayName("Light Level 3 L")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(50)]
+			public short LightLevel3_L
+			{
+				get => _Light_Level_3_L;
+				set
+				{
+					if (value > 100) { _Light_Level_3_L = 100; }
+					else if (value < 0) { _Light_Level_3_L = 0; }
+					else { _Light_Level_3_L = value; }
+				}
+			}
+
+			[DisplayName("Light Level 4 L")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(75)]
+			public short LightLevel4_L
+			{
+				get => _Light_Level_4_L;
+				set
+				{
+					if (value > 100) { _Light_Level_4_L = 100; }
+					else if (value < 0) { _Light_Level_4_L = 0; }
+					else { _Light_Level_4_L = value; }
+				}
+			}
+
+
+			[DisplayName("Light Level 5 L")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(100)]
+			public short LightLevel5_L
+			{
+				get => _Light_Level_5_L;
+				set
+				{
+					if (value > 100) { _Light_Level_5_L = 100; }
+					else if (value < 0) { _Light_Level_5_L = 0; }
+					else { _Light_Level_5_L = value; }
+				}
+			}
+
+			[DisplayName("Light Level 1 R")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(0)]
+			public short LightLevel1_R
+			{
+				get => _Light_Level_1_R;
+				set
+				{
+					if (value > 100) { _Light_Level_1_R = 100; }
+					else if (value < 0) { _Light_Level_1_R = 0; }
+					else { _Light_Level_1_R = value; }
+				}
+			}
+
+			[DisplayName("Light Level 2 R")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(25)]
+			public short LightLevel2_R
+			{
+				get => _Light_Level_2_R;
+				set
+				{
+					if (value > 100) { _Light_Level_2_R = 100; }
+					else if (value < 0) { _Light_Level_2_R = 0; }
+					else { _Light_Level_2_R = value; }
+				}
+			}
+
+			[DisplayName("Light Level 3 R")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(50)]
+			public short LightLevel3_R
+			{
+				get => _Light_Level_3_R;
+				set
+				{
+					if (value > 100) { _Light_Level_3_R = 100; }
+					else if (value < 0) { _Light_Level_3_R = 0; }
+					else { _Light_Level_3_R = value; }
+				}
+			}
+
+			[DisplayName("Light Level 4 R")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(75)]
+			public short LightLevel4_R
+			{
+				get => _Light_Level_4_R;
+				set
+				{
+					if (value > 100) { _Light_Level_4_R = 100; }
+					else if (value < 0) { _Light_Level_4_R = 0; }
+					else { _Light_Level_4_R = value; }
+				}
+			}
+
+
+			[DisplayName("Light Level 5 R")]
+			[Description("User settable light level % (0-100)")]
+			[DefaultValue(100)]
+			public short LightLevel5_R
+			{
+				get => _Light_Level_5_R;
+				set
+				{
+					if (value > 100) { _Light_Level_5_R = 100; }
+					else if (value < 0) { _Light_Level_5_R = 0; }
+					else { _Light_Level_5_R = value; }
+				}
+			}
+
 			[JsonIgnore]
 			private DateTime _RTCInitialTime_L;
 			[JsonIgnore]
@@ -305,6 +457,26 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			private short _Flash_Write_Offset_L;
 			[JsonIgnore]
 			private short _Flash_Write_Offset_R;
+			[JsonIgnore]
+			private short _Light_Level_1_L;
+			[JsonIgnore]
+			private short _Light_Level_2_L;
+			[JsonIgnore]
+			private short _Light_Level_3_L;
+			[JsonIgnore]
+			private short _Light_Level_4_L;
+			[JsonIgnore]
+			private short _Light_Level_5_L;
+			[JsonIgnore]
+			private short _Light_Level_1_R;
+			[JsonIgnore]
+			private short _Light_Level_2_R;
+			[JsonIgnore]
+			private short _Light_Level_3_R;
+			[JsonIgnore]
+			private short _Light_Level_4_R;
+			[JsonIgnore]
+			private short _Light_Level_5_R;
 			[JsonIgnore]
 			private int _Flash_Sector_Erase_Offset_L;
 			[JsonIgnore]

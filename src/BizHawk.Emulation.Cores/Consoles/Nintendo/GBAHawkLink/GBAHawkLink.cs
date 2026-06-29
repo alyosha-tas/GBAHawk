@@ -34,7 +34,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public ushort controller_state_1, controller_state_2;
 		public ushort Acc_X_state_1, Acc_X_state_2;
 		public ushort Acc_Y_state_1, Acc_Y_state_2;
-		public byte Solar_state_1, Solar_state_2;
+		public byte Solar_state_1 = 0x50;
+		public byte Solar_state_2 = 0x50;
 
 		public ushort Flash_Type_64_Value_L = 0;
 		public ushort Flash_Type_128_Value_L = 0;
@@ -370,7 +371,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			}
 			else if (mappers[0] == 6)
 			{
-				cntrllr1 = typeof(StandardSolar).DisplayName();
+				if (SyncSettings.Use_Discrete_Solar_L)
+				{
+					cntrllr1 = typeof(DiscreteSolar).DisplayName();
+				}
+				else
+				{
+					cntrllr1 = typeof(StandardSolar).DisplayName();
+				}
 			}
 
 			if (mappers[1] == 3)
@@ -383,7 +391,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			}
 			else if (mappers[1] == 6)
 			{
-				cntrllr2 = typeof(StandardSolar).DisplayName();
+				if (SyncSettings.Use_Discrete_Solar_R)
+				{
+					cntrllr2 = typeof(DiscreteSolar).DisplayName();
+				}
+				else
+				{
+					cntrllr2 = typeof(StandardSolar).DisplayName();
+				}
 			}
 
 			_controllerDeck = new(cntrllr1, cntrllr2);

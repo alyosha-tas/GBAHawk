@@ -92,11 +92,67 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			InputCallbacks.Call();
 			controller_state_1 = _controllerDeck.ReadPort1(controller);
 			(Acc_X_state_1, Acc_Y_state_1) = _controllerDeck.ReadAcc1(controller);
-			Solar_state_1 = _controllerDeck.ReadSolar1(controller);
+
+			if (SyncSettings.Use_Discrete_Solar_L)
+			{
+				// only change state if a key is being pressed, lowest key has highest priority
+				if (controller.IsPressed("P1 S1"))
+				{
+					Solar_state_1 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel1_L / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P1 S2"))
+				{
+					Solar_state_1 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel2_L / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P1 S3"))
+				{
+					Solar_state_1 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel3_L / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P1 S4"))
+				{
+					Solar_state_1 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel4_L / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P1 S5"))
+				{
+					Solar_state_1 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel5_L / 100 * 0xA0) + 0x50));
+				}
+			}
+			else
+			{
+				Solar_state_1 = _controllerDeck.ReadSolar1(controller);
+			}
 
 			controller_state_2 = _controllerDeck.ReadPort2(controller);
 			(Acc_X_state_2, Acc_Y_state_2) = _controllerDeck.ReadAcc2(controller);
-			Solar_state_2 = _controllerDeck.ReadSolar2(controller);
+
+			if (SyncSettings.Use_Discrete_Solar_R)
+			{
+				// only change state if a key is being pressed, lowest key has highest priority
+				if (controller.IsPressed("P2 S1"))
+				{
+					Solar_state_2 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel1_R / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P2 S2"))
+				{
+					Solar_state_2 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel2_R / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P2 S3"))
+				{
+					Solar_state_2 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel3_R / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P2 S4"))
+				{
+					Solar_state_2 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel4_R / 100 * 0xA0) + 0x50));
+				}
+				else if (controller.IsPressed("P2 S5"))
+				{
+					Solar_state_2 = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel5_R / 100 * 0xA0) + 0x50));
+				}
+			}
+			else
+			{
+				Solar_state_2 = _controllerDeck.ReadSolar2(controller);
+			}
 
 			// override the input state from the GBP directly
 			if (GBP_Screen_Detection_L)

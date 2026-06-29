@@ -565,6 +565,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				[typeof(StandardControls).DisplayName()] = portNum => new StandardControls(portNum),
 				[typeof(StandardTilt).DisplayName()] = portNum => new StandardTilt(portNum),
 				[typeof(StandardSolar).DisplayName()] = portNum => new StandardSolar(portNum),
+				[typeof(DiscreteSolar).DisplayName()] = portNum => new DiscreteSolar(portNum),
 				[typeof(StandardZGyro).DisplayName()] = portNum => new StandardZGyro(portNum)
 			};
 
@@ -927,6 +928,90 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 		private static readonly string[] BaseDefinition =
 		{
 			"Up", "Down", "Left", "Right", "Start", "Select", "B", "A", "L", "R", "Power"
+		};
+
+		public void SyncState(Serializer ser)
+		{
+			// nothing
+		}
+	}
+
+	[DisplayName("Gameboy Advance Controller + Discrete Solar")]
+	public class DiscreteSolar : IPort
+	{
+		public DiscreteSolar(int portNum)
+		{
+			PortNum = portNum;
+			Definition = new ControllerDefinition("Gameboy Advance Controller + Discrete Solar")
+			{
+				BoolButtons = BaseDefinition.Select(b => $"P{PortNum} {b}").ToList()
+			};
+		}
+
+		public int PortNum { get; }
+
+		public ControllerDefinition Definition { get; }
+
+		public ushort Read(IController c)
+		{
+			ushort result = 0x3FF;
+
+			if (c.IsPressed(Definition.BoolButtons[0]))
+			{
+				result &= 0xFFBF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[1]))
+			{
+				result &= 0xFF7F;
+			}
+			if (c.IsPressed(Definition.BoolButtons[2]))
+			{
+				result &= 0xFFDF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[3]))
+			{
+				result &= 0xFFEF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[4]))
+			{
+				result &= 0xFFF7;
+			}
+			if (c.IsPressed(Definition.BoolButtons[5]))
+			{
+				result &= 0xFFFB;
+			}
+			if (c.IsPressed(Definition.BoolButtons[6]))
+			{
+				result &= 0xFFFD;
+			}
+			if (c.IsPressed(Definition.BoolButtons[7]))
+			{
+				result &= 0xFFFE;
+			}
+			if (c.IsPressed(Definition.BoolButtons[8]))
+			{
+				result &= 0xFDFF;
+			}
+			if (c.IsPressed(Definition.BoolButtons[9]))
+			{
+				result &= 0xFEFF;
+			}
+
+			return result;
+		}
+
+		public (ushort X, ushort Y) ReadAcc(IController c)
+			=> (0, 0);
+
+		public byte SolarSense(IController c)
+		{
+			return (byte)(0x140 - (int)(c.AxisValue(Definition.Axes[0])));
+		}
+
+		private static readonly string[] BaseDefinition =
+		{
+			"Up", "Down", "Left", "Right", "Start", "Select", "B", "A", "L", "R", "Power",
+			"S1", "S2", "S3", "S4", "S5"
 		};
 
 		public void SyncState(Serializer ser)
