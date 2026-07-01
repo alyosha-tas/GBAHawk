@@ -524,8 +524,8 @@ namespace GBAHawk
 		else if (addr < 0x06000000)
 		{
 			// 8 bit writes to PALRAM stored as halfword
-			PALRAM[addr & 0x3FF] = value;
-			PALRAM[(addr + 1) & 0x3FF] = value;
+			PALRAM[addr & 0x3FE] = value;
+			PALRAM[(addr & 0x3FE) + 1] = value;
 
 			ppu_PALRAM_In_Use = false;
 		}
@@ -547,8 +547,8 @@ namespace GBAHawk
 						if ((addr & 0x17FFF) < 0x14000)
 						{
 							// 8 bit writes stored as halfword (needs more research)
-							VRAM[addr & 0x17FFF] = value;
-							VRAM[(addr + 1) & 0x17FFF] = value;
+							VRAM[addr & 0x17FFE] = value;
+							VRAM[(addr & 0x17FFE) + 1] = value;
 						}
 					}
 				}
@@ -559,8 +559,8 @@ namespace GBAHawk
 						if ((addr & 0x17FFF) < 0x14000)
 						{
 							// 8 bit writes stored as halfword (needs more research)
-							VRAM[addr & 0x17FFF] = value;
-							VRAM[(addr + 1) & 0x17FFF] = value;
+							VRAM[addr & 0x17FFE] = value;
+							VRAM[(addr & 0x17FFE) + 1] = value;
 						}
 					}
 				}
@@ -568,8 +568,8 @@ namespace GBAHawk
 			else
 			{
 				// 8 bit writes stored as halfword (needs more research)
-				VRAM[addr & 0xFFFF] = value;
-				VRAM[(addr + 1) & 0xFFFF] = value;
+				VRAM[addr & 0xFFFE] = value;
+				VRAM[(addr & 0xFFFE) + 1] = value;
 			}
 
 			ppu_VRAM_High_In_Use = false;
