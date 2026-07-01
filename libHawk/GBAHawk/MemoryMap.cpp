@@ -546,7 +546,7 @@ namespace GBAHawk
 					{
 						if ((addr & 0x17FFF) < 0x14000)
 						{
-							// 8 bit writes stored as halfword (needs more research)
+							// 8 bit writes stored as halfword
 							VRAM[addr & 0x17FFE] = value;
 							VRAM[(addr & 0x17FFE) + 1] = value;
 						}
@@ -558,7 +558,7 @@ namespace GBAHawk
 					{
 						if ((addr & 0x17FFF) < 0x14000)
 						{
-							// 8 bit writes stored as halfword (needs more research)
+							// 8 bit writes stored as halfword
 							VRAM[addr & 0x17FFE] = value;
 							VRAM[(addr & 0x17FFE) + 1] = value;
 						}
@@ -567,7 +567,7 @@ namespace GBAHawk
 			}
 			else
 			{
-				// 8 bit writes stored as halfword (needs more research)
+				// 8 bit writes stored as halfword
 				VRAM[addr & 0xFFFE] = value;
 				VRAM[(addr & 0xFFFE) + 1] = value;
 			}
