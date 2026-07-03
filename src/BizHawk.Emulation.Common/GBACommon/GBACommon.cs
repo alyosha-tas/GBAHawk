@@ -38,6 +38,90 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 			has_bat = false;
 			Cart_RAM_Size = 0;
 
+			// check if overrides exist in the database
+			GameInfo db_entry = Database.CheckDatabase(Database.RemoveHashType(romHashSHA1));
+			bool is_valid = true;
+			int db_mapper = 0;
+			uint db_sram_size = 0;
+			if (db_entry != null)
+			{
+				Console.WriteLine("DB entry present attempting to parse...");
+				// DB entries must contain all parameters, if any are missing it is invalid
+				var db_params = db_entry.GetOptions();
+
+				if (db_params.ContainsKey("mapper") && db_params.ContainsKey("sram"))
+				{
+					if (db_params.TryGetValue("mapper", out var str_map)) { db_mapper = int.Parse(str_map); }
+					if (db_params.TryGetValue("sram", out var str_sram)) { db_sram_size = uint.Parse(str_sram); }
+
+					if ((db_mapper < 0) || (db_mapper > 8))
+					{
+						Console.WriteLine("DB entry invalid, mapper value out of range. Ignoring DB entry.");
+						is_valid = false;
+					}
+
+					if (is_valid)
+					{
+						if (db_mapper < 4)
+						{
+							if (db_sram_size == 0)
+							{
+								Console.WriteLine("Loading from DB entry.");
+								mapper = db_mapper;
+
+								if (db_mapper == 2)
+								{
+									has_bat = true;
+									Cart_RAM_Size = 0x8000;
+								}
+							}
+							else
+							{
+								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper. Ignoring DB entry.");
+							}
+						}
+						else if (db_mapper < 7)
+						{
+							if (db_sram_size < 2)
+							{
+								Console.WriteLine("Loading from DB entry.");
+								mapper = db_mapper;
+								has_bat = true;
+
+								if (db_sram_size == 0) { Cart_RAM_Size = 0x200; }
+								else { Cart_RAM_Size = 0x2000; }
+							}
+							else
+							{
+								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper. Ignoring DB entry.");
+							}
+						}
+						else
+						{
+							if (db_sram_size < 2)
+							{
+								Console.WriteLine("Loading from DB entry.");
+								mapper = db_mapper;
+								has_bat = true;
+
+								if (db_sram_size == 0) { Cart_RAM_Size = 0x10000; }
+								else { Cart_RAM_Size = 0x20000; }
+							}
+							else
+							{
+								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper. Ignoring DB entry.");
+							}
+						}
+					}
+
+					return;
+				}
+				else
+				{
+					Console.WriteLine("DB entry invalid, one or more parameters missing. Ignoring DB entry.");
+				}
+			}
+
 			// check for SRAM
 			for (int i = 0; i < ROM.Length; i += 4)
 			{
@@ -100,12 +184,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				}
 			}
 
-			// hash checks for individual games / homebrew / test roms
-			if ((romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") || // Aging cart test
-				(romHashSHA1 == "SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E") || // VRAM access test
-				(romHashSHA1 == "SHA1:0926C720F59F7667192D2B90F02E7BD833EB21EB") || // VRAM access test new
-				(romHashSHA1 == "SHA1:06F466733CFC6412501C8113E87E89D08F0E50DF") || // VRAM access test oam
-				(romHashSHA1 == "SHA1:41D39A0C34F72469DD3FBCC90190605B8ADA93E6") || // Another World
+			// Individual hash checks for games, hacks and test roms go in db
+			if ((romHashSHA1 == "SHA1:41D39A0C34F72469DD3FBCC90190605B8ADA93E6") || // Another World
 				(romHashSHA1 == "SHA1:270C426705DF767A4AD2DC69D039842442F779B2") || // Anguna
 				(romHashSHA1 == "SHA1:9B02C4BFD99CCD913A5D7EE7CF269EBC689E1FDE"))   // Higurashi no Nakukoroni (fixed header)
 			{
@@ -186,94 +266,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 					{
 						Cart_RAM_Size = 0x20000;
 					}
-				}
-			}
-
-			// check if overrides exist in the database
-			GameInfo db_entry = Database.CheckDatabase(Database.RemoveHashType(romHashSHA1));
-			bool is_valid = true;
-			int db_mapper = 0;
-			uint db_sram_size = 0;
-			if (db_entry != null)
-			{
-				Console.WriteLine("DB entry present attempting to parse...");
-				// db entries must contain all parameters, if any are missing it is invalid
-				var db_params = db_entry.GetOptions();
-
-				if (db_params.ContainsKey("mapper") && db_params.ContainsKey("sram"))
-				{					
-					if (db_params.TryGetValue("mapper", out var str_map)) { db_mapper = int.Parse(str_map); }
-					if (db_params.TryGetValue("sram", out var str_sram)) { db_sram_size = uint.Parse(str_sram); }
-
-					if ((db_mapper < 0) || (db_mapper > 8))
-					{
-						Console.WriteLine("DB entry invalid, mapper value out of range.");
-						is_valid = false;
-					}
-
-					if ((db_mapper < 0) || (db_mapper > 8))
-					{
-						Console.WriteLine("DB entry invalid, mapper value out of range.");
-						is_valid = false;
-					}
-
-					if (is_valid)
-					{
-						if (db_mapper < 2)
-						{
-							if (db_sram_size == 0)
-							{
-								Console.WriteLine("Loading from DB entry.");
-								mapper = db_mapper;
-
-								if (db_mapper == 1)
-								{
-									has_bat = true;
-									Cart_RAM_Size = 0x8000;
-								}
-							}
-							else
-							{
-								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper.");
-							}
-						}
-						else if (db_mapper < 7)
-						{
-							if (db_sram_size < 2)
-							{
-								Console.WriteLine("Loading from DB entry.");
-								mapper = db_mapper;
-								has_bat = true;
-
-								if (db_sram_size == 0) { Cart_RAM_Size = 0x200; }
-								else { Cart_RAM_Size = 0x2000; }
-							}
-							else
-							{
-								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper.");
-							}
-						}
-						else
-						{
-							if (db_sram_size < 2)
-							{
-								Console.WriteLine("Loading from DB entry.");
-								mapper = db_mapper;
-								has_bat = true;
-
-								if (db_sram_size == 0) { Cart_RAM_Size = 0x10000; }
-								else { Cart_RAM_Size = 0x20000; }
-							}
-							else
-							{
-								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper.");
-							}
-						}
-					}
-				}
-				else
-				{
-					Console.WriteLine("DB entry invalid, one or more parameters missing.");
 				}
 			}
 		}
