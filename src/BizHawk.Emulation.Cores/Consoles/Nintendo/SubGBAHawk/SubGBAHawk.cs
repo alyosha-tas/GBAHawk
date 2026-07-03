@@ -12,8 +12,6 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 	NOTES: 
 	RAM disabling not implemented, check if used by any games
 
-	Open bus behaviour needs to be done more carefully
-
 	EEPROM accesses only emulated at 0xDxxxxxx, check if any games use lower range
 */
 
@@ -38,8 +36,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public ushort Flash_Type_64_Value = 0;
 		public ushort Flash_Type_128_Value = 0;
 		public byte[] cart_RAM;
+		public uint Cart_RAM_Size;
 		public bool has_bat;
-		int mapper;
+		public int mapper;
 
 		[CoreConstructor(VSystemID.Raw.GBA)]
 		public SubGBAHawk(CoreComm comm, GameInfo game, byte[] rom, SubGBAHawk.SubGBASettings settings, SubGBAHawk.SubGBASyncSettings syncSettings)
@@ -115,7 +114,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				}
 			}
 
-			mapper = Setup_Mapper(romHashMD5, romHashSHA1);
+			GBACommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, ROM, out mapper, out has_bat, out Cart_RAM_Size);
+
+			if (Cart_RAM_Size != 0)
+			{
+				cart_RAM = new byte[Cart_RAM_Size];
+
+				Console.WriteLine("SRAM Size: " + Cart_RAM_Size);
+			}
 
 			if (cart_RAM != null)
 			{
@@ -290,168 +296,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			}
 
 			return (byte)((tens_cnt << 4) | in_byte);
-		}
-
-		public int Setup_Mapper(string romHashMD5, string romHashSHA1)
-		{
-			int size_f = 0;
-
-			int mppr = 0;
-			has_bat = false;
-
-			// check for SRAM
-			for (int i = 0; i < ROM.Length; i += 4)
-			{
-				if (ROM[i] == 0x53)
-				{
-					if ((ROM[i + 1] == 0x52) && (ROM[i + 2] == 0x41))
-					{
-						if ((ROM[i + 3] == 0x4D) && (ROM[i + 4] == 0x5F))
-						{
-							Console.WriteLine("using SRAM mapper");
-							mppr = 2;
-							break;
-						}
-					}
-				}
-				if (ROM[i] == 0x45)
-				{
-					if ((ROM[i + 1] == 0x45) && (ROM[i + 2] == 0x50))
-					{
-						if ((ROM[i + 3] == 0x52) && (ROM[i + 4] == 0x4F) && (ROM[i + 5] == 0x4D))
-						{
-							Console.WriteLine("using EEPROM mapper");
-							mppr = 4;
-							break;
-						}
-					}
-				}
-				if (ROM[i] == 0x46)
-				{
-					if ((ROM[i + 1] == 0x4C) && (ROM[i + 2] == 0x41))
-					{
-						if ((ROM[i + 3] == 0x53) && (ROM[i + 4] == 0x48))
-						{
-							if ((ROM[i + 5] == 0x5F) && (ROM[i + 6] == 0x56))
-							{
-								Console.WriteLine("using FLASH mapper");
-								mppr = 7;
-								size_f = 64;
-
-								break;
-							}
-							if ((ROM[i + 5] == 0x35) && (ROM[i + 6] == 0x31) && (ROM[i + 7] == 0x32))
-							{
-								Console.WriteLine("using FLASH mapper");
-								mppr = 7;
-								size_f = 64;
-
-								break;
-							}
-							if ((ROM[i + 5] == 0x31) && (ROM[i + 6] == 0x4D))
-							{
-								Console.WriteLine("using FLASH mapper");
-								mppr = 7;
-								size_f = 128;
-
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			// hash checks for individual games / homebrew / test roms
-			if ((romHashSHA1 == "SHA1:C67E0A5E26EA5EBA2BC11C99D003027A96E44060") || // Aging cart test
-				(romHashSHA1 == "SHA1:AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E") || // VRAM access test
-				(romHashSHA1 == "SHA1:0926C720F59F7667192D2B90F02E7BD833EB21EB") || // VRAM access test new
-				(romHashSHA1 == "SHA1:41D39A0C34F72469DD3FBCC90190605B8ADA93E6") || // Another World
-				(romHashSHA1 == "SHA1:270C426705DF767A4AD2DC69D039842442F779B2") || // Anguna
-				(romHashSHA1 == "SHA1:9B02C4BFD99CCD913A5D7EE7CF269EBC689E1FDE"))   // Higurashi no Nakukoroni (fixed header)
-			{
-				Console.WriteLine("using SRAM mapper");
-				mppr = 2;
-			}
-
-			if (romHashSHA1 == "SHA1:3714D1222E5C2B2734996ACE9F9BC49B35656171")
-			{
-				mppr = 1;
-			}
-			else if (mppr == 2)
-			{
-				has_bat = true;
-				cart_RAM = new byte[0x8000];
-
-				if ((romHashSHA1 == "SHA1:A389FA50E2E842B264B980CBE30E980C69D93A5B") || // Mawaru - Made in Wario (JPN)
-					(romHashSHA1 == "SHA1:F0102D0D6F7596FE853D5D0A94682718278E083A"))   // Warioware Twisted (USA)
-				{
-					mppr = 3;
-				}
-			}
-			else if (mppr == 4)
-			{
-				has_bat = true;
-
-				// assume 512 byte saves, use hash check to pick out 8k versions
-				if ((romHashSHA1 == "SHA1:947498CB1DB918D305500257E8223DEEADDF561D") || // Yoshi USA
-					(romHashSHA1 == "SHA1:A3F2035CA2BDC2BC59E9E46EFBB6187705EBE3D1") || // Yoshi Japan
-					(romHashSHA1 == "SHA1:045BE1369964F141009F3701839EC0A8DCCB25C1") || // Yoshi EU
-					(romHashSHA1 == "SHA1:40CB751D119A49BE0CD44CF0491C93EBC8795EF0"))   // koro koro puzzle
-				{
-					Console.WriteLine("Using Tilt Controls");
-
-					cart_RAM = new byte[0x200];
-					mppr = 5;
-				}
-				else if ((romHashSHA1 == "SHA1:F91126CD3A1BF7BF5F770D3A70229171D0D5A6EE") || // Boktai Beta
-						 (romHashSHA1 == "SHA1:64F7BF0F0560F6E94DA33B549D3206678B29F557") || // Boktai EU
-						 (romHashSHA1 == "SHA1:7164326283DF46A3941EC7B6CECA889CBC40E660") || // Boktai USA
-						 (romHashSHA1 == "SHA1:C51AD84E9403DB94CD18A14AC72F8367B52A0D7F") || // Boktai JPN
-						 (romHashSHA1 == "SHA1:CD10D8ED82F4DAF4072774F70D015E39A5D32D0B") || // Boktai 2 USA
-						 (romHashSHA1 == "SHA1:EEACDF5A9D3D2173A4A96689B72DC6B7AD92153C") || // Boktai 2 EU
-						 (romHashSHA1 == "SHA1:54A4DCDECA2EE9A22559EB104B88586386639097") || // Boktai 2 JPN
-						 (romHashSHA1 == "SHA1:1A81843C3070DECEA4CBCA20C4563541400B2437") || // Boktai 2 JPN Rev 1
-						 (romHashSHA1 == "SHA1:2651C5E6875AC60ABFF734510D152166D211C87C"))   // Boktai 3
-				{
-					Console.WriteLine("Using Solar Sensor");
-
-					cart_RAM = new byte[0x2000];
-					mppr = 6;
-				}
-				else if (GBACommonFunctions.EEPROM_64K_check(romHashSHA1))
-				{
-					cart_RAM = new byte[0x2000];
-				}
-				else
-				{
-					cart_RAM = new byte[0x200];
-				}
-			}
-			else if (mppr == 7)
-			{
-				has_bat = true;
-
-				if (GBACommonFunctions.pokemon_check(romHashSHA1) ||
-					(romHashSHA1 == "SHA1:4DCD7CEE46D3A5E848A22EB371BEBBBC2FB8D488")) // Sennen Kozoku
-				{
-					cart_RAM = new byte[0x20000];
-
-					mppr = 8;
-				}
-				else
-				{
-					if (size_f == 64)
-					{
-						cart_RAM = new byte[0x10000];
-					}
-					else
-					{
-						cart_RAM = new byte[0x20000];
-					}
-				}
-			}
-
-			return mppr;
 		}
 
 		public ulong TotalExecutedCycles => 0;

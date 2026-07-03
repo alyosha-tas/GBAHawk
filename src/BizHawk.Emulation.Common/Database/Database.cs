@@ -27,7 +27,7 @@ namespace BizHawk.Emulation.Common
 
 		private static string _userRoot = null;
 
-		private static string RemoveHashType(string hash)
+		public static string RemoveHashType(string hash)
 		{
 			hash = hash.ToUpper();
 			if (hash.StartsWith("MD5:"))
