@@ -54,7 +54,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 					if (db_params.TryGetValue("mapper", out var str_map)) { db_mapper = int.Parse(str_map); }
 					if (db_params.TryGetValue("sram", out var str_sram)) { db_sram_size = uint.Parse(str_sram); }
 
-					if ((db_mapper < 0) || (db_mapper > 8))
+					if ((db_mapper < 0) || (db_mapper > 9))
 					{
 						Console.WriteLine("DB entry invalid, mapper value out of range. Ignoring DB entry.");
 						is_valid = false;
@@ -96,7 +96,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper. Ignoring DB entry.");
 							}
 						}
-						else
+						else if (db_mapper < 9)
 						{
 							if (db_sram_size < 2)
 							{
@@ -106,6 +106,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 								if (db_sram_size == 0) { Cart_RAM_Size = 0x10000; }
 								else { Cart_RAM_Size = 0x20000; }
+							}
+							else
+							{
+								Console.WriteLine("DB entry invalid, SRAM size invalid for given mapper. Ignoring DB entry.");
+							}
+						}
+						else
+						{
+							if (db_sram_size == 0)
+							{
+								Console.WriteLine("Loading from DB entry.");
+								mapper = db_mapper;
 							}
 							else
 							{
@@ -191,6 +203,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 			{
 				Console.WriteLine("using SRAM mapper");
 				mapper = 2;
+			}
+
+			// GBA video series
+			if ((romHashSHA1 == "SHA1:6128A476EDB10E6839AC5BD2697E83B9B7A9B234") || // Shark Tale v5
+				(romHashSHA1 == "SHA1:9BC5B60793B8A6DE3B80EB2C213CD125E1FA468E") || // Shark Tale v6
+				(romHashSHA1 == "SHA1:2DEDEA86EC289A0E31089299613D9F74CCA03609") || // Shrek v5
+				(romHashSHA1 == "SHA1:95D612057682B7B886441D387B167BA2493E49EF") || // Shrek v6
+				(romHashSHA1 == "SHA1:F23390B7A62C605FBCE6730ADDC29D381488E076") || // Shrek + Shark Tale
+				(romHashSHA1 == "SHA1:5CD627E205020297B25D707131883BE5850515FE") || // Shark 2 v5
+				(romHashSHA1 == "SHA1:3BCB4ACC5DA539BC1B91C9537BF7FFA081DED1D4"))   // Shrek 2 v6
+			{
+				Console.WriteLine("using Video mapper");
+				mapper = 9;
 			}
 
 			if (mapper == 2)

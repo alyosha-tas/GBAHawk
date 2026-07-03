@@ -164,6 +164,7 @@ namespace GBAHawk
 		// not stated
 		uint8_t BIOS[0x4000] = { };
 		uint8_t ROM[0x6000000] = { };
+		uint8_t* Video_ROM = nullptr;
 
 		// Most memory accesses from the cpu / dma are force aligned to word / half wod boundaries, 
 		// so use some pointers of the appropriate memory size to simplify accesses

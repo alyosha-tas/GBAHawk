@@ -13,6 +13,11 @@
 #include "Memory.h"
 #include "Mappers.h"
 
+#include "SRAM_Mappers.h"
+#include "EEPROM_Mappers.h"
+#include "FLash_Mappers.h"
+#include "Video_Mapper.h"
+
 using namespace std;
 
 namespace GBAHawk
@@ -136,6 +141,14 @@ namespace GBAHawk
 			else if (mapper == 8)
 			{
 				Mapper = new Mapper_FLASH_RTC();
+			}
+			else if (mapper == 9)
+			{
+				Mapper = new Mapper_Video();
+
+				GBA.Video_ROM = new uint8_t[0x6000000];
+
+				std::memcpy(GBA.Video_ROM, ext_rom, 0x6000000);
 			}
 
 			GBA.mapper_pntr = &Mapper[0];
