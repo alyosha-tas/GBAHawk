@@ -271,12 +271,34 @@ namespace GBAHawk
 					if (FIFO_DMA_A_cd == 0)
 					{
 						if (dma_Go[1]) { dma_Run[1] = true; dma_All_Off = false; }
+						else
+						{
+							// unrecoverable DMA jam
+							Halt_Held_CPU_Instr = dma_Held_CPU_Instr = cpu_Instr_Type = cpu_JAM;
+							dma_Go[0] = dma_Go[1] = dma_Go[2] = dma_Go[3] = false;
+						}
 
 						FIFO_DMA_A_Delay = false;
 
 						if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
+						}
+					}
+
+					// can still shut down DMA successfully at this point if DMA gets disabled
+					if (FIFO_DMA_A_cd == 2)
+					{
+						if (!dma_Go[1])
+						{
+							FIFO_DMA_A_cd = 0;
+
+							FIFO_DMA_A_Delay = false;
+
+							if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
+							{
+								Misc_Delays = false;
+							}
 						}
 					}
 				}
@@ -288,12 +310,34 @@ namespace GBAHawk
 					if (FIFO_DMA_B_cd == 0)
 					{
 						if (dma_Go[2]) { dma_Run[2] = true; dma_All_Off = false; }
+						else
+						{
+							// unrecoverable DMA jam
+							Halt_Held_CPU_Instr = dma_Held_CPU_Instr = cpu_Instr_Type = cpu_JAM;
+							dma_Go[0] = dma_Go[1] = dma_Go[2] = dma_Go[3] = false;
+						}
 
 						FIFO_DMA_B_Delay = false;
 
 						if (!FIFO_DMA_A_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
 						{
 							Misc_Delays = false;
+						}
+					}
+
+					// can still shut down DMA successfully at this point if DMA gets disabled
+					if (FIFO_DMA_B_cd == 2)
+					{
+						if (!dma_Go[2])
+						{
+							FIFO_DMA_B_cd = 0;
+
+							FIFO_DMA_B_Delay = false;
+
+							if (!FIFO_DMA_B_Delay && !VRAM_32_Delay && !PALRAM_32_Delay && !DMA_Any_IRQ && !DMA_Any_Start)
+							{
+								Misc_Delays = false;
+							}
 						}
 					}
 				}
@@ -3955,6 +3999,11 @@ namespace GBAHawk
 				}
 				break;
 
+			case cpu_JAM:
+				// unrecoverable
+
+				break;
+
 				// Check timing?
 			case cpu_Pause_For_DMA:
 				if (dma_Held_CPU_Instr >= 42)
@@ -4100,6 +4149,11 @@ namespace GBAHawk
 								// Multiply forces the next access to be non-sequential
 								cpu_Seq_Access = false;
 							}
+							break;
+
+						case cpu_JAM:
+							// unrecoverable
+
 							break;
 					}
 

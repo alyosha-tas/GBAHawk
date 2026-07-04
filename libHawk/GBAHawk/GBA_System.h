@@ -1714,6 +1714,7 @@ namespace GBAHawk
 		const static uint16_t cpu_Internal_Halted = 45;
 		const static uint16_t cpu_Multiply_Cycles = 46;
 		const static uint16_t cpu_Pause_For_DMA = 47;
+		const static uint16_t cpu_JAM = 48;
 		
 		// Instruction Operations ARM
 		const static uint16_t cpu_ARM_AND = 0;
