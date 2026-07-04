@@ -603,6 +603,10 @@ namespace GBAHawk
 					}
 				}
 			}
+			else
+			{
+				mapper_pntr->Write_ROM_8(addr, value);
+			}
 
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
@@ -712,6 +716,10 @@ namespace GBAHawk
 					}
 				}
 			}
+			else
+			{
+				mapper_pntr->Write_ROM_16(addr, value);
+			}
 
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
@@ -818,6 +826,10 @@ namespace GBAHawk
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
 				}
+			}
+			else
+			{
+				mapper_pntr->Write_ROM_32(addr, value);
 			}
 
 			// ROM access complete, re-enable prefetcher
@@ -1289,6 +1301,10 @@ namespace GBAHawk
 					}
 				}
 			}
+			else
+			{
+				mapper_pntr->Write_ROM_16(addr, value);
+			}
 
 			// ROM access complete, re-enable prefetcher
 			pre_Inactive = false;
@@ -1390,6 +1406,10 @@ namespace GBAHawk
 						mapper_pntr->Mapper_EEPROM_Write((uint8_t)value);
 					}
 				}
+			}
+			else
+			{
+				mapper_pntr->Write_ROM_32(addr, value);
 			}
 
 			// ROM access complete, re-enable prefetcher

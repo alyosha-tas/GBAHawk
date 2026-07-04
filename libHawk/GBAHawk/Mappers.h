@@ -102,6 +102,12 @@ namespace GBAHawk
 		uint32_t Bank_State;
 		uint32_t Next_Mode;
 		uint32_t Erase_4k_Addr;
+
+		// video mapper variables
+		uint32_t Video_Bank_Start_Address;
+		uint32_t Video_ROM_Space_Address;
+		uint32_t Video_Banks_to_Map;
+		uint32_t Video_Command;
 		
 		uint64_t Next_Ready_Cycle;
 
@@ -1334,6 +1340,10 @@ namespace GBAHawk
 			saver = int_saver(Bank_State, saver);
 			saver = int_saver(Next_Mode, saver);
 			saver = int_saver(Erase_4k_Addr, saver);
+			saver = int_saver(Video_Bank_Start_Address, saver);
+			saver = int_saver(Video_ROM_Space_Address, saver);
+			saver = int_saver(Video_Banks_to_Map, saver);
+			saver = int_saver(Video_Command, saver);
 
 			saver = long_saver(Next_Ready_Cycle, saver);
 			saver = long_saver(RTC_Temp_Write, saver);
@@ -1416,7 +1426,11 @@ namespace GBAHawk
 			loader = int_loader(&Bank_State, loader);
 			loader = int_loader(&Next_Mode, loader);
 			loader = int_loader(&Erase_4k_Addr, loader);
-
+			loader = int_loader(&Video_Bank_Start_Address, loader);
+			loader = int_loader(&Video_ROM_Space_Address, loader);
+			loader = int_loader(&Video_Banks_to_Map, loader);
+			loader = int_loader(&Video_Command, loader);
+			
 			loader = long_loader(&Next_Ready_Cycle, loader);
 			loader = long_loader(&RTC_Temp_Write, loader);
 

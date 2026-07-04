@@ -4,6 +4,7 @@
 ; status
 ; name
 ; console
+; other metadta
 ; load parameters (semi-colon after each parameter, all parameters are mandatory)
 ;
 ; parameter list with allowed values
@@ -18,6 +19,7 @@
 ;		6 = EEPROM + solar sensor
 ;		7 = Flash
 ;		8 = Flash + RTC
+;		9 = GBA video
 ;
 ;sram (value depends on mapper)
 ;		none or SRAM: use 0, which for SRAM is interpretted as 0x8000

@@ -25,8 +25,6 @@ using namespace std;
 *
 *	Fix details of ppu open bus implementation
 *
-*	Fix RTC tests
-*
 *	Redo SIO implementation
 * 
 *	Fix FIFO DMA shutdown bug

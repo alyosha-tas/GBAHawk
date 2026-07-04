@@ -22,6 +22,7 @@ GBAHawk_EXPORT GBACore* GBA_create()
 GBAHawk_EXPORT void GBA_destroy(GBACore* p)
 {
 	delete p->GBA.Cart_RAM;
+	delete p->GBA.Video_ROM;
 
 	std::free(p);
 }
@@ -226,6 +227,8 @@ GBAHawk_EXPORT void GBALink_destroy(GBALinkCore* p)
 {
 	delete p->L.GBA.Cart_RAM;
 	delete p->R.GBA.Cart_RAM;
+	delete p->L.GBA.Video_ROM;
+	delete p->R.GBA.Video_ROM;
 
 	std::free(p);
 }
