@@ -1197,6 +1197,7 @@ namespace NESHawk
 		bool ppu_Sprite_Draw_Glitch;
 		bool ppu_Buffer_Fill_Go;
 		bool ppu_Buffer_Write_Go;
+		bool ppu_ALE;
 
 		uint8_t ppu_OAM_Corrupt_Addr;
 		uint8_t VRAMBuffer;
@@ -1222,6 +1223,7 @@ namespace NESHawk
 		uint16_t ppu_Next_BG_Pt_0;
 		uint16_t ppu_Next_BG_Pt_1;
 		uint16_t ppu_Old_Low_Byte;
+		uint16_t ppu_Octal_Latch;
 
 		uint32_t cpu_step, cpu_stepcounter;
 		uint32_t ppuphase;
@@ -1327,6 +1329,7 @@ namespace NESHawk
 			ppu_Next_BG_Pt_0 = 0;
 			ppu_Next_BG_Pt_1 = 0;
 			ppu_Old_Low_Byte = 0;
+			ppu_Octal_Latch = 0;
 
 			ppu_BG_Attr[0] = 0;
 			ppu_BG_Attr[1] = 0;
@@ -1360,6 +1363,7 @@ namespace NESHawk
 			ppu_Sprite_Draw_Glitch = false;
 			ppu_Buffer_Fill_Go = false;
 			ppu_Buffer_Write_Go = false;
+			ppu_ALE = false;
 
 			ppu_OAM_Corrupt_Addr = 0;
 			intensity_lsl_6 = 0;
@@ -1985,15 +1989,16 @@ namespace NESHawk
 					ppu_Commit_Read = PPUON();
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address &= 0xFF;
-						ppu_VRAM_Address |= (ppu_Get_NT_Read() & 0xFF00);
+						ppu_ALE = true;
+						ppu_VRAM_Address = ppu_Get_NT_Read();
+						ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 						ppubus_clock(ppu_VRAM_Address);
 					}
 					break;
 				case 1:
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address = ppu_Get_NT_Read();
+						ppu_VRAM_Address = (ppu_Get_NT_Read() & 0xFF00) | ppu_Octal_Latch;
 						ppu_BG_NT_Addr = ppubus_read(ppu_VRAM_Address);
 					}
 					break;
@@ -2001,15 +2006,16 @@ namespace NESHawk
 					ppu_Commit_Read = PPUON();
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address &= 0xFF;
-						ppu_VRAM_Address |= (ppu_Get_AT_Read() & 0xFF00);
+						ppu_ALE = true;
+						ppu_VRAM_Address = ppu_Get_AT_Read();
+						ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 						ppubus_clock(ppu_VRAM_Address);
 					}
 					break;
 				case 3:
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address = ppu_Get_AT_Read();
+						ppu_VRAM_Address = (ppu_Get_AT_Read() & 0xFF00) | ppu_Octal_Latch;
 
 						at = ppubus_read(ppu_VRAM_Address);
 
@@ -2025,15 +2031,16 @@ namespace NESHawk
 					ppu_Commit_Read = PPUON();
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address &= 0xFF;
-						ppu_VRAM_Address |= (get_ptread(ppu_BG_NT_Addr) & 0xFF00);
+						ppu_ALE = true;
+						ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
+						ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 						ppubus_clock(ppu_VRAM_Address);
 					}
 					break;
 				case 5:
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
+						ppu_VRAM_Address = (get_ptread(ppu_BG_NT_Addr) & 0xFF00) | ppu_Octal_Latch;
 						ppu_Next_BG_Pt_0 = ppubus_read(ppu_VRAM_Address);
 					}
 					break;
@@ -2041,16 +2048,17 @@ namespace NESHawk
 					ppu_Commit_Read = PPUON();
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address &= 0xFF;
-						ppu_VRAM_Address |= (get_ptread(ppu_BG_NT_Addr) & 0xFF00);
+						ppu_ALE = true;
+						ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
+						ppu_VRAM_Address |= 8;
+						ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 						ppubus_clock(ppu_VRAM_Address);
 					}
 					break;
 				case 7:
 					if (ppu_Commit_Read)
 					{
-						ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
-						ppu_VRAM_Address |= 8;
+						ppu_VRAM_Address = (get_ptread(ppu_BG_NT_Addr) & 0xFF00) | ppu_Octal_Latch;
 						ppu_Next_BG_Pt_1 = ppubus_read(ppu_VRAM_Address);
 					}
 					break;
@@ -2137,6 +2145,7 @@ namespace NESHawk
 			saver = bool_saver(ppu_Sprite_Draw_Glitch, saver);
 			saver = bool_saver(ppu_Buffer_Fill_Go, saver);
 			saver = bool_saver(ppu_Buffer_Write_Go, saver);
+			saver = bool_saver(ppu_ALE, saver);
 
 			saver = byte_saver(ppu_OAM_Corrupt_Addr, saver);
 			saver = byte_saver(VRAMBuffer, saver);
@@ -2160,7 +2169,7 @@ namespace NESHawk
 			saver = short_saver(ppu_Next_BG_Pt_0, saver);
 			saver = short_saver(ppu_Next_BG_Pt_1, saver);
 			saver = short_saver(ppu_Old_Low_Byte, saver);
-
+			saver = short_saver(ppu_Octal_Latch, saver);
 
 			saver = int_saver(cpu_step, saver);
 			saver = int_saver(cpu_stepcounter, saver);
@@ -2274,6 +2283,7 @@ namespace NESHawk
 			loader = bool_loader(&ppu_Sprite_Draw_Glitch, loader);
 			loader = bool_loader(&ppu_Buffer_Fill_Go, loader);
 			loader = bool_loader(&ppu_Buffer_Write_Go, loader);
+			loader = bool_loader(&ppu_ALE, loader);
 
 			loader = byte_loader(&ppu_OAM_Corrupt_Addr, loader);
 			loader = byte_loader(&VRAMBuffer, loader);
@@ -2297,6 +2307,7 @@ namespace NESHawk
 			loader = short_loader(&ppu_Next_BG_Pt_0, loader);
 			loader = short_loader(&ppu_Next_BG_Pt_1, loader);
 			loader = short_loader(&ppu_Old_Low_Byte, loader);
+			loader = short_loader(&ppu_Octal_Latch, loader);
 
 			loader = int_loader(&cpu_step, loader);
 			loader = int_loader(&cpu_stepcounter, loader);

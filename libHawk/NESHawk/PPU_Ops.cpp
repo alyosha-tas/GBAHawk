@@ -198,6 +198,13 @@ namespace NESHawk
 					ppu_VRAM_Address = ppu_Reg_v;
 					mapper_pntr->AddressPPU(ppu_Reg_v);
 				}
+
+				// unstable operation, some combination of read value and previous lower 8 bits of address bus
+				// for now this just overrides the current octal latch with the read buffer
+				if (ppu_ALE)
+				{
+					ppu_Octal_Latch = VRAMBuffer;
+				}
 			}
 
 			bool all_empty = true;

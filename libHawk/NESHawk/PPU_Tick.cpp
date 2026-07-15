@@ -499,8 +499,9 @@ namespace NESHawk
 							ppu_Commit_Read = PPUON();
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address &= 0xFF;
-								ppu_VRAM_Address |= (ppu_Get_NT_Read() & 0xFF00);
+								ppu_ALE = true;
+								ppu_VRAM_Address = ppu_Get_NT_Read();
+								ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 								ppubus_clock(ppu_VRAM_Address);
 							}
 
@@ -514,7 +515,7 @@ namespace NESHawk
 							// unused nametable read
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address = ppu_Get_NT_Read();
+								ppu_VRAM_Address = (ppu_Get_NT_Read() & 0xFF00) | ppu_Octal_Latch;
 
 								// upper bits are the old values
 								if (status_cycle == 258)
@@ -543,8 +544,9 @@ namespace NESHawk
 							ppu_Commit_Read = PPUON();
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address &= 0xFF;
-								ppu_VRAM_Address |= (ppu_Get_NT_Read() & 0xFF00);
+								ppu_ALE = true;
+								ppu_VRAM_Address = ppu_Get_NT_Read();
+								ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 								ppubus_clock(ppu_VRAM_Address);
 							}
 							
@@ -585,7 +587,7 @@ namespace NESHawk
 							// unused nametable read
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address = ppu_Get_NT_Read();
+								ppu_VRAM_Address = (ppu_Get_NT_Read() & 0xFF00) | ppu_Octal_Latch;
 								ppubus_read(ppu_VRAM_Address);
 							}
 
@@ -599,8 +601,9 @@ namespace NESHawk
 							ppu_Commit_Read = PPUON();
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address &= 0xFF;
-								ppu_VRAM_Address |= (patternAddress & 0xFF00);
+								ppu_ALE = true;
+								ppu_VRAM_Address = patternAddress;
+								ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
 								ppubus_clock(ppu_VRAM_Address);
 							}
 							read_value = (uint8_t)ppu_Sprite_Shifters[s].X;
@@ -609,7 +612,7 @@ namespace NESHawk
 						case 5:
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address = patternAddress;
+								ppu_VRAM_Address = (patternAddress & 0xFF00) | ppu_Octal_Latch;
 								ppu_Sprite_Shifters[s].Pattern_0 = ppubus_read(ppu_VRAM_Address);
 							}
 							read_value = (uint8_t)ppu_Sprite_Shifters[s].X;
@@ -620,8 +623,11 @@ namespace NESHawk
 							ppu_Commit_Read = PPUON();
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address &= 0xFF;
-								ppu_VRAM_Address |= (patternAddress & 0xFF00);
+								ppu_ALE = true;
+								ppu_VRAM_Address = patternAddress;
+								ppu_VRAM_Address |= 8;
+								ppu_Octal_Latch = ppu_VRAM_Address & 0xFF;
+
 								ppubus_clock(ppu_VRAM_Address);
 							}
 							read_value = (uint8_t)ppu_Sprite_Shifters[s].X;
@@ -630,8 +636,7 @@ namespace NESHawk
 						case 7:
 							if (ppu_Commit_Read)
 							{
-								ppu_VRAM_Address = patternAddress;
-								ppu_VRAM_Address += 8;
+								ppu_VRAM_Address = (patternAddress & 0xFF00) | ppu_Octal_Latch;
 								ppu_Sprite_Shifters[s].Pattern_1 = ppubus_read(ppu_VRAM_Address);
 							}
 							
@@ -736,6 +741,8 @@ namespace NESHawk
 			ppu_was_on = PPUON();
 
 			ppu_Run(); // note cycle ticks inside runppu
+
+			ppu_ALE = false;
 
 			status_cycle += 1;
 
