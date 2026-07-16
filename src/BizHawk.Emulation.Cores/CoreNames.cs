@@ -18,5 +18,6 @@ namespace BizHawk.Emulation.Cores
 		public const string GBHawkLink4x = "GBHawkLink4x";
 		public const string SubGBHawk = "SubGBHawk";
 		public const string SubGBAHawk = "SubGBAHawk";
+		public const string SNESHawk = "SNESHawk";
 	}
 }
