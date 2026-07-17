@@ -5,7 +5,6 @@
 #include <string>
 
 #include "SNES_System.h"
-#include "Mappers.h"
 
 // Note:
 
@@ -17,22 +16,18 @@ namespace SNESHawk
 {
 	uint8_t SNES_System::ppubus_read(uint32_t addr)
 	{
-		// clock the address bus change
-		mapper_pntr->AddressPPU(addr);
-		
-		return mapper_pntr->ReadPPU(addr);
+		return 0;
 	}
 
 	void SNES_System::ppubus_clock(uint32_t addr)
 	{
-		// clock the address bus change
-		mapper_pntr->AddressPPU(addr);
+
 	}
 
 	// debug tools peek into the ppu through this
 	uint8_t SNES_System::ppubus_peek(uint32_t addr)
 	{
-		return mapper_pntr->PeekPPU(addr);
+		return 0;
 	}
 
 	uint8_t SNES_System::read_2007()
@@ -41,9 +36,6 @@ namespace SNESHawk
 		int bus_case = 0;
 		// ordinarily we return the buffered values
 		uint8_t ret = VRAMBuffer;
-
-		// in any case, we read from the ppu bus
-		VRAMBuffer = mapper_pntr->ReadPPU(addr);
 
 		// but reads from the palette are implemented in the PPU and return immediately
 		if ((addr & 0x3F00) == 0x3F00)
@@ -59,7 +51,6 @@ namespace SNESHawk
 		if (!ppu_Is_Rendering() || !PPUON())
 		{
 			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_Reg_v);
 		}
 
 		// update open bus here
@@ -105,8 +96,6 @@ namespace SNESHawk
 		else
 		{
 			addr &= 0x3FFF;
-
-			mapper_pntr->WritePPU(addr, value);
 		}
 
 		ppu_Increment_2007(ppu_Is_Rendering() && PPUON(), ppu_Vram_Incr32);
@@ -115,7 +104,6 @@ namespace SNESHawk
 		if (!ppu_Is_Rendering() || !PPUON())
 		{
 			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_VRAM_Address);
 		}
 	}
 
@@ -152,8 +140,6 @@ namespace SNESHawk
 				addr &= 0x3FFF;
 
 				glitch_2007_addr = addr & 0xFF;
-
-				mapper_pntr->WritePPU(addr, glitch_2007_addr);
 			}
 		}
 		else
@@ -180,8 +166,6 @@ namespace SNESHawk
 				addr &= 0xFF00;
 
 				addr |= value;
-
-				mapper_pntr->WritePPU(addr, value);
 			}
 
 		}
@@ -192,7 +176,6 @@ namespace SNESHawk
 		if (!ppu_Is_Rendering() || !PPUON())
 		{
 			ppu_VRAM_Address = ppu_Reg_v;
-			mapper_pntr->AddressPPU(ppu_VRAM_Address);
 		}
 	}
 
@@ -212,7 +195,6 @@ namespace SNESHawk
 					if (!ppu_Is_Rendering() || !PPUON())
 					{
 						ppu_VRAM_Address = ppu_Reg_v;
-						mapper_pntr->AddressPPU(ppu_VRAM_Address);
 					}
 				}
 				else
@@ -247,18 +229,17 @@ namespace SNESHawk
 				if (ppu_was_on_temp && ppu_Is_Rendering() && !PPUON())
 				{
 					ppu_VRAM_Address = ppu_Reg_v;
-					mapper_pntr->AddressPPU(ppu_Reg_v);
 				}
 
 				// OAM corruption can occur at this point, keep track of the secondary OAM address here	
-				if (ppu_Is_Rendering() && !PPUON() && ppu_was_on_temp)
+				if (ppu_Is_Rendering() && !PPUON())
 				{
 					ppu_Can_Corrupt = true;					
 
 					ppu_OAM_Corrupt_Addr = soam_index & 7;
 				}
 
-				if (ppu_Is_Rendering() && PPUON() && !ppu_was_on_temp && ppu_Can_Corrupt)
+				if (ppu_Is_Rendering() && PPUON() && ppu_Can_Corrupt)
 				{
 					for (int i = 0; i < 8; i++)
 					{
@@ -303,10 +284,6 @@ namespace SNESHawk
 			PpuOpenBusDecay(DecayType_None);
 		}
 
-		if (ppu_HasClockPPU)
-		{
-			mapper_pntr->ClockPPU();
-		}
 		Total_PPU_Clock_Cycles += 1;
 	}
 }

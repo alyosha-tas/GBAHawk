@@ -10,9 +10,8 @@
 #include "SNES_System.h"
 #include "APU.h"
 #include "Memory.h"
-#include "Mappers.h"
 
-#pragma region Mapper list includes
+#pragma region coprocessor list includes
 
 #pragma endregion
 
@@ -26,7 +25,6 @@ namespace SNESHawk
 	public:
 		SNESCore() 
 		{
-			Mapper = nullptr;
 			SNES.MessageCallback = nullptr;
 			SNES.TraceCallback = nullptr;
 			SNES.HardReset();
@@ -35,125 +33,52 @@ namespace SNESHawk
 
 		SNES_System SNES;
 		APU APU;
-		Mappers* Mapper;
 
 		void Load_IPL(uint8_t* ipl)
 		{
 			std::memcpy(APU.IPL, ipl, 0x40);
 		}
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, uint32_t apu_freq, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
 		{
-			SNES.Use_APU_Test_Regs = apu_test_regs;
-			
-			SNES.CPU_Zero_Set_Reset = cpu_zero_reset;
+			SNES.APU_Frequency = apu_freq;
+			SNES.PPU_H_Pos_Reset = ppu_h_pos;		
+			SNES.PPU_V_Pos_Reset = ppu_v_pos;
+			SNES.DRAM_Refresh_Pos = dram_pos;
 
-			if (SNES.CPU_Zero_Set_Reset)
+			SNES.ROM_Length = ext_rom_size;
+
+			SNES.ROM = new uint8_t[SNES.ROM_Length];
+
+			std::memcpy(SNES.ROM, ext_rom, SNES.ROM_Length);
+
+			std::memcpy(SNES.Header, ext_header, 0x40);
+
+			uint16_t mapper_num = (SNES.Header[0x15] & 0xF);
+
+			if (mapper_num == 0)
 			{
-				SNES.cpu_FlagZset(true);
+				// Lo ROM
+				SNES.ReadMemory = &SNES_System::ReadMemory_Lo_ROM;
+				SNES.PeekMemory = &SNES_System::PeekMemory_Lo_ROM;
+				SNES.WriteMemory = &SNES_System::WriteMemory_Lo_ROM;
 			}
-
-			std::memcpy(SNES.Header, ext_header, 0x10);
-
-			uint16_t mapper_num = (SNES.Header[6] >> 4);
-
-			mapper_num |= (SNES.Header[7] & 0xF0);
-
-			SNES.ROM_Length = (uint32_t)SNES.Header[4] * 0x4000;
-
-			SNES.CHR_ROM_Length = (uint32_t)SNES.Header[5] * 0x2000;
-
-			int ofst_to_chr = SNES.ROM_Length;
-
-			if (SNES.ROM_Length == 0x4000)
+			else if (mapper_num == 1)
 			{
-				// copy to 32kb if only 16 kb present
-				SNES.ROM_Length = 0x8000;
-
-				SNES.ROM = new uint8_t[SNES.ROM_Length];
-
-				std::memcpy(SNES.ROM, ext_rom, 0x4000);
-
-				std::memcpy(SNES.ROM + 0x4000, ext_rom, 0x4000);
+				// Hi ROM
+				SNES.ReadMemory = &SNES_System::ReadMemory_Hi_ROM;
+				SNES.PeekMemory = &SNES_System::PeekMemory_Hi_ROM;
+				SNES.WriteMemory = &SNES_System::WriteMemory_Hi_ROM;
 			}
-			else
+			else if (mapper_num == 5)
 			{
-				SNES.ROM = new uint8_t[SNES.ROM_Length];
-
-				std::memcpy(SNES.ROM, ext_rom, SNES.ROM_Length);
+				// Ex Hi ROM
+				SNES.ReadMemory = &SNES_System::ReadMemory_Ex_Hi_ROM;
+				SNES.PeekMemory = &SNES_System::PeekMemory_Ex_Hi_ROM;
+				SNES.WriteMemory = &SNES_System::WriteMemory_Ex_Hi_ROM;
 			}
-
-			if (SNES.CHR_ROM_Length > 0)
-			{
-				SNES.CHR_ROM = new uint8_t[SNES.CHR_ROM_Length];
-
-				std::memcpy(SNES.CHR_ROM, ext_rom + ofst_to_chr, SNES.CHR_ROM_Length);
-			}
-
-			switch (mapper_num)
-			{
-				case 0x00: Mapper = new Mapper_NROM(); break;
-				
-				default: Mapper = new Mapper_NROM(); break;
-			}
-
-			Mapper->Mirroring = ((SNES.Header[6] & 0x1) == 1);
-
-			SNES.mapper_pntr = &Mapper[0];
-
-			Mapper->Core_Cycle_Count = &SNES.TotalExecutedCycles;
-
-			Mapper->Core_Clock_Update_Cycle = &SNES.Clock_Update_Cycle;
-
-			Mapper->Core_ROM_Length = &SNES.ROM_Length;
-
-			// default mapping
-			Mapper->Core_ROM_Base = &SNES.ROM[0];
-			Mapper->Core_CIRAM_Base = &SNES.CIRAM[0];
-
-			Mapper->Core_CHR_ROM_Length = &SNES.CHR_ROM_Length;
-
-			Mapper->Core_CHR_ROM = &SNES.CHR_ROM[0];
-
-			if (Mapper->Mirroring)
-			{
-				Mapper->Core_CIRAM[0] = &SNES.CIRAM[0];
-				Mapper->Core_CIRAM[1] = &SNES.CIRAM[0x400];
-				Mapper->Core_CIRAM[2] = &SNES.CIRAM[0];
-				Mapper->Core_CIRAM[3] = &SNES.CIRAM[0x400];
-			}
-			else
-			{
-				Mapper->Core_CIRAM[0] = &SNES.CIRAM[0];
-				Mapper->Core_CIRAM[1] = &SNES.CIRAM[0];
-				Mapper->Core_CIRAM[2] = &SNES.CIRAM[0x400];
-				Mapper->Core_CIRAM[3] = &SNES.CIRAM[0x400];
-			}
-
-			Mapper->Core_DB = &SNES.DB;
-
-			Mapper->Core_Message_String = &SNES.Message_String;
-			Mapper->MessageCallback = SNES.MessageCallback;
-
-			Mapper->Core_show_bg_new = &SNES.show_bg_new;
-			Mapper->Core_show_obj_new = &SNES.show_bg_new;
-
-			Mapper->Core_status_sl = &SNES.status_sl;
-			Mapper->Core_status_cycle = &SNES.status_cycle;
-			Mapper->Core_PPU_Phase = &SNES.ppuphase;
-			Mapper->Core_ppu_OBJ_Size_16 = &SNES.ppu_OBJ_Size_16;
-
-			Mapper->Reset();
-
-			// set MMC3 IRQ Type
-			Mapper->Old_IRQ_Type = mmc3_old_irq;
-
-			// Bus conflicts for CNROM, UxROM, AxROM
-			Mapper->Bus_Conflicts = mapper_bus_conflicts;
 
 			SNES.Cart_RAM_Length = 0;
-
-			Mapper->Core_Cart_RAM_Length = &SNES.Cart_RAM_Length;
 
 			// Only reset cycle count on initial power on, not power cycles
 			SNES.Cycle_Count = 0;
@@ -165,17 +90,6 @@ namespace SNESHawk
 			if ((mapper_num == 4) || (mapper_num == 1) || (mapper_num == 5))
 			{
 				SNES.ppu_HasClockPPU = true;
-			}
-
-			// Use alternate mirroring layout when applicable
-			if ((mapper_num == 4) && ((SNES.Header[6] & 0x8) == 0x8))
-			{
-				Mapper->Alt_Mirroring = true;
-				
-				Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
-				Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
-				Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
-				Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
 			}
 
 			SNES.Mapper_Number = mapper_num;
@@ -190,10 +104,6 @@ namespace SNESHawk
 			SNES.Cart_RAM_Length = ext_sram_size;
 
 			std::memcpy(SNES.Cart_RAM, ext_sram, ext_sram_size);
-
-			Mapper->Core_Cart_RAM = &SNES.Cart_RAM[0];
-
-			Mapper->Size_Mask = ext_sram_size - 1;
 		}
 
 		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -208,14 +118,14 @@ namespace SNESHawk
 
 		void Hard_Reset() 
 		{
-			Mapper->Reset();
+			APU.HardReset();
 			
 			SNES.HardReset();
 		}
 
 		void Soft_Reset()
 		{
-			Mapper->Reset();
+			APU.SoftReset();
 
 			SNES.cpu_SoftReset();
 			SNES.apu_SoftReset();
@@ -299,13 +209,13 @@ namespace SNESHawk
 		void SaveState(uint8_t* saver)
 		{	
 			saver = SNES.SaveState(saver);
-			saver = Mapper->SaveState(saver);
+			saver = APU.apu_SaveState(saver);
 		}
 
 		void LoadState(uint8_t* loader)
 		{
 			loader = SNES.LoadState(loader);
-			loader = Mapper->LoadState(loader);
+			loader = APU.apu_LoadState(loader);
 		}
 
 		#pragma endregion
@@ -314,21 +224,17 @@ namespace SNESHawk
 
 		uint8_t GetSysBus(uint32_t addr)
 		{
-			return SNES.PeekMemory(addr & 0xFFFF);
+			return (SNES.*SNES.PeekMemory)(addr & 0xFFFF);
 		}
 
 		uint8_t GetVRAM(uint32_t addr) 
 		{
 
-			return Mapper->VRAM[(addr & 0x7FFF)];
+			return SNES.VRAM[(addr & 0xFFFF)];
 		}
 
 		uint8_t GetCHR_ROM(uint32_t addr)
 		{
-			if (SNES.CHR_ROM_Length != 0)
-			{
-				return SNES.CHR_ROM[addr & (SNES.CHR_ROM_Length - 1)];
-			}
 
 			return 0;
 		}
@@ -465,13 +371,7 @@ namespace SNESHawk
 				case 0: return SNES.ppu_BG_Pattern_High;
 				case 1: return SNES.ppu_OBJ_Pattern_High;
 				case 2: return SNES.ppu_OBJ_Size_16;
-				case 3:
-					if (SNES.Mapper_Number == 5)
-					{
-						return Mapper->MMC5_ExRAM_Mode == 1;
-					}
-
-					return false;
+				case 3: return false;
 				default: return false;
 			}
 			
@@ -485,7 +385,7 @@ namespace SNESHawk
 
 		uint8_t Get_PPU_Board_Peek(uint32_t addr)
 		{
-			return Mapper->PeekPPU(addr);
+			return 0;
 		}
 
 		uint8_t* Get_PPU_Pointers(int sel)
@@ -495,8 +395,8 @@ namespace SNESHawk
 				case 0: return SNES.CHR_ROM; break;
 				case 1: return SNES.OAM; break;
 				case 2: return SNES.PALRAM; break;
-				case 3: return Mapper->Ex_RAM; break;
-				case 4: return Mapper->VRAM; break;
+				case 3: return 0; break;
+				case 4: return 0; break;
 			}
 
 			return nullptr;

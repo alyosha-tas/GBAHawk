@@ -75,6 +75,11 @@ namespace SNESHawk
 			cpu_Reset();
 		}
 
+		void SoftReset()
+		{
+			cpu_SoftReset();
+		}
+
 		uint8_t ReadMemory(uint32_t addr);
 
 		uint8_t ReadMemoryDMA(uint32_t addr);

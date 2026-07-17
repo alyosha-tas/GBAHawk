@@ -18,6 +18,7 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Lazy<Bitmap> GbaController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.GBA_Controller"));
 		internal static readonly Lazy<Bitmap> GbController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.GBController"));
 		internal static readonly Lazy<Bitmap> NesController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.NES_Controller"));
+		internal static readonly Lazy<Bitmap> SNesController = new Lazy<Bitmap>(() => ReadEmbeddedBitmap("ControllerImages.SNES_Controller"));
 
 		internal static readonly Bitmap Add = ReadEmbeddedBitmap("add");
 		internal static readonly Bitmap AddEdit = ReadEmbeddedBitmap("AddEdit");
@@ -154,6 +155,7 @@ namespace BizHawk.Client.GBAHawk.Properties
 		internal static readonly Bitmap Triangle = ReadEmbeddedBitmap("Triangle");
 		internal static readonly Bitmap TruncateFromFile = ReadEmbeddedBitmap("TruncateFromFile");
 		internal static readonly Bitmap TvIcon = ReadEmbeddedBitmap("tvIcon");
+		internal static readonly Icon TvIconIco = ReadEmbeddedIcon("tvIcon");
 		internal static readonly Bitmap Undo = ReadEmbeddedBitmap("undo");
 		internal static readonly Bitmap Unfreeze = ReadEmbeddedBitmap("Unfreeze");
 		internal static readonly Bitmap Profile = ReadEmbeddedBitmap("user_blue_small");

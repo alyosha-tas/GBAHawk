@@ -5,7 +5,6 @@
 #include <string>
 
 #include "SNES_System.h"
-#include "Mappers.h"
 
 // Note:
 
@@ -30,14 +29,12 @@ namespace SNESHawk
 				{
 					// here the address bus temporarily has the PT fetch address on it
 					ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
-					mapper_pntr->AddressPPU(ppu_VRAM_Address);
 				}
 
 				if (status_cycle == 1)
 				{
 					// Now Reg_v gets put onto the bus
 					ppu_VRAM_Address = ppu_Reg_v;
-					mapper_pntr->AddressPPU(ppu_VRAM_Address);
 				}
 			}
 			
@@ -70,7 +67,6 @@ namespace SNESHawk
 				else if (status_cycle == (4 + NMI_offset))
 				{
 					if (nmi_destiny) { NMI = true; }
-					mapper_pntr->AtVsyncNmi();
 				}
 			}
 
@@ -114,7 +110,6 @@ namespace SNESHawk
 						if (PPUON())
 						{
 							ppu_VRAM_Address = get_ptread(ppu_BG_NT_Addr);
-							mapper_pntr->AddressPPU(ppu_VRAM_Address);
 						}
 					}
 				}			

@@ -8,6 +8,16 @@ using System.Linq;
 
 namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 {
+	public interface ISNESGPUViewable : IEmulatorService
+	{
+		SNESGPUMemoryAreas GetMemoryAreas();
+
+		/// <summary>
+		/// calls correspond to entering hblank (maybe) and in a regular frame, the sequence of calls will be 160, 161, ..., 227, 0, ..., 159
+		/// </summary>
+		void SetScanlineCallback(Action callback, int scanline);
+	}
+
 	public class SNESGPUMemoryAreas
 	{
 		public IntPtr vram;

@@ -84,15 +84,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			public ControllerType RightController { get; set; }
 
 
-			[DisplayName("Emulate Mapper Bus Conflicts")]
-			[Description("Effects CNROM, AxROM, UxROM")]
-			[DefaultValue(true)]
-			public bool Mapper_Bus_Conflicts { get; set; }
+			[DisplayName("APU Frequency")]
+			[Description("Audio Crystal Clock")]
+			[DefaultValue(32045)]
+			public uint APU_Freq { get; set; }
 
-			[DisplayName("Activate APU Test Registers")]
-			[Description("See NESDev documentation")]
-			[DefaultValue(false)]
-			public bool Use_APU_Test_Regs { get; set; }
+			[DisplayName("PPU Initial Horizontal Position")]
+			[Description("PPU dot where CPU starts execution")]
+			[DefaultValue(506)]
+			public uint PPU_H_Pos { get; set; }
+
+			[DisplayName("PPU Initial Vertical Position")]
+			[Description("PPU scanline where CPU starts execution")]
+			[DefaultValue(0)]
+			public uint PPU_V_Pos { get; set; }
+
+			[DisplayName("DRAM Refresh Position")]
+			[Description("PPU dot where RAM refresh occurs")]
+			[DefaultValue(538)]
+			public uint DRAM_Refresh_Cycle { get; set; }
 
 			public SNESHawkSyncSettings Clone()
 			{

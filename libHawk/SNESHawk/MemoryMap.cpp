@@ -6,7 +6,6 @@
 
 #include "Memory.h"
 #include "SNES_System.h"
-#include "Mappers.h"
 
 /*
 
@@ -15,155 +14,32 @@ namespace SNESHawk
 {
 	#pragma region Memory Map
 
-	uint8_t SNES_System::ReadMemory(uint32_t addr)
+	uint8_t SNES_System::ReadMemory_Lo_ROM(uint32_t addr)
 	{		
-		uint8_t ret;
+		uint8_t ret = 0;
+		
+		return ret;
+	}
 
-		if (addr >= 0x8000)
-		{
-			// easy optimization, since rom reads are so common, move this up (reordering the rest of these else ifs is not easy)
-			ret = mapper_pntr->ReadPRG(addr - 0x8000);
-		}
-		else if (addr < 0x0800)
-		{
-			ret = RAM[addr];
-		}
-		else if (addr < 0x2000)
-		{
-			ret = RAM[addr & 0x7FF];
-		}
-		else if (addr < 0x4000)
-		{
-			ret = ppu_ReadReg(addr & 7);
-		}
-		else if (addr < 0x4020)
-		{
-			ret = ReadReg(addr);
-		}
-		else if (addr < 0x6000)
-		{
-			ret = mapper_pntr->ReadExp(addr - 0x4000);
-		}
-		else
-		{
-			ret = mapper_pntr->ReadWRAM(addr - 0x6000);
-		}
+	uint8_t SNES_System::ReadMemory_Hi_ROM(uint32_t addr)
+	{
+		uint8_t ret = 0;
 
-		if (addr != 0x4015)
-		{
-			// This register is internal to the CPU and so the external CPU data bus is disconnected when reading it.
-			// Therefore the returned value cannot be seen by external devices and the value does not affect open bus.
-			DB = ret;
-		}
+		return ret;
+	}
+
+	uint8_t SNES_System::ReadMemory_Ex_Hi_ROM(uint32_t addr)
+	{
+		uint8_t ret = 0;
 
 		return ret;
 	}
 
 	uint8_t SNES_System::ReadMemoryDMA(uint32_t addr)
 	{
-		uint8_t ret;
-		uint8_t ret2;
-
-		// if the cpu address bus in the apu register range, they are activated
-		// all unmapped memory in the range 0x4000 - 0x4FFF maps to the registers
-		// otherwise, they are inactive and DMA cannot see them
-		if ((address_bus >= 0x4000) && (address_bus <= 0x401F))
-		{
-			if (addr >= 0x8000)
-			{
-				// easy optimization, since rom reads are so common, move this up (reordering the rest of these else ifs is not easy)
-				ret = mapper_pntr->ReadPRG(addr - 0x8000);
-			}
-			else if (addr < 0x0800)
-			{
-				ret = RAM[addr];
-			}
-			else if (addr < 0x2000)
-			{
-				ret = RAM[addr & 0x7FF];
-			}
-			else if (addr < 0x4000)
-			{
-				ret = ppu_ReadReg(addr & 7);
-			}
-			else if (addr < 0x4020)
-			{
-				ret = ReadReg(addr);
-			}
-			else if (addr < 0x6000)
-			{
-				ret = mapper_pntr->ReadExp(addr - 0x4000);
-			}
-			else
-			{
-				ret = mapper_pntr->ReadWRAM(addr - 0x6000);
-			}
-
-			// don't double clock if we already read from the exact address
-			// dmc handles clocking on it's own, only read back the values
-			if ((addr & 0x1F) == 0x16)
-			{
-				ret2 = ReadReg(0x4016);
-				ret &= 0xE0;
-				ret |= (ret2 & 0x1F);
-			}
-
-			if ((addr & 0x1F) == 0x17)
-			{
-				ret2 = ReadReg(0x4017);
-				ret &= 0xE0;
-				ret |= (ret2 & 0x1F);
-			}
-
-			// when $4015 is activated, the underlying read is what updates the data bus
-			// however, the returned value is what is in $4015
-			if (addr != 0x4015)
-			{
-				DB = ret;
-			}
-
-			if ((addr & 0x1F) == 0x15)
-			{
-				ret = ReadReg(0x4015);
-			}
-		}
-		else
-		{
-			if (addr >= 0x8000)
-			{
-				// easy optimization, since rom reads are so common, move this up (reordering the rest of these else ifs is not easy)
-				ret = mapper_pntr->ReadPRG(addr - 0x8000);
-			}
-			else if (addr < 0x0800)
-			{
-				ret = RAM[addr];
-			}
-			else if (addr < 0x2000)
-			{
-				ret = RAM[addr & 0x7FF];
-			}
-			else if (addr < 0x4000)
-			{
-				ret = ppu_ReadReg(addr & 7);
-			}
-			else if (addr < 0x6000)
-			{
-				ret = mapper_pntr->ReadExp(addr - 0x4000);
-			}
-			else
-			{
-				ret = mapper_pntr->ReadWRAM(addr - 0x6000);
-			}
-
-			DB = ret;
-		}
+		uint8_t ret = 0;
 
 		return ret;
-	}
-
-	uint8_t SNES_System::DummyReadMemory(uint32_t addr)
-	{
-		return ReadMemory(addr);
 	}
 
 	void SNES_System::OnExecFetch(uint16_t addr)
@@ -171,40 +47,19 @@ namespace SNESHawk
 
 	}
 
-	void SNES_System::WriteMemory(uint32_t addr, uint8_t value)
+	void SNES_System::WriteMemory_Lo_ROM(uint32_t addr, uint8_t value)
 	{
-		address_bus = addr;
-		
-		if (addr < 0x0800)
-		{			
-			RAM[addr] = value;
-		}
-		else if (addr < 0x2000)
-		{
-			RAM[addr & 0x7FF] = value;
-		}
-		else if (addr < 0x4000)
-		{
-			ppu_WriteReg(addr & 7, value);
-		}
-		else if (addr < 0x4020)
-		{
-			WriteReg(addr, value);
-		}
-		else if (addr < 0x6000)
-		{
-			mapper_pntr->WriteExp(addr - 0x4000, value);
-		}
-		else if (addr < 0x8000)
-		{
-			mapper_pntr->WriteWRAM(addr - 0x6000, value);
-		}
-		else
-		{
-			mapper_pntr->WritePRG(addr - 0x8000, value);
-		}
 
-		DB = value;
+	}
+
+	void SNES_System::WriteMemory_Hi_ROM(uint32_t addr, uint8_t value)
+	{
+
+	}
+
+	void SNES_System::WriteMemory_Ex_Hi_ROM(uint32_t addr, uint8_t value)
+	{
+
 	}
 
 	uint8_t SNES_System::ReadReg(uint32_t addr)
@@ -272,26 +127,7 @@ namespace SNESHawk
 			case 0x4018:
 			case 0x4019:
 			case 0x401A:
-				if (Use_APU_Test_Regs)
-				{
-					if (addr == 0x4018)
-					{
-						return (uint8_t)(((apu_Pulse_1_Sample & 0xF) << 4) | (apu_Pulse_0_Sample & 0xF));
-					}
-					if (addr == 0x4019)
-					{
-						return (uint8_t)(((apu_Noise_Sample & 0xF) << 4) | (apu_Triangle_Sample & 0xF));
-					}
-					if (addr == 0x401A)
-					{
-						ret_spec = (uint8_t)(apu_DMC_Out_Deltacounter & 0x7F);
-						return (uint8_t)(apu_DMC_Out_Deltacounter & 0x7F);
-					}
-				}
-				else
-				{
-					return DB;
-				}
+				return DB;
 
 			default:
 				//Console.WriteLine("read register: {0:x4}", addr);
@@ -405,33 +241,23 @@ namespace SNESHawk
 	}
 
 
-	uint8_t SNES_System::PeekMemory(uint32_t addr)
+	uint8_t SNES_System::PeekMemory_Lo_ROM(uint32_t addr)
 	{
-		uint8_t ret;
+		uint8_t ret = 0;
 
-		addr &= 0xFFFF;
+		return ret;
+	}
 
-		if (addr >= 0x4020)
-		{
-			//easy optimization, since rom reads are so common, move this up (reordering the rest of these elseifs is not easy)
-			ret = mapper_pntr->PeekCart(addr);
-		}
-		else if (addr < 0x0800)
-		{
-			ret = RAM[addr];
-		}
-		else if (addr < 0x2000)
-		{
-			ret = RAM[addr & 0x7FF];
-		}
-		else if (addr < 0x4000)
-		{
-			ret = ppu_PeekReg(addr & 7);
-		}
-		else if (addr < 0x4020)
-		{
-			ret = PeekReg(addr); //we're not rebasing the register just to keep register names canonical
-		}
+	uint8_t SNES_System::PeekMemory_Hi_ROM(uint32_t addr)
+	{
+		uint8_t ret = 0;
+
+		return ret;
+	}
+
+	uint8_t SNES_System::PeekMemory_Ex_Hi_ROM(uint32_t addr)
+	{
+		uint8_t ret = 0;
 
 		return ret;
 	}
@@ -477,9 +303,9 @@ namespace SNESHawk
 	{
 		uint16_t ret = 0;
 
-		ret = PeekMemory(addr);
+		ret = (this->*PeekMemory)(addr);
 
-		ret |= (uint16_t)(PeekMemory(++addr) << 8);
+		ret |= (uint16_t)((this->*PeekMemory)(++addr) << 8);
 		
 		return ret;
 	}
@@ -488,7 +314,7 @@ namespace SNESHawk
 	{
 		int16_t ret = 0;
 
-		ret = (int16_t)PeekMemory(addr);
+		ret = (int16_t)(this->*PeekMemory)(addr);
 
 		if ((ret & 0x80) == 0x80)
 		{

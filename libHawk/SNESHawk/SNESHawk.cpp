@@ -32,9 +32,9 @@ SNESHawk_EXPORT void SNES_load_ipl(SNESCore* p, uint8_t* ipl)
 }
 
 // load a rom into the core
-SNESHawk_EXPORT void SNES_load(SNESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset)
+SNESHawk_EXPORT void SNES_load(SNESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, uint32_t apu_freq, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
 {
-	p->Load_ROM(rom, size, header, mmc3_old_irq, mapper_bus_conflicts, apu_test_regs, cpu_zero_reset);
+	p->Load_ROM(rom, size, header, apu_freq, ppu_h_pos, ppu_v_pos, dram_pos);
 }
 
 // Create a default SRAM
@@ -137,10 +137,6 @@ SNESHawk_EXPORT uint8_t SNES_getsysbus(SNESCore* p, uint32_t addr) {
 
 SNESHawk_EXPORT uint8_t SNES_getvram(SNESCore* p, uint32_t addr) {
 	return p->GetVRAM(addr);
-}
-
-SNESHawk_EXPORT uint8_t SNES_getchrrom(SNESCore* p, uint32_t addr) {
-	return p->GetCHR_ROM(addr);
 }
 
 SNESHawk_EXPORT uint8_t SNES_getram(SNESCore* p, uint32_t addr) {

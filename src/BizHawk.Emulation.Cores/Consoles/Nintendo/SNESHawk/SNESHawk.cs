@@ -16,7 +16,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		public byte[] IPL;
 
 		public byte[] GamePack;
-		public readonly byte[] Header = new byte[0x20];
+		public readonly byte[] Header = new byte[0x40];
 
 		public uint ROM_Length;
 		public uint CHR_ROM_Length;
@@ -25,9 +25,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public byte[] cart_RAM;
 		public bool has_bat;
-		int mapper;
 
-		bool vram_32;
+		// following header format
+		// 0 = Lo ROM
+		// 1 = Hi ROM
+		// 5 = Ex Hi ROM
+		int mapping_type = 0;
 
 		[CoreConstructor(VSystemID.Raw.SNES)]
 		public SNESHawk(CoreComm comm, GameInfo game, byte[] rom, SNESHawk.SNESHawkSettings settings, SNESHawk.SNESHawkSyncSettings syncSettings, bool subframe = false)
@@ -44,60 +47,226 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 
-			// only 16 byte header size supported
-			if ((rom.Length & 0xFF) == 0x0)
+			// do not accept headered ROMs
+			if ((rom.Length % 1024) != 0)
 			{
-				// can only load if the game is in the db
-				Build_Header(romHashMD5, romHashSHA1);
-
-				GamePack = new byte[rom.Length];
-				Buffer.BlockCopy(rom, 0, GamePack, 0, rom.Length);
+				throw new Exception("Copier Headered ROMs not allowed.");
 			}
-			else if ((rom.Length & 0xFF) == 0x10)
+
+			// undersized ROM
+			if (rom.Length < 0x8000)
 			{
-				Console.WriteLine("ines header detected");
+				throw new Exception("undersized ROM, invalid.");
+			}
 
-				if (rom.Length > 16)
+			// determine if ROM length is a power of 2, if not mirror the latter contents to get a power of 2
+			int cur_length = 0x8000;
+			int pow_2_length = 0x8000;
+
+			while (cur_length <= rom.Length)
+			{
+				pow_2_length = cur_length;
+
+				cur_length *= 2;
+			}
+
+			if (pow_2_length != rom.Length)
+			{
+				GamePack = new byte[pow_2_length * 2];
+
+				for (int i = 0; i < pow_2_length; i++)
 				{
-					GamePack = new byte[rom.Length - 0x10];
-				}
-				else
-				{
-					throw new Exception("ROM too small");
+					GamePack[i] = rom[i];
 				}
 
-				Buffer.BlockCopy(rom, 0x10, GamePack, 0, rom.Length - 0x10);
-				Buffer.BlockCopy(rom, 0, Header, 0, 0x10);
+				int j = 0;
+
+				int mirror_lim = rom.Length - pow_2_length;
+
+				while (j < pow_2_length)
+				{
+					for (int k = 0; k < mirror_lim; k++)
+					{
+						GamePack[pow_2_length + j] = rom[pow_2_length + k];
+					}
+
+					j++;
+				}
 			}
 			else
 			{
-				throw new Exception("Header size not supported");
-			}
+				GamePack = new byte[rom.Length];
 
-			has_bat = ((Header[6] & 0x04) == 0x04);
-
-			// now we have a header and rom file to send to the core
-			// still need to deal with save ram
-			if (Header[8] != 0)
-			{
-				cart_RAM = new byte[(int)(Header[8])*0x2000];
-			}
-
-			if (cart_RAM != null)
-			{
-				for (int i = 0; i < cart_RAM.Length; i++)
+				for (int i = 0; i < rom.Length; i++)
 				{
-					cart_RAM[i] = 0xFF;
+					GamePack[i] = rom[i];
 				}
 			}
 
-			ROM_Length = (uint)Header[4] * 0x4000;
+			byte[] checksum_check = new byte[GamePack.Length];
 
-			CHR_ROM_Length = (uint)Header[5] * 0x2000;
+			int checksum = 0;
+			int proposed_checksum = 0;
 
-			if (GamePack.Length != (CHR_ROM_Length + ROM_Length))
+			bool header_found = false;
+
+			// now we have a ROM we can guess the header locations and get a valid checksum for it
+			// first try lo rom
+			for (int i = 0; i < GamePack.Length; i++)
 			{
-				throw new Exception("Mismatch between file length and header info.");
+				if ((i < 0x7FDC) || (i >= 0x7DE0))
+				{
+					checksum_check[i] = rom[i];
+				}
+			}
+
+			checksum_check[0x7FDC] = 0xFF;
+			checksum_check[0x7FDD] = 0xFF;
+
+			for (int i = 0; i < GamePack.Length; i++)
+			{
+				checksum += checksum_check[i];
+			}
+
+			checksum &= 0xFFFF;
+
+			proposed_checksum = GamePack[0x7FDF] << 8;
+			proposed_checksum |= GamePack[0x7FDE];
+
+			if (proposed_checksum == checksum)
+			{
+				// check the compliment
+				checksum ^= 0xFFFF;
+
+				proposed_checksum = GamePack[0x7FDD] << 8;
+				proposed_checksum |= GamePack[0x7FDC];
+
+				if (proposed_checksum == checksum)
+				{
+					// suspect Lo ROM, check if header indeed gives this case
+					if ((GamePack[0x7FD5] & 0xF) == 0)
+					{
+						header_found = true;
+						mapping_type = 0;
+
+						Console.WriteLine("Lo ROM detected via header.");
+					}
+				}
+			}
+
+			// if the ROM is too small and we found no header, don't load
+			if ((rom.Length < 0x10000) && !header_found)
+			{
+				throw new Exception("could not locate header, unable to load");
+			}
+
+			if (!header_found)
+			{
+				// redo for Hi ROM
+				for (int i = 0; i < GamePack.Length; i++)
+				{
+					if ((i < 0xFFDC) || (i >= 0xFDE0))
+					{
+						checksum_check[i] = rom[i];
+					}
+				}
+
+				checksum_check[0xFFDC] = 0xFF;
+				checksum_check[0xFFDD] = 0xFF;
+
+				checksum_check[0xFFDE] = 0;
+				checksum_check[0xFFDF] = 0;
+
+				for (int i = 0; i < GamePack.Length; i++)
+				{
+					checksum += checksum_check[i];
+				}
+
+				checksum &= 0xFFFF;
+
+				proposed_checksum = GamePack[0xFFDF] << 8;
+				proposed_checksum |= GamePack[0xFFDE];
+
+				if (proposed_checksum == checksum)
+				{
+					// check the compliment
+					checksum ^= 0xFFFF;
+
+					proposed_checksum = GamePack[0xFFDD] << 8;
+					proposed_checksum |= GamePack[0xFFDC];
+
+					if (proposed_checksum == checksum)
+					{
+						// suspect Hi ROM, check if header indeed gives this case
+						if ((GamePack[0xFFD5] & 0xF) == 1)
+						{
+							header_found = true;
+							mapping_type = 1;
+
+							Console.WriteLine("Hi ROM detected via header.");
+						}
+					}
+				}
+			}
+
+			// if the ROM is too small and we found no header, don't load
+			if (rom.Length < 0x410000)
+			{
+				throw new Exception("could not locate header, unable to load");
+			}
+
+			if (!header_found)
+			{
+				// redo for Ex Hi ROM
+				for (int i = 0; i < GamePack.Length; i++)
+				{
+					if ((i < 0x40FFDC) || (i >= 0x40FDE0))
+					{
+						checksum_check[i] = rom[i];
+					}
+				}
+
+				checksum_check[0x40FFDC] = 0xFF;
+				checksum_check[0x40FFDD] = 0xFF;
+
+				checksum_check[0x40FFDE] = 0;
+				checksum_check[0x40FFDF] = 0;
+
+				for (int i = 0; i < GamePack.Length; i++)
+				{
+					checksum += checksum_check[i];
+				}
+
+				checksum &= 0xFFFF;
+
+				proposed_checksum = GamePack[0x40FFDF] << 8;
+				proposed_checksum |= GamePack[0x40FFDE];
+
+				if (proposed_checksum == checksum)
+				{
+					// check the compliment
+					checksum ^= 0xFFFF;
+
+					proposed_checksum = GamePack[0x40FFDD] << 8;
+					proposed_checksum |= GamePack[0x40FFDC];
+
+					if (proposed_checksum == checksum)
+					{
+						// suspect Hi ROM, check if header indeed gives this case
+						if ((GamePack[0x40FFD5] & 0xF) == 5)
+						{
+							header_found = true;
+							mapping_type = 5;
+
+							Console.WriteLine("Ex Hi ROM detected via header.");
+						}
+					}
+				}
+			}
+
+			if (!header_found)
+			{
+				throw new Exception("could not locate header, unable to load");
 			}
 
 			// Load up the APU IPL, necessary to function
@@ -111,44 +280,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			LibSNESHawk.SNES_setmessagecallback(SNES_Pntr, SNES_message);
 
-			mapper = (Header[6] >> 4);
-
-			mapper |= (Header[7] & 0xF0);
-
-			Console.WriteLine("Mapper: (ines) " + mapper);
-
-			if (mapper == 9)
-			{
-				if (ROM_Length != 128 * 1024)
-				{
-					throw new Exception("Unsupported PRG ROM Size");
-				}
-
-				if (CHR_ROM_Length != 128 * 1024)
-				{
-					throw new Exception("Unsupported CHR ROM Size");
-				}
-			}
-
-			bool bus_conflicts = SyncSettings.Mapper_Bus_Conflicts == true;
-			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
-
-			LibSNESHawk.SNES_load(SNES_Pntr, GamePack, (uint)GamePack.Length, Header, bus_conflicts, apu_test_regs);
+			LibSNESHawk.SNES_load(SNES_Pntr, GamePack, (uint)GamePack.Length, Header, SyncSettings.APU_Freq, SyncSettings.PPU_H_Pos, SyncSettings.PPU_V_Pos, SyncSettings.DRAM_Refresh_Cycle);
 
 			if (cart_RAM != null) { LibSNESHawk.SNES_create_SRAM(SNES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
 			blip_buff.SetRates(1789773, 44100);
 
 			(ServiceProvider as BasicServiceProvider).Register<ISoundProvider>(this);
-
-			if (mapper == 30)
-			{
-				vram_32 = true;
-			}
-			else
-			{
-				vram_32 = false;
-			}
 
 			SetupMemoryDomains();
 
@@ -346,63 +484,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		public void Send_Input_Callback()
 		{
 			InputCallbacks.Call();
-		}
-
-		public byte[] Get_Core_Pal_RAM()
-		{
-			byte[] pal_ram_ret = new byte[0x20];
-
-			Mem_Domains.palram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 2);
-
-			Marshal.Copy(Mem_Domains.palram, pal_ram_ret, 0, 0x20);
-
-			return pal_ram_ret;
-		}
-
-		public byte[] Get_Core_OAM_RAM()
-		{
-			byte[] oam_ram_ret = new byte[0x100];
-
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 1);
-
-			Marshal.Copy(Mem_Domains.oam, oam_ram_ret, 0, 0x100);
-
-			return oam_ram_ret;
-		}
-
-		public byte[] Get_Core_EX_RAM()
-		{
-			byte[] ex_ram_ret = new byte[0x100];
-
-			Mem_Domains.oam = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 3);
-
-			Marshal.Copy(Mem_Domains.oam, ex_ram_ret, 0, 0x400);
-
-			return ex_ram_ret;
-		}
-
-		public byte[] Get_Core_EX_CHR()
-		{
-			byte[] ex_chr_ret;
-
-			if (CHR_ROM_Length != 0)
-			{
-				ex_chr_ret = new byte[CHR_ROM_Length];
-
-				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 0);
-
-				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, (int)CHR_ROM_Length);
-			}
-			else
-			{
-				ex_chr_ret = new byte[0x400];
-
-				Mem_Domains.vram = LibSNESHawk.SNES_get_ppu_pntrs(SNES_Pntr, 4);
-
-				Marshal.Copy(Mem_Domains.vram, ex_chr_ret, 0, 0x400);
-			}
-
-			return ex_chr_ret;
 		}
 	}
 }

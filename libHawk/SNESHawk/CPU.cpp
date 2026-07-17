@@ -22,7 +22,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 							cpu_ALU_Operation();
 						}
 						break;
@@ -42,7 +42,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 							PC++;
 							cpu_ALU_Operation();
 						}
@@ -73,7 +73,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -92,7 +92,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -100,11 +100,11 @@ namespace SNESHawk
 						if (cpu_ALU_Type == ALU::PHP)
 						{
 							cpu_FlagBset(true);
-							WriteMemory((uint16_t)(S-- + 0x100), P);
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), P);
 						}
 						else
 						{
-							WriteMemory((uint16_t)(S-- + 0x100), A);
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), A);
 						}
 						break;
 
@@ -123,7 +123,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -133,7 +133,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							S++;
 						}
 						break;
@@ -147,14 +147,14 @@ namespace SNESHawk
 							if (cpu_ALU_Type == ALU::PLP)
 							{
 								my_iflag = cpu_FlagIget();
-								P = ReadMemory(address_bus);
+								P = (this->*ReadMemory)(address_bus);
 								iflag_pending = cpu_FlagIget();
 								cpu_FlagIset(my_iflag);
 								cpu_FlagTset(true); //force T always to remain true
 							}
 							else
 							{
-								A = ReadMemory(address_bus);
+								A = (this->*ReadMemory)(address_bus);
 								NZ_A();
 							}
 						}
@@ -186,16 +186,16 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 2:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
+						(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
 						break;
 
 					case 3:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC);
+						(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)PC);
 						break;
 
 					case 4:
@@ -204,7 +204,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							PC = (uint16_t)((ReadMemory(address_bus) << 8) + opcode2);
+							PC = (uint16_t)(((this->*ReadMemory)(address_bus) << 8) + opcode2);
 						}
 						break;
 
@@ -228,7 +228,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							PC = (uint16_t)((ReadMemory(address_bus) << 8) + opcode2);
+							PC = (uint16_t)(((this->*ReadMemory)(address_bus) << 8) + opcode2);
 						}
 						break;
 
@@ -256,7 +256,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{							
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -267,7 +267,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp += ReadMemory(address_bus) << 8;
+							alu_temp += (this->*ReadMemory)(address_bus) << 8;
 							PC = (uint16_t)alu_temp;
 						}
 						break;
@@ -287,7 +287,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -297,7 +297,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							S++;
 						}
 						break;
@@ -308,7 +308,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							P = ReadMemory(address_bus);
+							P = (this->*ReadMemory)(address_bus);
 							cpu_FlagTset(true); //force T always to remain true
 							S++;
 						}
@@ -321,7 +321,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							PC &= 0xFF00;
-							PC |= ReadMemory(address_bus);
+							PC |= (this->*ReadMemory)(address_bus);
 							S++;
 						}
 						break;
@@ -333,7 +333,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							PC &= 0xFF;
-							PC |= (uint16_t)(ReadMemory(address_bus) << 8);
+							PC |= (uint16_t)((this->*ReadMemory)(address_bus) << 8);
 						}
 						break;
 
@@ -352,7 +352,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -362,7 +362,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							S++;
 						}
 						break;
@@ -374,7 +374,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							PC &= 0xFF00;
-							PC |= ReadMemory(address_bus);
+							PC |= (this->*ReadMemory)(address_bus);
 							S++;
 						}
 						break;
@@ -386,7 +386,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							PC &= 0xFF;
-							PC |= (uint16_t)(ReadMemory(address_bus) << 8);
+							PC |= (uint16_t)((this->*ReadMemory)(address_bus) << 8);
 						}
 						break;
 
@@ -396,7 +396,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							PC++;
 						}
 						break;
@@ -450,7 +450,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							opcode2 = ReadMemory(address_bus);
+							opcode2 = (this->*ReadMemory)(address_bus);
 							PC++;
 
 							if (branch_taken)
@@ -479,7 +479,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							alu_temp = ((uint8_t)PC + (int8_t)opcode2);
 							PC &= 0xFF00;
 							PC |= (uint16_t)(alu_temp & 0xFF);
@@ -499,7 +499,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							if (((alu_temp & 0x80000000) == 0x80000000))
 								PC = (uint16_t)(PC - 0x100);
 							else PC = (uint16_t)(PC + 0x100);
@@ -528,7 +528,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 								cpu_ALU_Operation();
 							}
 						}
@@ -558,17 +558,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 2:
-						WriteMemory(opcode2, (uint8_t)alu_temp);
+						(this->*WriteMemory)(opcode2, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 3:
-						WriteMemory(opcode2, (uint8_t)alu_temp);
+						(this->*WriteMemory)(opcode2, (uint8_t)alu_temp);
 						break;
 
 					case 4:
@@ -593,7 +593,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 
 							if ((cpu_Instr_Type == OpT::ZPXR) || (cpu_Instr_Type == OpT::ZPXW))
 							{
@@ -614,7 +614,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 								cpu_ALU_Operation();
 							}
 						}
@@ -644,7 +644,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							opcode2 = (uint8_t)(opcode2 + X);
 						}
 						break;
@@ -655,17 +655,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 3:
-						WriteMemory(opcode2, (uint8_t)alu_temp);
+						(this->*WriteMemory)(opcode2, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 4:
-						WriteMemory(opcode2, (uint8_t)alu_temp);
+						(this->*WriteMemory)(opcode2, (uint8_t)alu_temp);
 						break;
 
 					case 5:
@@ -695,7 +695,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 								cpu_ALU_Operation();
 							}
 						}
@@ -729,17 +729,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{				
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 3:
-						WriteMemory(ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)(ea, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 4:
-						WriteMemory(ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)(ea, (uint8_t)alu_temp);
 						break;
 
 					case 5:
@@ -762,7 +762,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							alu_temp = (opcode2 + X) & 0xFF;
 						}
 						break;
@@ -773,7 +773,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea = ReadMemory(address_bus);
+							ea = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -783,7 +783,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea += (ReadMemory(address_bus) << 8);
+							ea += ((this->*ReadMemory)(address_bus) << 8);
 						}
 						break;
 
@@ -795,7 +795,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 								cpu_ALU_Operation();
 							}
 						}
@@ -824,7 +824,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							alu_temp = (opcode2 + X) & 0xFF;
 						}
 						break;
@@ -835,7 +835,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea = ReadMemory(address_bus);
+							ea = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -845,7 +845,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea += (ReadMemory(address_bus) << 8);
+							ea += ((this->*ReadMemory)(address_bus) << 8);
 						}
 						break;
 
@@ -855,17 +855,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 6:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						break;
 
 					case 7:
@@ -890,7 +890,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							opcode3 = ReadMemory(address_bus);
+							opcode3 = (this->*ReadMemory)(address_bus);
 							PC++;
 
 							if ((cpu_Instr_Type == OpT::AIXR) || (cpu_Instr_Type == OpT::AIXW))
@@ -923,13 +923,13 @@ namespace SNESHawk
 						{
 							if ((cpu_Instr_Type == OpT::AIXR) || (cpu_Instr_Type == OpT::AIYR))
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 								ea = (uint16_t)(ea + 0x100);
 							}
 							else
 							{
 								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								if (adjust)
 								{
@@ -947,7 +947,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								cpu_ALU_Operation();
 							}
@@ -978,7 +978,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							opcode3 = ReadMemory(address_bus);
+							opcode3 = (this->*ReadMemory)(address_bus);
 							PC++;
 
 							if (cpu_Instr_Type == OpT::AIXRW)
@@ -1002,7 +1002,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 
 							if (adjust)
 							{
@@ -1017,17 +1017,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 4:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						break;
 
 					case 6:
@@ -1049,7 +1049,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							opcode3 = ReadMemory(address_bus);
+							opcode3 = (this->*ReadMemory)(address_bus);
 							PC++;
 
 							if ((opcode & 0xF) == 0xC)
@@ -1076,7 +1076,7 @@ namespace SNESHawk
 							{
 								H |= (uint8_t)((ea >> 8) + 1);
 								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								if (adjust)
 								{
@@ -1094,7 +1094,7 @@ namespace SNESHawk
 							{
 								H |= (uint8_t)((ea >> 8) + 1);
 								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								if (adjust)
 								{
@@ -1112,7 +1112,7 @@ namespace SNESHawk
 							{
 								H |= (uint8_t)((ea >> 8) + 1);
 								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								if (adjust)
 								{
@@ -1130,7 +1130,7 @@ namespace SNESHawk
 							{
 								H |= (uint8_t)((ea >> 8) + 1);
 								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
+								alu_temp = (this->*ReadMemory)(address_bus);
 
 								if (adjust)
 								{
@@ -1167,7 +1167,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea = ReadMemory(address_bus);
+							ea = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1178,7 +1178,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
+							ea = ((this->*ReadMemory)(address_bus) << 8)
 								| ((alu_temp & 0xFF));
 
 							H = 0; // In preparation for SHA (indirect, X), set H to 0.
@@ -1196,7 +1196,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							ea = (uint16_t)(ea + 0x100);
 						}
 						break;
@@ -1207,7 +1207,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 							cpu_ALU_Operation();
 						}
 						break;
@@ -1231,7 +1231,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea = ReadMemory(address_bus);
+							ea = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1242,7 +1242,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
+							ea = ((this->*ReadMemory)(address_bus) << 8)
 								| ((alu_temp & 0xFF));
 
 							H = 0; // In preparation for SHA (indirect, X), set H to 0.
@@ -1257,7 +1257,7 @@ namespace SNESHawk
 						{
 							if (RDY)
 							{
-								ReadMemory(address_bus);
+								(this->*ReadMemory)(address_bus);
 								ea += (alu_temp >> 8) << 8;
 							}
 						}
@@ -1266,7 +1266,7 @@ namespace SNESHawk
 							if (RDY)
 							{
 								H |= (uint8_t)((ea >> 8) + 1);
-								ReadMemory(address_bus);
+								(this->*ReadMemory)(address_bus);
 
 								if ((alu_temp & 0x100) == 0x100)
 								{
@@ -1303,7 +1303,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ea = ReadMemory(address_bus);
+							ea = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1314,7 +1314,7 @@ namespace SNESHawk
 						if (RDY)
 						{
 							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
+							ea = ((this->*ReadMemory)(address_bus) << 8)
 								| ((alu_temp & 0xFF));
 
 							H = 0; // In preparation for SHA (indirect, X), set H to 0.
@@ -1327,7 +1327,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							ReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 							if ((alu_temp & 0x100) == 0x100)
 								ea = (uint16_t)(ea + 0x100);
 						}
@@ -1339,17 +1339,17 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
 					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						cpu_ALU_Operation();
 						break;
 
 					case 6:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 						break;
 
 					case 7:
@@ -1371,7 +1371,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							DummyReadMemory(address_bus);
+							(this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1379,7 +1379,7 @@ namespace SNESHawk
 						// IRQ / NMI push PC, reset does not
 						if (cpu_IRQ_Type < 2)
 						{
-							WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
 						}
 						else
 						{
@@ -1388,7 +1388,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								DummyReadMemory(address_bus);
+								(this->*ReadMemory)(address_bus);
 								S--;
 							}
 						}
@@ -1398,7 +1398,7 @@ namespace SNESHawk
 						// IRQ / NMI push PC, reset does not
 						if (cpu_IRQ_Type < 2)
 						{
-							WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC);
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)PC);
 						}
 						else
 						{
@@ -1407,7 +1407,7 @@ namespace SNESHawk
 
 							if (RDY)
 							{
-								DummyReadMemory(address_bus);
+								(this->*ReadMemory)(address_bus);
 								S--;
 							}
 						}
@@ -1418,14 +1418,14 @@ namespace SNESHawk
 						if (cpu_IRQ_Type == 0)
 						{
 							cpu_FlagBset(false);
-							WriteMemory((uint16_t)(S-- + 0x100), P);
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), P);
 							cpu_FlagIset(true); //is this right?
 							ea = NMIVector;
 						}
 						else if (cpu_IRQ_Type == 1)
 						{
 							cpu_FlagBset(false);
-							WriteMemory((uint16_t)(S-- + 0x100), P);
+							(this->*WriteMemory)((uint16_t)(S-- + 0x100), P);
 							cpu_FlagIset(true);
 							ea = IRQVector;
 						}
@@ -1437,7 +1437,7 @@ namespace SNESHawk
 							if (RDY)
 							{
 								ea = ResetVector;
-								DummyReadMemory(address_bus);
+								(this->*ReadMemory)(address_bus);
 								S--;
 								cpu_FlagIset(true);
 							}
@@ -1455,7 +1455,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1465,7 +1465,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp += ReadMemory(address_bus) << 8;
+							alu_temp += (this->*ReadMemory)(address_bus) << 8;
 							PC = (uint16_t)alu_temp;
 						}
 						break;
@@ -1484,16 +1484,16 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
+						(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
 						break;
 
 					case 2:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC);
+						(this->*WriteMemory)((uint16_t)(S-- + 0x100), (uint8_t)PC);
 						break;
 
 					case 3:
 						cpu_FlagBset(true);
-						WriteMemory((uint16_t)(S-- + 0x100), P);
+						(this->*WriteMemory)((uint16_t)(S-- + 0x100), P);
 						cpu_FlagIset(true);
 						ea = BRKVector;
 						break;
@@ -1509,7 +1509,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{	
-							alu_temp = ReadMemory(address_bus);
+							alu_temp = (this->*ReadMemory)(address_bus);
 						}
 						break;
 
@@ -1519,7 +1519,7 @@ namespace SNESHawk
 
 						if (RDY)
 						{
-							alu_temp += ReadMemory(address_bus) << 8;
+							alu_temp += (this->*ReadMemory)(address_bus) << 8;
 							PC = (uint16_t)alu_temp;
 						}
 						break;
@@ -1945,40 +1945,40 @@ namespace SNESHawk
 		switch (cpu_ALU_Type)
 		{
 			case ALU::STA:
-				WriteMemory((uint16_t)ea, A);
+				(this->*WriteMemory)((uint16_t)ea, A);
 				break;
 
 			case ALU::STY:
-				WriteMemory((uint16_t)ea, Y);
+				(this->*WriteMemory)((uint16_t)ea, Y);
 				break;
 
 			case ALU::STX:
-				WriteMemory((uint16_t)ea, X);
+				(this->*WriteMemory)((uint16_t)ea, X);
 				break;
 
 			case ALU::SAX:
 				alu_temp = A & X;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+				(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 				break;
 
 			case ALU::SHA:
 				alu_temp = A & X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+				(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 				break;
 
 			case ALU::SHX:
 				alu_temp = X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+				(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 				break;
 
 			case ALU::SHY:
 				alu_temp = Y & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+				(this->*WriteMemory)((uint16_t)ea, (uint8_t)alu_temp);
 				break;
 
 			case ALU::SHS:
 				S = (uint8_t)(X & A);
-				WriteMemory((uint16_t)ea, (uint8_t)(S & H));
+				(this->*WriteMemory)((uint16_t)ea, (uint8_t)(S & H));
 				break;
 		}
 	}
@@ -2103,7 +2103,7 @@ namespace SNESHawk
 			branch_irq_hack = false;
 			OnExecFetch(PC);
 			if (TraceCallback) TraceCallback(0);
-			opcode = ReadMemory(address_bus);
+			opcode = (this->*ReadMemory)(address_bus);
 			PC++;
 			cpu_Decode(opcode);
 		}
@@ -2119,7 +2119,7 @@ namespace SNESHawk
 
 		if (RDY)
 		{
-			DummyReadMemory(address_bus);
+			(this->*ReadMemory)(address_bus);
 			cpu_Instr_Type = OpT::INT;
 		}
 	}
@@ -2131,7 +2131,7 @@ namespace SNESHawk
 
 		if (RDY)
 		{
-			opcode2 = ReadMemory(address_bus);
+			opcode2 = (this->*ReadMemory)(address_bus);
 			PC++;
 		}
 	}
@@ -2143,7 +2143,7 @@ namespace SNESHawk
 
 		if (RDY)
 		{
-			opcode3 = ReadMemory(address_bus);
+			opcode3 = (this->*ReadMemory)(address_bus);
 			PC++;
 		}
 	}

@@ -6,7 +6,6 @@
 
 #include "Memory.h"
 #include "SNES_System.h"
-#include "Mappers.h"
 
 /*
 *	How are consecutive writes on apu handled, do old or new values win?
@@ -43,7 +42,6 @@ namespace SNESHawk
 
 			if (reset_cycle == FrameCycle)
 			{
-				mapper_pntr->Reset();
 				HardReset();
 				return true;
 			}
@@ -81,46 +79,16 @@ namespace SNESHawk
 			video_buffer[i] = startup_color;
 		}
 
-		// matches my SNES from test rom
-		// relevant games: Cybernoid; Minna no Taabou no Nakayoshi Daisakusen; Huang Di; and maybe mechanized attack
-		// last boss of Time Lord
-		for (int i = 0; i < 0x8; i++)
+		// need to test
+		for (int i = 0; i < 0x20000; i++)
 		{
-			for (int j = 0; j < 256; j++)
-			{
-				RAM[i * 0x100 + j] = RAM_Start_Up[j];
-			}		
+			RAM[i] = 0;		
 		}
 
-		for (int i = 0; i < 0x8; i++)
+		for (int i = 0; i < 0x10000; i++)
 		{
-			for (int j = 0; j < 256; j++)
-			{
-				CIRAM[i * 0x100 + j] = RAM_Start_Up[j];
-			}
+			VRAM[i] = 0;
 		}
-
-		// some boards cannot have specific values in RAM upon initialization
-		// Let's hard code those cases here
-		// these will be defined through the gameDB exclusively for now.
-		/*
-		if (hash is RomChecksums.CamericaGolden5 or RomChecksums.CamericaGolden5Overdump or RomChecksums.CamericaPegasus4in1)
-		{
-			RAM[0x701] = 0xFF;
-		}
-		else if (hash == RomChecksums.DancingBlocks)
-		{
-			RAM[0xEC] = 0;
-			RAM[0xED] = 0;
-		}
-		else if (hash == RomChecksums.SilvaSaga || hash == RomChecksums.Fam_Jump_II)
-		{
-			for (int i = 0; i < Board.Wram.Length; i++)
-			{
-				Board.Wram[i] = 0xFF;
-			}
-		}
-		*/
 	}
 
 	void SNES_System::Single_Step()
@@ -173,7 +141,7 @@ namespace SNESHawk
 				}
 				else
 				{
-					WriteMemory(0x2004, oam_dma_byte);
+					(this->*WriteMemory)(0x2004, oam_dma_byte);
 				}
 				oam_dma_index++;
 				if (oam_dma_index == 512)
@@ -297,7 +265,7 @@ namespace SNESHawk
 			
 		_irq_apu = apu_Sequencer_IRQ || apu_DMC_IRQ;
 
-		IRQ = _irq_apu || mapper_pntr->IrqSignal();
+		IRQ = _irq_apu;
 
 		ExecuteOne();
 
@@ -313,11 +281,8 @@ namespace SNESHawk
 
 		apu_Len_Clock_Active = false;
 
-		mapper_pntr->ClockCPU();
-
 		// Get an audio sample and mix in any external audio sources
 		int32_t s = apu_EmitSample();
-		s += mapper_pntr->Cart_Audio_Output;
 
 		if (s != old_s)
 		{

@@ -24,7 +24,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public static extern int SNES_load_ipl(IntPtr core, byte[] bios);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, bool bus_conflicts, bool apu_test_regs);
+		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, uint apu_freq, uint ppu_h_pos, uint ppu_v_pos, uint dram_pos);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int SNES_create_SRAM(IntPtr core, byte[] sram_data, uint length);
@@ -84,9 +84,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern byte SNES_getvram(IntPtr core, int addr);
-
-		[DllImport(lib, CallingConvention = cc)]
-		public static extern byte SNES_getchrrom(IntPtr core, int addr);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern byte SNES_getram(IntPtr core, int addr);

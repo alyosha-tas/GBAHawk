@@ -66,40 +66,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					1)
 			};
 
-			if (CHR_ROM_Length != 0)
-			{
-				var CartVRom = new MemoryDomainDelegate(
-					"CHR ROM",
-					CHR_ROM_Length,
-					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getchrrom(SNES_Pntr, (int)(addr & (CHR_ROM_Length - 1))),
-					(addr, value) => { },
-					1);
-				domains.Add(CartVRom);
-			}
-			else if (vram_32)
-			{
-				var CartVRam = new MemoryDomainDelegate(
-					"CHR RAM",
-					0x8000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getvram(SNES_Pntr, (int)(addr & 0x7FFF)),
-					(addr, value) => { },
-					1);
-				domains.Add(CartVRam);
-			}
-			else
-			{
-				var CartVRam = new MemoryDomainDelegate(
-					"CHR RAM",
-					0x2000,
-					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getvram(SNES_Pntr, (int)(addr & 0x1FFF)),
-					(addr, value) => { },
-					1);
-				domains.Add(CartVRam);
-			}
-
 			if (cart_RAM != null)
 			{
 				var CartRam = new MemoryDomainDelegate(
