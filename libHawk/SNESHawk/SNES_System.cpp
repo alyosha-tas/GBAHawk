@@ -141,7 +141,7 @@ namespace SNESHawk
 				}
 				else
 				{
-					(this->*WriteMemory)(0x2004, oam_dma_byte);
+					WriteMemory(0x2004, oam_dma_byte);
 				}
 				oam_dma_index++;
 				if (oam_dma_index == 512)

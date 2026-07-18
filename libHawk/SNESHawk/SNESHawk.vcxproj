@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
+    <ClInclude Include="Mappers.h" />
     <ClInclude Include="SNESHawk.h" />
     <ClInclude Include="SNES_System.h" />
     <ClInclude Include="APU.h" />

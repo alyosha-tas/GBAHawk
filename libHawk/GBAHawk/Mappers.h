@@ -1474,7 +1474,7 @@ namespace GBAHawk
 			return 0xFFFFFFFF; // nothing mapped here
 		}
 
-		uint8_t PeekMemory(uint32_t addr)
+		uint8_t Peek_Memory(uint32_t addr)
 		{
 			return Read_Memory_8(addr);
 		}
@@ -1575,7 +1575,7 @@ namespace GBAHawk
 			return 0xFFFFFFFF; // nothing mapped here
 		}
 
-		uint8_t PeekMemory(uint32_t addr)
+		uint8_t Peek_Memory(uint32_t addr)
 		{
 			return Read_Memory_8(addr);
 		}

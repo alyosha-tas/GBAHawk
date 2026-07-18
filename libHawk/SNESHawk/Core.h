@@ -10,6 +10,7 @@
 #include "SNES_System.h"
 #include "APU.h"
 #include "Memory.h"
+#include "Mappers.h"
 
 #pragma region coprocessor list includes
 
@@ -32,6 +33,7 @@ namespace SNESHawk
 		};
 
 		SNES_System SNES;
+		Mappers* Mapper;
 		APU APU;
 
 		void Load_IPL(uint8_t* ipl)
@@ -59,23 +61,17 @@ namespace SNESHawk
 			if (mapper_num == 0)
 			{
 				// Lo ROM
-				SNES.ReadMemory = &SNES_System::ReadMemory_Lo_ROM;
-				SNES.PeekMemory = &SNES_System::PeekMemory_Lo_ROM;
-				SNES.WriteMemory = &SNES_System::WriteMemory_Lo_ROM;
+
 			}
 			else if (mapper_num == 1)
 			{
 				// Hi ROM
-				SNES.ReadMemory = &SNES_System::ReadMemory_Hi_ROM;
-				SNES.PeekMemory = &SNES_System::PeekMemory_Hi_ROM;
-				SNES.WriteMemory = &SNES_System::WriteMemory_Hi_ROM;
+
 			}
 			else if (mapper_num == 5)
 			{
 				// Ex Hi ROM
-				SNES.ReadMemory = &SNES_System::ReadMemory_Ex_Hi_ROM;
-				SNES.PeekMemory = &SNES_System::PeekMemory_Ex_Hi_ROM;
-				SNES.WriteMemory = &SNES_System::WriteMemory_Ex_Hi_ROM;
+
 			}
 
 			SNES.Cart_RAM_Length = 0;
@@ -224,7 +220,7 @@ namespace SNESHawk
 
 		uint8_t GetSysBus(uint32_t addr)
 		{
-			return (SNES.*SNES.PeekMemory)(addr & 0xFFFF);
+			return SNES.PeekMemory(addr & 0xFFFF);
 		}
 
 		uint8_t GetVRAM(uint32_t addr) 

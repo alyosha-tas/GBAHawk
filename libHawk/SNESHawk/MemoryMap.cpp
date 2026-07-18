@@ -14,24 +14,10 @@ namespace SNESHawk
 {
 	#pragma region Memory Map
 
-	uint8_t SNES_System::ReadMemory_Lo_ROM(uint32_t addr)
+	uint8_t SNES_System::ReadMemory(uint32_t addr)
 	{		
 		uint8_t ret = 0;
 		
-		return ret;
-	}
-
-	uint8_t SNES_System::ReadMemory_Hi_ROM(uint32_t addr)
-	{
-		uint8_t ret = 0;
-
-		return ret;
-	}
-
-	uint8_t SNES_System::ReadMemory_Ex_Hi_ROM(uint32_t addr)
-	{
-		uint8_t ret = 0;
-
 		return ret;
 	}
 
@@ -47,17 +33,7 @@ namespace SNESHawk
 
 	}
 
-	void SNES_System::WriteMemory_Lo_ROM(uint32_t addr, uint8_t value)
-	{
-
-	}
-
-	void SNES_System::WriteMemory_Hi_ROM(uint32_t addr, uint8_t value)
-	{
-
-	}
-
-	void SNES_System::WriteMemory_Ex_Hi_ROM(uint32_t addr, uint8_t value)
+	void SNES_System::WriteMemory(uint32_t addr, uint8_t value)
 	{
 
 	}
@@ -241,21 +217,7 @@ namespace SNESHawk
 	}
 
 
-	uint8_t SNES_System::PeekMemory_Lo_ROM(uint32_t addr)
-	{
-		uint8_t ret = 0;
-
-		return ret;
-	}
-
-	uint8_t SNES_System::PeekMemory_Hi_ROM(uint32_t addr)
-	{
-		uint8_t ret = 0;
-
-		return ret;
-	}
-
-	uint8_t SNES_System::PeekMemory_Ex_Hi_ROM(uint32_t addr)
+	uint8_t SNES_System::PeekMemory(uint32_t addr)
 	{
 		uint8_t ret = 0;
 
@@ -303,9 +265,9 @@ namespace SNESHawk
 	{
 		uint16_t ret = 0;
 
-		ret = (this->*PeekMemory)(addr);
+		ret = PeekMemory(addr);
 
-		ret |= (uint16_t)((this->*PeekMemory)(++addr) << 8);
+		ret |= (uint16_t)(PeekMemory(++addr) << 8);
 		
 		return ret;
 	}
@@ -314,7 +276,7 @@ namespace SNESHawk
 	{
 		int16_t ret = 0;
 
-		ret = (int16_t)(this->*PeekMemory)(addr);
+		ret = (int16_t)PeekMemory(addr);
 
 		if ((ret & 0x80) == 0x80)
 		{
