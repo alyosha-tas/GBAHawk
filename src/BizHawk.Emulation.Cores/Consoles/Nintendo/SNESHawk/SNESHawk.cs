@@ -290,7 +290,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			}
 
 			// Use header to choose SRAM size
+			int sram_len = (1 << Header[0x18]) * 1024;
 
+			// assume minimum is 2kb
+			if (sram_len < 0x800)
+			{
+				sram_len = 0;
+			}
+
+			if (sram_len > 0)
+			{
+				cart_RAM = new byte[sram_len];
+			}
 
 			// Load up the APU IPL, necessary to function
 			IPL = comm.CoreFileProvider.GetFirmwareOrThrow(new("SNES", "IPL"), "IPL Not Found, Cannot Load");

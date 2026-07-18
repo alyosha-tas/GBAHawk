@@ -6,6 +6,7 @@
 
 #include "Memory.h"
 #include "SNES_System.h"
+#include "Mappers.h"
 
 /*
 
@@ -17,6 +18,19 @@ namespace SNESHawk
 	uint8_t SNES_System::ReadMemory(uint32_t addr)
 	{		
 		uint8_t ret = 0;
+		
+		if ((addr & 0x8000) == 0x8000)
+		{
+			ret = mapper_pntr->Read_Memory_High(addr);
+		}
+		else if ((addr & 0x400000) == 0)
+		{
+			ret = ReadReg(addr);
+		}
+		else
+		{
+			ret = mapper_pntr->Read_Memory_Low(addr);
+		}
 		
 		return ret;
 	}
@@ -35,7 +49,18 @@ namespace SNESHawk
 
 	void SNES_System::WriteMemory(uint32_t addr, uint8_t value)
 	{
-
+		if ((addr & 0x8000) == 0x8000)
+		{
+			mapper_pntr->Write_Memory_High(addr, value);
+		}
+		else if ((addr & 0x400000) == 0)
+		{
+			WriteReg(addr, value);
+		}
+		else
+		{
+			mapper_pntr->Write_Memory_Low(addr, value);
+		}
 	}
 
 	uint8_t SNES_System::ReadReg(uint32_t addr)
@@ -43,67 +68,6 @@ namespace SNESHawk
 		uint8_t ret_spec;
 		switch (addr)
 		{
-			case 0x4000:
-			case 0x4001:
-			case 0x4002:
-			case 0x4003:
-			case 0x4004:
-			case 0x4005:
-			case 0x4006:
-			case 0x4007:
-			case 0x4008:
-			case 0x4009:
-			case 0x400A:
-			case 0x400B:
-			case 0x400C:
-			case 0x400D:
-			case 0x400E:
-			case 0x400F:
-			case 0x4010:
-			case 0x4011:
-			case 0x4012:
-			case 0x4013:
-				return DB;
-				//return apu.ReadReg(addr);
-			case 0x4014: /*OAM DMA*/ break;
-			case 0x4015: return (uint8_t)((uint8_t)(apu_ReadReg(addr) & 0xDF) + (uint8_t)(DB & 0x20));
-			case 0x4016:
-				// don't clock controllers from reads on consectuive cycles
-				// this includes from DMC DMA
-				if ((TotalExecutedCycles != (Last_Controller_Poll_1 + 1)) && (TotalExecutedCycles != Last_Controller_Poll_1))
-				{
-					ret_spec = read_joyport(addr);
-					Previous_Controller_Latch_1 = ret_spec;
-				}
-				else
-				{
-					ret_spec = Previous_Controller_Latch_1;
-				}
-
-				Last_Controller_Poll_1 = TotalExecutedCycles;
-
-				return ret_spec;
-
-			case 0x4017:
-				// don't clock controllers from reads on consectuive cycles
-				if ((TotalExecutedCycles != (Last_Controller_Poll_2 + 1)) && (TotalExecutedCycles != Last_Controller_Poll_2))
-				{
-					ret_spec = read_joyport(addr);
-					Previous_Controller_Latch_2 = ret_spec;
-				}
-				else
-				{
-					ret_spec = Previous_Controller_Latch_2;
-				}
-
-				Last_Controller_Poll_2 = TotalExecutedCycles;
-
-				return ret_spec;
-
-			case 0x4018:
-			case 0x4019:
-			case 0x401A:
-				return DB;
 
 			default:
 				//Console.WriteLine("read register: {0:x4}", addr);
@@ -128,63 +92,7 @@ namespace SNESHawk
 	{
 		switch (addr)
 		{
-			case 0x4000:
-			case 0x4001:
-			case 0x4002:
-			case 0x4003:
-			case 0x4004:
-			case 0x4005:
-			case 0x4006:
-			case 0x4007:
-			case 0x4008:
-			case 0x4009:
-			case 0x400A:
-			case 0x400B:
-			case 0x400C:
-			case 0x400D:
-			case 0x400E:
-			case 0x400F:
-			case 0x4010:
-			case 0x4011:
-			case 0x4012:
-			case 0x4013:
-				apu_WriteReg(addr, val);
-				break;
-			case 0x4014:
-				//schedule a sprite dma event for beginning 1 cycle in the future.
-				//this receives 2 because that's just the way it works out.
-				oam_dma_addr = (uint16_t)(val << 8);
-				sprdma_countdown = 1;
 
-				if (sprdma_countdown > 0)
-				{
-					sprdma_countdown--;
-					if (sprdma_countdown == 0)
-					{
-						if (!apu_Get_Cycle)
-						{
-							cpu_deadcounter = 2;
-						}
-						else
-						{
-							cpu_deadcounter = 1;
-						}
-						OAM_DMA_Exec = true;
-
-						if (TraceCallback) TraceCallback(3);
-
-						RDY = false;
-						oam_dma_index = 0;
-					}
-				}
-				break;
-			case 0x4015: apu_WriteReg(addr, val); break;
-			case 0x4016:
-				//write_joyport(val);
-				Controller_Strobed = true;
-				Controller_Strobed_Value = val;
-				break;
-			case 0x4017: apu_WriteReg(addr, val); break;
 			default:
 				//Console.WriteLine("wrote register: {0:x4} = {1:x2}", addr, val);
 				break;
@@ -221,6 +129,19 @@ namespace SNESHawk
 	{
 		uint8_t ret = 0;
 
+		if ((addr & 0x8000) == 0x8000)
+		{
+			ret = mapper_pntr->Peek_Memory_High(addr);
+		}
+		else if ((addr & 0x400000) == 0)
+		{
+			ret = PeekReg(addr);
+		}
+		else
+		{
+			ret = mapper_pntr->Peek_Memory_Low(addr);
+		}
+
 		return ret;
 	}
 
@@ -228,32 +149,7 @@ namespace SNESHawk
 	{
 		switch (addr)
 		{
-			case 0x4000:
-			case 0x4001:
-			case 0x4002:
-			case 0x4003:
-			case 0x4004:
-			case 0x4005:
-			case 0x4006:
-			case 0x4007:
-			case 0x4008:
-			case 0x4009:
-			case 0x400A:
-			case 0x400B:
-			case 0x400C:
-			case 0x400D:
-			case 0x400E:
-			case 0x400F:
-			case 0x4010:
-			case 0x4011:
-			case 0x4012:
-			case 0x4013:
-				return apu_PeekReg(addr);
-			case 0x4014: /*OAM DMA*/ break;
-			case 0x4015: return apu_PeekReg(addr);
-			case 0x4016:
-			case 0x4017:
-				return peek_joyport(addr);
+
 			default:
 				//Console.WriteLine("read register: {0:x4}", addr);
 				break;

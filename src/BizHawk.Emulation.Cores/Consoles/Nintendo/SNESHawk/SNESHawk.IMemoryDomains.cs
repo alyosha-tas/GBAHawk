@@ -40,7 +40,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					"ROM",
 					ROM_Length,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getrom(SNES_Pntr, (int)(addr & (ROM_Length - 1))),
+					addr => GamePack[addr & (ROM_Length - 1)],
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
@@ -66,9 +66,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					1),
 				new MemoryDomainDelegate(
 					"System Bus",
-					0x10000,
+					0x1000000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibSNESHawk.SNES_getsysbus(SNES_Pntr, (int)(addr & 0xFFFF)),
+					(addr) => LibSNESHawk.SNES_getsysbus(SNES_Pntr, (int)(addr & 0xFFFFFF)),
 					(addr, value) => { },
 					1)
 			};

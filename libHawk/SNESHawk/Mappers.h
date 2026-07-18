@@ -22,8 +22,7 @@ namespace SNESHawk
 		// not stated, initialized with power on
 		bool Reset_RTC;
 		bool RTC_Functional;
-		bool Solar_Functional;
-		uint8_t ROM_C4, ROM_C5, ROM_C6, ROM_C7, ROM_C8, ROM_C9;
+
 		int16_t EEPROM_Offset;
 		int16_t Flash_Write_Offset;
 		int32_t Flash_Sector_Erase_Offset;
@@ -31,6 +30,9 @@ namespace SNESHawk
 
 		uint16_t Flash_Type_64_Value;
 		uint16_t Flash_Type_128_Value;
+
+		uint32_t Core_ROM_Length;
+		uint32_t Core_Cart_RAM_Length;
 
 		// stated
 		bool Command_Mode;
@@ -77,8 +79,6 @@ namespace SNESHawk
 
 		uint8_t Reg_Year, Reg_Month, Reg_Day, Reg_Week, Reg_Hour, Reg_Minute, Reg_Second;
 
-		uint16_t Solar_Clock_Count, Gyro_Clock_Count;
-
 		uint32_t Size_Mask;
 		uint32_t Bit_Offset, Bit_Read;
 		uint32_t Access_Address;
@@ -107,25 +107,22 @@ namespace SNESHawk
 		uint32_t Video_Banks_to_Map;
 		uint32_t Video_Command;
 
+
 		uint64_t Next_Ready_Cycle;
 
 		uint64_t RTC_Temp_Write;
+
+		uint8_t* Core_DB = nullptr;
+
+		uint8_t* Core_ROM = nullptr;
+
+		uint8_t* Core_RAM = nullptr;
 
 		uint64_t* Core_Cycle_Count = nullptr;
 
 		uint64_t* Core_Clock_Update_Cycle = nullptr;
 
-		uint16_t* Core_Acc_X = nullptr;
-
-		uint16_t* Core_Acc_Y = nullptr;
-
-		uint8_t* Core_Solar = nullptr;
-
-		uint8_t* Cart_RAM = nullptr;
-
-		uint8_t* Core_Pointers_Read[512] = { };
-
-		uint8_t* Core_Pointers_Write[512] = { };
+		uint8_t* Core_Cart_RAM = nullptr;
 
 		string* Core_Message_String = nullptr;
 
@@ -175,6 +172,10 @@ namespace SNESHawk
 		}
 
 		virtual void Update_State()
+		{
+		}
+
+		virtual void Set_Pointers()
 		{
 		}
 
@@ -236,9 +237,6 @@ namespace SNESHawk
 			saver = byte_saver(Reg_Second, saver);
 			saver = byte_saver(CTRL_Reg_Commit, saver);
 			saver = byte_saver(CTRL_Reg_Latch, saver);
-
-			saver = short_saver(Solar_Clock_Count, saver);
-			saver = short_saver(Gyro_Clock_Count, saver);
 
 			saver = int_saver(Size_Mask, saver);
 			saver = int_saver(Bit_Offset, saver);
@@ -316,9 +314,6 @@ namespace SNESHawk
 			loader = byte_loader(&CTRL_Reg_Commit, loader);
 			loader = byte_loader(&CTRL_Reg_Latch, loader);
 
-			loader = short_loader(&Solar_Clock_Count, loader);
-			loader = short_loader(&Gyro_Clock_Count, loader);
-
 			loader = int_loader(&Size_Mask, loader);
 			loader = int_loader(&Bit_Offset, loader);
 			loader = int_loader(&Bit_Read, loader);
@@ -357,12 +352,27 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_High(uint32_t addr)
 		{	
-			return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+			uint32_t eff_addr = 0;
+
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				return Core_RAM[addr & 0x1FFFF];
+			}
+			else
+			{
+				eff_addr = addr & 0x7FFF;
+				eff_addr |= ((addr & 0x7F0000) >> 1);
+
+				return Core_ROM[eff_addr];
+			}
 		}
 
 		void Write_Memory_High(uint32_t addr, uint8_t value)
 		{
-			Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				Core_RAM[addr & 0x1FFFF] = value;
+			}
 		}
 
 		uint8_t Peek_Memory_High(uint32_t addr)
@@ -372,37 +382,48 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_Low(uint32_t addr)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
+			uint32_t eff_addr = 0;
 			
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+				return Core_RAM[addr & 0x1FFFF];
 			}
-			else if ((base >= 0x70) && (base < 0x7E))
+			else if ((addr & 0xF00000) == 0x700000)
 			{
-				// SRAM if applicable
-				return 0;
+				if (Core_Cart_RAM_Length != 0)
+				{
+					return Core_Cart_RAM[addr & (Core_Cart_RAM_Length - 1)];
+				}
+				else
+				{
+					eff_addr = addr & 0x7FFF;
+					eff_addr |= ((addr & 0x7F0000) >> 1);
+
+					return Core_ROM[eff_addr];
+				}
 			}
 			else
 			{
-				return 0;
+				// dependent on presence of SRAM?
+				eff_addr = addr & 0x7FFF;
+				eff_addr |= ((addr & 0x7F0000) >> 1);
+
+				return Core_ROM[eff_addr];
 			}
 		}
 
 		void Write_Memory_Low(uint32_t addr, uint8_t value)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
-
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+				Core_RAM[addr & 0x1FFFF] = value;
 			}
-			else if ((base >= 0x70) && (base < 0x7E))
+			else if ((addr & 0xF00000) == 0x700000)
 			{
-				// SRAM if applicable
-
+				if (Core_Cart_RAM_Length != 0)
+				{
+					Core_Cart_RAM[addr & (Core_Cart_RAM_Length - 1)] = value;
+				}
 			}
 		}
 
@@ -427,12 +448,22 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_High(uint32_t addr)
 		{
-			return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				return Core_RAM[addr & 0x1FFFF];
+			}
+			else
+			{
+				return Core_ROM[addr & 0x3FFFFF];
+			}
 		}
 
 		void Write_Memory_High(uint32_t addr, uint8_t value)
 		{
-			Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				Core_RAM[addr & 0x1FFFF] = value;
+			}
 		}
 
 		uint8_t Peek_Memory_High(uint32_t addr)
@@ -442,37 +473,21 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_Low(uint32_t addr)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
-
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
-			}
-			else if ((base >= 0x70) && (base < 0x7E))
-			{
-				// SRAM if applicable
-				return 0;
+				return Core_RAM[addr & 0x1FFFF];
 			}
 			else
 			{
-				return 0;
+				return Core_ROM[addr & 0x3FFFFF];
 			}
 		}
 
 		void Write_Memory_Low(uint32_t addr, uint8_t value)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
-
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
-			}
-			else if ((base >= 0x70) && (base < 0x7E))
-			{
-				// SRAM if applicable
-
+				Core_RAM[addr & 0x1FFFF] = value;
 			}
 		}
 
@@ -497,12 +512,27 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_High(uint32_t addr)
 		{
-			return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+			uint32_t eff_addr = 0;
+
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				return Core_RAM[addr & 0x1FFFF];
+			}
+			else
+			{
+				eff_addr = addr & 0x3FFFFF;
+				eff_addr |= ((addr & 0x800000) >> 1);
+
+				return Core_ROM[eff_addr];
+			}
 		}
 
 		void Write_Memory_High(uint32_t addr, uint8_t value)
 		{
-			Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
+			{
+				Core_RAM[addr & 0x1FFFF] = value;
+			}
 		}
 
 		uint8_t Peek_Memory_High(uint32_t addr)
@@ -512,37 +542,26 @@ namespace SNESHawk
 
 		uint8_t Read_Memory_Low(uint32_t addr)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
+			uint32_t eff_addr = 0;
 
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
-			}
-			else if ((base >= 0x70) && (base < 0x7E))
-			{
-				// SRAM if applicable
-				return 0;
+				return Core_RAM[addr & 0x1FFFF];
 			}
 			else
 			{
-				return 0;
+				eff_addr = addr & 0x3FFFFF;
+				eff_addr |= ((addr & 0x800000) >> 1);
+
+				return Core_ROM[eff_addr];
 			}
 		}
 
 		void Write_Memory_Low(uint32_t addr, uint8_t value)
 		{
-			uint8_t base = (addr >> 16) & 0xFF;
-
-			if ((base >= 0x7E) && (base < 0x80))
+			if (((addr & 0xFF0000) == 0x7E0000) || ((addr & 0xFF0000) == 0x7F0000))
 			{
-				// RAM
-				Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
-			}
-			else if ((base >= 0x70) && (base < 0x7E))
-			{
-				// SRAM if applicable
-
+				Core_RAM[addr & 0x1FFFF] = value;
 			}
 		}
 

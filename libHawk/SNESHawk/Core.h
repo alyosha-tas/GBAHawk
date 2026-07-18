@@ -30,6 +30,7 @@ namespace SNESHawk
 			SNES.TraceCallback = nullptr;
 			SNES.HardReset();
 			APU.HardReset();
+			Mapper = nullptr;
 		};
 
 		SNES_System SNES;
@@ -41,6 +42,7 @@ namespace SNESHawk
 			std::memcpy(APU.IPL, ipl, 0x40);
 		}
 
+		// NOTE: Front end only sends power of 2 sized ROMs here
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, uint32_t apu_freq, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
 		{
 			SNES.APU_Frequency = apu_freq;
@@ -48,33 +50,108 @@ namespace SNESHawk
 			SNES.PPU_V_Pos_Reset = ppu_v_pos;
 			SNES.DRAM_Refresh_Pos = dram_pos;
 
-			SNES.ROM_Length = ext_rom_size;
-
-			SNES.ROM = new uint8_t[SNES.ROM_Length];
-
-			std::memcpy(SNES.ROM, ext_rom, SNES.ROM_Length);
-
 			std::memcpy(SNES.Header, ext_header, 0x40);
 
 			uint16_t mapper_num = (SNES.Header[0x15] & 0xF);
 
+			SNES.ROM_Speed = ((SNES.Header[0x15] >> 4) & 1);
+
+			uint32_t rom_divs = 0;
+
+			int k = 0;
+
 			if (mapper_num == 0)
 			{
 				// Lo ROM
+				Mapper = new Mapper_Lo_ROM;
 
+				SNES.ROM_Length = 0x400000;
+
+				SNES.ROM = new uint8_t[SNES.ROM_Length];
+
+				rom_divs = SNES.ROM_Length / ext_rom_size;
+				
+				for (int i = 0; i < rom_divs; i++)
+				{
+					for (int j = 0; j < ext_rom_size; j++)
+					{
+						SNES.ROM[k] = ext_rom[j];
+						k++;
+					}
+				}
+
+				SNES.Is_Lo_ROM = true;
 			}
 			else if (mapper_num == 1)
 			{
 				// Hi ROM
+				Mapper = new Mapper_Hi_ROM;
 
+				SNES.ROM_Length = 0x400000;
+
+				SNES.ROM = new uint8_t[SNES.ROM_Length];
+
+				rom_divs = SNES.ROM_Length / ext_rom_size;
+
+				for (int i = 0; i < rom_divs; i++)
+				{
+					for (int j = 0; j < ext_rom_size; j++)
+					{
+						SNES.ROM[k] = ext_rom[j];
+						k++;
+					}
+				}
+
+				SNES.Is_Lo_ROM = false;
 			}
 			else if (mapper_num == 5)
 			{
 				// Ex Hi ROM
+				Mapper = new Mapper_Ex_Hi_ROM;
 
+				SNES.ROM_Length = 0x800000;
+
+				SNES.ROM = new uint8_t[SNES.ROM_Length];
+
+				rom_divs = SNES.ROM_Length / ext_rom_size;
+
+				for (int i = 0; i < rom_divs; i++)
+				{
+					for (int j = 0; j < ext_rom_size; j++)
+					{
+						SNES.ROM[k] = ext_rom[j];
+						k++;
+					}
+				}
+
+				uint8_t temp_val = 0;
+
+				// upper and lower halves are swapped relative to address space
+				for (int i = 0; i < 0x400000; i++)
+				{
+					temp_val = SNES.ROM[i];
+					SNES.ROM[i] = SNES.ROM[i + 0x400000];
+					SNES.ROM[i + 0x400000] = temp_val;
+				}
+
+				SNES.Is_Lo_ROM = false;
 			}
 
+			SNES.mapper_pntr = &Mapper[0];
+
+			Mapper->Core_ROM_Length = ext_rom_size;
+			Mapper->Core_ROM = &SNES.ROM[0];
+			Mapper->Core_RAM = &SNES.RAM[0];
+
+			Mapper->Core_DB = &SNES.DB;
+
+			Mapper->Core_Message_String = &SNES.Message_String;
+			Mapper->MessageCallback = SNES.MessageCallback;
+
+			Mapper->Reset();
+
 			SNES.Cart_RAM_Length = 0;
+			Mapper->Core_Cart_RAM_Length = 0;
 
 			// Only reset cycle count on initial power on, not power cycles
 			SNES.Cycle_Count = 0;
@@ -99,6 +176,10 @@ namespace SNESHawk
 
 			SNES.Cart_RAM_Length = ext_sram_size;
 
+			Mapper->Core_Cart_RAM_Length = ext_sram_size;
+
+			Mapper->Core_Cart_RAM = &SNES.Cart_RAM[0];
+
 			std::memcpy(SNES.Cart_RAM, ext_sram, ext_sram_size);
 		}
 
@@ -115,6 +196,7 @@ namespace SNESHawk
 		void Hard_Reset() 
 		{
 			APU.HardReset();
+			Mapper->Reset();
 			
 			SNES.HardReset();
 		}
@@ -122,17 +204,17 @@ namespace SNESHawk
 		void Soft_Reset()
 		{
 			APU.SoftReset();
+			Mapper->Reset();
 
 			SNES.cpu_SoftReset();
-			SNES.apu_SoftReset();
 			SNES.ppu_SoftReset();
 		}
 
 		bool FrameAdvance(bool render, bool rendersound)
 		{
-			SNES.apu_Audio_Sample_Clock = 0;
+			APU.Audio_Sample_Clock = 0;
 
-			SNES.apu_Audio_Num_Samples = 0;
+			APU.Audio_Num_Samples = 0;
 
 			SNES.Is_Lag = true;
 
@@ -143,9 +225,9 @@ namespace SNESHawk
 
 		bool SubFrameAdvance( bool render, bool rendersound, bool do_reset, uint32_t reset_cycle)
 		{
-			SNES.apu_Audio_Sample_Clock = 0;
+			APU.Audio_Sample_Clock = 0;
 
-			SNES.apu_Audio_Num_Samples = 0;
+			APU.Audio_Num_Samples = 0;
 
 			SNES.frame_is_done = false;
 
@@ -189,13 +271,13 @@ namespace SNESHawk
 
 		uint32_t GetAudio(int32_t* dest, int32_t* n_samp)
 		{
-			int32_t* src = SNES.apu_Audio_Samples;
+			int32_t* src = APU.Audio_Samples;
 			int32_t* dst = dest;
 
-			std::memcpy(dst, src, sizeof int32_t * SNES.apu_Audio_Num_Samples * 2);
-			n_samp[0] = SNES.apu_Audio_Num_Samples;
+			std::memcpy(dst, src, sizeof int32_t * APU.Audio_Num_Samples * 2);
+			n_samp[0] = APU.Audio_Num_Samples;
 
-			uint32_t temp_int = SNES.apu_Audio_Sample_Clock;
+			uint32_t temp_int = APU.Audio_Sample_Clock;
 			
 			return temp_int;
 		}
@@ -220,7 +302,7 @@ namespace SNESHawk
 
 		uint8_t GetSysBus(uint32_t addr)
 		{
-			return SNES.PeekMemory(addr & 0xFFFF);
+			return SNES.PeekMemory(addr & 0xFFFFFF);
 		}
 
 		uint8_t GetRAM(uint32_t addr)
@@ -312,11 +394,6 @@ namespace SNESHawk
 			{
 				// DMA info OAM
 				std::memcpy(r, SNES.CPUDMAStateOAM().c_str(), l);
-			}
-			else
-			{
-				// DMA info DMC
-				std::memcpy(r, SNES.CPUDMAStateDMC().c_str(), l);
 			}
 		}
 

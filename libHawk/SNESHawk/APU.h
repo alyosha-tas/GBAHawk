@@ -48,9 +48,15 @@ namespace SNESHawk
 
 		uint16_t Echo_Addr;
 
+		uint32_t Audio_Sample_Clock;
+		uint32_t Audio_Num_Samples;
+
 		uint8_t RAM[0x10000] = { };
 
 		uint64_t FrameCycle;
+
+		int32_t Audio_Samples[25000] = {};
+
 
 		void HardReset()
 		{
@@ -115,6 +121,9 @@ namespace SNESHawk
 			saver = byte_saver(Echo_Value, saver);
 			
 			saver = short_saver(Echo_Addr, saver);
+
+			saver = int_saver(Audio_Sample_Clock, saver);
+			saver = int_saver(Audio_Num_Samples, saver);
 			
 			saver = long_saver(FrameCycle, saver);
 			
@@ -130,6 +139,9 @@ namespace SNESHawk
 			loader = byte_loader(&Echo_Value, loader);
 			
 			loader = short_loader(&Echo_Addr, loader);
+
+			loader = int_loader(&Audio_Sample_Clock, loader);
+			loader = int_loader(&Audio_Num_Samples, loader);
 			
 			loader = long_loader(&FrameCycle, loader);
 			
