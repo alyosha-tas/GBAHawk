@@ -30,6 +30,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
+					"VRAM",
+					0x10000,
+					MemoryDomain.Endian.Little,
+					(addr) => LibSNESHawk.SNES_getvram(SNES_Pntr, (int)(addr & 0xFFFF)),
+					(addr, value) => { },
+					1),
+				new MemoryDomainDelegate(
 					"ROM",
 					ROM_Length,
 					MemoryDomain.Endian.Little,
@@ -38,16 +45,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 					1),
 				new MemoryDomainDelegate(
 					"OAM",
-					0x400,
+					544,
 					MemoryDomain.Endian.Little,
 					addr => LibSNESHawk.SNES_getoam(SNES_Pntr, (int)(addr & 0x3FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
 					"PALRAM",
-					0x20,
+					0x200,
 					MemoryDomain.Endian.Little,
-					addr => LibSNESHawk.SNES_getpalram(SNES_Pntr, (int)(addr & 0x1F)),
+					addr => LibSNESHawk.SNES_getpalram(SNES_Pntr, (int)(addr & 0x1FF)),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(

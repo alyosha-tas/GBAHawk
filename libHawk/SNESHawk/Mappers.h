@@ -344,7 +344,7 @@ namespace SNESHawk
 
 	};
 
-	#pragma region Default
+	#pragma region Default Lo ROM
 
 	class Mapper_Lo_ROM : public Mappers
 	{
@@ -413,6 +413,146 @@ namespace SNESHawk
 	};
 
 #pragma endregion
+
+	#pragma region Default Hi ROM
+
+	class Mapper_Hi_ROM : public Mappers
+	{
+	public:
+
+		void Reset()
+		{
+			// nothing to initialize
+		}
+
+		uint8_t Read_Memory_High(uint32_t addr)
+		{
+			return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+		}
+
+		void Write_Memory_High(uint32_t addr, uint8_t value)
+		{
+			Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+		}
+
+		uint8_t Peek_Memory_High(uint32_t addr)
+		{
+			return Read_Memory_High(addr);
+		}
+
+		uint8_t Read_Memory_Low(uint32_t addr)
+		{
+			uint8_t base = (addr >> 16) & 0xFF;
+
+			if ((base >= 0x7E) && (base < 0x80))
+			{
+				// RAM
+				return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+			}
+			else if ((base >= 0x70) && (base < 0x7E))
+			{
+				// SRAM if applicable
+				return 0;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		void Write_Memory_Low(uint32_t addr, uint8_t value)
+		{
+			uint8_t base = (addr >> 16) & 0xFF;
+
+			if ((base >= 0x7E) && (base < 0x80))
+			{
+				// RAM
+				Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+			}
+			else if ((base >= 0x70) && (base < 0x7E))
+			{
+				// SRAM if applicable
+
+			}
+		}
+
+		uint8_t Peek_Memory_Low(uint32_t addr)
+		{
+			return Read_Memory_Low(addr);
+		}
+	};
+
+	#pragma endregion
+
+	#pragma region Default Ex Hi ROM
+
+	class Mapper_Ex_Hi_ROM : public Mappers
+	{
+	public:
+
+		void Reset()
+		{
+			// nothing to initialize
+		}
+
+		uint8_t Read_Memory_High(uint32_t addr)
+		{
+			return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+		}
+
+		void Write_Memory_High(uint32_t addr, uint8_t value)
+		{
+			Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+		}
+
+		uint8_t Peek_Memory_High(uint32_t addr)
+		{
+			return Read_Memory_High(addr);
+		}
+
+		uint8_t Read_Memory_Low(uint32_t addr)
+		{
+			uint8_t base = (addr >> 16) & 0xFF;
+
+			if ((base >= 0x7E) && (base < 0x80))
+			{
+				// RAM
+				return Core_Pointers_Read[(addr >> 15) & 0x1FF][addr & 0x7FFF];
+			}
+			else if ((base >= 0x70) && (base < 0x7E))
+			{
+				// SRAM if applicable
+				return 0;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		void Write_Memory_Low(uint32_t addr, uint8_t value)
+		{
+			uint8_t base = (addr >> 16) & 0xFF;
+
+			if ((base >= 0x7E) && (base < 0x80))
+			{
+				// RAM
+				Core_Pointers_Write[(addr >> 15) & 0x1FF][addr & 0x7FFF] = value;
+			}
+			else if ((base >= 0x70) && (base < 0x7E))
+			{
+				// SRAM if applicable
+
+			}
+		}
+
+		uint8_t Peek_Memory_Low(uint32_t addr)
+		{
+			return Read_Memory_Low(addr);
+		}
+	};
+
+	#pragma endregion
 
 }
 

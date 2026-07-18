@@ -1248,7 +1248,7 @@ namespace SNESHawk
 
 		uint8_t glitchy_reads_2003[8] = { };
 		uint8_t OAM[544] = { };
-		uint8_t PALRAM[0x20] = { };
+		uint8_t PALRAM[0x200] = { };
 
 		uint8_t ppu_BG_Attr[3] = { };
 
@@ -1415,9 +1415,9 @@ namespace SNESHawk
 				soam[i] = 0xFF;
 			}
 
-			for (int i = 0; i < 32; i++)
+			for (int i = 0; i < 0x200; i++)
 			{
-				PALRAM[i] = POWER_ON_PALETTE[i];
+				PALRAM[i] = 0;
 			}
 
 			for (int i = 0; i < 8; i++)
@@ -2184,7 +2184,7 @@ namespace SNESHawk
 
 			saver = byte_array_saver(glitchy_reads_2003, saver, 8);
 			saver = byte_array_saver(OAM, saver, 544);
-			saver = byte_array_saver(PALRAM, saver, 32);
+			saver = byte_array_saver(PALRAM, saver, 0x200);
 			saver = byte_array_saver(ppu_BG_Attr, saver, 3);
 			saver = byte_array_saver(soam, saver, 256);
 
@@ -2311,7 +2311,7 @@ namespace SNESHawk
 
 			loader = byte_array_loader(glitchy_reads_2003, loader, 8);
 			loader = byte_array_loader(OAM, loader, 544);
-			loader = byte_array_loader(PALRAM, loader, 32);
+			loader = byte_array_loader(PALRAM, loader, 0x200);
 			loader = byte_array_loader(ppu_BG_Attr, loader, 3);
 			loader = byte_array_loader(soam, loader, 256);
 

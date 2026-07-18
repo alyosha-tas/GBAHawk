@@ -223,21 +223,15 @@ namespace SNESHawk
 			return SNES.PeekMemory(addr & 0xFFFF);
 		}
 
+		uint8_t GetRAM(uint32_t addr)
+		{
+			return SNES.RAM[addr & 0x1FFFF];
+		}
+
 		uint8_t GetVRAM(uint32_t addr) 
 		{
 
 			return SNES.VRAM[(addr & 0xFFFF)];
-		}
-
-		uint8_t GetCHR_ROM(uint32_t addr)
-		{
-
-			return 0;
-		}
-
-		uint8_t GetRAM(uint32_t addr)
-		{
-			return SNES.RAM[addr & 0x7FF];
 		}
 
 		uint8_t GetAPURAM(uint32_t addr)
@@ -252,12 +246,16 @@ namespace SNESHawk
 
 		uint8_t GetOAM(uint32_t addr)
 		{
-			return SNES.OAM[addr & 0xFF];
+			if (addr < 544)
+			{
+				return SNES.OAM[addr & 0xFF];
+			}
+			return 0;
 		}
 
 		uint8_t GetPALRAM(uint32_t addr)
 		{
-			return SNES.PALRAM[addr & 0x1F];
+			return SNES.PALRAM[addr & 0x1FF];
 		}
 
 		uint8_t GetSRAM(uint32_t addr)

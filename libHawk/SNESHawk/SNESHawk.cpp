@@ -135,12 +135,12 @@ SNESHawk_EXPORT uint8_t SNES_getsysbus(SNESCore* p, uint32_t addr) {
 	return p->GetSysBus(addr);
 }
 
-SNESHawk_EXPORT uint8_t SNES_getvram(SNESCore* p, uint32_t addr) {
-	return p->GetVRAM(addr);
-}
-
 SNESHawk_EXPORT uint8_t SNES_getram(SNESCore* p, uint32_t addr) {
 	return p->GetRAM(addr);
+}
+
+SNESHawk_EXPORT uint8_t SNES_getvram(SNESCore* p, uint32_t addr) {
+	return p->GetVRAM(addr);
 }
 
 SNESHawk_EXPORT uint8_t SNES_get_apu_ram(SNESCore* p, uint32_t addr) {

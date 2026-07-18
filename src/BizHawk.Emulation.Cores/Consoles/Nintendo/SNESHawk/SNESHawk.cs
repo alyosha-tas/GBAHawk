@@ -19,7 +19,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		public readonly byte[] Header = new byte[0x40];
 
 		public uint ROM_Length;
-		public uint CHR_ROM_Length;
 
 		public ushort controller_state;
 
@@ -103,6 +102,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				}
 			}
 
+			ROM_Length = (uint)GamePack.Length;
+
 			byte[] checksum_check = new byte[GamePack.Length];
 
 			int checksum = 0;
@@ -114,9 +115,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			// first try lo rom
 			for (int i = 0; i < GamePack.Length; i++)
 			{
-				if ((i < 0x7FDC) || (i >= 0x7DE0))
+				if ((i < 0x7FDC) || (i >= 0x7FE0))
 				{
-					checksum_check[i] = rom[i];
+					checksum_check[i] = GamePack[i];
 				}
 			}
 
@@ -132,6 +133,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			proposed_checksum = GamePack[0x7FDF] << 8;
 			proposed_checksum |= GamePack[0x7FDE];
+
+			//Console.WriteLine("rom check " + rom.Length + " " + GamePack.Length);
+
+			//Console.WriteLine("here check " + proposed_checksum + " " + checksum);
 
 			if (proposed_checksum == checksum)
 			{
@@ -150,6 +155,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 						mapping_type = 0;
 
 						Console.WriteLine("Lo ROM detected via header.");
+
+						for (int i = 0; i < 0x40; i++)
+						{
+							Header[i] = GamePack[0x7FC0 + i];
+						}
 					}
 				}
 			}
@@ -165,7 +175,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				// redo for Hi ROM
 				for (int i = 0; i < GamePack.Length; i++)
 				{
-					if ((i < 0xFFDC) || (i >= 0xFDE0))
+					if ((i < 0xFFDC) || (i >= 0xFFE0))
 					{
 						checksum_check[i] = rom[i];
 					}
@@ -204,13 +214,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 							mapping_type = 1;
 
 							Console.WriteLine("Hi ROM detected via header.");
+
+							for (int i = 0; i < 0x40; i++)
+							{
+								Header[i] = GamePack[0xFFC0 + i];
+							}
 						}
 					}
 				}
 			}
 
 			// if the ROM is too small and we found no header, don't load
-			if (rom.Length < 0x410000)
+			if ((rom.Length < 0x410000) && !header_found)
 			{
 				throw new Exception("could not locate header, unable to load");
 			}
@@ -220,7 +235,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 				// redo for Ex Hi ROM
 				for (int i = 0; i < GamePack.Length; i++)
 				{
-					if ((i < 0x40FFDC) || (i >= 0x40FDE0))
+					if ((i < 0x40FFDC) || (i >= 0x40FFE0))
 					{
 						checksum_check[i] = rom[i];
 					}
@@ -259,6 +274,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 							mapping_type = 5;
 
 							Console.WriteLine("Ex Hi ROM detected via header.");
+
+							for (int i = 0; i < 0x40; i++)
+							{
+								Header[i] = GamePack[0x40FFC0 + i];
+							}
 						}
 					}
 				}
@@ -268,6 +288,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				throw new Exception("could not locate header, unable to load");
 			}
+
+			// Use header to choose SRAM size
+
 
 			// Load up the APU IPL, necessary to function
 			IPL = comm.CoreFileProvider.GetFirmwareOrThrow(new("SNES", "IPL"), "IPL Not Found, Cannot Load");
