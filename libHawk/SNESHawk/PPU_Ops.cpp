@@ -273,12 +273,9 @@ namespace SNESHawk
 				NMI_PendingInstructions--;
 				if (NMI_PendingInstructions <= 0)
 				{
-					NMI = true;
+					*CPU_NMI = true;
 				}
 			}
-
-			// this is where the CPU instruction is called
-			RunCpuOne();
 
 			// decay the ppu bus, approximating real behaviour
 			PpuOpenBusDecay(DecayType_None);

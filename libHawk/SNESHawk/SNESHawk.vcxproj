@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
+    <ClInclude Include="R5A22.h" />
     <ClInclude Include="Mappers.h" />
     <ClInclude Include="SNESHawk.h" />
     <ClInclude Include="SNES_System.h" />
@@ -146,8 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="APU.cpp" />
+    <ClCompile Include="SNES_DMA.cpp" />
     <ClCompile Include="SPC700.cpp" />
-    <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="R5A22.cpp" />
     <ClCompile Include="MemoryMap.cpp" />
     <ClCompile Include="SNESHawk.cpp" />
     <ClCompile Include="SNES_System.cpp" />

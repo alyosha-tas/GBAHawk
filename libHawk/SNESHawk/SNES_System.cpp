@@ -60,7 +60,6 @@ namespace SNESHawk
 	void SNES_System::HardReset()
 	{
 		ppu_Reset();
-		cpu_Reset();
 
 		Last_Controller_Poll_1 = 0;
 		Last_Controller_Poll_2 = 0;
@@ -100,65 +99,6 @@ namespace SNESHawk
 		else
 		{
 			TickPPU(true);
-		}
-	}
-
-	void SNES_System::RunCpuOne()
-	{
-		if (RDY)
-		{
-			cpu_Fetch_Cnt++;
-
-			if (cpu_Fetch_Cnt == cpu_Fetch_Op)
-			{
-				switch (cpu_Cycle_Type)
-				{
-					case Cycle_Type::Read_Cycle:
-						alu_temp = ReadMemory(address_bus);
-						break;
-
-					case Cycle_Type::Read_Cycle_Hi:
-						alu_temp_hi = ReadMemory(address_bus);
-						break;
-
-					case Cycle_Type::Write_Cycle:
-						break;
-
-					case Cycle_Type::Fetch_ALU_Cycle:
-						cpu_ALU_Operation();
-						// fall through to normal fetch cycle
-
-					case Cycle_Type::Fetch_Cycle:
-						iflag_pending = cpu_FlagIget();
-						// fall through to no check case
-
-					case Cycle_Type::Fetch_Cycle_No_Check:
-						Fetch1();
-						break;
-						
-					case Cycle_Type::Internal_Cycle:
-
-						break;
-
-					case Cycle_Type::PC_Change_Cycle:
-						break;
-
-					case Cycle_Type::Fetch_Reset:
-						// do nothing as this is just a cycle that immediately goes into the interrupt handler with a reset
-						ReadMemory(address_bus);
-						break;
-				}
-			}
-			else if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
-			{
-				cpu_Instr_Cycle++;
-
-				cpu_Fetch_Cnt = 0;
-
-				ExecuteOneOp();
-
-				cpu_Fetch_Wait = cpu_Calculate_Wait_States();
-			}
 		}
 	}
 }

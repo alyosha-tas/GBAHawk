@@ -76,7 +76,7 @@ SNESHawk_EXPORT bool SNES_frame_advance(SNESCore* p, bool render, bool sound)
 // get cpu clocks
 SNESHawk_EXPORT uint64_t SNES_get_cycles(SNESCore* p)
 {
-	return p->SNES.TotalExecutedCycles;
+	return p->CPU.TotalExecutedCycles;
 }
 
 // advance a frame and possibly subframe reset
@@ -88,7 +88,7 @@ SNESHawk_EXPORT bool SNES_subframe_advance(SNESCore* p, bool render, bool sound,
 // get clocks needed for timing subframe movies
 SNESHawk_EXPORT uint64_t SNES_subframe_cycles(SNESCore* p)
 {
-	return p->SNES.Total_CPU_Clock_Cycles;
+	return p->CPU.Total_CPU_Clock_Cycles;
 }
 
 // set controller read callback

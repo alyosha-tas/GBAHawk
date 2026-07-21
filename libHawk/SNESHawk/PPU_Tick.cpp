@@ -66,7 +66,7 @@ namespace SNESHawk
 				}
 				else if (status_cycle == (4 + NMI_offset))
 				{
-					if (nmi_destiny) { NMI = true; }
+					if (nmi_destiny) { *CPU_NMI = true; }
 				}
 			}
 

@@ -9,6 +9,7 @@
 
 #include "SNES_System.h"
 #include "APU.h"
+#include "R5A22.h"
 #include "Memory.h"
 #include "Mappers.h"
 
@@ -27,15 +28,17 @@ namespace SNESHawk
 		SNESCore() 
 		{
 			SNES.MessageCallback = nullptr;
-			SNES.TraceCallback = nullptr;
+			CPU.TraceCallback = nullptr;
 			SNES.HardReset();
 			APU.HardReset();
+			CPU.HardReset();
 			Mapper = nullptr;
 		};
 
 		SNES_System SNES;
 		Mappers* Mapper;
 		APU APU;
+		R5A22 CPU;
 
 		void Load_IPL(uint8_t* ipl)
 		{
@@ -167,7 +170,11 @@ namespace SNESHawk
 
 			SNES.Mapper_Number = mapper_num;
 
-			SNES.Total_CPU_Clock_Cycles = 0;
+			CPU.Total_CPU_Clock_Cycles = 0;
+			CPU.Sys_pntr = &SNES;
+
+			SNES.CPU_NMI = &CPU.NMI;
+			SNES.CPU_IRQ = &CPU.IRQ;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -196,6 +203,7 @@ namespace SNESHawk
 		void Hard_Reset() 
 		{
 			APU.HardReset();
+			CPU.HardReset();
 			Mapper->Reset();
 			
 			SNES.HardReset();
@@ -204,9 +212,9 @@ namespace SNESHawk
 		void Soft_Reset()
 		{
 			APU.SoftReset();
+			CPU.SoftReset();
 			Mapper->Reset();
 
-			SNES.cpu_SoftReset();
 			SNES.ppu_SoftReset();
 		}
 
@@ -288,12 +296,14 @@ namespace SNESHawk
 		{	
 			saver = SNES.SaveState(saver);
 			saver = APU.apu_SaveState(saver);
+			saver = CPU.SaveState(saver);
 		}
 
 		void LoadState(uint8_t* loader)
 		{
 			loader = SNES.LoadState(loader);
 			loader = APU.apu_LoadState(loader);
+			loader = CPU.LoadState(loader);
 		}
 
 		#pragma endregion
@@ -356,7 +366,7 @@ namespace SNESHawk
 
 		void SetTraceCallback(void (*callback)(int))
 		{
-			SNES.TraceCallback = callback;
+			CPU.TraceCallback = callback;
 		}
 
 		int GetHeaderLength()
@@ -376,7 +386,7 @@ namespace SNESHawk
 
 		void GetHeader(char* h, int l)
 		{
-			std::memcpy(h, SNES.TraceHeader, l);
+			std::memcpy(h, CPU.TraceHeader, l);
 		}
 
 		// the copy length l must be supplied ahead of time from GetRegStrngLength
@@ -384,16 +394,16 @@ namespace SNESHawk
 		{
 			if (t == 0)
 			{
-				std::memcpy(r, SNES.CPURegisterState().c_str(), l);
+				std::memcpy(r, CPU.CPURegisterState().c_str(), l);
 			}
 			else if (t < 3)
 			{
-				std::memcpy(r, SNES.Reg_Blank, l);
+				std::memcpy(r, CPU.Reg_Blank, l);
 			}
 			else if (t == 3)
 			{
 				// DMA info OAM
-				std::memcpy(r, SNES.CPUDMAStateOAM().c_str(), l);
+				std::memcpy(r, CPU.CPUDMAStateOAM().c_str(), l);
 			}
 		}
 
@@ -402,19 +412,19 @@ namespace SNESHawk
 		{
 			if (t == 0)
 			{
-				std::memcpy(d, SNES.CPUDisassembly().c_str(), l);
+				std::memcpy(d, CPU.CPUDisassembly().c_str(), l);
 			}
 			else if (t == 1)
 			{
-				std::memcpy(d, SNES.NMI_event, l);
+				std::memcpy(d, CPU.NMI_event, l);
 			}
 			else if (t == 2)
 			{
-				std::memcpy(d, SNES.IRQ_event, l);
+				std::memcpy(d, CPU.IRQ_event, l);
 			}
 			else
 			{
-				std::memcpy(d, SNES.DMA_event, l);
+				std::memcpy(d, CPU.DMA_event, l);
 			}
 		}
 

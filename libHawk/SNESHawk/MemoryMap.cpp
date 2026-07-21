@@ -42,11 +42,6 @@ namespace SNESHawk
 		return ret;
 	}
 
-	void SNES_System::OnExecFetch(uint16_t addr)
-	{
-
-	}
-
 	void SNES_System::WriteMemory(uint32_t addr, uint8_t value)
 	{
 		if ((addr & 0x8000) == 0x8000)
