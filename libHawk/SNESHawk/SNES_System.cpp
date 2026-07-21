@@ -105,6 +105,46 @@ namespace SNESHawk
 
 	void SNES_System::RunCpuOne()
 	{
+		if (RDY)
+		{
+			cpu_Fetch_Cnt++;
 
+			if (cpu_Fetch_Cnt == cpu_Fetch_Op)
+			{
+				switch (cpu_Cycle_Type)
+				{
+					case Cycle_Type::Read_Cycle:
+						alu_temp = ReadMemory(address_bus);
+						break;
+
+					case Cycle_Type::Write_Cycle:
+						break;
+
+					case Cycle_Type::Fetch_ALU_Cycle:
+						cpu_ALU_Operation();
+
+
+						cpu_Instr_Cycle = 0;
+						break;
+
+					case Cycle_Type::Fetch_Cycle:
+
+						cpu_Instr_Cycle = 0;
+						break;
+						
+					case Cycle_Type::Internal_Cycle:
+						break;
+
+					case Cycle_Type::PC_Change_Cycle:
+						break;
+				}
+			}
+			else if (cpu_Fetch_Cnt == cpu_Fetch_Wait)
+			{
+				cpu_Instr_Cycle++;
+
+
+			}
+		}
 	}
 }

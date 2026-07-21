@@ -75,7 +75,7 @@ namespace SNESHawk
 
 		}
 
-		return DB;
+		return Data_Bus;
 	}
 
 	uint8_t SNES_System::read_joyport(uint32_t addr)
@@ -84,7 +84,7 @@ namespace SNESHawk
 		ret = ReadController(addr == 0x4016);
 
 		ret &= 0x1F;
-		ret |= (uint8_t)(0xE0 & DB);
+		ret |= (uint8_t)(0xE0 & Data_Bus);
 		return ret;
 	}
 

@@ -17,7 +17,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -37,18 +36,21 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
+						cpu_Cycle_Type = Cycle_Type::Read_Cycle;
+						PC++;
 
 						if (RDY)
 						{
 							alu_temp = ReadMemory(address_bus);
-							PC++;
+							
 							cpu_ALU_Operation();
 						}
 						break;
 
 					case 1:
+						cpu_Cycle_Type = Cycle_Type::Fetch_ALU_Cycle;
+
 						End();
 						break;
 				}
@@ -68,7 +70,6 @@ namespace SNESHawk
 							iflag_pending = true;
 						}
 						
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -87,7 +88,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -118,7 +118,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -128,7 +127,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(0x100 | S);
 
 						if (RDY)
@@ -139,7 +137,6 @@ namespace SNESHawk
 						break;
 
 					case 2:						
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -181,7 +178,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -199,7 +195,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -223,7 +218,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -250,7 +244,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						ea = (opcode3 << 8) + opcode2;
 						address_bus = (uint16_t)ea;
 
@@ -261,7 +254,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						ea = (opcode3 << 8) + (uint8_t)(opcode2 + 1);
 						address_bus = (uint16_t)ea;
 
@@ -282,7 +274,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -292,7 +283,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(0x100 | S);
 
 						if (RDY)
@@ -303,7 +293,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -315,7 +304,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -327,7 +315,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -347,7 +334,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -357,7 +343,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(0x100 | S);
 
 						if (RDY)
@@ -368,7 +353,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -380,7 +364,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(S + 0x100);
 
 						if (RDY)
@@ -391,7 +374,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -443,7 +425,6 @@ namespace SNESHawk
 						NMI_Br = false;
 						IRQ_Br = false;
 
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						cpu_First_Check = true;
@@ -465,7 +446,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (cpu_First_Check)
@@ -494,7 +474,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -523,7 +502,6 @@ namespace SNESHawk
 					case 1:
 						if (cpu_Instr_Type == OpT::ZPR)
 						{
-							RDY_Freeze = !RDY;
 							address_bus = opcode2;
 
 							if (RDY)
@@ -553,7 +531,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -588,7 +565,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -609,7 +585,6 @@ namespace SNESHawk
 					case 2:
 						if ((cpu_Instr_Type == OpT::ZPXR) || (cpu_Instr_Type == OpT::ZPYR))
 						{
-							RDY_Freeze = !RDY;
 							address_bus = opcode2;
 
 							if (RDY)
@@ -639,7 +614,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -650,7 +624,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -690,7 +663,6 @@ namespace SNESHawk
 						ea = (uint16_t)((opcode3 << 8) + opcode2);
 						if (cpu_Instr_Type == OpT::AbsR)
 						{
-							RDY_Freeze = !RDY;
 							address_bus = ea;
 
 							if (RDY)
@@ -723,7 +695,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						ea = (opcode3 << 8) + opcode2;
 						address_bus = ea;
 
@@ -757,7 +728,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -768,7 +738,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)alu_temp;
 
 						if (RDY)
@@ -778,7 +747,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint8_t)(alu_temp + 1);
 
 						if (RDY)
@@ -790,7 +758,6 @@ namespace SNESHawk
 					case 4:
 						if (cpu_Instr_Type == OpT::AdXR)
 						{
-							RDY_Freeze = !RDY;
 							address_bus = (uint16_t)ea;
 
 							if (RDY)
@@ -819,7 +786,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -830,7 +796,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)alu_temp;
 
 						if (RDY)
@@ -840,7 +805,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint8_t)(alu_temp + 1);
 
 						if (RDY)
@@ -850,7 +814,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -885,7 +848,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -916,7 +878,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 						
 						if (RDY)
@@ -942,7 +903,6 @@ namespace SNESHawk
 					case 3:
 						if ((cpu_Instr_Type == OpT::AIXR) || (cpu_Instr_Type == OpT::AIYR))
 						{
-							RDY_Freeze = !RDY;
 							address_bus = (uint16_t)ea;
 
 							if (RDY)
@@ -973,7 +933,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -996,7 +955,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1012,7 +970,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1035,124 +992,6 @@ namespace SNESHawk
 						break;
 				}
 				break;
-		
-			case OpT::AIUW:
-				switch (cpu_Instr_Cycle)
-				{
-					case 0:
-						Fetch2();
-						break;
-
-					case 1:
-						RDY_Freeze = !RDY;
-						address_bus = PC;
-
-						if (RDY)
-						{
-							opcode3 = ReadMemory(address_bus);
-							PC++;
-
-							if ((opcode & 0xF) == 0xC)
-							{
-								alu_temp = opcode2 + X;
-							}
-							else
-							{
-								alu_temp = opcode2 + Y;
-							}
-							ea = (opcode3 << 8) + (alu_temp & 0xFF);
-							address_bus = (uint16_t)ea;
-							H = 0; // In preparation for SHY, set H to 0.
-						}
-						break;
-
-					case 2:
-						RDY_Freeze = !RDY;
-						address_bus = (uint16_t)ea;
-
-						if (cpu_ALU_Type == ALU::SHS)
-						{
-							if (RDY)
-							{
-								H |= (uint8_t)((ea >> 8) + 1);
-								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
-
-								if (adjust)
-								{
-									ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & ((A & X) << 8)));
-								}
-							}
-							else
-							{
-								H = 0xFF; //If the RDY line is low here, the SHS instruction omits the bitwise AND with H
-							}
-						}
-						else if (cpu_ALU_Type == ALU::SHY)
-						{
-							if (RDY)
-							{
-								H |= (uint8_t)((ea >> 8) + 1);
-								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
-
-								if (adjust)
-								{
-									ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & (Y << 8)));
-								}
-							}
-							else
-							{
-								H = 0xFF; //If the RDY line is low here, the SHY instruction omits the bitwise AND with H
-							}
-						}
-						else if (cpu_ALU_Type == ALU::SHX)
-						{
-							if (RDY)
-							{
-								H |= (uint8_t)((ea >> 8) + 1);
-								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
-
-								if (adjust)
-								{
-									ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & (X << 8)));
-								}
-							}
-							else
-							{
-								H = 0xFF; //If the RDY line is low here, the SHX instruction omits the bitwise AND with H
-							}
-						}
-						else // SHA
-						{
-							if (RDY)
-							{
-								H |= (uint8_t)((ea >> 8) + 1);
-								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
-
-								if (adjust)
-								{
-									ea = (uint16_t)((ea & 0xFF) | ((ea + 0x100) & 0xFF00 & ((A & X) << 8)));
-								}
-							}
-							else
-							{
-								H = 0xFF; //If the RDY line is low here, the SHA instruction omits the bitwise AND with H
-							}
-						}
-						break;
-
-					case 3:
-						cpu_Write_Operation();
-						break;
-
-					case 4:
-						End();
-						break;
-				}
-				break;
 
 			case OpT::IIYR:
 				switch (cpu_Instr_Cycle)
@@ -1162,7 +1001,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -1172,7 +1010,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint8_t)(opcode2 + 1);
 
 						if (RDY)
@@ -1191,7 +1028,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1202,7 +1038,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1226,7 +1061,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -1236,7 +1070,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint8_t)(opcode2 + 1);
 
 						if (RDY)
@@ -1250,7 +1083,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (opcode == 0x91)
@@ -1298,7 +1130,6 @@ namespace SNESHawk
 						break;
 
 					case 1:
-						RDY_Freeze = !RDY;
 						address_bus = opcode2;
 
 						if (RDY)
@@ -1308,7 +1139,6 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						RDY_Freeze = !RDY;
 						address_bus = (uint8_t)(opcode2 + 1);
 
 						if (RDY)
@@ -1322,7 +1152,6 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1334,7 +1163,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)ea;
 
 						if (RDY)
@@ -1366,7 +1194,6 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						RDY_Freeze = !RDY;
 						address_bus = PC;
 
 						if (RDY)
@@ -1383,7 +1210,6 @@ namespace SNESHawk
 						}
 						else
 						{
-							RDY_Freeze = !RDY;
 							address_bus = (uint16_t)(S + 0x100);
 
 							if (RDY)
@@ -1402,7 +1228,6 @@ namespace SNESHawk
 						}
 						else
 						{
-							RDY_Freeze = !RDY;
 							address_bus = (uint16_t)(S + 0x100);
 
 							if (RDY)
@@ -1431,7 +1256,6 @@ namespace SNESHawk
 						}
 						else
 						{
-							RDY_Freeze = !RDY;
 							address_bus = (uint16_t)(S + 0x100);
 
 							if (RDY)
@@ -1445,7 +1269,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						if (ea == IRQVector && !cpu_FlagBget() && NMI)
 						{
 							NMI = false;
@@ -1460,7 +1283,6 @@ namespace SNESHawk
 						break;
 
 					case 5:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(ea + 1);
 
 						if (RDY)
@@ -1499,7 +1321,6 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						RDY_Freeze = !RDY;
 						if (ea == BRKVector && cpu_FlagBget() && NMI)
 						{
 							NMI = false;
@@ -1514,7 +1335,6 @@ namespace SNESHawk
 						break;
 
 					case 5:
-						RDY_Freeze = !RDY;
 						address_bus = (uint16_t)(ea + 1);
 
 						if (RDY)
@@ -1537,11 +1357,6 @@ namespace SNESHawk
 			case OpT::FONI:
 				Fetch_Opcode_No_Interrupt();
 				break;
-		}
-
-		if (!RDY_Freeze)
-		{
-			cpu_Instr_Cycle++;
 		}
 	}
 
@@ -1580,17 +1395,6 @@ namespace SNESHawk
 			case ALU::LDY:
 				Y = (uint8_t)alu_temp;
 				NZ_Y();
-				break;
-
-			case ALU::LAX:
-				A = X = (uint8_t)alu_temp;
-				NZ_A();
-				break;
-
-			case ALU::ANC:
-				A &= (uint8_t)alu_temp;
-				cpu_FlagCset((A & 0x80) == 0x80);
-				NZ_A();
 				break;
 
 			case ALU::ASR:
@@ -1733,32 +1537,11 @@ namespace SNESHawk
 				cpu_FlagVset(false);
 				break;
 
-			case ALU::LAS:
-				S &= (uint8_t)alu_temp;
-				X = S;
-				A = S;
-				P = (uint8_t)((P & 0x7D) | TableNZ[S]);
-				break;
-
-			case ALU::AXS:
-				X &= A;
-				alu_temp = X - (uint8_t)alu_temp;
-				X = (uint8_t)alu_temp;
-				cpu_FlagCset((alu_temp & 0x100) == 0x0);
-				NZ_X();
-				break;
-
 			case ALU::BIT:
 				cpu_FlagNset((alu_temp & 0x80) != 0);
 				cpu_FlagVset((alu_temp & 0x40) != 0);
 				cpu_FlagZset((A & alu_temp) == 0);
 				break;
-
-			case ALU::DCP:
-				value8 = temp8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)(value8 - 1);
-				cpu_FlagCset((temp8 & 1) != 0);
-				// pass through to cmp
 
 			case ALU::CMP:
 				value8 = (uint8_t)alu_temp;
@@ -1815,11 +1598,6 @@ namespace SNESHawk
 				}
 				break;
 
-			case ALU::ISC:
-				value8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)(value8 + 1);
-				// pass through to sbc
-
 			case ALU::SBC:
 				value8 = (uint8_t)alu_temp;
 				tempint = A - value8 - (cpu_FlagCget() ? 0 : 1);
@@ -1845,95 +1623,6 @@ namespace SNESHawk
 				}
 				break;
 
-			case ALU::ARR:
-				A &= (uint8_t)alu_temp;
-
-				if (cpu_FlagDget() && BCD_Enabled)
-				{
-					// Shift logic
-					uint8_t next = (A >> 1) | (cpu_FlagCget() ? 0x80 : 0x00);
-					cpu_FlagVset(((A ^ next) & 0x40) != 0);
-					cpu_FlagNset(cpu_FlagCget());
-					cpu_FlagZset((next & 0xFF) == 0);
-
-					// BCD fixup
-					if ((A & 0x0F) + (A & 0x01) > 0x05)
-					{
-						next = (next & 0xF0) | ((next + 0x06) & 0x0F);
-					}
-					if ((A & 0xF0) + (A & 0x10) > 0x50)
-					{
-						next = (next & 0x0F) | ((next + 0x60) & 0xF0);
-						cpu_FlagCset(true);
-					}
-					else
-					{
-						cpu_FlagCset(false);
-					}
-
-					A = (uint8_t)next;
-				}
-				else
-				{
-					booltemp = (A & 1) == 1;
-					A = (uint8_t)((A >> 1) | (cpu_FlagCget() ? 0x80 : 0x00));
-					cpu_FlagCset(booltemp);
-					if ((A & 0x20) == 0x20)
-						if ((A & 0x40) == 0x40)
-						{
-							cpu_FlagCset(true); cpu_FlagVset(false);
-						}
-						else { cpu_FlagVset(true); cpu_FlagCset(false); }
-					else if ((A & 0x40) == 0x40)
-					{
-						cpu_FlagVset(true); cpu_FlagCset(true);
-					}
-					else { cpu_FlagVset(false); cpu_FlagCset(false); }
-					NZ_A();
-				}
-				break;
-
-			case ALU::RLA:
-				value8 = temp8 = (uint8_t)alu_temp;
-				alu_temp = value8 = (uint8_t)((value8 << 1) | (P & 1));
-				cpu_FlagCset((temp8 & 0x80) != 0);
-				A &= value8;
-				NZ_A();
-				break;
-
-			case ALU::SLO:
-				value8 = (uint8_t)alu_temp;
-				cpu_FlagCset((value8 & 0x80) != 0);
-				alu_temp = value8 = (uint8_t)((value8 << 1));
-				A |= value8;
-				NZ_A();
-				break;
-
-			case ALU::ANE:
-				// Many varied reports on what this should be.
-				// safe value is 0xFF. Commodore 64 needs 0xEF.
-				A |= AneConstant;
-				A &= (uint8_t)(X & alu_temp);
-				NZ_A();
-				break;
-
-			case ALU::LXA:
-				//there is some debate about what this should be. it may depend on the 6502 variant.
-				//this is suggested by qeed's doc for the SNES and passes blargg's instruction test
-				A |= LxaConstant;
-				A &= (uint8_t)alu_temp;
-				X = A;
-				NZ_A();
-				break;
-
-			case ALU::SRE:
-				value8 = (uint8_t)alu_temp;
-				cpu_FlagCset((value8 & 1) != 0);
-				alu_temp = value8 = (uint8_t)(value8 >> 1);
-				A ^= value8;
-				NZ_A();
-				break;
-
 			default:
 				throw exception("bad op");
 
@@ -1954,31 +1643,6 @@ namespace SNESHawk
 
 			case ALU::STX:
 				WriteMemory((uint16_t)ea, X);
-				break;
-
-			case ALU::SAX:
-				alu_temp = A & X;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHA:
-				alu_temp = A & X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHX:
-				alu_temp = X & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHY:
-				alu_temp = Y & H;
-				WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-				break;
-
-			case ALU::SHS:
-				S = (uint8_t)(X & A);
-				WriteMemory((uint16_t)ea, (uint8_t)(S & H));
 				break;
 		}
 	}
@@ -2095,7 +1759,6 @@ namespace SNESHawk
 		cpu_Instr_Type = OpT::FONI;
 		cpu_Instr_Cycle = -1;
 		
-		RDY_Freeze = !RDY;
 		address_bus = PC;
 
 		if (RDY)
@@ -2114,7 +1777,6 @@ namespace SNESHawk
 		cpu_Instr_Type = OpT::DRMI;
 		cpu_Instr_Cycle = -1;
 		
-		RDY_Freeze = !RDY;
 		address_bus = PC;
 
 		if (RDY)
@@ -2126,7 +1788,6 @@ namespace SNESHawk
 
 	void SNES_System::Fetch2()
 	{
-		RDY_Freeze = !RDY;
 		address_bus = PC;
 
 		if (RDY)
@@ -2138,7 +1799,6 @@ namespace SNESHawk
 
 	void SNES_System::Fetch3()
 	{
-		RDY_Freeze = !RDY;
 		address_bus = PC;
 
 		if (RDY)

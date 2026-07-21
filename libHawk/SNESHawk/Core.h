@@ -143,7 +143,7 @@ namespace SNESHawk
 			Mapper->Core_ROM = &SNES.ROM[0];
 			Mapper->Core_RAM = &SNES.RAM[0];
 
-			Mapper->Core_DB = &SNES.DB;
+			Mapper->Core_DB = &SNES.Data_Bus;
 
 			Mapper->Core_Message_String = &SNES.Message_String;
 			Mapper->MessageCallback = SNES.MessageCallback;

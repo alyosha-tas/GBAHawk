@@ -143,7 +143,7 @@ namespace SNESHawk
 		bool OAM_DMA_Exec = false;
 		bool dmc_realign;
 
-		uint8_t DB; //old data bus values from previous reads
+		uint8_t Data_Bus; //old data bus values from previous reads
 		uint8_t oam_dma_byte;
 		uint8_t latched4016;
 		uint8_t Controller_Strobed_Value;
@@ -197,7 +197,7 @@ namespace SNESHawk
 			saver = bool_saver(OAM_DMA_Exec, saver);
 			saver = bool_saver(dmc_realign, saver);
 
-			saver = byte_saver(DB, saver);
+			saver = byte_saver(Data_Bus, saver);
 			saver = byte_saver(oam_dma_byte, saver);
 			saver = byte_saver(latched4016, saver);
 			saver = byte_saver(Controller_Strobed_Value, saver);
@@ -249,7 +249,7 @@ namespace SNESHawk
 			loader = bool_loader(&OAM_DMA_Exec, loader);
 			loader = bool_loader(&dmc_realign, loader);
 
-			loader = byte_loader(&DB, loader);
+			loader = byte_loader(&Data_Bus, loader);
 			loader = byte_loader(&oam_dma_byte, loader);
 			loader = byte_loader(&latched4016, loader);
 			loader = byte_loader(&Controller_Strobed_Value, loader);
@@ -294,27 +294,35 @@ namespace SNESHawk
 
 		uint32_t cpu_Instr_Type_Save;
 		uint32_t cpu_ALU_Type_Save;
+		uint32_t cpu_Cycle_Type_Save;
+
+		uint32_t cpu_Fetch_Cnt, cpu_Fetch_Wait, cpu_Fetch_Op;
 
 		bool BCD_Enabled = false;
 		bool debug = false;
+		bool Is_Native_Mode;
+		bool Is_Index_16;
+		bool Is_Acc_16;
 		bool IRQ;
 		bool NMI;
 		bool RDY;
 		bool IRQ_Br;
 		bool NMI_Br;
 
-		uint8_t A;
-		uint8_t X;
-		uint8_t Y;
 		uint8_t P;
+		uint8_t DBR;
+		uint8_t PBR;
 		uint16_t PC;
-		uint8_t S;
+		uint16_t S;
+		uint16_t D;
+		uint16_t A;
+		uint16_t X;
+		uint16_t Y;
 
 		uint64_t TotalExecutedCycles;
 		uint64_t Total_CPU_Clock_Cycles;
 
 		bool iflag_pending;
-		bool RDY_Freeze;
 		bool branch_irq_hack;
 		bool cpu_First_Check;
 
@@ -363,11 +371,17 @@ namespace SNESHawk
 			BCD_Enabled = false;
 			cpu_First_Check = false;
 
+			Is_Native_Mode = false;
+			Is_Acc_16 = false;
+			Is_Index_16 = false;
+
 			IRQ = false;
 			NMI = false;
 
 			IRQ_Br = false;
 			NMI_Br = false;
+
+			cpu_Fetch_Cnt = cpu_Fetch_Wait = cpu_Fetch_Op = 0;
 		}
 
 		void cpu_SoftReset()
@@ -480,8 +494,7 @@ namespace SNESHawk
 			AIYW,		// addr,Y [absolute indexed WRITE Y]
 			AIXRW,		// addr,X [absolute indexed RMW X]
 			AIYRW,		// addr,Y [absolute indexed RMW Y]
-			AIUW,		// addr,(X,Y) [absolute indexed WRITE Unofficial]
-			
+
 			Jam,		// Jam
 			INT,		// Interrupts
 			DRMI,		// Dummy reads for interrupts
@@ -504,7 +517,7 @@ namespace SNESHawk
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
 			OpT::Imm  , OpT::AdXW , OpT::Imm  , OpT::AdXW , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
-			OpT::Br   , OpT::IIYW , OpT::Jam  , OpT::IIYW , OpT::ZPXW , OpT::ZPXW , OpT::ZPYW , OpT::ZPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AIUW , OpT::AIUW , OpT::AIXW , OpT::AIUW , OpT::AIUW ,
+			OpT::Br   , OpT::IIYW , OpT::Jam  , OpT::IIYW , OpT::ZPXW , OpT::ZPXW , OpT::ZPYW , OpT::ZPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AbsW , OpT::AbsW , OpT::AIXW , OpT::AbsW , OpT::AbsW ,
 			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXR , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYR , OpT::ZPXR , OpT::ZPXR , OpT::ZPYR , OpT::ZPYR , OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYR , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
 
@@ -513,6 +526,18 @@ namespace SNESHawk
 			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 		};
+
+		enum class Cycle_Type
+		{
+			Read_Cycle,
+			Write_Cycle,
+			Fetch_ALU_Cycle,
+			Fetch_Cycle,
+			Internal_Cycle,
+			PC_Change_Cycle,
+		};
+
+		Cycle_Type cpu_Cycle_Type;
 
 		enum class ALU
 		{
@@ -524,11 +549,10 @@ namespace SNESHawk
 			// int value 33
 			// A implied
 			ASLA, ROLA, LSRA, RORA,
-			
-			// unofficial
-			LAX, SLO, ANC, RLA, SRE, ARR, SAX, ANE, SHA, SHS, SHY, SHX, LXA,
-			LAS, DCP, AXS, ISC, SED,
 
+			// new to 65C816
+			SED, WAI, STP, XBA, XCE, PHD, TCS, PLD, TSC, PHK, TCD, RTL, TDC, PHB, TXY, PLB, TYX,
+			
 			// Branch conditions
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ,
 
@@ -536,35 +560,66 @@ namespace SNESHawk
 			PLP, PLA, PHA, PHP,
 
 			// loads / stores
-			STA, STX, STY, LDA, LDX, LDY,
+			STA, STX, STY, STZ, LDA, LDX, LDY,
 
 		};
 
 		ALU cpu_ALU_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::PHP  , ALU::ORA  , ALU::ASLA , ALU::ANC  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
-			ALU::BPL  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
-			ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::PLP  , ALU::AND  , ALU::ROLA , ALU::ANC  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
-			ALU::BMI  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
+			ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  , ALU::PHP  , ALU::ORA  , ALU::ASLA , ALU::PHD  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  ,
+			ALU::BPL  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::TCS  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  ,
+			ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::PLP  , ALU::AND  , ALU::ROLA , ALU::PLD  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::AND  ,
+			ALU::BMI  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::TSC  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  ,
 
-			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::ASR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
-			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::CLI  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
-			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::ARR  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::PHK  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
+			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::NOP  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
+			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::RTL  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::NOP  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
 
-			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::SAX  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::ANE  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  ,
-			ALU::BCC  , ALU::STA  , ALU::NOP  , ALU::SHA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::SHS  , ALU::SHY  , ALU::STA  , ALU::SHX  , ALU::SHA  ,
-			ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::LXA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
-			ALU::BCS  , ALU::LDA  , ALU::NOP  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::LAS  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
+			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::PHB  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  ,
+			ALU::BCC  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::TXY  , ALU::STZ  , ALU::STA  , ALU::STZ  , ALU::STA  ,
+			ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::PLB  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
+			ALU::BCS  , ALU::LDA  , ALU::NOP  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::TYX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
 
-			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::AXS  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
-			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::CLD  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
-			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
-			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::SED  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
+			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::WAI  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::NOP  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::XBA  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
+			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::NOP  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
 		};
 
 		ALU cpu_ALU_Type;
+
+		enum class RW_Size
+		{
+			NA,	// Not Applicable (includes 8 bit only operations like STZ)
+			IXY,// Depends on size of X,Y regs
+			Acc,// Depends on size of accumulator
+		};
+
+		RW_Size cpu_RW_Size_List[256] =
+		{
+			//  0			     1			   2			     3			    4				5				6				7				8				9				A				B				C				D				E				F
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHD  , RW_Size::NOP  , RW_Size::ORA  , RW_Size::ASL  , RW_Size::ORA  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TCS  , RW_Size::NOP  , RW_Size::ORA  , RW_Size::ASL  , RW_Size::ORA  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PLD  , RW_Size::BIT  , RW_Size::AND  , RW_Size::ROL  , RW_Size::AND  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TSC  , RW_Size::NOP  , RW_Size::AND  , RW_Size::ROL  , RW_Size::AND  ,
+
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHK  , RW_Size::NOP  , RW_Size::EOR  , RW_Size::LSR  , RW_Size::EOR  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::TCD  , RW_Size::NOP  , RW_Size::EOR  , RW_Size::LSR  , RW_Size::EOR  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::RTL  , RW_Size::NOP  , RW_Size::ADC  , RW_Size::ROR  , RW_Size::RRA  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::TDC  , RW_Size::NOP  , RW_Size::ADC  , RW_Size::ROR  , RW_Size::RRA  ,
+
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHB  , RW_Size::STY  , RW_Size::STA  , RW_Size::STX  , RW_Size::STA  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TXY  , RW_Size::STZ  , RW_Size::STA  , RW_Size::STZ  , RW_Size::STA  ,
+			RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PLB  , RW_Size::LDY  , RW_Size::LDA  , RW_Size::LDX  , RW_Size::LDA  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TYX  , RW_Size::LDY  , RW_Size::LDA  , RW_Size::LDX  , RW_Size::LDA  ,
+
+			RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::WAI  , RW_Size::CPY  , RW_Size::CMP  , RW_Size::DEC  , RW_Size::CMP  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::STP  , RW_Size::NOP  , RW_Size::CMP  , RW_Size::DEC  , RW_Size::CMP  ,
+			RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::XBA  , RW_Size::CPX  , RW_Size::SBC  , RW_Size::INC  , RW_Size::SBC  ,
+			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::XCE  , RW_Size::NOP  , RW_Size::SBC  , RW_Size::INC  , RW_Size::SBC  ,
+		};
 
 		#pragma endregion
 
@@ -578,6 +633,9 @@ namespace SNESHawk
 		{
 			cpu_Instr_Type = cpu_Instr_Type_List[opcode];
 			cpu_ALU_Type = cpu_ALU_Type_List[opcode];
+
+			// determine whether one or two reads or writes occurs depending on processor state
+
 		}
 
 		void cpu_ALU_Operation();
@@ -626,8 +684,6 @@ namespace SNESHawk
 
 		void ExecuteOne()
 		{
-			RDY_Freeze = false;
-
 			ExecuteOneOp();
 			TotalExecutedCycles++;
 			Total_CPU_Clock_Cycles++;
@@ -987,16 +1043,23 @@ namespace SNESHawk
 
 		uint8_t* cpu_SaveState(uint8_t* saver)
 		{
-			saver = byte_saver(A, saver);
-			saver = byte_saver(X, saver);
-			saver = byte_saver(Y, saver);
 			saver = byte_saver(P, saver);
+			saver = byte_saver(DBR, saver);
+			saver = byte_saver(PBR, saver);
 			saver = short_saver(PC, saver);
-			saver = byte_saver(S, saver);
+			saver = short_saver(S, saver);
+			saver = short_saver(D, saver);
+			saver = short_saver(A, saver);
+			saver = short_saver(X, saver);
+			saver = short_saver(Y, saver);
+
 
 			saver = bool_saver(NMI, saver);
 			saver = bool_saver(IRQ, saver);
 			saver = bool_saver(RDY, saver);
+			saver = bool_saver(Is_Native_Mode, saver);
+			saver = bool_saver(Is_Index_16, saver);
+			saver = bool_saver(Is_Acc_16, saver);
 			saver = bool_saver(NMI_Br, saver);
 			saver = bool_saver(IRQ_Br, saver);
 
@@ -1004,7 +1067,6 @@ namespace SNESHawk
 			saver = long_saver(Total_CPU_Clock_Cycles, saver);
 
 			saver = bool_saver(iflag_pending, saver);
-			saver = bool_saver(RDY_Freeze, saver);
 			saver = bool_saver(branch_irq_hack, saver);
 			saver = bool_saver(cpu_First_Check, saver);
 
@@ -1033,22 +1095,33 @@ namespace SNESHawk
 
 			saver = int_saver((uint32_t)cpu_Instr_Type, saver);
 			saver = int_saver((uint32_t)cpu_ALU_Type, saver);
+			saver = int_saver((uint32_t)cpu_Cycle_Type, saver);
+
+			saver = int_saver(cpu_Fetch_Cnt, saver);
+			saver = int_saver(cpu_Fetch_Wait, saver);
+			saver = int_saver(cpu_Fetch_Op, saver);
 
 			return saver;
 		}
 
 		uint8_t* cpu_LoadState(uint8_t* loader)
 		{
-			loader = byte_loader(&A, loader);
-			loader = byte_loader(&X, loader);
-			loader = byte_loader(&Y, loader);
 			loader = byte_loader(&P, loader);
+			loader = byte_loader(&DBR, loader);
+			loader = byte_loader(&PBR, loader);
 			loader = short_loader(&PC, loader);
-			loader = byte_loader(&S, loader);
+			loader = short_loader(&S, loader);
+			loader = short_loader(&D, loader);
+			loader = short_loader(&A, loader);
+			loader = short_loader(&X, loader);
+			loader = short_loader(&Y, loader);
 
 			loader = bool_loader(&NMI, loader);
 			loader = bool_loader(&IRQ, loader);
 			loader = bool_loader(&RDY, loader);
+			loader = bool_loader(&Is_Native_Mode, loader);
+			loader = bool_loader(&Is_Index_16, loader);
+			loader = bool_loader(&Is_Acc_16, loader);
 			loader = bool_loader(&NMI_Br, loader);
 			loader = bool_loader(&IRQ_Br, loader);
 
@@ -1056,7 +1129,6 @@ namespace SNESHawk
 			loader = long_loader(&Total_CPU_Clock_Cycles, loader);
 
 			loader = bool_loader(&iflag_pending, loader);
-			loader = bool_loader(&RDY_Freeze, loader);
 			loader = bool_loader(&branch_irq_hack, loader);
 			loader = bool_loader(&cpu_First_Check, loader);
 
@@ -1085,9 +1157,15 @@ namespace SNESHawk
 
 			loader = int_loader(&cpu_Instr_Type_Save, loader);
 			loader = int_loader(&cpu_ALU_Type_Save, loader);
+			loader = int_loader(&cpu_Cycle_Type_Save, loader);
 
 			cpu_Instr_Type = static_cast<OpT>(cpu_Instr_Type_Save);
 			cpu_ALU_Type = static_cast<ALU>(cpu_ALU_Type_Save);
+			cpu_Cycle_Type = static_cast<Cycle_Type>(cpu_Cycle_Type_Save);
+
+			loader = int_loader(&cpu_Fetch_Cnt, loader);
+			loader = int_loader(&cpu_Fetch_Wait, loader);
+			loader = int_loader(&cpu_Fetch_Op, loader);
 
 			return loader;
 		}
