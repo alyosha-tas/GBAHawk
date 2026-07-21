@@ -18,16 +18,12 @@ namespace SNESHawk
 				{
 					case 0:
 						address_bus = PC;
-
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-							cpu_ALU_Operation();
-						}
+						cpu_Cycle_Type = Cycle_Type::Internal_Cycle;										
 						break;
 
 					case 1:
-						End();
+						address_bus = PC;
+						cpu_Cycle_Type = Cycle_Type::Fetch_ALU_Cycle;
 						break;
 				}
 				break;
@@ -40,18 +36,18 @@ namespace SNESHawk
 						cpu_Cycle_Type = Cycle_Type::Read_Cycle;
 						PC++;
 
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-							
-							cpu_ALU_Operation();
-						}
+						cpu_Instr_Cycle += cpu_Instr_Skip;
 						break;
 
 					case 1:
-						cpu_Cycle_Type = Cycle_Type::Fetch_ALU_Cycle;
+						address_bus = PC;
+						cpu_Cycle_Type = Cycle_Type::Read_Cycle_Hi;
+						PC++;
+						break;
 
-						End();
+					case 2:
+						address_bus = PC;
+						cpu_Cycle_Type = Cycle_Type::Fetch_ALU_Cycle;
 						break;
 				}
 				break;
@@ -60,26 +56,15 @@ namespace SNESHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0:
-						// not effected by RDY
-						if (cpu_ALU_Type == ALU::CLI)
-						{
-							iflag_pending = false;
-						}
-						else
-						{
-							iflag_pending = true;
-						}
+						iflag_pending = cpu_ALU_Type != ALU::CLI;
 						
 						address_bus = PC;
-
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-						}
+						cpu_Cycle_Type = Cycle_Type::Internal_Cycle;
 						break;
 
 					case 1:
-						End_ISpecial();
+						address_bus = PC;
+						cpu_Cycle_Type = Cycle_Type::Fetch_Cycle_No_Check;
 						break;
 				}
 				break;
@@ -422,12 +407,7 @@ namespace SNESHawk
 								break;
 						}
 
-						NMI_Br = false;
-						IRQ_Br = false;
-
 						address_bus = PC;
-
-						cpu_First_Check = true;
 
 						if (RDY)
 						{
@@ -448,15 +428,6 @@ namespace SNESHawk
 					case 1:
 						address_bus = PC;
 
-						if (cpu_First_Check)
-						{
-							// This is the last check for interrupts in the non-branch crossing case
-							NMI_Br = NMI;
-							IRQ_Br = IRQ;
-
-							cpu_First_Check = false;
-						}
-
 						if (RDY)
 						{
 							ReadMemory(address_bus);
@@ -466,8 +437,6 @@ namespace SNESHawk
 
 							if (!((alu_temp & 0x100) == 0x100))
 							{								
-								branch_irq_hack = true;
-
 								cpu_Instr_Cycle++;
 							}
 						}
@@ -486,7 +455,7 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						End_Branch();
+						End();
 						break;
 				}
 				break;
@@ -1349,14 +1318,6 @@ namespace SNESHawk
 						break;
 				}
 				break;
-
-			case OpT::DRMI:		
-				Fetch_Dummy_Interrupt();
-				break;
-
-			case OpT::FONI:
-				Fetch_Opcode_No_Interrupt();
-				break;
 		}
 	}
 
@@ -1623,6 +1584,265 @@ namespace SNESHawk
 				}
 				break;
 
+			case ALU::NOP_16:
+				break;
+
+			case ALU::ORA_16:
+				A |= (uint8_t)alu_temp;
+				NZ_A();
+				break;
+
+			case ALU::AND_16:
+				A &= (uint8_t)alu_temp;
+				NZ_A();
+				break;
+
+			case ALU::EOR_16:
+				A ^= (uint8_t)alu_temp;
+				NZ_A();
+				break;
+
+			case ALU::LDA_16:
+				A = (uint8_t)alu_temp;
+				NZ_A();
+				break;
+
+			case ALU::LDX_16:
+				X = (uint8_t)alu_temp;
+				NZ_X();
+				break;
+
+			case ALU::LDY_16:
+				Y = (uint8_t)alu_temp;
+				NZ_Y();
+				break;
+
+			case ALU::ASR_16:
+				A &= (uint8_t)alu_temp;
+				cpu_FlagCset((A & 0x1) == 0x1);
+				A >>= 1;
+				NZ_A();
+				break;
+
+			case ALU::INX_16:
+				X++;
+				NZ_X();
+				break;
+
+			case ALU::INY_16:
+				Y++;
+				NZ_Y();
+				break;
+
+			case ALU::DEX_16:
+				X--;
+				NZ_X();
+				break;
+
+			case ALU::DEY_16:
+				Y--;
+				NZ_Y();
+				break;
+
+			case ALU::INC_16:
+				alu_temp = (uint8_t)((alu_temp + 1) & 0xFF);
+				P = (uint8_t)((P & 0x7D) | TableNZ[alu_temp]);
+				break;
+
+			case ALU::DEC_16:
+				alu_temp = (uint8_t)((alu_temp - 1) & 0xFF);
+				P = (uint8_t)((P & 0x7D) | TableNZ[alu_temp]);
+				break;
+
+			case ALU::ASL_16:
+				value8 = (uint8_t)alu_temp;
+				cpu_FlagCset((value8 & 0x80) != 0);
+				alu_temp = value8 = (uint8_t)(value8 << 1);
+				P = (uint8_t)((P & 0x7D) | TableNZ[value8]);
+				break;
+
+			case ALU::ROL_16:
+				value8 = temp8 = (uint8_t)alu_temp;
+				alu_temp = value8 = (uint8_t)((value8 << 1) | (P & 1));
+				cpu_FlagCset((temp8 & 0x80) != 0);
+				P = (uint8_t)((P & 0x7D) | TableNZ[value8]);
+				break;
+
+			case ALU::ROR_16:
+				value8 = temp8 = (uint8_t)alu_temp;
+				alu_temp = value8 = (uint8_t)((value8 >> 1) | ((P & 1) << 7));
+				cpu_FlagCset((temp8 & 1) != 0);
+				P = (uint8_t)((P & 0x7D) | TableNZ[value8]);
+				break;
+
+			case ALU::LSR_16:
+				value8 = (uint8_t)alu_temp;
+				cpu_FlagCset((value8 & 1) != 0);
+				alu_temp = value8 = (uint8_t)(value8 >> 1);
+				P = (uint8_t)((P & 0x7D) | TableNZ[value8]);
+				break;
+
+			case ALU::ASLA_16:
+				cpu_FlagCset((A & 0x80) != 0);
+				A = (uint8_t)(A << 1);
+				NZ_A();
+				break;
+
+			case ALU::ROLA_16:
+				temp8 = A;
+				A = (uint8_t)((A << 1) | (P & 1));
+				cpu_FlagCset((temp8 & 0x80) != 0);
+				NZ_A();
+				break;
+
+			case ALU::RORA_16:
+				temp8 = A;
+				A = (uint8_t)((A >> 1) | ((P & 1) << 7));
+				cpu_FlagCset((temp8 & 1) != 0);
+				NZ_A();
+				break;
+
+			case ALU::LSRA_16:
+				cpu_FlagCset((A & 1) != 0);
+				A = (uint8_t)(A >> 1);
+				NZ_A();
+				break;
+
+			case ALU::TXS_16:
+				S = X;
+				break;
+
+			case ALU::TSX_16:
+				X = S;
+				NZ_X();
+				break;
+
+			case ALU::TAX_16:
+				X = A;
+				NZ_X();
+				break;
+
+			case ALU::TAY_16:
+				Y = A;
+				NZ_Y();
+				break;
+
+			case ALU::TYA_16:
+				A = Y;
+				NZ_A();
+				break;
+
+			case ALU::TXA_16:
+				A = X;
+				NZ_A();
+				break;
+
+			case ALU::SEC_16:
+				cpu_FlagCset(true);
+				break;
+
+			case ALU::CLC_16:
+				cpu_FlagCset(false);
+				break;
+
+			case ALU::SED_16:
+				cpu_FlagDset(true);
+				break;
+
+			case ALU::CLD_16:
+				cpu_FlagDset(false);
+				break;
+
+			case ALU::CLV_16:
+				cpu_FlagVset(false);
+				break;
+
+			case ALU::BIT_16:
+				cpu_FlagNset((alu_temp & 0x80) != 0);
+				cpu_FlagVset((alu_temp & 0x40) != 0);
+				cpu_FlagZset((A & alu_temp) == 0);
+				break;
+
+			case ALU::CMP_16:
+				value8 = (uint8_t)alu_temp;
+				value16 = (uint16_t)(A - value8);
+				cpu_FlagCset(A >= value8);
+				P = (uint8_t)((P & 0x7D) | TableNZ[(uint8_t)value16]);
+				break;
+
+			case ALU::CPX_16:
+				value8 = (uint8_t)alu_temp;
+				value16 = (uint16_t)(X - value8);
+				cpu_FlagCset(X >= value8);
+				P = (uint8_t)((P & 0x7D) | TableNZ[(uint8_t)value16]);
+				break;
+
+			case ALU::CPY_16:
+				value8 = (uint8_t)alu_temp;
+				value16 = (uint16_t)(Y - value8);
+				cpu_FlagCset(Y >= value8);
+				P = (uint8_t)((P & 0x7D) | TableNZ[(uint8_t)value16]);
+				break;
+
+			case ALU::RRA_16:
+				value8 = (uint8_t)alu_temp;
+				value8 = temp8 = (uint8_t)alu_temp;
+				alu_temp = value8 = (uint8_t)((value8 >> 1) | ((P & 1) << 7));
+				cpu_FlagCset((temp8 & 1) != 0);
+				// pass through to adc
+
+			case ALU::ADC_16:
+				//TODO - an extra cycle penalty on 65C02 only
+				value8 = (uint8_t)alu_temp;
+				if (cpu_FlagDget() && BCD_Enabled)
+				{
+					tempint = (A & 0x0F) + (value8 & 0x0F) + (cpu_FlagCget() ? 0x01 : 0x00);
+					if (tempint > 0x09)
+						tempint += 0x06;
+					tempint = (tempint & 0x0F) + (A & 0xF0) + (value8 & 0xF0) + (tempint > 0x0F ? 0x10 : 0x00);
+					cpu_FlagVset((~(A ^ value8) & (A ^ tempint) & 0x80) != 0);
+					cpu_FlagZset(((A + value8 + (cpu_FlagCget() ? 1 : 0)) & 0xFF) == 0);
+					cpu_FlagNset((tempint & 0x80) != 0);
+					if ((tempint & 0x1F0) > 0x090)
+						tempint += 0x060;
+					cpu_FlagCset(tempint > 0xFF);
+					A = (uint8_t)(tempint & 0xFF);
+				}
+				else
+				{
+					tempint = value8 + A + (cpu_FlagCget() ? 1 : 0);
+					cpu_FlagVset((~(A ^ value8) & (A ^ tempint) & 0x80) != 0);
+					cpu_FlagCset(tempint > 0xFF);
+					A = (uint8_t)tempint;
+					NZ_A();
+				}
+				break;
+
+			case ALU::SBC_16:
+				value8 = (uint8_t)alu_temp;
+				tempint = A - value8 - (cpu_FlagCget() ? 0 : 1);
+				if (cpu_FlagDget() && BCD_Enabled)
+				{
+					lo = (A & 0x0F) - (value8 & 0x0F) - (cpu_FlagCget() ? 0 : 1);
+					hi = (A & 0xF0) - (value8 & 0xF0);
+					if ((lo & 0xF0) != 0) lo -= 0x06;
+					if ((lo & 0x80) != 0) hi -= 0x10;
+					if ((hi & 0x0F00) != 0) hi -= 0x60;
+					cpu_FlagVset(((A ^ value8) & (A ^ tempint) & 0x80) != 0);
+					cpu_FlagZset((tempint & 0xFF) == 0);
+					cpu_FlagNset((tempint & 0x80) != 0);
+					cpu_FlagCset((hi & 0xFF00) == 0);
+					A = (uint8_t)((lo & 0x0F) | (hi & 0xF0));
+				}
+				else
+				{
+					cpu_FlagVset(((A ^ value8) & (A ^ tempint) & 0x80) != 0);
+					cpu_FlagCset(tempint >= 0);
+					A = (uint8_t)tempint;
+					NZ_A();
+				}
+				break;
+
 			default:
 				throw exception("bad op");
 
@@ -1670,7 +1890,7 @@ namespace SNESHawk
 			cpu_IRQ_Type = 0; // NMI
 			NMI = false;
 
-			Fetch_Dummy_Interrupt();
+			ReadMemory(address_bus);
 			return;
 		}
 
@@ -1682,108 +1902,15 @@ namespace SNESHawk
 			cpu_Instr_Type = OpT::INT;
 			cpu_IRQ_Type = 1; // IRQ
 
-			Fetch_Dummy_Interrupt();
+			ReadMemory(address_bus);
 			return;
 		}
 
-		Fetch_Opcode_No_Interrupt();
-	}
-
-	void SNES_System::Fetch1_Branch()
-	{
-		cpu_Instr_Cycle = -1;
-		my_iflag = cpu_FlagIget();
-		cpu_FlagIset(iflag_pending);
-
-		if (!branch_irq_hack)
-		{
-			// will interrupt if either poll is true
-			if (NMI_Br || NMI)
-			{
-				if (TraceCallback) TraceCallback(1);
-				ea = NMIVector;
-
-				cpu_Instr_Type = OpT::INT;
-				cpu_IRQ_Type = 0; // NMI
-				NMI = false;
-
-				Fetch_Dummy_Interrupt();
-				return;
-			}
-
-			if ((IRQ_Br || IRQ) && !my_iflag)
-			{
-				if (TraceCallback) TraceCallback(2);
-				ea = IRQVector;
-
-				cpu_Instr_Type = OpT::INT;
-				cpu_IRQ_Type = 1; // IRQ
-
-				Fetch_Dummy_Interrupt();
-				return;
-			}
-		}
-		else
-		{
-			if (NMI_Br)
-			{
-				if (TraceCallback) TraceCallback(1);
-				ea = NMIVector;
-
-				cpu_Instr_Type = OpT::INT;
-				cpu_IRQ_Type = 0; // NMI
-				NMI = false;
-
-				Fetch_Dummy_Interrupt();
-				return;
-			}
-
-			if (IRQ_Br && !my_iflag)
-			{
-				if (TraceCallback) TraceCallback(2);
-				ea = IRQVector;
-
-				cpu_Instr_Type = OpT::INT;
-				cpu_IRQ_Type = 1; // IRQ
-
-				Fetch_Dummy_Interrupt();
-				return;
-			}
-		}
-
-		Fetch_Opcode_No_Interrupt();
-	}
-
-	void SNES_System::Fetch_Opcode_No_Interrupt()
-	{
-		cpu_Instr_Type = OpT::FONI;
-		cpu_Instr_Cycle = -1;
-		
-		address_bus = PC;
-
-		if (RDY)
-		{
-			branch_irq_hack = false;
-			OnExecFetch(PC);
-			if (TraceCallback) TraceCallback(0);
-			opcode = ReadMemory(address_bus);
-			PC++;
-			cpu_Decode(opcode);
-		}
-	}
-
-	void SNES_System::Fetch_Dummy_Interrupt()
-	{
-		cpu_Instr_Type = OpT::DRMI;
-		cpu_Instr_Cycle = -1;
-		
-		address_bus = PC;
-
-		if (RDY)
-		{
-			ReadMemory(address_bus);
-			cpu_Instr_Type = OpT::INT;
-		}
+		OnExecFetch(PC);
+		if (TraceCallback) TraceCallback(0);
+		opcode = ReadMemory(address_bus);
+		PC++;
+		cpu_Decode(opcode);
 	}
 
 	void SNES_System::Fetch2()

@@ -291,23 +291,26 @@ namespace SNESHawk
 
 		uint16_t cpu_Instr_Cycle;
 		uint16_t cpu_IRQ_Type;
+		uint16_t cpu_Instr_Skip;
+		
 
 		uint32_t cpu_Instr_Type_Save;
 		uint32_t cpu_ALU_Type_Save;
 		uint32_t cpu_Cycle_Type_Save;
+		uint32_t cpu_RW_Size_Save;
 
 		uint32_t cpu_Fetch_Cnt, cpu_Fetch_Wait, cpu_Fetch_Op;
 
 		bool BCD_Enabled = false;
 		bool debug = false;
-		bool Is_Native_Mode;
 		bool Is_Index_16;
 		bool Is_Acc_16;
 		bool IRQ;
 		bool NMI;
 		bool RDY;
-		bool IRQ_Br;
-		bool NMI_Br;
+		bool Flag_E;
+		bool Flag_B;
+		bool cpu_ALU_Op_Size_8;
 
 		uint8_t P;
 		uint8_t DBR;
@@ -323,8 +326,6 @@ namespace SNESHawk
 		uint64_t Total_CPU_Clock_Cycles;
 
 		bool iflag_pending;
-		bool branch_irq_hack;
-		bool cpu_First_Check;
 
 		uint8_t opcode2, opcode3;
 		uint8_t H;
@@ -332,7 +333,7 @@ namespace SNESHawk
 		uint16_t address_bus;
 
 		uint32_t opcode;
-		uint32_t ea, alu_temp;
+		uint32_t ea, alu_temp, alu_temp_hi;
 
 		uint8_t value8, temp8;
 		uint16_t value16;
@@ -360,41 +361,66 @@ namespace SNESHawk
 			PC = 0;
 			TotalExecutedCycles = 0;
 
-			cpu_Instr_Type = OpT::DRMI;
+			cpu_Instr_Type = OpT::INT;
 			cpu_IRQ_Type = 2;
 			cpu_ALU_Type = ALU::NOP;
-			cpu_Instr_Cycle = 0;
+			cpu_Instr_Cycle = -1;
+			cpu_RW_Size = RW_Size::NA;
+			cpu_Cycle_Type = Cycle_Type::Fetch_Reset;
+
+			address_bus = 0;
+
+			cpu_Instr_Skip = 1;
+			cpu_ALU_Op_Size_8 = true;
 
 			opcode = 0;
 			iflag_pending = true;
 			RDY = true;
 			BCD_Enabled = false;
-			cpu_First_Check = false;
 
-			Is_Native_Mode = false;
 			Is_Acc_16 = false;
 			Is_Index_16 = false;
 
 			IRQ = false;
 			NMI = false;
 
-			IRQ_Br = false;
-			NMI_Br = false;
+			cpu_Fetch_Cnt = 0;
+			cpu_Fetch_Op = 1;
+			cpu_Fetch_Wait = 6;
 
-			cpu_Fetch_Cnt = cpu_Fetch_Wait = cpu_Fetch_Op = 0;
+			Flag_E = true;
+			Flag_B = false;
 		}
 
 		void cpu_SoftReset()
 		{
-			cpu_Instr_Type = OpT::DRMI;
+			cpu_Instr_Type = OpT::INT;
 			cpu_IRQ_Type = 2;
 			cpu_ALU_Type = ALU::NOP;
-			cpu_Instr_Cycle = 0;
+			cpu_Instr_Cycle = -1;
+			cpu_RW_Size = RW_Size::NA;
+			cpu_Cycle_Type = Cycle_Type::Fetch_Reset;
+
+			address_bus = 0;
 
 			opcode = 0;
 
 			iflag_pending = true;
 			cpu_FlagIset(true);
+
+			RDY = true;
+			BCD_Enabled = false;
+
+			cpu_Instr_Skip = 1;
+			cpu_ALU_Op_Size_8 = true;
+
+			cpu_Fetch_Cnt = 0;
+			cpu_Fetch_Op = 1;
+			cpu_Fetch_Wait = 6;
+
+			Flag_E = true;
+			Flag_B = false;
+
 		}
 
 		inline bool cpu_FlagCget() { return (P & 0x01) != 0; }
@@ -409,11 +435,31 @@ namespace SNESHawk
 		inline bool cpu_FlagDget() { return (P & 0x08) != 0; }
 		inline void cpu_FlagDset(bool value) { P = (uint8_t)((P & ~0x08) | (value ? 0x08 : 0x00)); }
 
-		inline bool cpu_FlagBget() { return (P & 0x10) != 0; }
-		inline void cpu_FlagBset(bool value) { P = (uint8_t)((P & ~0x10) | (value ? 0x10 : 0x00)); }
+		inline bool cpu_FlagXget() { return (P & 0x10) != 0; }
+		inline void cpu_FlagXset(bool value)
+		{
+			if (Flag_E)
+			{
+				P |= 0x10;
+			}
+			else
+			{
+				P = (uint8_t)((P & ~0x10) | (value ? 0x10 : 0x00));
+			}
+		}
 
-		inline bool cpu_FlagTget() { return (P & 0x20) != 0; }
-		inline void cpu_FlagTset(bool value) { P = (uint8_t)((P & ~0x20) | (value ? 0x20 : 0x00)); }
+		inline bool cpu_FlagMget() { return (P & 0x20) != 0; }
+		inline void cpu_FlagMset(bool value)
+		{
+			if (Flag_E)
+			{
+				P |= 0x20;
+			}
+			else
+			{
+				P = (uint8_t)((P & ~0x20) | (value ? 0x20 : 0x00));
+			}
+		}
 
 		inline bool cpu_FlagVget() { return (P & 0x40) != 0; }
 		inline void cpu_FlagVset(bool value) { P = (uint8_t)((P & ~0x40) | (value ? 0x40 : 0x00)); }
@@ -497,8 +543,6 @@ namespace SNESHawk
 
 			Jam,		// Jam
 			INT,		// Interrupts
-			DRMI,		// Dummy reads for interrupts
-			FONI		// Fetch opcode no interrupts
 		};
 
 		OpT cpu_Instr_Type;
@@ -530,11 +574,15 @@ namespace SNESHawk
 		enum class Cycle_Type
 		{
 			Read_Cycle,
+			Read_Cycle_Hi,
 			Write_Cycle,
 			Fetch_ALU_Cycle,
 			Fetch_Cycle,
+			Fetch_Cycle_No_Check,
+			Fetch_Cycle_No_Int,
 			Internal_Cycle,
 			PC_Change_Cycle,
+			Fetch_Reset,
 		};
 
 		Cycle_Type cpu_Cycle_Type;
@@ -562,6 +610,35 @@ namespace SNESHawk
 			// loads / stores
 			STA, STX, STY, STZ, LDA, LDX, LDY,
 
+			// reserved area
+			RA_1, RA_2,
+
+			// Now duplicate the whole thing for 16 bit versions
+			// these are chosen in the decode step based on emulation mode / processor flags
+
+			// regular ops
+			NOP_16, SEC_16, SEI_16, CLC_16, CLI_16, BIT_16, AND_16, EOR_16, ORA_16, ADC_16, CMP_16, CPY_16, CPX_16, ASL_16, SBC_16, ROL_16,
+			LSR_16, ASR_16, ROR_16, RRA_16, DEX_16, DEY_16, TXA_16, TYA_16, TXS_16, TAY_16, TAX_16, CLV_16, TSX_16, DEC_16, INY_16, CLD_16,
+			INC_16, INX_16,
+
+			// int value 33
+			// A implied
+			ASLA_16, ROLA_16, LSRA_16, RORA_16,
+
+			// new to 65C816
+			SED_16, WAI_16, STP_16, XBA_16, XCE_16, PHD_16, TCS_16, PLD_16, TSC_16, PHK_16, TCD_16, RTL_16, TDC_16, PHB_16, TXY_16, PLB_16, TYX_16,
+
+			// Branch conditions
+			BPL_16, BMI_16, BVC_16, BVS_16, BCC_16, BCS_16, BNE_16, BEQ_16,
+
+			// push pull op
+			PLP_16, PLA_16, PHA_16, PHP_16,
+
+			// loads / stores
+			STA_16, STX_16, STY_16, STZ_16, LDA_16, LDX_16, LDY_16,
+
+			// reserved area
+			RA_1_16, RA_2_16,
 		};
 
 		ALU cpu_ALU_Type_List[256] =
@@ -599,27 +676,29 @@ namespace SNESHawk
 
 		RW_Size cpu_RW_Size_List[256] =
 		{
-			//  0			     1			   2			     3			    4				5				6				7				8				9				A				B				C				D				E				F
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHD  , RW_Size::NOP  , RW_Size::ORA  , RW_Size::ASL  , RW_Size::ORA  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TCS  , RW_Size::NOP  , RW_Size::ORA  , RW_Size::ASL  , RW_Size::ORA  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PLD  , RW_Size::BIT  , RW_Size::AND  , RW_Size::ROL  , RW_Size::AND  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TSC  , RW_Size::NOP  , RW_Size::AND  , RW_Size::ROL  , RW_Size::AND  ,
+			//  0			   1			  2				 3			    4			   5			  6				 7				8			   9			  A				 B				C			   D			  E				 F
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHK  , RW_Size::NOP  , RW_Size::EOR  , RW_Size::LSR  , RW_Size::EOR  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::TCD  , RW_Size::NOP  , RW_Size::EOR  , RW_Size::LSR  , RW_Size::EOR  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::RTL  , RW_Size::NOP  , RW_Size::ADC  , RW_Size::ROR  , RW_Size::RRA  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::TDC  , RW_Size::NOP  , RW_Size::ADC  , RW_Size::ROR  , RW_Size::RRA  ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PHB  , RW_Size::STY  , RW_Size::STA  , RW_Size::STX  , RW_Size::STA  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TXY  , RW_Size::STZ  , RW_Size::STA  , RW_Size::STZ  , RW_Size::STA  ,
-			RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::PLB  , RW_Size::LDY  , RW_Size::LDA  , RW_Size::LDX  , RW_Size::LDA  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::TYX  , RW_Size::LDY  , RW_Size::LDA  , RW_Size::LDX  , RW_Size::LDA  ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc ,
 
-			RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::WAI  , RW_Size::CPY  , RW_Size::CMP  , RW_Size::DEC  , RW_Size::CMP  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::STP  , RW_Size::NOP  , RW_Size::CMP  , RW_Size::DEC  , RW_Size::CMP  ,
-			RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::XBA  , RW_Size::CPX  , RW_Size::SBC  , RW_Size::INC  , RW_Size::SBC  ,
-			RW_Size::NA   , RW_Size::Acc  , RW_Size::Acc  , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::NA   , RW_Size::Acc  , RW_Size::IXY  , RW_Size::XCE  , RW_Size::NOP  , RW_Size::SBC  , RW_Size::INC  , RW_Size::SBC  ,
+			RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 		};
+
+		RW_Size cpu_RW_Size;
 
 		#pragma endregion
 
@@ -633,9 +712,51 @@ namespace SNESHawk
 		{
 			cpu_Instr_Type = cpu_Instr_Type_List[opcode];
 			cpu_ALU_Type = cpu_ALU_Type_List[opcode];
+			cpu_RW_Size = cpu_RW_Size_List[opcode];
 
 			// determine whether one or two reads or writes occurs depending on processor state
+			if (cpu_RW_Size == RW_Size::NA)
+			{
+				cpu_Instr_Skip = 1;
+				cpu_ALU_Op_Size_8 = true;
+			}
+			else if (cpu_RW_Size == RW_Size::Acc)
+			{
+				if (Flag_E || cpu_FlagMget())
+				{
+					cpu_Instr_Skip = 1;
+					cpu_ALU_Op_Size_8 = true;
+				}
+				else
+				{
+					cpu_Instr_Skip = 0;
+					cpu_ALU_Op_Size_8 = false;
+				}
+			}
+			else
+			{
+				if (Flag_E || cpu_FlagXget())
+				{
+					cpu_Instr_Skip = 1;
+					cpu_ALU_Op_Size_8 = true;
+				}
+				else
+				{
+					cpu_Instr_Skip = 0;
+					cpu_ALU_Op_Size_8 = false;
+				}
+			}
 
+			// Now we have know what size operation to do, choose ALU op accordingly
+			if (!cpu_ALU_Op_Size_8)
+			{
+				cpu_ALU_Type = static_cast<ALU>(76 + (uint32_t)cpu_ALU_Type);
+			}
+		}
+
+		uint32_t cpu_Calculate_Wait_States()
+		{
+			return 1;
 		}
 
 		void cpu_ALU_Operation();
@@ -650,8 +771,6 @@ namespace SNESHawk
 
 		void Fetch1();
 
-		void Fetch1_Branch();
-
 		void Fetch2();
 
 		void Fetch3();
@@ -664,22 +783,10 @@ namespace SNESHawk
 			Fetch1();
 		}
 
-		void End_SuppressInterrupt()
-		{
-			cpu_Instr_Type = OpT::FONI;
-			Fetch_Opcode_No_Interrupt();
-		}
-
 		void End()
 		{
-			iflag_pending = cpu_FlagIget();
-			Fetch1();
-		}
-
-		void End_Branch()
-		{
-			iflag_pending = cpu_FlagIget();
-			Fetch1_Branch();
+			
+			
 		}
 
 		void ExecuteOne()
@@ -799,8 +906,8 @@ namespace SNESHawk
 			trace_string.append("  ");
 			trace_string.append(cpu_FlagNget() ? "N" : "n");
 			trace_string.append(cpu_FlagVget() ? "V" : "v");
-			trace_string.append(cpu_FlagTget() ? "T" : "t");
-			trace_string.append(cpu_FlagBget() ? "B" : "b");
+			trace_string.append(cpu_FlagMget() ? "M" : "m");
+			trace_string.append(cpu_FlagXget() ? "X" : "x");
 			trace_string.append(cpu_FlagVget() ? "D" : "d");
 			trace_string.append(cpu_FlagIget() ? "I" : "i");
 			trace_string.append(cpu_FlagZget() ? "Z" : "z");
@@ -1057,18 +1164,15 @@ namespace SNESHawk
 			saver = bool_saver(NMI, saver);
 			saver = bool_saver(IRQ, saver);
 			saver = bool_saver(RDY, saver);
-			saver = bool_saver(Is_Native_Mode, saver);
 			saver = bool_saver(Is_Index_16, saver);
 			saver = bool_saver(Is_Acc_16, saver);
-			saver = bool_saver(NMI_Br, saver);
-			saver = bool_saver(IRQ_Br, saver);
+			saver = bool_saver(Flag_E, saver);
+			saver = bool_saver(Flag_B, saver);
+			saver = bool_saver(cpu_ALU_Op_Size_8, saver);
+			saver = bool_saver(iflag_pending, saver);
 
 			saver = long_saver(TotalExecutedCycles, saver);
 			saver = long_saver(Total_CPU_Clock_Cycles, saver);
-
-			saver = bool_saver(iflag_pending, saver);
-			saver = bool_saver(branch_irq_hack, saver);
-			saver = bool_saver(cpu_First_Check, saver);
 
 			saver = byte_saver(opcode2, saver);
 			saver = byte_saver(opcode3, saver);
@@ -1079,6 +1183,7 @@ namespace SNESHawk
 			saver = int_saver(opcode, saver);
 			saver = int_saver(ea, saver);
 			saver = int_saver(alu_temp, saver);
+			saver = int_saver(alu_temp_hi, saver);
 
 			saver = byte_saver(value8, saver);
 			saver = byte_saver(temp8, saver);
@@ -1092,10 +1197,12 @@ namespace SNESHawk
 
 			saver = short_saver(cpu_IRQ_Type, saver);
 			saver = short_saver(cpu_Instr_Cycle, saver);
+			saver = short_saver(cpu_Instr_Skip, saver);
 
 			saver = int_saver((uint32_t)cpu_Instr_Type, saver);
 			saver = int_saver((uint32_t)cpu_ALU_Type, saver);
 			saver = int_saver((uint32_t)cpu_Cycle_Type, saver);
+			saver = int_saver((uint32_t)cpu_RW_Size, saver);
 
 			saver = int_saver(cpu_Fetch_Cnt, saver);
 			saver = int_saver(cpu_Fetch_Wait, saver);
@@ -1119,18 +1226,15 @@ namespace SNESHawk
 			loader = bool_loader(&NMI, loader);
 			loader = bool_loader(&IRQ, loader);
 			loader = bool_loader(&RDY, loader);
-			loader = bool_loader(&Is_Native_Mode, loader);
 			loader = bool_loader(&Is_Index_16, loader);
 			loader = bool_loader(&Is_Acc_16, loader);
-			loader = bool_loader(&NMI_Br, loader);
-			loader = bool_loader(&IRQ_Br, loader);
+			loader = bool_loader(&Flag_E, loader);
+			loader = bool_loader(&Flag_B, loader);
+			loader = bool_loader(&cpu_ALU_Op_Size_8, loader);
+			loader = bool_loader(&iflag_pending, loader);
 
 			loader = long_loader(&TotalExecutedCycles, loader);
 			loader = long_loader(&Total_CPU_Clock_Cycles, loader);
-
-			loader = bool_loader(&iflag_pending, loader);
-			loader = bool_loader(&branch_irq_hack, loader);
-			loader = bool_loader(&cpu_First_Check, loader);
 
 			loader = byte_loader(&opcode2, loader);
 			loader = byte_loader(&opcode3, loader);
@@ -1141,6 +1245,7 @@ namespace SNESHawk
 			loader = int_loader(&opcode, loader);
 			loader = int_loader(&ea, loader);
 			loader = int_loader(&alu_temp, loader);
+			loader = int_loader(&alu_temp_hi, loader);
 
 			loader = byte_loader(&value8, loader);
 			loader = byte_loader(&temp8, loader);
@@ -1154,14 +1259,17 @@ namespace SNESHawk
 
 			loader = short_loader(&cpu_IRQ_Type, loader);
 			loader = short_loader(&cpu_Instr_Cycle, loader);
+			loader = short_loader(&cpu_Instr_Skip, loader);
 
 			loader = int_loader(&cpu_Instr_Type_Save, loader);
 			loader = int_loader(&cpu_ALU_Type_Save, loader);
 			loader = int_loader(&cpu_Cycle_Type_Save, loader);
+			loader = int_loader(&cpu_RW_Size_Save, loader);
 
 			cpu_Instr_Type = static_cast<OpT>(cpu_Instr_Type_Save);
 			cpu_ALU_Type = static_cast<ALU>(cpu_ALU_Type_Save);
 			cpu_Cycle_Type = static_cast<Cycle_Type>(cpu_Cycle_Type_Save);
+			cpu_RW_Size = static_cast<RW_Size>(cpu_RW_Size_Save);
 
 			loader = int_loader(&cpu_Fetch_Cnt, loader);
 			loader = int_loader(&cpu_Fetch_Wait, loader);
