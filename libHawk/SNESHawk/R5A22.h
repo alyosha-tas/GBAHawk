@@ -95,19 +95,21 @@ namespace SNESHawk
 		uint16_t A;
 		uint16_t X;
 		uint16_t Y;
+		uint16_t ea;
 
 		uint64_t TotalExecutedCycles;
 		uint64_t Total_CPU_Clock_Cycles;
 
 		bool iflag_pending;
 
-		uint8_t opcode2, opcode3;
+		uint8_t opcode2, opcode3, opcode4;
 		uint8_t H;
 
-		uint16_t address_bus;
+		uint32_t Push_Shift;
+		uint32_t address_bus;
 
 		uint32_t opcode;
-		uint32_t ea, alu_temp, alu_temp_hi;
+		uint32_t alu_temp, alu_temp_hi;
 
 		uint8_t value8, temp8;
 		uint16_t value16;
@@ -131,7 +133,7 @@ namespace SNESHawk
 			X = 0;
 			Y = 0;
 			P = 0x20; // 5th bit always set
-			S = 0;
+			S = 0x100;
 			PC = 0;
 			TotalExecutedCycles = 0;
 
@@ -142,6 +144,7 @@ namespace SNESHawk
 			RW_Size_Op = RW_Size::NA;
 			Cycle_Type = CPU_Cycle_Type::Fetch_Reset;
 
+			Push_Shift = 0;
 			address_bus = 0;
 
 			Instr_Skip = 1;
@@ -175,6 +178,7 @@ namespace SNESHawk
 			RW_Size_Op = RW_Size::NA;
 			Cycle_Type = CPU_Cycle_Type::Fetch_Reset;
 
+			Push_Shift = 0;
 			address_bus = 0;
 
 			opcode = 0;
@@ -273,6 +277,7 @@ namespace SNESHawk
 			JSR,		// JSR
 			JMP,		// Jump
 			JMPI,		// Jump Indirect
+			JMPX,		// Jump Indirect,x
 			Imp,		// Implied
 			Imm,		// Immediate
 			Acc,		// Accumulator
@@ -324,23 +329,23 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::BRK  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 			OpT::JSR  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::RTI  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTI  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::AIYRW, OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 			OpT::RTS  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::Imm  , OpT::AdXW , OpT::Imm  , OpT::AdXW , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
+			OpT::Imm  , OpT::AdXW , OpT::Imm  , OpT::AdXW , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
 			OpT::Br   , OpT::IIYW , OpT::Jam  , OpT::IIYW , OpT::ZPXW , OpT::ZPXW , OpT::ZPYW , OpT::ZPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AbsW , OpT::AbsW , OpT::AIXW , OpT::AbsW , OpT::AbsW ,
 			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXR , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYR , OpT::ZPXR , OpT::ZPXR , OpT::ZPYR , OpT::ZPYR , OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYR , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
 
 			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::AIYRW, OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
 			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 		};
@@ -356,6 +361,7 @@ namespace SNESHawk
 			Fetch_Cycle_No_Int,
 			Fetch_2,
 			Fetch_3,
+			Fetch_4,
 			Internal_Cycle,
 			PC_Change_Cycle,
 			Fetch_Reset,
@@ -374,14 +380,14 @@ namespace SNESHawk
 			// A implied
 			ASLA, ROLA, LSRA, RORA,
 
-			// new to 65C816
-			SED, WAI, STP, XBA, XCE, PHD, TCS, PLD, TSC, PHK, TCD, RTL, TDC, PHB, TXY, PLB, TYX,
+			// 65C816 misc.
+			SED, WAI, STP, XBA, XCE, TCS, TSC, TCD, RTL, TDC, TXY, TYX,
 
 			// Branch conditions
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ,
 
 			// push pull op
-			PLP, PLA, PHA, PHP,
+			PHA, PHP, PHD, PHK, PHB, PHX, PHY, PLA, PLP, PLD, PLB, PLX, PLY,
 
 			// loads / stores
 			STA, STX, STY, STZ, LDA, LDX, LDY,
@@ -401,14 +407,14 @@ namespace SNESHawk
 			// A implied
 			ASLA_16, ROLA_16, LSRA_16, RORA_16,
 
-			// new to 65C816
-			SED_16, WAI_16, STP_16, XBA_16, XCE_16, PHD_16, TCS_16, PLD_16, TSC_16, PHK_16, TCD_16, RTL_16, TDC_16, PHB_16, TXY_16, PLB_16, TYX_16,
+			// 65C816 misc.
+			SED_16, WAI_16, STP_16, XBA_16, XCE_16, TCS_16, TSC_16, TCD_16, RTL_16, TDC_16, TXY_16, TYX_16,
 
 			// Branch conditions
 			BPL_16, BMI_16, BVC_16, BVS_16, BCC_16, BCS_16, BNE_16, BEQ_16,
 
 			// push pull op
-			PLP_16, PLA_16, PHA_16, PHP_16,
+			PHA_16, PHP_16, PHD_16, PHK_16, PHB_16, PHX_16, PHY_16, PLA_16, PLP_16, PLD_16, PLB_16, PLX_16, PLY_16,
 
 			// loads / stores
 			STA_16, STX_16, STY_16, STZ_16, LDA_16, LDX_16, LDY_16,
@@ -426,9 +432,9 @@ namespace SNESHawk
 			ALU::BMI  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::TSC  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  ,
 
 			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::PHK  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
-			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::NOP  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
+			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::PHY  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
 			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::RTL  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::NOP  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::PLY  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
 
 			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::PHB  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  ,
 			ALU::BCC  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::TXY  , ALU::STZ  , ALU::STA  , ALU::STZ  , ALU::STA  ,
@@ -436,9 +442,9 @@ namespace SNESHawk
 			ALU::BCS  , ALU::LDA  , ALU::NOP  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::TYX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
 
 			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::WAI  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
-			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::NOP  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::PHX  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
 			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::XBA  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
-			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::NOP  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
+			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::PLX  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
 		};
 
 		ALU ALU_Type;
@@ -446,20 +452,21 @@ namespace SNESHawk
 		enum class RW_Size
 		{
 			NA,	// Not Applicable (includes 8 bit only operations like STZ)
-			IXY,// Depends on size of X,Y regs
 			Acc,// Depends on size of accumulator
+			IXY,// Depends on size of X,Y regs
+			A16,// Always 16 bits (ex PLD) or long jumps
 		};
 
 		RW_Size RW_Size_List[256] =
 		{
 			//  0			   1			  2				 3			    4			   5			  6				 7				8			   9			  A				 B				C			   D			  E				 F
-			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::A16 , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
-			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::A16 , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 
 			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
-			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::A16 , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 
@@ -469,7 +476,7 @@ namespace SNESHawk
 			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc ,
 
 			RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
-			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
+			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::A16 , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::NA  , RW_Size::IXY , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 			RW_Size::NA  , RW_Size::Acc , RW_Size::Acc , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc , RW_Size::IXY , RW_Size::NA  , RW_Size::NA  , RW_Size::Acc , RW_Size::NA  , RW_Size::Acc ,
 		};
@@ -480,9 +487,7 @@ namespace SNESHawk
 
 	#pragma region M6502 functions
 
-		void NZ_A() { P = (uint8_t)((P & 0x7D) | TableNZ[A]); }
-		void NZ_X() { P = (uint8_t)((P & 0x7D) | TableNZ[X]); }
-		void NZ_Y() { P = (uint8_t)((P & 0x7D) | TableNZ[Y]); }
+		void NZ_ALU() { P = (uint8_t)((P & 0x7D) | TableNZ[alu_temp]); }
 
 		void Decode(uint8_t opcode)
 		{
@@ -509,7 +514,7 @@ namespace SNESHawk
 					ALU_Op_Size_8 = false;
 				}
 			}
-			else
+			else if (RW_Size_Op == RW_Size::IXY)
 			{
 				if (Flag_E || FlagXget())
 				{
@@ -521,6 +526,11 @@ namespace SNESHawk
 					Instr_Skip = 0;
 					ALU_Op_Size_8 = false;
 				}
+			}
+			else
+			{
+				Instr_Skip = 0;
+				ALU_Op_Size_8 = false;
 			}
 
 			// Now we have know what size operation to do, choose ALU op accordingly
@@ -538,8 +548,6 @@ namespace SNESHawk
 		void OnExecFetch(uint16_t addr);
 
 		void ALU_Operation();
-
-		void Write_Operation();
 
 		void Execute(int cycles);
 
@@ -574,6 +582,94 @@ namespace SNESHawk
 
 		void Get_Push_Value()
 		{
+
+		}
+
+		inline uint32_t get_PC_Addr()
+		{
+			return (((uint32_t)PBR) << 16) | PC;
+		}
+
+		inline uint16_t Dec_S()
+		{
+			S--;
+			if (Flag_E)
+			{
+				S &= 0xFF;
+				S |= 0x100;
+			}
+		}
+
+		inline uint16_t Inc_S()
+		{
+			S++;
+			if (Flag_E)
+			{
+				S &= 0xFF;
+				S |= 0x100;
+			}
+		}
+
+		void get_Push_value()
+		{
+			switch (ALU_Type)
+			{
+				case ALU::PHA:
+					value8 = A;
+					break;
+
+				case ALU::PHP:
+					value8 = P;
+					break;
+
+				case ALU::PHD:
+					value8 = D;
+					break;
+
+				case ALU::PHK:
+					value8 = PBR;
+					break;
+
+				case ALU::PHB:
+					value8 = DBR;
+					break;
+
+				case ALU::PHX:
+					value8 = X;
+					break;
+
+				case ALU::PHY:
+					value8 = Y;
+					break;
+
+				case ALU::PHA_16:
+					value8 = A >> Push_Shift;
+					break;
+
+				case ALU::PHP_16:
+					value8 = P >> Push_Shift;
+					break;
+
+				case ALU::PHD_16:
+					value8 = D >> Push_Shift;
+					break;
+
+				case ALU::PHK_16:
+					value8 = PBR >> Push_Shift;
+					break;
+
+				case ALU::PHB_16:
+					value8 = DBR >> Push_Shift;
+					break;
+
+				case ALU::PHX_16:
+					value8 = X >> Push_Shift;
+					break;
+
+				case ALU::PHY_16:
+					value8 = Y >> Push_Shift;
+					break;
+			}
 
 		}
 
@@ -623,7 +719,7 @@ namespace SNESHawk
 			saver = short_saver(A, saver);
 			saver = short_saver(X, saver);
 			saver = short_saver(Y, saver);
-
+			saver = short_saver(ea, saver);
 
 			saver = bool_saver(NMI, saver);
 			saver = bool_saver(IRQ, saver);
@@ -640,12 +736,12 @@ namespace SNESHawk
 
 			saver = byte_saver(opcode2, saver);
 			saver = byte_saver(opcode3, saver);
+			saver = byte_saver(opcode4, saver);
 			saver = byte_saver(H, saver);
 
-			saver = short_saver(address_bus, saver);
-
+			saver = int_saver(Push_Shift, saver);
+			saver = int_saver(address_bus, saver);
 			saver = int_saver(opcode, saver);
-			saver = int_saver(ea, saver);
 			saver = int_saver(alu_temp, saver);
 			saver = int_saver(alu_temp_hi, saver);
 
@@ -688,6 +784,7 @@ namespace SNESHawk
 			loader = short_loader(&A, loader);
 			loader = short_loader(&X, loader);
 			loader = short_loader(&Y, loader);
+			loader = short_loader(&ea, loader);
 
 			loader = bool_loader(&NMI, loader);
 			loader = bool_loader(&IRQ, loader);
@@ -704,12 +801,12 @@ namespace SNESHawk
 
 			loader = byte_loader(&opcode2, loader);
 			loader = byte_loader(&opcode3, loader);
+			loader = byte_loader(&opcode4, loader);
 			loader = byte_loader(&H, loader);
 
-			loader = short_loader(&address_bus, loader);
-
+			loader = int_loader(&Push_Shift, loader);
+			loader = int_loader(&address_bus, loader);
 			loader = int_loader(&opcode, loader);
-			loader = int_loader(&ea, loader);
 			loader = int_loader(&alu_temp, loader);
 			loader = int_loader(&alu_temp_hi, loader);
 
