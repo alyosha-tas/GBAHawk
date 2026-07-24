@@ -96,7 +96,6 @@ namespace SNESHawk
 		uint16_t A;
 		uint16_t X;
 		uint16_t Y;
-		uint16_t ea;
 
 		uint64_t TotalExecutedCycles;
 		uint64_t Total_CPU_Clock_Cycles;
@@ -108,6 +107,7 @@ namespace SNESHawk
 
 		uint32_t Push_Shift;
 		uint32_t address_bus;
+		uint32_t ea;
 
 		uint32_t opcode;
 		uint32_t alu_temp, alu_temp_hi;
@@ -282,6 +282,7 @@ namespace SNESHawk
 			JMPX,		// Jump Indirect,x
 			Imp,		// Implied
 			Imm,		// Immediate
+			Imm3,		// Immediate (3 cycle)
 			Acc,		// Accumulator
 			PL,			// Pull
 			PH,			// Push
@@ -291,20 +292,31 @@ namespace SNESHawk
 			CSI,		// CLI, SEI
 			BRK,		// Break
 
-			// int value 13
 			AbsR,		// [absolute READ]
 			AbsW,		// [absolute Write]
 			AbsRW,		// [absolute RMW]
 
-			AdXR,		// (addr,X) [indexed indirect READ]
-			AdXW,		// (addr,X) [indexed indirect WRITE]
-			AdXRW,		// (addr,X) [indexed indirect RMW]
+			DIXR,		// (D,X) [Direct,X indirect READ]
+			DIXW,		// (D,X) [Direct,X indirect WRITE]
 
-			IIYR,		// (addr),Y* [indirect indexed READ]
-			IIYW,		// (addr),Y* [indirect indexed WRITE]
-			IIYRW,		// (addr),Y* [indirect indexed RMW]
+			DIR,		// (D) [Direct indirect READ]
+			DIW,		// (D) [Direct indirect WRITE]
 
-			// int value 22
+			DLR,		// [D] [Direct indirect long READ]
+			DLW,		// [D] [Direct indirect long WRITE]
+
+			DSR,		// D,S [Stack Relative READ]
+			DSW,		// D,S [Stack Relative WRITE]
+
+			DSIR,		// (D,S),y [Stack Relative Indirect READ]
+			DSIW,		// (D,S),y [Stack Relative Indirect WRITE]
+
+			DIIYR,		// (D),Y* [indirect indexed READ]
+			DIIYW,		// (D),Y* [indirect indexed WRITE]
+
+			DLIYR,		// [D],Y* [indirect indexed long READ]
+			DLIYW,		// [D],Y* [indirect indexed long WRITE]
+
 			DPR,		// [Direct page READ]
 			DPW,		// [Direct page WRITE]
 			DPRW,		// [Direct page RMW]
@@ -315,16 +327,15 @@ namespace SNESHawk
 			DPYW,		// D,Y [Direct page indexed WRITE Y]
 			DPXRW,		// D,X [Direct page indexed RMW]
 
-			// int value 30
 			AIXR,		// addr,X [absolute indexed READ X]
 			AIYR,		// addr,Y [absolute indexed READ Y]
 			AIXW,		// addr,X [absolute indexed WRITE X]
 			AIYW,		// addr,Y [absolute indexed WRITE Y]
 			AIXRW,		// addr,X [absolute indexed RMW X]
-			AIYRW,		// addr,Y [absolute indexed RMW Y]
 
 			Jam,		// Jam
 			INT,		// Interrupts
+			WAI,		// WAIT
 		};
 
 		OpT Instr_Type;
@@ -332,25 +343,25 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::JSR  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::BRK  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::JSR  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::RTI  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::AIYRW, OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::RTS  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTI  , OpT::DIXR , OpT::Imp  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTS  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::Imm  , OpT::AdXW , OpT::Brl  , OpT::AdXW , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
-			OpT::Br   , OpT::IIYW , OpT::Jam  , OpT::IIYW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AbsW , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::AbsW ,
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXR , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DPYR , OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYR , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
+			OpT::Imm  , OpT::DIXW , OpT::Brl  , OpT::DSW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DLW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
+			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::AbsW ,
+			OpT::Imm  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
 
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::AIYRW, OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 		};
 
 		enum class CPU_Cycle_Type
@@ -379,7 +390,6 @@ namespace SNESHawk
 			LSR, ASR, ROR, RRA, DEX, DEY, TXA, TYA, TXS, TAY, TAX, CLV, TSX, DEC, INY, CLD,
 			INC, INX,
 
-			// int value 33
 			// A implied
 			ASLA, ROLA, LSRA, RORA,
 
@@ -406,7 +416,6 @@ namespace SNESHawk
 			LSR_16, ASR_16, ROR_16, RRA_16, DEX_16, DEY_16, TXA_16, TYA_16, TXS_16, TAY_16, TAX_16, CLV_16, TSX_16, DEC_16, INY_16, CLD_16,
 			INC_16, INX_16,
 
-			// int value 33
 			// A implied
 			ASLA_16, ROLA_16, LSRA_16, RORA_16,
 
@@ -430,24 +439,24 @@ namespace SNESHawk
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
 			ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  , ALU::PHP  , ALU::ORA  , ALU::ASLA , ALU::PHD  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  ,
-			ALU::BPL  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::TCS  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  ,
+			ALU::BPL  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::TCS  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::ORA  ,
 			ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::PLP  , ALU::AND  , ALU::ROLA , ALU::PLD  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::AND  ,
-			ALU::BMI  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::TSC  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  ,
+			ALU::BMI  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::TSC  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::AND  ,
 
 			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::PHK  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
-			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::PHY  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
+			ALU::BVC  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::PHY  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
 			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::RTL  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::PLY  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::BVS  , ALU::ADC  , ALU::ADC  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::PLY  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
 
 			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::PHB  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  ,
-			ALU::BCC  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::TXY  , ALU::STZ  , ALU::STA  , ALU::STZ  , ALU::STA  ,
+			ALU::BCC  , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::TXY  , ALU::STZ  , ALU::STA  , ALU::STZ  , ALU::STA  ,
 			ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::PLB  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
-			ALU::BCS  , ALU::LDA  , ALU::NOP  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::TYX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
+			ALU::BCS  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::TYX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
 
 			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::WAI  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
-			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::PHX  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::BNE  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::PHX  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
 			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::XBA  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
-			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::PLX  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
+			ALU::BEQ  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::PLX  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
 		};
 
 		ALU ALU_Type;
@@ -593,6 +602,25 @@ namespace SNESHawk
 			return (((uint32_t)PBR) << 16) | PC;
 		}
 
+		inline void get_Direct_Addr_Inc()
+		{
+			if ((D & 0xFF) == 0)
+			{
+				if (Flag_E)
+				{
+					address_bus = (D & 0xFF00) | ((D + Index_Add + 1) & 0xFF);
+				}
+				else
+				{
+					address_bus = (ea + 1) & 0xFFFF;
+				}
+			}
+			else
+			{
+				address_bus = (ea + 1) & 0xFFFF;
+			}
+		}
+
 		inline uint16_t Dec_S()
 		{
 			S--;
@@ -708,7 +736,7 @@ namespace SNESHawk
 					break;
 
 				case ALU::STZ_16:
-					value8 = 0; // shouldn'r reach here
+					value8 = 0; // shouldn't reach here
 					break;
 			}
 		}
@@ -759,7 +787,6 @@ namespace SNESHawk
 			saver = short_saver(A, saver);
 			saver = short_saver(X, saver);
 			saver = short_saver(Y, saver);
-			saver = short_saver(ea, saver);
 
 			saver = bool_saver(NMI, saver);
 			saver = bool_saver(IRQ, saver);
@@ -781,6 +808,7 @@ namespace SNESHawk
 
 			saver = int_saver(Push_Shift, saver);
 			saver = int_saver(address_bus, saver);
+			saver = int_saver(ea, saver);
 			saver = int_saver(opcode, saver);
 			saver = int_saver(alu_temp, saver);
 			saver = int_saver(alu_temp_hi, saver);
@@ -825,7 +853,6 @@ namespace SNESHawk
 			loader = short_loader(&A, loader);
 			loader = short_loader(&X, loader);
 			loader = short_loader(&Y, loader);
-			loader = short_loader(&ea, loader);
 
 			loader = bool_loader(&NMI, loader);
 			loader = bool_loader(&IRQ, loader);
@@ -847,6 +874,7 @@ namespace SNESHawk
 
 			loader = int_loader(&Push_Shift, loader);
 			loader = int_loader(&address_bus, loader);
+			loader = int_loader(&ea, loader);
 			loader = int_loader(&opcode, loader);
 			loader = int_loader(&alu_temp, loader);
 			loader = int_loader(&alu_temp_hi, loader);

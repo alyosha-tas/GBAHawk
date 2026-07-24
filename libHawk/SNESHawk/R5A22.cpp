@@ -310,13 +310,13 @@ namespace SNESHawk
 					case 2:
 						ea = (opcode3 << 8) + opcode2;
 						address_bus = ea;
-						ea++;
+						ea = (ea + 1) & 0xFFFF;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						break;
 
 					case 3:
 						address_bus = ea;
-						ea++;
+						ea = (ea + 1) & 0xFFFF;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						Instr_Cycle += Instr_Skip;
 						// if not a long jump, we will just re-assign PBR with the same value again
@@ -641,33 +641,20 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						address_bus = (D + opcode2) & 0xFFFF;
+						ea = (D + opcode2) & 0xFFFF;
+						Index_Add = opcode2;
+						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 3:
-						if ((D & 0xFF) == 0)
-						{
-							if (Flag_E)
-							{
-								address_bus = (D & 0xFF00) | ((D + opcode2 + 1) & 0xFF);
-							}
-							else
-							{
-								address_bus++;
-							}
-						}
-						else
-						{
-							address_bus++;
-						}
-
+						get_Direct_Addr_Inc();
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						break;
 
 					case 4:
-						// same address bus value as above
+						get_Direct_Addr_Inc();
 						ALU_Operation();
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						Instr_Cycle += Instr_Skip;
@@ -714,21 +701,22 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						// same address bus value as above
+						address_bus = get_PC_Addr();
 						if ((Instr_Type == OpT::DPXR) || (Instr_Type == OpT::DPXW))
 						{
-							Index_Add = X;
+							Index_Add = X + opcode2;
 						}
 						else
 						{
-							Index_Add = Y;
+							Index_Add = Y + opcode2;
 						}
 
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 3:
-						address_bus = (D + opcode2 + Index_Add) & 0xFFFF;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
 
 						Push_Shift = 0;
 
@@ -746,21 +734,7 @@ namespace SNESHawk
 						break;
 
 					case 4:
-						if ((D & 0xFF) == 0)
-						{
-							if (Flag_E)
-							{
-								address_bus = (D & 0xFF00) | ((D + opcode2 + Index_Add + 1) & 0xFF);
-							}
-							else
-							{
-								address_bus++;
-							}
-						}
-						else
-						{
-							address_bus++;
-						}
+						get_Direct_Addr_Inc();
 
 						Push_Shift = 8;
 
@@ -802,47 +776,33 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						// same address bus value as above
+						address_bus = get_PC_Addr();
 						if ((Instr_Type == OpT::DPXR) || (Instr_Type == OpT::DPXW))
 						{
-							Index_Add = X;
+							Index_Add = X + opcode2;
 						}
 						else
 						{
-							Index_Add = Y;
+							Index_Add = Y + opcode2;
 						}
 
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 3:
-						address_bus = (D + opcode2 + Index_Add) & 0xFFFF;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 4:
-						if ((D & 0xFF) == 0)
-						{
-							if (Flag_E)
-							{
-								address_bus = (D & 0xFF00) | ((D + opcode2 + Index_Add + 1) & 0xFF);
-							}
-							else
-							{
-								address_bus++;
-							}
-						}
-						else
-						{
-							address_bus++;
-						}
-
+						get_Direct_Addr_Inc();
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						break;
 
 					case 5:
-						// same address bus value as above
+						get_Direct_Addr_Inc();
 						ALU_Operation();
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						Instr_Cycle += Instr_Skip;
@@ -937,18 +897,19 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						address_bus = ((uint32_t)DBR << 16) | (uint32_t)(opcode3 << 8) | opcode2;
+						ea = ((uint32_t)DBR << 16) | (uint32_t)(opcode3 << 8) | opcode2;
+						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 3:
-						address_bus++;
+						address_bus = ea + 1;
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						break;
 
 					case 4:
-						// same address bus value as above
+						address_bus = ea + 1;
 						ALU_Operation();
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						Instr_Cycle += Instr_Skip;
@@ -971,124 +932,353 @@ namespace SNESHawk
 				}
 				break;
 		
-			case OpT::AdXR:
-			case OpT::AdXW:
+			case OpT::DIXR:
+			case OpT::DIXW:
 				switch (Instr_Cycle)
 				{
 					case 0:
-						address_bus = PC;
+						address_bus = get_PC_Addr();
 						PC++;
 						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0)
+						{
+							Instr_Cycle++;
+						}
 						break;
 
 					case 1:
-						address_bus = opcode2;
-
-						if (RDY)
-						{
-							ReadMemory(address_bus);
-							alu_temp = (opcode2 + X) & 0xFF;
-						}
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 2:
-						address_bus = (uint16_t)alu_temp;
-
-						if (RDY)
-						{
-							ea = ReadMemory(address_bus);
-						}
+						address_bus = get_PC_Addr();
+						Index_Add = X + opcode2;
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 3:
-						address_bus = (uint8_t)(alu_temp + 1);
-
-						if (RDY)
-						{
-							ea += (ReadMemory(address_bus) << 8);
-						}
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
 						break;
 
 					case 4:
-						if (Instr_Type == OpT::AdXR)
-						{
-							address_bus = (uint16_t)ea;
-
-							if (RDY)
-							{
-								alu_temp = ReadMemory(address_bus);
-								ALU_Operation();
-							}
-						}
-						else
-						{
-							Write_Operation();
-						}
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
 						break;
 
 					case 5:
-						End();
+						ea = ((uint32_t)DBR << 16) | (uint32_t)(opcode4 << 8) | opcode3;
+						address_bus = ea;
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DIXR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 6:
+						address_bus++;
+						
+						Push_Shift = 8;
+
+						if (Instr_Type == OpT::DIXR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+						break;
+
+					case 7:
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
 						break;
 				}
 				break;
 
-			case OpT::AdXRW:
+			case OpT::DIR:
+			case OpT::DIW:
 				switch (Instr_Cycle)
 				{
 					case 0:
-						address_bus = PC;
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0)
+						{
+							Instr_Cycle++;
+						}
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						Index_Add = opcode2;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 3:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 4:
+						ea = ((uint32_t)DBR << 16) | (uint32_t)(opcode4 << 8) | opcode3;
+						address_bus = ea;
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DIR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 5:
+						address_bus++;
+
+						Push_Shift = 8;
+
+						if (Instr_Type == OpT::DIR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+						break;
+
+					case 6:
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::DLR:
+			case OpT::DLW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0)
+						{
+							Instr_Cycle++;
+						}
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						Index_Add = opcode2;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 3:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 4:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 5:						
+						address_bus = (alu_temp << 16) | (uint32_t)(opcode4 << 8) | opcode3;
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DLR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 6:
+						address_bus++;
+
+						Push_Shift = 8;
+
+						if (Instr_Type == OpT::DLR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+						break;
+
+					case 7:
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::DSR:
+			case OpT::DSW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
 						PC++;
 						Cycle_Type = CPU_Cycle_Type::Fetch_2;
 						break;
 
 					case 1:
-						address_bus = opcode2;
-
-						if (RDY)
-						{
-							ReadMemory(address_bus);
-							alu_temp = (opcode2 + X) & 0xFF;
-						}
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 2:
-						address_bus = (uint16_t)alu_temp;
+						address_bus = (S + opcode2) & 0xFFFF;
 
-						if (RDY)
+						if (Instr_Type == OpT::DSR)
 						{
-							ea = ReadMemory(address_bus);
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 3:
-						address_bus = (uint8_t)(alu_temp + 1);
+						address_bus = (address_bus + 1) & 0xFFFF;
 
-						if (RDY)
+						if (Instr_Type == OpT::DSR)
 						{
-							ea += (ReadMemory(address_bus) << 8);
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						}
 						break;
 
 					case 4:
-						address_bus = (uint16_t)ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						break;
+				}
+				break;
 
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-						}
+			case OpT::DSIR:
+			case OpT::DSIW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						address_bus = (S + opcode2) & 0xFFFF;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 3:
+						address_bus = (address_bus + 1) & 0xFFFF;
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 4:
+						// address bus same as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
 					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-						ALU_Operation();
+						ea = ((uint32_t)DBR << 16) | ((((uint32_t)(opcode4 << 8) | opcode3) + Y) & 0xFFFF);
+						address_bus = ea;
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DSR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 6:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						address_bus = ((uint32_t)DBR << 16) | ((address_bus + 1) & 0xFFFF);
+
+						if (Instr_Type == OpT::DSR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
 						break;
 
 					case 7:
-						End();
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
 						break;
 				}
 				break;
@@ -1100,34 +1290,190 @@ namespace SNESHawk
 				switch (Instr_Cycle)
 				{
 					case 0:
-						address_bus = PC;
+						address_bus = get_PC_Addr();
 						PC++;
 						Cycle_Type = CPU_Cycle_Type::Fetch_2;
 						break;
 
 					case 1:
-						address_bus = PC;
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
 
-						if (RDY)
+						// determine if cycle is skipped
+						if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
 						{
-							opcode3 = ReadMemory(address_bus);
-							PC++;
-
-							if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIXW))
+							if (FlagXget())
 							{
-								alu_temp = opcode2 + X;
+								if (Instr_Type == OpT::AIXR)
+								{
+									Index_Add = X;
+									
+									if (((uint32_t)opcode2 + (X & 0xFF)) < 0x100)
+									{
+										Instr_Cycle++;
+									}
+								}
+								else
+								{
+									Index_Add = Y;
+									
+									if (((uint32_t)opcode2 + (Y & 0xFF)) < 0x100)
+									{
+										Instr_Cycle++;
+									}
+								}
 							}
-							else
-							{
-								alu_temp = opcode2 + Y;
-							}
-							ea = (opcode3 << 8) + (alu_temp & 0xFF);
-							H = 0; // In preparation for SHY, set H to 0.
+						}
+						break;
 
-							if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
+					case 2:
+						address_bus = (uint32_t)(DBR << 16) | ((uint32_t)(opcode3 << 8)) | ((opcode2 + (Index_Add & 0xFF)) & 0xFF);
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 3:
+						address_bus = (uint32_t)(DBR << 16) | ((((uint32_t)(opcode3 << 8) | opcode2) + Index_Add) & 0xFFFF);
+
+						Push_Shift = 0;
+
+						if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 4:
+						address_bus = (uint32_t)(DBR << 16) | ((address_bus + 1) & 0xFFFF);
+
+						Push_Shift = 8;
+
+						if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+						break;
+
+					case 5:
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::AIXRW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = (uint32_t)(DBR << 16) | ((uint32_t)(opcode3 << 8)) | ((opcode2 + (X & 0xFF)) & 0xFF);
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 3:
+						ea = (uint32_t)(DBR << 16) | ((((uint32_t)(opcode3 << 8) | opcode2) + X) & 0xFFFF);
+						address_bus = ea;
+
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 4:
+						address_bus = (uint32_t)(DBR << 16) | ((ea + 1) & 0xFFFF);
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						break;
+
+					case 5:
+						address_bus = (uint32_t)(DBR << 16) | ((ea + 1) & 0xFFFF);
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						ALU_Operation();
+						break;
+
+					case 6:
+						address_bus = (uint32_t)(DBR << 16) | ((ea + 1) & 0xFFFF);
+
+						Push_Shift = 8;
+
+						get_Write_value();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 7:
+						address_bus = (uint32_t)(DBR << 16) | (ea & 0xFFFF);
+
+						Push_Shift = 0;
+
+						get_Write_value();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						break;
+
+					case 8:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::DIIYR:
+			case OpT::DIIYW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0)
+						{
+							Instr_Cycle++;
+						}
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						Index_Add = 0;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 3:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+
+						// determine if cycle is skipped
+						if (Instr_Type == OpT::DIIYR)
+						{
+							if (FlagXget())
 							{
-								// skip a cycle if no page crossing
-								if (!((alu_temp & 0x100) == 0x100))
+								if (((uint32_t)opcode3 + (Y & 0xFF)) < 0x100)
 								{
 									Instr_Cycle++;
 								}
@@ -1135,319 +1481,124 @@ namespace SNESHawk
 						}
 						break;
 
-					case 2:
-						address_bus = (uint16_t)ea;
-						
-						if (RDY)
-						{
-							if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
-							{
-								alu_temp = ReadMemory(address_bus);
-								ea = (uint16_t)(ea + 0x100);
-							}
-							else
-							{
-								bool adjust = ((alu_temp & 0x100) == 0x100);
-								alu_temp = ReadMemory(address_bus);
-
-								if (adjust)
-								{
-									ea = (uint16_t)(ea + 0x100);
-								}
-							}
-						}
+					case 4:
+						address_bus = (uint32_t)(DBR << 16) | ((uint32_t)(opcode4 << 8)) | ((opcode3 + (Y & 0xFF)) & 0xFF);
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						break;
 
-					case 3:
-						if ((Instr_Type == OpT::AIXR) || (Instr_Type == OpT::AIYR))
+					case 5:
+						address_bus = (uint32_t)(DBR << 16) | ((((uint32_t)(opcode4 << 8) | opcode3) + Y) & 0xFFFF);
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DIIYR)
 						{
-							address_bus = (uint16_t)ea;
-
-							if (RDY)
-							{
-								alu_temp = ReadMemory(address_bus);
-
-								ALU_Operation();
-							}
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
 						}
 						else
 						{
-							Write_Operation();
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						}
-						break;
 
-					case 4:
-						End();
-						break;
-				}
-				break;
-
-			case OpT::AIXRW:
-			case OpT::AIYRW:
-				switch (Instr_Cycle)
-				{
-					case 0:
-						address_bus = PC;
-						PC++;
-						Cycle_Type = CPU_Cycle_Type::Fetch_2;
-						break;
-
-					case 1:
-						address_bus = PC;
-
-						if (RDY)
-						{
-							opcode3 = ReadMemory(address_bus);
-							PC++;
-
-							if (Instr_Type == OpT::AIXRW)
-							{
-								alu_temp = opcode2 + X;
-							}
-							else
-							{
-								alu_temp = opcode2 + Y;
-							}
-							ea = (opcode3 << 8) + (alu_temp & 0xFF);
-
-							H = 0; // In preparation for SHY, set H to 0.
-						}
-						break;
-
-					case 2:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							bool adjust = ((alu_temp & 0x100) == 0x100);
-							alu_temp = ReadMemory(address_bus);
-
-							if (adjust)
-							{
-								ea = (uint16_t)(ea + 0x100);
-							}
-						}
-						break;
-
-					case 3:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-						}
-						break;
-
-					case 4:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-						ALU_Operation();
-						break;
-
-					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
+						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 6:
-						End();
-						break;
-				}
-				break;
+						address_bus = (uint32_t)(DBR << 16) | ((address_bus + 1) & 0xFFFF);
 
-			case OpT::IIYR:
-				switch (Instr_Cycle)
-				{
-					case 0:
-						address_bus = PC;
-						PC++;
-						Cycle_Type = CPU_Cycle_Type::Fetch_2;
-						break;
+						Push_Shift = 8;
 
-					case 1:
-						address_bus = opcode2;
-
-						if (RDY)
+						if (Instr_Type == OpT::DIIYR)
 						{
-							ea = ReadMemory(address_bus);
-						}
-						break;
-
-					case 2:
-						address_bus = (uint8_t)(opcode2 + 1);
-
-						if (RDY)
-						{
-							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
-								| ((alu_temp & 0xFF));
-
-							H = 0; // In preparation for SHA (indirect, X), set H to 0.
-
-							if (!((alu_temp & 0x100) == 0x100))
-							{
-								Instr_Cycle++;
-							}
-						}
-						break;
-
-					case 3:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							ReadMemory(address_bus);
-							ea = (uint16_t)(ea + 0x100);
-						}
-						break;
-
-					case 4:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-							ALU_Operation();
-						}
-						break;
-
-					case 5:
-						End();
-						break;
-				}
-				break;
-
-			case OpT::IIYW:
-				switch (Instr_Cycle)
-				{
-					case 0:
-						address_bus = PC;
-						PC++;
-						Cycle_Type = CPU_Cycle_Type::Fetch_2;
-						break;
-
-					case 1:
-						address_bus = opcode2;
-
-						if (RDY)
-						{
-							ea = ReadMemory(address_bus);
-						}
-						break;
-
-					case 2:
-						address_bus = (uint8_t)(opcode2 + 1);
-
-						if (RDY)
-						{
-							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
-								| ((alu_temp & 0xFF));
-
-							H = 0; // In preparation for SHA (indirect, X), set H to 0.
-						}
-						break;
-
-					case 3:
-						address_bus = (uint16_t)ea;
-
-						if (opcode == 0x91)
-						{
-							if (RDY)
-							{
-								ReadMemory(address_bus);
-								ea += (alu_temp >> 8) << 8;
-							}
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						}
 						else
 						{
-							if (RDY)
-							{
-								H |= (uint8_t)((ea >> 8) + 1);
-								ReadMemory(address_bus);
-
-								if ((alu_temp & 0x100) == 0x100)
-								{
-									ea = (uint16_t)(ea & 0xFF | ((ea + 0x100) & 0xFF00 & ((A & X) << 8)));
-								}
-							}
-							else
-							{
-								H = 0xFF; //If the RDY line is low here, the SHA instruction omits the bitwise AND with H
-							}
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						}
-						break;
-
-					case 4:
-						Write_Operation();
-						break;
-
-					case 5:
-						End();
-						break;
-				}
-				break;
-
-			case OpT::IIYRW:
-				switch (Instr_Cycle)
-				{
-					case 0:
-						address_bus = PC;
-						PC++;
-						Cycle_Type = CPU_Cycle_Type::Fetch_2;
-						break;
-
-					case 1:
-						address_bus = opcode2;
-
-						if (RDY)
-						{
-							ea = ReadMemory(address_bus);
-						}
-						break;
-
-					case 2:
-						address_bus = (uint8_t)(opcode2 + 1);
-
-						if (RDY)
-						{
-							alu_temp = ea + Y;
-							ea = (ReadMemory(address_bus) << 8)
-								| ((alu_temp & 0xFF));
-
-							H = 0; // In preparation for SHA (indirect, X), set H to 0.
-						}
-						break;
-
-					case 3:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							ReadMemory(address_bus);
-							if ((alu_temp & 0x100) == 0x100)
-								ea = (uint16_t)(ea + 0x100);
-						}
-						break;
-
-					case 4:
-						address_bus = (uint16_t)ea;
-
-						if (RDY)
-						{
-							alu_temp = ReadMemory(address_bus);
-						}
-						break;
-
-					case 5:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
-						ALU_Operation();
-						break;
-
-					case 6:
-						WriteMemory((uint16_t)ea, (uint8_t)alu_temp);
 						break;
 
 					case 7:
-						End();
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::DLIYR:
+			case OpT::DLIYW:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0)
+						{
+							Instr_Cycle++;
+						}
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						Index_Add = 0;
+						ea = (D + Index_Add) & 0xFFFF;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 3:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 4:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 5:
+						address_bus = (alu_temp << 16) | ((((uint32_t)(opcode4 << 8) | opcode3) + Y) & 0xFFFF);
+
+						Push_Shift = 0;
+
+						if (Instr_Type == OpT::DLIYR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+
+						Instr_Cycle += Instr_Skip;
+						break;
+
+					case 6:
+						address_bus++;
+
+						Push_Shift = 8;
+
+						if (Instr_Type == OpT::DLIYR)
+						{
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						}
+						else
+						{
+							get_Write_value();
+							Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						}
+						break;
+
+					case 7:
+						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
 						break;
 				}
 				break;
