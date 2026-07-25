@@ -296,6 +296,12 @@ namespace SNESHawk
 			AbsW,		// [absolute Write]
 			AbsRW,		// [absolute RMW]
 
+			AbsLR,		// [absolute long READ]
+			AbsLW,		// [absolute long WRITE]
+
+			ALXR,		// [absolute long, X READ]
+			ALXW,		// [absolute long, X WRITE]
+
 			DIXR,		// (D,X) [Direct,X indirect READ]
 			DIXW,		// (D,X) [Direct,X indirect WRITE]
 
@@ -343,25 +349,25 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::JSR  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::BRK  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::JSR  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
-			OpT::RTI  , OpT::DIXR , OpT::Imp  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::RTS  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTI  , OpT::DIXR , OpT::Imp  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::RTS  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
-			OpT::Imm  , OpT::DIXW , OpT::Brl  , OpT::DSW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DLW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
-			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::AbsW ,
-			OpT::Imm  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
+			OpT::Imm  , OpT::DIXW , OpT::Brl  , OpT::DSW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DLW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsLW,
+			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::ALXW ,
+			OpT::Imm  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::ALXR ,
 
-			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 		};
 
 		enum class CPU_Cycle_Type
@@ -569,7 +575,7 @@ namespace SNESHawk
 
 		void Fetch1();
 
-		void ExecuteOneOp();
+		void Decode_Next_Cycle();
 
 		void RunCpuOne();
 
@@ -587,7 +593,7 @@ namespace SNESHawk
 
 		void ExecuteOne()
 		{
-			ExecuteOneOp();
+			Decode_Next_Cycle();
 			TotalExecutedCycles++;
 			Total_CPU_Clock_Cycles++;
 		}

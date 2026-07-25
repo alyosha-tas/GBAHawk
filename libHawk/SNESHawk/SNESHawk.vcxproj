@@ -147,9 +147,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="APU.cpp" />
+    <ClCompile Include="R5A22_Ops.cpp" />
     <ClCompile Include="SNES_DMA.cpp" />
     <ClCompile Include="SPC700.cpp" />
-    <ClCompile Include="R5A22.cpp" />
+    <ClCompile Include="R5A22_Decode.cpp" />
     <ClCompile Include="MemoryMap.cpp" />
     <ClCompile Include="SNESHawk.cpp" />
     <ClCompile Include="SNES_System.cpp" />
