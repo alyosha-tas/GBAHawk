@@ -53,6 +53,35 @@ namespace SNESHawk
 				}
 				break;
 
+			case OpT::Imm3:
+				switch (Instr_Cycle)
+				{
+				case 0:
+					address_bus = get_PC_Addr();
+					Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+					PC++;
+
+					Instr_Cycle += Instr_Skip;
+					break;
+
+				case 1:
+					address_bus = get_PC_Addr();
+					Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+					PC++;
+					break;
+
+				case 2:
+					address_bus = get_PC_Addr();
+					Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+					break;
+
+				case 3:
+					address_bus = get_PC_Addr();
+					Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+					break;
+				}
+				break;
+
 			case OpT::CSI:
 				switch (Instr_Cycle)
 				{
@@ -1863,165 +1892,233 @@ namespace SNESHawk
 
 			case OpT::Jam:
 				// do nothing, stuck
+				Instr_Cycle--;
 				break;
 
 			case OpT::INT:
 				switch (Instr_Cycle)
 				{
 					case 0:
-						address_bus = PC;
-
-						if (RDY)
-						{
-							ReadMemory(address_bus);
-						}
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						if (Flag_E) { Instr_Cycle++; }
 						break;
 
 					case 1:
-						// IRQ / NMI push PC, reset does not
-						if (IRQ_Type < 2)
-						{
-							WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
-						}
-						else
-						{
-							address_bus = (uint16_t)(S + 0x100);
-
-							if (RDY)
-							{
-								ReadMemory(address_bus);
-								S--;
-							}
-						}
+						value8 = PBR;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 2:
-						// IRQ / NMI push PC, reset does not
-						if (IRQ_Type < 2)
-						{
-							WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC);
-						}
-						else
-						{
-							address_bus = (uint16_t)(S + 0x100);
-
-							if (RDY)
-							{
-								ReadMemory(address_bus);
-								S--;
-							}
-						}
+						value8 = PC >> 8;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 3:
-						// NMI, IRQ, Reset
-						if (IRQ_Type == 0)
-						{
-							FlagBset(false);
-							WriteMemory((uint16_t)(S-- + 0x100), P);
-							FlagIset(true); //is this right?
-							ea = NMIVector;
-						}
-						else if (IRQ_Type == 1)
-						{
-							FlagBset(false);
-							WriteMemory((uint16_t)(S-- + 0x100), P);
-							FlagIset(true);
-							ea = IRQVector;
-						}
-						else
-						{
-							address_bus = (uint16_t)(S + 0x100);
-
-							if (RDY)
-							{
-								ea = ResetVector;
-								ReadMemory(address_bus);
-								S--;
-								FlagIset(true);
-							}
-						}
+						value8 = PC;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 4:
-						if (ea == IRQVector && !FlagBget() && NMI)
-						{
-							NMI = false;
-							ea = NMIVector;
-						}
-						address_bus = ea;
+						value8 = P;
+						address_bus = S;
+						Dec_S();
+						Flag_B = false;
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 
-						if (RDY)
+						// NMI, IRQ
+						if (Flag_E)
 						{
-							alu_temp = ReadMemory(address_bus);
+							if (IRQ_Type == 0)
+							{
+								ea = NMIVector;
+							}
+							else
+							{
+								ea = IRQVector;
+							}
+						}
+						else
+						{
+							if (IRQ_Type == 0)
+							{
+								ea = NMIVector_Native;
+							}
+							else
+							{
+								ea = IRQVector_Native;
+							}
 						}
 						break;
 
 					case 5:
-						address_bus = (uint16_t)(ea + 1);
+						FlagDset(false);
+						FlagIset(true);
+						
+						// IRQ hijacking?
 
-						if (RDY)
-						{
-							alu_temp += ReadMemory(address_bus) << 8;
-							PC = (uint16_t)alu_temp;
-						}
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
 						break;
 
 					case 6:
+						address_bus = (uint16_t)(ea + 1);
+
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 7:
+						PBR = 0;
+						PC = opcode2 | ((uint32_t)opcode3 << 8);
+						Fetch_Opcode_No_Interrupt();
+						break;
+				}
+				break;
+
+			case OpT::RESET:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						if (Flag_E) { Instr_Cycle++; }
+						break;
+
+					case 1:
+						value8 = PC >> 8;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 2:
+						value8 = PC;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 3:
+						value8 = PC;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 4:
+						FlagIset(true);
+						FlagDset(false);
+						ea = ResetVector;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 5:
+						address_bus = (uint16_t)(ea + 1);
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 6:
+						PBR = 0;
+						PC = opcode2 | ((uint32_t)opcode3 << 8);
 						Fetch_Opcode_No_Interrupt();
 						break;
 				}
 				break;
 
 			case OpT::BRK:
+			case OpT::COP:
 				switch (Instr_Cycle)
 				{
 					case 0:
-						address_bus = PC;
-						PC++;
-						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						if (Flag_E) { Instr_Cycle++; }
 						break;
 
 					case 1:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)(PC >> 8));
+						value8 = PBR;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 2:
-						WriteMemory((uint16_t)(S-- + 0x100), (uint8_t)PC);
+						value8 = PC >> 8;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 3:
-						FlagBset(true);
-						WriteMemory((uint16_t)(S-- + 0x100), P);
-						FlagIset(true);
-						ea = BRKVector;
+						value8 = PC;
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
 					case 4:
-						if (ea == BRKVector && FlagBget() && NMI)
-						{
-							NMI = false;
-							ea = NMIVector;
-						}
-						address_bus = (uint16_t)(ea);
+						value8 = P;
+						address_bus = S;
+						Dec_S();
 
-						if (RDY)
-						{	
-							alu_temp = ReadMemory(address_bus);
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+
+						// BRK, COP
+						if (Flag_E)
+						{
+							if (Instr_Type == OpT::BRK)
+							{
+								ea = BRKVector;
+								value8 = P | 0x40;
+								Flag_B = true;
+							}
+							else
+							{
+								ea = COPVector;
+							}
+						}
+						else
+						{
+							if (Instr_Type == OpT::BRK)
+							{
+								ea = BRKVector_Native;
+								Flag_B = true;
+							}
+							else
+							{
+								ea = COPVector_Native;
+							}
 						}
 						break;
 
 					case 5:
-						address_bus = (uint16_t)(ea + 1);
+						FlagDset(false);
+						FlagIset(true);
 
-						if (RDY)
-						{
-							alu_temp += ReadMemory(address_bus) << 8;
-							PC = (uint16_t)alu_temp;
-						}
+						// IRQ hijacking?
+
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
 						break;
 
 					case 6:
+						address_bus = (uint16_t)(ea + 1);
+
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 7:
+						PBR = 0;
+						PC = opcode2 | ((uint32_t)opcode3 << 8);
 						Fetch_Opcode_No_Interrupt();
 						break;
 				}

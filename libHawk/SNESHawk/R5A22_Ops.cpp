@@ -64,7 +64,6 @@ namespace SNESHawk
 
 				case CPU_Cycle_Type::Fetch_Reset:
 					// do nothing as this is just a cycle that immediately goes into the interrupt handler with a reset
-					Sys_pntr->ReadMemory(address_bus);
 					break;
 				}
 			}
@@ -700,8 +699,6 @@ namespace SNESHawk
 			Instr_Type = OpT::INT;
 			IRQ_Type = 0; // NMI
 			NMI = false;
-
-			Sys_pntr->ReadMemory(address_bus);
 			return;
 		}
 
@@ -712,8 +709,6 @@ namespace SNESHawk
 
 			Instr_Type = OpT::INT;
 			IRQ_Type = 1; // IRQ
-
-			Sys_pntr->ReadMemory(address_bus);
 			return;
 		}
 
@@ -727,6 +722,19 @@ namespace SNESHawk
 	void R5A22::OnExecFetch(uint16_t addr)
 	{
 
+	}
+
+	void R5A22::Fetch_Opcode_No_Interrupt()
+	{
+		Instr_Cycle = -1;
+
+		address_bus = get_PC_Addr();
+
+		OnExecFetch(PC);
+		if (TraceCallback) TraceCallback(0);
+		opcode = Sys_pntr->ReadMemory(address_bus);
+		PC++;
+		Decode(opcode);
 	}
 
 

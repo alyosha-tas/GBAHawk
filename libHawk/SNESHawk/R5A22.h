@@ -123,10 +123,16 @@ namespace SNESHawk
 		const static uint8_t AneConstant = 0xFF;
 		const static uint8_t LxaConstant = 0xFF;
 
+		const static uint16_t COPVector = 0xFFFA;
 		const static uint16_t NMIVector = 0xFFFA;
 		const static uint16_t ResetVector = 0xFFFC;
 		const static uint16_t BRKVector = 0xFFFE;
 		const static uint16_t IRQVector = 0xFFFE;
+
+		const static uint16_t COPVector_Native = 0xFFE4;
+		const static uint16_t NMIVector_Native = 0xFFEA;
+		const static uint16_t BRKVector_Native = 0xFFE6;
+		const static uint16_t IRQVector_Native = 0xFFEE;
 
 		void HardReset()
 		{
@@ -172,12 +178,16 @@ namespace SNESHawk
 
 		void SoftReset()
 		{
-			Instr_Type = OpT::INT;
+			Instr_Type = OpT::RESET;
 			IRQ_Type = 2;
 			ALU_Type = ALU::NOP;
 			Instr_Cycle = -1;
 			RW_Size_Op = RW_Size::NA;
 			Cycle_Type = CPU_Cycle_Type::Fetch_Reset;
+
+			// upper byte of S set to 1
+			S &= 0xFF;
+			S |= 0x0100;
 
 			Push_Shift = 0;
 			address_bus = 0;
@@ -277,6 +287,7 @@ namespace SNESHawk
 			Br,			// Branch
 			Brl,		// Branch Long
 			JSR,		// JSR
+			JSRIX,		// JSR Indirect,X
 			JMP,		// Jump
 			JMPI,		// Jump Indirect
 			JMPX,		// Jump Indirect,x
@@ -291,6 +302,7 @@ namespace SNESHawk
 			RTI,		// RTI
 			CSI,		// CLI, SEI
 			BRK,		// Break
+			COP,		// co-processor
 
 			AbsR,		// [absolute READ]
 			AbsW,		// [absolute Write]
@@ -341,6 +353,7 @@ namespace SNESHawk
 
 			Jam,		// Jam
 			INT,		// Interrupts
+			RESET,		// reset
 			WAI,		// WAIT
 		};
 
@@ -349,7 +362,7 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::BRK  , OpT::DIXR , OpT::COP  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
 			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 			OpT::JSR  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
 			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
@@ -367,7 +380,7 @@ namespace SNESHawk
 			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
 			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::JSRIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 		};
 
 		enum class CPU_Cycle_Type
@@ -596,11 +609,6 @@ namespace SNESHawk
 			Decode_Next_Cycle();
 			TotalExecutedCycles++;
 			Total_CPU_Clock_Cycles++;
-		}
-
-		void Get_Push_Value()
-		{
-
 		}
 
 		inline uint32_t get_PC_Addr()
