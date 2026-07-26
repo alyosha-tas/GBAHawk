@@ -30,6 +30,7 @@ namespace SNESHawk
 		{
 			TickPPU(false);
 		}
+
 	}
 
 	bool SNES_System::SubFrame_Advance(uint32_t reset_cycle)

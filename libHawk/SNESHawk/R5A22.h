@@ -20,6 +20,10 @@
 #define sprintf_s snprintf
 #endif
 
+//Core_Message_String->assign("test: " + to_string(change_CS) + " cs: " + to_string(Chip_Select) + " Command: " + to_string(Command_Mode) + " port: " + to_string((Port_Dir & 1)) + " val: " + to_string((value & 1)) + " rtc: " + to_string(RTC_Clock_Low) + " cnt: " + to_string(Reg_Bit_Count) + " dir 2: " + to_string(((Port_Dir & 2) == 2)));
+
+//MessageCallback(Core_Message_String->length());
+
 using namespace std;
 
 namespace SNESHawk
@@ -32,11 +36,11 @@ namespace SNESHawk
 
 		SNES_System* Sys_pntr = nullptr;
 
+		string* Core_Message_String = nullptr;
+
+		void (*MessageCallback)(int);
+
 	#pragma region DMA Controller
-
-
-
-
 
 	#pragma region DMA State Save / Load
 
@@ -68,6 +72,7 @@ namespace SNESHawk
 		uint16_t IRQ_Type;
 		uint16_t Instr_Skip;
 		uint16_t Index_Add;
+		uint16_t alu_temp_16;
 
 		uint32_t Instr_Type_Save;
 		uint32_t ALU_Type_Save;
@@ -76,7 +81,6 @@ namespace SNESHawk
 
 		uint32_t Fetch_Cnt, Fetch_Wait, Fetch_Op;
 
-		bool BCD_Enabled = false;
 		bool debug = false;
 		bool Is_Index_16;
 		bool Is_Acc_16;
@@ -119,6 +123,7 @@ namespace SNESHawk
 		bool booltemp;
 		int32_t tempint;
 		uint32_t lo, hi;
+		uint32_t value32;
 
 		const static uint8_t AneConstant = 0xFF;
 		const static uint8_t LxaConstant = 0xFF;
@@ -160,7 +165,6 @@ namespace SNESHawk
 			opcode = 0;
 			iflag_pending = true;
 			RDY = true;
-			BCD_Enabled = false;
 
 			Is_Acc_16 = false;
 			Is_Index_16 = false;
@@ -169,7 +173,7 @@ namespace SNESHawk
 			NMI = false;
 
 			Fetch_Cnt = 0;
-			Fetch_Op = 1;
+			Fetch_Op = 3;
 			Fetch_Wait = 6;
 
 			Flag_E = true;
@@ -198,13 +202,12 @@ namespace SNESHawk
 			FlagIset(true);
 
 			RDY = true;
-			BCD_Enabled = false;
 
 			Instr_Skip = 1;
 			ALU_Op_Size_8 = true;
 
 			Fetch_Cnt = 0;
-			Fetch_Op = 1;
+			Fetch_Op = 3;
 			Fetch_Wait = 6;
 
 			Flag_E = true;
@@ -259,26 +262,6 @@ namespace SNESHawk
 		// SO pin
 		inline void SetOverflow() { FlagVset(true); }
 
-		uint8_t TableNZ[256] =
-		{
-			0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80
-		};
-
 	#pragma endregion
 
 	#pragma region Constant Declarations
@@ -288,9 +271,10 @@ namespace SNESHawk
 			Brl,		// Branch Long
 			JSR,		// JSR
 			JSRIX,		// JSR Indirect,X
+			JMPIX,		// Jump Indirect,X
 			JMP,		// Jump
 			JMPI,		// Jump Indirect
-			JMPX,		// Jump Indirect,x
+			JSL,		// Jump Indirect
 			Imp,		// Implied
 			Imm,		// Immediate
 			Imm3,		// Immediate (3 cycle)
@@ -351,6 +335,13 @@ namespace SNESHawk
 			AIYW,		// addr,Y [absolute indexed WRITE Y]
 			AIXRW,		// addr,X [absolute indexed RMW X]
 
+			PER,		// Push PC relative
+			PEI,		// Push Indirect
+			PEA,		// Push Absolute
+
+			MVN,		// Block MOV -
+			MVP,		// Block MOV +
+
 			Jam,		// Jam
 			INT,		// Interrupts
 			RESET,		// reset
@@ -362,15 +353,15 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::DIXR , OpT::COP  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPR  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
-			OpT::JSR  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::BRK  , OpT::DIXR , OpT::COP  , OpT::DSR  , OpT::DPRW , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsRW, OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPRW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AbsRW, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::JSR  , OpT::DIXR , OpT::JSL  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
 			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
-			OpT::RTI  , OpT::DIXR , OpT::Imp  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
-			OpT::RTS  , OpT::DIXR , OpT::Jam  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPX , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::RTI  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::MVP  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::MVN  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::RTS  , OpT::DIXR , OpT::PER  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
 			OpT::Imm  , OpT::DIXW , OpT::Brl  , OpT::DSW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DLW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsLW,
 			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::ALXW ,
@@ -378,9 +369,9 @@ namespace SNESHawk
 			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::ALXR ,
 
 			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEI  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::JSRIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEA  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::JSRIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 		};
 
 		enum class CPU_Cycle_Type
@@ -406,7 +397,7 @@ namespace SNESHawk
 		{
 			// regular ops
 			NOP, SEC, SEI, CLC, CLI, BIT, AND, EOR, ORA, ADC, CMP, CPY, CPX, ASL, SBC, ROL,
-			LSR, ASR, ROR, RRA, DEX, DEY, TXA, TYA, TXS, TAY, TAX, CLV, TSX, DEC, INY, CLD,
+			LSR, ASR, ROR, DEX, DEY, TXA, TYA, TXS, TAY, TAX, CLV, TSX, DEC, INY, CLD,
 			INC, INX,
 
 			// A implied
@@ -432,7 +423,7 @@ namespace SNESHawk
 
 			// regular ops
 			NOP_16, SEC_16, SEI_16, CLC_16, CLI_16, BIT_16, AND_16, EOR_16, ORA_16, ADC_16, CMP_16, CPY_16, CPX_16, ASL_16, SBC_16, ROL_16,
-			LSR_16, ASR_16, ROR_16, RRA_16, DEX_16, DEY_16, TXA_16, TYA_16, TXS_16, TAY_16, TAX_16, CLV_16, TSX_16, DEC_16, INY_16, CLD_16,
+			LSR_16, ASR_16, ROR_16, DEX_16, DEY_16, TXA_16, TYA_16, TXS_16, TAY_16, TAX_16, CLV_16, TSX_16, DEC_16, INY_16, CLD_16,
 			INC_16, INX_16,
 
 			// A implied
@@ -464,8 +455,8 @@ namespace SNESHawk
 
 			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::PHK  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
 			ALU::BVC  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  , ALU::CLI  , ALU::EOR  , ALU::PHY  , ALU::TCD  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::EOR  ,
-			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::RTL  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::ADC  , ALU::ADC  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::PLY  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::ADC  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::RTL  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::ADC  ,
+			ALU::BVS  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::ADC  , ALU::SEI  , ALU::ADC  , ALU::PLY  , ALU::TDC  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::ADC  ,
 
 			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::PHB  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  ,
 			ALU::BCC  , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::STA  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::TXY  , ALU::STZ  , ALU::STA  , ALU::STZ  , ALU::STA  ,
@@ -518,7 +509,21 @@ namespace SNESHawk
 
 	#pragma region M6502 functions
 
-		void NZ_ALU() { P = (uint8_t)((P & 0x7D) | TableNZ[alu_temp]); }
+		void NZ_Set(uint8_t index)
+		{
+			P &= 0x7D;
+
+			FlagZset(index == 0);
+			FlagNset((index & 0x80) == 0x80);
+		}
+
+		void NZ_Set_16(uint16_t index)
+		{
+			P &= 0x7D;
+
+			FlagZset(index == 0);
+			FlagNset((index & 0x8000) == 0x8000);
+		}
 
 		void Decode(uint8_t opcode)
 		{
@@ -567,13 +572,14 @@ namespace SNESHawk
 			// Now we have know what size operation to do, choose ALU op accordingly
 			if (!ALU_Op_Size_8)
 			{
-				ALU_Type = static_cast<ALU>(76 + (uint32_t)ALU_Type);
+				ALU_Type = static_cast<ALU>(79 + (uint32_t)ALU_Type);
 			}
 		}
 
-		uint32_t Calculate_Wait_States()
+		void Calculate_Wait_States()
 		{
-			return 1;
+			Fetch_Op = 3;
+			Fetch_Wait = 6;
 		}
 
 		void OnExecFetch(uint16_t addr);
@@ -635,7 +641,7 @@ namespace SNESHawk
 			}
 		}
 
-		inline uint16_t Dec_S()
+		inline void Dec_S()
 		{
 			S--;
 			if (Flag_E)
@@ -645,7 +651,7 @@ namespace SNESHawk
 			}
 		}
 
-		inline uint16_t Inc_S()
+		inline void Inc_S()
 		{
 			S++;
 			if (Flag_E)
@@ -760,14 +766,14 @@ namespace SNESHawk
 	#pragma region Disassemble
 
 		// disassemblies will also return strings of the same length
-		const char* TraceHeader = "6502: PC, machine code, mnemonic, operands, registers (A, X, Y, P, SP), flags (NVTBDIZCR)  Cycles      SL     F Cycle      ";
+		const char* TraceHeader = "65C816: PC, machine code, mnemonic, operands, registers (A, X, Y, SP, P), flags (NVTBDIZCR)  Cycles      SL     F Cycle      ";
 		const char* NMI_event = "             ====NMI====             ";
 		const char* IRQ_event = "             ====IRQ====             ";
 		const char* DMA_event = "             ====DMA====             ";
 
-		const char* Reg_Template = "  A:XX X:XX Y:XX P:XX SP:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
+		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
 		const char* Reg_Blank = "                                                                                          ";
-		const char* Disasm_template = "PCPC:  AA BB CC  Di Di Di Di Di      ";
+		const char* Disasm_template = "PCPCPC:  AA BB CC  Di Di Di Di Di      ";
 
 		char replacer[40] = {};
 		char* val_char_1 = nullptr;
@@ -836,11 +842,13 @@ namespace SNESHawk
 			saver = int_saver(tempint, saver);
 			saver = int_saver(lo, saver);
 			saver = int_saver(hi, saver);
+			saver = int_saver(value32, saver);
 
 			saver = short_saver(IRQ_Type, saver);
 			saver = short_saver(Instr_Cycle, saver);
 			saver = short_saver(Instr_Skip, saver);
 			saver = short_saver(Index_Add, saver);
+			saver = short_saver(alu_temp_16, saver);
 
 			saver = int_saver((uint32_t)Instr_Type, saver);
 			saver = int_saver((uint32_t)ALU_Type, saver);
@@ -902,11 +910,13 @@ namespace SNESHawk
 			loader = sint_loader(&tempint, loader);
 			loader = int_loader(&lo, loader);
 			loader = int_loader(&hi, loader);
+			loader = int_loader(&value32, loader);
 
 			loader = short_loader(&IRQ_Type, loader);
 			loader = short_loader(&Instr_Cycle, loader);
 			loader = short_loader(&Instr_Skip, loader);
 			loader = short_loader(&Index_Add, loader);
+			loader = short_loader(&alu_temp_16, loader);
 
 			loader = int_loader(&Instr_Type_Save, loader);
 			loader = int_loader(&ALU_Type_Save, loader);

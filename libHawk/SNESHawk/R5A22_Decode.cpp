@@ -212,7 +212,58 @@ namespace SNESHawk
 						PC = opcode2 | ((uint32_t)opcode3 << 8);
 						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
 						break;
+				}
+				break;
 
+			case OpT::JSRIX:
+			case OpT::JMPIX:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						if (Instr_Type == OpT::JMPIX) { Instr_Cycle += 2; }
+						break;
+
+					case 1:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = PC >> 8;
+						break;
+
+					case 2:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = PC;
+						break;
+
+					case 3:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 4:
+						// same address bus value as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 5:
+						address_bus = (uint32_t)(PBR << 16) | (((((uint32_t)opcode3 << 8) | opcode2) + X) & 0xFFFF);				
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 6:
+						address_bus = (uint32_t)(PBR << 16) | (((((uint32_t)opcode3 << 8) | opcode2) + X + 1) & 0xFFFF);
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						break;
+
+					case 7:
+						PC = (alu_temp_hi << 8) | alu_temp;
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
 				}
 				break;
 			
@@ -286,6 +337,61 @@ namespace SNESHawk
 					case 5:
 						PBR = opcode4;
 						PC = alu_temp | ((uint32_t)alu_temp_hi << 8);
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::JSL:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = PBR;
+						break;
+
+					case 3:
+						// same address bus as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 4:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 5:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = PC >> 8;
+						break;
+
+					case 6:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = PC;
+						break;
+
+					case 7:
+						PBR = opcode4;
+						PC = opcode2 | ((uint32_t)opcode3 << 8);
 						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
 						break;
 				}
@@ -617,12 +723,12 @@ namespace SNESHawk
 
 					case 5:
 						// same address bus value as above
-						value8 = value16 >> 8;
+						value8 = alu_temp_16 >> 8;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 					case 6:
 						address_bus = (D + opcode2) & 0xFFFF;
-						value8 = value16 & 0xFF;
+						value8 = alu_temp_16 & 0xFF;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
@@ -791,12 +897,12 @@ namespace SNESHawk
 
 					case 6:
 						// same address bus value as above
-						value8 = value16 >> 8;
+						value8 = alu_temp_16 >> 8;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 					case 7:
 						address_bus = (D + opcode2 + Index_Add) & 0xFFFF;
-						value8 = value16 & 0xFF;
+						value8 = alu_temp_16 & 0xFF;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
@@ -910,12 +1016,12 @@ namespace SNESHawk
 
 					case 5:
 						// same address bus value as above
-						value8 = value16 >> 8;
+						value8 = alu_temp_16 >> 8;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 					case 6:
 						address_bus = ((uint32_t)DBR << 16) | (uint32_t)(opcode3 << 8) | opcode2;
-						value8 = value16 & 0xFF;
+						value8 = alu_temp_16 & 0xFF;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
@@ -1649,21 +1755,14 @@ namespace SNESHawk
 
 					case 6:
 						address_bus = (uint32_t)(DBR << 16) | ((ea + 1) & 0xFFFF);
-
-						Push_Shift = 8;
-
-						get_Write_value();
+						value8 = alu_temp_16 >> 8;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
-
 						Instr_Cycle += Instr_Skip;
 						break;
 
 					case 7:
 						address_bus = (uint32_t)(DBR << 16) | (ea & 0xFFFF);
-
-						Push_Shift = 0;
-
-						get_Write_value();
+						value8 = alu_temp_16 & 0xFF;
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
 						break;
 
@@ -1886,6 +1985,202 @@ namespace SNESHawk
 
 					case 7:
 						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::PER:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						// same address bus as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 3:
+						Index_Add = PC + (((uint32_t)opcode3 << 8) | opcode2);
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = Index_Add >> 8;
+						break;
+
+					case 4:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = Index_Add;
+						break;
+
+					case 5:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::PEI:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+
+						// extra cycle if DL not zero
+						if ((D & 0xFF) == 0) { Instr_Cycle++; }
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 2:
+						ea = (D + opcode2) & 0xFFFF;
+						address_bus = ea;
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						Instr_Cycle += Instr_Skip;
+						Index_Add = 0;
+						break;
+
+					case 3:
+						get_Direct_Addr_Inc();
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						break;
+
+					case 4:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = alu_temp_hi;
+						break;
+
+					case 5:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = alu_temp;
+						break;
+
+					case 6:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::PEA:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = opcode3 >> 8;
+						break;
+
+					case 3:
+						address_bus = S;
+						Dec_S();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						value8 = opcode2;
+						break;
+
+					case 4:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::MVN:
+			case OpT::MVP:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						break;
+
+					case 2:
+						DBR = alu_temp;
+						address_bus = (alu_temp << 16) | X;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 3:
+						address_bus = (alu_temp_hi << 16) | Y;
+						Cycle_Type = CPU_Cycle_Type::Fetch_4;
+						break;
+
+					case 4:
+						// same address bus as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 5:
+						// same address bus as above
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 7:
+						value16 = A;
+						A--;
+						if (A > value16)
+						{
+							Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						}
+						else
+						{
+							PC -= 3;
+							if (Instr_Type == OpT::MVN)
+							{
+								X++;
+								Y++;
+							}
+							else
+							{
+								X--;
+								Y--;
+							}
+
+							if (Flag_E)
+							{
+								X &= 0xFF;
+								Y &= 0xFF;
+							}
+
+							Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						}					
 						break;
 				}
 				break;

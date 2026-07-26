@@ -175,6 +175,9 @@ namespace SNESHawk
 
 			SNES.CPU_NMI = &CPU.NMI;
 			SNES.CPU_IRQ = &CPU.IRQ;
+
+			CPU.Core_Message_String = &SNES.Message_String;
+			CPU.MessageCallback = SNES.MessageCallback;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -226,7 +229,12 @@ namespace SNESHawk
 
 			SNES.Is_Lag = true;
 
-			SNES.Frame_Advance();
+			for (int i = 0; i < 50; i++)
+			{
+				CPU.RunCpuOne();
+			}
+
+			//SNES.Frame_Advance();
 
 			return SNES.Is_Lag;
 		}
@@ -371,17 +379,17 @@ namespace SNESHawk
 
 		int GetHeaderLength()
 		{
-			return 124 + 1;
+			return 126 + 1;
 		}
 
 		int GetDisasmLength()
 		{
-			return 38 + 1;
+			return 40 + 1;
 		}
 
 		int GetRegStringLength()
 		{
-			return 91 + 1;
+			return 99 + 1;
 		}
 
 		void GetHeader(char* h, int l)

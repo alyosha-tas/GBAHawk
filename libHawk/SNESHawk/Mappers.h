@@ -10,6 +10,10 @@
 
 #include "../Common/Savestate.h"
 
+//Core_Message_String->assign("test: " + to_string(change_CS) + " cs: " + to_string(Chip_Select) + " Command: " + to_string(Command_Mode) + " port: " + to_string((Port_Dir & 1)) + " val: " + to_string((value & 1)) + " rtc: " + to_string(RTC_Clock_Low) + " cnt: " + to_string(Reg_Bit_Count) + " dir 2: " + to_string(((Port_Dir & 2) == 2)));
+
+//MessageCallback(Core_Message_String->length());
+
 using namespace std;
 
 namespace SNESHawk
