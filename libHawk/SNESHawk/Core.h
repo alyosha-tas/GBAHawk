@@ -229,7 +229,7 @@ namespace SNESHawk
 
 			SNES.Is_Lag = true;
 
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < 500; i++)
 			{
 				CPU.RunCpuOne();
 			}
@@ -384,12 +384,12 @@ namespace SNESHawk
 
 		int GetDisasmLength()
 		{
-			return 40 + 1;
+			return 43 + 1;
 		}
 
 		int GetRegStringLength()
 		{
-			return 99 + 1;
+			return 120 + 1;
 		}
 
 		void GetHeader(char* h, int l)

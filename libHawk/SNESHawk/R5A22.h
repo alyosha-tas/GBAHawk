@@ -144,12 +144,12 @@ namespace SNESHawk
 			A = 0;
 			X = 0;
 			Y = 0;
-			P = 0x20; // 5th bit always set
+			P = 0x30; // 5th bit always set
 			S = 0x100;
 			PC = 0;
 			TotalExecutedCycles = 0;
 
-			Instr_Type = OpT::INT;
+			Instr_Type = OpT::RESET;
 			IRQ_Type = 2;
 			ALU_Type = ALU::NOP;
 			Instr_Cycle = -1;
@@ -342,6 +342,7 @@ namespace SNESHawk
 			MVN,		// Block MOV -
 			MVP,		// Block MOV +
 
+			STP,		// Stop
 			Jam,		// Jam
 			INT,		// Interrupts
 			RESET,		// reset
@@ -354,24 +355,24 @@ namespace SNESHawk
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
 			OpT::BRK  , OpT::DIXR , OpT::COP  , OpT::DSR  , OpT::DPRW , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsRW, OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPRW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AbsRW, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPRW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imp  , OpT::AbsRW, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 			OpT::JSR  , OpT::DIXR , OpT::JSL  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::Imp  , OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
 			OpT::RTI  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::MVP  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::PH   , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::MVN  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imm  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::MVN  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::PH   , OpT::Imp  , OpT::JMP  , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 			OpT::RTS  , OpT::DIXR , OpT::PER  , OpT::DSR  , OpT::DPW  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::RTL  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imm  , OpT::JMPIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXW , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::Imp  , OpT::JMPIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 
 			OpT::Imm  , OpT::DIXW , OpT::Brl  , OpT::DSW  , OpT::DPW  , OpT::DPW  , OpT::DPW  , OpT::DLW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsLW,
-			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::ALXW ,
+			OpT::Br   , OpT::DIIYW, OpT::DIW  , OpT::DSIW , OpT::DPXW , OpT::DPXW , OpT::DPYW , OpT::DLIYW, OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::Imp  , OpT::AbsW , OpT::AIXW , OpT::AIXW , OpT::ALXW ,
 			OpT::Imm  , OpT::DIXR , OpT::Imm  , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPR  , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::PH   , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::DPXR , OpT::DPXR , OpT::DPYR , OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imp  , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::ALXR ,
 
 			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::WAI  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEI  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::Imm3 , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
-			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
-			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEA  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imm  , OpT::JSRIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEI  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::PH   , OpT::STP  , OpT::JMPI , OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
+			OpT::Imm  , OpT::DIXR , OpT::Imm3 , OpT::DSR  , OpT::DPR  , OpT::DPR  , OpT::DPRW , OpT::DLR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imp  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsLR,
+			OpT::Br   , OpT::DIIYR, OpT::DIR  , OpT::DSIR , OpT::PEA  , OpT::DPXR , OpT::DPXRW, OpT::DLIYR, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::Imp  , OpT::JSRIX, OpT::AIXR , OpT::AIXRW, OpT::ALXR ,
 		};
 
 		enum class CPU_Cycle_Type
@@ -404,7 +405,7 @@ namespace SNESHawk
 			ASLA, ROLA, LSRA, RORA,
 
 			// 65C816 misc.
-			SED, WAI, STP, XBA, XCE, TCS, TSC, TCD, RTL, TDC, TXY, TYX,
+			SED, WAI, REP, XBA, XCE, TCS, TSC, TCD, RTL, TDC, TXY, TYX,
 
 			// Branch conditions
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ,
@@ -430,7 +431,7 @@ namespace SNESHawk
 			ASLA_16, ROLA_16, LSRA_16, RORA_16,
 
 			// 65C816 misc.
-			SED_16, WAI_16, STP_16, XBA_16, XCE_16, TCS_16, TSC_16, TCD_16, RTL_16, TDC_16, TXY_16, TYX_16,
+			SED_16, WAI_16, REP_16, XBA_16, XCE_16, TCS_16, TSC_16, TCD_16, RTL_16, TDC_16, TXY_16, TYX_16,
 
 			// Branch conditions
 			BPL_16, BMI_16, BVC_16, BVS_16, BCC_16, BCS_16, BNE_16, BEQ_16,
@@ -463,8 +464,8 @@ namespace SNESHawk
 			ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::PLB  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
 			ALU::BCS  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::TYX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LDA  ,
 
-			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::WAI  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
-			ALU::BNE  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::PHX  , ALU::STP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::CPY  , ALU::CMP  , ALU::REP  , ALU::CMP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::WAI  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
+			ALU::BNE  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  , ALU::CLD  , ALU::CMP  , ALU::PHX  , ALU::NOP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::CMP  ,
 			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::XBA  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
 			ALU::BEQ  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  , ALU::SED  , ALU::SBC  , ALU::PLX  , ALU::XCE  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::SBC  ,
 		};
@@ -771,9 +772,9 @@ namespace SNESHawk
 		const char* IRQ_event = "             ====IRQ====             ";
 		const char* DMA_event = "             ====DMA====             ";
 
-		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
+		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX D:XXXX PBR:XX DBR:XX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
 		const char* Reg_Blank = "                                                                                          ";
-		const char* Disasm_template = "PCPCPC:  AA BB CC  Di Di Di Di Di      ";
+		const char* Disasm_template = "PCPCPC:  AA BB CC DD  Di Di Di Di Di      ";
 
 		char replacer[40] = {};
 		char* val_char_1 = nullptr;

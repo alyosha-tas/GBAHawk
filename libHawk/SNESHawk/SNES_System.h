@@ -112,6 +112,8 @@ namespace SNESHawk
 
 		uint16_t Peek_Memory_16(uint32_t addr);
 
+		uint32_t Peek_Memory_24(uint32_t addr);
+
 		uint16_t Peek_Memory_8_Branch(uint32_t addr);
 
 		uint8_t read_joyport(uint32_t addr);

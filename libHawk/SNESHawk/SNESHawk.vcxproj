@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="APU.cpp" />
+    <ClCompile Include="R5A22_Disassembly.cpp" />
     <ClCompile Include="R5A22_Ops.cpp" />
     <ClCompile Include="SNES_DMA.cpp" />
     <ClCompile Include="SPC700.cpp" />

@@ -152,6 +152,19 @@ namespace SNESHawk
 		return 0xDB;
 	}
 
+	uint32_t SNES_System::Peek_Memory_24(uint32_t addr)
+	{
+		uint32_t ret = 0;
+
+		ret = PeekMemory(addr);
+
+		ret |= (uint32_t)(PeekMemory(++addr) << 8);
+
+		ret |= (uint32_t)(PeekMemory(++addr) << 16);
+
+		return ret;
+	}
+
 	uint16_t SNES_System::Peek_Memory_16(uint32_t addr)
 	{
 		uint16_t ret = 0;

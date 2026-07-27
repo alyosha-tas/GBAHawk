@@ -2185,6 +2185,8 @@ namespace SNESHawk
 				}
 				break;
 
+			case OpT::STP:
+				// fall through to JAM because nothing can unstop from here
 			case OpT::Jam:
 				// do nothing, stuck
 				Instr_Cycle--;
