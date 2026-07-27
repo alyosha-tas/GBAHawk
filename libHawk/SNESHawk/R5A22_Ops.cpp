@@ -227,7 +227,36 @@ namespace SNESHawk
 				break;
 
 			case ALU::REP:
-				P = (uint8_t)alu_temp ^ P;
+				temp8 = 0;
+				for (int i = 0; i < 8; i++)
+				{
+					if (((alu_temp >> i) & 1) == 1)
+					{
+						// these bits are reset
+					}
+					else
+					{
+						temp8 |= (((P >> i)& 1) << i);
+					}
+				}
+				P = temp8;
+				break;
+
+			case ALU::SEP:
+				temp8 = 0;
+				for (int i = 0; i < 8; i++)
+				{
+					if (((alu_temp >> i) & 1) == 1)
+					{
+						// these bits are set
+						temp8 |= (1 << i);
+					}
+					else
+					{
+						temp8 |= (((P >> i) & 1) << i);
+					}
+				}
+				P = temp8;
 				break;
 
 			case ALU::XCE:

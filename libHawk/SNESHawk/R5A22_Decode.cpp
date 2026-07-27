@@ -1789,7 +1789,7 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						Index_Add = 0;
+						Index_Add = opcode2;
 						ea = (D + Index_Add) & 0xFFFF;
 						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Fetch_3;
@@ -1848,7 +1848,7 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						Index_Add = 0;
+						Index_Add = opcode2;
 						ea = (D + Index_Add) & 0xFFFF;
 						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Fetch_3;
@@ -1902,7 +1902,7 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						Index_Add = 0;
+						Index_Add = opcode2;
 						ea = (D + Index_Add) & 0xFFFF;
 						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Fetch_3;
@@ -1952,7 +1952,7 @@ namespace SNESHawk
 						break;
 
 					case 2:
-						Index_Add = 0;
+						Index_Add = opcode2;
 						ea = (D + Index_Add) & 0xFFFF;
 						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Fetch_3;

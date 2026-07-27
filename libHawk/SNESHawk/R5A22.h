@@ -405,7 +405,7 @@ namespace SNESHawk
 			ASLA, ROLA, LSRA, RORA,
 
 			// 65C816 misc.
-			SED, WAI, REP, XBA, XCE, TCS, TSC, TCD, RTL, TDC, TXY, TYX,
+			SED, WAI, REP, SEP, XBA, XCE, TCS, TSC, TCD, RTL, TDC, TXY, TYX,
 
 			// Branch conditions
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ,
@@ -431,7 +431,7 @@ namespace SNESHawk
 			ASLA_16, ROLA_16, LSRA_16, RORA_16,
 
 			// 65C816 misc.
-			SED_16, WAI_16, REP_16, XBA_16, XCE_16, TCS_16, TSC_16, TCD_16, RTL_16, TDC_16, TXY_16, TYX_16,
+			SED_16, WAI_16, REP_16, SEP_16, XBA_16, XCE_16, TCS_16, TSC_16, TCD_16, RTL_16, TDC_16, TXY_16, TYX_16,
 
 			// Branch conditions
 			BPL_16, BMI_16, BVC_16, BVS_16, BCC_16, BCS_16, BNE_16, BEQ_16,
@@ -573,7 +573,7 @@ namespace SNESHawk
 			// Now we have know what size operation to do, choose ALU op accordingly
 			if (!ALU_Op_Size_8)
 			{
-				ALU_Type = static_cast<ALU>(79 + (uint32_t)ALU_Type);
+				ALU_Type = static_cast<ALU>(80 + (uint32_t)ALU_Type);
 			}
 		}
 
