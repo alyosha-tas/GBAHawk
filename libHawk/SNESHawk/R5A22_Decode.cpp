@@ -549,7 +549,9 @@ namespace SNESHawk
 					case 1:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((uint32_t)(PC & 0xFF) + (int8_t)opcode2);
+						alu_temp = (((uint32_t)PC & 0xFF) + (int8_t)opcode2);
+						PC &= 0xFF00;
+						PC |= (uint16_t)(alu_temp & 0xFF);
 
 						if (!Flag_E)
 						{
@@ -564,14 +566,12 @@ namespace SNESHawk
 					case 2:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						if ((alu_temp & 0x80000000) == 0x80000000)
+							PC = (uint16_t)(PC - 0x100);
+						else PC = (uint16_t)(PC + 0x100);
 						break;
 
 					case 3:
-						PC &= 0xFF00;
-						PC |= (uint16_t)(alu_temp & 0xFF);
-						if (((alu_temp & 0x80000000) == 0x80000000))
-							PC = (uint16_t)(PC - 0x100);
-						else PC = (uint16_t)(PC + 0x100);
 						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
 						break;
 				}

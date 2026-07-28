@@ -149,7 +149,7 @@ namespace SNESHawk
 
 		switch (op)
 		{
-			case 0x00: sprintf_s(val_char_2, 40, "BRK"); break;
+			case 0x00: sprintf_s(val_char_2, 40, "BRK"); pc++; break;
 			case 0x10: sprintf_s(val_char_2, 40, "BPL $%04X", Sys_pntr->Peek_Memory_8_Branch(pc++)); break;
 			case 0x20: sprintf_s(val_char_2, 40, "JSR $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
 			case 0x30: sprintf_s(val_char_2, 40, "BMI $%04X", Sys_pntr->Peek_Memory_8_Branch(pc++)); break;
@@ -182,6 +182,57 @@ namespace SNESHawk
 			case 0xD1: sprintf_s(val_char_2, 40, "CMP ($D),Y+$%02X", Sys_pntr->PeekMemory(pc++)); break;
 			case 0xE1: sprintf_s(val_char_2, 40, "SBC ($D,X+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
 			case 0xF1: sprintf_s(val_char_2, 40, "SBC ($D),Y+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+
+			case 0x02: sprintf_s(val_char_2, 40, "COP"); pc++; break;
+			case 0x12: sprintf_s(val_char_2, 40, "ORA ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x22: sprintf_s(val_char_2, 40, "JSL $%06X", Sys_pntr->Peek_Memory_24(pc++)); pc++; pc++; break;
+			case 0x32: sprintf_s(val_char_2, 40, "AND ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x42: sprintf_s(val_char_2, 40, "WDM $%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x52: sprintf_s(val_char_2, 40, "EOR ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x62: sprintf_s(val_char_2, 40, "PER"); pc++; pc++; break;
+			case 0x72: sprintf_s(val_char_2, 40, "ADC ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x82: sprintf_s(val_char_2, 40, "BRL $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x92: sprintf_s(val_char_2, 40, "STA ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			//A2
+			case 0xB2: sprintf_s(val_char_2, 40, "LDA ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xC2: sprintf_s(val_char_2, 40, "REP #$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xD2: sprintf_s(val_char_2, 40, "CMP ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xE2: sprintf_s(val_char_2, 40, "SEP #$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xF2: sprintf_s(val_char_2, 40, "SBC ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+
+			case 0x03: sprintf_s(val_char_2, 40, "ORA $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x13: sprintf_s(val_char_2, 40, "ORA ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x23: sprintf_s(val_char_2, 40, "AND $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x33: sprintf_s(val_char_2, 40, "AND ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x43: sprintf_s(val_char_2, 40, "EOR $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x53: sprintf_s(val_char_2, 40, "EOR ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x63: sprintf_s(val_char_2, 40, "ADC $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x73: sprintf_s(val_char_2, 40, "ADC ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x83: sprintf_s(val_char_2, 40, "STA $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x93: sprintf_s(val_char_2, 40, "STA ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xA3: sprintf_s(val_char_2, 40, "LDA $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xB3: sprintf_s(val_char_2, 40, "LDA ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xC3: sprintf_s(val_char_2, 40, "CMP $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xD3: sprintf_s(val_char_2, 40, "CMP ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xE3: sprintf_s(val_char_2, 40, "SBC $S+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xF3: sprintf_s(val_char_2, 40, "SBC ($S+$%02X),Y", Sys_pntr->PeekMemory(pc++)); break;
+
+			case 0x04: sprintf_s(val_char_2, 40, "TSB $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x14: sprintf_s(val_char_2, 40, "TRB $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x24: sprintf_s(val_char_2, 40, "BIT $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x34: sprintf_s(val_char_2, 40, "BIT $D,X+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x44: sprintf_s(val_char_2, 40, "MVP $X, $Y"); pc++; pc++; break;
+			case 0x54: sprintf_s(val_char_2, 40, "MVN $X, $Y"); pc++; pc++; break;
+			case 0x64: sprintf_s(val_char_2, 40, "STZ $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x74: sprintf_s(val_char_2, 40, "STZ $D,X+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x84: sprintf_s(val_char_2, 40, "STY $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0x94: sprintf_s(val_char_2, 40, "STY $D,X+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xA4: sprintf_s(val_char_2, 40, "LDY $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xB4: sprintf_s(val_char_2, 40, "LDY $D,X+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xC4: sprintf_s(val_char_2, 40, "CPY $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xD4: sprintf_s(val_char_2, 40, "PEI ($D+$%02X)", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xE4: sprintf_s(val_char_2, 40, "CPX $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
+			case 0xF4: sprintf_s(val_char_2, 40, "PEA $S"); pc++; pc++; break;
 
 			case 0x05: sprintf_s(val_char_2, 40, "ORA $D+$%02X", Sys_pntr->PeekMemory(pc++)); break;
 			case 0x15: sprintf_s(val_char_2, 40, "ORA $D,X+$%02X", Sys_pntr->PeekMemory(pc++)); break;
@@ -294,6 +345,23 @@ namespace SNESHawk
 			case 0xEB: sprintf_s(val_char_2, 40, "XBA"); break;
 			case 0xFB: sprintf_s(val_char_2, 40, "XCE"); break;
 
+			case 0x0C: sprintf_s(val_char_2, 40, "TSB $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x1C: sprintf_s(val_char_2, 40, "TRB $%04X,X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x2C: sprintf_s(val_char_2, 40, "BIT $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x3C: sprintf_s(val_char_2, 40, "BIT $%04X,X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x4C: sprintf_s(val_char_2, 40, "JMP $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x5C: sprintf_s(val_char_2, 40, "JMP $%06X", Sys_pntr->Peek_Memory_24(pc++)); pc++; pc++; break;
+			case 0x6C: sprintf_s(val_char_2, 40, "JMP ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x7C: sprintf_s(val_char_2, 40, "JMP ($%04X,X)", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x8C: sprintf_s(val_char_2, 40, "STY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0x9C: sprintf_s(val_char_2, 40, "STZ $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xAC: sprintf_s(val_char_2, 40, "LDY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xBC: sprintf_s(val_char_2, 40, "LDY $%04X,X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xCC: sprintf_s(val_char_2, 40, "CPY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xDC: sprintf_s(val_char_2, 40, "JML ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xEC: sprintf_s(val_char_2, 40, "CPX $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+			case 0xFC: sprintf_s(val_char_2, 40, "JSR ($%04X,X)", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+
 			case 0x0D: sprintf_s(val_char_2, 40, "ORA $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
 			case 0x1D: sprintf_s(val_char_2, 40, "ORA $%04X,X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
 			case 0x2D: sprintf_s(val_char_2, 40, "AND $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
@@ -377,6 +445,17 @@ namespace SNESHawk
 				else
 				{
 					sprintf_s(val_char_2, 40, "CPX #$%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
+				}
+				break;
+
+			case 0xA2:
+				if (Flag_E || FlagXget())
+				{
+					sprintf_s(val_char_2, 40, "LDX #$%02X", Sys_pntr->PeekMemory(pc++));
+				}
+				else
+				{
+					sprintf_s(val_char_2, 40, "LDX #$%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
 				}
 				break;
 
@@ -467,431 +546,6 @@ namespace SNESHawk
 					sprintf_s(val_char_2, 40, "SBC #$%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++; break;
 				}
 				break;
-
-
-
-
-
-		case 0x04:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-
-
-		case 0x0C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0x14:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x1C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x24:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "BIT $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "BIT $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x2C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "BIT $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "BIT $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0x34:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x3C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x44:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x4C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "JMP $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "JMP $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0x54:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x5C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x64:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x6C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "JMP ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "JMP ($%04X)", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0x74:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x7C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x82:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x84:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "STY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "STY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0x8C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "STY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "STY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0x94:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "STY $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "STY $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-
-
-		case 0x9C:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "STZ $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "STZ $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-
-
-		case 0xA2:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LDX #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LDX #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xA4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LDY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LDY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xAC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LDY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LDY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0xB3:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LAX ($%02X),Y *", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LAX ($%02X),Y *", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xB4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LDY $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LDY $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-
-
-		case 0xBC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "LDY $%04X,X *", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "LDY $%04X,X *", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0xC2:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "REP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "REP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xC4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "CPY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "CPY $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xCC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "CPY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "CPY $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-
-
-		case 0xD4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-
-
-		case 0xDC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xE2:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP #$%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xE4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "CPX $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "CPX $%02X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-
-
-		case 0xEC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "CPX $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "CPX $%04X", Sys_pntr->Peek_Memory_16(pc++)); pc++;
-			}
-			break;
-
-		case 0xF4:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP $%02X,X", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
-
-		case 0xFC:
-			if (Flag_E || FlagMget())
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			else
-			{
-				sprintf_s(val_char_2, 40, "NOP ($%02X,X)", Sys_pntr->PeekMemory(pc++));
-			}
-			break;
 		}
 
 		if (pc > diff)

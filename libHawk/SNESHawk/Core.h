@@ -229,7 +229,7 @@ namespace SNESHawk
 
 			SNES.Is_Lag = true;
 
-			for (int i = 0; i < 500; i++)
+			for (int i = 0; i < 50000; i++)
 			{
 				CPU.RunCpuOne();
 			}

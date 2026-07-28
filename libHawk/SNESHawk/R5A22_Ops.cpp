@@ -257,6 +257,46 @@ namespace SNESHawk
 					}
 				}
 				P = temp8;
+
+				// register size changes automatically set 0's to high bytes
+				if (FlagMget()) { A &= 0xFF; }
+				if (FlagXget()) { X &= 0xFF; Y &= 0xFF; }
+
+				break;
+
+			case ALU::TSB:
+				temp8 = 0;
+				for (int i = 0; i < 8; i++)
+				{
+					if (((A >> i) & 1) == 1)
+					{
+						// these bits are reset
+					}
+					else
+					{
+						temp8 |= (((alu_temp >> i) & 1) << i);
+					}
+				}
+				FlagZset(temp8 == 0);
+				alu_temp_16 = temp8;
+				break;
+
+			case ALU::TRB:
+				temp8 = 0;
+				for (int i = 0; i < 8; i++)
+				{
+					if (((A >> i) & 1) == 1)
+					{
+						// these bits are set
+						temp8 |= (1 << i);
+					}
+					else
+					{
+						temp8 |= (((alu_temp >> i) & 1) << i);
+					}
+				}
+				FlagZset(temp8 == 0);
+				alu_temp_16 = temp8;
 				break;
 
 			case ALU::XCE:
