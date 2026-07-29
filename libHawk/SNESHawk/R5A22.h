@@ -33,7 +33,6 @@ namespace SNESHawk
 	class R5A22
 	{
 	public:
-
 		SNES_System* Sys_pntr = nullptr;
 
 		string* Core_Message_String = nullptr;
@@ -78,6 +77,8 @@ namespace SNESHawk
 		uint32_t ALU_Type_Save;
 		uint32_t Cycle_Type_Save;
 		uint32_t RW_Size_Save;
+		uint32_t Upper_Rom_Waits_Exec;
+		uint32_t Upper_Rom_Waits_Tot;
 
 		uint32_t Fetch_Cnt, Fetch_Wait, Fetch_Op;
 
@@ -178,6 +179,9 @@ namespace SNESHawk
 
 			Flag_E = true;
 			Flag_B = false;
+
+			Upper_Rom_Waits_Exec = 4;
+			Upper_Rom_Waits_Tot = 8;
 		}
 
 		void SoftReset()
@@ -213,6 +217,8 @@ namespace SNESHawk
 			Flag_E = true;
 			Flag_B = false;
 
+			Upper_Rom_Waits_Exec = 4;
+			Upper_Rom_Waits_Tot = 8;
 		}
 
 		inline bool FlagCget() { return (P & 0x01) != 0; }
@@ -388,7 +394,6 @@ namespace SNESHawk
 			Fetch_3,
 			Fetch_4,
 			Internal_Cycle,
-			PC_Change_Cycle,
 			Fetch_Reset,
 		};
 
@@ -508,7 +513,7 @@ namespace SNESHawk
 
 	#pragma endregion
 
-	#pragma region M6502 functions
+	#pragma region 65C816 functions
 
 		void NZ_Set(uint8_t index)
 		{
@@ -579,8 +584,57 @@ namespace SNESHawk
 
 		void Calculate_Wait_States()
 		{
-			Fetch_Op = 3;
-			Fetch_Wait = 6;
+			if (Cycle_Type == CPU_Cycle_Type::Internal_Cycle)
+			{
+				Fetch_Op = 3;
+				Fetch_Wait = 6;
+			}
+			else
+			{
+				if (((address_bus & 0x8000) == 0) && ((address_bus & 0x400000) == 0))
+				{
+					uint32_t reg_addr = address_bus & 0x7FFF;
+					// register range
+					if (reg_addr < 0x2000)
+					{
+						// low RAM
+						Fetch_Op = 4;
+						Fetch_Wait = 8;
+					}
+					else if (reg_addr < 0x4000)
+					{
+						Fetch_Op = 3;
+						Fetch_Wait = 6;
+					}
+					else if (reg_addr < 0x4200)
+					{
+						Fetch_Op = 6;
+						Fetch_Wait = 12;
+					}
+					else if (reg_addr < 0x6000)
+					{
+						Fetch_Op = 3;
+						Fetch_Wait = 6;
+					}
+					else
+					{
+						Fetch_Op = 4;
+						Fetch_Wait = 8;
+					}
+				}
+				else if ((address_bus & 0x800000) == 0x800000)
+				{
+					// upper ROM area, possibly fast ROM
+					Fetch_Op = Upper_Rom_Waits_Exec;
+					Fetch_Wait = Upper_Rom_Waits_Tot;
+				}
+				else
+				{
+					// slow ROM and RAM
+					Fetch_Op = 4;
+					Fetch_Wait = 8;
+				}
+			}
 		}
 
 		void OnExecFetch(uint16_t addr);

@@ -157,11 +157,11 @@ namespace SNESHawk
 	#pragma region SPC700
 	#pragma region Variables
 
-		uint16_t cpu_Instr_Cycle;
-		uint16_t cpu_IRQ_Type;
+		uint16_t Instr_Cycle;
+		uint16_t IRQ_Type;
 
-		uint32_t cpu_Instr_Type_Save;
-		uint32_t cpu_ALU_Type_Save;
+		uint32_t Instr_Type_Save;
+		uint32_t ALU_Type_Save;
 
 		bool BCD_Enabled = false;
 		bool debug = false;
@@ -176,7 +176,9 @@ namespace SNESHawk
 		uint8_t Y;
 		uint8_t P;
 		uint16_t PC;
-		uint8_t S;
+		uint16_t D;
+		uint16_t S;
+		uint16_t Index_Add;
 
 		uint64_t TotalExecutedCycles;
 		uint64_t Total_CPU_Clock_Cycles;
@@ -192,7 +194,9 @@ namespace SNESHawk
 		uint16_t address_bus;
 
 		uint32_t opcode;
-		uint32_t ea, alu_temp;
+		uint32_t ea, alu_temp, alu_temp_hi, alu_temp_16;
+
+		uint32_t Fetch_Cnt, Fetch_Wait, Fetch_Op;
 
 		uint8_t value8, temp8;
 		uint16_t value16;
@@ -216,14 +220,15 @@ namespace SNESHawk
 			X = 0;
 			Y = 0;
 			P = 0x20; // 5th bit always set
-			S = 0;
+			S = 0x1FF;
 			PC = 0;
+			D = 0;
 			TotalExecutedCycles = 0;
 
-			cpu_Instr_Type = OpT::DRMI;
-			cpu_IRQ_Type = 2;
-			cpu_ALU_Type = ALU::NOP;
-			cpu_Instr_Cycle = 0;
+			Instr_Type = OpT::DRMI;
+			IRQ_Type = 2;
+			ALU_Type = ALU::NOP;
+			Instr_Cycle = 0;
 
 			opcode = 0;
 			iflag_pending = true;
@@ -236,67 +241,56 @@ namespace SNESHawk
 
 			IRQ_Br = false;
 			NMI_Br = false;
+
+			Fetch_Cnt = 0;
+			Fetch_Wait = 2;
+			Fetch_Op = 1;
 		}
 
 		void cpu_SoftReset()
 		{
-			cpu_Instr_Type = OpT::DRMI;
-			cpu_IRQ_Type = 2;
-			cpu_ALU_Type = ALU::NOP;
-			cpu_Instr_Cycle = 0;
+			Instr_Type = OpT::DRMI;
+			IRQ_Type = 2;
+			ALU_Type = ALU::NOP;
+			Instr_Cycle = 0;
+			D = 0;
 
 			opcode = 0;
 
 			iflag_pending = true;
-			cpu_FlagIset(true);
+			FlagIset(true);
+
+			Fetch_Cnt = 0;
+			Fetch_Wait = 2;
+			Fetch_Op = 1;
 		}
 
-		inline bool cpu_FlagCget() { return (P & 0x01) != 0; }
-		inline void cpu_FlagCset(bool value) { P = (uint8_t)((P & ~0x01) | (value ? 0x01 : 0x00)); }
+		inline bool FlagCget() { return (P & 0x01) != 0; }
+		inline void FlagCset(bool value) { P = (uint8_t)((P & ~0x01) | (value ? 0x01 : 0x00)); }
 
-		inline bool cpu_FlagZget() { return (P & 0x02) != 0; }
-		inline void cpu_FlagZset(bool value) { P = (uint8_t)((P & ~0x02) | (value ? 0x02 : 0x00)); }
+		inline bool FlagZget() { return (P & 0x02) != 0; }
+		inline void FlagZset(bool value) { P = (uint8_t)((P & ~0x02) | (value ? 0x02 : 0x00)); }
 
-		inline bool cpu_FlagIget() { return (P & 0x04) != 0; }
-		inline void cpu_FlagIset(bool value) { P = (uint8_t)((P & ~0x04) | (value ? 0x04 : 0x00)); }
+		inline bool FlagIget() { return (P & 0x04) != 0; }
+		inline void FlagIset(bool value) { P = (uint8_t)((P & ~0x04) | (value ? 0x04 : 0x00)); }
 
-		inline bool cpu_FlagDget() { return (P & 0x08) != 0; }
-		inline void cpu_FlagDset(bool value) { P = (uint8_t)((P & ~0x08) | (value ? 0x08 : 0x00)); }
+		inline bool FlagDget() { return (P & 0x08) != 0; }
+		inline void FlagDset(bool value) { P = (uint8_t)((P & ~0x08) | (value ? 0x08 : 0x00)); }
 
-		inline bool cpu_FlagBget() { return (P & 0x10) != 0; }
-		inline void cpu_FlagBset(bool value) { P = (uint8_t)((P & ~0x10) | (value ? 0x10 : 0x00)); }
+		inline bool FlagBget() { return (P & 0x10) != 0; }
+		inline void FlagBset(bool value) { P = (uint8_t)((P & ~0x10) | (value ? 0x10 : 0x00)); }
 
-		inline bool cpu_FlagTget() { return (P & 0x20) != 0; }
-		inline void cpu_FlagTset(bool value) { P = (uint8_t)((P & ~0x20) | (value ? 0x20 : 0x00)); }
+		inline bool FlagTget() { return (P & 0x20) != 0; }
+		inline void FlagTset(bool value) { P = (uint8_t)((P & ~0x20) | (value ? 0x20 : 0x00)); }
 
-		inline bool cpu_FlagVget() { return (P & 0x40) != 0; }
-		inline void cpu_FlagVset(bool value) { P = (uint8_t)((P & ~0x40) | (value ? 0x40 : 0x00)); }
+		inline bool FlagVget() { return (P & 0x40) != 0; }
+		inline void FlagVset(bool value) { P = (uint8_t)((P & ~0x40) | (value ? 0x40 : 0x00)); }
 
-		inline bool cpu_FlagNget() { return (P & 0x80) != 0; }
-		inline void cpu_FlagNset(bool value) { P = (uint8_t)((P & ~0x80) | (value ? 0x80 : 0x00)); }
+		inline bool FlagNget() { return (P & 0x80) != 0; }
+		inline void FlagNset(bool value) { P = (uint8_t)((P & ~0x80) | (value ? 0x80 : 0x00)); }
 
 		// SO pin
-		inline void SetOverflow() { cpu_FlagVset(true); }
-
-		uint8_t TableNZ[256] =
-		{
-			0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-			0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80
-		};
+		inline void SetOverflow() { FlagVset(true); }
 
 	#pragma endregion
 
@@ -309,6 +303,7 @@ namespace SNESHawk
 			JMPI,		// Jump Indirect
 			Imp,		// Implied
 			Imm,		// Immediate
+			Imm3,		// Immediate 3 cycle
 			Acc,		// Accumulator
 			PL,			// Pull
 			PH,			// Push
@@ -316,6 +311,7 @@ namespace SNESHawk
 			RTI,		// RTI
 			CSI,		// CLI, SEI
 			BRK,		// Break
+			TCALL,		// Call
 
 			// int value 13
 			AbsR,		// [absolute READ]
@@ -330,18 +326,22 @@ namespace SNESHawk
 			IIYW,		// (addr),Y* [indirect indexed WRITE]
 			IIYRW,		// (addr),Y* [indirect indexed RMW]
 
-			// int value 22
-			ZPR,		// [zero page READ]
-			ZPW,		// [zero page WRITE]
-			ZPRW,		// [zero page RMW]
+			DIXR,		// (D,X) [Direct,X indirect READ]
+			DIXW,		// (D,X) [Direct,X indirect WRITE]
 
-			ZPXR,		// zp,X [zero page indexed READ X]
-			ZPYR,		// zp,Y [zero page indexed READ Y]
-			ZPXW,		// zp,X [zero page indexed WRITE X]
-			ZPYW,		// zp,Y [zero page indexed WRITE Y]
-			ZPXRW,		// zp,X [zero page indexed RMW]
+			DIIYR,		// (D),Y* [indirect indexed READ]
+			DIIYW,		// (D),Y* [indirect indexed WRITE]
 
-			// int value 30
+			DPR,		// [Direct page READ]
+			DPW,		// [Direct page WRITE]
+			DPRW,		// [Direct page RMW]
+
+			DPXR,		// D,X [Direct page indexed READ X]
+			DPYR,		// D,Y [Direct page indexed READ Y]
+			DPXW,		// D,X [Direct page indexed WRITE X]
+			DPYW,		// D,Y [Direct page indexed WRITE Y]
+			DPXRW,		// D,X [Direct page indexed RMW]
+
 			AIXR,		// addr,X [absolute indexed READ X]
 			AIYR,		// addr,Y [absolute indexed READ Y]
 			AIXW,		// addr,X [absolute indexed WRITE X]
@@ -351,36 +351,56 @@ namespace SNESHawk
 			AIUW,		// addr,(X,Y) [absolute indexed WRITE Unofficial]
 
 			Jam,		// Jam
-			INT,		// Interrupts
+			STP,		// Stop
+			RESET,		// Reset
 			DRMI,		// Dummy reads for interrupts
 			FONI		// Fetch opcode no interrupts
 		};
 
-		OpT cpu_Instr_Type;
+		OpT Instr_Type;
 
-		OpT cpu_Instr_Type_List[256] =
+		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::BRK  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::JSR  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imp  , OpT::TCALL, OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::BRK  ,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::JSR  , OpT::TCALL, OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::RTI  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::RTS  , OpT::AdXR , OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTI  , OpT::TCALL, OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PH   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMP  , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::RTS  , OpT::TCALL, OpT::Jam  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::PL   , OpT::Imm  , OpT::Acc  , OpT::Imm  , OpT::JMPI , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::CSI  , OpT::AIYR , OpT::Acc  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
 
-			OpT::Imm  , OpT::AdXW , OpT::Imm  , OpT::AdXW , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
-			OpT::Br   , OpT::IIYW , OpT::Jam  , OpT::IIYW , OpT::ZPXW , OpT::ZPXW , OpT::ZPYW , OpT::ZPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AIUW , OpT::AIUW , OpT::AIXW , OpT::AIUW , OpT::AIUW ,
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXR , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYR , OpT::ZPXR , OpT::ZPXR , OpT::ZPYR , OpT::ZPYR , OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYR , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
+			OpT::Imm  , OpT::TCALL, OpT::Imm  , OpT::AdXW , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::ZPW  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsW , OpT::AbsW , OpT::AbsW , OpT::AbsW ,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYW , OpT::ZPXW , OpT::ZPXW , OpT::ZPYW , OpT::ZPYW , OpT::Imp  , OpT::AIYW , OpT::Imp  , OpT::AIUW , OpT::AIUW , OpT::AIXW , OpT::AIUW , OpT::AIUW ,
+			OpT::Imm  , OpT::TCALL, OpT::Imm  , OpT::AdXR , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::ZPR  , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsR , OpT::AbsR ,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYR , OpT::ZPXR , OpT::ZPXR , OpT::ZPYR , OpT::ZPYR , OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYR , OpT::AIXR , OpT::AIXR , OpT::AIYR , OpT::AIYR ,
 
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
-			OpT::Imm  , OpT::AdXR , OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::IIYR , OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imm  , OpT::TCALL, OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::AbsRW,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::AIXRW,
+			OpT::Imm  , OpT::TCALL, OpT::Imm  , OpT::AdXRW, OpT::ZPR  , OpT::ZPR  , OpT::ZPRW , OpT::ZPRW , OpT::Imp  , OpT::Imm  , OpT::Imp  , OpT::Imm  , OpT::AbsR , OpT::AbsR , OpT::AbsRW, OpT::STP  ,
+			OpT::Br   , OpT::TCALL, OpT::Jam  , OpT::IIYRW, OpT::ZPXR , OpT::ZPXR , OpT::ZPXRW, OpT::ZPXRW, OpT::Imp  , OpT::AIYR , OpT::Imp  , OpT::AIYRW, OpT::AIXR , OpT::AIXR , OpT::AIXRW, OpT::STP  ,
 		};
+
+
+		enum class CPU_Cycle_Type
+		{
+			Read_Cycle,
+			Read_Cycle_Hi,
+			Write_Cycle,
+			Fetch_ALU_Cycle,
+			Fetch_Cycle,
+			Fetch_Cycle_No_Check,
+			Fetch_Cycle_No_Int,
+			Fetch_2,
+			Fetch_3,
+			Internal_Cycle,
+			Fetch_Reset,
+		};
+
+		CPU_Cycle_Type Cycle_Type;
+
 
 		enum class ALU
 		{
@@ -401,72 +421,92 @@ namespace SNESHawk
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ,
 
 			// push pull op
-			PLP, PLA, PHA, PHP,
+			PLP, PLA, PHA, PHP, PHX, PLX, PHY, PLY,
 
 			// loads / stores
 			STA, STX, STY, LDA, LDX, LDY,
 
 		};
 
-		ALU cpu_ALU_Type_List[256] =
+		ALU ALU_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			ALU::NOP  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::PHP  , ALU::ORA  , ALU::ASLA , ALU::ANC  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
-			ALU::BPL  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
-			ALU::NOP  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::PLP  , ALU::AND  , ALU::ROLA , ALU::ANC  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
-			ALU::BMI  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
+			ALU::NOP  , ALU::NOP  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::PHP  , ALU::ORA  , ALU::ASLA , ALU::ANC  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
+			ALU::BPL  , ALU::NOP  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  , ALU::CLC  , ALU::ORA  , ALU::NOP  , ALU::SLO  , ALU::NOP  , ALU::ORA  , ALU::ASL  , ALU::SLO  ,
+			ALU::NOP  , ALU::NOP  , ALU::NOP  , ALU::RLA  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::PLP  , ALU::AND  , ALU::ROLA , ALU::ANC  , ALU::BIT  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
+			ALU::BMI  , ALU::NOP  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  , ALU::SEC  , ALU::AND  , ALU::NOP  , ALU::RLA  , ALU::NOP  , ALU::AND  , ALU::ROL  , ALU::RLA  ,
 
-			ALU::NOP  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::ASR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
-			ALU::BVC  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::CLI  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
-			ALU::NOP  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::ARR  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::NOP  , ALU::NOP  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::PHA  , ALU::EOR  , ALU::LSRA , ALU::ASR  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
+			ALU::BVC  , ALU::NOP  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  , ALU::CLI  , ALU::EOR  , ALU::NOP  , ALU::SRE  , ALU::NOP  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
+			ALU::NOP  , ALU::NOP  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::PLA  , ALU::ADC  , ALU::RORA , ALU::ARR  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
+			ALU::BVS  , ALU::NOP  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  , ALU::SEI  , ALU::ADC  , ALU::NOP  , ALU::RRA  , ALU::NOP  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
 
-			ALU::NOP  , ALU::STA  , ALU::NOP  , ALU::SAX  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::ANE  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  ,
-			ALU::BCC  , ALU::STA  , ALU::NOP  , ALU::SHA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::SHS  , ALU::SHY  , ALU::STA  , ALU::SHX  , ALU::SHA  ,
-			ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::LXA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
-			ALU::BCS  , ALU::LDA  , ALU::NOP  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::LAS  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
+			ALU::NOP  , ALU::NOP  , ALU::NOP  , ALU::SAX  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::DEY  , ALU::NOP  , ALU::TXA  , ALU::ANE  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  ,
+			ALU::BCC  , ALU::NOP  , ALU::NOP  , ALU::SHA  , ALU::STY  , ALU::STA  , ALU::STX  , ALU::SAX  , ALU::TYA  , ALU::STA  , ALU::TXS  , ALU::SHS  , ALU::SHY  , ALU::STA  , ALU::SHX  , ALU::SHA  ,
+			ALU::LDY  , ALU::NOP  , ALU::LDX  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::TAY  , ALU::LDA  , ALU::TAX  , ALU::LXA  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
+			ALU::BCS  , ALU::NOP  , ALU::NOP  , ALU::LAX  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  , ALU::CLV  , ALU::LDA  , ALU::TSX  , ALU::LAS  , ALU::LDY  , ALU::LDA  , ALU::LDX  , ALU::LAX  ,
 
-			ALU::CPY  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::AXS  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
-			ALU::BNE  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::CLD  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
-			ALU::CPX  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
-			ALU::BEQ  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::SED  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
+			ALU::CPY  , ALU::NOP  , ALU::NOP  , ALU::DCP  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::INY  , ALU::CMP  , ALU::DEX  , ALU::AXS  , ALU::CPY  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
+			ALU::BNE  , ALU::NOP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  , ALU::CLD  , ALU::CMP  , ALU::NOP  , ALU::DCP  , ALU::NOP  , ALU::CMP  , ALU::DEC  , ALU::DCP  ,
+			ALU::CPX  , ALU::NOP  , ALU::NOP  , ALU::ISC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::INX  , ALU::SBC  , ALU::NOP  , ALU::SBC  , ALU::CPX  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
+			ALU::BEQ  , ALU::NOP  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  , ALU::SED  , ALU::SBC  , ALU::NOP  , ALU::ISC  , ALU::NOP  , ALU::SBC  , ALU::INC  , ALU::ISC  ,
 		};
 
-		ALU cpu_ALU_Type;
+		ALU ALU_Type;
 
-#pragma endregion
+	#pragma endregion
 
-#pragma region M6502 functions
+	#pragma region SPC700 functions
 
-		void NZ_A() { P = (uint8_t)((P & 0x7D) | TableNZ[A]); }
-		void NZ_X() { P = (uint8_t)((P & 0x7D) | TableNZ[X]); }
-		void NZ_Y() { P = (uint8_t)((P & 0x7D) | TableNZ[Y]); }
-
-		void cpu_Decode(uint8_t opcode)
+		void NZ_Set(uint8_t index)
 		{
-			cpu_Instr_Type = cpu_Instr_Type_List[opcode];
-			cpu_ALU_Type = cpu_ALU_Type_List[opcode];
+			P &= 0x7D;
+
+			FlagZset(index == 0);
+			FlagNset((index & 0x80) == 0x80);
 		}
 
-		void cpu_ALU_Operation();
+		void NZ_Set_16(uint16_t index)
+		{
+			P &= 0x7D;
 
-		void cpu_Write_Operation();
+			FlagZset(index == 0);
+			FlagNset((index & 0x8000) == 0x8000);
+		}
+
+		void Decode(uint8_t opcode)
+		{
+			Instr_Type = Instr_Type_List[opcode];
+			ALU_Type = ALU_Type_List[opcode];
+		}
+
+		void Calculate_Wait_States()
+		{
+			if (Cycle_Type == CPU_Cycle_Type::Internal_Cycle)
+			{
+				Fetch_Op = 1;
+				Fetch_Wait = 2;
+			}
+			else
+			{
+				Fetch_Op = 1;
+				Fetch_Wait = 2;
+			}
+		}
+
+		void OnExecFetch(uint16_t addr);
+
+		void ALU_Operation();
 
 		void Execute(int cycles);
-
-		void Fetch_Dummy_Interrupt();
 
 		void Fetch_Opcode_No_Interrupt();
 
 		void Fetch1();
 
-		void Fetch1_Branch();
+		void Decode_Next_Cycle();
 
-		void Fetch2();
-
-		void Fetch3();
-
-		void ExecuteOneOp();
+		void RunCpuOne();
 
 		void End_ISpecial()
 		{
@@ -474,34 +514,86 @@ namespace SNESHawk
 			Fetch1();
 		}
 
-		void End_SuppressInterrupt()
-		{
-			cpu_Instr_Type = OpT::FONI;
-			Fetch_Opcode_No_Interrupt();
-		}
-
 		void End()
 		{
-			iflag_pending = cpu_FlagIget();
-			Fetch1();
-		}
 
-		void End_Branch()
-		{
-			iflag_pending = cpu_FlagIget();
-			Fetch1_Branch();
+
 		}
 
 		void ExecuteOne()
 		{
-			RDY_Freeze = false;
-
-			ExecuteOneOp();
+			Decode_Next_Cycle();
 			TotalExecutedCycles++;
 			Total_CPU_Clock_Cycles++;
 		}
 
+		inline uint32_t get_PC_Addr()
+		{
+			return PC;
+		}
+
+		inline void get_Direct_Addr_Inc()
+		{
+			address_bus = (ea + 1) & 0xFF;
+			address_bus |= D;
+		}
+
+		inline void Dec_S()
+		{
+			S--;
+			S &= 0xFF;
+			S |= 0x100;
+		}
+
+		inline void Inc_S()
+		{
+			S++;
+			S &= 0xFF;
+			S |= 0x100;
+		}
+
+		void get_Push_value()
+		{
+			switch (ALU_Type)
+			{
+				case ALU::PHA:
+					value8 = A;
+					break;
+
+				case ALU::PHP:
+					value8 = P;
+					break;
+
+				case ALU::PHX:
+					value8 = X;
+					break;
+
+				case ALU::PHY:
+					value8 = Y;
+					break;
+			}
+		}
+
+		void get_Write_value()
+		{
+			switch (ALU_Type)
+			{
+				case ALU::STA:
+					value8 = A;
+					break;
+
+				case ALU::STX:
+					value8 = X;
+					break;
+
+				case ALU::STY:
+					value8 = Y;
+					break;
+			}
+		}
+
 	#pragma endregion
+
 
 	#pragma region Disassemble
 
@@ -550,7 +642,7 @@ namespace SNESHawk
 		{
 			string trace_string = "";
 
-			string disasm = cpu_Disassemble(PC);
+			string disasm = Disassemble(PC);
 
 			val_char_1 = replacer;
 
@@ -609,14 +701,14 @@ namespace SNESHawk
 			trace_string.append(val_char_1, 2);
 
 			trace_string.append("  ");
-			trace_string.append(cpu_FlagNget() ? "N" : "n");
-			trace_string.append(cpu_FlagVget() ? "V" : "v");
-			trace_string.append(cpu_FlagTget() ? "T" : "t");
-			trace_string.append(cpu_FlagBget() ? "B" : "b");
-			trace_string.append(cpu_FlagVget() ? "D" : "d");
-			trace_string.append(cpu_FlagIget() ? "I" : "i");
-			trace_string.append(cpu_FlagZget() ? "Z" : "z");
-			trace_string.append(cpu_FlagCget() ? "C" : "c");
+			trace_string.append(FlagNget() ? "N" : "n");
+			trace_string.append(FlagVget() ? "V" : "v");
+			trace_string.append(FlagTget() ? "T" : "t");
+			trace_string.append(FlagBget() ? "B" : "b");
+			trace_string.append(FlagVget() ? "D" : "d");
+			trace_string.append(FlagIget() ? "I" : "i");
+			trace_string.append(FlagZget() ? "Z" : "z");
+			trace_string.append(FlagCget() ? "C" : "c");
 			trace_string.append(RDY ? "R" : "r");
 			trace_string.append("  ");
 
@@ -640,7 +732,7 @@ namespace SNESHawk
 			return trace_string;
 		}
 
-		string cpu_Disassemble(uint16_t pc)
+		string Disassemble(uint16_t pc)
 		{
 			uint16_t diff = pc;
 
@@ -860,7 +952,9 @@ namespace SNESHawk
 			saver = byte_saver(Y, saver);
 			saver = byte_saver(P, saver);
 			saver = short_saver(PC, saver);
-			saver = byte_saver(S, saver);
+			saver = short_saver(D, saver);
+			saver = short_saver(S, saver);
+			saver = short_saver(Index_Add, saver);
 
 			saver = bool_saver(NMI, saver);
 			saver = bool_saver(IRQ, saver);
@@ -885,6 +979,12 @@ namespace SNESHawk
 			saver = int_saver(opcode, saver);
 			saver = int_saver(ea, saver);
 			saver = int_saver(alu_temp, saver);
+			saver = int_saver(alu_temp_hi, saver);
+			saver = int_saver(alu_temp_16, saver);
+
+			saver = int_saver(Fetch_Cnt, saver);
+			saver = int_saver(Fetch_Wait, saver);
+			saver = int_saver(Fetch_Op, saver);
 
 			saver = byte_saver(value8, saver);
 			saver = byte_saver(temp8, saver);
@@ -896,11 +996,11 @@ namespace SNESHawk
 			saver = int_saver(lo, saver);
 			saver = int_saver(hi, saver);
 
-			saver = short_saver(cpu_IRQ_Type, saver);
-			saver = short_saver(cpu_Instr_Cycle, saver);
+			saver = short_saver(IRQ_Type, saver);
+			saver = short_saver(Instr_Cycle, saver);
 
-			saver = int_saver((uint32_t)cpu_Instr_Type, saver);
-			saver = int_saver((uint32_t)cpu_ALU_Type, saver);
+			saver = int_saver((uint32_t)Instr_Type, saver);
+			saver = int_saver((uint32_t)ALU_Type, saver);
 
 			return saver;
 		}
@@ -912,7 +1012,9 @@ namespace SNESHawk
 			loader = byte_loader(&Y, loader);
 			loader = byte_loader(&P, loader);
 			loader = short_loader(&PC, loader);
-			loader = byte_loader(&S, loader);
+			loader = short_loader(&D, loader);
+			loader = short_loader(&S, loader);
+			loader = short_loader(&Index_Add, loader);
 
 			loader = bool_loader(&NMI, loader);
 			loader = bool_loader(&IRQ, loader);
@@ -937,6 +1039,12 @@ namespace SNESHawk
 			loader = int_loader(&opcode, loader);
 			loader = int_loader(&ea, loader);
 			loader = int_loader(&alu_temp, loader);
+			loader = int_loader(&alu_temp_hi, loader);
+			loader = int_loader(&alu_temp_16, loader);
+
+			loader = int_loader(&Fetch_Cnt, loader);
+			loader = int_loader(&Fetch_Wait, loader);
+			loader = int_loader(&Fetch_Op, loader);
 
 			loader = byte_loader(&value8, loader);
 			loader = byte_loader(&temp8, loader);
@@ -948,14 +1056,14 @@ namespace SNESHawk
 			loader = int_loader(&lo, loader);
 			loader = int_loader(&hi, loader);
 
-			loader = short_loader(&cpu_IRQ_Type, loader);
-			loader = short_loader(&cpu_Instr_Cycle, loader);
+			loader = short_loader(&IRQ_Type, loader);
+			loader = short_loader(&Instr_Cycle, loader);
 
-			loader = int_loader(&cpu_Instr_Type_Save, loader);
-			loader = int_loader(&cpu_ALU_Type_Save, loader);
+			loader = int_loader(&Instr_Type_Save, loader);
+			loader = int_loader(&ALU_Type_Save, loader);
 
-			cpu_Instr_Type = static_cast<OpT>(cpu_Instr_Type_Save);
-			cpu_ALU_Type = static_cast<ALU>(cpu_ALU_Type_Save);
+			Instr_Type = static_cast<OpT>(Instr_Type_Save);
+			ALU_Type = static_cast<ALU>(ALU_Type_Save);
 
 			return loader;
 		}
@@ -964,12 +1072,7 @@ namespace SNESHawk
 
 	#pragma endregion
 
-
-
-
-
 	};
-
 }
 
 #endif

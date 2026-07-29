@@ -178,6 +178,9 @@ namespace SNESHawk
 
 			CPU.Core_Message_String = &SNES.Message_String;
 			CPU.MessageCallback = SNES.MessageCallback;
+
+			SNES.Fast_ROM_Exec = &CPU.Upper_Rom_Waits_Exec;
+			SNES.Fast_ROM_Tot = &CPU.Upper_Rom_Waits_Tot;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -229,7 +232,7 @@ namespace SNESHawk
 
 			SNES.Is_Lag = true;
 
-			for (int i = 0; i < 50000; i++)
+			for (int i = 0; i < 357368; i++)
 			{
 				CPU.RunCpuOne();
 			}

@@ -19,53 +19,50 @@ namespace SNESHawk
 			{
 				switch (Cycle_Type)
 				{
-				case CPU_Cycle_Type::Read_Cycle:
-					alu_temp = Sys_pntr->ReadMemory(address_bus);
-					break;
+					case CPU_Cycle_Type::Read_Cycle:
+						alu_temp = Sys_pntr->ReadMemory(address_bus);
+						break;
 
-				case CPU_Cycle_Type::Read_Cycle_Hi:
-					alu_temp_hi = Sys_pntr->ReadMemory(address_bus);
-					alu_temp_16 = (alu_temp_hi << 8) | alu_temp;
-					break;
+					case CPU_Cycle_Type::Read_Cycle_Hi:
+						alu_temp_hi = Sys_pntr->ReadMemory(address_bus);
+						alu_temp_16 = (alu_temp_hi << 8) | alu_temp;
+						break;
 
-				case CPU_Cycle_Type::Write_Cycle:
-					Sys_pntr->WriteMemory(address_bus, value8);
-					break;
+					case CPU_Cycle_Type::Write_Cycle:
+						Sys_pntr->WriteMemory(address_bus, value8);
+						break;
 
-				case CPU_Cycle_Type::Fetch_ALU_Cycle:
-					ALU_Operation();
-					// fall through to normal fetch cycle
+					case CPU_Cycle_Type::Fetch_ALU_Cycle:
+						ALU_Operation();
+						// fall through to normal fetch cycle
 
-				case CPU_Cycle_Type::Fetch_Cycle:
-					iflag_pending = FlagIget();
-					// fall through to no check case
+					case CPU_Cycle_Type::Fetch_Cycle:
+						iflag_pending = FlagIget();
+						// fall through to no check case
 
-				case CPU_Cycle_Type::Fetch_Cycle_No_Check:
-					Fetch1();
-					break;
+					case CPU_Cycle_Type::Fetch_Cycle_No_Check:
+						Fetch1();
+						break;
 
-				case CPU_Cycle_Type::Fetch_2:
-					opcode2 = Sys_pntr->ReadMemory(address_bus);
-					break;
+					case CPU_Cycle_Type::Fetch_2:
+						opcode2 = Sys_pntr->ReadMemory(address_bus);
+						break;
 
-				case CPU_Cycle_Type::Fetch_3:
-					opcode3 = Sys_pntr->ReadMemory(address_bus);
-					break;
+					case CPU_Cycle_Type::Fetch_3:
+						opcode3 = Sys_pntr->ReadMemory(address_bus);
+						break;
 
-				case CPU_Cycle_Type::Fetch_4:
-					opcode4 = Sys_pntr->ReadMemory(address_bus);
-					break;
+					case CPU_Cycle_Type::Fetch_4:
+						opcode4 = Sys_pntr->ReadMemory(address_bus);
+						break;
 
-				case CPU_Cycle_Type::Internal_Cycle:
+					case CPU_Cycle_Type::Internal_Cycle:
 
-					break;
+						break;
 
-				case CPU_Cycle_Type::PC_Change_Cycle:
-					break;
-
-				case CPU_Cycle_Type::Fetch_Reset:
-					// do nothing as this is just a cycle that immediately goes into the interrupt handler with a reset
-					break;
+					case CPU_Cycle_Type::Fetch_Reset:
+						// do nothing as this is just a cycle that immediately goes into the interrupt handler with a reset
+						break;
 				}
 			}
 			else if (Fetch_Cnt == Fetch_Wait)
@@ -74,9 +71,9 @@ namespace SNESHawk
 
 				Fetch_Cnt = 0;
 
-				Core_Message_String->assign("test: " + to_string(Instr_Cycle) + " cyc: " + to_string(TotalExecutedCycles));
+				//Core_Message_String->assign("test: " + to_string(Instr_Cycle) + " cyc: " + to_string(TotalExecutedCycles));
 
-				MessageCallback(Core_Message_String->length());
+				//MessageCallback(Core_Message_String->length());
 
 				Decode_Next_Cycle();
 
@@ -321,7 +318,7 @@ namespace SNESHawk
 				break;
 
 			case ALU::TXS:
-				S = A;
+				S = X;
 				break;
 
 			case ALU::TSX:

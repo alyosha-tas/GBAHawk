@@ -41,6 +41,9 @@ namespace SNESHawk
 
 		bool* CPU_NMI = nullptr;
 		bool* CPU_IRQ = nullptr;
+
+		uint32_t* Fast_ROM_Exec;
+		uint32_t* Fast_ROM_Tot;
 		
 		// Various sync settings and mapper specific behavior and revision dependent behavior
 		bool Is_Lo_ROM = false;
