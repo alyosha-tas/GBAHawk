@@ -481,6 +481,7 @@ namespace BizHawk.Client.GBAHawk
 			this.NumberOfScripts.Location = new System.Drawing.Point(3, 3);
 			this.NumberOfScripts.Name = "NumberOfScripts";
 			this.NumberOfScripts.Text = "0 script     ";
+			this.NumberOfScripts.AutoSize = true;
 			// 
 			// OutputMessages
 			// 
