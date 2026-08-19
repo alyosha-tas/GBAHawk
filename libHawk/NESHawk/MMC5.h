@@ -15,6 +15,92 @@ namespace NESHawk
 	{
 	public:
 
+		bool IRQ_Pending;
+		bool IRQ_Enable;
+		bool IRQ_Audio;
+		bool PRG_Mode;
+		bool CHR_Mode;
+		bool WRAM_Enable;
+		bool WRAM_Write_Protect;
+		bool In_Frame;
+
+		uint8_t IRQ_Counter;
+		uint8_t IRQ_Target;
+		uint8_t Multiplicand;
+		uint8_t Multiplier;
+		uint8_t Product_Low;
+		uint8_t Product_High;
+		uint8_t NT_Fill_Tile;
+		uint8_t NT_Fill_Attrib;
+
+		uint32_t CHR_Mask;
+		uint32_t PRG_Bank;
+		uint32_t PRG_Block;
+		uint32_t PRG_Mask;
+		uint32_t WRAM_Bank;
+		uint32_t WRAM_Mask;
+		uint32_t Last_NT_Read;
+
+		uint32_t MMC5_PRG_Mode;
+		uint32_t MMC5_CHR_Mode;
+		//uint32_t MMC5_ExRAM_Mode; defined in base mapper for graphics tools
+		uint32_t MMC5_AB_Mode;
+		uint32_t MMC5_CHR_Reg_High;
+
+		uint64_t Next_Ready_Cycle;
+
+		uint32_t MMC5_Regs_A[8] = { };
+		uint32_t MMC5_Regs_B[4] = { };
+		uint32_t MMC5_Regs_PRG[4] = { };
+		uint32_t MMC5_NT_Modes[4] = { };
+		uint32_t MMC5_A_Banks_1K[8] = { };
+		uint32_t MMC5_B_Banks_1K[8] = { };
+		uint32_t MMC5_PRG_Banks_8K[4] = { };
+
+		// cartridge audio
+		uint32_t MMC5_Audio_Frame_Reload = 7458; // ???
+
+		bool MMC5_Audio_PCM_Read;
+		bool MMC5_Audio_PCM_Enable_IRQ;
+		bool MMC5_Audio_PCM_IRQ_Triggered;
+
+		bool MMC5_Pulse_0_LenCntDisable;
+		bool MMC5_Pulse_0_ConstantVolume;
+		bool MMC5_Pulse_0_Enable;
+		bool MMC5_Pulse_0_estart;
+
+		bool MMC5_Pulse_1_LenCntDisable;
+		bool MMC5_Pulse_1_ConstantVolume;
+		bool MMC5_Pulse_1_Enable;
+		bool MMC5_Pulse_1_estart;
+
+		uint8_t MMC5_Audio_PCM_Val;
+		uint8_t MMC5_Audio_PCM_NextVal;
+
+		uint32_t MMC5_Audio_Frame;
+
+		uint32_t MMC5_Pulse_0_V;
+		uint32_t MMC5_Pulse_0_T;
+		uint32_t MMC5_Pulse_0_L;
+		uint32_t MMC5_Pulse_0_D;
+		uint32_t MMC5_Pulse_0_etime;
+		uint32_t MMC5_Pulse_0_ecount;
+		uint32_t MMC5_Pulse_0_length;
+		uint32_t MMC5_Pulse_0_sequence;
+		uint32_t MMC5_Pulse_0_clock;
+		uint32_t MMC5_Pulse_0_output;
+
+		uint32_t MMC5_Pulse_1_V;
+		uint32_t MMC5_Pulse_1_T;
+		uint32_t MMC5_Pulse_1_L;
+		uint32_t MMC5_Pulse_1_D;
+		uint32_t MMC5_Pulse_1_etime;
+		uint32_t MMC5_Pulse_1_ecount;
+		uint32_t MMC5_Pulse_1_length;
+		uint32_t MMC5_Pulse_1_sequence;
+		uint32_t MMC5_Pulse_1_clock;
+		uint32_t MMC5_Pulse_1_output;
+
 		void Reset()
 		{
 			//set all prg regs to use ROM
@@ -1068,6 +1154,206 @@ namespace NESHawk
 
 	#pragma endregion
 
+
+		uint8_t* SaveState(uint8_t* saver)
+		{
+			saver = bool_saver(IRQ_Pending, saver);
+			saver = bool_saver(IRQ_Enable, saver);
+			saver = bool_saver(IRQ_Audio, saver);
+			saver = bool_saver(PRG_Mode, saver);
+			saver = bool_saver(CHR_Mode, saver);
+			saver = bool_saver(WRAM_Enable, saver);
+			saver = bool_saver(WRAM_Write_Protect, saver);
+			saver = bool_saver(In_Frame, saver);
+
+			saver = byte_saver(IRQ_Counter, saver);
+			saver = byte_saver(IRQ_Target, saver);
+			saver = byte_saver(Multiplicand, saver);
+			saver = byte_saver(Multiplier, saver);
+			saver = byte_saver(Product_Low, saver);
+			saver = byte_saver(Product_High, saver);
+			saver = byte_saver(NT_Fill_Tile, saver);
+			saver = byte_saver(NT_Fill_Attrib, saver);
+
+			saver = int_saver(CHR_Mask, saver);
+			saver = int_saver(PRG_Bank, saver);
+			saver = int_saver(PRG_Block, saver);
+			saver = int_saver(PRG_Mask, saver);
+			saver = int_saver(WRAM_Bank, saver);
+			saver = int_saver(WRAM_Mask, saver);
+
+			saver = int_saver(MMC5_PRG_Mode, saver);
+			saver = int_saver(MMC5_CHR_Mode, saver);
+			saver = int_saver(MMC5_ExRAM_Mode, saver);
+			saver = int_saver(MMC5_AB_Mode, saver);
+			saver = int_saver(MMC5_CHR_Reg_High, saver);
+			saver = int_saver(Last_NT_Read, saver);
+
+			saver = long_saver(Next_Ready_Cycle, saver);
+
+			saver = int_array_saver(MMC5_Regs_A, saver, 8);
+			saver = int_array_saver(MMC5_Regs_B, saver, 4);
+			saver = int_array_saver(MMC5_Regs_PRG, saver, 4);
+			saver = int_array_saver(MMC5_NT_Modes, saver, 4);
+			saver = int_array_saver(MMC5_A_Banks_1K, saver, 8);
+			saver = int_array_saver(MMC5_B_Banks_1K, saver, 8);
+			saver = int_array_saver(MMC5_PRG_Banks_8K, saver, 4);
+
+			// cartridge audio
+			saver = bool_saver(MMC5_Audio_PCM_Read, saver);
+			saver = bool_saver(MMC5_Audio_PCM_Enable_IRQ, saver);
+			saver = bool_saver(MMC5_Audio_PCM_IRQ_Triggered, saver);
+
+			saver = byte_saver(MMC5_Audio_PCM_Val, saver);
+			saver = byte_saver(MMC5_Audio_PCM_NextVal, saver);
+
+			saver = int_saver(MMC5_Audio_Frame, saver);
+
+			saver = bool_saver(MMC5_Pulse_0_LenCntDisable, saver);
+			saver = bool_saver(MMC5_Pulse_0_ConstantVolume, saver);
+			saver = bool_saver(MMC5_Pulse_0_Enable, saver);
+			saver = bool_saver(MMC5_Pulse_0_estart, saver);
+			saver = bool_saver(MMC5_Pulse_1_LenCntDisable, saver);
+			saver = bool_saver(MMC5_Pulse_1_ConstantVolume, saver);
+			saver = bool_saver(MMC5_Pulse_1_Enable, saver);
+			saver = bool_saver(MMC5_Pulse_1_estart, saver);
+
+			saver = int_saver(MMC5_Pulse_0_V, saver);
+			saver = int_saver(MMC5_Pulse_0_T, saver);
+			saver = int_saver(MMC5_Pulse_0_L, saver);
+			saver = int_saver(MMC5_Pulse_0_D, saver);
+			saver = int_saver(MMC5_Pulse_0_etime, saver);
+			saver = int_saver(MMC5_Pulse_0_ecount, saver);
+			saver = int_saver(MMC5_Pulse_0_length, saver);
+			saver = int_saver(MMC5_Pulse_0_sequence, saver);
+			saver = int_saver(MMC5_Pulse_0_clock, saver);
+			saver = int_saver(MMC5_Pulse_0_output, saver);
+			saver = int_saver(MMC5_Pulse_1_V, saver);
+			saver = int_saver(MMC5_Pulse_1_T, saver);
+			saver = int_saver(MMC5_Pulse_1_L, saver);
+			saver = int_saver(MMC5_Pulse_1_D, saver);
+			saver = int_saver(MMC5_Pulse_1_etime, saver);
+			saver = int_saver(MMC5_Pulse_1_ecount, saver);
+			saver = int_saver(MMC5_Pulse_1_length, saver);
+			saver = int_saver(MMC5_Pulse_1_sequence, saver);
+			saver = int_saver(MMC5_Pulse_1_clock, saver);
+			saver = int_saver(MMC5_Pulse_1_output, saver);
+
+			// common to all mappers
+			saver = bool_saver(Mirroring, saver);
+			saver = bool_saver(Bus_Conflicts, saver);
+			saver = bool_saver(Old_IRQ_Type, saver);
+			saver = bool_saver(Alt_Mirroring, saver);
+
+			saver = int_saver(Size_Mask, saver);
+
+			saver = byte_array_saver(Ex_RAM, saver, 0x400);
+			saver = byte_array_saver(VRAM, saver, 0x8000);
+			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
+
+			return saver;
+		}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = bool_loader(&IRQ_Pending, loader);
+			loader = bool_loader(&IRQ_Enable, loader);
+			loader = bool_loader(&IRQ_Audio, loader);
+			loader = bool_loader(&PRG_Mode, loader);
+			loader = bool_loader(&CHR_Mode, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
+			loader = bool_loader(&WRAM_Write_Protect, loader);
+			loader = bool_loader(&In_Frame, loader);
+
+			loader = byte_loader(&IRQ_Counter, loader);
+			loader = byte_loader(&IRQ_Target, loader);
+			loader = byte_loader(&Multiplicand, loader);
+			loader = byte_loader(&Multiplier, loader);
+			loader = byte_loader(&Product_Low, loader);
+			loader = byte_loader(&Product_High, loader);
+			loader = byte_loader(&NT_Fill_Tile, loader);
+			loader = byte_loader(&NT_Fill_Attrib, loader);
+
+			loader = int_loader(&CHR_Mask, loader);
+			loader = int_loader(&PRG_Bank, loader);
+			loader = int_loader(&PRG_Block, loader);
+			loader = int_loader(&PRG_Mask, loader);
+			loader = int_loader(&WRAM_Bank, loader);
+			loader = int_loader(&WRAM_Mask, loader);
+
+			loader = int_loader(&MMC5_PRG_Mode, loader);
+			loader = int_loader(&MMC5_CHR_Mode, loader);
+			loader = int_loader(&MMC5_ExRAM_Mode, loader);
+			loader = int_loader(&MMC5_AB_Mode, loader);
+			loader = int_loader(&MMC5_CHR_Reg_High, loader);
+			loader = int_loader(&Last_NT_Read, loader);
+
+			loader = long_loader(&Next_Ready_Cycle, loader);
+
+			loader = int_array_loader(MMC5_Regs_A, loader, 8);
+			loader = int_array_loader(MMC5_Regs_B, loader, 4);
+			loader = int_array_loader(MMC5_Regs_PRG, loader, 4);
+			loader = int_array_loader(MMC5_NT_Modes, loader, 4);
+			loader = int_array_loader(MMC5_A_Banks_1K, loader, 8);
+			loader = int_array_loader(MMC5_B_Banks_1K, loader, 8);
+			loader = int_array_loader(MMC5_PRG_Banks_8K, loader, 4);
+
+			// cartridge audio
+			loader = bool_loader(&MMC5_Audio_PCM_Read, loader);
+			loader = bool_loader(&MMC5_Audio_PCM_Enable_IRQ, loader);
+			loader = bool_loader(&MMC5_Audio_PCM_IRQ_Triggered, loader);
+
+			loader = byte_loader(&MMC5_Audio_PCM_Val, loader);
+			loader = byte_loader(&MMC5_Audio_PCM_NextVal, loader);
+
+			loader = int_loader(&MMC5_Audio_Frame, loader);
+
+			loader = bool_loader(&MMC5_Pulse_0_LenCntDisable, loader);
+			loader = bool_loader(&MMC5_Pulse_0_ConstantVolume, loader);
+			loader = bool_loader(&MMC5_Pulse_0_Enable, loader);
+			loader = bool_loader(&MMC5_Pulse_0_estart, loader);
+			loader = bool_loader(&MMC5_Pulse_1_LenCntDisable, loader);
+			loader = bool_loader(&MMC5_Pulse_1_ConstantVolume, loader);
+			loader = bool_loader(&MMC5_Pulse_1_Enable, loader);
+			loader = bool_loader(&MMC5_Pulse_1_estart, loader);
+
+			loader = int_loader(&MMC5_Pulse_0_V, loader);
+			loader = int_loader(&MMC5_Pulse_0_T, loader);
+			loader = int_loader(&MMC5_Pulse_0_L, loader);
+			loader = int_loader(&MMC5_Pulse_0_D, loader);
+			loader = int_loader(&MMC5_Pulse_0_etime, loader);
+			loader = int_loader(&MMC5_Pulse_0_ecount, loader);
+			loader = int_loader(&MMC5_Pulse_0_length, loader);
+			loader = int_loader(&MMC5_Pulse_0_sequence, loader);
+			loader = int_loader(&MMC5_Pulse_0_clock, loader);
+			loader = int_loader(&MMC5_Pulse_0_output, loader);
+			loader = int_loader(&MMC5_Pulse_1_V, loader);
+			loader = int_loader(&MMC5_Pulse_1_T, loader);
+			loader = int_loader(&MMC5_Pulse_1_L, loader);
+			loader = int_loader(&MMC5_Pulse_1_D, loader);
+			loader = int_loader(&MMC5_Pulse_1_etime, loader);
+			loader = int_loader(&MMC5_Pulse_1_ecount, loader);
+			loader = int_loader(&MMC5_Pulse_1_length, loader);
+			loader = int_loader(&MMC5_Pulse_1_sequence, loader);
+			loader = int_loader(&MMC5_Pulse_1_clock, loader);
+			loader = int_loader(&MMC5_Pulse_1_output, loader);
+
+			// common to all mappers
+			loader = bool_loader(&Mirroring, loader);
+			loader = bool_loader(&Bus_Conflicts, loader);
+			loader = bool_loader(&Old_IRQ_Type, loader);
+			loader = bool_loader(&Alt_Mirroring, loader);
+
+			loader = int_loader(&Size_Mask, loader);
+
+			loader = byte_array_loader(Ex_RAM, loader, 0x400);
+			loader = byte_array_loader(VRAM, loader, 0x8000);
+			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
+
+			Remap_ROM();
+
+			return loader;
+		}
 	};
 }
 /*

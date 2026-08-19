@@ -17,6 +17,28 @@ namespace NESHawk
 
 		const uint32_t PPU_Clock_Timeout = 4; // i don't know if this is right, but anything lower will not boot Bill & Ted
 
+		bool PRG_Mode;
+		bool PRG_Slot;
+		bool CHR_Mode;
+		bool WRAM_Enable;
+
+		uint8_t Command;
+		uint8_t MMC1_CHR_0;
+		uint8_t MMC1_CHR_1;
+		uint8_t Serial_Shift_Count;
+		uint8_t Serial_Shift_Value;
+
+		uint32_t CHR_Bank;
+		uint32_t CHR_Mask;
+		uint32_t PRG_Bank;
+		uint32_t PRG_Mask;
+		uint32_t WRAM_Bank;
+		uint32_t WRAM_Mask;
+		uint32_t Mirror_Mode;
+		uint32_t MMC1_PPU_Clock;
+
+		uint8_t MMC1_CHR_Regs_4K[2] = { };
+
 		void Reset()
 		{
 			Serial_Shift_Count = Serial_Shift_Value = 0;
@@ -243,6 +265,87 @@ namespace NESHawk
 
 				Core_CIRAM[block][ofs] = value;
 			}
+		}
+
+		uint8_t* SaveState(uint8_t* saver)
+		{
+			saver = bool_saver(PRG_Mode, saver);
+			saver = bool_saver(PRG_Slot, saver);
+			saver = bool_saver(CHR_Mode, saver);
+			saver = bool_saver(WRAM_Enable, saver);
+
+			saver = byte_saver(Command, saver);
+			saver = byte_saver(MMC1_CHR_0, saver);
+			saver = byte_saver(MMC1_CHR_1, saver);
+			saver = byte_saver(Serial_Shift_Count, saver);
+			saver = byte_saver(Serial_Shift_Value, saver);
+
+			saver = int_saver(CHR_Bank, saver);
+			saver = int_saver(CHR_Mask, saver);
+			saver = int_saver(PRG_Bank, saver);
+			saver = int_saver(PRG_Mask, saver);
+			saver = int_saver(WRAM_Bank, saver);
+			saver = int_saver(WRAM_Mask, saver);
+			saver = int_saver(Mirror_Mode, saver);
+			saver = int_saver(MMC1_PPU_Clock, saver);
+
+	
+			saver = byte_array_saver(MMC1_CHR_Regs_4K, saver, 2);
+
+			// common to all mappers
+			saver = bool_saver(Mirroring, saver);
+			saver = bool_saver(Bus_Conflicts, saver);
+			saver = bool_saver(Old_IRQ_Type, saver);
+			saver = bool_saver(Alt_Mirroring, saver);
+
+			saver = int_saver(Size_Mask, saver);
+
+			saver = byte_array_saver(Ex_RAM, saver, 0x400);
+			saver = byte_array_saver(VRAM, saver, 0x8000);
+			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
+
+			return saver;
+		}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = bool_loader(&PRG_Mode, loader);
+			loader = bool_loader(&PRG_Slot, loader);
+			loader = bool_loader(&CHR_Mode, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
+
+			loader = byte_loader(&Command, loader);
+			loader = byte_loader(&MMC1_CHR_0, loader);
+			loader = byte_loader(&MMC1_CHR_1, loader);
+			loader = byte_loader(&Serial_Shift_Count, loader);
+			loader = byte_loader(&Serial_Shift_Value, loader);
+
+			loader = int_loader(&CHR_Bank, loader);
+			loader = int_loader(&CHR_Mask, loader);
+			loader = int_loader(&PRG_Bank, loader);
+			loader = int_loader(&PRG_Mask, loader);
+			loader = int_loader(&WRAM_Bank, loader);
+			loader = int_loader(&WRAM_Mask, loader);
+			loader = int_loader(&Mirror_Mode, loader);
+			loader = int_loader(&MMC1_PPU_Clock, loader);
+
+			loader = byte_array_loader(MMC1_CHR_Regs_4K, loader, 2);
+
+			// common to all mappers
+			loader = bool_loader(&Mirroring, loader);
+			loader = bool_loader(&Bus_Conflicts, loader);
+			loader = bool_loader(&Old_IRQ_Type, loader);
+			loader = bool_loader(&Alt_Mirroring, loader);
+
+			loader = int_loader(&Size_Mask, loader);
+
+			loader = byte_array_loader(Ex_RAM, loader, 0x400);
+			loader = byte_array_loader(VRAM, loader, 0x8000);
+			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
+
+			Remap_ROM();
+
+			return loader;
 		}
 	};
 }

@@ -15,6 +15,33 @@ namespace NESHawk
 	{
 	public:
 
+		bool IRQ_Pending;
+		bool IRQ_Enable;
+		bool IRQ_Reload_Flag;
+		bool PRG_Mode;
+		bool CHR_Mode;
+		bool Just_Cleared;
+		bool Just_Cleared_Pending;
+		bool WRAM_Enable;
+		bool WRAM_Write_Protect;
+
+		uint8_t Command;
+		uint8_t IRQ_Reload;
+		uint8_t IRQ_Counter;
+
+		uint32_t CHR_Bank;
+		uint32_t CHR_Mask;
+		uint32_t PRG_Bank;
+		uint32_t PRG_Mask;
+		uint32_t Mirror_Mode;
+		uint32_t Reg_Addr;
+		uint32_t Separator_Counter;
+		uint32_t IRQ_Countdown;
+		uint32_t A12_Old;
+
+		uint8_t MMC3_Regs[8] = { };
+		uint8_t MMC3_CHR_Regs_1K[8] = { };
+
 		void Reset()
 		{
 			PRG_Mode = false;
@@ -319,5 +346,95 @@ namespace NESHawk
 		}
 
 		bool IrqSignal() { return IRQ_Pending; }
+
+		uint8_t* SaveState(uint8_t* saver)
+		{
+			saver = bool_saver(IRQ_Pending, saver);
+			saver = bool_saver(IRQ_Enable, saver);
+			saver = bool_saver(IRQ_Reload_Flag, saver);
+			saver = bool_saver(PRG_Mode, saver);
+			saver = bool_saver(CHR_Mode, saver);
+			saver = bool_saver(Just_Cleared, saver);
+			saver = bool_saver(Just_Cleared_Pending, saver);
+			saver = bool_saver(WRAM_Enable, saver);
+			saver = bool_saver(WRAM_Write_Protect, saver);
+
+			saver = byte_saver(Command, saver);
+			saver = byte_saver(IRQ_Reload, saver);
+			saver = byte_saver(IRQ_Counter, saver);
+
+			saver = int_saver(CHR_Bank, saver);
+			saver = int_saver(CHR_Mask, saver);
+			saver = int_saver(PRG_Bank, saver);
+			saver = int_saver(PRG_Mask, saver);
+			saver = int_saver(Mirror_Mode, saver);
+			saver = int_saver(Reg_Addr, saver);
+			saver = int_saver(Separator_Counter, saver);
+			saver = int_saver(IRQ_Countdown, saver);
+			saver = int_saver(A12_Old, saver);
+
+			saver = byte_array_saver(MMC3_Regs, saver, 8);
+			saver = byte_array_saver(MMC3_CHR_Regs_1K, saver, 8);
+
+			// common to all mappers
+			saver = bool_saver(Mirroring, saver);
+			saver = bool_saver(Bus_Conflicts, saver);
+			saver = bool_saver(Old_IRQ_Type, saver);
+			saver = bool_saver(Alt_Mirroring, saver);
+
+			saver = int_saver(Size_Mask, saver);
+
+			saver = byte_array_saver(Ex_RAM, saver, 0x400);
+			saver = byte_array_saver(VRAM, saver, 0x8000);
+			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
+
+			return saver;
+		}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = bool_loader(&IRQ_Pending, loader);
+			loader = bool_loader(&IRQ_Enable, loader);
+			loader = bool_loader(&IRQ_Reload_Flag, loader);
+			loader = bool_loader(&PRG_Mode, loader);
+			loader = bool_loader(&CHR_Mode, loader);
+			loader = bool_loader(&Just_Cleared, loader);
+			loader = bool_loader(&Just_Cleared_Pending, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
+			loader = bool_loader(&WRAM_Write_Protect, loader);
+
+			loader = byte_loader(&Command, loader);
+			loader = byte_loader(&IRQ_Reload, loader);
+			loader = byte_loader(&IRQ_Counter, loader);
+
+			loader = int_loader(&CHR_Bank, loader);
+			loader = int_loader(&CHR_Mask, loader);
+			loader = int_loader(&PRG_Bank, loader);
+			loader = int_loader(&PRG_Mask, loader);
+			loader = int_loader(&Mirror_Mode, loader);
+			loader = int_loader(&Reg_Addr, loader);
+			loader = int_loader(&Separator_Counter, loader);
+			loader = int_loader(&IRQ_Countdown, loader);
+			loader = int_loader(&A12_Old, loader);
+
+			loader = byte_array_loader(MMC3_Regs, loader, 8);
+			loader = byte_array_loader(MMC3_CHR_Regs_1K, loader, 8);
+
+			// common to all mappers
+			loader = bool_loader(&Mirroring, loader);
+			loader = bool_loader(&Bus_Conflicts, loader);
+			loader = bool_loader(&Old_IRQ_Type, loader);
+			loader = bool_loader(&Alt_Mirroring, loader);
+
+			loader = int_loader(&Size_Mask, loader);
+
+			loader = byte_array_loader(Ex_RAM, loader, 0x400);
+			loader = byte_array_loader(VRAM, loader, 0x8000);
+			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
+
+			Remap_ROM();
+
+			return loader;
+		}
 	};
 }

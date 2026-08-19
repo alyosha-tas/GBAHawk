@@ -15,6 +15,18 @@ namespace NESHawk
 	{
 	public:
 
+		uint8_t MMC2_Latch_0;
+		uint8_t MMC2_Latch_1;
+
+		uint32_t CHR_Bank;
+		uint32_t CHR_Bank_2;
+		uint32_t CHR_Bank_3;
+		uint32_t CHR_Bank_4;
+		uint32_t CHR_Mask;
+		uint32_t PRG_Bank;
+		uint32_t PRG_Mask;
+		uint32_t Mirror_Mode;
+		
 		void Reset()
 		{
 			CHR_Mask = (*Core_CHR_ROM_Length >> 12) - 1;
@@ -158,6 +170,66 @@ namespace NESHawk
 
 				return Core_CIRAM[block][ofs];
 			}
+		}
+
+		uint8_t* SaveState(uint8_t* saver)
+		{
+			saver = byte_saver(MMC2_Latch_0, saver);
+			saver = byte_saver(MMC2_Latch_1, saver);
+			
+			saver = int_saver(CHR_Bank, saver);
+			saver = int_saver(CHR_Bank_2, saver);
+			saver = int_saver(CHR_Bank_3, saver);
+			saver = int_saver(CHR_Bank_4, saver);
+			saver = int_saver(CHR_Mask, saver);
+			saver = int_saver(PRG_Bank, saver);
+			saver = int_saver(PRG_Mask, saver);
+			saver = int_saver(Mirror_Mode, saver);
+
+			// common to all mappers
+			saver = bool_saver(Mirroring, saver);
+			saver = bool_saver(Bus_Conflicts, saver);
+			saver = bool_saver(Old_IRQ_Type, saver);
+			saver = bool_saver(Alt_Mirroring, saver);
+
+			saver = int_saver(Size_Mask, saver);
+
+			saver = byte_array_saver(Ex_RAM, saver, 0x400);
+			saver = byte_array_saver(VRAM, saver, 0x8000);
+			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
+
+			return saver;
+		}
+
+		uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = byte_loader(&MMC2_Latch_0, loader);
+			loader = byte_loader(&MMC2_Latch_1, loader);
+			
+			loader = int_loader(&CHR_Bank, loader);
+			loader = int_loader(&CHR_Bank_2, loader);
+			loader = int_loader(&CHR_Bank_3, loader);
+			loader = int_loader(&CHR_Bank_4, loader);
+			loader = int_loader(&CHR_Mask, loader);
+			loader = int_loader(&PRG_Bank, loader);
+			loader = int_loader(&PRG_Mask, loader);
+			loader = int_loader(&Mirror_Mode, loader);
+
+			// common to all mappers
+			loader = bool_loader(&Mirroring, loader);
+			loader = bool_loader(&Bus_Conflicts, loader);
+			loader = bool_loader(&Old_IRQ_Type, loader);
+			loader = bool_loader(&Alt_Mirroring, loader);
+
+			loader = int_loader(&Size_Mask, loader);
+
+			loader = byte_array_loader(Ex_RAM, loader, 0x400);
+			loader = byte_array_loader(VRAM, loader, 0x8000);
+			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
+
+			Remap_ROM();
+
+			return loader;
 		}
 	};
 }
