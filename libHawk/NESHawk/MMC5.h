@@ -1189,6 +1189,8 @@ namespace NESHawk
 			saver = int_saver(MMC5_CHR_Reg_High, saver);
 			saver = int_saver(Last_NT_Read, saver);
 
+			saver = int_saver(Cart_Audio_Output, saver);
+
 			saver = long_saver(Next_Ready_Cycle, saver);
 
 			saver = int_array_saver(MMC5_Regs_A, saver, 8);
@@ -1287,6 +1289,8 @@ namespace NESHawk
 			loader = int_loader(&MMC5_AB_Mode, loader);
 			loader = int_loader(&MMC5_CHR_Reg_High, loader);
 			loader = int_loader(&Last_NT_Read, loader);
+
+			loader = sint_loader(&Cart_Audio_Output, loader);
 
 			loader = long_loader(&Next_Ready_Cycle, loader);
 

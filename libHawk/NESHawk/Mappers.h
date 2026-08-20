@@ -32,6 +32,7 @@ namespace NESHawk
 		// only savestated in actual MMC5 mapper
 		uint32_t MMC5_ExRAM_Mode = 0;
 
+		// only savestated in mapper siwth audio
 		int32_t Cart_Audio_Output = 0;
 
 		// on board RAM
