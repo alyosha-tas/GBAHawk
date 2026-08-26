@@ -29,18 +29,32 @@ namespace SNESHawk
 				}
 				break;
 
+			case OpT::Imp3:
+				switch (Instr_Cycle)
+				{
+				case 0:
+					address_bus = get_PC_Addr();
+					Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+					break;
+
+				case 1:
+					// same address as above
+					Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+					break;
+
+				case 2:
+					// same address as above
+					Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+					break;
+				}
+				break;
+
 			case OpT::Imm:
 				switch (Instr_Cycle)
 				{
 					case 0:
 						address_bus = get_PC_Addr();
 						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
-						PC++;
-						break;
-
-					case 1:
-						address_bus = get_PC_Addr();
-						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
 						PC++;
 						break;
 
@@ -51,7 +65,7 @@ namespace SNESHawk
 				}
 				break;
 
-			case OpT::Imm3:
+			case OpT::ImmD:
 				switch (Instr_Cycle)
 				{
 					case 0:
@@ -62,18 +76,25 @@ namespace SNESHawk
 
 					case 1:
 						address_bus = get_PC_Addr();
-						Cycle_Type = CPU_Cycle_Type::Read_Cycle_Hi;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
 						PC++;
 						break;
 
 					case 2:
-						address_bus = get_PC_Addr();
-						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						address_bus = D | opcode2;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
 						break;
 
 					case 3:
+						// same address as above
+						value8 = opcode3;
+						ALU_Operation();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						break;
+
+					case 4:
 						address_bus = get_PC_Addr();
-						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
 						break;
 				}
 				break;
@@ -106,17 +127,13 @@ namespace SNESHawk
 					case 1:
 						address_bus = S;
 						Dec_S();
-						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
-
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 						get_Push_value();
 						break;
 
 					case 2:
-						address_bus = S;
-						Dec_S();
+						// same address as above
 						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
-
-						get_Push_value();
 						break;
 
 					case 3:
@@ -1454,6 +1471,16 @@ namespace SNESHawk
 				NZ_Set(A);
 				break;
 
+			case ALU::INCA:
+				A = (uint8_t)((A + 1) & 0xFF);
+				NZ_Set(A);
+				break;
+
+			case ALU::DECA:
+				A = (uint8_t)((A - 1) & 0xFF);
+				NZ_Set(A);
+				break;
+
 			case ALU::TXS:
 				S = A;
 				break;
@@ -1494,6 +1521,10 @@ namespace SNESHawk
 
 			case ALU::CLC:
 				FlagCset(false);
+				break;
+
+			case ALU::NOTC:
+				FlagCset(!FlagCget());
 				break;
 
 			case ALU::SED:
@@ -1547,53 +1578,24 @@ namespace SNESHawk
 
 			case ALU::ADC:
 				value8 = (uint8_t)alu_temp;
-				if (FlagDget())
-				{
-					tempint = (A & 0x0F) + (value8 & 0x0F) + (FlagCget() ? 0x01 : 0x00);
-					if (tempint > 0x09)
-						tempint += 0x06;
-					tempint = (tempint & 0x0F) + (A & 0xF0) + (value8 & 0xF0) + (tempint > 0x0F ? 0x10 : 0x00);
-					FlagVset((~(A ^ value8) & (A ^ tempint) & 0x80) != 0);
-					FlagZset(((A + value8 + (FlagCget() ? 1 : 0)) & 0xFF) == 0);
-					FlagNset((tempint & 0x80) != 0);
-					if ((tempint & 0x1F0) > 0x090)
-						tempint += 0x060;
-					FlagCset(tempint > 0xFF);
-					A = (uint8_t)(tempint & 0xFF);
-				}
-				else
-				{
-					tempint = value8 + A + (FlagCget() ? 1 : 0);
-					FlagVset((~(A ^ value8) & (A ^ tempint) & 0x80) != 0);
-					FlagCset(tempint > 0xFF);
-					A = (uint8_t)tempint;
-					NZ_Set(A);
-				}
+
+				tempint = value8 + A + (FlagCget() ? 1 : 0);
+				FlagVset((~(A ^ value8) & (A ^ tempint) & 0x80) != 0);
+				FlagCset(tempint > 0xFF);
+				A = (uint8_t)tempint;
+				NZ_Set(A);
+
 				break;
 
 			case ALU::SBC:
 				value8 = (uint8_t)alu_temp;
 				tempint = A - value8 - (FlagCget() ? 0 : 1);
-				if (FlagDget())
-				{
-					lo = (A & 0x0F) - (value8 & 0x0F) - (FlagCget() ? 0 : 1);
-					hi = (A & 0xF0) - (value8 & 0xF0);
-					if ((lo & 0xF0) != 0) lo -= 0x06;
-					if ((lo & 0x80) != 0) hi -= 0x10;
-					if ((hi & 0x0F00) != 0) hi -= 0x60;
-					FlagVset(((A ^ value8) & (A ^ tempint) & 0x80) != 0);
-					FlagZset((tempint & 0xFF) == 0);
-					FlagNset((tempint & 0x80) != 0);
-					FlagCset((hi & 0xFF00) == 0);
-					A = (uint8_t)((lo & 0x0F) | (hi & 0xF0));
-				}
-				else
-				{
-					FlagVset(((A ^ value8) & (A ^ tempint) & 0x80) != 0);
-					FlagCset(tempint >= 0);
-					A = (uint8_t)tempint;
-					NZ_Set(A);
-				}
+
+				FlagVset(((A ^ value8) & (A ^ tempint) & 0x80) != 0);
+				FlagCset(tempint >= 0);
+				A = (uint8_t)tempint;
+				NZ_Set(A);
+
 				break;
 
 			case ALU::PLA:
@@ -1616,6 +1618,50 @@ namespace SNESHawk
 			case ALU::PLY:
 				Y = alu_temp;
 				NZ_Set(Y);
+				break;
+
+			// for direct page ops the direct page value starts in value8
+			case ALU::ORv:
+				value8 |= (uint8_t)alu_temp;
+				NZ_Set(value8);
+				break;
+
+			case ALU::ANDv:
+				value8 &= (uint8_t)alu_temp;
+				NZ_Set(value8);
+				break;
+
+			case ALU::EORv:
+				value8 ^= (uint8_t)alu_temp;
+				value8 &= 0xFF;
+				NZ_Set(value8);
+				break;
+
+			case ALU::CMPv:
+				value16 = (uint16_t)(value8 - alu_temp);
+				FlagCset(value8 >= alu_temp);
+				NZ_Set(value16);
+				break;
+
+			case ALU::ADCv:
+				tempint = alu_temp + value8 + (FlagCget() ? 1 : 0);
+				FlagVset((~(value8 ^ alu_temp) & (value8 ^ tempint) & 0x80) != 0);
+				FlagCset(tempint > 0xFF);
+				value8 = (uint8_t)tempint;
+				NZ_Set(value8);
+				break;
+
+			case ALU::SBCv:
+				tempint = value8 - alu_temp - (FlagCget() ? 0 : 1);
+				FlagVset(((value8 ^ alu_temp) & (value8 ^ tempint) & 0x80) != 0);
+				FlagCset(tempint >= 0);
+				value8 = (uint8_t)tempint;
+				NZ_Set(value8);
+				break;
+
+			case ALU::LDv:
+				value8 = (uint8_t)alu_temp;
+				NZ_Set(value8);
 				break;
 
 			default:
