@@ -1138,6 +1138,158 @@ namespace SNESHawk
 				}
 				break;
 
+			case OpT::DDS:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = D | opcode2;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 3:
+						address_bus = D | opcode2;
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 4:
+						// same address bus as above
+						value8 = opcode3;
+						ALU_Operation();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						break;
+
+					case 5:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::IDXY:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 1:
+						address_bus = D | Y;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = D | X;
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 3:
+						// same address bus as above
+						value8 = opcode3;
+						ALU_Operation();
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						break;
+
+					case 4:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
+			case OpT::BitC:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_2;
+						break;
+
+					case 1:
+						address_bus = get_PC_Addr();
+						PC++;
+						Cycle_Type = CPU_Cycle_Type::Fetch_3;
+						break;
+
+					case 2:
+						address_bus = (opcode3 & 0x1F);
+						address_bus <<= 8;
+						address_bus |= opcode2;
+
+						// instructions take 4/5/6 total cycles
+						switch (opcode)
+						{
+							case 0x4A:
+							case 0x6A:
+							case 0xAA:
+								Instr_Cycle += 2;
+								break;
+							case 0xEA:
+								Instr_Cycle += 1;
+								break;
+						}
+
+						Cycle_Type = CPU_Cycle_Type::Read_Cycle;
+						break;
+
+					case 3:
+						// same address bus as above
+						if (opcode != 0xCA) { Instr_Cycle += 1; }
+						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
+						break;
+
+					case 4:
+						// same address bus as above
+						if (opcode == 0xCA)
+						{
+							opcode4 = FlagCget() ? 1 : 0;
+							temp8 = ((opcode3 >> 5) & 7);
+							alu_temp &= 0xFF - (1 << temp8);
+							alu_temp |= opcode4 << temp8;
+							value8 = alu_temp;
+						}
+						else
+						{
+							temp8 = ((opcode3 >> 5) & 7);
+							opcode4 = (alu_temp >> temp8) & 1;
+							opcode4 = (opcode4 == 1) ? 0 : 1;
+							alu_temp &= 0xFF - (1 << temp8);
+							alu_temp |= opcode4 << temp8;
+							value8 = alu_temp;
+						}
+
+						Cycle_Type = CPU_Cycle_Type::Write_Cycle;
+						break;
+
+					case 5:
+						value8 = alu_temp & (1 << ((opcode3 >> 5) & 7));
+						
+						switch (opcode)
+						{
+							case 0x0A: FlagCset(FlagCget() || (value8 != 0)); break;
+							case 0x2A: FlagCset(FlagCget() || (value8 == 0)); break;
+							case 0x4A: FlagCset(FlagCget() && (value8 != 0)); break;
+							case 0x6A: FlagCset(FlagCget() && (value8 == 0)); break;
+							case 0x8A: FlagCset(FlagCget() ^ (value8 != 0)); break;
+							case 0xAA: FlagCset(value8 != 0); break;
+						}
+
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
 			case OpT::STP:
 				// fall through to JAM because nothing can unstop from here
 			case OpT::Jam:
