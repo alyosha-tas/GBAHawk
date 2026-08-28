@@ -449,6 +449,9 @@ namespace SNESHawk
 							case ALU::BEQ:
 								branch_taken = FlagZget();
 								break;
+							case ALU::BRA:
+								branch_taken = true;
+								break;
 						}
 
 						address_bus = get_PC_Addr();
@@ -1290,6 +1293,42 @@ namespace SNESHawk
 				}
 				break;
 
+			case OpT::MLDV:
+				switch (Instr_Cycle)
+				{
+					case 0:
+						address_bus = get_PC_Addr();
+						if (opcode == 0xCC)
+						{
+							Instr_Cycle += 3;
+							value16 = ((uint16_t)Y) * A;
+							A = value16 & 0xFF;
+							Y = (value16 >> 8) & 0xFF;
+							NZ_Set(Y);
+						}
+						else
+						{
+							value16 = ((uint16_t)Y) * A;
+							Division_Algorithm();
+						}
+						break;
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+					case 8:
+					case 9:
+					case 10:
+						break;
+					case 11:
+						Cycle_Type = CPU_Cycle_Type::Fetch_Cycle;
+						break;
+				}
+				break;
+
 			case OpT::STP:
 				// fall through to JAM because nothing can unstop from here
 			case OpT::Jam:
@@ -1328,7 +1367,6 @@ namespace SNESHawk
 
 					case 4:
 						FlagIset(true);
-						FlagDset(false);
 						ea = ResetVector;
 						address_bus = ea;
 						Cycle_Type = CPU_Cycle_Type::Fetch_2;
@@ -1387,7 +1425,6 @@ namespace SNESHawk
 						break;
 
 					case 5:
-						FlagDset(false);
 						FlagIset(true);
 
 						// IRQ hijacking?
@@ -1679,14 +1716,6 @@ namespace SNESHawk
 				FlagCset(!FlagCget());
 				break;
 
-			case ALU::SED:
-				FlagDset(true);
-				break;
-
-			case ALU::CLD:
-				FlagDset(false);
-				break;
-
 			case ALU::CLV:
 				FlagVset(false);
 				break;
@@ -1814,6 +1843,40 @@ namespace SNESHawk
 			case ALU::LDv:
 				value8 = (uint8_t)alu_temp;
 				NZ_Set(value8);
+				break;
+
+			case ALU::DAA:
+				value16 = A;
+				if ((A > 0x99) || FlagCget())
+				{
+					value16 += 0x60;
+				}
+				if (((A & 0xF) > 0x9) || FlagHget())
+				{
+					value16 += 0x6;
+				}
+
+				A = value16;
+
+				NZ_Set(A);
+				FlagCset((value16 & 0x100) == 0x100);
+				break;
+
+			case ALU::DAS:
+				value16 = A;
+				if ((A > 0x99) || !FlagCget())
+				{
+					value16 -= 0x60;
+				}
+				if (((A & 0xF) > 0x9) || !FlagHget())
+				{
+					value16 -= 0x6;
+				}
+
+				A = value16;
+
+				NZ_Set(A);
+				FlagCset((value16 & 0x100) == 0x100);
 				break;
 
 			default:
