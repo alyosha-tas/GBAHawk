@@ -92,8 +92,6 @@ namespace SNESHawk
 
 		uint8_t DummyReadMemory(uint32_t addr);
 
-		void OnExecFetch(uint16_t addr);
-
 		void WriteMemory(uint32_t addr, uint8_t value);
 
 		uint8_t PeekMemory(uint32_t addr);
@@ -210,9 +208,9 @@ namespace SNESHawk
 		const static uint8_t LxaConstant = 0xFF;
 
 		const static uint16_t NMIVector = 0xFFFA;
-		const static uint16_t ResetVector = 0xFFFC;
-		const static uint16_t BRKVector = 0xFFFE;
-		const static uint16_t IRQVector = 0xFFFE;
+		const static uint16_t ResetVector = 0xFFFE;
+		const static uint16_t BRKVector = 0xFFDE;
+		const static uint16_t IRQVector = 0xFFFC;
 
 		void cpu_Reset()
 		{
@@ -302,6 +300,7 @@ namespace SNESHawk
 			JSR,		// JSR
 			JMP,		// Jump
 			JMPI,		// Jump Indirect
+			JMPX,		// Jump [a,X]
 			Imp,		// Implied
 			Imp3,		// Implies (3-cycle)
 			Imm,		// Immediate
@@ -309,11 +308,16 @@ namespace SNESHawk
 			Acc,		// Accumulator
 			PL,			// Pull
 			PH,			// Push
-			RTS,		// RTS
-			RTI,		// RTI
 			CSI,		// CLI, SEI
 			BRK,		// Break
-			TCALL,		// Call
+			TCALL,		// Call [FFnn]
+			PCALL,		// Call u
+			CALL,		// Call
+			CBNE,		// conditional branch on compare
+			DBNZd,		// dec and branch if zero, direct page
+			DBNZy,		// dec and branch if zero, (y)
+			RETI,		// RETI
+			RET,		// RET
 
 			// int value 13
 			AbsR,		// [absolute READ]
@@ -357,6 +361,14 @@ namespace SNESHawk
 			IDXY,		// Indirect page to indirect page
 			BitC,		// Individual BIT ops with C or memory
 			MLDV,		// multiply / divide
+			XCN,		// 5 cycle implied
+			CMPaa,		// compare with abs
+			TSC,		// set / clear abs
+
+			WRMW,		// word sized RMW
+			WR,			// word sized read
+			WW,			// word sized write
+			WC,			// word sized compare
 
 			Jam,		// Jam
 			STP,		// Stop
@@ -370,25 +382,25 @@ namespace SNESHawk
 		OpT Instr_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::AbsRW, OpT::BRK  ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Acc  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::AIXRW, OpT::AIXRW,
-			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPR  , OpT::AbsRW, OpT::PH   , OpT::AbsRW, OpT::Br   ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Acc  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::DPR  , OpT::AIXRW,
+			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::TSC  , OpT::BRK  ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WRMW , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::CMPaa, OpT::JMPX ,
+			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPR  , OpT::AbsRW, OpT::PH   , OpT::CBNE , OpT::Br   ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WRMW , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::DPR  , OpT::CALL ,
 
-			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Acc  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::AIXRW, OpT::AIXRW,
-			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::AbsRW, OpT::AbsRW,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Acc  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::DPR  , OpT::AIXRW,
+			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::TSC  , OpT::PCALL,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WC   , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::CMPaa, OpT::JMP  ,
+			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::PH   , OpT::DBNZd, OpT::RET  ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WR   , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::DPR  , OpT::RETI ,
 
 			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::Imm  , OpT::PL   , OpT::ImmD ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Imp  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::MLDV , OpT::AbsRW,
-			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::Imm  , OpT::PL   , OpT::AbsR ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::Imp  , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::Imp3 , OpT::AIYR ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WR   , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::MLDV , OpT::XCN  ,
+			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::DDS  , OpT::BitC , OpT::DPRW , OpT::AbsRW, OpT::Imm  , OpT::PL   , OpT::IXW  ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::ImmD , OpT::IDXY , OpT::WR   , OpT::DPXRW, OpT::Acc  , OpT::Imp  , OpT::Imp3 , OpT::IXR  ,
 
 			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPW  , OpT::AbsW , OpT::IXW  , OpT::DIXW , OpT::Imm  , OpT::AbsW , OpT::BitC , OpT::DPW  , OpT::AbsW , OpT::Imm  , OpT::PL   , OpT::MLDV ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXW , OpT::AIXW , OpT::AIYW , OpT::DIIYW, OpT::DPW  , OpT::DPYW , OpT::Imp  , OpT::DPXW , OpT::Imp  , OpT::Imp  , OpT::AIXRW, OpT::Imp3 ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXW , OpT::AIXW , OpT::AIYW , OpT::DIIYW, OpT::DPW  , OpT::DPYW , OpT::WW   , OpT::DPXW , OpT::Imp  , OpT::Imp  , OpT::CBNE , OpT::Imp3 ,
 			OpT::Imp  , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPR  , OpT::AbsR , OpT::IXR  , OpT::DIXR , OpT::Imm  , OpT::AbsR , OpT::BitC , OpT::DPR  , OpT::AbsR , OpT::Imp3 , OpT::PL   , OpT::STP  ,
-			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::DPR  , OpT::DPYR , OpT::DDS  , OpT::DPXR , OpT::Imp  , OpT::Imp  , OpT::AIXRW, OpT::STP  ,
+			OpT::Br   , OpT::TCALL, OpT::DPRW , OpT::BrB  , OpT::DPXR , OpT::AIXR , OpT::AIYR , OpT::DIIYR, OpT::DPR  , OpT::DPYR , OpT::DDS  , OpT::DPXR , OpT::Imp  , OpT::Imp  , OpT::DBNZy, OpT::STP  ,
 		};
 
 
@@ -415,15 +427,11 @@ namespace SNESHawk
 		{
 			// regular ops
 			NOP, CLP, SEP, SEC, SEI, CLC, CLI, BIT, SETB, CLRB, AND, EOR, ORA, ADC, CMP, CPY, CPX, ASL, SBC, ROL,
-			LSR, ASR, ROR, RRA, DEX, DEY, TXA, TYA, TXS, TAY, TAX, CLV, TSX, DEC, INY, INC, INX, NOTC,
+			LSR, ASR, ROR, DEX, DEY, TXA, TYA, TXS, TAY, TAX, CLV, TSX, DEC, INY, INC, INX, NOTC,
 
 			// int value 33
 			// A implied
 			ASLA, ROLA, LSRA, RORA, INCA, DECA,
-
-			// unofficial
-			LAX, SLO, ANC, RLA, SRE, ARR, SAX, ANE, SHA, SHS, SHY, SHX, LXA,
-			LAS, DCP, AXS, ISC,
 
 			// Branch conditions
 			BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ, BRA,
@@ -440,30 +448,33 @@ namespace SNESHawk
 			// misc
 			DAA, DAS,
 
+			// word sized ops
+			WINC, WDEC, WCMP, WADD, WSUB, WLD,
+
 		};
 
 		ALU ALU_Type_List[256] =
 		{
 			//  0			1			2			3			4			5			6			7			8			9			A			B			C			D			E			F
-			ALU::NOP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORv  , ALU::NOP  , ALU::ASL  , ALU::ASL  , ALU::PHP  , ALU::ASL  , ALU::NOP  ,
-			ALU::BPL  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORv  , ALU::NOP  , ALU::ASL  , ALU::ASLA , ALU::DEX  , ALU::ASL  , ALU::SLO  ,
-			ALU::CLP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::ANDv , ALU::NOP  , ALU::ROL  , ALU::ROL  , ALU::PHA  , ALU::ROL  , ALU::BRA  ,
-			ALU::BMI  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::ANDv , ALU::NOP  , ALU::ROL  , ALU::ROLA , ALU::INX  , ALU::CPX  , ALU::RLA  ,
+			ALU::NOP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORv  , ALU::NOP  , ALU::ASL  , ALU::ASL  , ALU::PHP  , ALU::CMP  , ALU::NOP  ,
+			ALU::BPL  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORA  , ALU::ORv  , ALU::WINC , ALU::ASL  , ALU::ASLA , ALU::DEX  , ALU::CMPv , ALU::NOP  ,
+			ALU::CLP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::ANDv , ALU::NOP  , ALU::ROL  , ALU::ROL  , ALU::PHA  , ALU::NOP  , ALU::BRA  ,
+			ALU::BMI  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::AND  , ALU::ANDv , ALU::WDEC , ALU::ROL  , ALU::ROLA , ALU::INX  , ALU::CPX  , ALU::NOP  ,
 
-			ALU::SEP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EORv , ALU::NOP  , ALU::LSR  , ALU::LSR  , ALU::EOR  , ALU::LSR  , ALU::SRE  ,
-			ALU::BVC  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EORv , ALU::NOP  , ALU::LSR  , ALU::LSRA , ALU::PHX  , ALU::LSR  , ALU::SRE  ,
-			ALU::CLC  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMPv , ALU::NOP  , ALU::ROR  , ALU::ROR  , ALU::ADC  , ALU::ROR  , ALU::RRA  ,
-			ALU::BVS  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMPv , ALU::NOP  , ALU::ROR  , ALU::RORA , ALU::PHY  , ALU::CPY  , ALU::RRA  ,
+			ALU::SEP  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EORv , ALU::NOP  , ALU::LSR  , ALU::LSR  , ALU::EOR  , ALU::CMP  , ALU::NOP  ,
+			ALU::BVC  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EOR  , ALU::EORv , ALU::WCMP , ALU::LSR  , ALU::LSRA , ALU::PHX  , ALU::CMPv , ALU::NOP  ,
+			ALU::CLC  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMPv , ALU::NOP  , ALU::ROR  , ALU::ROR  , ALU::ADC  , ALU::NOP  , ALU::NOP  ,
+			ALU::BVS  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMP  , ALU::CMPv , ALU::WADD , ALU::ROR  , ALU::RORA , ALU::PHY  , ALU::CPY  , ALU::NOP  ,
 
 			ALU::SEC  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADCv , ALU::NOP  , ALU::DEC  , ALU::DEC  , ALU::LDY  , ALU::PLP  , ALU::LDv  ,
-			ALU::BCC  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADCv , ALU::TXS  , ALU::DEC  , ALU::DECA , ALU::TSX  , ALU::NOP  , ALU::SHA  ,
-			ALU::SEI  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBCv , ALU::NOP  , ALU::INC  , ALU::INC  , ALU::CPY  , ALU::PLA  , ALU::LAX  ,
-			ALU::BCS  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBCv , ALU::TSX  , ALU::INC  , ALU::INCA , ALU::TXS  , ALU::DAS  , ALU::LAX  ,
+			ALU::BCC  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADC  , ALU::ADCv , ALU::WSUB , ALU::DEC  , ALU::DECA , ALU::TSX  , ALU::NOP  , ALU::NOP  ,
+			ALU::SEI  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBCv , ALU::NOP  , ALU::INC  , ALU::INC  , ALU::CPY  , ALU::PLA  , ALU::STA  ,
+			ALU::BCS  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBC  , ALU::SBCv , ALU::WLD  , ALU::INC  , ALU::INCA , ALU::TXS  , ALU::DAS  , ALU::LDA  ,
 
 			ALU::CLI  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STA  , ALU::CPX  , ALU::STX  , ALU::NOP  , ALU::STY  , ALU::STY  , ALU::LDX  , ALU::PLX  , ALU::NOP  ,
-			ALU::BNE  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STX  , ALU::STX  , ALU::NOP  , ALU::STY  , ALU::DEY  , ALU::TYA  , ALU::DEC  , ALU::DAA  ,
-			ALU::CLV  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDX  , ALU::NOP  , ALU::LDY  , ALU::LDY  , ALU::NOTC , ALU::PLY  , ALU::ISC  ,
-			ALU::BEQ  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDX  , ALU::LDX  , ALU::LDv  , ALU::LDY  , ALU::INY  , ALU::TAY  , ALU::INC  , ALU::ISC  ,
+			ALU::BNE  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STA  , ALU::STX  , ALU::STX  , ALU::NOP  , ALU::STY  , ALU::DEY  , ALU::TYA  , ALU::NOP  , ALU::DAA  ,
+			ALU::CLV  , ALU::NOP  , ALU::SETB , ALU::SETB , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDX  , ALU::NOP  , ALU::LDY  , ALU::LDY  , ALU::NOTC , ALU::PLY  , ALU::NOP  ,
+			ALU::BEQ  , ALU::NOP  , ALU::CLRB , ALU::CLRB , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDA  , ALU::LDX  , ALU::LDX  , ALU::LDv  , ALU::LDY  , ALU::INY  , ALU::TAY  , ALU::NOP  , ALU::NOP  ,
 		};
 
 		ALU ALU_Type;

@@ -19,11 +19,6 @@ namespace SNESHawk
 		return ReadMemory(addr);
 	}
 
-	void APU::OnExecFetch(uint16_t addr)
-	{
-		
-	}
-
 	void APU::WriteMemory(uint32_t addr, uint8_t value)
 	{
 
