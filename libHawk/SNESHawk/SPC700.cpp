@@ -765,7 +765,7 @@ namespace SNESHawk
 						break;
 
 					case 3:
-						temp8 = temp8 = (opcode >> 1) & 7;
+						temp8  = (opcode >> 1) & 7;
 						
 						if ((opcode & 1) == 0)
 						{
