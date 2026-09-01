@@ -75,6 +75,12 @@ namespace SNESHawk
 
 		void WriteMemory(uint32_t, uint8_t);
 
+		// 0 = R5A22
+		// 1 = SPC700
+		// 2 = Coprocessor
+		// 3 = All
+		int TraceTarget = 0;
+
 	# pragma region General System
 
 		uint32_t RAM_Start_Up[256] =  { 0, 255, 0, 255, 255, 0, 255, 0, 0, 255, 0, 255, 255, 0, 255, 0,

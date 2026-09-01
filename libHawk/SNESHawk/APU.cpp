@@ -11,12 +11,29 @@ namespace SNESHawk
 {
 	uint8_t APU::ReadMemory(uint32_t addr)
 	{
-		return 0;
-	}
-	
-	uint8_t APU::DummyReadMemory(uint32_t addr)
-	{
-		return ReadMemory(addr);
+		if (addr < 0xF0)
+		{
+			return RAM[addr];
+		}
+		else if (addr < 0x100)
+		{
+			return ReadReg(addr);
+		}
+		else if (addr < 0xFFC0)
+		{
+			return RAM[addr];
+		}
+		else
+		{
+			if (IPL_Active)
+			{
+				return IPL[addr - 0xFFC0];
+			}
+			else
+			{
+				return RAM[addr];
+			}
+		}
 	}
 
 	void APU::WriteMemory(uint32_t addr, uint8_t value)
@@ -24,10 +41,62 @@ namespace SNESHawk
 
 	}
 
+	uint8_t APU::ReadReg(uint32_t addr)
+	{
+		return 0;
+
+	}
+
+
+	void APU::WriteReg(uint32_t addr, uint8_t value)
+	{
+
+	}
+
 	uint8_t APU::PeekMemory(uint32_t addr)
 	{
-		uint8_t ret = 0;
-		return ret;
+		if (addr < 0xF0)
+		{
+			return RAM[addr];
+		}
+		else if (addr < 0x100)
+		{
+			return PeekReg(addr);
+		}
+		else if (addr < 0xFFC0)
+		{
+			return RAM[addr];
+		}
+		else
+		{
+			if (IPL_Active)
+			{
+				return IPL[addr - 0xFFC0];
+			}
+			else
+			{
+				return RAM[addr];
+			}
+		}
+	}
+
+	uint8_t APU::PeekReg(uint32_t addr)
+	{
+		return 0;
+	}
+
+	uint16_t APU::Peek_Memory_8_Branch(uint32_t addr)
+	{
+		int16_t ret = 0;
+
+		ret = (int16_t)PeekMemory(addr);
+
+		if ((ret & 0x80) == 0x80)
+		{
+			ret |= 0xFF00;
+		}
+
+		return (uint16_t)((int16_t)addr + ret + 1);
 	}
 
 	uint16_t APU::Peek_Memory_16(uint32_t addr)

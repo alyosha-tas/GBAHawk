@@ -324,6 +324,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			SetupMemoryDomains();
 
+			// Set up trace logger
+			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
+
 			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
 			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
 			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
@@ -445,17 +448,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public DisplayType Region => DisplayType.NTSC;
 
-		public readonly ITraceable Tracer;
+		public ITraceable Tracer;
 
 		public LibSNESHawk.TraceCallback tracecb;
 
 		// these will be constant values assigned during core construction
 		private int Header_Length;
-		private readonly int Disasm_Length;
-		private readonly int Reg_String_Length;
+		private int Disasm_Length;
+		private int Reg_String_Length;
 
 		public void MakeTrace(int t)
 		{
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
+
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 

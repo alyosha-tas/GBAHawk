@@ -14,7 +14,7 @@
 		/// <summary>
 		/// Gets the header that would be used by a trace logger
 		/// </summary>
-		string Header { get; }
+		string Header { get; set; }
 
 		/// <summary>
 		/// Sets the sink

@@ -181,6 +181,10 @@ namespace SNESHawk
 
 			SNES.Fast_ROM_Exec = &CPU.Upper_Rom_Waits_Exec;
 			SNES.Fast_ROM_Tot = &CPU.Upper_Rom_Waits_Tot;
+
+			APU.Core_Message_String = &SNES.Message_String;
+			APU.MessageCallback = SNES.MessageCallback;
+			APU.Core_status_sl = &SNES.status_sl;
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -235,6 +239,7 @@ namespace SNESHawk
 			for (int i = 0; i < 357368; i++)
 			{
 				CPU.RunCpuOne();
+				APU.RunCpuOne();
 			}
 
 			//SNES.Frame_Advance();
@@ -375,67 +380,200 @@ namespace SNESHawk
 
 		#pragma region Tracer
 
+		void SetTraceTarget(int target)
+		{
+			SNES.TraceTarget = target;
+		}
+
 		void SetTraceCallback(void (*callback)(int))
 		{
-			CPU.TraceCallback = callback;
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			{
+				CPU.TraceCallback = callback;
+			}
+			else if (SNES.TraceTarget == 1)
+			{
+				APU.TraceCallback = callback;
+			}
+			else
+			{
+				// TODO: implement for coprocessor
+				CPU.TraceCallback = callback;
+			}
+			
 		}
 
 		int GetHeaderLength()
 		{
-			return 126 + 1;
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			{
+				return 126 + 1;
+			}
+			else if (SNES.TraceTarget == 1)
+			{
+				return 125 + 1;
+			}
+			else
+			{
+				// TODO: implement for coprocessor
+				return 126 + 1;
+			}
 		}
 
 		int GetDisasmLength()
 		{
-			return 43 + 1;
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			{
+				return 43 + 1;
+			}
+			else if (SNES.TraceTarget == 1)
+			{
+				return 38 + 1;
+			}
+			else
+			{
+				// TODO: implement for coprocessor
+				return 43 + 1;
+			}			
 		}
 
 		int GetRegStringLength()
 		{
-			return 120 + 1;
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			{
+				return 120 + 1;
+			}
+			else if (SNES.TraceTarget == 1)
+			{
+				return 93 + 1;
+			}
+			else
+			{
+				// TODO: implement for coprocessor
+				return 120 + 1;
+			}
 		}
 
 		void GetHeader(char* h, int l)
 		{
-			std::memcpy(h, CPU.TraceHeader, l);
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			{
+				std::memcpy(h, CPU.TraceHeader, l);
+			}
+			else if (SNES.TraceTarget == 1)
+			{
+				std::memcpy(h, APU.TraceHeader, l);
+			}
+			else
+			{
+				// TODO: implement for coprocessor
+				std::memcpy(h, CPU.TraceHeader, l);
+			}
 		}
 
 		// the copy length l must be supplied ahead of time from GetRegStrngLength
 		void GetRegisterState(char* r, int t, int l)
 		{
-			if (t == 0)
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
 			{
-				std::memcpy(r, CPU.CPURegisterState().c_str(), l);
+				if (t == 0)
+				{
+					std::memcpy(r, CPU.CPURegisterState().c_str(), l);
+				}
+				else if (t < 3)
+				{
+					std::memcpy(r, CPU.Reg_Blank, l);
+				}
+				else if (t == 3)
+				{
+					// DMA info OAM
+					std::memcpy(r, CPU.CPUDMAStateOAM().c_str(), l);
+				}
 			}
-			else if (t < 3)
+			else if (SNES.TraceTarget == 1)
 			{
-				std::memcpy(r, CPU.Reg_Blank, l);
+				if (t == 0)
+				{
+					std::memcpy(r, APU.CPURegisterState().c_str(), l);
+				}
+				else
+				{
+					// ECHO write info
+					std::memcpy(r, APU.APU_Echo_Write().c_str(), l);
+				}
 			}
-			else if (t == 3)
+			else
 			{
-				// DMA info OAM
-				std::memcpy(r, CPU.CPUDMAStateOAM().c_str(), l);
+				// TODO: implement for coprocessor
+				if (t == 0)
+				{
+					std::memcpy(r, CPU.CPURegisterState().c_str(), l);
+				}
+				else if (t < 3)
+				{
+					std::memcpy(r, CPU.Reg_Blank, l);
+				}
+				else if (t == 3)
+				{
+					// DMA info OAM
+					std::memcpy(r, CPU.CPUDMAStateOAM().c_str(), l);
+				}
 			}
 		}
 
 		// the copy length l must be supplied ahead of time from GetDisasmLength
 		void GetDisassembly(char* d, int t, int l)
 		{
-			if (t == 0)
+			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
 			{
-				std::memcpy(d, CPU.CPUDisassembly().c_str(), l);
+				if (t == 0)
+				{
+					std::memcpy(d, CPU.CPUDisassembly().c_str(), l);
+				}
+				else if (t == 1)
+				{
+					std::memcpy(d, CPU.NMI_event, l);
+				}
+				else if (t == 2)
+				{
+					std::memcpy(d, CPU.IRQ_event, l);
+				}
+				else
+				{
+					std::memcpy(d, CPU.DMA_event, l);
+				}
 			}
-			else if (t == 1)
+			else if (SNES.TraceTarget == 1)
 			{
-				std::memcpy(d, CPU.NMI_event, l);
-			}
-			else if (t == 2)
-			{
-				std::memcpy(d, CPU.IRQ_event, l);
+				if (t == 0)
+				{
+					std::memcpy(d, APU.CPUDisassembly().c_str(), l);
+				}
+				else
+				{
+					// ECHO write info
+					std::memcpy(d, APU.ECHO_event, l);
+				}
 			}
 			else
 			{
-				std::memcpy(d, CPU.DMA_event, l);
+				// TODO: implement for coprocessor
+				if (t == 0)
+				{
+					std::memcpy(d, CPU.CPUDisassembly().c_str(), l);
+				}
+				else if (t == 1)
+				{
+					std::memcpy(d, CPU.NMI_event, l);
+				}
+				else if (t == 2)
+				{
+					std::memcpy(d, CPU.IRQ_event, l);
+				}
+				else
+				{
+					std::memcpy(d, CPU.DMA_event, l);
+				}
 			}
 		}
 

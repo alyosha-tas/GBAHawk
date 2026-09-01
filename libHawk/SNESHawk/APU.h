@@ -27,9 +27,9 @@ using namespace std;
 *
 */
 
-//Message_String = "Uop " + to_string((int)uop) + " cyc: " + to_string(TotalExecutedCycles);
+//Core_Message_String->assign("PC: " + to_string(PC));
 
-//MessageCallback(Message_String.length());
+//MessageCallback(Core_Message_String->length());
 
 namespace SNESHawk
 {
@@ -37,9 +37,15 @@ namespace SNESHawk
 	{
 	public:
 
+		string* Core_Message_String = nullptr;
+
+		void (*MessageCallback)(int);
+
 	#pragma region functions and general variables
 		// external core pointers
 		uint32_t* Core_status_sl = nullptr;
+
+		bool IPL_Active;
 
 		// IPL loaded with core
 		uint8_t IPL[0x40] = { };
@@ -60,7 +66,9 @@ namespace SNESHawk
 
 		void HardReset()
 		{
-			// fill initial RAm according to fullsnes
+			IPL_Active = true;
+			
+			// fill initial RAM according to fullsnes
 			int i = 0;
 
 			while (i < 65536)
@@ -90,8 +98,6 @@ namespace SNESHawk
 
 		uint8_t ReadMemoryDMA(uint32_t addr);
 
-		uint8_t DummyReadMemory(uint32_t addr);
-
 		void WriteMemory(uint32_t addr, uint8_t value);
 
 		uint8_t PeekMemory(uint32_t addr);
@@ -107,12 +113,6 @@ namespace SNESHawk
 		uint16_t Peek_Memory_8_Branch(uint32_t addr);
 
 		uint16_t Peek_Memory_16_TCALL(uint32_t op);
-
-		uint8_t read_joyport(uint32_t addr);
-
-		void write_joyport(uint8_t value);
-
-		uint8_t peek_joyport(uint32_t addr);
 
 		uint8_t PeekReg(uint32_t addr);
 
@@ -223,7 +223,7 @@ namespace SNESHawk
 			D = 0;
 			TotalExecutedCycles = 0;
 
-			Instr_Type = OpT::DRMI;
+			Instr_Type = OpT::RESET;
 			IRQ_Type = 2;
 			ALU_Type = ALU::NOP;
 			Instr_Cycle = 0;
@@ -239,7 +239,7 @@ namespace SNESHawk
 
 		void cpu_SoftReset()
 		{
-			Instr_Type = OpT::DRMI;
+			Instr_Type = OpT::RESET;
 			IRQ_Type = 2;
 			ALU_Type = ALU::NOP;
 			Instr_Cycle = 0;
@@ -621,10 +621,10 @@ namespace SNESHawk
 
 		// disassemblies will also return strings of the same length
 		const char* TraceHeader = "SCP700: PC, machine code, mnemonic, operands, registers (A, X, Y, P, SP), flags (NVPBHIZC)  Cycles      SL     F Cycle      ";
-		const char* ECHO_event = "             ====ECHO====             ";
+		const char* ECHO_event = "             ====ECHO====            ";
 
-		const char* Reg_Template = "  A:XX X:XX Y:XX P:XX SP:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
-		const char* Reg_Blank = "                                                                                          ";
+		const char* Reg_Template = "  A:XX X:XX Y:XX P:XX SP:01XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
+		const char* Reg_Blank = "                                                                                            ";
 		const char* Disasm_template = "PCPC:  AA BB CC  Di Di Di Di Di      ";
 
 		char replacer[40] = {};
@@ -650,7 +650,7 @@ namespace SNESHawk
 			sprintf_s(val_char_1, 3, "%02X", Echo_Value);
 			reg_state.append(val_char_1, 2);
 
-			while (reg_state.length() < 87)
+			while (reg_state.length() < 91)
 			{
 				reg_state.append(" ");
 			}
@@ -717,8 +717,8 @@ namespace SNESHawk
 			trace_string.append(val_char_1, 2);
 
 			trace_string.append(" SP:");
-			sprintf_s(val_char_1, 3, "%02X", S);
-			trace_string.append(val_char_1, 2);
+			sprintf_s(val_char_1, 5, "%04X", S);
+			trace_string.append(val_char_1, 4);
 
 			trace_string.append("  ");
 			trace_string.append(FlagNget() ? "N" : "n");
@@ -743,7 +743,7 @@ namespace SNESHawk
 			sprintf_s(val_char_1, 17, "%16lld", FrameCycle);
 			trace_string.append(val_char_1, 16);
 
-			while (trace_string.length() < 91)
+			while (trace_string.length() < 93)
 			{
 				trace_string.append(" ");
 			}

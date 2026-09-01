@@ -107,6 +107,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public delegate void TraceCallback(int t);
 
 		[DllImport(lib, CallingConvention = cc)]
+		public static extern void SNES_settracetarget(IntPtr core, int target);
+
+		[DllImport(lib, CallingConvention = cc)]
 		public static extern void SNES_settracecallback(IntPtr core, TraceCallback callback);
 
 		[DllImport(lib, CallingConvention = cc)]

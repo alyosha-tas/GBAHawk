@@ -2189,6 +2189,7 @@ namespace SNESHawk
 				// fall through to JAM because nothing can unstop from here
 			case OpT::Jam:
 				// do nothing, stuck
+				Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 				Instr_Cycle--;
 				break;
 

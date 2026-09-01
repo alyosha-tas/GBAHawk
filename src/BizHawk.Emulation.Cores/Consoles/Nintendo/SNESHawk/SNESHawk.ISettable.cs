@@ -49,6 +49,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			[DefaultValue(true)]
 			public bool DispSprites { get; set; }
 
+			public enum TracerSelect
+			{
+				R5A22,
+				SPC700,
+				Coprocessor,
+				All
+			}
+
+			[DisplayName("Trace Logger Target")]
+			[Description("Choose which CPUs gets traced.")]
+			[DefaultValue(TracerSelect.R5A22)]
+			public TracerSelect TracerTarget { get; set; }
+
 			public SNESHawkSettings Clone()
 			{
 				return (SNESHawkSettings)MemberwiseClone();

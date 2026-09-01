@@ -58,7 +58,7 @@ namespace SNESHawk
 						PC++;
 						break;
 
-					case 2:
+					case 1:
 						address_bus = get_PC_Addr();
 						Cycle_Type = CPU_Cycle_Type::Fetch_ALU_Cycle;
 						break;
@@ -506,7 +506,8 @@ namespace SNESHawk
 					case 5:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((((uint32_t)PC & 0xFF) + (int8_t)opcode3)) & 0x1FF;
+						alu_temp = opcode3;
+						if ((alu_temp & 0x80) == 0x80) { alu_temp |= 0xFF00; }
 						PC += alu_temp;
 						break;
 
@@ -552,7 +553,8 @@ namespace SNESHawk
 					case 4:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((((uint32_t)PC & 0xFF) + (int8_t)opcode3)) & 0x1FF;
+						alu_temp = opcode3;
+						if ((alu_temp & 0x80) == 0x80) { alu_temp |= 0xFF00; }
 						PC += alu_temp;
 						break;
 
@@ -591,7 +593,8 @@ namespace SNESHawk
 					case 3:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((((uint32_t)PC & 0xFF) + (int8_t)opcode2)) & 0x1FF;
+						alu_temp = opcode2;
+						if ((alu_temp & 0x80) == 0x80) { alu_temp |= 0xFF00; }
 						PC += alu_temp;
 						break;
 
@@ -730,7 +733,11 @@ namespace SNESHawk
 					case 1:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((((uint32_t)PC & 0xFF) + (int8_t)opcode2)) & 0x1FF;
+
+						alu_temp = opcode2;
+
+						if ((alu_temp & 0x80) == 0x80) { alu_temp |= 0xFF00; }
+
 						PC += alu_temp;
 						break;
 
@@ -793,7 +800,8 @@ namespace SNESHawk
 					case 4:
 						// same address bus value as above
 						Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
-						alu_temp = ((((uint32_t)PC & 0xFF) + (int8_t)opcode3)) & 0x1FF;
+						alu_temp = opcode3;
+						if ((alu_temp & 0x80) == 0x80) { alu_temp |= 0xFF00; }
 						PC += alu_temp;
 						break;
 
@@ -1821,6 +1829,7 @@ namespace SNESHawk
 				// fall through to JAM because nothing can unstop from here
 			case OpT::Jam:
 				// do nothing, stuck
+				Cycle_Type = CPU_Cycle_Type::Internal_Cycle;
 				Instr_Cycle--;
 				break;
 

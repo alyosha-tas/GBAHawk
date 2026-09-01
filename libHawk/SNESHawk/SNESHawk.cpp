@@ -172,6 +172,11 @@ SNESHawk_EXPORT void SNES_settracecallback(SNESCore* p, void (*callback)(int)) {
 	p->SetTraceCallback(callback);
 }
 
+// set tracer target
+SNESHawk_EXPORT void SNES_settracetarget(SNESCore* p, int target) {
+	p->SetTraceTarget(target);
+}
+
 // return the cpu trace header length
 SNESHawk_EXPORT int SNES_getheaderlength(SNESCore* p) {
 	return p->GetHeaderLength();

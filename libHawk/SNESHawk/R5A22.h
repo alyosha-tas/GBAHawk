@@ -822,9 +822,9 @@ namespace SNESHawk
 
 		// disassemblies will also return strings of the same length
 		const char* TraceHeader = "65C816: PC, machine code, mnemonic, operands, registers (A, X, Y, SP, P), flags (NVTBDIZCR)  Cycles      SL     F Cycle      ";
-		const char* NMI_event = "             ====NMI====             ";
-		const char* IRQ_event = "             ====IRQ====             ";
-		const char* DMA_event = "             ====DMA====             ";
+		const char* NMI_event = "               ====NMI====                ";
+		const char* IRQ_event = "               ====IRQ====                ";
+		const char* DMA_event = "               ====DMA====                ";
 
 		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX D:XXXX PBR:XX DBR:XX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
 		const char* Reg_Blank = "                                                                                          ";

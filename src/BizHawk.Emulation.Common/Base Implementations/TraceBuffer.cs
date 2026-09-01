@@ -8,7 +8,7 @@
 	{
 		private const string DEFAULT_HEADER = "Instructions";
 
-		public string Header { get; }
+		public string Header { get; set; }
 
 		public ITraceSink? Sink { get; set; }
 
