@@ -142,12 +142,6 @@ namespace BizHawk.Client.GBAHawk
 			this.wheelScrollSpeedToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.ColumnsSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator19 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.HelpSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.TASEditorManualOnlineMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.ForumThreadMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.aboutToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.toolStripSeparator10 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.EnableTooltipsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.TasView = new BizHawk.Client.GBAHawk.InputRoll();
 			this.TasStatusStrip = new StatusStripEx();
 			this.MessageStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -210,8 +204,7 @@ namespace BizHawk.Client.GBAHawk
             this.ConfigSubMenu,
             this.MetaSubMenu,
             this.SettingsSubMenu,
-            this.ColumnsSubMenu,
-            this.HelpSubMenu});
+            this.ColumnsSubMenu});
 			this.TASMenu.TabIndex = 0;
 			this.TASMenu.MenuActivate += new System.EventHandler(this.TASMenu_MenuActivate);
 			this.TASMenu.MenuDeactivate += new System.EventHandler(this.TASMenu_MenuDeactivate);
@@ -830,36 +823,6 @@ namespace BizHawk.Client.GBAHawk
             this.toolStripSeparator19});
 			this.ColumnsSubMenu.Text = "&Columns";
 			// 
-			// HelpSubMenu
-			// 
-			this.HelpSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.TASEditorManualOnlineMenuItem,
-            this.ForumThreadMenuItem,
-            this.aboutToolStripMenuItem,
-            this.toolStripSeparator10,
-            this.EnableTooltipsMenuItem});
-			this.HelpSubMenu.Text = "&Help";
-			// 
-			// TASEditorManualOnlineMenuItem
-			// 
-			this.TASEditorManualOnlineMenuItem.Text = "TAS Editor Manual Online...";
-			this.TASEditorManualOnlineMenuItem.Click += new System.EventHandler(this.TASEditorManualOnlineMenuItem_Click);
-			// 
-			// ForumThreadMenuItem
-			// 
-			this.ForumThreadMenuItem.Text = "Forum Thread...";
-			this.ForumThreadMenuItem.Click += new System.EventHandler(this.ForumThreadMenuItem_Click);
-			// 
-			// aboutToolStripMenuItem
-			// 
-			this.aboutToolStripMenuItem.Enabled = false;
-			this.aboutToolStripMenuItem.Text = "&About";
-			// 
-			// EnableTooltipsMenuItem
-			// 
-			this.EnableTooltipsMenuItem.Enabled = false;
-			this.EnableTooltipsMenuItem.Text = "&Enable Tooltips";
-			// 
 			// TasView
 			//
 			this.TasView.ChangeSelectionWhenPaging = false;
@@ -1239,10 +1202,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ReselectClipboardMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator6;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator9;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx HelpSubMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx EnableTooltipsMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator10;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx aboutToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetMaxUndoLevelsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AutoadjustInputMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx UseInputKeysItem;
@@ -1348,8 +1307,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetMarkerWithTextContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetSeekingCutoffIntervalMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator26;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx TASEditorManualOnlineMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ForumThreadMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx autosaveToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SetAutosaveIntervalMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AutosaveAsgbmvMenuItem;

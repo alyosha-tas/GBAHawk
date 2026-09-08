@@ -64,6 +64,33 @@ namespace BizHawk.Emulation.Common
 			Firmware("SNES", "IPL", "APU Boot Rom");
 			Option("SNES", "IPL", File("97E352553E94242AE823547CD853EECDA55C20F0", 0x40, "IPL.bin", "APU Boot Rom"), FirmwareOptionStatus.Ideal);
 
+			Firmware("SNES", "CX4", "CX4 Rom");
+			Option("SNES", "CX4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_cx4.rom", "CX4 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "DSP1", "DSP1 Rom");
+			Option("SNES", "DSP1", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1.rom", "DSP1 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "DSP1b", "DSP1b Rom");
+			Option("SNES", "DSP1b", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1b.rom", "DSP1b Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "DSP2", "DSP2 Rom");
+			Option("SNES", "DSP2", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp2.rom", "DSP2 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "DSP3", "DSP3 Rom");
+			Option("SNES", "DSP3", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp3.rom", "DSP3 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "DSP4", "DSP4 Rom");
+			Option("SNES", "DSP4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp4.rom", "DSP4 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "ST010", "ST010 Rom");
+			Option("SNES", "ST010", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st010.rom", "ST010 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "ST011", "ST011 Rom");
+			Option("SNES", "ST011", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st011.rom", "ST011 Rom"), FirmwareOptionStatus.Ideal);
+
+			Firmware("SNES", "ST018", "ST018 Rom");
+			Option("SNES", "ST018", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st018.rom", "ST018 Rom"), FirmwareOptionStatus.Ideal);
+
 			AllPatches = allPatches;
 			FirmwareFilesByHash = filesByHash;
 			FirmwareOptions = options;

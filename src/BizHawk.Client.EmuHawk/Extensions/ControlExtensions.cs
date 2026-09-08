@@ -250,7 +250,7 @@ namespace BizHawk.Client.GBAHawk
 			=> !e.Alt && e.Control && e.Shift && e.KeyCode == key;
 
 		/// <summary>
-		/// Changes the description heigh area to match the rows needed for the largest description in the list
+		/// Changes the description height area to match the rows needed for the largest description in the list
 		/// </summary>
 		public static void AdjustDescriptionHeightToFit(this PropertyGrid grid)
 		{
@@ -273,11 +273,16 @@ namespace BizHawk.Client.GBAHawk
 				{
 					if (control.GetType().Name == "DocComment")
 					{
+						// get height from description
 						var field = control.GetType().GetField("userSized", BindingFlags.Instance | BindingFlags.NonPublic);
 						field?.SetValue(control, true);
 						int height = (int)Graphics.FromHwnd(control.Handle).MeasureString(desc, control.Font, grid.Width).Height;
-						control.Height = Math.Max(20, height) + 16; // magic for now
-						return;
+						Console.WriteLine(control.Height);
+
+						// get height from name, which is also included in the box
+						int height2 = (int)Graphics.FromHwnd(control.Handle).MeasureString("Title", control.Font, grid.Width).Height;
+
+						control.Height = Math.Max(20, height) + height2 + 16; // magic for now
 					}
 				}
 			}

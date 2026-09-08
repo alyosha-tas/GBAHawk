@@ -2456,7 +2456,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public StandardControls(int portNum)
 		{
 			PortNum = portNum;
-			Definition = new("Gameboy Controller H")
+			Definition = new("Gameboy Controller")
 			{
 				BoolButtons = BaseDefinition
 				.Select(b => "P" + PortNum + " " + b)

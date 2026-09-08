@@ -141,18 +141,20 @@ namespace BizHawk.Client.GBAHawk
             this.Table1PaletteLabel.Size = new System.Drawing.Size(100, 23);
             this.Table1PaletteLabel.TabIndex = 0;
             this.Table1PaletteLabel.Text = "Palette: 0";
-            // 
-            // Table0PaletteLabel
-            // 
-            this.Table0PaletteLabel.Location = new System.Drawing.Point(6, 150);
+			this.Table1PaletteLabel.AutoSize = true;
+			// 
+			// Table0PaletteLabel
+			// 
+			this.Table0PaletteLabel.Location = new System.Drawing.Point(6, 150);
             this.Table0PaletteLabel.Name = "Table0PaletteLabel";
             this.Table0PaletteLabel.Size = new System.Drawing.Size(100, 23);
             this.Table0PaletteLabel.TabIndex = 1;
             this.Table0PaletteLabel.Text = "Palette: 0";
-            // 
-            // PatternView
-            // 
-            this.PatternView.BackColor = System.Drawing.Color.Transparent;
+			this.Table0PaletteLabel.AutoSize = true;
+			// 
+			// PatternView
+			// 
+			this.PatternView.BackColor = System.Drawing.Color.Transparent;
             this.PatternView.ContextMenuStrip = this.PatternContext;
             this.PatternView.Location = new System.Drawing.Point(7, 20);
             this.PatternView.Name = "PatternView";
@@ -278,6 +280,7 @@ namespace BizHawk.Client.GBAHawk
             this.label2.Size = new System.Drawing.Size(100, 23);
             this.label2.TabIndex = 0;
             this.label2.Text = "Shift-click to remember selection";
+			this.label2.AutoSize = true;
             // 
             // Value5Label
             // 
@@ -286,26 +289,29 @@ namespace BizHawk.Client.GBAHawk
             this.Value5Label.Size = new System.Drawing.Size(100, 23);
             this.Value5Label.TabIndex = 1;
             this.Value5Label.Text = "Value 5";
-            // 
-            // Value4Label
-            // 
-            this.Value4Label.Location = new System.Drawing.Point(144, 120);
+			this.Value5Label.AutoSize = true;
+			// 
+			// Value4Label
+			// 
+			this.Value4Label.Location = new System.Drawing.Point(144, 120);
             this.Value4Label.Name = "Value4Label";
             this.Value4Label.Size = new System.Drawing.Size(100, 23);
             this.Value4Label.TabIndex = 2;
             this.Value4Label.Text = "Value 4";
-            // 
-            // label1
-            // 
-            this.label1.Location = new System.Drawing.Point(6, 16);
+			this.Value4Label.AutoSize = true;
+			// 
+			// label1
+			// 
+			this.label1.Location = new System.Drawing.Point(6, 16);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(100, 23);
             this.label1.TabIndex = 3;
             this.label1.Text = "Hover over item to view details";
-            // 
-            // ZoomBox
-            // 
-            this.ZoomBox.Location = new System.Drawing.Point(196, 16);
+			this.label1.AutoSize = true;
+			// 
+			// ZoomBox
+			// 
+			this.ZoomBox.Location = new System.Drawing.Point(196, 16);
             this.ZoomBox.Name = "ZoomBox";
             this.ZoomBox.Size = new System.Drawing.Size(64, 64);
             this.ZoomBox.TabIndex = 6;
@@ -319,34 +325,38 @@ namespace BizHawk.Client.GBAHawk
             this.Value3Label.Size = new System.Drawing.Size(100, 23);
             this.Value3Label.TabIndex = 7;
             this.Value3Label.Text = "Value 3";
-            // 
-            // Value2Label
-            // 
-            this.Value2Label.Location = new System.Drawing.Point(10, 148);
+			this.Value3Label.AutoSize = true;
+			// 
+			// Value2Label
+			// 
+			this.Value2Label.Location = new System.Drawing.Point(10, 148);
             this.Value2Label.Name = "Value2Label";
             this.Value2Label.Size = new System.Drawing.Size(100, 23);
             this.Value2Label.TabIndex = 8;
             this.Value2Label.Text = "Value 2";
-            // 
-            // ValueLabel
-            // 
-            this.ValueLabel.Location = new System.Drawing.Point(10, 120);
+			this.Value2Label.AutoSize = true;
+			// 
+			// ValueLabel
+			// 
+			this.ValueLabel.Location = new System.Drawing.Point(10, 120);
             this.ValueLabel.Name = "ValueLabel";
             this.ValueLabel.Size = new System.Drawing.Size(100, 23);
             this.ValueLabel.TabIndex = 9;
             this.ValueLabel.Text = "Value 1";
-            // 
-            // AddressLabel
-            // 
-            this.AddressLabel.Location = new System.Drawing.Point(10, 92);
+			this.ValueLabel.AutoSize = true;
+			// 
+			// AddressLabel
+			// 
+			this.AddressLabel.Location = new System.Drawing.Point(10, 92);
             this.AddressLabel.Name = "AddressLabel";
             this.AddressLabel.Size = new System.Drawing.Size(100, 23);
             this.AddressLabel.TabIndex = 10;
             this.AddressLabel.Text = "Address";
-            // 
-            // SpriteViewerBox
-            // 
-            this.SpriteViewerBox.Controls.Add(this.SpriteView);
+			this.AddressLabel.AutoSize = true;
+			// 
+			// SpriteViewerBox
+			// 
+			this.SpriteViewerBox.Controls.Add(this.SpriteView);
             this.SpriteViewerBox.Location = new System.Drawing.Point(293, 212);
             this.SpriteViewerBox.Name = "SpriteViewerBox";
             this.SpriteViewerBox.Size = new System.Drawing.Size(272, 124);
@@ -438,18 +448,20 @@ namespace BizHawk.Client.GBAHawk
             this.label4.Size = new System.Drawing.Size(39, 23);
             this.label4.TabIndex = 0;
             this.label4.Text = "Less";
-            // 
-            // label3
-            // 
-            this.label3.Location = new System.Drawing.Point(6, 19);
+			this.label4.AutoSize = true;
+			// 
+			// label3
+			// 
+			this.label3.Location = new System.Drawing.Point(6, 19);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(39, 23);
             this.label3.TabIndex = 1;
             this.label3.Text = "More";
-            // 
-            // RefreshRate
-            // 
-            this.RefreshRate.AutoSize = false;
+			this.label3.AutoSize = true;
+			// 
+			// RefreshRate
+			// 
+			this.RefreshRate.AutoSize = false;
             this.RefreshRate.LargeChange = 2;
             this.RefreshRate.Location = new System.Drawing.Point(39, 15);
             this.RefreshRate.Maximum = 8;
@@ -743,10 +755,11 @@ namespace BizHawk.Client.GBAHawk
             this.label5.Size = new System.Drawing.Size(100, 23);
             this.label5.TabIndex = 0;
             this.label5.Text = "Bank:";
-            // 
-            // numericUpDownCHRROMBank
-            // 
-            this.numericUpDownCHRROMBank.Location = new System.Drawing.Point(47, 154);
+			this.label5.AutoSize = true;
+			// 
+			// numericUpDownCHRROMBank
+			// 
+			this.numericUpDownCHRROMBank.Location = new System.Drawing.Point(47, 154);
             this.numericUpDownCHRROMBank.Name = "numericUpDownCHRROMBank";
             this.numericUpDownCHRROMBank.Size = new System.Drawing.Size(121, 20);
             this.numericUpDownCHRROMBank.TabIndex = 1;

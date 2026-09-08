@@ -207,7 +207,7 @@ namespace SNESHawk
 
 		void Load_Palette(uint8_t* ext_palette)
 		{
-			std::memcpy(SNES.Compiled_Palette, ext_palette, sizeof int32_t * 512);
+			std::memcpy(SNES.Compiled_Palette, ext_palette, sizeof(int32_t) * 512);
 		}
 
 		void Hard_Reset() 
@@ -284,7 +284,7 @@ namespace SNESHawk
 			uint32_t* src = SNES.video_buffer;
 			uint32_t* dst = dest;
 
-			std::memcpy(dst, src, sizeof (uint32_t) * 256 * 240);
+			std::memcpy(dst, src, sizeof(uint32_t) * 256 * 240);
 
 			// blank the screen
 			for (int i = 0; i < 256 * 240; i++)
@@ -298,7 +298,7 @@ namespace SNESHawk
 			int32_t* src = APU.Audio_Samples;
 			int32_t* dst = dest;
 
-			std::memcpy(dst, src, sizeof int32_t * APU.Audio_Num_Samples * 2);
+			std::memcpy(dst, src, sizeof(int32_t) * APU.Audio_Num_Samples * 2);
 			n_samp[0] = APU.Audio_Num_Samples;
 
 			uint32_t temp_int = APU.Audio_Sample_Clock;

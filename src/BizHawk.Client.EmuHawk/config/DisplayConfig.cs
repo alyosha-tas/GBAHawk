@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using BizHawk.Bizware.BizwareGL;
 using BizHawk.Client.Common;
 using BizHawk.Client.Common.Filters;
-using BizHawk.Common;
 
 namespace BizHawk.Client.GBAHawk
 {
@@ -275,11 +274,6 @@ namespace BizHawk.Client.GBAHawk
 		{
 			_config.TargetScanlineFilterIntensity = tbScanlineIntensity.Value;
 			labelScanlines.Text = $"{_config.TargetScanlineFilterIntensity / 256.0:P2}";
-		}
-
-		private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-		{
-			System.Diagnostics.Process.Start("https://tasvideos.org/Bizhawk/DisplayConfig");
 		}
 
 		private void Label13_Click(object sender, EventArgs e)

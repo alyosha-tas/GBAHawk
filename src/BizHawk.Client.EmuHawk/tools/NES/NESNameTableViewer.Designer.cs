@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using BizHawk.WinForms.Controls;
 
 namespace BizHawk.Client.GBAHawk
 {
@@ -37,7 +38,7 @@ namespace BizHawk.Client.GBAHawk
 			this.ScreenshotAsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.SaveImageClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.RefreshImageContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.menuStrip1 = new MenuStrip();
+			this.menuStrip1 = new MenuStripEx();
 			this.FileSubMenu = new System.Windows.Forms.ToolStripMenuItem();
 			this.ScreenshotMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.ScreenshotToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -259,60 +260,70 @@ namespace BizHawk.Client.GBAHawk
 			this.PaletteLabel.Location = new System.Drawing.Point(64, 96);
 			this.PaletteLabel.Name = "PaletteLabel";
 			this.PaletteLabel.Text = "     ";
+			this.PaletteLabel.AutoSize = true;
 			// 
 			// label5
 			// 
 			this.label5.Location = new System.Drawing.Point(6, 96);
 			this.label5.Name = "label5";
 			this.label5.Text = "Palette:";
+			this.label5.AutoSize = true;
 			// 
 			// TableLabel
 			// 
 			this.TableLabel.Location = new System.Drawing.Point(64, 78);
 			this.TableLabel.Name = "TableLabel";
 			this.TableLabel.Text = "     ";
+			this.TableLabel.AutoSize = true;
 			// 
 			// label4
 			// 
 			this.label4.Location = new System.Drawing.Point(6, 78);
 			this.label4.Name = "label4";
 			this.label4.Text = "Table:";
+			this.label4.AutoSize = true;
 			// 
 			// PPUAddressLabel
 			// 
 			this.PPUAddressLabel.Location = new System.Drawing.Point(64, 60);
 			this.PPUAddressLabel.Name = "PPUAddressLabel";
 			this.PPUAddressLabel.Text = "     ";
+			this.PPUAddressLabel.AutoSize = true;
 			// 
 			// XYLabel
 			// 
 			this.XYLabel.Location = new System.Drawing.Point(64, 43);
 			this.XYLabel.Name = "XYLabel";
 			this.XYLabel.Text = "     ";
+			this.XYLabel.AutoSize = true;
 			// 
 			// TileIDLabel
 			// 
 			this.TileIDLabel.Location = new System.Drawing.Point(64, 26);
 			this.TileIDLabel.Name = "TileIDLabel";
 			this.TileIDLabel.Text = "     ";
+			this.TileIDLabel.AutoSize = true;
 			// 
 			// label3
 			// 
 			this.label3.Location = new System.Drawing.Point(6, 60);
 			this.label3.Name = "label3";
 			this.label3.Text = "PPU Addr:";
+			this.label3.AutoSize = true;
 			// 
 			// label2
 			// 
 			this.label2.Location = new System.Drawing.Point(6, 43);
 			this.label2.Name = "label2";
 			this.label2.Text = "X / Y:";
+			this.label2.AutoSize = true;
 			// 
 			// label1
 			// 
 			this.label1.Location = new System.Drawing.Point(6, 26);
 			this.label1.Name = "label1";
 			this.label1.Text = "Tile ID:";
+			this.label1.AutoSize = true;
 			// 
 			// groupBox5
 			// 
@@ -331,12 +342,14 @@ namespace BizHawk.Client.GBAHawk
 			this.label7.Location = new System.Drawing.Point(7, 186);
 			this.label7.Name = "label7";
 			this.label7.Text = "More";
+			this.label7.AutoSize = true;
 			// 
 			// label6
 			// 
 			this.label6.Location = new System.Drawing.Point(7, 32);
 			this.label6.Name = "label6";
 			this.label6.Text = "Less";
+			this.label6.AutoSize = true;
 			// 
 			// RefreshRate
 			// 

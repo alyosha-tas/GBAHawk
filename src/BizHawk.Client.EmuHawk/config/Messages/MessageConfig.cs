@@ -102,7 +102,7 @@ namespace BizHawk.Client.GBAHawk
 
 			MessageTypeBox.Controls.Clear();
 
-			int y = 12;
+			int y = 16;
 			foreach (var (name, pos) in Positions)
 			{
 				var row = new MessageRow

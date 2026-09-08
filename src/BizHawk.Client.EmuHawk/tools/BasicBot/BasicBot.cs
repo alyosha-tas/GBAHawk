@@ -1291,11 +1291,6 @@ namespace BizHawk.Client.GBAHawk
 			Clipboard.SetText(BestAttemptLogLabel.Text);
 		}
 
-		private void HelpToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			Process.Start("https://tasvideos.org/Bizhawk/BasicBot");
-		}
-
 		private void InvisibleEmulationCheckBox_CheckedChanged(object sender, EventArgs e)
 		{
 			Settings.InvisibleEmulation ^= true;

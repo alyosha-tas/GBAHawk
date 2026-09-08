@@ -24,7 +24,8 @@ using namespace std;
 
 /*
 *	contains the APU as well as the SPC700 cpu compoment
-*
+*	TODO: fix dummy read / internal cycles (see fullsnes)
+*	TODO: fix timings
 */
 
 //Core_Message_String->assign("PC: " + to_string(PC));
@@ -815,22 +816,22 @@ namespace SNESHawk
 				case 0xE2: sprintf_s(val_char_2, 40, "SET1 7 $%02X", PeekMemory(pc++)); break;
 				case 0xF2: sprintf_s(val_char_2, 40, "CLR1 7 $%02X", PeekMemory(pc++)); break;
 
-				case 0x03: sprintf_s(val_char_2, 40, "BBS 0 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x13: sprintf_s(val_char_2, 40, "BBC 0 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x23: sprintf_s(val_char_2, 40, "BBS 1 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x33: sprintf_s(val_char_2, 40, "BBC 1 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x43: sprintf_s(val_char_2, 40, "BBS 2 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x53: sprintf_s(val_char_2, 40, "BBC 2 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x63: sprintf_s(val_char_2, 40, "BBS 3 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x73: sprintf_s(val_char_2, 40, "BBC 3 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x83: sprintf_s(val_char_2, 40, "BBS 4 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0x93: sprintf_s(val_char_2, 40, "BBC 4 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xA3: sprintf_s(val_char_2, 40, "BBS 5 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xB3: sprintf_s(val_char_2, 40, "BBC 5 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xC3: sprintf_s(val_char_2, 40, "BBS 6 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xD3: sprintf_s(val_char_2, 40, "BBC 6 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xE3: sprintf_s(val_char_2, 40, "BBS 7 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
-				case 0xF3: sprintf_s(val_char_2, 40, "BBC 7 $%02X $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
+				case 0x03: sprintf_s(val_char_2, 40, "BBS 0 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x13: sprintf_s(val_char_2, 40, "BBC 0 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x23: sprintf_s(val_char_2, 40, "BBS 1 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x33: sprintf_s(val_char_2, 40, "BBC 1 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x43: sprintf_s(val_char_2, 40, "BBS 2 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x53: sprintf_s(val_char_2, 40, "BBC 2 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x63: sprintf_s(val_char_2, 40, "BBS 3 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x73: sprintf_s(val_char_2, 40, "BBC 3 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x83: sprintf_s(val_char_2, 40, "BBS 4 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0x93: sprintf_s(val_char_2, 40, "BBC 4 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xA3: sprintf_s(val_char_2, 40, "BBS 5 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xB3: sprintf_s(val_char_2, 40, "BBC 5 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xC3: sprintf_s(val_char_2, 40, "BBS 6 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xD3: sprintf_s(val_char_2, 40, "BBC 6 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xE3: sprintf_s(val_char_2, 40, "BBS 7 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
+				case 0xF3: sprintf_s(val_char_2, 40, "BBC 7 $%02X $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
 
 				case 0x04: sprintf_s(val_char_2, 40, "OR $%02X", PeekMemory(pc++)); break;
 				case 0x14: sprintf_s(val_char_2, 40, "OR $%02X + X", PeekMemory(pc++)); break;
@@ -901,55 +902,55 @@ namespace SNESHawk
 				case 0xF7: sprintf_s(val_char_2, 40, "LDA [$%02X]* + Y", PeekMemory(pc++)); break;
 
 				case 0x08: sprintf_s(val_char_2, 40, "OR #%02X", PeekMemory(pc++)); break;
-				case 0x18: sprintf_s(val_char_2, 40, "ORv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x18: sprintf_s(val_char_2, 40, "ORv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x28: sprintf_s(val_char_2, 40, "AND #%02X", PeekMemory(pc++)); break;
-				case 0x38: sprintf_s(val_char_2, 40, "ANDv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x38: sprintf_s(val_char_2, 40, "ANDv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x48: sprintf_s(val_char_2, 40, "EOR #%02X", PeekMemory(pc++)); break;
-				case 0x58: sprintf_s(val_char_2, 40, "EORv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x58: sprintf_s(val_char_2, 40, "EORv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x68: sprintf_s(val_char_2, 40, "CMP #%02X", PeekMemory(pc++)); break;
-				case 0x78: sprintf_s(val_char_2, 40, "CMPv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x78: sprintf_s(val_char_2, 40, "CMPv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x88: sprintf_s(val_char_2, 40, "ADC #%02X", PeekMemory(pc++)); break;
-				case 0x98: sprintf_s(val_char_2, 40, "ADCv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x98: sprintf_s(val_char_2, 40, "ADCv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0xA8: sprintf_s(val_char_2, 40, "SBC #%02X", PeekMemory(pc++)); break;
-				case 0xB8: sprintf_s(val_char_2, 40, "SBCv $%02X, #%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0xB8: sprintf_s(val_char_2, 40, "SBCv $%02X, #%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0xC8: sprintf_s(val_char_2, 40, "CPX #%02X", PeekMemory(pc++)); break;
 				case 0xD8: sprintf_s(val_char_2, 40, "STX $%02X", PeekMemory(pc++)); break;
 				case 0xE8: sprintf_s(val_char_2, 40, "LDA #%02X", PeekMemory(pc++)); break;
 				case 0xF8: sprintf_s(val_char_2, 40, "LDX $%02X", PeekMemory(pc++)); break;
 
-				case 0x09: sprintf_s(val_char_2, 40, "OR s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x09: sprintf_s(val_char_2, 40, "OR s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x19: sprintf_s(val_char_2, 40, "OR s=(Y), d=(X)"); break;
-				case 0x29: sprintf_s(val_char_2, 40, "AND s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x29: sprintf_s(val_char_2, 40, "AND s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x39: sprintf_s(val_char_2, 40, "AND s=(Y), d=(X)"); break;
-				case 0x49: sprintf_s(val_char_2, 40, "EOR s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x49: sprintf_s(val_char_2, 40, "EOR s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x59: sprintf_s(val_char_2, 40, "EOR s=(Y), d=(X)"); break;
-				case 0x69: sprintf_s(val_char_2, 40, "CMP s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x69: sprintf_s(val_char_2, 40, "CMP s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x79: sprintf_s(val_char_2, 40, "CMP s=(Y), d=(X)"); break;
-				case 0x89: sprintf_s(val_char_2, 40, "ADC s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0x89: sprintf_s(val_char_2, 40, "ADC s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0x99: sprintf_s(val_char_2, 40, "ADC s=(Y), d=(X)"); break;
-				case 0xA9: sprintf_s(val_char_2, 40, "SBC s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0xA9: sprintf_s(val_char_2, 40, "SBC s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 				case 0xB9: sprintf_s(val_char_2, 40, "SBC s=(Y), d=(X)"); break;
 				case 0xC9: sprintf_s(val_char_2, 40, "STX $%04X", Peek_Memory_16(pc++)); pc++; break;
 				case 0xD9: sprintf_s(val_char_2, 40, "STX $%02X + Y", PeekMemory(pc++)); break;
 				case 0xE9: sprintf_s(val_char_2, 40, "LDX #%04X", Peek_Memory_16(pc++)); pc++; break;
 				case 0xF9: sprintf_s(val_char_2, 40, "LDX $%02X + Y", PeekMemory(pc++)); break;
 
-				case 0x0A: sprintf_s(val_char_2, 40, "OR1 $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0x0A: sprintf_s(val_char_2, 40, "OR1 $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0x1A: sprintf_s(val_char_2, 40, "DEC W $%02X", PeekMemory(pc++)); break;
-				case 0x2A: sprintf_s(val_char_2, 40, "OR1 ~$%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0x2A: sprintf_s(val_char_2, 40, "OR1 ~$%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0x3A: sprintf_s(val_char_2, 40, "INC W $%02X", PeekMemory(pc++)); break;
-				case 0x4A: sprintf_s(val_char_2, 40, "AND1 $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0x4A: sprintf_s(val_char_2, 40, "AND1 $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0x5A: sprintf_s(val_char_2, 40, "CMP W $%02X", PeekMemory(pc++)); break;
-				case 0x6A: sprintf_s(val_char_2, 40, "AND1 ~$%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0x6A: sprintf_s(val_char_2, 40, "AND1 ~$%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0x7A: sprintf_s(val_char_2, 40, "ADD W $%02X", PeekMemory(pc++)); break;
-				case 0x8A: sprintf_s(val_char_2, 40, "EOR1 $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0x8A: sprintf_s(val_char_2, 40, "EOR1 $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0x9A: sprintf_s(val_char_2, 40, "SUB W $%02X", PeekMemory(pc++)); break;
-				case 0xAA: sprintf_s(val_char_2, 40, "LDC $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0xAA: sprintf_s(val_char_2, 40, "LDC $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0xBA: sprintf_s(val_char_2, 40, "LD YA $%02X", PeekMemory(pc++)); break;
-				case 0xCA: sprintf_s(val_char_2, 40, "STC $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
+				case 0xCA: sprintf_s(val_char_2, 40, "STC $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
 				case 0xDA: sprintf_s(val_char_2, 40, "ST YA $%02X", PeekMemory(pc++)); break;
-				case 0xEA: sprintf_s(val_char_2, 40, "NOT1 $%03X.%01X", Peek_Memory_12(pc++), Peek_Memory_Bit(pc++)); break;
-				case 0xFA: sprintf_s(val_char_2, 40, "MOV s=$%02X, d=$%02X", PeekMemory(pc++), PeekMemory(pc++)); break;
+				case 0xEA: sprintf_s(val_char_2, 40, "NOT1 $%03X.%01X", Peek_Memory_12(pc), Peek_Memory_Bit(pc+1)); pc += 2; break;
+				case 0xFA: sprintf_s(val_char_2, 40, "MOV s=$%02X, d=$%02X", PeekMemory(pc), PeekMemory(pc+1)); pc += 2; break;
 
 				case 0x0B: sprintf_s(val_char_2, 40, "ASL $%02X", PeekMemory(pc++)); break;
 				case 0x1B: sprintf_s(val_char_2, 40, "ASL $%02X + X", PeekMemory(pc++)); break;
@@ -1004,18 +1005,18 @@ namespace SNESHawk
 
 				case 0x0E: sprintf_s(val_char_2, 40, "TSET1 $%04X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x1E: sprintf_s(val_char_2, 40, "CPX $%04X", Peek_Memory_16(pc++)); pc++; break;
-				case 0x2E: sprintf_s(val_char_2, 40, "CBNE $%02X, $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
+				case 0x2E: sprintf_s(val_char_2, 40, "CBNE $%02X, $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
 				case 0x3E: sprintf_s(val_char_2, 40, "CPX $%02X", PeekMemory(pc++)); break;
 				case 0x4E: sprintf_s(val_char_2, 40, "TCLR1 $%04X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x5E: sprintf_s(val_char_2, 40, "CPY $%04X", Peek_Memory_16(pc++)); pc++; break;
-				case 0x6E: sprintf_s(val_char_2, 40, "DBNZ $%02X, $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
+				case 0x6E: sprintf_s(val_char_2, 40, "DBNZ $%02X, $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
 				case 0x7E: sprintf_s(val_char_2, 40, "CPY $%02X", PeekMemory(pc++)); break;
 				case 0x8E: sprintf_s(val_char_2, 40, "PLP"); break;
 				case 0x9E: sprintf_s(val_char_2, 40, "DIV YA,X"); break;
 				case 0xAE: sprintf_s(val_char_2, 40, "PLA"); break;
 				case 0xBE: sprintf_s(val_char_2, 40, "DAS"); break;
 				case 0xCE: sprintf_s(val_char_2, 40, "PLX"); break;
-				case 0xDE: sprintf_s(val_char_2, 40, "CBNE $%02X + X, $%04X", PeekMemory(pc++), Peek_Memory_8_Branch(pc++)); break;
+				case 0xDE: sprintf_s(val_char_2, 40, "CBNE $%02X + X, $%04X", PeekMemory(pc), Peek_Memory_8_Branch(pc+1)); pc += 2; break;
 				case 0xEE: sprintf_s(val_char_2, 40, "PLY"); break;
 				case 0xFE: sprintf_s(val_char_2, 40, "DBNZ Y, $%04X", Peek_Memory_8_Branch(pc++)); break;
 

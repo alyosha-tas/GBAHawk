@@ -23,9 +23,18 @@ namespace BizHawk.Client.GBAHawk
 		static ControllerConfig()
 		{
 			ControllerImages.Add("Gameboy Controller", Properties.Resources.GbController);
-			ControllerImages.Add("Gameboy Controller H", Properties.Resources.GbController);
 			ControllerImages.Add("Gameboy Controller + Tilt", Properties.Resources.GbController);
-			ControllerImages.Add("GBA Controller", Properties.Resources.GbaController);
+
+			ControllerImages.Add("Gameboy Advance Controller", Properties.Resources.GbaController);
+			ControllerImages.Add("Gameboy Advance Controller + Tilt", Properties.Resources.GbaController);
+			ControllerImages.Add("Gameboy Advance Controller + Solar", Properties.Resources.GbaController);
+			ControllerImages.Add("Gameboy Advance Controller + Discrete Solar", Properties.Resources.GbaController);
+			ControllerImages.Add("Gameboy Advance Controller + Z Gyro", Properties.Resources.GbaController);
+
+			ControllerImages.Add("NES Controller", Properties.Resources.NesController);
+
+			ControllerImages.Add("SNES Controller", Properties.Resources.SNesController);
+
 			ControllerImages.Add("Dual Gameboy Controller", Properties.Resources.GbController);
 		}
 
@@ -238,7 +247,7 @@ namespace BizHawk.Client.GBAHawk
 				var bmp = lazyBmp.Value;
 				pictureBox1.Image = bmp;
 				pictureBox1.Size = bmp.Size;
-				tableLayoutPanel1.ColumnStyles[1].Width = bmp.Width;
+				tableLayoutPanel1.ColumnStyles[1].Width = bmp.Width + 8; // extra room for border
 			}
 			else
 			{

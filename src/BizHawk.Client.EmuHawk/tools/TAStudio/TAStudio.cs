@@ -120,8 +120,6 @@ namespace BizHawk.Client.GBAHawk
 			InitializeComponent();
 
 			RecentSubMenu.Image = Resources.Recent;
-			TASEditorManualOnlineMenuItem.Image = Resources.Help;
-			ForumThreadMenuItem.Image = Resources.TAStudio;
 			Icon = Resources.TAStudioIcon;
 
 			_defaultMainSplitDistance = MainVertialSplit.SplitterDistance;
