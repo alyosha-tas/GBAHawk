@@ -30,7 +30,7 @@ namespace BizHawk.Client.GBAHawk
 				if (PlatformDropdown.SelectedIndex > 0)
 				{
 					return _availableSystems
-						.First(x => x.FullName == PlatformDropdown.SelectedItem.ToString()).SystemId;
+						.First(x => x.SystemId == PlatformDropdown.SelectedItem.ToString()).SystemId;
 				}
 
 				return "";
@@ -42,7 +42,7 @@ namespace BizHawk.Client.GBAHawk
 			PlatformDropdown.Items.Add("Ask me on load");
 			foreach (var platform in _availableSystems)
 			{
-				PlatformDropdown.Items.Add(platform.FullName);
+				PlatformDropdown.Items.Add(platform.SystemId);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace BizHawk.Client.GBAHawk
 
 				var selectedItem = PlatformDropdown.Items
 					.OfType<string>()
-					.FirstOrDefault(item => item == (selectedSystem?.FullName ?? ""));
+					.FirstOrDefault(item => item == (selectedSystem?.SystemId ?? ""));
 
 				if (selectedItem != null)
 				{

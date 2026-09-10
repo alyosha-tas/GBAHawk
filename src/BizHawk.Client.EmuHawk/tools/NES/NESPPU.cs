@@ -56,6 +56,12 @@ namespace BizHawk.Client.GBAHawk
 			set { _chrRomView = value; CalculateFormSize(); }
 		}
 
+		[RestoreDefaults]
+		private void RestoreDefaults()
+		{
+			ChrRomView = false;
+		}
+
 		protected override string WindowTitleStatic => "PPU Viewer";
 
 		public NesPPU()

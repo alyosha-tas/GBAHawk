@@ -15,6 +15,7 @@
 #include "CNROM.h"
 #include "UxROM.h"
 #include "AxROM.h"
+#include "GxROM.h"
 #include "MMC5.h"
 #include "MMC3.h"
 #include "MMC2.h"
@@ -97,16 +98,17 @@ namespace NESHawk
 			{
 				switch (mapper_num)
 				{
-				case 0x00: Mapper = new Mapper_NROM(); break;
-				case 0x01: Mapper = new Mapper_MMC1(); break;
-				case 0x02: Mapper = new Mapper_UxROM(); break;
-				case 0x03: Mapper = new Mapper_CNROM(); break;
-				case 0x04: Mapper = new Mapper_MMC3(); break;
-				case 0x05: Mapper = new Mapper_MMC5(); break;
-				case 0x07: Mapper = new Mapper_AxROM(); break;
-				case 0x09: Mapper = new Mapper_MMC2(); break;
-				case 0x1E: Mapper = new Mapper_030(); break;
-				case 0xE8: Mapper = new Mapper_232(); break;
+					case 0x00: Mapper = new Mapper_NROM(); break;
+					case 0x01: Mapper = new Mapper_MMC1(); break;
+					case 0x02: Mapper = new Mapper_UxROM(); break;
+					case 0x03: Mapper = new Mapper_CNROM(); break;
+					case 0x04: Mapper = new Mapper_MMC3(); break;
+					case 0x05: Mapper = new Mapper_MMC5(); break;
+					case 0x07: Mapper = new Mapper_AxROM(); break;
+					case 0x09: Mapper = new Mapper_MMC2(); break;
+					case 0x1E: Mapper = new Mapper_030(); break;
+					case 0x42: Mapper = new Mapper_GxROM(); break;
+					case 0xE8: Mapper = new Mapper_232(); break;
 
 				default: Mapper = new Mapper_NROM(); break;
 				}
