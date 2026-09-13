@@ -16,6 +16,7 @@
 #include "UxROM.h"
 #include "AxROM.h"
 #include "GxROM.h"
+#include "MMC6.h"
 #include "MMC5.h"
 #include "MMC3.h"
 #include "MMC2.h"
@@ -63,6 +64,9 @@ namespace NESHawk
 
 			mapper_num |= ((uint16_t)NES.Header[8] & 0xF) << 8;
 
+			// some mappers are chosen based on submapper
+			uint16_t submapper_num = (NES.Header[8] >> 4);
+
 			NES.ROM_Length = ((uint32_t)NES.Header[4] + (((uint32_t)NES.Header[9] & 0xF) << 8)) * 0x4000;
 
 			NES.CHR_ROM_Length = ((uint32_t)NES.Header[5] + (((uint32_t)NES.Header[9] & 0xF0) << 4)) * 0x2000;
@@ -102,7 +106,16 @@ namespace NESHawk
 					case 0x01: Mapper = new Mapper_MMC1(); break;
 					case 0x02: Mapper = new Mapper_UxROM(); break;
 					case 0x03: Mapper = new Mapper_CNROM(); break;
-					case 0x04: Mapper = new Mapper_MMC3(); break;
+					case 0x04:
+						if (submapper_num == 0)
+						{
+							Mapper = new Mapper_MMC3(); break;
+						}
+						else if (submapper_num == 1)
+						{
+							Mapper = new Mapper_MMC6(); break;
+						}
+						break;
 					case 0x05: Mapper = new Mapper_MMC5(); break;
 					case 0x07: Mapper = new Mapper_AxROM(); break;
 					case 0x09: Mapper = new Mapper_MMC2(); break;
@@ -110,7 +123,7 @@ namespace NESHawk
 					case 0x42: Mapper = new Mapper_GxROM(); break;
 					case 0xE8: Mapper = new Mapper_232(); break;
 
-				default: Mapper = new Mapper_NROM(); break;
+					default: Mapper = new Mapper_NROM(); break;
 				}
 			}
 			else

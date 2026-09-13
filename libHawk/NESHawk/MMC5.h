@@ -1360,35 +1360,3 @@ namespace NESHawk
 		}
 	};
 }
-/*
-namespace BizHawk.Emulation.Cores.Nintendo.NES
-{
-	internal sealed class ExROM : NesBoardBase
-	{
-
-		class Pulse
-		{
-
-
-		}
-
-
-
-		private void PulseAddDiff(int value)
-		{
-			enqueuer(value * 370);
-			//Console.WriteLine(value);
-		}
-
-		public MMC5Audio(Action<int> enqueuer, Action<bool> RaiseIRQ)
-		{
-			this.enqueuer = enqueuer;
-			this.RaiseIRQ = RaiseIRQ;
-			for (int i = 0; i < pulse.Length; i++)
-				pulse[i] = new Pulse(PulseAddDiff);
-		}
-
-
-	}
-}
-*/

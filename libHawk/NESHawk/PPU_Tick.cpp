@@ -136,7 +136,7 @@ namespace NESHawk
 								if ((sprite_eval_cycle & 1) == 1)
 								{
 									soam[soam_index] = 0xFF;
-									soam_index++;
+									ppu_Increment_soam_index();
 								}
 
 								sprite_zero_in_range = false;
@@ -147,7 +147,11 @@ namespace NESHawk
 							{
 								if (sprite_eval_cycle == 64)
 								{
-									soam_index = 0;
+									if (ppu_was_on)
+									{
+										soam_index = 0;
+										ppu_soam_overflow = false;
+									}
 									oam_index = reg_2003;
 								}
 
@@ -164,12 +168,12 @@ namespace NESHawk
 								else if (sprite_eval_write)
 								{
 									//look for sprites 
-									if (spr_true_count == 0 && soam_index < 8)
+									if (spr_true_count == 0 && !ppu_soam_overflow)
 									{
-										soam[soam_index * 4] = read_value;
+										soam[soam_index] = read_value;
 									}
 
-									if (soam_index < 8)
+									if (!ppu_soam_overflow)
 									{
 										if (yp >= read_value && yp < read_value + spriteHeight && spr_true_count == 0)
 										{
@@ -181,13 +185,15 @@ namespace NESHawk
 
 											spr_true_count++;
 											oam_index++;
+											ppu_Increment_soam_index();
 										}
 										else if (spr_true_count > 0 && spr_true_count < 4)
 										{
-											soam[soam_index * 4 + spr_true_count] = read_value;
+											soam[soam_index] = read_value;
 
 											oam_index++;
 											spr_true_count++;
+											ppu_Increment_soam_index();
 
 											if (spr_true_count == 4)
 											{
@@ -197,7 +203,6 @@ namespace NESHawk
 													oam_index &= 0xFFC;
 												}
 
-												soam_index++;
 												spr_true_count = 0;
 											}
 										}
@@ -232,7 +237,6 @@ namespace NESHawk
 													oam_index &= 0xFFC;
 												}
 
-												soam_index++;
 												spr_true_count = 0;
 
 												sprite_eval_write = false;
@@ -255,14 +259,7 @@ namespace NESHawk
 								else
 								{
 									// if we don't write sprites anymore, just scan through the oam
-									if (soam_index * 4 + spr_true_count < 32)
-									{
-										read_value = soam[soam_index * 4 + spr_true_count]; //writes change to reads
-									}
-									else
-									{
-										read_value = soam[0]; //writes change to reads
-									}
+									read_value = soam[soam_index]; //writes change to reads
 
 									oam_index += 4;
 
@@ -403,6 +400,8 @@ namespace NESHawk
 							if ((status_cycle == 256) && ppu_was_on)
 							{
 								ppu_Increment_vs();
+								soam_index = 0;
+								ppu_soam_overflow = false;
 							}
 
 							if (status_cycle == 256) { race_2006 = true; }
@@ -456,6 +455,8 @@ namespace NESHawk
 							if ((status_cycle == 256) && ppu_was_on)
 							{
 								ppu_Increment_vs();
+								soam_index = 0;
+								ppu_soam_overflow = false;
 							}
 
 							if (status_cycle == 256) { race_2006 = true; }
@@ -479,7 +480,7 @@ namespace NESHawk
 						ppuphase = PPU_PHASE_OBJ;
 
 						s = 0;
-						soam_index = -1;
+
 						ppu_aux_index = 0;
 
 						last_pipeline = target > 0;
@@ -492,9 +493,11 @@ namespace NESHawk
 					switch (ppu_aux_index)
 					{
 						case 0:
-							soam_index++;
+							
 							ppu_temp_oam_y = soam[soam_index];
 							read_value = ppu_temp_oam_y;
+
+							if (PPUON() || ppu_was_on) { ppu_Increment_soam_index(); }
 
 							ppu_Commit_Read = PPUON();
 							if (ppu_Commit_Read)
@@ -527,9 +530,10 @@ namespace NESHawk
 								ppubus_read(ppu_VRAM_Address);
 							}
 
-							soam_index++;
 							ppu_temp_oam_ind = soam[soam_index];
 							read_value = ppu_temp_oam_ind;
+
+							if (PPUON() || ppu_was_on) { ppu_Increment_soam_index(); }
 
 							if (last_pipeline)
 							{
@@ -550,9 +554,10 @@ namespace NESHawk
 								ppubus_clock(ppu_VRAM_Address);
 							}
 							
-							soam_index++;
 							ppu_Sprite_Shifters[s].Attr = (soam[soam_index] & 0xE3);
 							read_value = soam[soam_index];
+
+							if (PPUON() || ppu_was_on) { ppu_Increment_soam_index(); }
 
 							spriteHeight = ppu_OBJ_Size_16 ? 16 : 8;
 
@@ -591,9 +596,13 @@ namespace NESHawk
 								ppubus_read(ppu_VRAM_Address);
 							}
 
-							soam_index++;
 							ppu_Sprite_Shifters[s].X = soam[soam_index];
 							read_value = (uint8_t)ppu_Sprite_Shifters[s].X;
+
+							if (PPUON() || ppu_was_on)
+							{
+								ppu_Increment_soam_index();
+							}
 							break;
 
 						case 4:
@@ -677,9 +686,6 @@ namespace NESHawk
 							ppuphase = PPU_PHASE_BG;
 							xt = 0;
 							xp = 0;
-
-							soam_index++;
-							if (soam_index == 32) { soam_index = 0; }
 						}
 
 						// read first 2 tiles for next scanline
@@ -734,6 +740,15 @@ namespace NESHawk
 						Read_bgdata(xp, xt);
 						xp++;
 						xp &= 1;
+
+						if (status_cycle == 339)
+						{
+							if (ppu_was_on)
+							{
+								soam_index = 0;
+								ppu_soam_overflow = false;
+							}
+						}
 					}
 				}
 			}
@@ -779,7 +794,6 @@ namespace NESHawk
 				if ((status_sl < 240) || (status_sl == 261))
 				{
 					spr_true_count = 0;
-					soam_index = 0;
 					oam_index = 0;
 					sprite_eval_write = true;
 

@@ -1198,6 +1198,7 @@ namespace NESHawk
 		bool ppu_Buffer_Fill_Go;
 		bool ppu_Buffer_Write_Go;
 		bool ppu_ALE;
+		bool ppu_soam_overflow;
 
 		uint8_t ppu_OAM_Corrupt_Addr;
 		uint8_t VRAMBuffer;
@@ -1364,6 +1365,7 @@ namespace NESHawk
 			ppu_Buffer_Fill_Go = false;
 			ppu_Buffer_Write_Go = false;
 			ppu_ALE = false;
+			ppu_soam_overflow = false;
 
 			ppu_OAM_Corrupt_Addr = 0;
 			intensity_lsl_6 = 0;
@@ -1563,6 +1565,19 @@ namespace NESHawk
 			ppu_Reg_v &= 0x7FFF;
 		}
 
+		void ppu_Increment_soam_index()
+		{
+			if (!ppu_soam_overflow)
+			{
+				soam_index++;
+				if (soam_index == 32)
+				{
+					soam_index = 0;
+					ppu_soam_overflow = true;
+				}
+			}
+		}
+
 		uint8_t ppu_ReadReg(int addr)                                                   // Register Reads
 		{
 			uint8_t ret_spec;
@@ -1639,7 +1654,7 @@ namespace NESHawk
 				{
 					if (status_cycle == 0)
 					{
-						ret = soam[0];
+						ret = soam[soam_index];
 					}
 					else if (status_cycle <= 64)
 					{
@@ -1655,7 +1670,7 @@ namespace NESHawk
 					}
 					else
 					{
-						ret = soam[0];
+						ret = soam[soam_index];
 					}
 				}
 				else
@@ -2146,6 +2161,7 @@ namespace NESHawk
 			saver = bool_saver(ppu_Buffer_Fill_Go, saver);
 			saver = bool_saver(ppu_Buffer_Write_Go, saver);
 			saver = bool_saver(ppu_ALE, saver);
+			saver = bool_saver(ppu_soam_overflow, saver);
 
 			saver = byte_saver(ppu_OAM_Corrupt_Addr, saver);
 			saver = byte_saver(VRAMBuffer, saver);
@@ -2284,6 +2300,7 @@ namespace NESHawk
 			loader = bool_loader(&ppu_Buffer_Fill_Go, loader);
 			loader = bool_loader(&ppu_Buffer_Write_Go, loader);
 			loader = bool_loader(&ppu_ALE, loader);
+			loader = bool_loader(&ppu_soam_overflow, loader);
 
 			loader = byte_loader(&ppu_OAM_Corrupt_Addr, loader);
 			loader = byte_loader(&VRAMBuffer, loader);

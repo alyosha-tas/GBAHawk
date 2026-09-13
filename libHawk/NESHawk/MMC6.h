@@ -11,7 +11,7 @@ using namespace std;
 
 namespace NESHawk
 {
-	class Mapper_MMC3 : public Mappers
+	class Mapper_MMC6 : public Mappers
 	{
 	public:
 
@@ -23,7 +23,10 @@ namespace NESHawk
 		bool Just_Cleared;
 		bool Just_Cleared_Pending;
 		bool WRAM_Enable;
-		bool WRAM_Write_Protect;
+		bool WRAM_Enable_Lo;
+		bool WRAM_Enable_Hi;
+		bool WRAM_Write_Protect_Lo;
+		bool WRAM_Write_Protect_Hi;
 
 		uint8_t Command;
 		uint8_t IRQ_Reload;
@@ -52,7 +55,10 @@ namespace NESHawk
 			Just_Cleared = false;
 			Just_Cleared_Pending = false;
 			WRAM_Enable = false;
-			WRAM_Write_Protect = false;
+			WRAM_Enable_Lo = false;
+			WRAM_Enable_Hi = false;
+			WRAM_Write_Protect_Lo = false;
+			WRAM_Write_Protect_Hi = false;
 			Old_IRQ_Type = false;
 			Alt_Mirroring = false;
 
@@ -64,7 +70,7 @@ namespace NESHawk
 			Separator_Counter = 0;
 			IRQ_Countdown = 0;
 			A12_Old = 0;
-			
+
 			//initial values seem necessary
 			MMC3_Regs[0] = 0;
 			MMC3_Regs[1] = 2;
@@ -89,7 +95,7 @@ namespace NESHawk
 		}
 
 		void Remap_ROM()
-		{			
+		{
 			if (PRG_Mode)
 			{
 				Core_ROM[0] = Core_ROM_Base + *Core_ROM_Length - 0x4000;
@@ -165,6 +171,7 @@ namespace NESHawk
 					Command = value;
 					CHR_Mode = (value & 0x80) == 0x80;
 					PRG_Mode = (value & 0x40) == 0x40;
+					WRAM_Enable = (value & 0x20) == 0x20;
 					Reg_Addr = (value & 7);
 					break;
 				case 0x0001: //$8001
@@ -176,8 +183,11 @@ namespace NESHawk
 					break;
 				case 0x2001: //$A001
 					//wram enable/protect
-					WRAM_Write_Protect = (value & 0x40) == 0x40;
-					WRAM_Enable = (value & 0x80) == 0x80;
+					WRAM_Write_Protect_Lo = (value & 0x10) == 0x10;
+					WRAM_Write_Protect_Hi = (value & 0x40) == 0x40;
+
+					WRAM_Enable_Lo = (value & 0x20) == 0x20;
+					WRAM_Enable_Hi = (value & 0x80) == 0x80;				
 					break;
 				case 0x4000: //$C000 - IRQ Reload value
 					IRQ_Reload = value;
@@ -202,7 +212,20 @@ namespace NESHawk
 		{
 			if ((*Core_Cart_RAM_Length > 0) && WRAM_Enable)
 			{
-				return Core_Cart_RAM[addr];
+				if ((addr & 0x200) == 0)
+				{
+					if (WRAM_Enable_Lo)
+					{
+						return Core_Cart_RAM[addr];
+					}
+				}
+				else
+				{
+					if (WRAM_Enable_Hi)
+					{
+						return Core_Cart_RAM[addr];
+					}
+				}
 			}
 
 			// not entirely accurate and hardware dependent
@@ -223,9 +246,22 @@ namespace NESHawk
 
 		void WriteWRAM(uint32_t addr, uint8_t value)
 		{
-			if ((*Core_Cart_RAM_Length > 0) && WRAM_Enable && !WRAM_Write_Protect)
+			if ((*Core_Cart_RAM_Length > 0) && WRAM_Enable)
 			{
-				Core_Cart_RAM[addr] = value;
+				if ((addr & 0x200) == 0)
+				{
+					if (!WRAM_Write_Protect_Lo)
+					{
+						Core_Cart_RAM[addr] = value;
+					}
+				}
+				else
+				{
+					if (!WRAM_Write_Protect_Hi)
+					{
+						Core_Cart_RAM[addr] = value;
+					}
+				}				
 			}
 		}
 
@@ -251,7 +287,7 @@ namespace NESHawk
 			if (IRQ_Counter == 0)
 			{
 				if (Old_IRQ_Type)
-				{				
+				{
 					if (last_irq_counter != 0 || IRQ_Reload_Flag)
 						IRQ_EQ_Pass();
 				}
@@ -268,7 +304,7 @@ namespace NESHawk
 				Separator_Counter--;
 
 			if (IRQ_Countdown > 0)
-			{				
+			{
 				IRQ_Countdown--;
 				if (IRQ_Countdown == 0)
 				{
@@ -330,7 +366,7 @@ namespace NESHawk
 				if (*Core_CHR_ROM_Length > 0)
 				{
 					addr = MapCHR(addr);
-					
+
 					return Core_CHR_ROM[addr];
 				}
 				else
@@ -357,7 +393,10 @@ namespace NESHawk
 			saver = bool_saver(Just_Cleared, saver);
 			saver = bool_saver(Just_Cleared_Pending, saver);
 			saver = bool_saver(WRAM_Enable, saver);
-			saver = bool_saver(WRAM_Write_Protect, saver);
+			saver = bool_saver(WRAM_Enable_Lo, saver);
+			saver = bool_saver(WRAM_Enable_Hi, saver);
+			saver = bool_saver(WRAM_Write_Protect_Lo, saver);
+			saver = bool_saver(WRAM_Write_Protect_Hi, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(IRQ_Reload, saver);
@@ -401,7 +440,10 @@ namespace NESHawk
 			loader = bool_loader(&Just_Cleared, loader);
 			loader = bool_loader(&Just_Cleared_Pending, loader);
 			loader = bool_loader(&WRAM_Enable, loader);
-			loader = bool_loader(&WRAM_Write_Protect, loader);
+			loader = bool_loader(&WRAM_Enable_Lo, loader);
+			loader = bool_loader(&WRAM_Enable_Hi, loader);
+			loader = bool_loader(&WRAM_Write_Protect_Lo, loader);
+			loader = bool_loader(&WRAM_Write_Protect_Hi, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&IRQ_Reload, loader);
