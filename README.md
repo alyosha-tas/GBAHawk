@@ -1,4 +1,4 @@
-##Overview
+\## Overview
 
 GBAHawk is a fork of the BizHawk emulator focusing on console verification of TASes and hardware research for early nintendo consoles.
 
@@ -8,7 +8,7 @@ Currently supports GB/C/A and NES consoles with mature console verificaiton pipe
 
 A SNES core is currently in developement.
 
-##Linking
+\## Linking
 
 To link GB/C/A games, you must use the multi-disc bundler. This tool creates an .xml file that refertences both ROM locations.
 
@@ -18,6 +18,7 @@ Hitting 'Save' will create the .xml file. Hitting 'Save and Run' will additional
 
 To perform single pack linking on the GBA, the second ROM should be the included file 'Multi-boot.gba' (which is just a binary file containing the ascii string "This isn't a ROM")
 
-##Project Status
+\## Project Status
 
 Currently the primary focus is on SNES developement and finalizing the NES core.
+
