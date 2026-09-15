@@ -184,18 +184,18 @@ SNESHawk_EXPORT void SNES_settracetarget(SNESCore* p, int target) {
 }
 
 // return the cpu trace header length
-SNESHawk_EXPORT int SNES_getheaderlength(SNESCore* p, int s) {
-	return p->GetHeaderLength(s);
+SNESHawk_EXPORT int SNES_getheaderlength(SNESCore* p) {
+	return p->GetHeaderLength();
 }
 
 // return the cpu disassembly length
-SNESHawk_EXPORT int SNES_getdisasmlength(SNESCore* p, int s) {
-	return p->GetDisasmLength(s);
+SNESHawk_EXPORT int SNES_getdisasmlength(SNESCore* p) {
+	return p->GetDisasmLength();
 }
 
 // return the cpu register string length
-SNESHawk_EXPORT int SNES_getregstringlength(SNESCore* p, int s) {
-	return p->GetRegStringLength(s);
+SNESHawk_EXPORT int SNES_getregstringlength(SNESCore* p) {
+	return p->GetRegStringLength();
 }
 
 // return the cpu trace header

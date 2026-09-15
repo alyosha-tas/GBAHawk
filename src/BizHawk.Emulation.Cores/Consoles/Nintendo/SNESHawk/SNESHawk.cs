@@ -330,9 +330,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			// Set up trace logger
 			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
 
-			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
-			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr, 0);
-			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr, 0);
+			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
 
 			var newHeader = new StringBuilder(Header_Length);
 			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, 0, Header_Length);
@@ -464,8 +464,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public void MakeTrace(int t, int s)
 		{
-			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr, s);
-			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr, s);
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
 
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
@@ -486,20 +486,19 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			int last_header = 0;
 			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
 
+			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
+
 			if ((Settings.TracerTarget == SNESHawkSettings.TracerSelect.R5A22) || (Settings.TracerTarget == SNESHawkSettings.TracerSelect.All))
-			{
-				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
+			{				
 				last_header = 0;
 			}
 			else if (Settings.TracerTarget == SNESHawkSettings.TracerSelect.SPC700)
 			{
-				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 1);
 				last_header = 1;
 			}
 			else
 			{
 				// TODO: coprocessor
-				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
 				last_header = 0;
 			}
 

@@ -23,7 +23,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			{
 				tracecb = null;
 			}
-			
+
+			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
 			LibSNESHawk.SNES_settracecallback(SNES_Pntr, tracecb);
 
 			if (controller.IsPressed("Power"))

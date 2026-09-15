@@ -826,8 +826,8 @@ namespace SNESHawk
 		const char* IRQ_event = "               ====IRQ====                ";
 		const char* DMA_event = "               ====DMA====                ";
 
-		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX D:XXXX PBR:XX DBR:XX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
-		const char* Reg_Blank = "                                                                                          ";
+		const char* Reg_Template = "  A:XXXX X:XXXX Y:XXXX SP:XXXX D:XXXX PBR:XX DBR:XX P:XX  NVTBDIZCR  Cy:0123456789ABCDEF SL:LYL F-Cyc:0123456789ABCDEF";
+		const char* Reg_Blank = "                                                                                                                      ";
 		const char* Disasm_template = "PCPCPC:  AA BB CC DD  Di Di Di Di Di      ";
 
 		char replacer[40] = {};

@@ -188,7 +188,8 @@ namespace SNESHawk
 
 		void Set_Frequencies(uint32_t apu_freq, uint32_t coproc_freq, bool coproc_present)
 		{
-			double inv_apu_freq = 1.0 / (double)apu_freq;
+			// 4 is the smallest needed multiple to match APU behavior
+			double inv_apu_freq = 4.0 / (double)apu_freq;
 
 			SNES.APU_Inc_Time = (uint64_t)floor(inv_apu_freq * 1e17);
 
@@ -414,6 +415,15 @@ namespace SNESHawk
 		void SetTraceTarget(int target)
 		{
 			SNES.TraceTarget = target;
+
+			if (target == 3)
+			{
+				APU.Trace_Adjust = true;
+			}
+			else
+			{
+				APU.Trace_Adjust = false;
+			}
 		}
 
 		void SetTraceCallback(void (*callback)(int, int))
@@ -444,55 +454,19 @@ namespace SNESHawk
 			
 		}
 
-		int GetHeaderLength(int s)
+		int GetHeaderLength()
 		{
-			if (s == 0)
-			{
-				return 126 + 1;
-			}
-			else if (s == 1)
-			{
-				return 125 + 1;
-			}
-			else
-			{
-				// TODO: implement for coprocessor
-				return 126 + 1;
-			}
+			return 126 + 1;
 		}
 
-		int GetDisasmLength(int s)
+		int GetDisasmLength()
 		{
-			if (s == 0)
-			{
-				return 43 + 1;
-			}
-			else if (s == 1)
-			{
-				return 38 + 1;
-			}
-			else
-			{
-				// TODO: implement for coprocessor
-				return 43 + 1;
-			}			
+			return 43 + 1;			
 		}
 
-		int GetRegStringLength(int s)
+		int GetRegStringLength()
 		{
-			if (s == 0)
-			{
-				return 120 + 1;
-			}
-			else if (s == 1)
-			{
-				return 93 + 1;
-			}
-			else
-			{
-				// TODO: implement for coprocessor
-				return 120 + 1;
-			}
+			return 120 + 1;
 		}
 
 		void GetHeader(char* h, int s, int l)

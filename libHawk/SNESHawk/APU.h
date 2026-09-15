@@ -42,11 +42,15 @@ namespace SNESHawk
 
 		void (*MessageCallback)(int);
 
+		bool Trace_Adjust = false;
+
 	#pragma region functions and general variables
 		// external core pointers
 		uint32_t* Core_status_sl = nullptr;
 
 		bool IPL_Active;
+
+		bool CPU_Tick_Parity;
 
 		// IPL loaded with core
 		uint8_t IPL[0x40] = { };
@@ -64,10 +68,17 @@ namespace SNESHawk
 
 		int32_t Audio_Samples[25000] = {};
 
+		uint32_t APU_CPU_Tick_Count;
+		uint32_t APU_DSP_Tick_Count;
+
 
 		void HardReset()
 		{
 			IPL_Active = true;
+			CPU_Tick_Parity = true;
+
+			APU_CPU_Tick_Count = 0;
+			APU_DSP_Tick_Count = 0;
 			
 			// fill initial RAM according to fullsnes
 			int i = 0;
@@ -93,6 +104,31 @@ namespace SNESHawk
 		void SoftReset()
 		{
 			cpu_SoftReset();
+		}
+
+		void APU_Tick()
+		{
+			APU_DSP_Tick_Count++;
+			APU_DSP_Tick_Count &= 2;
+
+			if (APU_CPU_Tick_Count == 0)
+			{
+				//RunCpuOne();
+			}
+			
+			
+			APU_CPU_Tick_Count++;
+			APU_CPU_Tick_Count &= 3;
+
+			if (APU_CPU_Tick_Count == 0)
+			{
+				CPU_Tick_Parity ^= true;
+
+				if (CPU_Tick_Parity)
+				{
+					RunCpuOne();
+				}
+			}
 		}
 
 		uint8_t ReadMemory(uint32_t addr);
@@ -125,12 +161,17 @@ namespace SNESHawk
 	#pragma region APU savestate
 		uint8_t* apu_SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(IPL_Active, saver);
+			saver = bool_saver(CPU_Tick_Parity, saver);
+			
 			saver = byte_saver(Echo_Value, saver);
 			
 			saver = short_saver(Echo_Addr, saver);
 
 			saver = int_saver(Audio_Sample_Clock, saver);
 			saver = int_saver(Audio_Num_Samples, saver);
+			saver = int_saver(APU_CPU_Tick_Count, saver);
+			saver = int_saver(APU_DSP_Tick_Count, saver);
 			
 			saver = long_saver(FrameCycle, saver);
 			
@@ -143,12 +184,17 @@ namespace SNESHawk
 
 		uint8_t* apu_LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&IPL_Active, loader);
+			loader = bool_loader(&CPU_Tick_Parity, loader);
+			
 			loader = byte_loader(&Echo_Value, loader);
 			
 			loader = short_loader(&Echo_Addr, loader);
 
 			loader = int_loader(&Audio_Sample_Clock, loader);
 			loader = int_loader(&Audio_Num_Samples, loader);
+			loader = int_loader(&APU_CPU_Tick_Count, loader);
+			loader = int_loader(&APU_DSP_Tick_Count, loader);
 			
 			loader = long_loader(&FrameCycle, loader);
 			
@@ -621,12 +667,12 @@ namespace SNESHawk
 	#pragma region Disassemble
 
 		// disassemblies will also return strings of the same length
-		const char* TraceHeader = "SCP700: PC, machine code, mnemonic, operands, registers (A, X, Y, P, SP), flags (NVPBHIZC)  Cycles      SL     F Cycle      ";
-		const char* ECHO_event = "             ====ECHO====            ";
+		const char* TraceHeader = "SCP700: PC, machine code, mnemonic, operands, registers (A, X, Y, P, SP), flags (NVPBHIZC)  Cycles      SL     F Cycle       ";
+		const char* ECHO_event = "               ====ECHO====               ";
 
-		const char* Reg_Template = "  A:XX X:XX Y:XX P:XX SP:01XX  NVTBDIZCR  Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
-		const char* Reg_Blank = "                                                                                            ";
-		const char* Disasm_template = "PCPC:  AA BB CC  Di Di Di Di Di      ";
+		const char* Reg_Template = "  A:XX X:XX Y:XX P:XX SP:01XX  NVTBDIZCR                             Cy:0123456789ABCDEF SLZ:LYL F-Cyc:0123456789ABCDEF";
+		const char* Reg_Blank = "                                                                                                                       ";
+		const char* Disasm_template = "PCPC:  AA BB CC  Di Di Di Di Di           ";
 
 		char replacer[40] = {};
 		char* val_char_1 = nullptr;
@@ -681,14 +727,14 @@ namespace SNESHawk
 				trace_string.append(" ");
 			}
 
-			while (trace_string.length() < 18)
+			while (trace_string.length() < 22)
 			{
 				trace_string.append(" ");
 			}
 
 			trace_string.append(disasm);
 
-			while (trace_string.length() < 38)
+			while (trace_string.length() < 43)
 			{
 				trace_string.append(" ");
 			}
@@ -733,6 +779,14 @@ namespace SNESHawk
 			trace_string.append(FlagCget() ? "C" : "c");
 			trace_string.append("  ");
 
+			if (Trace_Adjust)
+			{
+				while (trace_string.length() < 69)
+				{
+					trace_string.append(" ");
+				}
+			}
+
 			trace_string.append("Cy:");
 			sprintf_s(val_char_1, 17, "%16lld", TotalExecutedCycles);
 			trace_string.append(val_char_1, 16);
@@ -745,7 +799,7 @@ namespace SNESHawk
 			sprintf_s(val_char_1, 17, "%16lld", FrameCycle);
 			trace_string.append(val_char_1, 16);
 
-			while (trace_string.length() < 93)
+			while (trace_string.length() < 120)
 			{
 				trace_string.append(" ");
 			}

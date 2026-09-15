@@ -116,13 +116,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public static extern void SNES_settracecallback(IntPtr core, TraceCallback callback);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getheaderlength(IntPtr core, int s);
+		public static extern int SNES_getheaderlength(IntPtr core);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getdisasmlength(IntPtr core, int s);
+		public static extern int SNES_getdisasmlength(IntPtr core);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getregstringlength(IntPtr core, int s);
+		public static extern int SNES_getregstringlength(IntPtr core);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void SNES_getheader(IntPtr core, StringBuilder h, int s, int l);
