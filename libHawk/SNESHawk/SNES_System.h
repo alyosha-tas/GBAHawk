@@ -20,8 +20,8 @@ using namespace std;
 
 // Notes:
 
-/*
-*	
+/*  we assume the SNES clock is exactly 21.47727 MHz. this gives 1 cycle every ~46.56085247 nanoseconds
+*	So time increment will be 4656085247 as the baseline wchi APU and coprocessors compare against
 * 
 */
 
@@ -47,10 +47,13 @@ namespace SNESHawk
 		
 		// Various sync settings and mapper specific behavior and revision dependent behavior
 		bool Is_Lo_ROM = false;
-		uint32_t APU_Frequency = 0;
 		uint32_t PPU_H_Pos_Reset = 0;
 		uint32_t PPU_V_Pos_Reset = 0;
 		uint32_t DRAM_Refresh_Pos = 0;
+
+		const uint64_t Single_Tick = 4656085247;
+		uint64_t APU_Inc_Time = 0;
+		uint64_t Coproc_Inc_Time = 0;
 
 		uint8_t* Cart_RAM = nullptr;
 		uint8_t* ROM = nullptr;
@@ -175,6 +178,9 @@ namespace SNESHawk
 		uint64_t Last_Controller_Poll_1;
 		uint64_t Last_Controller_Poll_2;
 
+		uint64_t APU_Time;
+		uint64_t Coproc_Time;
+
 		//hardware/state
 		uint8_t RAM[0x20000] = { };
 		uint8_t VRAM[0x10000] = { };
@@ -227,6 +233,8 @@ namespace SNESHawk
 			saver = long_saver(Cycle_Count, saver);
 			saver = long_saver(Last_Controller_Poll_1, saver);
 			saver = long_saver(Last_Controller_Poll_2, saver);
+			saver = long_saver(APU_Time, saver);
+			saver = long_saver(Coproc_Time, saver);
 			
 			saver = byte_array_saver(RAM, saver, 0x20000);
 			saver = byte_array_saver(VRAM, saver, 0x10000);
@@ -278,6 +286,8 @@ namespace SNESHawk
 			loader = long_loader(&Cycle_Count, loader);
 			loader = long_loader(&Last_Controller_Poll_1, loader);
 			loader = long_loader(&Last_Controller_Poll_2, loader);
+			loader = long_loader(&APU_Time, loader);
+			loader = long_loader(&Coproc_Time, loader);
 
 			loader = byte_array_loader(RAM, loader, 0x20000);
 			loader = byte_array_loader(VRAM, loader, 0x10000);

@@ -635,7 +635,8 @@ namespace SNESHawk
 
 		uint32_t op_size = 0;
 
-		void (*TraceCallback)(int);
+		// (type, source: snes cpu = 0, apu = 1, coprocessor = 2)
+		void (*TraceCallback)(int, int);
 
 		string APU_Echo_Write()
 		{

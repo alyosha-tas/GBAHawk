@@ -1,4 +1,7 @@
-﻿namespace BizHawk.Emulation.Common
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+
+namespace BizHawk.Emulation.Common
 {
 	public interface ITraceSink
 	{
@@ -15,6 +18,8 @@
 		/// Gets the header that would be used by a trace logger
 		/// </summary>
 		string Header { get; set; }
+
+		void GetCurrentHeader();
 
 		/// <summary>
 		/// Sets the sink

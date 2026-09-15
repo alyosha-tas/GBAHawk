@@ -46,9 +46,8 @@ namespace SNESHawk
 		}
 
 		// NOTE: Front end only sends power of 2 sized ROMs here
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, uint32_t apu_freq, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
 		{
-			SNES.APU_Frequency = apu_freq;
 			SNES.PPU_H_Pos_Reset = ppu_h_pos;		
 			SNES.PPU_V_Pos_Reset = ppu_v_pos;
 			SNES.DRAM_Refresh_Pos = dram_pos;
@@ -187,6 +186,24 @@ namespace SNESHawk
 			APU.Core_status_sl = &SNES.status_sl;
 		}
 
+		void Set_Frequencies(uint32_t apu_freq, uint32_t coproc_freq, bool coproc_present)
+		{
+			double inv_apu_freq = 1.0 / (double)apu_freq;
+
+			SNES.APU_Inc_Time = (uint64_t)floor(inv_apu_freq * 1e17);
+
+			if (coproc_present)
+			{
+				double inv_coproc_freq = 1.0 / (double)coproc_freq;
+
+				SNES.Coproc_Inc_Time = (uint64_t)floor(inv_coproc_freq * 1e17);
+			}
+			else
+			{
+				SNES.Coproc_Inc_Time = (uint64_t)-1;
+			}
+		}
+
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
 		{
 			SNES.Cart_RAM = new uint8_t[ext_sram_size];
@@ -238,8 +255,22 @@ namespace SNESHawk
 
 			for (int i = 0; i < 357368; i++)
 			{
+				
+				SNES.APU_Time += SNES.Single_Tick;
+				if (SNES.APU_Time > SNES.APU_Inc_Time)
+				{
+					SNES.APU_Time -= SNES.APU_Inc_Time;
+					APU.RunCpuOne();
+				}
+				
+				SNES.Coproc_Time += SNES.Single_Tick;
+				if (SNES.Coproc_Time > SNES.Coproc_Inc_Time)
+				{
+					SNES.Coproc_Time -= SNES.Coproc_Inc_Time;
+					// run coprocessor here
+				}
+				
 				CPU.RunCpuOne();
-				APU.RunCpuOne();
 			}
 
 			//SNES.Frame_Advance();
@@ -385,15 +416,25 @@ namespace SNESHawk
 			SNES.TraceTarget = target;
 		}
 
-		void SetTraceCallback(void (*callback)(int))
+		void SetTraceCallback(void (*callback)(int, int))
 		{
 			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
 			{
 				CPU.TraceCallback = callback;
+
+				if (SNES.TraceTarget == 3)
+				{
+					APU.TraceCallback = callback;
+				}
+				else
+				{
+					APU.TraceCallback = nullptr;
+				}
 			}
 			else if (SNES.TraceTarget == 1)
 			{
 				APU.TraceCallback = callback;
+				CPU.TraceCallback = nullptr;
 			}
 			else
 			{
@@ -403,13 +444,13 @@ namespace SNESHawk
 			
 		}
 
-		int GetHeaderLength()
+		int GetHeaderLength(int s)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				return 126 + 1;
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				return 125 + 1;
 			}
@@ -420,13 +461,13 @@ namespace SNESHawk
 			}
 		}
 
-		int GetDisasmLength()
+		int GetDisasmLength(int s)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				return 43 + 1;
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				return 38 + 1;
 			}
@@ -437,13 +478,13 @@ namespace SNESHawk
 			}			
 		}
 
-		int GetRegStringLength()
+		int GetRegStringLength(int s)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				return 120 + 1;
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				return 93 + 1;
 			}
@@ -454,13 +495,13 @@ namespace SNESHawk
 			}
 		}
 
-		void GetHeader(char* h, int l)
+		void GetHeader(char* h, int s, int l)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				std::memcpy(h, CPU.TraceHeader, l);
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				std::memcpy(h, APU.TraceHeader, l);
 			}
@@ -472,9 +513,9 @@ namespace SNESHawk
 		}
 
 		// the copy length l must be supplied ahead of time from GetRegStrngLength
-		void GetRegisterState(char* r, int t, int l)
+		void GetRegisterState(char* r, int t, int s, int l)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				if (t == 0)
 				{
@@ -490,7 +531,7 @@ namespace SNESHawk
 					std::memcpy(r, CPU.CPUDMAStateOAM().c_str(), l);
 				}
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				if (t == 0)
 				{
@@ -522,9 +563,9 @@ namespace SNESHawk
 		}
 
 		// the copy length l must be supplied ahead of time from GetDisasmLength
-		void GetDisassembly(char* d, int t, int l)
+		void GetDisassembly(char* d, int t, int s, int l)
 		{
-			if ((SNES.TraceTarget == 0) || (SNES.TraceTarget == 3))
+			if (s == 0)
 			{
 				if (t == 0)
 				{
@@ -543,7 +584,7 @@ namespace SNESHawk
 					std::memcpy(d, CPU.DMA_event, l);
 				}
 			}
-			else if (SNES.TraceTarget == 1)
+			else if (s == 1)
 			{
 				if (t == 0)
 				{

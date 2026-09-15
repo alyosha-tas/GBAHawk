@@ -24,7 +24,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public static extern int SNES_load_ipl(IntPtr core, byte[] bios);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, uint apu_freq, uint ppu_h_pos, uint ppu_v_pos, uint dram_pos);
+		public static extern int SNES_load(IntPtr core, byte[] romdata, uint length, byte[] headerdata, uint ppu_h_pos, uint ppu_v_pos, uint dram_pos);
+
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern int SNES_set_freq(IntPtr core, uint apu_freq, uint coproc_freq, bool coproc_present);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int SNES_create_SRAM(IntPtr core, byte[] sram_data, uint length);
@@ -104,7 +107,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public static extern byte SNES_getsram(IntPtr core, int addr);
 
 		[UnmanagedFunctionPointer(cc)]
-		public delegate void TraceCallback(int t);
+		public delegate void TraceCallback(int t, int s);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void SNES_settracetarget(IntPtr core, int target);
@@ -113,22 +116,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNES.Common
 		public static extern void SNES_settracecallback(IntPtr core, TraceCallback callback);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getheaderlength(IntPtr core);
+		public static extern int SNES_getheaderlength(IntPtr core, int s);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getdisasmlength(IntPtr core);
+		public static extern int SNES_getdisasmlength(IntPtr core, int s);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int SNES_getregstringlength(IntPtr core);
+		public static extern int SNES_getregstringlength(IntPtr core, int s);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void SNES_getheader(IntPtr core, StringBuilder h, int l);
+		public static extern void SNES_getheader(IntPtr core, StringBuilder h, int s, int l);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void SNES_getregisterstate(IntPtr core, StringBuilder h, int t, int l);
+		public static extern void SNES_getregisterstate(IntPtr core, StringBuilder h, int t, int s, int l);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void SNES_getdisassembly(IntPtr core, StringBuilder h, int t, int l);
+		public static extern void SNES_getdisassembly(IntPtr core, StringBuilder h, int t, int s, int l);
 
 		[UnmanagedFunctionPointer(cc)]
 		public delegate void MessageCallback(int str_length);

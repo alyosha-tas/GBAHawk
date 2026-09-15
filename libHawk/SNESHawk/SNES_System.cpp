@@ -68,6 +68,9 @@ namespace SNESHawk
 		Previous_Controller_Latch_1 = 0;
 		Previous_Controller_Latch_2 = 0;
 
+		APU_Time = 0;
+		Coproc_Time = 0;
+
 		uint32_t startup_color = 0xFF000000;
 
 		for (int i = 0; i < 256 * 240; i++)

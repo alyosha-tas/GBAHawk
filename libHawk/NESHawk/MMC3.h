@@ -66,6 +66,7 @@ namespace NESHawk
 			A12_Old = 0;
 			
 			//initial values seem necessary
+			// on C revision, the CHR related regs appear to default to 0? soyoban action jam doesn't set them and has graphics corruption on console.
 			MMC3_Regs[0] = 0;
 			MMC3_Regs[1] = 2;
 			MMC3_Regs[2] = 4;

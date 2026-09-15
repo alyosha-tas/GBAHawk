@@ -314,7 +314,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			LibSNESHawk.SNES_setmessagecallback(SNES_Pntr, SNES_message);
 
-			LibSNESHawk.SNES_load(SNES_Pntr, GamePack, (uint)GamePack.Length, Header, SyncSettings.APU_Freq, SyncSettings.PPU_H_Pos, SyncSettings.PPU_V_Pos, SyncSettings.DRAM_Refresh_Cycle);
+			LibSNESHawk.SNES_load(SNES_Pntr, GamePack, (uint)GamePack.Length, Header, SyncSettings.PPU_H_Pos, SyncSettings.PPU_V_Pos, SyncSettings.DRAM_Refresh_Cycle);
+
+			// TODO: put in coprocessor frequency when it is present
+			LibSNESHawk.SNES_set_freq(SNES_Pntr, SyncSettings.APU_Freq, 0, false);
 
 			if (cart_RAM != null) { LibSNESHawk.SNES_create_SRAM(SNES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
@@ -327,12 +330,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			// Set up trace logger
 			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
 
-			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
-			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
-			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
+			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr, 0);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr, 0);
 
 			var newHeader = new StringBuilder(Header_Length);
-			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, Header_Length);
+			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, 0, Header_Length);
 
 			Console.WriteLine(Header_Length + " " + Disasm_Length + " " + Reg_String_Length);
 
@@ -360,6 +363,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			SNES_InputPoll = Send_Input_Callback;
 
 			LibSNESHawk.SNES_setinputpollcallback(SNES_Pntr, SNES_InputPoll);
+
+			Tracer.GetHeaderFunc = Update_SNES_Header;
 		}
 
 		public SNESHawkSyncSettings.ControllerType LeftController;
@@ -448,7 +453,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		public DisplayType Region => DisplayType.NTSC;
 
-		public ITraceable Tracer;
+		public TraceBuffer Tracer;
 
 		public LibSNESHawk.TraceCallback tracecb;
 
@@ -457,18 +462,52 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		private int Disasm_Length;
 		private int Reg_String_Length;
 
-		public void MakeTrace(int t)
+		public void MakeTrace(int t, int s)
 		{
-			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr);
-			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr);
+			Disasm_Length = LibSNESHawk.SNES_getdisasmlength(SNES_Pntr, s);
+			Reg_String_Length = LibSNESHawk.SNES_getregstringlength(SNES_Pntr, s);
 
 			StringBuilder new_d = new StringBuilder(Disasm_Length);
 			StringBuilder new_r = new StringBuilder(Reg_String_Length);
 
-			LibSNESHawk.SNES_getdisassembly(SNES_Pntr, new_d, t, Disasm_Length);
-			LibSNESHawk.SNES_getregisterstate(SNES_Pntr, new_r, t, Reg_String_Length);
+			LibSNESHawk.SNES_getdisassembly(SNES_Pntr, new_d, t, s, Disasm_Length);
+			LibSNESHawk.SNES_getregisterstate(SNES_Pntr, new_r, t, s, Reg_String_Length);
 
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(40), registerInfo: new_r.ToString()));
+		}
+
+		public string Update_SNES_Header(int i)
+		{
+			if (SNES_Pntr == IntPtr.Zero)
+			{
+				return "";
+			}
+
+			int last_header = 0;
+			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
+
+			if ((Settings.TracerTarget == SNESHawkSettings.TracerSelect.R5A22) || (Settings.TracerTarget == SNESHawkSettings.TracerSelect.All))
+			{
+				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
+				last_header = 0;
+			}
+			else if (Settings.TracerTarget == SNESHawkSettings.TracerSelect.SPC700)
+			{
+				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 1);
+				last_header = 1;
+			}
+			else
+			{
+				// TODO: coprocessor
+				Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr, 0);
+				last_header = 0;
+			}
+
+			var newHeader = new StringBuilder(Header_Length);
+
+			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, last_header, Header_Length);
+
+			return newHeader.ToString();
 		}
 
 		// NES PPU Viewer

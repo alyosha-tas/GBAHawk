@@ -794,7 +794,7 @@ namespace SNESHawk
 
 		if (NMI)
 		{
-			if (TraceCallback) TraceCallback(1);
+			if (TraceCallback) TraceCallback(1,0);
 			ea = NMIVector;
 
 			Instr_Type = OpT::INT;
@@ -805,7 +805,7 @@ namespace SNESHawk
 
 		if (IRQ && !my_iflag)
 		{
-			if (TraceCallback) TraceCallback(2);
+			if (TraceCallback) TraceCallback(2,0);
 			ea = IRQVector;
 
 			Instr_Type = OpT::INT;
@@ -814,7 +814,7 @@ namespace SNESHawk
 		}
 
 		OnExecFetch(PC);
-		if (TraceCallback) TraceCallback(0);
+		if (TraceCallback) TraceCallback(0,0);
 		opcode = Sys_pntr->ReadMemory(address_bus);
 		PC++;
 		Decode(opcode);
@@ -832,7 +832,7 @@ namespace SNESHawk
 		address_bus = get_PC_Addr();
 
 		OnExecFetch(PC);
-		if (TraceCallback) TraceCallback(0);
+		if (TraceCallback) TraceCallback(0,0);
 		opcode = Sys_pntr->ReadMemory(address_bus);
 		PC++;
 		Decode(opcode);

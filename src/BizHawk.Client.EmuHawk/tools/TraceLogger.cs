@@ -400,6 +400,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void StartLogFile(bool append = false)
 		{
+			Tracer.GetCurrentHeader();
 			var data = Tracer.Header;
 			_streamWriter = new StreamWriter(
 				string.Concat(_baseName, _segmentCount == 0 ? string.Empty : $"_{_segmentCount}", _extension),

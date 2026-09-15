@@ -2502,7 +2502,7 @@ namespace SNESHawk
 		address_bus = get_PC_Addr();
 
 		OnExecFetch(PC);
-		if (TraceCallback) TraceCallback(0);
+		if (TraceCallback) TraceCallback(0,1);
 		opcode = ReadMemory(address_bus);
 		PC++;
 		Decode(opcode);
@@ -2520,7 +2520,7 @@ namespace SNESHawk
 		address_bus = get_PC_Addr();
 
 		OnExecFetch(PC);
-		if (TraceCallback) TraceCallback(0);
+		if (TraceCallback) TraceCallback(0,1);
 		opcode = ReadMemory(address_bus);
 		PC++;
 		Decode(opcode);

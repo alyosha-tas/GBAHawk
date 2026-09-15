@@ -1,4 +1,6 @@
-﻿namespace BizHawk.Emulation.Common
+﻿using System;
+
+namespace BizHawk.Emulation.Common
 {
 	/// <summary>
 	/// A generic implementation of ITraceable that can be used by any core
@@ -11,6 +13,16 @@
 		public string Header { get; set; }
 
 		public ITraceSink? Sink { get; set; }
+
+		public void GetCurrentHeader()
+		{
+			if (GetHeaderFunc != null)
+			{
+				Header = GetHeaderFunc(0);
+			}		
+		}
+
+		public Func<int, string>? GetHeaderFunc;
 
 		public TraceBuffer(string header = DEFAULT_HEADER) => Header = header;
 	}

@@ -15,13 +15,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 		{
 			Controller = controller;
 
-			// Set up trace header in case it changed
-			LibSNESHawk.SNES_settracetarget(SNES_Pntr, (int)Settings.TracerTarget);
-			Header_Length = LibSNESHawk.SNES_getheaderlength(SNES_Pntr);
-			var newHeader = new StringBuilder(Header_Length);
-			LibSNESHawk.SNES_getheader(SNES_Pntr, newHeader, Header_Length);
-			Tracer.Header = newHeader.ToString();
-
 			if (Tracer.IsEnabled())
 			{
 				tracecb = MakeTrace;

@@ -60,7 +60,20 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			[DisplayName("Trace Logger Target")]
 			[Description("Choose which CPUs gets traced.")]
 			[DefaultValue(TracerSelect.R5A22)]
-			public TracerSelect TracerTarget { get; set; }
+			public TracerSelect TracerTarget
+			{ 
+				get; set;
+				/*get => (TracerSelect)_trace_sel;
+				set
+				{
+					_trace_sel = (uint)value;
+
+					Update_SNES_Header?.Invoke();
+				}*/
+			}
+
+			[JsonIgnore]
+			private uint _trace_sel;
 
 			public SNESHawkSettings Clone()
 			{
@@ -99,8 +112,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 			[DisplayName("APU Frequency")]
 			[Description("Audio Crystal Clock")]
-			[DefaultValue(32045)]
-			public uint APU_Freq { get; set; }
+			[DefaultValue(24606720)]
+			public uint APU_Freq
+			{
+				get => _APU_freq;
+				set
+				{
+					if (value > 20000000) { _APU_freq = value; }
+					else { _APU_freq = 20000000; }
+				}
+			}
 
 			[DisplayName("PPU Initial Horizontal Position")]
 			[Description("PPU dot where CPU starts execution")]
@@ -116,6 +137,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			[Description("PPU dot where RAM refresh occurs")]
 			[DefaultValue(538)]
 			public uint DRAM_Refresh_Cycle { get; set; }
+
+			[JsonIgnore]
+			private uint _APU_freq;
 
 			public SNESHawkSyncSettings Clone()
 			{

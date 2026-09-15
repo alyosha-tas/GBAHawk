@@ -32,9 +32,15 @@ SNESHawk_EXPORT void SNES_load_ipl(SNESCore* p, uint8_t* ipl)
 }
 
 // load a rom into the core
-SNESHawk_EXPORT void SNES_load(SNESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, uint32_t apu_freq, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
+SNESHawk_EXPORT void SNES_load(SNESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, uint32_t ppu_h_pos, uint32_t ppu_v_pos, uint32_t dram_pos)
 {
-	p->Load_ROM(rom, size, header, apu_freq, ppu_h_pos, ppu_v_pos, dram_pos);
+	p->Load_ROM(rom, size, header, ppu_h_pos, ppu_v_pos, dram_pos);
+}
+
+// set up frequencies
+SNESHawk_EXPORT void SNES_set_freq(SNESCore* p, uint32_t apu_freq, uint32_t coproc_freq, bool coproc_present)
+{
+	p->Set_Frequencies(apu_freq, coproc_freq, coproc_present);
 }
 
 // Create a default SRAM
@@ -168,7 +174,7 @@ SNESHawk_EXPORT uint8_t SNES_getsram(SNESCore* p, uint32_t addr) {
 #pragma region Tracer
 
 // set tracer callback
-SNESHawk_EXPORT void SNES_settracecallback(SNESCore* p, void (*callback)(int)) {
+SNESHawk_EXPORT void SNES_settracecallback(SNESCore* p, void (*callback)(int, int)) {
 	p->SetTraceCallback(callback);
 }
 
@@ -178,33 +184,33 @@ SNESHawk_EXPORT void SNES_settracetarget(SNESCore* p, int target) {
 }
 
 // return the cpu trace header length
-SNESHawk_EXPORT int SNES_getheaderlength(SNESCore* p) {
-	return p->GetHeaderLength();
+SNESHawk_EXPORT int SNES_getheaderlength(SNESCore* p, int s) {
+	return p->GetHeaderLength(s);
 }
 
 // return the cpu disassembly length
-SNESHawk_EXPORT int SNES_getdisasmlength(SNESCore* p) {
-	return p->GetDisasmLength();
+SNESHawk_EXPORT int SNES_getdisasmlength(SNESCore* p, int s) {
+	return p->GetDisasmLength(s);
 }
 
 // return the cpu register string length
-SNESHawk_EXPORT int SNES_getregstringlength(SNESCore* p) {
-	return p->GetRegStringLength();
+SNESHawk_EXPORT int SNES_getregstringlength(SNESCore* p, int s) {
+	return p->GetRegStringLength(s);
 }
 
 // return the cpu trace header
-SNESHawk_EXPORT void SNES_getheader(SNESCore* p, char* h, int l) {
-	p->GetHeader(h, l);
+SNESHawk_EXPORT void SNES_getheader(SNESCore* p, char* h, int s, int l) {
+	p->GetHeader(h, s, l);
 }
 
 // return the cpu register state
-SNESHawk_EXPORT void SNES_getregisterstate(SNESCore* p, char* r, int t, int l) {
-	p->GetRegisterState(r, t, l);
+SNESHawk_EXPORT void SNES_getregisterstate(SNESCore* p, char* r, int t, int s, int l) {
+	p->GetRegisterState(r, t, s, l);
 }
 
 // return the cpu disassembly
-SNESHawk_EXPORT void SNES_getdisassembly(SNESCore* p, char* d, int t, int l) {
-	p->GetDisassembly(d, t, l);
+SNESHawk_EXPORT void SNES_getdisassembly(SNESCore* p, char* d, int t, int s, int l) {
+	p->GetDisassembly(d, t, s, l);
 }
 
 #pragma endregion
