@@ -348,6 +348,9 @@ namespace NESHawk
 				oam_dma_addr = (uint16_t)(val << 8);
 				sprdma_countdown = 1;
 
+				//Message_String = "oam dma " + to_string(status_sl) + " " + to_string(TotalExecutedCycles);
+				//MessageCallback(Message_String.length());
+
 				if (sprdma_countdown > 0)
 				{
 					sprdma_countdown--;
@@ -385,7 +388,7 @@ namespace NESHawk
 
 	void NES_System::write_joyport(uint8_t value)
 	{
-		//Message_String = "Write " + to_string(TotalExecutedCycles);
+		//Message_String = "Write " + to_string(status_sl) + " " + to_string(TotalExecutedCycles);
 		//MessageCallback(Message_String.length());
 
 		StrobeController(latched4016, value);

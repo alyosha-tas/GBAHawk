@@ -24,6 +24,7 @@ namespace NESHawk
 		bool Just_Cleared_Pending;
 		bool WRAM_Enable;
 		bool WRAM_Write_Protect;
+		bool Counter_Glitch;
 
 		uint8_t Command;
 		uint8_t IRQ_Reload;
@@ -38,6 +39,7 @@ namespace NESHawk
 		uint32_t Separator_Counter;
 		uint32_t IRQ_Countdown;
 		uint32_t A12_Old;
+		uint32_t Num_Intervening_Clocks;
 
 		uint8_t MMC3_Regs[8] = { };
 		uint8_t MMC3_CHR_Regs_1K[8] = { };
@@ -55,6 +57,7 @@ namespace NESHawk
 			WRAM_Write_Protect = false;
 			Old_IRQ_Type = false;
 			Alt_Mirroring = false;
+			Counter_Glitch = false;
 
 			Command = 0;
 			IRQ_Reload = 0;
@@ -85,6 +88,8 @@ namespace NESHawk
 			PRG_Bank = 0;
 
 			Mirror_Mode = 0;
+
+			Num_Intervening_Clocks = 0;
 
 			Remap_ROM();
 		}
@@ -185,13 +190,34 @@ namespace NESHawk
 					break;
 				case 0x4001: //$C001 - IRQ Clear
 					// does not take immediate effect (fixes Klax)
-					Just_Cleared_Pending = true;
+					if (Num_Intervening_Clocks != 1)
+					{
+						Just_Cleared_Pending = true;
+						Counter_Glitch = false;
+					}
+					else
+					{
+						Counter_Glitch = true;
+
+
+					}
+
+					Core_Message_String->assign("Glitch: " + to_string(Num_Intervening_Clocks) + " " + to_string(*Core_Cycle_Count));
+
+					MessageCallback(Core_Message_String->length());
+
+					//Just_Cleared_Pending = true;
+
+					Num_Intervening_Clocks = 0;
 					break;
 				case 0x6000: //$E000 - IRQ Acknowledge / Disable
 					IRQ_Enable = false;
 					IRQ_Pending = false;
 					break;
 				case 0x6001: //$E001 - IRQ Enable
+					//Core_Message_String->assign("Bank: " + to_string(IRQ_Pending) + " Bank: " + to_string(IRQ_Enable) + " len: " + to_string(*Core_status_sl));
+
+					//MessageCallback(Core_Message_String->length());
 					IRQ_Enable = true;
 					break;
 			}
@@ -235,6 +261,9 @@ namespace NESHawk
 			if (IRQ_Enable)
 			{
 				IRQ_Pending = true;
+				//Core_Message_String->assign("IRQ: " + to_string(*Core_status_sl) + " " + to_string(*Core_Cycle_Count));
+
+				//MessageCallback(Core_Message_String->length());
 			}
 		}
 
@@ -290,10 +319,19 @@ namespace NESHawk
 
 		void AddressPPU(uint32_t addr)
 		{
+			if ((addr & 0x3F00) == 0x3F00)
+			{
+				//return;
+			}
+			
 			uint32_t a12 = (addr >> 12) & 1;
 			bool rising_edge = (a12 == 1 && A12_Old == 0);
 			if (rising_edge)
 			{
+				//Core_Message_String->assign("clock: " + to_string(*Core_status_sl) + " " + to_string(*Core_Cycle_Count));
+
+				//MessageCallback(Core_Message_String->length());
+				
 				if (Separator_Counter > 0)
 				{
 					Separator_Counter = 15;
@@ -301,7 +339,9 @@ namespace NESHawk
 				else
 				{
 					Separator_Counter = 15;
-					IRQ_Countdown = 5;
+					if (!Counter_Glitch) { IRQ_Countdown = 5; }
+
+					Num_Intervening_Clocks += 1;
 				}
 			}
 
@@ -359,6 +399,7 @@ namespace NESHawk
 			saver = bool_saver(Just_Cleared_Pending, saver);
 			saver = bool_saver(WRAM_Enable, saver);
 			saver = bool_saver(WRAM_Write_Protect, saver);
+			saver = bool_saver(Counter_Glitch, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(IRQ_Reload, saver);
@@ -373,6 +414,7 @@ namespace NESHawk
 			saver = int_saver(Separator_Counter, saver);
 			saver = int_saver(IRQ_Countdown, saver);
 			saver = int_saver(A12_Old, saver);
+			saver = int_saver(Num_Intervening_Clocks, saver);
 
 			saver = byte_array_saver(MMC3_Regs, saver, 8);
 			saver = byte_array_saver(MMC3_CHR_Regs_1K, saver, 8);
@@ -403,6 +445,7 @@ namespace NESHawk
 			loader = bool_loader(&Just_Cleared_Pending, loader);
 			loader = bool_loader(&WRAM_Enable, loader);
 			loader = bool_loader(&WRAM_Write_Protect, loader);
+			loader = bool_loader(&Counter_Glitch, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&IRQ_Reload, loader);
@@ -417,6 +460,7 @@ namespace NESHawk
 			loader = int_loader(&Separator_Counter, loader);
 			loader = int_loader(&IRQ_Countdown, loader);
 			loader = int_loader(&A12_Old, loader);
+			loader = int_loader(&Num_Intervening_Clocks, loader);
 
 			loader = byte_array_loader(MMC3_Regs, loader, 8);
 			loader = byte_array_loader(MMC3_CHR_Regs_1K, loader, 8);

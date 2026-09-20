@@ -26,6 +26,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 		public byte[] cart_RAM;
 		public bool has_bat;
 		int mapper;
+		int submapper;
 
 		bool vram_32;
 
@@ -69,6 +70,16 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				throw new Exception("Header size not supported / unsupported ROM layout.");
 			}
 
+			mapper = (Header[6] >> 4);
+
+			mapper |= (Header[7] & 0xF0);
+
+			mapper |= ((int)Header[8] & 0xF) << 8;
+
+			submapper = Header[8] >> 4;
+
+			Console.WriteLine("Mapper: (iNES 2.0) " + mapper);
+
 			has_bat = ((Header[6] & 0x02) == 0x02);
 
 			// now we have a header and rom file to send to the core
@@ -103,6 +114,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				cart_RAM = new byte[(int) 64 << (Header[10] & 0xF)];
 			}
 
+			// MMC6 has built in WRAM, even if not referenced in header it is built into the chip
+			if ((mapper == 4) && (submapper == 1))
+			{
+				cart_RAM = new byte[0x400];
+			}
+
 			if (cart_RAM != null)
 			{
 				for (int i = 0; i < cart_RAM.Length; i++)
@@ -125,14 +142,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			NES_message = GetMessage;
 
 			LibNESHawk.NES_setmessagecallback(NES_Pntr, NES_message);
-
-			mapper = (Header[6] >> 4);
-
-			mapper |= (Header[7] & 0xF0);
-
-			mapper |= ((int)Header[8] & 0xF) << 8;
-
-			Console.WriteLine("Mapper: (iNES 2.0) " + mapper);
 
 			if (mapper == 9)
 			{
