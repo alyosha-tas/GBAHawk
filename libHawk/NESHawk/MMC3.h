@@ -199,12 +199,10 @@ namespace NESHawk
 					{
 						Counter_Glitch = true;
 
+						Core_Message_String->assign("Glitch: " + to_string(Num_Intervening_Clocks) + " " + to_string(*Core_Cycle_Count));
 
+						MessageCallback(Core_Message_String->length());
 					}
-
-					Core_Message_String->assign("Glitch: " + to_string(Num_Intervening_Clocks) + " " + to_string(*Core_Cycle_Count));
-
-					MessageCallback(Core_Message_String->length());
 
 					//Just_Cleared_Pending = true;
 
@@ -215,9 +213,6 @@ namespace NESHawk
 					IRQ_Pending = false;
 					break;
 				case 0x6001: //$E001 - IRQ Enable
-					//Core_Message_String->assign("Bank: " + to_string(IRQ_Pending) + " Bank: " + to_string(IRQ_Enable) + " len: " + to_string(*Core_status_sl));
-
-					//MessageCallback(Core_Message_String->length());
 					IRQ_Enable = true;
 					break;
 			}
@@ -261,32 +256,57 @@ namespace NESHawk
 			if (IRQ_Enable)
 			{
 				IRQ_Pending = true;
-				//Core_Message_String->assign("IRQ: " + to_string(*Core_status_sl) + " " + to_string(*Core_Cycle_Count));
-
-				//MessageCallback(Core_Message_String->length());
 			}
 		}
 
 		void ClockIRQ()
 		{
 			uint8_t last_irq_counter = IRQ_Counter;
-			if (IRQ_Reload_Flag || IRQ_Counter == 0)
+			
+			if (Old_IRQ_Type)
 			{
-				IRQ_Counter = IRQ_Reload;
+				// For old behavior, the counter glitch freezes the counter until the next reload
+				if (!Counter_Glitch)
+				{
+					if (IRQ_Reload_Flag || IRQ_Counter == 0)
+					{
+						IRQ_Counter = IRQ_Reload;
+					}
+					else
+					{
+						IRQ_Counter--;
+					}
+					if (IRQ_Counter == 0)
+					{
+						if (last_irq_counter != 0 || IRQ_Reload_Flag)
+							IRQ_EQ_Pass();
+					}
+				}
 			}
 			else
 			{
-				IRQ_Counter--;
-			}
-			if (IRQ_Counter == 0)
-			{
-				if (Old_IRQ_Type)
-				{				
-					if (last_irq_counter != 0 || IRQ_Reload_Flag)
-						IRQ_EQ_Pass();
+				// For new behavior, the counter glitch ORs the current counter with 0x80 and no reload occurs
+				// but counter continues counting there after
+				if (Counter_Glitch)
+				{
+					IRQ_Counter |= 0x80;
+					Counter_Glitch = false;
 				}
 				else
-					IRQ_EQ_Pass();
+				{
+					if (IRQ_Reload_Flag || IRQ_Counter == 0)
+					{
+						IRQ_Counter = IRQ_Reload;
+					}
+					else
+					{
+						IRQ_Counter--;
+					}
+					if (IRQ_Counter == 0)
+					{
+						IRQ_EQ_Pass();
+					}
+				}
 			}
 
 			IRQ_Reload_Flag = false;
@@ -319,19 +339,10 @@ namespace NESHawk
 
 		void AddressPPU(uint32_t addr)
 		{
-			if ((addr & 0x3F00) == 0x3F00)
-			{
-				//return;
-			}
-			
 			uint32_t a12 = (addr >> 12) & 1;
 			bool rising_edge = (a12 == 1 && A12_Old == 0);
 			if (rising_edge)
 			{
-				//Core_Message_String->assign("clock: " + to_string(*Core_status_sl) + " " + to_string(*Core_Cycle_Count));
-
-				//MessageCallback(Core_Message_String->length());
-				
 				if (Separator_Counter > 0)
 				{
 					Separator_Counter = 15;
@@ -339,7 +350,7 @@ namespace NESHawk
 				else
 				{
 					Separator_Counter = 15;
-					if (!Counter_Glitch) { IRQ_Countdown = 5; }
+					IRQ_Countdown = 5;
 
 					Num_Intervening_Clocks += 1;
 				}
