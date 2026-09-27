@@ -116,6 +116,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			GBACommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, ROM, out mapper, out has_bat, out Cart_RAM_Size);
 
+			// alternate setup for video mapper
+			if (mapper == 9)
+			{
+				// registers return 0xFF;
+				for (int i = 0x800000; i < 0x800200; i++)
+				{
+					ROM[i] = 0xFF;
+				}
+
+				// blank values
+				for (int i = 0x800200; i < 0x1000000; i += 2)
+				{
+					ROM[i] = 0xAD;
+					ROM[i + 1] = 0xDE;
+				}
+
+				// rest of ROM is unmapped
+				for (int i = 0; i < 0x5000000; i += 2)
+				{
+					ROM[i + 0x1000000] = (byte)((i & 0xFF) >> 1);
+					ROM[i + 0x1000000 + 1] = (byte)(((i >> 8) & 0xFF) >> 1);
+				}
+			}
+
 			if (Cart_RAM_Size != 0)
 			{
 				cart_RAM = new byte[Cart_RAM_Size];
@@ -229,6 +253,25 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 
 			if (cart_RAM != null) { LibGBAHawk.GBA_create_SRAM(GBA_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 
+			// video sent to core garaunteed to be 0x4000000 bytes
+			if (mapper == 9)
+			{
+				byte[] vid_rom = new byte[0x4000000];
+
+				if (rom.Length < 0x4000000)
+				{
+					Buffer.BlockCopy(rom, 0, vid_rom, 0, rom.Length);
+
+					LibGBAHawk.GBA_load_video(GBA_Pntr, vid_rom);
+				}
+				else
+				{
+					Buffer.BlockCopy(rom, 0, vid_rom, 0, 0x4000000);
+
+					LibGBAHawk.GBA_load_video(GBA_Pntr, vid_rom);
+				}
+			}
+
 			blip_L.SetRates(4194304 * 4, 44100);
 			blip_R.SetRates(4194304 * 4, 44100);
 
@@ -310,7 +353,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0xA0000];
+		private byte[] GBA_core = new byte[0xB0000];
 
 		private readonly GBA_ControllerDeck _controllerDeck;
 

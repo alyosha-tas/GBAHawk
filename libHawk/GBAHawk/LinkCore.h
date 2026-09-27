@@ -68,6 +68,18 @@ namespace GBAHawk
 			R.GBA.Ext_Multi_Start = &L.GBA.ser_Multi_Start;
 		}
 
+		void Load_Video_ROM(uint8_t* rom, uint32_t num)
+		{
+			if (num == 0)
+			{
+				L.Load_Video_ROM(rom);
+			}
+			else
+			{
+				R.Load_Video_ROM(rom);
+			}
+		}
+
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size, uint32_t num)
 		{
 			if (num == 0)

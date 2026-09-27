@@ -39,7 +39,8 @@ namespace NESHawk
 		uint32_t Separator_Counter;
 		uint32_t IRQ_Countdown;
 		uint32_t A12_Old;
-		uint32_t Num_Intervening_Clocks;
+
+		uint64_t Num_Intervening_Clocks;
 
 		uint8_t MMC3_Regs[8] = { };
 		uint8_t MMC3_CHR_Regs_1K[8] = { };
@@ -99,14 +100,14 @@ namespace NESHawk
 			if (PRG_Mode)
 			{
 				Core_ROM[0] = Core_ROM_Base + *Core_ROM_Length - 0x4000;
-				Core_ROM[1] = Core_ROM_Base + (MMC3_Regs[7] & PRG_Mask) * 0x2000;
-				Core_ROM[2] = Core_ROM_Base + (MMC3_Regs[6] & PRG_Mask) * 0x2000;
+				Core_ROM[1] = Core_ROM_Base + (MMC3_Regs[7] & PRG_Mask & 0x3F) * 0x2000;
+				Core_ROM[2] = Core_ROM_Base + (MMC3_Regs[6] & PRG_Mask & 0x3F) * 0x2000;
 				Core_ROM[3] = Core_ROM_Base + *Core_ROM_Length - 0x2000;
 			}
 			else
 			{
-				Core_ROM[0] = Core_ROM_Base + (MMC3_Regs[6] & PRG_Mask) * 0x2000;
-				Core_ROM[1] = Core_ROM_Base + (MMC3_Regs[7] & PRG_Mask) * 0x2000;
+				Core_ROM[0] = Core_ROM_Base + (MMC3_Regs[6] & PRG_Mask & 0x3F) * 0x2000;
+				Core_ROM[1] = Core_ROM_Base + (MMC3_Regs[7] & PRG_Mask & 0x3F) * 0x2000;
 				Core_ROM[2] = Core_ROM_Base + *Core_ROM_Length - 0x4000;
 				Core_ROM[3] = Core_ROM_Base + *Core_ROM_Length - 0x2000;
 			}
@@ -425,7 +426,8 @@ namespace NESHawk
 			saver = int_saver(Separator_Counter, saver);
 			saver = int_saver(IRQ_Countdown, saver);
 			saver = int_saver(A12_Old, saver);
-			saver = int_saver(Num_Intervening_Clocks, saver);
+
+			saver = long_saver(Num_Intervening_Clocks, saver);
 
 			saver = byte_array_saver(MMC3_Regs, saver, 8);
 			saver = byte_array_saver(MMC3_CHR_Regs_1K, saver, 8);
@@ -471,7 +473,8 @@ namespace NESHawk
 			loader = int_loader(&Separator_Counter, loader);
 			loader = int_loader(&IRQ_Countdown, loader);
 			loader = int_loader(&A12_Old, loader);
-			loader = int_loader(&Num_Intervening_Clocks, loader);
+
+			loader = long_loader(&Num_Intervening_Clocks, loader);
 
 			loader = byte_array_loader(MMC3_Regs, loader, 8);
 			loader = byte_array_loader(MMC3_CHR_Regs_1K, loader, 8);

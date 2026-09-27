@@ -148,6 +148,30 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 				GBACommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, ROMS[i], out mappers[i], out has_bats[i], out Cart_RAM_Sizes[i]);
 
+				// alternate setup for video mapper
+				if (mappers[i] == 9)
+				{
+					// registers return 0xFF;
+					for (int j = 0x800000; j < 0x800200; j++)
+					{
+						ROMS[i][j] = 0xFF;
+					}
+
+					// blank values
+					for (int j = 0x800200; j < 0x1000000; j += 2)
+					{
+						ROMS[i][j] = 0xAD;
+						ROMS[i][j + 1] = 0xDE;
+					}
+
+					// rest of ROM is unmapped
+					for (int j = 0; j < 0x5000000; j += 2)
+					{
+						ROMS[i][j + 0x1000000] = (byte)((j & 0xFF) >> 1);
+						ROMS[i][j + 0x1000000 + 1] = (byte)(((j >> 8) & 0xFF) >> 1);
+					}
+				}
+
 				if (Cart_RAM_Sizes[i] != 0)
 				{
 					cart_RAMS[i] = new byte[Cart_RAM_Sizes[i]];
@@ -342,6 +366,33 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
 			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }
 
+			// video sent to core garaunteed to be 0x4000000 bytes
+			if ((mappers[0] == 9) || (mappers[1] == 9))
+			{
+				byte[] vid_rom = new byte[0x4000000];
+
+				for (int i = 0; i < 2; i++)
+				{
+					if (mappers[i] == 9)
+					{
+						var rom = lp.Roms[i].RomData;
+
+						if (rom.Length < 0x4000000)
+						{
+							Buffer.BlockCopy(rom, 0, vid_rom, 0, rom.Length);
+
+							LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
+						}
+						else
+						{
+							Buffer.BlockCopy(rom, 0, vid_rom, 0, 0x4000000);
+
+							LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
+						}
+					}
+				}
+			}
+
 			blip_L.SetRates(4194304 * 4, 44100);
 			blip_R.SetRates(4194304 * 4, 44100);
 
@@ -441,7 +492,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0xA0000 * 2];
+		private byte[] GBA_core = new byte[0xB0000 * 2];
 
 		private readonly GBALink_ControllerDeck _controllerDeck;
 

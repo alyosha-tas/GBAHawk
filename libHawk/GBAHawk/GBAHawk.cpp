@@ -40,6 +40,12 @@ GBAHawk_EXPORT void GBA_load(GBACore* p, uint8_t* rom, uint32_t size, uint32_t m
 	p->Load_ROM(rom, size, mapper, datetime, rtc_functional, EEPROM_offset, flash_type_64_value, flash_type_128_value, flash_write_offset, flash_sector_offset, flash_chip_offset, is_GBP);
 }
 
+// load video ROM for movie mapper
+GBAHawk_EXPORT void GBA_load_video(GBACore* p, uint8_t* rom)
+{
+	p->Load_Video_ROM(rom);
+}
+
 // Create a default SRAM
 GBAHawk_EXPORT void GBA_create_SRAM(GBACore* p, uint8_t* sram, uint32_t size)
 {
@@ -255,6 +261,12 @@ GBAHawk_EXPORT void GBALink_load(GBALinkCore* p, uint8_t* rom_0, uint32_t size_0
 	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1,
 				EEPROM_offset_0, EEPROM_offset_1, flash_type_64_value_0, flash_type_64_value_1, flash_type_128_value_0, flash_type_128_value_1,
 			    flash_write_offset_0, flash_write_offset_1, flash_sector_offset_0, flash_sector_offset_1, flash_chip_offset_0, flash_chip_offset_1, is_GBP_0, is_GBP_1);
+}
+
+// load video ROM for movie mapper
+GBAHawk_EXPORT void GBALink_load_video(GBALinkCore* p, uint8_t* rom, uint32_t num)
+{
+	p->Load_Video_ROM(rom, num);
 }
 
 // Create a default SRAM

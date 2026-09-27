@@ -145,10 +145,6 @@ namespace GBAHawk
 			else if (mapper == 9)
 			{
 				Mapper = new Mapper_Video();
-
-				GBA.Video_ROM = new uint8_t[0x6000000];
-
-				std::memcpy(GBA.Video_ROM, ext_rom, 0x6000000);
 			}
 
 			GBA.mapper_pntr = &Mapper[0];
@@ -223,6 +219,17 @@ namespace GBAHawk
 			GBA.Ext_SC = &GBA.Ext_Disconnect_1;
 			GBA.Ext_SD = &GBA.Ext_Disconnect_0;
 			GBA.Ext_Multi_Start = &GBA.ser_Multi_Start;
+		}
+
+		void Load_Video_ROM(uint8_t* ext_rom)
+		{
+			GBA.Video_ROM = new uint8_t[0x4000000];
+
+			std::memcpy(GBA.Video_ROM, ext_rom, 0x4000000);
+
+			Mapper->Core_Video_ROM = &GBA.Video_ROM[0];
+
+			Mapper->Load_Mapping();
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)

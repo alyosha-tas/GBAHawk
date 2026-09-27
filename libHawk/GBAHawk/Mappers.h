@@ -12,6 +12,10 @@
 
 using namespace std;
 
+//Core_Message_String->assign("Bank: " + to_string(PRG_Bank) + " Mask: " + to_string(PRG_Mask) + " len: " + to_string(*Core_Cycle_Count));
+
+//MessageCallback(Core_Message_String->length());
+
 namespace GBAHawk
 {
 	class Mappers
@@ -108,6 +112,8 @@ namespace GBAHawk
 		uint32_t Video_ROM_Space_Address;
 		uint32_t Video_Banks_to_Map;
 		uint32_t Video_Command;
+
+		uint32_t Video_Banks[0x4000] = { };
 		
 		uint64_t Next_Ready_Cycle;
 
@@ -126,6 +132,8 @@ namespace GBAHawk
 		uint8_t* Cart_RAM = nullptr;
 
 		uint8_t* Core_ROM = nullptr;
+
+		uint8_t* Core_Video_ROM = nullptr;
 
 		string* Core_Message_String = nullptr;
 
@@ -205,6 +213,10 @@ namespace GBAHawk
 		}
 
 		virtual void Update_State()
+		{
+		}
+
+		virtual void Load_Mapping()
 		{
 		}
 
@@ -1348,6 +1360,8 @@ namespace GBAHawk
 			saver = long_saver(Next_Ready_Cycle, saver);
 			saver = long_saver(RTC_Temp_Write, saver);
 
+			saver = int_array_saver(Video_Banks, saver, 0x4000);
+
 			return saver;
 		}
 
@@ -1440,6 +1454,10 @@ namespace GBAHawk
 			Core_ROM[0xC7] = Current_C7;
 			Core_ROM[0xC8] = Current_C8;
 			Core_ROM[0xC9] = Current_C9;
+
+			loader = int_array_loader(Video_Banks, loader, 0x4000);
+
+			Load_Mapping();
 
 			return loader;
 		}

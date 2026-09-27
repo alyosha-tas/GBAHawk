@@ -22,11 +22,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBALink_load_bios(IntPtr core, byte[] bios);
+		public static extern void GBALink_load_bios(IntPtr core, byte[] bios);
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBALink_load(IntPtr core, byte[] romdata0, uint length0, int mapper0,
+		public static extern void GBALink_load(IntPtr core, byte[] romdata0, uint length0, int mapper0,
 															byte[] romdata1, uint length1, int mapper1,
 															ulong datetime0, bool rtc_functional0,
 															ulong datetime1, bool rtc_functional1,
@@ -38,6 +38,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 															int FlashChipOffset_L, int FlashChipOffset_R,
 															bool is_GBP0, bool is_GBP1);
 
+
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBALink_load_video(IntPtr core, byte[] romdata, uint core_num);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int GBALink_create_SRAM(IntPtr core, byte[] sram_data, uint length, uint core_num);

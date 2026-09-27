@@ -22,12 +22,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load_bios(IntPtr core, byte[] bios);
+		public static extern void GBA_load_bios(IntPtr core, byte[] bios);
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, 
+		public static extern void GBA_load(IntPtr core, byte[] romdata, uint length, int mapper, ulong datetime, bool rtc_functional, 
 										  short EEPROMoffset, ushort FlashType64Value, ushort FlashType128Value, short FlashWriteOffset, int FlashSectorOffset, int FlashChipOffset, bool is_GBP);
+
+		[DllImport(lib, CallingConvention = cc)]
+		public static extern void GBA_load_video(IntPtr core, byte[] romdata);
 
 
 		[DllImport(lib, CallingConvention = cc)]
