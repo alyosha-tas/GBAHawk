@@ -11,7 +11,7 @@ using namespace std;
 
 namespace NESHawk
 {
-	// NOTE: MMC6 always comes with 1K WRAM
+	// NOTE: MMC6 always comes with 1K WRAM, and uses 'new' style IRQs. It is unknown if there is a $C001 glitch, at least Star Tropics doesn't need it
 	class Mapper_MMC6 : public Mappers
 	{
 	public:
@@ -60,7 +60,6 @@ namespace NESHawk
 			WRAM_Read_Enable_Hi = false;
 			WRAM_Write_Enable_Lo = false;
 			WRAM_Write_Enable_Hi = false;
-			Old_IRQ_Type = false;
 			Alt_Mirroring = false;
 
 			Command = 0;
@@ -317,13 +316,7 @@ namespace NESHawk
 			}
 			if (IRQ_Counter == 0)
 			{
-				if (Old_IRQ_Type)
-				{
-					if (last_irq_counter != 0 || IRQ_Reload_Flag)
-						IRQ_EQ_Pass();
-				}
-				else
-					IRQ_EQ_Pass();
+				IRQ_EQ_Pass();
 			}
 
 			IRQ_Reload_Flag = false;
@@ -346,8 +339,6 @@ namespace NESHawk
 			if (Just_Cleared)
 			{
 				IRQ_Counter = 0;
-				if (Old_IRQ_Type)
-					IRQ_Reload_Flag = true;
 			}
 
 			Just_Cleared = Just_Cleared_Pending;

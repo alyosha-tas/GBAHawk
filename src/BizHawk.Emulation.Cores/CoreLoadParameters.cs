@@ -1,8 +1,19 @@
 using System.Collections.Generic;
 using BizHawk.Emulation.Common;
+using System;
 
 namespace BizHawk.Emulation.Cores
 {
+	[AttributeUsage(AttributeTargets.Constructor, AllowMultiple = true)]
+	public sealed class CoreConstructorAttribute : Attribute
+	{
+		public string System { get; }
+		public CoreConstructorAttribute(string system)
+		{
+			System = system;
+		}
+	}
+
 	public interface IRomAsset
 	{
 		byte[] RomData { get; }

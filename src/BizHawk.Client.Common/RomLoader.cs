@@ -1,13 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 
 using BizHawk.Common;
-using BizHawk.Common.StringExtensions;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores;
+
+using BizHawk.Emulation.Cores.Nintendo.GBLink;
+using BizHawk.Emulation.Cores.Nintendo.GBALink;
+using BizHawk.Emulation.Cores.Nintendo.SNESHawk;
+using BizHawk.Emulation.Cores.Nintendo.NESHawk;
+using BizHawk.Emulation.Cores.Nintendo.SubNESHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBA;
+using BizHawk.Emulation.Cores.Nintendo.SubGBA;
+using BizHawk.Emulation.Cores.Nintendo.GBHawk;
+using BizHawk.Emulation.Cores.Nintendo.SubGBHawk;
 
 namespace BizHawk.Client.Common
 {
@@ -21,6 +29,19 @@ namespace BizHawk.Client.Common
 			public string RomPath { get; set; }
 			public GameInfo Game { get; set; }
 		}
+
+		/// <summary>
+		/// What CoreInventory needs to synthesize CoreLoadParameters for a core
+		/// </summary>
+		public interface ICoreInventoryParameters
+		{
+			CoreComm Comm { get; }
+			GameInfo Game { get; }
+			List<IRomAsset> Roms { get; }
+			object FetchSettings(Type emulatorType, Type settingsType);
+			object FetchSyncSettings(Type emulatorType, Type syncSettingsType);
+		}
+
 		private class CoreInventoryParameters : ICoreInventoryParameters
 		{
 			private readonly RomLoader _parent;
@@ -194,55 +215,6 @@ namespace BizHawk.Client.Common
 			return true;
 		}
 
-		private IEmulator MakeCoreFromCoreInventory(CoreInventoryParameters cip, string forcedCoreName = null)
-		{
-			IReadOnlyCollection<CoreInventory.Core> cores;
-			if (forcedCoreName != null)
-			{
-				var singleCore = CoreInventory.Instance.GetCores(cip.Game.System).SingleOrDefault(c => c.Name == forcedCoreName);
-				cores = singleCore != null ? new[] { singleCore } : Array.Empty<CoreInventory.Core>();
-			}
-			else
-			{
-				_config.PreferredCores.TryGetValue(cip.Game.System, out var preferredCore);
-
-				var dbForcedCoreName = cip.Game.ForcedCore;
-				cores = CoreInventory.Instance.GetCores(cip.Game.System)
-					.OrderBy(c =>
-					{
-						if (c.Name == preferredCore)
-						{
-							return (int)CorePriority.UserPreference;
-						}
-
-						if (string.Equals(c.Name, dbForcedCoreName, StringComparison.InvariantCultureIgnoreCase))
-						{
-							return (int)CorePriority.GameDbPreference;
-						}
-
-						return (int)c.Priority;
-					})
-					.ToList();
-
-				if (cores.Count == 0) throw new InvalidOperationException("No core was found to try on the game");
-			}
-			var exceptions = new List<Exception>();
-			foreach (var core in cores)
-			{
-				try
-				{
-					return core.Create(cip);
-				}
-				catch (Exception e)
-				{
-					if (_config.DontTryOtherCores || e is MissingFirmwareException || e.InnerException is MissingFirmwareException)
-						throw;
-					exceptions.Add(e);
-				}
-			}
-			throw new AggregateException("No core could load the game", exceptions);
-		}
-
 		private void LoadOther(CoreComm nextComm, HawkFile file, string forcedCoreName, out IEmulator nextEmulator, out RomGame rom, out GameInfo game, out bool cancel)
 		{
 			cancel = false;
@@ -294,7 +266,117 @@ namespace BizHawk.Client.Common
 				},
 			};
 
-			nextEmulator = MakeCoreFromCoreInventory(cip, forcedCoreName);
+			string UseCoreName = null;
+
+			// check if a core preference is available
+			_config.PreferredCores.TryGetValue(game.System, out var preferredCore);
+
+			if (forcedCoreName != null)
+			{
+				UseCoreName = forcedCoreName;
+			}
+			else if (preferredCore != null)
+			{
+				UseCoreName = preferredCore;
+			}
+			else
+			{
+				if (game.System == "NES")
+				{
+					UseCoreName = "NESHawk2";
+				}
+				else if (game.System == "GB")
+				{
+					UseCoreName = "GBHawk";
+				}
+				else if (game.System == "GBA")
+				{
+					UseCoreName = "GBAHawk";
+				}
+				else if (game.System == "SNES")
+				{
+					UseCoreName = "SNESHawk";
+				}
+			}
+
+			if (game.System =="NES")
+			{
+				if (UseCoreName == "NESHawk2")
+				{
+					nextEmulator = new NESHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(NESHawk), typeof(NESHawk.NESHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(NESHawk), typeof(NESHawk.NESHawkSyncSettings)));
+
+				}
+				else if (UseCoreName == "SubNESHawk2")
+				{
+					nextEmulator = new SubNESHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(SubNESHawk), typeof(NESHawk.NESHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(SubNESHawk), typeof(NESHawk.NESHawkSyncSettings)));
+				}
+			}
+			else if (game.System == "GB")
+			{
+				if (UseCoreName == "GBHawk")
+				{
+					nextEmulator = new GBHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(GBHawk), typeof(GBHawk.GBHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(GBHawk), typeof(GBHawk.GBHawkSyncSettings)));
+				}
+				else if (UseCoreName == "SubGBHawk")
+				{
+					nextEmulator = new SubGBHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(SubGBHawk), typeof(GBHawk.GBHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(SubGBHawk), typeof(GBHawk.GBHawkSyncSettings)));
+				}
+			}
+			else if (game.System == "GBA")
+			{
+				if (UseCoreName == "GBAHawk")
+				{
+					nextEmulator = new GBAHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(GBAHawk), typeof(GBAHawk.GBASettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(GBAHawk), typeof(GBAHawk.GBASyncSettings)));
+				}
+				else if (UseCoreName == "SubGBAHawk")
+				{
+					nextEmulator = new SubGBAHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(SubGBAHawk), typeof(GBAHawk.GBASettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(SubGBAHawk), typeof(GBAHawk.GBASyncSettings)));
+				}
+			}
+			else if (game.System == "SNES")
+			{
+				
+				
+				if (UseCoreName == "SNESHawk")
+				{
+					nextEmulator = new SNESHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(SNESHawk), typeof(SNESHawk.SNESHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(SNESHawk), typeof(SNESHawk.SNESHawkSyncSettings)));
+				}
+			}
 		}
 
 		private bool LoadXML(string path, CoreComm nextComm, HawkFile file, string forcedCoreName, out IEmulator nextEmulator, out RomGame rom, out GameInfo game)
@@ -302,12 +384,39 @@ namespace BizHawk.Client.Common
 			nextEmulator = null;
 			rom = null;
 			game = null;
-			try
-			{
-				var xmlGame = XmlGame.Create(file); // if load fails, are we supposed to retry as a bsnes XML????????
-				game = xmlGame.GI;
 
-				var system = game.System;
+			var xmlGame = XmlGame.Create(file);
+			game = xmlGame.GI;
+
+			var system = game.System;
+
+			string UseCoreName = null;
+
+			// check if a core preference is available
+			_config.PreferredCores.TryGetValue(system, out var preferredCore);
+
+			if (forcedCoreName != null)
+			{
+				UseCoreName = forcedCoreName;
+			}
+			else if (preferredCore != null)
+			{
+				UseCoreName = preferredCore;
+			}
+			else
+			{
+				if (system == "GBAL")
+				{
+					UseCoreName = "GBAHawkLink";
+				}
+				else if (system == "GBL")
+				{
+					UseCoreName = "GBHawkLink";
+				}
+			}
+
+			if (UseCoreName != null)
+			{
 				var cip = new CoreInventoryParameters(this)
 				{
 					Comm = nextComm,
@@ -323,14 +432,42 @@ namespace BizHawk.Client.Common
 						})
 						.ToList(),
 				};
-				nextEmulator = MakeCoreFromCoreInventory(cip, forcedCoreName);
-				return true;
+
+				if (UseCoreName == "GBAHawkLink")
+				{
+					var lp = new CoreLoadParameters<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings>
+					{
+						Comm = cip.Comm,
+						Game = cip.Game,
+						Settings = (dynamic)cip.FetchSettings(typeof(GBAHawkLink), typeof(GBAHawkLink.GBALinkSettings)),
+						SyncSettings = (dynamic)cip.FetchSyncSettings(typeof(GBAHawkLink), typeof(GBAHawkLink.GBALinkSyncSettings)),
+						Roms = cip.Roms
+					};
+
+					nextEmulator = new GBAHawkLink(lp);
+					return true;
+				}
+				else if (UseCoreName == "GBHawkLink")
+				{
+					var lp = new CoreLoadParameters<GBHawkLink.GBLinkSettings, GBHawkLink.GBLinkSyncSettings>
+					{
+						Comm = cip.Comm,
+						Game = cip.Game,
+						Settings = (dynamic)cip.FetchSettings(typeof(GBHawkLink), typeof(GBHawkLink.GBLinkSettings)),
+						SyncSettings = (dynamic)cip.FetchSyncSettings(typeof(GBHawkLink), typeof(GBHawkLink.GBLinkSyncSettings)),
+						Roms = cip.Roms
+					};
+
+					nextEmulator = new GBHawkLink(lp);
+					return true;
+				}
+				else
+				{
+					return false;
+				}
 			}
-			catch (Exception ex)
-			{
-				DoLoadErrorCallback(ex.ToString(), VSystemID.Raw.GBL, LoadErrorType.Xml);
-				return false;
-			}
+
+			return false;
 		}
 
 		public bool LoadRom(string path, CoreComm nextComm, string forcedCoreName = null, int recursiveCount = 0)
@@ -451,10 +588,13 @@ namespace BizHawk.Client.Common
 
 			public static readonly IReadOnlyCollection<string> NES = new[] { "nes" };
 
+			public static readonly IReadOnlyCollection<string> SNES = new[] { "sfc" };
+
 			public static readonly IReadOnlyCollection<string> AutoloadFromArchive = Array.Empty<string>()
 				.Concat(GB)
 				.Concat(GBA)
 				.Concat(NES)
+				.Concat(SNES)
 				.Select(static s => $".{s}") // this is what's expected at call-site
 				.ToArray();
 		}
@@ -464,6 +604,7 @@ namespace BizHawk.Client.Common
 			new FilesystemFilter("Gameboy", RomFileExtensions.GB, addArchiveExts: true),
 			new FilesystemFilter("Gameboy Advance", RomFileExtensions.GBA, addArchiveExts: true),
 			new FilesystemFilter("Nintendo Entertainment System", RomFileExtensions.NES, addArchiveExts: true),
+			new FilesystemFilter("Super Nintendo Entertainment System", RomFileExtensions.SNES, addArchiveExts: true),
 			FilesystemFilter.Archives,
 			FilesystemFilter.EmuHawkSaveStates
 		);

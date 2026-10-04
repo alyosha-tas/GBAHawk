@@ -175,9 +175,7 @@ namespace BizHawk.Client.Common
 
 			CommonEntriesFor(VSystemID.Raw.NES, basePath: Path.Combine(".", "NES")),
 
-			CommonEntriesFor(VSystemID.Raw.SNES, basePath: Path.Combine(".", "SFC")),
-
-			CommonEntriesFor(VSystemID.Raw.SNES, basePath: Path.Combine(".", "SMC"))
+			CommonEntriesFor(VSystemID.Raw.SNES, basePath: Path.Combine(".", "SNES")),
 
 		}.SelectMany(a => a).ToArray());
 	}
