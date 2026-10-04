@@ -9,7 +9,7 @@ using BizHawk.Emulation.Cores.Nintendo.NES.Common;
 
 namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 {
-	[Core(CoreNames.NESHawk2, isReleased: false)]
+	[Core(CoreNames.NESHawk2, isReleased: true)]
 	public partial class NESHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<NESHawk.NESHawkSettings, NESHawk.NESHawkSyncSettings>
 	{
@@ -63,6 +63,28 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				if ((Header[0] != 0x4E) || (Header[1] != 0x45)|| (Header[2] != 0x53) || (Header[3] != 0x1A) || ((Header[7] & 0x0C) != 0x08))
 				{
 					throw new Exception("Only NES 2.0 Header is supported.");
+				}
+
+				// PAL region is not supported
+				if (((Header[12] & 3) == 0x1) || ((Header[12] & 3) == 0x3))
+				{
+					throw new Exception("Only NTSC supported.");
+				}
+
+				// Only NES is supported not adjacent systems like Vs.
+				if ((Header[7] & 3) != 0)
+				{
+					if ((Header[7] & 3) == 3)
+					{
+						if (((Header[13] & 0xF) != 0) && ((Header[13] & 0xF) != 4))
+						{
+							throw new Exception("Only NES console type is supported.");
+						}
+					}
+					else
+					{
+						throw new Exception("Only NES console type is supported.");
+					}
 				}
 			}
 			else
