@@ -4,7 +4,7 @@ GBAHawk is a fork of the BizHawk emulator focusing on console verification of TA
 
 Where applicable, only the North American version of the console is supported. Any revision dependent behavior is tested on and matches my personal console.
 
-Currently supports GB/C/A and NES consoles with mature console verificaiton pipelines. Note that NES has limited mapper support and developementis ongoing.
+Currently supports GB/C/A and NES consoles with mature console verificaiton pipelines. Note that NES has limited mapper support and developement is ongoing.
 
 A SNES core is currently in developement.
 
