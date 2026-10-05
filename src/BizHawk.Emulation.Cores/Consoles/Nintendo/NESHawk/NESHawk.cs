@@ -178,7 +178,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				}
 			}
 
-			bool mmc3_irq = SyncSettings.MMC3_IRQ_Type == NESHawkSyncSettings.MMC3IRQType.Old;
+			bool mmc3_is_rev_A = SyncSettings.MMC3_is_Rev_A;
 			bool bus_conflicts = SyncSettings.Mapper_Bus_Conflicts == true;
 			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
 			bool cpu_zero = SyncSettings.CPU_Zero_Reset == true;
@@ -197,7 +197,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				special_flag = 1; // Retrocoders demo that expects to read chip ID from CHR ROM flash chip
 			}
 
-			LibNESHawk.NES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, mmc3_irq, bus_conflicts, apu_test_regs, cpu_zero, special_flag);
+			LibNESHawk.NES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, mmc3_is_rev_A, bus_conflicts, apu_test_regs, cpu_zero, special_flag);
 
 			if (cart_RAM != null) { LibNESHawk.NES_create_SRAM(NES_Pntr, cart_RAM, (uint)cart_RAM.Length); }
 

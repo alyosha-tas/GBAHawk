@@ -45,7 +45,7 @@ namespace NESHawk
 		NES_System NES;
 		Mappers* Mapper;
 
-		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_old_irq, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
+		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_is_rev_A, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
 		{
 			NES.Use_APU_Test_Regs = apu_test_regs;
 			
@@ -107,9 +107,10 @@ namespace NESHawk
 					case 0x02: Mapper = new Mapper_UxROM(); break;
 					case 0x03: Mapper = new Mapper_CNROM(); break;
 					case 0x04:
-						if (submapper_num == 0)
+						if ((submapper_num == 0) || (submapper_num == 4))
 						{
 							Mapper = new Mapper_MMC3(); break;
+
 						}
 						else if (submapper_num == 1)
 						{
@@ -182,8 +183,7 @@ namespace NESHawk
 
 			Mapper->Reset();
 
-			// set MMC3 IRQ Type
-			Mapper->Old_IRQ_Type = mmc3_old_irq;
+			Mapper->MMC3_is_rev_A = mmc3_is_rev_A;
 
 			// Bus conflicts for CNROM, UxROM, AxROM
 			Mapper->Bus_Conflicts = mapper_bus_conflicts;
@@ -205,14 +205,27 @@ namespace NESHawk
 			}
 
 			// Use alternate mirroring layout when applicable
-			if ((mapper_num == 4) && ((NES.Header[6] & 0x8) == 0x8))
+			if (mapper_num == 4)
 			{
-				Mapper->Alt_Mirroring = true;
-				
-				Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
-				Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
-				Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
-				Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
+				if ((NES.Header[6] & 0x8) == 0x8)
+				{
+					Mapper->Alt_Mirroring = true;
+
+					Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
+					Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
+					Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
+					Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
+				}
+
+				// set MMC3 IRQ Type
+				if (submapper_num == 0)
+				{					
+					Mapper->Old_IRQ_Type = false;
+				}
+				else if (submapper_num == 4)
+				{
+					Mapper->Old_IRQ_Type = true;
+				}
 			}
 
 			NES.Mapper_Number = mapper_num;

@@ -86,16 +86,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			[DefaultValue(ControllerType.Standard)]
 			public ControllerType RightController { get; set; }
 
-			public enum MMC3IRQType
-			{
-				Old,
-				New
-			}
-
-			[DisplayName("MMC3 IRQ Type")]
-			[Description("Chip Dependent")]
-			[DefaultValue(MMC3IRQType.New)]
-			public MMC3IRQType MMC3_IRQ_Type { get; set; }
+			[DisplayName("Use MMC3 Revision A for NEC chips")]
+			[Description("Slightly different IRQ glitch behavior. Keep as false unless you are sure.")]
+			[DefaultValue(false)]
+			public bool MMC3_is_Rev_A { get; set; }
 
 			[DisplayName("Emulate Mapper Bus Conflicts")]
 			[Description("Effects CNROM, AxROM, UxROM")]

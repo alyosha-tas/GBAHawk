@@ -25,6 +25,7 @@ namespace NESHawk
 		bool Mirroring;
 		bool Bus_Conflicts;
 		bool Old_IRQ_Type;
+		bool MMC3_is_rev_A;
 		bool Alt_Mirroring;
 
 		uint32_t Size_Mask;

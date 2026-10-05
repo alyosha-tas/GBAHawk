@@ -25,6 +25,8 @@ namespace NESHawk
 		bool WRAM_Enable;
 		bool WRAM_Write_Protect;
 		bool Counter_Glitch;
+		bool Can_Activate_Counter_Glitch;
+		bool Counter_Glitch_Activated;
 
 		uint8_t Command;
 		uint8_t IRQ_Reload;
@@ -39,8 +41,6 @@ namespace NESHawk
 		uint32_t Separator_Counter;
 		uint32_t IRQ_Countdown;
 		uint32_t A12_Old;
-
-		uint64_t Num_Intervening_Clocks;
 
 		uint8_t MMC3_Regs[8] = { };
 		uint8_t MMC3_CHR_Regs_1K[8] = { };
@@ -59,6 +59,8 @@ namespace NESHawk
 			Old_IRQ_Type = false;
 			Alt_Mirroring = false;
 			Counter_Glitch = false;
+			Can_Activate_Counter_Glitch = false;
+			Counter_Glitch_Activated = false;
 
 			Command = 0;
 			IRQ_Reload = 0;
@@ -89,8 +91,6 @@ namespace NESHawk
 			PRG_Bank = 0;
 
 			Mirror_Mode = 0;
-
-			Num_Intervening_Clocks = 0;
 
 			Remap_ROM();
 		}
@@ -191,23 +191,23 @@ namespace NESHawk
 					break;
 				case 0x4001: //$C001 - IRQ Clear
 					// does not take immediate effect (fixes Klax)
-					if (Num_Intervening_Clocks != 1)
+
+					if (!Counter_Glitch_Activated)
 					{
 						Just_Cleared_Pending = true;
 						Counter_Glitch = false;
+						Can_Activate_Counter_Glitch = true;
 					}
 					else
 					{
-						Counter_Glitch = true;
-
-						Core_Message_String->assign("Glitch: " + to_string(Num_Intervening_Clocks) + " " + to_string(*Core_Cycle_Count));
+						Core_Message_String->assign("Glitch: " + to_string(*Core_Cycle_Count));
 
 						MessageCallback(Core_Message_String->length());
+
+						Counter_Glitch = true;
 					}
 
 					//Just_Cleared_Pending = true;
-
-					Num_Intervening_Clocks = 0;
 					break;
 				case 0x6000: //$E000 - IRQ Acknowledge / Disable
 					IRQ_Enable = false;
@@ -266,8 +266,25 @@ namespace NESHawk
 			
 			if (Old_IRQ_Type)
 			{
-				// For old behavior, the counter glitch freezes the counter until the next reload
-				if (!Counter_Glitch)
+				// For old behavior, the counter glitch ORs the current counter with 0xFF (or sometimes 0xF8?) and no reload occurs
+				// but counter continues counting there after
+				if (Counter_Glitch)
+				{
+					// Might have more variability, unknown
+					if (MMC3_is_rev_A)
+					{
+						IRQ_Counter |= 0xF8;
+					}
+					else
+					{
+						IRQ_Counter |= 0xFF;
+					}
+					
+					Counter_Glitch = false;
+
+					IRQ_Counter--;
+				}
+				else
 				{
 					if (IRQ_Reload_Flag || IRQ_Counter == 0)
 					{
@@ -292,6 +309,8 @@ namespace NESHawk
 				{
 					IRQ_Counter |= 0x80;
 					Counter_Glitch = false;
+
+					IRQ_Counter--;
 				}
 				else
 				{
@@ -309,6 +328,15 @@ namespace NESHawk
 					}
 				}
 			}
+
+			Counter_Glitch_Activated = false;
+
+			if (Can_Activate_Counter_Glitch)
+			{
+				Counter_Glitch_Activated = true;
+			}
+
+			Can_Activate_Counter_Glitch = false;
 
 			IRQ_Reload_Flag = false;
 		}
@@ -352,8 +380,6 @@ namespace NESHawk
 				{
 					Separator_Counter = 15;
 					IRQ_Countdown = 5;
-
-					Num_Intervening_Clocks += 1;
 				}
 			}
 
@@ -412,6 +438,8 @@ namespace NESHawk
 			saver = bool_saver(WRAM_Enable, saver);
 			saver = bool_saver(WRAM_Write_Protect, saver);
 			saver = bool_saver(Counter_Glitch, saver);
+			saver = bool_saver(Can_Activate_Counter_Glitch, saver);
+			saver = bool_saver(Counter_Glitch_Activated, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(IRQ_Reload, saver);
@@ -426,8 +454,6 @@ namespace NESHawk
 			saver = int_saver(Separator_Counter, saver);
 			saver = int_saver(IRQ_Countdown, saver);
 			saver = int_saver(A12_Old, saver);
-
-			saver = long_saver(Num_Intervening_Clocks, saver);
 
 			saver = byte_array_saver(MMC3_Regs, saver, 8);
 			saver = byte_array_saver(MMC3_CHR_Regs_1K, saver, 8);
@@ -459,6 +485,8 @@ namespace NESHawk
 			loader = bool_loader(&WRAM_Enable, loader);
 			loader = bool_loader(&WRAM_Write_Protect, loader);
 			loader = bool_loader(&Counter_Glitch, loader);
+			loader = bool_loader(&Can_Activate_Counter_Glitch, loader);
+			loader = bool_loader(&Counter_Glitch_Activated, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&IRQ_Reload, loader);
@@ -473,8 +501,6 @@ namespace NESHawk
 			loader = int_loader(&Separator_Counter, loader);
 			loader = int_loader(&IRQ_Countdown, loader);
 			loader = int_loader(&A12_Old, loader);
-
-			loader = long_loader(&Num_Intervening_Clocks, loader);
 
 			loader = byte_array_loader(MMC3_Regs, loader, 8);
 			loader = byte_array_loader(MMC3_CHR_Regs_1K, loader, 8);
