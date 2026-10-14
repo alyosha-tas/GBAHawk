@@ -200,9 +200,9 @@ namespace NESHawk
 					}
 					else
 					{
-						Core_Message_String->assign("Glitch: " + to_string(*Core_Cycle_Count));
+						//Core_Message_String->assign("Glitch: " + to_string(*Core_Cycle_Count));
 
-						MessageCallback(Core_Message_String->length());
+						//MessageCallback(Core_Message_String->length());
 
 						Counter_Glitch = true;
 					}
@@ -264,16 +264,17 @@ namespace NESHawk
 		{
 			uint8_t last_irq_counter = IRQ_Counter;
 			
+			// NEC
 			if (Old_IRQ_Type)
 			{
-				// For old behavior, the counter glitch ORs the current counter with 0xFF (or sometimes 0xF8?) and no reload occurs
+				// For old behavior, the counter glitch ORs the current counter with 0xFF (or for rev A 0xF0) and no reload occurs
 				// but counter continues counting there after
 				if (Counter_Glitch)
 				{
 					// Might have more variability, unknown
 					if (MMC3_is_rev_A)
 					{
-						IRQ_Counter |= 0xF8;
+						IRQ_Counter |= 0xF0;
 					}
 					else
 					{
@@ -303,8 +304,10 @@ namespace NESHawk
 			}
 			else
 			{
+				// Sharp
 				// For new behavior, the counter glitch ORs the current counter with 0x80 and no reload occurs
 				// but counter continues counting there after
+				// Note that sharp Rev A exhibits the same $C000 = 0 IRQ behavior as NEC
 				if (Counter_Glitch)
 				{
 					IRQ_Counter |= 0x80;
@@ -324,7 +327,15 @@ namespace NESHawk
 					}
 					if (IRQ_Counter == 0)
 					{
-						IRQ_EQ_Pass();
+						if (MMC3_is_rev_A)
+						{
+							if (last_irq_counter != 0 || IRQ_Reload_Flag)
+								IRQ_EQ_Pass();
+						}
+						else
+						{
+							IRQ_EQ_Pass();
+						}
 					}
 				}
 			}
@@ -358,8 +369,7 @@ namespace NESHawk
 			if (Just_Cleared)
 			{
 				IRQ_Counter = 0;
-				if (Old_IRQ_Type)
-					IRQ_Reload_Flag = true;
+				IRQ_Reload_Flag = true;
 			}
 
 			Just_Cleared = Just_Cleared_Pending;

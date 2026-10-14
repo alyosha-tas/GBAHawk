@@ -13,6 +13,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 	public partial class NESHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<NESHawk.NESHawkSettings, NESHawk.NESHawkSyncSettings>
 	{
+		public byte[] Game_Genie_ROM;
+
 		public byte[] GamePack;
 		public readonly byte[] Header = new byte[0x10];
 
@@ -195,6 +197,14 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			if (romHashSHA1 == "SHA1:4A894BFA13E720AB6BC79BB57864DEA686E9E068")
 			{
 				special_flag = 1; // Retrocoders demo that expects to read chip ID from CHR ROM flash chip
+			}
+
+			if (SyncSettings.Us_Game_Genie)
+			{
+				// Load up a BIOS and initialize the correct PPU
+				Game_Genie_ROM = comm.CoreFileProvider.GetFirmwareOrThrow(new("NES", "World"), "Game Genie Rom Not Found, Cannot Load. Disable Game Genie in config.");
+
+				LibNESHawk.NES_load_game_genie(NES_Pntr, Game_Genie_ROM);
 			}
 
 			LibNESHawk.NES_load(NES_Pntr, GamePack, (uint)GamePack.Length, Header, mmc3_is_rev_A, bus_conflicts, apu_test_regs, cpu_zero, special_flag);

@@ -70,7 +70,6 @@ namespace NESHawk
 				else if (status_cycle == (4 + NMI_offset))
 				{
 					if (nmi_destiny) { NMI = true; }
-					mapper_pntr->AtVsyncNmi();
 				}
 			}
 

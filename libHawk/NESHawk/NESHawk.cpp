@@ -25,6 +25,12 @@ NESHawk_EXPORT void NES_destroy(NESCore* p)
 	std::free(p);
 }
 
+// load game with game genie
+NESHawk_EXPORT void NES_load_game_genie(NESCore* p, uint8_t* game_genie)
+{
+	p->Load_Game_Genie(game_genie);
+}
+
 // load a rom into the core
 NESHawk_EXPORT void NES_load(NESCore* p, uint8_t* rom, uint32_t size, uint8_t* header, bool mmc3_is_rev_A, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
 {

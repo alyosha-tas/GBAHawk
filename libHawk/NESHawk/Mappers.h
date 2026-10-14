@@ -21,6 +21,8 @@ namespace NESHawk
 	public:
 	#pragma region mapper base
  
+		Mappers* Mapper;
+		
 		// variables that are common for all mappers, other variables defined per mapper
 		bool Mirroring;
 		bool Bus_Conflicts;
@@ -62,6 +64,8 @@ namespace NESHawk
 		uint8_t* Core_ROM[4] = { nullptr, nullptr, nullptr, nullptr };
 
 		uint8_t* Core_ROM_Base = nullptr;
+
+		uint8_t* Core_Game_Genie_ROM_Base = nullptr;
 
 		uint8_t* Core_CIRAM_Base = nullptr;
 
@@ -140,8 +144,6 @@ namespace NESHawk
 
 		virtual void Reset() { }
 
-		virtual void Update_State() { }
-
 		virtual void AddressPPU(uint32_t addr) { }
 
 		virtual uint8_t ReadPPU(uint32_t addr)
@@ -165,8 +167,6 @@ namespace NESHawk
 		}
 
 		virtual uint8_t PeekPPU(uint32_t addr) { return ReadPPU(addr); }
-
-		virtual uint8_t PeekReg2xxx(uint32_t addr) { return 0; }
 
 		virtual uint8_t PeekCart(uint32_t addr)
 		{
@@ -193,8 +193,6 @@ namespace NESHawk
 		virtual void ClockCPU() {}
 
 		virtual void ClockPPU() {}
-
-		virtual void AtVsyncNmi() {}
 
 		virtual bool IrqSignal() { return false; }
 

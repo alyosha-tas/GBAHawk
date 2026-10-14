@@ -86,8 +86,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			[DefaultValue(ControllerType.Standard)]
 			public ControllerType RightController { get; set; }
 
-			[DisplayName("Use MMC3 Revision A for NEC chips")]
-			[Description("Slightly different IRQ glitch behavior. Keep as false unless you are sure.")]
+			[DisplayName("Enable Game Genie")]
+			[Description("Use Game Genie, ROM must be available")]
+			[DefaultValue(false)]
+			public bool Us_Game_Genie { get; set; }
+
+			[DisplayName("Use MMC3 Revision A Behavior.")]
+			[Description("Slightly different IRQ for both NEC and Sharp variants. Only use if you are sure.")]
 			[DefaultValue(false)]
 			public bool MMC3_is_Rev_A { get; set; }
 

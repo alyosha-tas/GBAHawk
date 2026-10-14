@@ -24,6 +24,7 @@
 #include "Mapper_030.h"
 #include "Mapper_232.h"
 #include "NROM_RetroCoders.h"
+#include "Game_Genie.h"
 #pragma endregion
 
 
@@ -44,6 +45,7 @@ namespace NESHawk
 
 		NES_System NES;
 		Mappers* Mapper;
+		bool Use_Game_Genie = false;
 
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint8_t* ext_header, bool mmc3_is_rev_A, bool mapper_bus_conflicts, bool apu_test_regs, bool cpu_zero_reset, uint8_t special_flag)
 		{
@@ -98,10 +100,12 @@ namespace NESHawk
 				std::memcpy(NES.CHR_ROM, ext_rom + ofst_to_chr, NES.CHR_ROM_Length);
 			}
 
-			if (special_flag == 0)
+			if (Use_Game_Genie == false)
 			{
-				switch (mapper_num)
+				if (special_flag == 0)
 				{
+					switch (mapper_num)
+					{
 					case 0x00: Mapper = new Mapper_NROM(); break;
 					case 0x01: Mapper = new Mapper_MMC1(); break;
 					case 0x02: Mapper = new Mapper_UxROM(); break;
@@ -125,112 +129,272 @@ namespace NESHawk
 					case 0xE8: Mapper = new Mapper_232(); break;
 
 					default: Mapper = new Mapper_NROM(); break;
+					}
 				}
+				else
+				{
+					if (special_flag == 1)
+					{
+						Mapper = new NROM_RetroCoders(); // ROM expects to be able to read chip ID
+					}
+				}
+
+				Mapper->Mirroring = ((NES.Header[6] & 0x1) == 1);
+
+				NES.mapper_pntr = &Mapper[0];
+
+				Mapper->Core_Cycle_Count = &NES.TotalExecutedCycles;
+
+				Mapper->Core_Clock_Update_Cycle = &NES.Clock_Update_Cycle;
+
+				Mapper->Core_ROM_Length = &NES.ROM_Length;
+
+				// default mapping
+				Mapper->Core_ROM_Base = &NES.ROM[0];
+				Mapper->Core_CIRAM_Base = &NES.CIRAM[0];
+
+				Mapper->Core_CHR_ROM_Length = &NES.CHR_ROM_Length;
+
+				Mapper->Core_CHR_ROM = &NES.CHR_ROM[0];
+
+				if (Mapper->Mirroring)
+				{
+					Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
+					Mapper->Core_CIRAM[1] = &NES.CIRAM[0x400];
+					Mapper->Core_CIRAM[2] = &NES.CIRAM[0];
+					Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
+				}
+				else
+				{
+					Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
+					Mapper->Core_CIRAM[1] = &NES.CIRAM[0];
+					Mapper->Core_CIRAM[2] = &NES.CIRAM[0x400];
+					Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
+				}
+
+				Mapper->Core_DB = &NES.DB_Ext;
+
+				Mapper->Core_Message_String = &NES.Message_String;
+				Mapper->MessageCallback = NES.MessageCallback;
+
+				Mapper->Core_show_bg_new = &NES.show_bg_new;
+				Mapper->Core_show_obj_new = &NES.show_bg_new;
+
+				Mapper->Core_status_sl = &NES.status_sl;
+				Mapper->Core_status_cycle = &NES.status_cycle;
+				Mapper->Core_PPU_Phase = &NES.ppuphase;
+				Mapper->Core_ppu_OBJ_Size_16 = &NES.ppu_OBJ_Size_16;
+
+				Mapper->Reset();
+
+				Mapper->MMC3_is_rev_A = mmc3_is_rev_A;
+
+				// Bus conflicts for CNROM, UxROM, AxROM
+				Mapper->Bus_Conflicts = mapper_bus_conflicts;
+
+				NES.Cart_RAM_Length = 0;
+
+				Mapper->Core_Cart_RAM_Length = &NES.Cart_RAM_Length;
+
+				// Only reset cycle count on initial power on, not power cycles
+				NES.Cycle_Count = 0;
+				NES.Clock_Update_Cycle = 0;
+
+				// Only certain carts require ppu clocking
+				NES.ppu_HasClockPPU = false;
+
+				if ((mapper_num == 4) || (mapper_num == 1) || (mapper_num == 5))
+				{
+					NES.ppu_HasClockPPU = true;
+				}
+
+				// Use alternate mirroring layout when applicable
+				if (mapper_num == 4)
+				{
+					if ((NES.Header[6] & 0x8) == 0x8)
+					{
+						Mapper->Alt_Mirroring = true;
+
+						Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
+						Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
+						Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
+						Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
+					}
+
+					// set MMC3 IRQ Type
+					if (submapper_num == 0)
+					{
+						Mapper->Old_IRQ_Type = false;
+					}
+					else if (submapper_num == 4)
+					{
+						Mapper->Old_IRQ_Type = true;
+					}
+				}
+
+				NES.Mapper_Number = mapper_num;
+
+				NES.Total_CPU_Clock_Cycles = 0;
 			}
 			else
-			{
-				if (special_flag == 1)
+			{				
+				if (special_flag == 0)
 				{
-					Mapper = new NROM_RetroCoders(); // ROM expects to be able to read chip ID
-				}
-			}
+					switch (mapper_num)
+					{
+						case 0x00: Mapper->Mapper = new Mapper_NROM(); break;
+						case 0x01: Mapper->Mapper = new Mapper_MMC1(); break;
+						case 0x02: Mapper->Mapper = new Mapper_UxROM(); break;
+						case 0x03: Mapper->Mapper = new Mapper_CNROM(); break;
+						case 0x04:
+							if ((submapper_num == 0) || (submapper_num == 4))
+							{
+								Mapper->Mapper = new Mapper_MMC3(); break;
 
-			Mapper->Mirroring = ((NES.Header[6] & 0x1) == 1);
+							}
+							else if (submapper_num == 1)
+							{
+								Mapper->Mapper = new Mapper_MMC6(); break;
+							}
+							break;
+						case 0x05: Mapper->Mapper = new Mapper_MMC5(); break;
+						case 0x07: Mapper->Mapper = new Mapper_AxROM(); break;
+						case 0x09: Mapper->Mapper = new Mapper_MMC2(); break;
+						case 0x1E: Mapper->Mapper = new Mapper_030(); break;
+						case 0x42: Mapper->Mapper = new Mapper_GxROM(); break;
+						case 0xE8: Mapper->Mapper = new Mapper_232(); break;
+
+						default: Mapper->Mapper = new Mapper_NROM(); break;
+					}
+				}
+				else
+				{
+					if (special_flag == 1)
+					{
+						Mapper->Mapper = new NROM_RetroCoders(); // ROM expects to be able to read chip ID
+					}
+				}
+
+				Mapper->Mapper->Mirroring = ((NES.Header[6] & 0x1) == 1);
+
+				Mapper->Mapper->Core_Cycle_Count = &NES.TotalExecutedCycles;
+
+				Mapper->Mapper->Core_Clock_Update_Cycle = &NES.Clock_Update_Cycle;
+
+				Mapper->Mapper->Core_ROM_Length = &NES.ROM_Length;
+
+				// default mapping
+				Mapper->Mapper->Core_ROM_Base = &NES.ROM[0];
+				Mapper->Mapper->Core_CIRAM_Base = &NES.CIRAM[0];
+
+				Mapper->Mapper->Core_CHR_ROM_Length = &NES.CHR_ROM_Length;
+
+				Mapper->Mapper->Core_CHR_ROM = &NES.CHR_ROM[0];
+
+				if (Mapper->Mapper->Mirroring)
+				{
+					Mapper->Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
+					Mapper->Mapper->Core_CIRAM[1] = &NES.CIRAM[0x400];
+					Mapper->Mapper->Core_CIRAM[2] = &NES.CIRAM[0];
+					Mapper->Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
+				}
+				else
+				{
+					Mapper->Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
+					Mapper->Mapper->Core_CIRAM[1] = &NES.CIRAM[0];
+					Mapper->Mapper->Core_CIRAM[2] = &NES.CIRAM[0x400];
+					Mapper->Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
+				}
+
+				Mapper->Mapper->Core_DB = &NES.DB_Ext;
+
+				Mapper->Mapper->Core_Message_String = &NES.Message_String;
+				Mapper->Mapper->MessageCallback = NES.MessageCallback;
+
+				Mapper->Mapper->Core_show_bg_new = &NES.show_bg_new;
+				Mapper->Mapper->Core_show_obj_new = &NES.show_bg_new;
+
+				Mapper->Mapper->Core_status_sl = &NES.status_sl;
+				Mapper->Mapper->Core_status_cycle = &NES.status_cycle;
+				Mapper->Mapper->Core_PPU_Phase = &NES.ppuphase;
+				Mapper->Mapper->Core_ppu_OBJ_Size_16 = &NES.ppu_OBJ_Size_16;
+
+				Mapper->Reset();
+
+				Mapper->Mapper->MMC3_is_rev_A = mmc3_is_rev_A;
+
+				// Bus conflicts for CNROM, UxROM, AxROM
+				Mapper->Mapper->Bus_Conflicts = mapper_bus_conflicts;
+
+				NES.Cart_RAM_Length = 0;
+
+				Mapper->Mapper->Core_Cart_RAM_Length = &NES.Cart_RAM_Length;
+
+				// Only reset cycle count on initial power on, not power cycles
+				NES.Cycle_Count = 0;
+				NES.Clock_Update_Cycle = 0;
+
+				// Only certain carts require ppu clocking
+				NES.ppu_HasClockPPU = false;
+
+				if ((mapper_num == 4) || (mapper_num == 1) || (mapper_num == 5))
+				{
+					NES.ppu_HasClockPPU = true;
+				}
+
+				// Use alternate mirroring layout when applicable
+				if (mapper_num == 4)
+				{
+					if ((NES.Header[6] & 0x8) == 0x8)
+					{
+						Mapper->Mapper->Alt_Mirroring = true;
+
+						Mapper->Mapper->Core_CIRAM[0] = &Mapper->Mapper->EXT_CIRAM[0];
+						Mapper->Mapper->Core_CIRAM[1] = &Mapper->Mapper->EXT_CIRAM[0x400];
+						Mapper->Mapper->Core_CIRAM[2] = &Mapper->Mapper->EXT_CIRAM[0x800];
+						Mapper->Mapper->Core_CIRAM[3] = &Mapper->Mapper->EXT_CIRAM[0xC00];
+					}
+
+					// set MMC3 IRQ Type
+					if (submapper_num == 0)
+					{
+						Mapper->Mapper->Old_IRQ_Type = false;
+					}
+					else if (submapper_num == 4)
+					{
+						Mapper->Mapper->Old_IRQ_Type = true;
+					}
+				}
+
+				NES.Mapper_Number = mapper_num;
+
+				NES.Total_CPU_Clock_Cycles = 0;
+			}
+		}
+
+		void Load_Game_Genie(uint8_t* game_genie)
+		{
+			Use_Game_Genie = true;
+
+			NES.Game_Genie_ROM = new uint8_t[0x1000];
+
+			std::memcpy(NES.Game_Genie_ROM, game_genie, 0x1000);
+
+			Mapper = new Mapper_Game_Genie();
 
 			NES.mapper_pntr = &Mapper[0];
-
-			Mapper->Core_Cycle_Count = &NES.TotalExecutedCycles;
-
-			Mapper->Core_Clock_Update_Cycle = &NES.Clock_Update_Cycle;
-
-			Mapper->Core_ROM_Length = &NES.ROM_Length;
-
-			// default mapping
-			Mapper->Core_ROM_Base = &NES.ROM[0];
-			Mapper->Core_CIRAM_Base = &NES.CIRAM[0];
-
-			Mapper->Core_CHR_ROM_Length = &NES.CHR_ROM_Length;
-
-			Mapper->Core_CHR_ROM = &NES.CHR_ROM[0];
-
-			if (Mapper->Mirroring)
-			{
-				Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
-				Mapper->Core_CIRAM[1] = &NES.CIRAM[0x400];
-				Mapper->Core_CIRAM[2] = &NES.CIRAM[0];
-				Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
-			}
-			else
-			{
-				Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
-				Mapper->Core_CIRAM[1] = &NES.CIRAM[0];
-				Mapper->Core_CIRAM[2] = &NES.CIRAM[0x400];
-				Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
-			}
 
 			Mapper->Core_DB = &NES.DB_Ext;
 
 			Mapper->Core_Message_String = &NES.Message_String;
 			Mapper->MessageCallback = NES.MessageCallback;
 
-			Mapper->Core_show_bg_new = &NES.show_bg_new;
-			Mapper->Core_show_obj_new = &NES.show_bg_new;
+			Mapper->Core_CIRAM[0] = &NES.CIRAM[0];
+			Mapper->Core_CIRAM[1] = &NES.CIRAM[0x400];
+			Mapper->Core_CIRAM[2] = &NES.CIRAM[0];
+			Mapper->Core_CIRAM[3] = &NES.CIRAM[0x400];
 
-			Mapper->Core_status_sl = &NES.status_sl;
-			Mapper->Core_status_cycle = &NES.status_cycle;
-			Mapper->Core_PPU_Phase = &NES.ppuphase;
-			Mapper->Core_ppu_OBJ_Size_16 = &NES.ppu_OBJ_Size_16;
-
-			Mapper->Reset();
-
-			Mapper->MMC3_is_rev_A = mmc3_is_rev_A;
-
-			// Bus conflicts for CNROM, UxROM, AxROM
-			Mapper->Bus_Conflicts = mapper_bus_conflicts;
-
-			NES.Cart_RAM_Length = 0;
-
-			Mapper->Core_Cart_RAM_Length = &NES.Cart_RAM_Length;
-
-			// Only reset cycle count on initial power on, not power cycles
-			NES.Cycle_Count = 0;
-			NES.Clock_Update_Cycle = 0;
-
-			// Only certain carts require ppu clocking
-			NES.ppu_HasClockPPU = false;
-
-			if ((mapper_num == 4) || (mapper_num == 1) || (mapper_num == 5))
-			{
-				NES.ppu_HasClockPPU = true;
-			}
-
-			// Use alternate mirroring layout when applicable
-			if (mapper_num == 4)
-			{
-				if ((NES.Header[6] & 0x8) == 0x8)
-				{
-					Mapper->Alt_Mirroring = true;
-
-					Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
-					Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
-					Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
-					Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
-				}
-
-				// set MMC3 IRQ Type
-				if (submapper_num == 0)
-				{					
-					Mapper->Old_IRQ_Type = false;
-				}
-				else if (submapper_num == 4)
-				{
-					Mapper->Old_IRQ_Type = true;
-				}
-			}
-
-			NES.Mapper_Number = mapper_num;
-
-			NES.Total_CPU_Clock_Cycles = 0;
+			Mapper->Core_Game_Genie_ROM_Base = &NES.Game_Genie_ROM[0];
 		}
 
 		void Create_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)

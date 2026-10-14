@@ -45,6 +45,7 @@ namespace NESHawk
 
 		uint8_t* Cart_RAM = nullptr;
 		uint8_t* ROM = nullptr;
+		uint8_t* Game_Genie_ROM = nullptr;
 		uint8_t* CHR_ROM = nullptr;
 		uint32_t Cart_RAM_Length = 0;
 		string Message_String = "";

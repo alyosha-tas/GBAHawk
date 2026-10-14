@@ -60,6 +60,10 @@ namespace BizHawk.Emulation.Common
 			Firmware("GB", "World", "Game Boy Boot Rom");
 			Option("GB", "World", File("4ED31EC6B0B175BB109C0EB5FD3D193DA823339F", 256, "GB_dmg.bin", "Game Boy Boot Rom"), FirmwareOptionStatus.Ideal);
 
+			// NES
+			Firmware("NES", "World", "Game Genie Rom");
+			Option("NES", "World", File("AAA9833C3DE2213F2B0326769B715651FD13FD84", 0x1000, "Game_Genie.bin", "Game Genie Rom"), FirmwareOptionStatus.Ideal);
+
 			// SNES
 			Firmware("SNES", "IPL", "APU Boot Rom");
 			Option("SNES", "IPL", File("97E352553E94242AE823547CD853EECDA55C20F0", 0x40, "IPL.bin", "APU Boot Rom"), FirmwareOptionStatus.Ideal);
