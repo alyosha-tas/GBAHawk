@@ -7,11 +7,14 @@
 
 #include "Mappers.h"
 
-
 using namespace std;
 
 namespace NESHawk
 {
+	// TODO: MMC6 WRAM enable needs to account for second enable bit
+	// TODO: Do bus conflicts for EXP area ($4020-$5FFF)
+	// TODO: MMC5 bus conflicts
+	
 	class Mapper_Game_Genie : public Mappers
 	{
 	public:
@@ -76,7 +79,7 @@ namespace NESHawk
 					// bus conflict with underlying WRAM or exp
 					if ((addr & 0x6000) == 0x6000)
 					{
-						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						if ((Mapper->Core_Cart_RAM_Length[0] > 0) && Mapper->WRAM_Enable)
 						{
 							ret = ReadWRAM(addr - 0x6000);
 						}
@@ -99,7 +102,7 @@ namespace NESHawk
 					// bus conflict with underlying WRAM or exp
 					if ((addr & 0x6000) == 0x6000)
 					{
-						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						if ((Mapper->Core_Cart_RAM_Length[0] > 0) && Mapper->WRAM_Enable)
 						{
 							ret = ReadWRAM(addr - 0x6000);
 						}
@@ -122,7 +125,7 @@ namespace NESHawk
 					// bus conflict with underlying WRAM or exp
 					if ((addr & 0x6000) == 0x6000)
 					{
-						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						if ((Mapper->Core_Cart_RAM_Length[0] > 0) && Mapper->WRAM_Enable)
 						{
 							ret = ReadWRAM(addr - 0x6000);
 						}
@@ -172,9 +175,9 @@ namespace NESHawk
 					Cheat_2_compare = ((value >> 2) & 1) == 1; 
 					Cheat_3_compare = ((value >> 3) & 1) == 1;
 
-					Cheat_1_enable = ((value >> 1) & 1) == 0;
-					Cheat_2_enable = ((value >> 1) & 1) == 0;
-					Cheat_3_enable = ((value >> 1) & 1) == 0;			
+					Cheat_1_enable = ((value >> 4) & 1) == 0;
+					Cheat_2_enable = ((value >> 5) & 1) == 0;
+					Cheat_3_enable = ((value >> 6) & 1) == 0;			
 				}
 				else if (addr == 0x1) { Cheat_1_addr |= ((value & 0x7F) << 8); }
 				else if (addr == 0x2) { Cheat_1_addr |= value; }

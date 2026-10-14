@@ -30,6 +30,8 @@ namespace NESHawk
 
 			PRG_Bank = 0;
 
+			WRAM_Enable = true;
+
 			Remap_ROM();
 		}
 
@@ -64,6 +66,7 @@ namespace NESHawk
 			saver = bool_saver(Bus_Conflicts, saver);
 			saver = bool_saver(Old_IRQ_Type, saver);
 			saver = bool_saver(Alt_Mirroring, saver);
+			saver = bool_saver(WRAM_Enable, saver);
 
 			saver = int_saver(Size_Mask, saver);
 
@@ -86,6 +89,7 @@ namespace NESHawk
 			loader = bool_loader(&Bus_Conflicts, loader);
 			loader = bool_loader(&Old_IRQ_Type, loader);
 			loader = bool_loader(&Alt_Mirroring, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
 
 			loader = int_loader(&Size_Mask, loader);
 

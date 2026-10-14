@@ -22,7 +22,6 @@ namespace NESHawk
 		bool CHR_Mode;
 		bool Just_Cleared;
 		bool Just_Cleared_Pending;
-		bool WRAM_Enable;
 		bool WRAM_Write_Protect;
 		bool Counter_Glitch;
 		bool Can_Activate_Counter_Glitch;
@@ -445,7 +444,6 @@ namespace NESHawk
 			saver = bool_saver(CHR_Mode, saver);
 			saver = bool_saver(Just_Cleared, saver);
 			saver = bool_saver(Just_Cleared_Pending, saver);
-			saver = bool_saver(WRAM_Enable, saver);
 			saver = bool_saver(WRAM_Write_Protect, saver);
 			saver = bool_saver(Counter_Glitch, saver);
 			saver = bool_saver(Can_Activate_Counter_Glitch, saver);
@@ -473,6 +471,7 @@ namespace NESHawk
 			saver = bool_saver(Bus_Conflicts, saver);
 			saver = bool_saver(Old_IRQ_Type, saver);
 			saver = bool_saver(Alt_Mirroring, saver);
+			saver = bool_saver(WRAM_Enable, saver);
 
 			saver = int_saver(Size_Mask, saver);
 
@@ -492,7 +491,6 @@ namespace NESHawk
 			loader = bool_loader(&CHR_Mode, loader);
 			loader = bool_loader(&Just_Cleared, loader);
 			loader = bool_loader(&Just_Cleared_Pending, loader);
-			loader = bool_loader(&WRAM_Enable, loader);
 			loader = bool_loader(&WRAM_Write_Protect, loader);
 			loader = bool_loader(&Counter_Glitch, loader);
 			loader = bool_loader(&Can_Activate_Counter_Glitch, loader);
@@ -520,6 +518,7 @@ namespace NESHawk
 			loader = bool_loader(&Bus_Conflicts, loader);
 			loader = bool_loader(&Old_IRQ_Type, loader);
 			loader = bool_loader(&Alt_Mirroring, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
 
 			loader = int_loader(&Size_Mask, loader);
 

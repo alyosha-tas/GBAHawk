@@ -20,7 +20,6 @@ namespace NESHawk
 		bool PRG_Mode;
 		bool PRG_Slot;
 		bool CHR_Mode;
-		bool WRAM_Enable;
 
 		uint8_t Command;
 		uint8_t MMC1_CHR_0;
@@ -60,6 +59,8 @@ namespace NESHawk
 			PRG_Slot = ((Command >> 2) & 1) == 1;
 			PRG_Mode = ((Command >> 3) & 1) == 1;
 			CHR_Mode = ((Command >> 4) & 1) == 1;
+
+			WRAM_Enable = false;
 
 			Remap_ROM();
 		}
@@ -116,9 +117,7 @@ namespace NESHawk
 		}
 
 		void Remap_ROM()
-		{
-			
-			
+		{			
 			if (!CHR_Mode)
 			{
 				MMC1_CHR_Regs_4K[0] = MMC1_CHR_0 & ~1;
@@ -272,7 +271,6 @@ namespace NESHawk
 			saver = bool_saver(PRG_Mode, saver);
 			saver = bool_saver(PRG_Slot, saver);
 			saver = bool_saver(CHR_Mode, saver);
-			saver = bool_saver(WRAM_Enable, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(MMC1_CHR_0, saver);
@@ -289,7 +287,6 @@ namespace NESHawk
 			saver = int_saver(Mirror_Mode, saver);
 			saver = int_saver(MMC1_PPU_Clock, saver);
 
-	
 			saver = byte_array_saver(MMC1_CHR_Regs_4K, saver, 2);
 
 			// common to all mappers
@@ -297,6 +294,7 @@ namespace NESHawk
 			saver = bool_saver(Bus_Conflicts, saver);
 			saver = bool_saver(Old_IRQ_Type, saver);
 			saver = bool_saver(Alt_Mirroring, saver);
+			saver = bool_saver(WRAM_Enable, saver);
 
 			saver = int_saver(Size_Mask, saver);
 
@@ -312,7 +310,6 @@ namespace NESHawk
 			loader = bool_loader(&PRG_Mode, loader);
 			loader = bool_loader(&PRG_Slot, loader);
 			loader = bool_loader(&CHR_Mode, loader);
-			loader = bool_loader(&WRAM_Enable, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&MMC1_CHR_0, loader);
@@ -336,6 +333,7 @@ namespace NESHawk
 			loader = bool_loader(&Bus_Conflicts, loader);
 			loader = bool_loader(&Old_IRQ_Type, loader);
 			loader = bool_loader(&Alt_Mirroring, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
 
 			loader = int_loader(&Size_Mask, loader);
 

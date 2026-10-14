@@ -20,7 +20,6 @@ namespace NESHawk
 		bool IRQ_Audio;
 		bool PRG_Mode;
 		bool CHR_Mode;
-		bool WRAM_Enable;
 		bool WRAM_Write_Protect;
 		bool In_Frame;
 
@@ -125,6 +124,8 @@ namespace NESHawk
 			IRQ_Enable = false;
 			IRQ_Audio = false;
 			In_Frame = false;
+
+			WRAM_Enable = false;
 
 			IRQ_Counter = 0;
 			IRQ_Target = 0;
@@ -1162,7 +1163,6 @@ namespace NESHawk
 			saver = bool_saver(IRQ_Audio, saver);
 			saver = bool_saver(PRG_Mode, saver);
 			saver = bool_saver(CHR_Mode, saver);
-			saver = bool_saver(WRAM_Enable, saver);
 			saver = bool_saver(WRAM_Write_Protect, saver);
 			saver = bool_saver(In_Frame, saver);
 
@@ -1246,6 +1246,7 @@ namespace NESHawk
 			saver = bool_saver(Bus_Conflicts, saver);
 			saver = bool_saver(Old_IRQ_Type, saver);
 			saver = bool_saver(Alt_Mirroring, saver);
+			saver = bool_saver(WRAM_Enable, saver);
 
 			saver = int_saver(Size_Mask, saver);
 
@@ -1263,7 +1264,6 @@ namespace NESHawk
 			loader = bool_loader(&IRQ_Audio, loader);
 			loader = bool_loader(&PRG_Mode, loader);
 			loader = bool_loader(&CHR_Mode, loader);
-			loader = bool_loader(&WRAM_Enable, loader);
 			loader = bool_loader(&WRAM_Write_Protect, loader);
 			loader = bool_loader(&In_Frame, loader);
 
@@ -1347,6 +1347,7 @@ namespace NESHawk
 			loader = bool_loader(&Bus_Conflicts, loader);
 			loader = bool_loader(&Old_IRQ_Type, loader);
 			loader = bool_loader(&Alt_Mirroring, loader);
+			loader = bool_loader(&WRAM_Enable, loader);
 
 			loader = int_loader(&Size_Mask, loader);
 
