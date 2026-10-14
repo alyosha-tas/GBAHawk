@@ -405,9 +405,18 @@ namespace NESHawk
 
 			std::memcpy(NES.Cart_RAM, ext_sram, ext_sram_size);
 
-			Mapper->Core_Cart_RAM = &NES.Cart_RAM[0];
+			if (Use_Game_Genie == false)
+			{
+				Mapper->Core_Cart_RAM = &NES.Cart_RAM[0];
 
-			Mapper->Size_Mask = ext_sram_size - 1;
+				Mapper->Size_Mask = ext_sram_size - 1;
+			}
+			else
+			{
+				Mapper->Mapper->Core_Cart_RAM = &NES.Cart_RAM[0];
+
+				Mapper->Mapper->Size_Mask = ext_sram_size - 1;
+			}
 		}
 
 		void Load_SRAM(uint8_t* ext_sram, uint32_t ext_sram_size)
@@ -590,8 +599,14 @@ namespace NESHawk
 
 		uint8_t GetVRAM(uint32_t addr) 
 		{
-
-			return Mapper->VRAM[(addr & 0x7FFF)];
+			if (!Use_Game_Genie)
+			{
+				return Mapper->VRAM[(addr & 0x7FFF)];
+			}
+			else
+			{
+				return Mapper->Mapper->VRAM[(addr & 0x7FFF)];
+			}
 		}
 
 		uint8_t GetCHR_ROM(uint32_t addr)
@@ -734,7 +749,14 @@ namespace NESHawk
 				case 3:
 					if (NES.Mapper_Number == 5)
 					{
-						return Mapper->MMC5_ExRAM_Mode == 1;
+						if (!Use_Game_Genie)
+						{
+							return Mapper->MMC5_ExRAM_Mode == 1;
+						}
+						else
+						{
+							return Mapper->Mapper->MMC5_ExRAM_Mode == 1;
+						}
 					}
 
 					return false;
@@ -751,7 +773,14 @@ namespace NESHawk
 
 		uint8_t Get_PPU_Board_Peek(uint32_t addr)
 		{
-			return Mapper->PeekPPU(addr);
+			if (!Use_Game_Genie)
+			{
+				return Mapper->PeekPPU(addr);
+			}
+			else
+			{
+				return Mapper->Mapper->PeekPPU(addr);
+			}
 		}
 
 		uint8_t* Get_PPU_Pointers(int sel)
@@ -761,8 +790,14 @@ namespace NESHawk
 				case 0: return NES.CHR_ROM; break;
 				case 1: return NES.OAM; break;
 				case 2: return NES.PALRAM; break;
-				case 3: return Mapper->Ex_RAM; break;
-				case 4: return Mapper->VRAM; break;
+				case 3:
+					if (!Use_Game_Genie) { return Mapper->Ex_RAM; }
+					else { return Mapper->Mapper->Ex_RAM; }
+					break;
+				case 4:
+					if (!Use_Game_Genie) { return Mapper->VRAM; }
+					else { return Mapper->Mapper->VRAM; }
+					break;
 			}
 
 			return nullptr;

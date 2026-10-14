@@ -18,11 +18,26 @@ namespace NESHawk
 
 		bool Game_Genie_Mode;
 
-		
+		bool Cheat_1_enable, Cheat_2_enable, Cheat_3_enable;
+		bool Cheat_1_compare, Cheat_2_compare, Cheat_3_compare;
+
+		uint8_t Cheat_1_value, Cheat_2_value, Cheat_3_value;
+		uint8_t Cheat_1_compare_value, Cheat_2_compare_value, Cheat_3_compare_value;
+
+		uint32_t Cheat_1_addr, Cheat_2_addr, Cheat_3_addr;
+
 
 		void Reset()
 		{
 			Game_Genie_Mode = true;
+
+			Cheat_1_enable = Cheat_2_enable = Cheat_3_enable = false;
+			Cheat_1_compare = Cheat_2_compare = Cheat_3_compare = false;
+
+			Cheat_1_value = Cheat_2_value = Cheat_3_value = 0;
+			Cheat_1_compare_value = Cheat_2_compare_value = Cheat_3_compare_value = 0;
+
+			Cheat_1_addr = Cheat_2_addr = Cheat_3_addr = 0x8000;
 
 			Mapper->Reset();
 		}
@@ -41,9 +56,80 @@ namespace NESHawk
 				}
 			}
 			else
-
 			{
-				return Mapper->ReadPRG(addr);
+				uint8_t ret = Mapper->ReadPRG(addr);
+
+				if (Cheat_1_enable && (addr == (Cheat_1_addr - 0x8000)))
+				{
+					if (Cheat_1_compare)
+					{
+						if (ret == Cheat_1_compare_value)
+						{
+							ret = Cheat_1_value;
+						}
+					}
+					else
+					{
+						ret = Cheat_1_value;
+					}
+
+					// bus conflict with underlying WRAM or exp
+					if ((addr & 0x6000) == 0x6000)
+					{
+						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						{
+							ret = ReadWRAM(addr - 0x6000);
+						}
+					}
+				}
+				else if (Cheat_2_enable && (addr == (Cheat_2_addr - 0x8000)))
+				{
+					if (Cheat_2_compare)
+					{
+						if (ret == Cheat_2_compare_value)
+						{
+							ret = Cheat_2_value;
+						}
+					}
+					else
+					{
+						ret = Cheat_2_value;
+					}
+
+					// bus conflict with underlying WRAM or exp
+					if ((addr & 0x6000) == 0x6000)
+					{
+						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						{
+							ret = ReadWRAM(addr - 0x6000);
+						}
+					}
+				}
+				else if (Cheat_3_enable && (addr == (Cheat_3_addr - 0x8000)))
+				{
+					if (Cheat_3_compare)
+					{
+						if (ret == Cheat_3_compare_value)
+						{
+							ret = Cheat_3_value;
+						}
+					}
+					else
+					{
+						ret = Cheat_3_value;
+					}
+
+					// bus conflict with underlying WRAM or exp
+					if ((addr & 0x6000) == 0x6000)
+					{
+						if (Mapper->Core_Cart_RAM_Length[0] > 0)
+						{
+							ret = ReadWRAM(addr - 0x6000);
+						}
+					}
+				}
+				
+				return ret;
 			}		
 		}
 
@@ -54,7 +140,6 @@ namespace NESHawk
 				return *Core_DB;
 			}
 			else
-
 			{
 				return Mapper->ReadExp(addr);
 			}
@@ -67,7 +152,6 @@ namespace NESHawk
 				return *Core_DB;
 			}
 			else
-
 			{
 				return Mapper->ReadWRAM(addr);
 			}
@@ -77,16 +161,35 @@ namespace NESHawk
 		{
 			if (Game_Genie_Mode)
 			{
-				if (addr == 0)
+				if (addr == 0x0)
 				{
 					if ((value & 1) == 1)
 					{
 						Game_Genie_Mode = false;
 					}
+
+					Cheat_1_compare = ((value >> 1) & 1) == 1;
+					Cheat_2_compare = ((value >> 2) & 1) == 1; 
+					Cheat_3_compare = ((value >> 3) & 1) == 1;
+
+					Cheat_1_enable = ((value >> 1) & 1) == 0;
+					Cheat_2_enable = ((value >> 1) & 1) == 0;
+					Cheat_3_enable = ((value >> 1) & 1) == 0;			
 				}
+				else if (addr == 0x1) { Cheat_1_addr |= ((value & 0x7F) << 8); }
+				else if (addr == 0x2) { Cheat_1_addr |= value; }
+				else if (addr == 0x3) { Cheat_1_compare_value = value; }
+				else if (addr == 0x4) { Cheat_1_value = value; }
+				else if (addr == 0x5) { Cheat_2_addr |= ((value & 0x7F) << 8); }
+				else if (addr == 0x6) { Cheat_2_addr |= value; }
+				else if (addr == 0x7) { Cheat_2_compare_value = value; }
+				else if (addr == 0x8) { Cheat_2_value = value; }
+				else if (addr == 0x9) { Cheat_3_addr |= ((value & 0x7F) << 8); }
+				else if (addr == 0xA) { Cheat_3_addr |= value; }
+				else if (addr == 0xB) { Cheat_3_compare_value = value; }
+				else if (addr == 0xC) { Cheat_3_value = value; }
 			}
 			else
-
 			{
 				Mapper->WritePRG(addr, value);
 			}
@@ -99,7 +202,6 @@ namespace NESHawk
 
 			}
 			else
-
 			{
 				Mapper->WriteExp(addr, value);
 			}
@@ -112,7 +214,6 @@ namespace NESHawk
 
 			}
 			else
-
 			{
 				Mapper->WriteWRAM(addr, value);
 			}
@@ -181,7 +282,6 @@ namespace NESHawk
 				return Core_CIRAM[block][ofs];
 			}
 			else
-
 			{
 				return Mapper->ReadPPU(addr);
 			}
@@ -194,7 +294,6 @@ namespace NESHawk
 				return ReadPPU(addr);
 			}
 			else
-
 			{
 				return Mapper->PeekPPU(addr);
 			}
@@ -209,7 +308,6 @@ namespace NESHawk
 				return *Core_DB;
 			}
 			else
-
 			{
 				return Mapper->PeekCart(addr);
 			}
@@ -256,7 +354,6 @@ namespace NESHawk
 				return false;
 			}
 			else
-
 			{
 				return Mapper->IrqSignal();
 			}
@@ -266,6 +363,26 @@ namespace NESHawk
 		{
 			saver = bool_saver(Game_Genie_Mode, saver);
 
+			saver = bool_saver(Cheat_1_enable, saver);
+			saver = bool_saver(Cheat_2_enable, saver);
+			saver = bool_saver(Cheat_3_enable, saver);
+
+			saver = bool_saver(Cheat_1_compare, saver);
+			saver = bool_saver(Cheat_2_compare, saver);
+			saver = bool_saver(Cheat_3_compare, saver);
+
+			saver = byte_saver(Cheat_1_value, saver);
+			saver = byte_saver(Cheat_2_value, saver);
+			saver = byte_saver(Cheat_3_value, saver);
+
+			saver = byte_saver(Cheat_1_compare_value, saver);
+			saver = byte_saver(Cheat_2_compare_value, saver);
+			saver = byte_saver(Cheat_3_compare_value, saver);
+
+			saver = int_saver(Cheat_1_addr, saver);
+			saver = int_saver(Cheat_2_addr, saver);
+			saver = int_saver(Cheat_3_addr, saver);
+
 			Mapper->SaveState(saver);
 
 			return saver;
@@ -274,6 +391,26 @@ namespace NESHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&Game_Genie_Mode, loader);
+
+			loader = bool_loader(&Cheat_1_enable, loader);
+			loader = bool_loader(&Cheat_2_enable, loader);
+			loader = bool_loader(&Cheat_3_enable, loader);
+
+			loader = bool_loader(&Cheat_1_compare, loader);
+			loader = bool_loader(&Cheat_2_compare, loader);
+			loader = bool_loader(&Cheat_3_compare, loader);
+
+			loader = byte_loader(&Cheat_1_value, loader);
+			loader = byte_loader(&Cheat_2_value, loader);
+			loader = byte_loader(&Cheat_3_value, loader);
+
+			loader = byte_loader(&Cheat_1_compare_value, loader);
+			loader = byte_loader(&Cheat_2_compare_value, loader);
+			loader = byte_loader(&Cheat_3_compare_value, loader);
+
+			loader = int_loader(&Cheat_1_addr, loader);
+			loader = int_loader(&Cheat_2_addr, loader);
+			loader = int_loader(&Cheat_3_addr, loader);
 
 			Mapper->LoadState(loader);
 
