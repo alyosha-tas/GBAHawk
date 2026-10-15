@@ -22,6 +22,7 @@
 #include "MMC2.h"
 #include "MMC1.h"
 #include "Mapper_030.h"
+#include "Mapper_152.h"
 #include "Mapper_232.h"
 #include "NROM_RetroCoders.h"
 #include "Game_Genie.h"
@@ -126,6 +127,7 @@ namespace NESHawk
 					case 0x09: Mapper = new Mapper_MMC2(); break;
 					case 0x1E: Mapper = new Mapper_030(); break;
 					case 0x42: Mapper = new Mapper_GxROM(); break;
+					case 0x98: Mapper = new Mapper_152(); break;
 					case 0xE8: Mapper = new Mapper_232(); break;
 
 					default: Mapper = new Mapper_NROM(); break;
@@ -262,6 +264,7 @@ namespace NESHawk
 						case 0x09: Mapper->Mapper = new Mapper_MMC2(); break;
 						case 0x1E: Mapper->Mapper = new Mapper_030(); break;
 						case 0x42: Mapper->Mapper = new Mapper_GxROM(); break;
+						case 0x98: Mapper->Mapper = new Mapper_152(); break;
 						case 0xE8: Mapper->Mapper = new Mapper_232(); break;
 
 						default: Mapper->Mapper = new Mapper_NROM(); break;

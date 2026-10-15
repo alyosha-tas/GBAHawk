@@ -436,17 +436,7 @@ namespace NESHawk
 			saver = byte_array_saver(MMC3_CHR_Regs_1K, saver, 8);
 
 			// common to all mappers
-			saver = bool_saver(Mirroring, saver);
-			saver = bool_saver(Bus_Conflicts, saver);
-			saver = bool_saver(Old_IRQ_Type, saver);
-			saver = bool_saver(Alt_Mirroring, saver);
-			saver = bool_saver(WRAM_Enable, saver);
-
-			saver = int_saver(Size_Mask, saver);
-
-			saver = byte_array_saver(Ex_RAM, saver, 0x400);
-			saver = byte_array_saver(VRAM, saver, 0x8000);
-			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
+			saver = Base_Saver(saver);
 
 			return saver;
 		}
@@ -483,17 +473,7 @@ namespace NESHawk
 			loader = byte_array_loader(MMC3_CHR_Regs_1K, loader, 8);
 
 			// common to all mappers
-			loader = bool_loader(&Mirroring, loader);
-			loader = bool_loader(&Bus_Conflicts, loader);
-			loader = bool_loader(&Old_IRQ_Type, loader);
-			loader = bool_loader(&Alt_Mirroring, loader);
-			loader = bool_loader(&WRAM_Enable, loader);
-
-			loader = int_loader(&Size_Mask, loader);
-
-			loader = byte_array_loader(Ex_RAM, loader, 0x400);
-			loader = byte_array_loader(VRAM, loader, 0x8000);
-			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
+			loader = Base_Loader(loader);
 
 			Remap_ROM();
 

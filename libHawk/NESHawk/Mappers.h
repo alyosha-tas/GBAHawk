@@ -199,6 +199,22 @@ namespace NESHawk
 
 		virtual uint8_t* SaveState(uint8_t* saver)
 		{
+			saver = Base_Saver(saver);
+			
+			return saver;
+		}
+
+		virtual uint8_t* LoadState(uint8_t* loader)
+		{
+			loader = Base_Loader(loader);
+			
+			Remap_ROM();
+
+			return loader;
+		}
+
+		uint8_t* Base_Saver(uint8_t* saver)
+		{
 			saver = bool_saver(Mirroring, saver);
 			saver = bool_saver(Bus_Conflicts, saver);
 			saver = bool_saver(Old_IRQ_Type, saver);
@@ -210,11 +226,11 @@ namespace NESHawk
 			saver = byte_array_saver(Ex_RAM, saver, 0x400);
 			saver = byte_array_saver(VRAM, saver, 0x8000);
 			saver = byte_array_saver(EXT_CIRAM, saver, 0x2000);
-			
+
 			return saver;
 		}
 
-		virtual uint8_t* LoadState(uint8_t* loader)
+		uint8_t* Base_Loader(uint8_t* loader)
 		{
 			loader = bool_loader(&Mirroring, loader);
 			loader = bool_loader(&Bus_Conflicts, loader);
@@ -227,8 +243,6 @@ namespace NESHawk
 			loader = byte_array_loader(Ex_RAM, loader, 0x400);
 			loader = byte_array_loader(VRAM, loader, 0x8000);
 			loader = byte_array_loader(EXT_CIRAM, loader, 0x2000);
-			
-			Remap_ROM();
 
 			return loader;
 		}
