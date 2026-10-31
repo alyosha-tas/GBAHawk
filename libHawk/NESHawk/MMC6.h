@@ -27,6 +27,9 @@ namespace NESHawk
 		bool WRAM_Read_Enable_Hi;
 		bool WRAM_Write_Enable_Lo;
 		bool WRAM_Write_Enable_Hi;
+		bool Counter_Glitch;
+		bool Can_Activate_Counter_Glitch;
+		bool Counter_Glitch_Activated;
 
 		uint8_t Command;
 		uint8_t IRQ_Reload;
@@ -60,6 +63,9 @@ namespace NESHawk
 			WRAM_Write_Enable_Lo = false;
 			WRAM_Write_Enable_Hi = false;
 			Alt_Mirroring = false;
+			Counter_Glitch = false;
+			Can_Activate_Counter_Glitch = false;
+			Counter_Glitch_Activated = false;
 
 			Command = 0;
 			IRQ_Reload = 0;
@@ -70,7 +76,8 @@ namespace NESHawk
 			IRQ_Countdown = 0;
 			A12_Old = 0;
 
-			//initial values seem necessary
+			// initial values seem necessary
+			// this doesn't match behavior on my cart, mirroring mode appears set at poweron?
 			MMC3_Regs[0] = 0;
 			MMC3_Regs[1] = 2;
 			MMC3_Regs[2] = 4;
@@ -202,7 +209,23 @@ namespace NESHawk
 					break;
 				case 0x4001: //$C001 - IRQ Clear
 					// does not take immediate effect (fixes Klax)
-					Just_Cleared_Pending = true;
+
+					if (!Counter_Glitch_Activated)
+					{
+						Just_Cleared_Pending = true;
+						Counter_Glitch = false;
+						Can_Activate_Counter_Glitch = true;
+					}
+					else
+					{
+						//Core_Message_String->assign("Glitch: " + to_string(*Core_Cycle_Count));
+
+						//MessageCallback(Core_Message_String->length());
+
+						Counter_Glitch = true;
+					}
+
+					//Just_Cleared_Pending = true;
 					break;
 				case 0x6000: //$E000 - IRQ Acknowledge / Disable
 					IRQ_Enable = false;
@@ -305,18 +328,40 @@ namespace NESHawk
 		void ClockIRQ()
 		{
 			uint8_t last_irq_counter = IRQ_Counter;
-			if (IRQ_Reload_Flag || IRQ_Counter == 0)
+
+			// MMC6 has a combination of the 'Sharp' and 'NEC' behaviors from the MMC3
+			if (Counter_Glitch)
 			{
-				IRQ_Counter = IRQ_Reload;
+				IRQ_Counter |= 0xFF;
+
+				Counter_Glitch = false;
+
+				IRQ_Counter--;
 			}
 			else
 			{
-				IRQ_Counter--;
+				if (IRQ_Reload_Flag || IRQ_Counter == 0)
+				{
+					IRQ_Counter = IRQ_Reload;
+				}
+				else
+				{
+					IRQ_Counter--;
+				}
+				if (IRQ_Counter == 0)
+				{
+					IRQ_EQ_Pass();
+				}
 			}
-			if (IRQ_Counter == 0)
+
+			Counter_Glitch_Activated = false;
+
+			if (Can_Activate_Counter_Glitch)
 			{
-				IRQ_EQ_Pass();
+				Counter_Glitch_Activated = true;
 			}
+
+			Can_Activate_Counter_Glitch = false;
 
 			IRQ_Reload_Flag = false;
 		}
@@ -417,6 +462,9 @@ namespace NESHawk
 			saver = bool_saver(WRAM_Read_Enable_Hi, saver);
 			saver = bool_saver(WRAM_Write_Enable_Lo, saver);
 			saver = bool_saver(WRAM_Write_Enable_Hi, saver);
+			saver = bool_saver(Counter_Glitch, saver);
+			saver = bool_saver(Can_Activate_Counter_Glitch, saver);
+			saver = bool_saver(Counter_Glitch_Activated, saver);
 
 			saver = byte_saver(Command, saver);
 			saver = byte_saver(IRQ_Reload, saver);
@@ -454,6 +502,9 @@ namespace NESHawk
 			loader = bool_loader(&WRAM_Read_Enable_Hi, loader);
 			loader = bool_loader(&WRAM_Write_Enable_Lo, loader);
 			loader = bool_loader(&WRAM_Write_Enable_Hi, loader);
+			loader = bool_loader(&Counter_Glitch, loader);
+			loader = bool_loader(&Can_Activate_Counter_Glitch, loader);
+			loader = bool_loader(&Counter_Glitch_Activated, loader);
 
 			loader = byte_loader(&Command, loader);
 			loader = byte_loader(&IRQ_Reload, loader);
