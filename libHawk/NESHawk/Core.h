@@ -21,6 +21,7 @@
 #include "MMC3.h"
 #include "MMC2.h"
 #include "MMC1.h"
+#include "VRC2.h"
 #include "Mapper_030.h"
 #include "Mapper_152.h"
 #include "Mapper_206.h"
@@ -108,31 +109,42 @@ namespace NESHawk
 				{
 					switch (mapper_num)
 					{
-					case 0x00: Mapper = new Mapper_NROM(); break;
-					case 0x01: Mapper = new Mapper_MMC1(); break;
-					case 0x02: Mapper = new Mapper_UxROM(); break;
-					case 0x03: Mapper = new Mapper_CNROM(); break;
-					case 0x04:
-						if ((submapper_num == 0) || (submapper_num == 4))
-						{
-							Mapper = new Mapper_MMC3(); break;
+						case 0x00: Mapper = new Mapper_NROM(); break;
+						case 0x01: Mapper = new Mapper_MMC1(); break;
+						case 0x02: Mapper = new Mapper_UxROM(); break;
+						case 0x03: Mapper = new Mapper_CNROM(); break;
+						case 0x04:
+							if ((submapper_num == 0) || (submapper_num == 4))
+							{
+								Mapper = new Mapper_MMC3(); break;
 
-						}
-						else if (submapper_num == 1)
-						{
-							Mapper = new Mapper_MMC6(); break;
-						}
-						break;
-					case 0x05: Mapper = new Mapper_MMC5(); break;
-					case 0x07: Mapper = new Mapper_AxROM(); break;
-					case 0x09: Mapper = new Mapper_MMC2(); break;
-					case 0x1E: Mapper = new Mapper_030(); break;
-					case 0x42: Mapper = new Mapper_GxROM(); break;
-					case 0x98: Mapper = new Mapper_152(); break;
-					case 0xCE: Mapper = new Mapper_206(); break;
-					case 0xE8: Mapper = new Mapper_232(); break;
+							}
+							else if (submapper_num == 1)
+							{
+								Mapper = new Mapper_MMC6(); break;
+							}
+							break;
+						case 0x05: Mapper = new Mapper_MMC5(); break;
+						case 0x07: Mapper = new Mapper_AxROM(); break;
+						case 0x09: Mapper = new Mapper_MMC2(); break;
+						case 0x17:
+							if (submapper_num == 3)
+							{
+								Mapper = new VRC2(); break;
+								Mapper->VRC_Register_Layout = 0;
+							}
+							else
+							{
+								// should be VRC4 but not implemented yet
+								Mapper = new Mapper_NROM(); break;
+							}
+						case 0x1E: Mapper = new Mapper_030(); break;
+						case 0x42: Mapper = new Mapper_GxROM(); break;
+						case 0x98: Mapper = new Mapper_152(); break;
+						case 0xCE: Mapper = new Mapper_206(); break;
+						case 0xE8: Mapper = new Mapper_232(); break;
 
-					default: Mapper = new Mapper_NROM(); break;
+						default: Mapper = new Mapper_NROM(); break;
 					}
 				}
 				else
@@ -278,6 +290,17 @@ namespace NESHawk
 						case 0x05: Mapper->Mapper = new Mapper_MMC5(); break;
 						case 0x07: Mapper->Mapper = new Mapper_AxROM(); break;
 						case 0x09: Mapper->Mapper = new Mapper_MMC2(); break;
+						case 0x17:
+							if (submapper_num == 3)
+							{
+								Mapper->Mapper = new VRC2(); break;
+								Mapper->Mapper->VRC_Register_Layout = 0;
+							}
+							else
+							{
+								// should be VRC4 but not implemented yet
+								Mapper->Mapper = new Mapper_NROM(); break;
+							}
 						case 0x1E: Mapper->Mapper = new Mapper_030(); break;
 						case 0x42: Mapper->Mapper = new Mapper_GxROM(); break;
 						case 0x98: Mapper->Mapper = new Mapper_152(); break;

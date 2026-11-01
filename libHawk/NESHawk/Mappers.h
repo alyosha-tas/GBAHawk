@@ -33,6 +33,9 @@ namespace NESHawk
 
 		uint32_t Size_Mask;
 
+		// only savestated in VRC mappers
+		uint32_t VRC_Register_Layout = 0;
+
 		// only savestated in actual MMC5 mapper
 		uint32_t MMC5_ExRAM_Mode = 0;
 

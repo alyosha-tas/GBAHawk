@@ -26,9 +26,6 @@ namespace NESHawk
 
 		void Reset()
 		{
-			WRAM_Enable = false;
-			Old_IRQ_Type = false;
-
 			Reg_Addr = 0;
 
 			M206_Regs[0] = 0;

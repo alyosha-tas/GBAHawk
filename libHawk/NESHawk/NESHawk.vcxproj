@@ -46,6 +46,7 @@
     <ClInclude Include="NESHawk.h" />
     <ClInclude Include="Mappers.h" />
     <ClInclude Include="NES_System.h" />
+    <ClInclude Include="VRC2.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
