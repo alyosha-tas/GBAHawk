@@ -64,6 +64,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			ROMS[0] = new byte[0x6000000];
 			ROMS[1] = new byte[0x6000000];
 
+			int mirror_mode = 2;
+
 			for (int i = 0; i < 2; i++)
 			{
 				var rom = lp.Roms[i].RomData;
@@ -77,6 +79,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				{
 					if (lp.Roms[i].RomData[j] != multi_boot_check[j]) { is_multi_boot[i] = false; }
 				}
+
+				mirror_mode = GBACommonFunctions.Setup_Mirroring(romHashMD5, romHashSHA1);
 
 				if (is_multi_boot[i])
 				{
@@ -98,21 +102,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					ROMS_Length[i] = (uint)rom.Length;
 					Buffer.BlockCopy(rom, 0, ROMS[i], 0, rom.Length);
 
-					// some roms expect a different repetition pattern (probably depends on chip size)
-					if ((romHashSHA1 == "SHA1:676357A271981699D97CFE1730F0AB3D07CE1F69") || // gba ldm-stm
-						(romHashSHA1 == "SHA1:D336E8B65FBC4DE054FCEDE16CFE1B1978EAAEE4"))   // armfuck
-					{
-						for (int j = 0; j < rom.Length; j++)
-						{
-							ROMS[i][j + 0x1000000] = rom[j];
-							ROMS[i][j + 0x2000000] = rom[j];
-							ROMS[i][j + 0x3000000] = rom[j];
-							ROMS[i][j + 0x4000000] = rom[j];
-							ROMS[i][j + 0x5000000] = rom[j];
-						}
-					}
-					else if ((romHashSHA1 != "SHA1:5F989B9A4017F16A431F76FD78A95E9799AA8FCA") && // GBA Suite Memory test
-						(romHashSHA1 != "SHA1:D015A5039FF5D08EEBA3DDB16470EAAB259631D0"))   // Broken Circle
+					if ((mirror_mode == 0) || (mirror_mode == 2))
 					{
 						// fill unused ROM area (assuming the ROM chip doesn't respond)
 						// for now mirror across 2MB boundaries, but might need to be more precise for smaller ROMs (do they exist?)
@@ -138,11 +128,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					else
 					{
 						// mirror the rom accross the whole region (might need different increment sizes for different ROMs)
-						for (int j = 0; j < rom.Length; j++)
+						if (rom.Length <= 0x1000000)
 						{
-							ROMS[i][j + 0x2000000] = rom[j];
-							ROMS[i][j + 0x4000000] = rom[j];
+							for (int j = 0; j < rom.Length; j++)
+							{
+								ROMS[i][j + 0x1000000] = rom[j];
+								ROMS[i][j + 0x2000000] = rom[j];
+								ROMS[i][j + 0x3000000] = rom[j];
+								ROMS[i][j + 0x4000000] = rom[j];
+								ROMS[i][j + 0x5000000] = rom[j];
+							}
 						}
+						else if (rom.Length <= 0x2000000)
+						{
+							for (int j = 0; j < rom.Length; j++)
+							{
+								ROMS[i][j + 0x2000000] = rom[j];
+								ROMS[i][j + 0x4000000] = rom[j];
+							}
+						}
+
+						// don't mirror at all for larger ROMs
 					}
 				}
 

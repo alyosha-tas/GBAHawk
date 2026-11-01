@@ -30,6 +30,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 	public class GBACommonFunctions
 	{
+		public static int Setup_Mirroring(string romHashMD5, string romHashSHA1)
+		{
+			int db_mirror = 2;
+			
+			GameInfo db_entry = Database.CheckDatabase(Database.RemoveHashType(romHashSHA1));
+			if (db_entry != null)
+			{
+				var db_params = db_entry.GetOptions();
+
+				if (db_params.ContainsKey("mirror"))
+				{
+					if (db_params.TryGetValue("mirror", out var str_mir)) { db_mirror = int.Parse(str_mir); }
+				}
+
+				if ((db_mirror != 0) && (db_mirror != 1))
+				{
+					db_mirror = 2;
+				}
+			}
+
+			return db_mirror;
+		}
+
 		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] ROM, out int mapper, out bool has_bat, out uint Cart_RAM_Size)
 		{
 			int size_f = 0;
@@ -42,6 +65,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 			GameInfo db_entry = Database.CheckDatabase(Database.RemoveHashType(romHashSHA1));
 			bool is_valid = true;
 			int db_mapper = 0;
+			int db_mirror = 2;
 			uint db_sram_size = 0;
 			if (db_entry != null)
 			{
@@ -49,10 +73,17 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 				// DB entries must contain all parameters, if any are missing it is invalid
 				var db_params = db_entry.GetOptions();
 
-				if (db_params.ContainsKey("mapper") && db_params.ContainsKey("sram"))
+				if (db_params.ContainsKey("mapper") && db_params.ContainsKey("sram") && db_params.ContainsKey("mirror"))
 				{
 					if (db_params.TryGetValue("mapper", out var str_map)) { db_mapper = int.Parse(str_map); }
 					if (db_params.TryGetValue("sram", out var str_sram)) { db_sram_size = uint.Parse(str_sram); }
+					if (db_params.TryGetValue("mirror", out var str_mir)) { db_mirror = int.Parse(str_mir); }
+
+					if ((db_mirror != 0) && (db_mirror != 1))
+					{
+						Console.WriteLine("DB entry invalid, mirroring value out of range. Ignoring DB entry.");
+						is_valid = false;
+					}
 
 					if ((db_mapper < 0) || (db_mapper > 9))
 					{

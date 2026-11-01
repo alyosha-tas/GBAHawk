@@ -80,6 +80,8 @@ namespace NESHawk
 
 		uint8_t* Core_DB = nullptr;
 
+		uint16_t* Core_PC = nullptr;
+
 		uint8_t* Core_CHR_ROM = nullptr;
 
 		uint8_t* Core_CIRAM[4] = { nullptr, nullptr, nullptr, nullptr };

@@ -23,6 +23,7 @@
 #include "MMC1.h"
 #include "Mapper_030.h"
 #include "Mapper_152.h"
+#include "Mapper_206.h"
 #include "Mapper_232.h"
 #include "NROM_RetroCoders.h"
 #include "Game_Genie.h"
@@ -128,6 +129,7 @@ namespace NESHawk
 					case 0x1E: Mapper = new Mapper_030(); break;
 					case 0x42: Mapper = new Mapper_GxROM(); break;
 					case 0x98: Mapper = new Mapper_152(); break;
+					case 0xCE: Mapper = new Mapper_206(); break;
 					case 0xE8: Mapper = new Mapper_232(); break;
 
 					default: Mapper = new Mapper_NROM(); break;
@@ -175,6 +177,7 @@ namespace NESHawk
 				}
 
 				Mapper->Core_DB = &NES.DB_Ext;
+				Mapper->Core_PC = &NES.PC;
 
 				Mapper->Core_Message_String = &NES.Message_String;
 				Mapper->MessageCallback = NES.MessageCallback;
@@ -234,6 +237,19 @@ namespace NESHawk
 					}
 				}
 
+				if (mapper_num == 206)
+				{
+					if ((NES.Header[6] & 0x8) == 0x8)
+					{
+						Mapper->Alt_Mirroring = true;
+
+						Mapper->Core_CIRAM[0] = &Mapper->EXT_CIRAM[0];
+						Mapper->Core_CIRAM[1] = &Mapper->EXT_CIRAM[0x400];
+						Mapper->Core_CIRAM[2] = &Mapper->EXT_CIRAM[0x800];
+						Mapper->Core_CIRAM[3] = &Mapper->EXT_CIRAM[0xC00];
+					}
+				}
+
 				NES.Mapper_Number = mapper_num;
 
 				NES.Total_CPU_Clock_Cycles = 0;
@@ -265,6 +281,7 @@ namespace NESHawk
 						case 0x1E: Mapper->Mapper = new Mapper_030(); break;
 						case 0x42: Mapper->Mapper = new Mapper_GxROM(); break;
 						case 0x98: Mapper->Mapper = new Mapper_152(); break;
+						case 0xCE: Mapper->Mapper = new Mapper_206(); break;
 						case 0xE8: Mapper->Mapper = new Mapper_232(); break;
 
 						default: Mapper->Mapper = new Mapper_NROM(); break;
@@ -310,6 +327,7 @@ namespace NESHawk
 				}
 
 				Mapper->Mapper->Core_DB = &NES.DB_Ext;
+				Mapper->Mapper->Core_PC = &NES.PC;
 
 				Mapper->Mapper->Core_Message_String = &NES.Message_String;
 				Mapper->Mapper->MessageCallback = NES.MessageCallback;
@@ -366,6 +384,19 @@ namespace NESHawk
 					else if (submapper_num == 4)
 					{
 						Mapper->Mapper->Old_IRQ_Type = true;
+					}
+				}
+
+				if (mapper_num == 206)
+				{
+					if ((NES.Header[6] & 0x8) == 0x8)
+					{
+						Mapper->Mapper->Alt_Mirroring = true;
+
+						Mapper->Mapper->Core_CIRAM[0] = &Mapper->Mapper->EXT_CIRAM[0];
+						Mapper->Mapper->Core_CIRAM[1] = &Mapper->Mapper->EXT_CIRAM[0x400];
+						Mapper->Mapper->Core_CIRAM[2] = &Mapper->Mapper->EXT_CIRAM[0x800];
+						Mapper->Mapper->Core_CIRAM[3] = &Mapper->Mapper->EXT_CIRAM[0xC00];
 					}
 				}
 
