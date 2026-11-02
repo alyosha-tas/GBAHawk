@@ -34,7 +34,10 @@ namespace NESHawk
 		uint32_t Size_Mask;
 
 		// only savestated in VRC mappers
+		bool VRC2_SRAM = false;
 		uint32_t VRC_Register_Layout = 0;
+
+
 
 		// only savestated in actual MMC5 mapper
 		uint32_t MMC5_ExRAM_Mode = 0;
@@ -110,7 +113,7 @@ namespace NESHawk
 		{
 			if (*Core_Cart_RAM_Length > 0)
 			{
-				return Core_Cart_RAM[addr];
+				return Core_Cart_RAM[addr & Size_Mask];
 			}
 
 			// not entirely accurate and hardware dependent
@@ -140,7 +143,7 @@ namespace NESHawk
 		{
 			if (*Core_Cart_RAM_Length > 0)
 			{
-				Core_Cart_RAM[addr] = value;
+				Core_Cart_RAM[addr & Size_Mask] = value;
 			}
 		}
 

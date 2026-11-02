@@ -263,28 +263,54 @@ namespace NESHawk
 
 		uint8_t ReadWRAM(uint32_t addr)
 		{
-			if (addr < 0x1000)
+			if (VRC2_SRAM)
 			{
-				// check if games rely on other behavior of the latch bit (could be always 0)
-				return (*Core_DB & 0x7E | SP_Latch);
+				if (*Core_Cart_RAM_Length > 0)
+				{
+					return Core_Cart_RAM[addr & Size_Mask];
+				}
+
+				// not entirely accurate and hardware dependent
+				// works for Battletoads and Castlevania III
+
+				return *Core_DB;
 			}
 			else
 			{
-				return *Core_DB;
+				if (addr < 0x1000)
+				{
+					// check if games rely on other behavior of the latch bit (could be always 0)
+					return (*Core_DB & 0x7E | SP_Latch);
+				}
+				else
+				{
+					return *Core_DB;
+				}
 			}
 		}
 
 		void WriteWRAM(uint32_t addr, uint8_t value)
 		{
-			if (addr < 0x1000)
+			if (VRC2_SRAM)
 			{
-				SP_Latch = value & 1;
+				if (*Core_Cart_RAM_Length > 0)
+				{
+					Core_Cart_RAM[addr & Size_Mask] = value;
+				}
+			}
+			else
+			{
+				if (addr < 0x1000)
+				{
+					SP_Latch = value & 1;
+				}
 			}
 		}
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(Mirror_Mode, saver);
+			saver = bool_saver(VRC2_SRAM, saver);
 
 			saver = byte_saver(SP_Latch, saver);
 			
@@ -307,6 +333,7 @@ namespace NESHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&Mirror_Mode, loader);
+			loader = bool_loader(&VRC2_SRAM, loader);
 
 			loader = byte_loader(&SP_Latch, loader);
 			
