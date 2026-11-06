@@ -10,7 +10,6 @@ namespace BizHawk.Client.Common
 	{
 		void DisplayVsync(bool enabled);
 		int FrameCount();
-		object? Disassemble(uint pc, string? name = null);
 		long TotalExecutedCycles();
 		string GetSystemId();
 		bool IsLagged();
@@ -19,7 +18,6 @@ namespace BizHawk.Client.Common
 		void SetLagCount(int count);
 		void LimitFramerate(bool enabled);
 		void MinimizeFrameskip(bool enabled);
-		string GetDisplayType();
 
 		IGameInfo? GetGameInfo();
 

@@ -151,26 +151,6 @@ namespace BizHawk.Emulation.Common
 			return core.ServiceProvider.GetService<ITraceable>();
 		}
 
-		public static bool CanDisassemble(this IEmulator core)
-		{
-			return core != null && core.ServiceProvider.HasService<IDisassemblable>();
-		}
-
-		public static IDisassemblable AsDisassembler(this IEmulator core)
-		{
-			return core.ServiceProvider.GetService<IDisassemblable>();
-		}
-
-		public static bool HasRegions(this IEmulator core)
-		{
-			return core != null && core.ServiceProvider.HasService<IRegionable>();
-		}
-
-		public static IRegionable AsRegionable(this IEmulator core)
-		{
-			return core.ServiceProvider.GetService<IRegionable>();
-		}
-
 		public static ILinkable AsLinkable(this IEmulator core)
 		{
 			return core.ServiceProvider.GetService<ILinkable>();
@@ -179,26 +159,6 @@ namespace BizHawk.Emulation.Common
 		public static bool UsesLinkCable(this IEmulator core)
 		{
 			return core != null && core.ServiceProvider.HasService<ILinkable>();
-		}
-
-		public static bool CanGenerateGameDBEntries(this IEmulator core)
-		{
-			return core != null && core.ServiceProvider.HasService<ICreateGameDBEntries>();
-		}
-
-		public static ICreateGameDBEntries AsGameDBEntryGenerator(this IEmulator core)
-		{
-			return core.ServiceProvider.GetService<ICreateGameDBEntries>();
-		}
-
-		public static string RomDetails(this IEmulator core)
-		{
-			if (core != null && core.ServiceProvider.HasService<IRomInfo>())
-			{
-				return core.ServiceProvider.GetService<IRomInfo>().RomDetails;
-			}
-
-			return "";
 		}
 
 		public static int VsyncNumerator(this IEmulator core)

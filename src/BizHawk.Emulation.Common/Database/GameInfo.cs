@@ -11,15 +11,10 @@ namespace BizHawk.Emulation.Common
 	{
 		string Name { get; }
 		string System { get; }
-
-		/// <value>either CRC32, MD5, or SHA1, hex-encoded, unprefixed</value>
+		/// <value> SHA1, hex-encoded, unprefixed</value>
 		string Hash { get; }
-
-		string Region { get; }
-		RomStatus Status { get; }
 		bool NotInDatabase { get; }
 		string FirmwareHash { get; }
-		string ForcedCore { get; }
 	}
 
 	public class GameInfo : IGameInfo
@@ -27,11 +22,8 @@ namespace BizHawk.Emulation.Common
 		public string Name { get; set; }
 		public string System { get; set; }
 		public string Hash { get; set; }
-		public string Region { get; set; }
-		public RomStatus Status { get; set; } = RomStatus.NotInDatabase;
 		public bool NotInDatabase { get; set; } = true;
 		public string FirmwareHash { get; set; }
-		public string ForcedCore { get; private set; }
 
 		private Dictionary<string, string> Options { get; set; } = new Dictionary<string, string>();
 
@@ -51,9 +43,6 @@ namespace BizHawk.Emulation.Common
 			Name = "Null",
 			System = VSystemID.Raw.NULL,
 			Hash = "",
-			Region = "",
-			Status = RomStatus.GoodDump,
-			ForcedCore = "",
 			NotInDatabase = false
 		};
 
@@ -62,21 +51,8 @@ namespace BizHawk.Emulation.Common
 			Name = cgi.Name;
 			System = cgi.System;
 			Hash = cgi.Hash;
-			Region = cgi.Region;
-			Status = cgi.Status;
-			ForcedCore = cgi.ForcedCore;
 			NotInDatabase = false;
-			ParseOptionsDictionary(cgi.MetaData);
-		}
-
-		public void AddOption(string option, string param)
-		{
-			Options[option] = param;
-		}
-
-		public void RemoveOption(string option)
-		{
-			Options.Remove(option);
+			ParseOptionsDictionary(cgi.Options);
 		}
 
 		public bool this[string option] => Options.ContainsKey(option);
@@ -155,16 +131,16 @@ namespace BizHawk.Emulation.Common
 			return new ReadOnlyDictionary<string, string>(Options);
 		}
 
-		private void ParseOptionsDictionary(string metaData)
+		private void ParseOptionsDictionary(string options)
 		{
-			if (string.IsNullOrEmpty(metaData))
+			if (string.IsNullOrEmpty(options))
 			{
 				return;
 			}
 
-			var options = metaData.Split(';').Where(opt => string.IsNullOrEmpty(opt) == false).ToArray();
+			var opts = options.Split(';').Where(opt => string.IsNullOrEmpty(opt) == false).ToArray();
 
-			foreach (var opt in options)
+			foreach (var opt in opts)
 			{
 				var parts = opt.Split('=');
 				var key = parts[0];
@@ -179,11 +155,6 @@ namespace BizHawk.Emulation.Common
 		public static bool IsNullInstance(this IGameInfo game)
 		{
 			return game == null || game.System == VSystemID.Raw.NULL;
-		}
-
-		public static bool IsRomStatusBad(this IGameInfo game)
-		{
-			return game.Status == RomStatus.BadDump || game.Status == RomStatus.Overdump;
 		}
 	}
 }

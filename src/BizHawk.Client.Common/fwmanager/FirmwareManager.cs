@@ -152,8 +152,7 @@ namespace BizHawk.Client.Common
 			{
 				_resolutionDictionary.Remove(fr); // clear previous resolution results
 				// check each acceptable option for this firmware, looking for the first that's in the reader's file list
-				var found = FirmwareDatabase.FirmwareOptions.FirstOrNull(fo1 => fo1.ID == fr.ID && fo1.IsAcceptableOrIdeal
-					&& reader.Dict.ContainsKey(fo1.Hash));
+				var found = FirmwareDatabase.FirmwareOptions.FirstOrNull(fo1 => fo1.ID == fr.ID && reader.Dict.ContainsKey(fo1.Hash));
 				if (found == null) continue; // didn't find any of them
 				var fo = found.Value;
 				// else found one, add it to the dict

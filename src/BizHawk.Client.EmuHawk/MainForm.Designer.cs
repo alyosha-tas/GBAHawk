@@ -209,7 +209,6 @@ namespace BizHawk.Client.GBAHawk
 			this.GBLsettingsToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.GenericCoreSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.MainStatusBar = new BizHawk.WinForms.Controls.StatusStripEx();
-			this.DumpStatusButton = new System.Windows.Forms.ToolStripDropDownButton();
 			this.EmuStatus = new BizHawk.WinForms.Controls.StatusLabelEx();
 			this.PlayRecordStatusButton = new System.Windows.Forms.ToolStripDropDownButton();
 			this.PauseStatusButton = new System.Windows.Forms.ToolStripDropDownButton();
@@ -1299,7 +1298,6 @@ namespace BizHawk.Client.GBAHawk
 			// MainStatusBar
 			// 
 			this.MainStatusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.DumpStatusButton,
 			this.EmuStatus,
 			this.PlayRecordStatusButton,
 			this.PauseStatusButton,
@@ -1325,16 +1323,6 @@ namespace BizHawk.Client.GBAHawk
 			this.MainStatusBar.ShowItemToolTips = true;
 			this.MainStatusBar.SizingGrip = false;
 			this.MainStatusBar.TabIndex = 1;
-			// 
-			// DumpStatusButton
-			// 
-			this.DumpStatusButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.DumpStatusButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.DumpStatusButton.Name = "DumpStatusButton";
-			this.DumpStatusButton.ShowDropDownArrow = false;
-			this.DumpStatusButton.Size = new System.Drawing.Size(4, 20);
-			this.DumpStatusButton.Text = "No ROM loaded";
-			this.DumpStatusButton.Click += new System.EventHandler(this.DumpStatusButton_Click);
 			// 
 			// PlayRecordStatusButton
 			// 
@@ -1840,7 +1828,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx StopMovieContextMenuItem;
 		private System.Windows.Forms.ToolStripDropDownButton PauseStatusButton;
 		private System.Windows.Forms.ToolStripDropDownButton PlayRecordStatusButton;
-		private System.Windows.Forms.ToolStripDropDownButton DumpStatusButton;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ViewSubtitlesContextMenuItem;
 		private MenuStripEx MainformMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBSubMenu;

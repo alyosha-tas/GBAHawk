@@ -1319,21 +1319,6 @@ namespace BizHawk.Client.GBAHawk
 			FrameBufferResized();
 		}
 
-		private void DumpStatusButton_Click(object sender, EventArgs e)
-		{
-			string details = Emulator.RomDetails();
-			if (string.IsNullOrWhiteSpace(details))
-			{
-				details = _defaultRomDetails;
-			}
-
-			if (!string.IsNullOrEmpty(details))
-			{
-				Tools.Load<LogWindow>();
-				((LogWindow) Tools.Get<LogWindow>()).ShowReport("Dump Status Report", details);
-			}
-		}
-
 		private void SlotStatusButtons_MouseUp(object sender, MouseEventArgs e)
 		{
 			int slot = 0;

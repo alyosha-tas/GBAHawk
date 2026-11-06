@@ -170,6 +170,8 @@
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\FCEUX %282.2.0%29.pal" />
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\QuickNes.pal" />
 		<None Remove="C:\Users\david\Desktop\BizHawkResearch\src\BizHawk.Client.EmuHawk\..\..\Assets\NES\Palettes\SONY_CXA2025AS_US.pal" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\dll\libwinpthread-1.dll" />
+		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\gamedb\game.db" />
 		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-fast.cgp" />
 		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-fast.hlsl" />
 		<None Remove="C:\Users\david\Desktop\GBAHawk\src\BizHawk.Client.EmuHawk\..\..\Assets\Shaders\BizHawk\bicubic-normal.cgp" />
@@ -342,9 +344,6 @@
 <!-- creates circular dependency
 		<Compile Update="Properties/Resources.cs" DependentUpon="Resources.resx" />
 -->
-		<Compile Update="RomStatusPicker.cs" SubType="Form" />
-		<Compile Update="RomStatusPicker.Designer.cs" DependentUpon="RomStatusPicker.cs" />
-		<EmbeddedResource Update="RomStatusPicker.resx" DependentUpon="RomStatusPicker.cs" />
 		<Compile Update="tools/BasicBot/BasicBot.cs" SubType="Form" />
 		<Compile Update="tools/BasicBot/BasicBot.Designer.cs" DependentUpon="BasicBot.cs" />
 		<EmbeddedResource Update="tools/BasicBot/BasicBot.resx" DependentUpon="BasicBot.cs" />

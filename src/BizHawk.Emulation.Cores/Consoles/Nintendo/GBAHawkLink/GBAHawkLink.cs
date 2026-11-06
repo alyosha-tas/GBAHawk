@@ -18,7 +18,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
 	[Core(CoreNames.GBAHawkLink, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable,
+	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings>
 	{
 		public byte[] BIOS;
@@ -511,8 +511,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		public bool GBP_Mode_Enabled_R;
 		public bool GBP_Screen_Detection_R;
 		public int GBP_Screen_Count_R;
-
-		public DisplayType Region => DisplayType.NTSC;
 
 		private readonly ITraceable Tracer;
 

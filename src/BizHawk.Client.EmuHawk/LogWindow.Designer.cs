@@ -35,7 +35,6 @@ namespace BizHawk.Client.GBAHawk
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.buttonCopy = new System.Windows.Forms.Button();
 			this.buttonCopyAll = new System.Windows.Forms.Button();
-			this.AddToGameDbBtn = new System.Windows.Forms.Button();
 			this.virtualListView1 = new System.Windows.Forms.ListView();
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.MenuStrip = new MenuStripEx();
@@ -77,7 +76,6 @@ namespace BizHawk.Client.GBAHawk
 			this.tableLayoutPanel1.Controls.Add(this.btnClose, 4, 0);
 			this.tableLayoutPanel1.Controls.Add(this.buttonCopy, 1, 0);
 			this.tableLayoutPanel1.Controls.Add(this.buttonCopyAll, 2, 0);
-			this.tableLayoutPanel1.Controls.Add(this.AddToGameDbBtn, 3, 0);
 			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 367);
 			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -105,18 +103,6 @@ namespace BizHawk.Client.GBAHawk
 			this.buttonCopyAll.Text = "Copy All";
 			this.buttonCopyAll.UseVisualStyleBackColor = true;
 			this.buttonCopyAll.Click += new System.EventHandler(this.ButtonCopyAll_Click);
-			// 
-			// AddToGameDbBtn
-			// 
-			this.AddToGameDbBtn.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this.AddToGameDbBtn.Location = new System.Drawing.Point(246, 3);
-			this.AddToGameDbBtn.Name = "AddToGameDbBtn";
-			this.AddToGameDbBtn.Size = new System.Drawing.Size(109, 24);
-			this.AddToGameDbBtn.TabIndex = 5;
-			this.AddToGameDbBtn.Text = "Add to database";
-			this.AddToGameDbBtn.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-			this.AddToGameDbBtn.UseVisualStyleBackColor = true;
-			this.AddToGameDbBtn.Click += new System.EventHandler(this.AddToGameDbBtn_Click);
 			// 
 			// virtualListView1
 			// 
@@ -171,7 +157,6 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.ColumnHeader columnHeader1;
 		private System.Windows.Forms.Button buttonCopy;
 		private System.Windows.Forms.Button buttonCopyAll;
-		private System.Windows.Forms.Button AddToGameDbBtn;
 		private MenuStripEx MenuStrip;
 	}
 }

@@ -100,9 +100,6 @@ namespace BizHawk.Client.GBAHawk
 		/// <remarks>only referenced from <see cref="BasicBot"/></remarks>
 		void Unthrottle();
 
-		/// <remarks>only referenced from <see cref="LogWindow"/></remarks>
-		void UpdateDumpInfo(RomStatus? newStatus = null);
-
 		/// <remarks>only referenced from <see cref="BookmarksBranchesBox"/></remarks>
 		void UpdateStatusSlots();
 	}

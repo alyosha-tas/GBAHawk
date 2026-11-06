@@ -451,8 +451,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 
 		private int _frame = 0;
 
-		public DisplayType Region => DisplayType.NTSC;
-
 		public TraceBuffer Tracer;
 
 		public LibSNESHawk.TraceCallback tracecb;

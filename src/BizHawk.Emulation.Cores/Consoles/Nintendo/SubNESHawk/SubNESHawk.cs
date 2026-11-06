@@ -26,7 +26,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubNESHawk
 			ser.Register(_nesCore.ServiceProvider.GetService<IVideoProvider>());
 			ser.Register(_nesCore.ServiceProvider.GetService<ISoundProvider>());
 			ser.Register(_nesCore.ServiceProvider.GetService<ITraceable>());
-			ser.Register(_nesCore.ServiceProvider.GetService<IDisassemblable>());
 			ser.Register(_nesCore.ServiceProvider.GetService<IMemoryDomains>());
 			ser.Register(_nesCore.ServiceProvider.GetService<INESPPUViewable>());
 			ser.Register(_nesCore.ServiceProvider.GetService<ISaveRam>());

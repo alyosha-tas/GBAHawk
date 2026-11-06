@@ -138,7 +138,6 @@ namespace BizHawk.Client.GBAHawk
 			BasicBotMenuItem.Image = Properties.Resources.BasicBotBit;
 			MultiDiskBundlerFileMenuItem.Image = Properties.Resources.SaveConfig;
 			KeypadMenuItem.Image = Properties.Resources.Calculator;
-			DumpStatusButton.Image = Properties.Resources.Blank;
 			PlayRecordStatusButton.Image = Properties.Resources.Blank;
 			PauseStatusButton.Image = Properties.Resources.Blank;
 			RebootStatusBarIcon.Image = Properties.Resources.Reboot;
@@ -1299,69 +1298,6 @@ namespace BizHawk.Client.GBAHawk
 			HandleToggleLightAndLink();
 		}
 
-		public void UpdateDumpInfo(RomStatus? newStatus = null)
-		{
-			DumpStatusButton.Image = Properties.Resources.Blank;
-			DumpStatusButton.ToolTipText = "";
-
-			if (Emulator.IsNull() || Game.IsNullInstance())
-			{
-				return;
-			}
-
-			var status = newStatus == null
-				? Game.Status
-				: (Game.Status = newStatus.Value);
-			if (status == RomStatus.BadDump)
-			{
-				DumpStatusButton.Image = Properties.Resources.ExclamationRed;
-				DumpStatusButton.ToolTipText = "Warning: Bad ROM Dump";
-			}
-			else if (status == RomStatus.Overdump)
-			{
-				DumpStatusButton.Image = Properties.Resources.ExclamationRed;
-				DumpStatusButton.ToolTipText = "Warning: Overdump";
-			}
-			else if (status == RomStatus.NotInDatabase)
-			{
-				DumpStatusButton.Image = Properties.Resources.RetroQuestion;
-				DumpStatusButton.ToolTipText = "Warning: Unknown ROM";
-			}
-			else if (status == RomStatus.TranslatedRom)
-			{
-				DumpStatusButton.Image = Properties.Resources.Translation;
-				DumpStatusButton.ToolTipText = "Translated ROM";
-			}
-			else if (status == RomStatus.Homebrew)
-			{
-				DumpStatusButton.Image = Properties.Resources.HomeBrew;
-				DumpStatusButton.ToolTipText = "Homebrew ROM";
-			}
-			else if (Game.Status == RomStatus.Hack)
-			{
-				DumpStatusButton.Image = Properties.Resources.Hack;
-				DumpStatusButton.ToolTipText = "Hacked ROM";
-			}
-			else if (Game.Status == RomStatus.Unknown)
-			{
-				DumpStatusButton.Image = Properties.Resources.Hack;
-				DumpStatusButton.ToolTipText = "Warning: ROM of Unknown Character";
-			}
-			else
-			{
-				DumpStatusButton.Image = Properties.Resources.GreenCheck;
-				DumpStatusButton.ToolTipText = "Verified good dump";
-			}
-
-			if (_multiDiskMode)
-			{
-				DumpStatusButton.ToolTipText = "Multi-disk bundler";
-				DumpStatusButton.Image = Properties.Resources.RetroQuestion;
-			}
-		}
-
-		private bool _multiDiskMode;
-
 		// Rom details as decided by MainForm, which shouldn't happen, the RomLoader or Core should be doing this
 		// Better is to just keep the game and rom hashes as properties and then generate the rom info from this
 		private string _defaultRomDetails = "";
@@ -1725,10 +1661,6 @@ namespace BizHawk.Client.GBAHawk
 		private void CheckMessages()
 		{
 			Application.DoEvents();
-			if (ActiveForm != null)
-			{
-				ScreenSaver.ResetTimerPeriodically();
-			}
 
 			if (PathsFromDragDrop is not null) this.DoWithTempMute(() =>
 			{
@@ -3167,15 +3099,13 @@ namespace BizHawk.Client.GBAHawk
 						}
 
 						_defaultRomDetails = xSw.ToString();
-						_multiDiskMode = true;
 					}
 
-					var romDetails = Emulator.RomDetails();
-					if (string.IsNullOrWhiteSpace(romDetails) && loader.Rom != null)
+					if (loader.Rom != null)
 					{
 						_defaultRomDetails = $"{loader.Game.Name}\r\n{SHA1Checksum.ComputePrefixedHex(loader.Rom.RomData)}\r\n{MD5Checksum.ComputePrefixedHex(loader.Rom.RomData)}\r\n";
 					}
-					else if (string.IsNullOrWhiteSpace(romDetails) && loader.Rom == null)
+					else if (loader.Rom == null)
 					{
 						// single disc game
 						_defaultRomDetails = $"{loader.Game.Name}\r\nSHA1:N/A\r\nMD5:N/A\r\n";
@@ -3266,7 +3196,6 @@ namespace BizHawk.Client.GBAHawk
 			_stateSlots.ClearRedoList();
 			UpdateStatusSlots();
 			UpdateCoreStatusBarButton();
-			UpdateDumpInfo();
 			SetMainformMovieInfo();
 		}
 

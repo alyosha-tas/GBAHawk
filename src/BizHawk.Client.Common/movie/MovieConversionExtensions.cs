@@ -201,15 +201,6 @@ namespace BizHawk.Client.Common
 				}
 			}
 
-			if (emulator.HasRegions())
-			{
-				var region = emulator.AsRegionable().Region;
-				if (region == DisplayType.PAL)
-				{
-					movie.HeaderEntries.Add(HeaderKeys.Pal, "1");
-				}
-			}
-
 			if (firmwareManager.RecentlyServed.Count != 0)
 			{
 				foreach (var firmware in firmwareManager.RecentlyServed)

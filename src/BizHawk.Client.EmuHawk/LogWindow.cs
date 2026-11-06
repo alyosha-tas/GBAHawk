@@ -32,7 +32,6 @@ namespace BizHawk.Client.GBAHawk
 		{
 			InitializeComponent();
 			Icon = Properties.Resources.CommandWindow;
-			AddToGameDbBtn.Image = Properties.Resources.Add;
 			Closing += (o, e) =>
 			{
 				Detach();
@@ -129,7 +128,7 @@ namespace BizHawk.Client.GBAHawk
 
 		private void LogWindow_Load(object sender, EventArgs e)
 		{
-			HideShowGameDbButton();
+
 		}
 
 		private void ListView_QueryItemText(object sender, RetrieveVirtualItemEventArgs e)
@@ -168,26 +167,6 @@ namespace BizHawk.Client.GBAHawk
 					sb.AppendLine(s);
 			if (sb.Length > 0)
 				Clipboard.SetText(sb.ToString(), TextDataFormat.Text);
-		}
-
-		private void HideShowGameDbButton()
-		{
-			AddToGameDbBtn.Visible = Emulator.CanGenerateGameDBEntries()
-				&& (Game.Status == RomStatus.Unknown || Game.Status == RomStatus.NotInDatabase);
-		}
-
-		private void AddToGameDbBtn_Click(object sender, EventArgs e)
-		{
-			using var picker = new RomStatusPicker();
-			var result = picker.ShowDialog();
-			if (result.IsOk())
-			{
-				var gameDbEntry = Emulator.AsGameDBEntryGenerator().GenerateGameDbEntry();
-				gameDbEntry.Status = picker.PickedStatus;
-				Database.SaveDatabaseEntry(gameDbEntry);
-				MainForm.UpdateDumpInfo(gameDbEntry.Status);
-				HideShowGameDbButton();
-			}
 		}
 
 		private class LogStream : Stream

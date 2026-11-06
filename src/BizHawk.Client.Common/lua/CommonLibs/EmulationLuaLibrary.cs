@@ -35,11 +35,6 @@ namespace BizHawk.Client.Common
 		public int FrameCount()
 			=> APIs.Emulation.FrameCount();
 
-		[LuaMethodExample("local obemudis = emu.disassemble( 0x8000 );")]
-		[LuaMethod("disassemble", "Returns the disassembly object (disasm string and length int) for the given PC address. Uses System Bus domain if no domain name provided")]
-		public object Disassemble(uint pc, string name = "")
-			=> APIs.Emulation.Disassemble(pc, name);
-
 		[LuaMethodExample("local inemutot = emu.totalexecutedcycles( );")]
 		[LuaMethod("totalexecutedcycles", "gets the total number of executed cpu cycles")]
 		public long TotalExecutedycles()
@@ -86,11 +81,6 @@ namespace BizHawk.Client.Common
 		{
 			YieldCallback();
 		}
-
-		[LuaMethodExample("local stemuget = emu.getdisplaytype();")]
-		[LuaMethod("getdisplaytype", "returns the display type (PAL vs NTSC) that the emulator is currently running in")]
-		public string GetDisplayType()
-			=> APIs.Emulation.GetDisplayType();
 
 		[LuaDeprecatedMethod]
 		[LuaMethod("getluacore", "returns the name of the Lua core currently in use")]

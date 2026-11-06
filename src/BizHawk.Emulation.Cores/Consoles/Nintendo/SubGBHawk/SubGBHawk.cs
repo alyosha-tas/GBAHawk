@@ -27,7 +27,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBHawk
 			ser.Register(_gbCore.ServiceProvider.GetService<IVideoProvider>());
 			ser.Register(_gbCore.ServiceProvider.GetService<ISoundProvider>());
 			ser.Register(_gbCore.ServiceProvider.GetService<ITraceable>());
-			ser.Register(_gbCore.ServiceProvider.GetService<IDisassemblable>());
 			ser.Register(_gbCore.ServiceProvider.GetService<IMemoryDomains>());
 			ser.Register(_gbCore.ServiceProvider.GetService<IGBPPUViewable>());
 			ser.Register(_gbCore.ServiceProvider.GetService<ISaveRam>());

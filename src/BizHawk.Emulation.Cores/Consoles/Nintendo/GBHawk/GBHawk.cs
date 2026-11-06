@@ -18,7 +18,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
 	[Core(CoreNames.GBHawk, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IRegionable, IGBPPUViewable,
+	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IGBPPUViewable,
 	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
 		public bool Is_GBC;
@@ -284,8 +284,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				LibGBHawk.GB_executescanlinecallback(GB_Pntr);
 			}
 		}
-
-		public DisplayType Region => DisplayType.NTSC;
 
 		private readonly GBHawkControllerDeck _controllerDeck;
 

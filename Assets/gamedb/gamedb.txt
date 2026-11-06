@@ -1,6 +1,3 @@
-#include gamedb_e_cards.txt
-#include gamedb_gb.txt
-#include gamedb_gba.txt
-#include gamedb_gbc.txt
+#include gamedb_nes_overrides.txt
 #include gamedb_gba_overrides.txt
 

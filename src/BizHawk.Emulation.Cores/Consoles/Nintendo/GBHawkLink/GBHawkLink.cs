@@ -10,7 +10,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 {
 	[Core(CoreNames.GBHawkLink, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class GBHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable,
+	public partial class GBHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<GBHawkLink.GBLinkSettings, GBHawkLink.GBLinkSyncSettings>
 	{
 		public byte[][] BIOS = new byte[4][];
@@ -359,8 +359,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 		private readonly GBLink_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
-
-		public DisplayType Region => DisplayType.NTSC;
 
 		private readonly ITraceable Tracer;
 

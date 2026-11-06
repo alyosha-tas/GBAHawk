@@ -31,18 +31,16 @@ namespace BizHawk.Emulation.Common
 				long size,
 				string recommendedName,
 				string desc,
-				string additionalInfo = "",
-				bool isBad = false)
+				string additionalInfo = "")
 					=> filesByHash[hash] = new(
 						hash: hash,
 						size: size,
 						recommendedName: recommendedName,
 						desc: desc,
-						additionalInfo: additionalInfo,
-						isBad: isBad);
+						additionalInfo: additionalInfo);
 
-			void Option(string systemId, string id, in FirmwareFile ff, FirmwareOptionStatus status = FirmwareOptionStatus.Acceptable)
-				=> options.Add(new(new(systemId, id), ff.Hash, ff.Size, ff.IsBad ? FirmwareOptionStatus.Bad : status));
+			void Option(string systemId, string id, in FirmwareFile ff)
+				=> options.Add(new(new(systemId, id), ff.Hash, ff.Size));
 
 			void Firmware(string systemId, string id, string desc)
 				=> records.Add(new(new(systemId, id), desc));
@@ -54,46 +52,46 @@ namespace BizHawk.Emulation.Common
 			Option("GBA", "Bios", in gbaJDebug);
 
 			Firmware("GBC", "World", "Game Boy Color Boot Rom");
-			Option("GBC", "World", File("1293D68BF9643BC4F36954C1E80E38F39864528D", 2304, "cgb.bin", "Game Boy Color Boot Rom"), FirmwareOptionStatus.Ideal);
+			Option("GBC", "World", File("1293D68BF9643BC4F36954C1E80E38F39864528D", 2304, "cgb.bin", "Game Boy Color Boot Rom"));
 
 			// GB
 			Firmware("GB", "World", "Game Boy Boot Rom");
-			Option("GB", "World", File("4ED31EC6B0B175BB109C0EB5FD3D193DA823339F", 256, "GB_dmg.bin", "Game Boy Boot Rom"), FirmwareOptionStatus.Ideal);
+			Option("GB", "World", File("4ED31EC6B0B175BB109C0EB5FD3D193DA823339F", 256, "GB_dmg.bin", "Game Boy Boot Rom"));
 
 			// NES
 			Firmware("NES", "World", "Game Genie Rom");
-			Option("NES", "World", File("AAA9833C3DE2213F2B0326769B715651FD13FD84", 0x1000, "Game_Genie.bin", "Game Genie Rom"), FirmwareOptionStatus.Ideal);
+			Option("NES", "World", File("AAA9833C3DE2213F2B0326769B715651FD13FD84", 0x1000, "Game_Genie.bin", "Game Genie Rom"));
 
 			// SNES
 			Firmware("SNES", "IPL", "APU Boot Rom");
-			Option("SNES", "IPL", File("97E352553E94242AE823547CD853EECDA55C20F0", 0x40, "IPL.bin", "APU Boot Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "IPL", File("97E352553E94242AE823547CD853EECDA55C20F0", 0x40, "IPL.bin", "APU Boot Rom"));
 
 			Firmware("SNES", "CX4", "CX4 Rom");
-			Option("SNES", "CX4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_cx4.rom", "CX4 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "CX4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_cx4.rom", "CX4 Rom"));
 
 			Firmware("SNES", "DSP1", "DSP1 Rom");
-			Option("SNES", "DSP1", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1.rom", "DSP1 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "DSP1", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1.rom", "DSP1 Rom"));
 
 			Firmware("SNES", "DSP1b", "DSP1b Rom");
-			Option("SNES", "DSP1b", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1b.rom", "DSP1b Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "DSP1b", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp1b.rom", "DSP1b Rom"));
 
 			Firmware("SNES", "DSP2", "DSP2 Rom");
-			Option("SNES", "DSP2", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp2.rom", "DSP2 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "DSP2", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp2.rom", "DSP2 Rom"));
 
 			Firmware("SNES", "DSP3", "DSP3 Rom");
-			Option("SNES", "DSP3", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp3.rom", "DSP3 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "DSP3", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp3.rom", "DSP3 Rom"));
 
 			Firmware("SNES", "DSP4", "DSP4 Rom");
-			Option("SNES", "DSP4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp4.rom", "DSP4 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "DSP4", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_dsp4.rom", "DSP4 Rom"));
 
 			Firmware("SNES", "ST010", "ST010 Rom");
-			Option("SNES", "ST010", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st010.rom", "ST010 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "ST010", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st010.rom", "ST010 Rom"));
 
 			Firmware("SNES", "ST011", "ST011 Rom");
-			Option("SNES", "ST011", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st011.rom", "ST011 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "ST011", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st011.rom", "ST011 Rom"));
 
 			Firmware("SNES", "ST018", "ST018 Rom");
-			Option("SNES", "ST018", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st018.rom", "ST018 Rom"), FirmwareOptionStatus.Ideal);
+			Option("SNES", "ST018", File("A002F4EFBA42775A31185D443F3ED1790B0E949A", 3072, "SNES_st018.rom", "ST018 Rom"));
 
 			AllPatches = allPatches;
 			FirmwareFilesByHash = filesByHash;

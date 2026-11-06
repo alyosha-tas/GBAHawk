@@ -370,8 +370,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 
 		private int _frame = 0;
 
-		public DisplayType Region => DisplayType.NTSC;
-
 		public readonly ITraceable Tracer;
 
 		public LibNESHawk.TraceCallback tracecb;

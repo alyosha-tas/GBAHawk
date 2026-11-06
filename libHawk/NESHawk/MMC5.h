@@ -20,7 +20,8 @@ namespace NESHawk
 		bool IRQ_Audio;
 		bool PRG_Mode;
 		bool CHR_Mode;
-		bool WRAM_Write_Protect;
+		bool WRAM_Write_Enable_1;
+		bool WRAM_Write_Enable_2;
 		bool In_Frame;
 
 		uint8_t IRQ_Counter;
@@ -125,7 +126,11 @@ namespace NESHawk
 			IRQ_Audio = false;
 			In_Frame = false;
 
+			WRAM_Write_Enable_1 = false;
+			WRAM_Write_Enable_2 = false;
+
 			WRAM_Enable = false;
+			WRAM_Mask = 7;
 
 			IRQ_Counter = 0;
 			IRQ_Target = 0;
@@ -459,7 +464,10 @@ namespace NESHawk
 
 		void WriteWRAM(uint32_t addr, uint8_t value)
 		{
-			WriteWRAMActual(WRAM_Bank, addr & 0x1fff, value);
+			if (WRAM_Write_Enable_1 && WRAM_Write_Enable_2)
+			{
+				WriteWRAMActual(WRAM_Bank, addr & 0x1fff, value);
+			}
 		}
 
 		void WriteWRAMActual(uint32_t bank, uint32_t offs, uint8_t value)
@@ -558,7 +566,24 @@ namespace NESHawk
 					break;
 
 				case 0x1102: //$5102:  [.... ..AA]    PRG-RAM Protect A
+					if ((value & 3) == 2)
+					{
+						WRAM_Write_Enable_1 = true;
+					}
+					else
+					{
+						WRAM_Write_Enable_1 = false;
+					}
+					break;
 				case 0x1103: //$5103:  [.... ..BB]    PRG-RAM Protect B
+					if ((value & 3) == 1)
+					{
+						WRAM_Write_Enable_2 = true;
+					}
+					else
+					{
+						WRAM_Write_Enable_2 = false;
+					}
 					break;
 
 				case 0x1104: //$5104:  [.... ..XX]    ExRAM mode
@@ -1163,7 +1188,8 @@ namespace NESHawk
 			saver = bool_saver(IRQ_Audio, saver);
 			saver = bool_saver(PRG_Mode, saver);
 			saver = bool_saver(CHR_Mode, saver);
-			saver = bool_saver(WRAM_Write_Protect, saver);
+			saver = bool_saver(WRAM_Write_Enable_1, saver);
+			saver = bool_saver(WRAM_Write_Enable_2, saver);
 			saver = bool_saver(In_Frame, saver);
 
 			saver = byte_saver(IRQ_Counter, saver);
@@ -1254,7 +1280,8 @@ namespace NESHawk
 			loader = bool_loader(&IRQ_Audio, loader);
 			loader = bool_loader(&PRG_Mode, loader);
 			loader = bool_loader(&CHR_Mode, loader);
-			loader = bool_loader(&WRAM_Write_Protect, loader);
+			loader = bool_loader(&WRAM_Write_Enable_1, loader);
+			loader = bool_loader(&WRAM_Write_Enable_2, loader);
 			loader = bool_loader(&In_Frame, loader);
 
 			loader = byte_loader(&IRQ_Counter, loader);

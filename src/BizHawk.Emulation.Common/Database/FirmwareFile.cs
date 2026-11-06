@@ -8,8 +8,6 @@ namespace BizHawk.Emulation.Common
 
 		public readonly string Info;
 
-		public readonly bool IsBad;
-
 		public readonly string RecommendedName;
 
 		public readonly long Size;
@@ -19,13 +17,11 @@ namespace BizHawk.Emulation.Common
 			long size,
 			string recommendedName,
 			string desc,
-			string additionalInfo = "",
-			bool isBad = false)
+			string additionalInfo = "")
 		{
 			Description = desc;
 			Hash = hash;
 			Info = additionalInfo;
-			IsBad = isBad;
 			RecommendedName = recommendedName;
 			Size = size;
 		}

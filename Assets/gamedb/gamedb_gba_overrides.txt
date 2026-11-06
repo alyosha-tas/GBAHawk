@@ -1,10 +1,9 @@
 ; overrides for gba rom hacks and homebrews
 ; format (with a tab between each entry):
 ; sha1 hash
-; status
 ; name
 ; console
-; other metadta
+; Intentionally blank
 ; load parameters (semi-colon after each parameter, all parameters are mandatory)
 ;
 ; parameter list with allowed values
@@ -31,16 +30,16 @@
 ;		1 = mirrors exist at next power of 2 boundary
 ;
 
-3714D1222E5C2B2734996ACE9F9BC49B35656171	H	RTC Demo	GBA		mapper=1;sram=0;mirror=0
-B76A045B79B2C7EC73787A73CEEE8508355AF43E	H	RTC Tests	GBA		mapper=1;sram=0;mirror=0
+3714D1222E5C2B2734996ACE9F9BC49B35656171	RTC Demo	GBA		mapper=1;sram=0;mirror=0
+B76A045B79B2C7EC73787A73CEEE8508355AF43E	RTC Tests	GBA		mapper=1;sram=0;mirror=0
 
-C67E0A5E26EA5EBA2BC11C99D003027A96E44060	H	Aging cart test	GBA		mapper=2;sram=0;mirror=0
-AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E	H	VRAM access test	GBA		mapper=2;sram=0;mirror=0
-0926C720F59F7667192D2B90F02E7BD833EB21EB	H	VRAM access test new	GBA		mapper=2;sram=0;mirror=0
-06F466733CFC6412501C8113E87E89D08F0E50DF	H	VRAM access test oam	GBA		mapper=2;sram=0;mirror=0
+C67E0A5E26EA5EBA2BC11C99D003027A96E44060	Aging cart test	GBA		mapper=2;sram=0;mirror=0
+AC6D8FD4A1FB5234A889EE092CBE7774DAC21F0E	VRAM access test	GBA		mapper=2;sram=0;mirror=0
+0926C720F59F7667192D2B90F02E7BD833EB21EB	VRAM access test new	GBA		mapper=2;sram=0;mirror=0
+06F466733CFC6412501C8113E87E89D08F0E50DF	VRAM access test oam	GBA		mapper=2;sram=0;mirror=0
 
-676357A271981699D97CFE1730F0AB3D07CE1F69	H	GBA LDM-STM	GBA		mapper=0;sram=0;mirror=1
-D336E8B65FBC4DE054FCEDE16CFE1B1978EAAEE4	H	Armfuck	GBA		mapper=0;sram=0;mirror=1
-5F989B9A4017F16A431F76FD78A95E9799AA8FCA	H	GBA Suite Memory Test	GBA		mapper=0;sram=0;mirror=1
-CF52441DCFF636105691817793A25EDEB7758C10	H	GBA Suite Memory Test (png183)	GBA		mapper=0;sram=0;mirror=1
-D015A5039FF5D08EEBA3DDB16470EAAB259631D0	H	Broken Circle	GBA		mapper=0;sram=0;mirror=1
+676357A271981699D97CFE1730F0AB3D07CE1F69	GBA LDM-STM	GBA		mapper=0;sram=0;mirror=1
+D336E8B65FBC4DE054FCEDE16CFE1B1978EAAEE4	Armfuck	GBA		mapper=0;sram=0;mirror=1
+5F989B9A4017F16A431F76FD78A95E9799AA8FCA	GBA Suite Memory Test	GBA		mapper=0;sram=0;mirror=1
+CF52441DCFF636105691817793A25EDEB7758C10	GBA Suite Memory Test (png183)	GBA		mapper=0;sram=0;mirror=1
+D015A5039FF5D08EEBA3DDB16470EAAB259631D0	Broken Circle	GBA		mapper=0;sram=0;mirror=1

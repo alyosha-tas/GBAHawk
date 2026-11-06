@@ -19,7 +19,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
 	[Core(CoreNames.SubGBAHawk, isReleased: true)]
 	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
-	public partial class SubGBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IRegionable, IGBAGPUViewable,
+	public partial class SubGBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IGBAGPUViewable,
 								ISettable<SubGBAHawk.SubGBASettings, SubGBAHawk.SubGBASyncSettings>
 	{
 		public byte[] BIOS;
@@ -367,8 +367,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 		public bool GBP_Mode_Enabled;
 		public bool GBP_Screen_Detection;
 		public int GBP_Screen_Count;
-
-		public DisplayType Region => DisplayType.NTSC;
 
 		private readonly ITraceable Tracer;
 

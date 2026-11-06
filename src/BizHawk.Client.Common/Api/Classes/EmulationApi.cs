@@ -17,16 +17,10 @@ namespace BizHawk.Client.Common
 		private IEmulator? Emulator { get; set; }
 
 		[OptionalService]
-		private IDisassemblable? DisassemblableCore { get; set; }
-
-		[OptionalService]
 		private IInputPollable? InputPollableCore { get; set; }
 
 		[OptionalService]
 		private IMemoryDomains? MemoryDomains { get; set; }
-
-		[OptionalService]
-		private IRegionable? RegionableCore { get; set; }
 
 		private readonly Config _config;
 
@@ -57,27 +51,6 @@ namespace BizHawk.Client.Common
 
 		public int FrameCount()
 			=> Emulator!.Frame;
-
-		public object? Disassemble(uint pc, string? name = null)
-		{
-			try
-			{
-				if (DisassemblableCore != null)
-				{
-					return new {
-						disasm = DisassemblableCore.Disassemble(
-							string.IsNullOrEmpty(name) ? MemoryDomains!.SystemBus : MemoryDomains![name!]!,
-							pc,
-							out var l
-						),
-						length = l
-					};
-				}
-			}
-			catch (NotImplementedException) {}
-			LogCallback($"Error: {Emulator.Attributes().CoreName} does not yet implement {nameof(IDisassemblable.Disassemble)}()");
-			return null;
-		}
 
 		public long TotalExecutedCycles()
 		{
@@ -121,8 +94,6 @@ namespace BizHawk.Client.Common
 		public void LimitFramerate(bool enabled) => _config.ClockThrottle = enabled;
 
 		public void MinimizeFrameskip(bool enabled) => _config.AutoMinimizeSkipping = enabled;
-
-		public string GetDisplayType() => (RegionableCore?.Region)?.ToString() ?? "";
 
 		public IGameInfo? GetGameInfo()
 			=> _game;

@@ -308,12 +308,6 @@ namespace BizHawk.Client.GBAHawk
 						lvi.ToolTipText = "You've bound a custom choice here. Hope you know what you're doing.";
 						lvi.SubItems[4].Text = "-custom-";
 					}
-					else if (FirmwareDatabase.FirmwareOptions.FirstOrNull(fo => fo.Hash == hash)?.IsAcceptableOrIdeal == false)
-					{
-						lvi.ImageIndex = IdBad;
-						lvi.ToolTipText = "Bad! This file has been bound to a choice which is known to be bad (details in right-click > Info)";
-						lvi.SubItems[4].Text = ri.KnownFirmwareFile.Value.Description;
-					}
 					else
 					{
 						lvi.ImageIndex = IdOk;
@@ -543,26 +537,9 @@ namespace BizHawk.Client.GBAHawk
 				olvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 				olvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 				var ff = FirmwareDatabase.FirmwareFilesByHash[o.Hash];
-				if (o.Status == FirmwareOptionStatus.Ideal)
-				{
-					olvi.ImageIndex = FirmwaresConfigInfo.idIdeal;
-					olvi.ToolTipText = FirmwaresConfigInfo.ttIdeal;
-				}
-				if (o.Status == FirmwareOptionStatus.Acceptable)
-				{
-					olvi.ImageIndex = FirmwaresConfigInfo.idAcceptable;
-					olvi.ToolTipText = FirmwaresConfigInfo.ttAcceptable;
-				}
-				if (o.Status == FirmwareOptionStatus.Unacceptable)
-				{
-					olvi.ImageIndex = FirmwaresConfigInfo.idUnacceptable;
-					olvi.ToolTipText = FirmwaresConfigInfo.ttUnacceptable;
-				}
-				if (o.Status == FirmwareOptionStatus.Bad)
-				{
-					olvi.ImageIndex = FirmwaresConfigInfo.idBad;
-					olvi.ToolTipText = FirmwaresConfigInfo.ttBad;
-				}
+
+				olvi.ImageIndex = FirmwaresConfigInfo.idIdeal;
+				olvi.ToolTipText = FirmwaresConfigInfo.ttIdeal;
 				olvi.SubItems[0].Text = ff.Size.ToString();
 				olvi.SubItems[0].Font = Font; // why doesn't this work?
 				olvi.SubItems[1].Text = $"sha1:{o.Hash}";
