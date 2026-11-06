@@ -209,11 +209,6 @@ namespace BizHawk.Client.Common
 			return sb.ToString();
 		}
 
-		// ReSharper disable SimplifyConditionalTernaryExpression
-		public bool IsPal => Header.TryGetValue(HeaderKeys.Pal, out var s) ? s == "1" : false;
-		// ReSharper restore SimplifyConditionalTernaryExpression
-
-		public string TextSavestate { get; set; }
 		public byte[] BinarySavestate { get; set; }
 		public int[] SavestateFramebuffer { get; set; }
 		public byte[] SaveRam { get; set; }

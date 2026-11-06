@@ -93,7 +93,7 @@ namespace BizHawk.Emulation.Common
 						// blank space here
 						Options = items[4]
 					};
-					if (game.Hash is SHA1Checksum.EmptyFile or MD5Checksum.EmptyFile)
+					if (game.Hash is SHA1Checksum.EmptyFile)
 					{
 						Console.WriteLine($"WARNING: gamedb {path} contains entry for empty rom as \"{game.Name}\"!");
 					}

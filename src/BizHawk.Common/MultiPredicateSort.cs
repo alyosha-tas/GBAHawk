@@ -4,46 +4,6 @@ using System.Linq;
 
 namespace BizHawk.Common
 {
-#if false
-	/// <summary>Sorts using a reorderable list of predicates.</summary>
-	/// <seealso cref="RigidMultiPredicateSort{T}"/>
-	public sealed class MultiPredicateSort<T>
-	{
-		private readonly int _count;
-
-		/// <remarks>TODO would an array be faster?</remarks>
-		private readonly List<(string ID, bool IsDesc)> _order;
-
-		private readonly IReadOnlyDictionary<string, Func<T, IComparable>> _predicates;
-
-		public MultiPredicateSort(IReadOnlyDictionary<string, Func<T, IComparable>> predicates)
-		{
-			_count = predicates.Count;
-			if (_count == 0) throw new ArgumentException("must have at least 1 predicate", nameof(predicates));
-			_order = predicates.Select(kvp => (kvp.Key, false)).ToList();
-			_predicates = predicates;
-		}
-
-		public List<T> AppliedTo(IReadOnlyCollection<T> list)
-		{
-			var temp = _order[0].IsDesc
-				? list.OrderByDescending(_predicates[_order[0].ID])
-				: list.OrderBy(_predicates[_order[0].ID]);
-			for (var i = 1; i < _count; i++)
-			{
-				temp = _order[i].IsDesc
-					? temp.ThenByDescending(_predicates[_order[i].ID])
-					: temp.ThenBy(_predicates[_order[i].ID]);
-			}
-			return temp.ToList();
-		}
-	}
-#endif
-
-	/// <summary>Sorts using a single primary predicate, with subsorts using the remaining predicates in order.</summary>
-#if false
-	/// <seealso cref="MultiPredicateSort{T}"/>
-#endif
 	public sealed class RigidMultiPredicateSort<T>
 	{
 		private readonly IReadOnlyDictionary<string, Func<T, IComparable>> _predicates;

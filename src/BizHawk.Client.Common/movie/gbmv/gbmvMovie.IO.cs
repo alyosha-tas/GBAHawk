@@ -113,14 +113,7 @@ namespace BizHawk.Client.Common
 
 			if (StartsFromSavestate)
 			{
-				if (TextSavestate != null)
-				{
-					bs.PutLump(BinaryStateLump.CorestateText, (TextWriter tw) => tw.Write(TextSavestate));
-				}
-				else
-				{
-					bs.PutLump(BinaryStateLump.Corestate, (BinaryWriter bw) => bw.Write(BinarySavestate));
-				}
+				bs.PutLump(BinaryStateLump.Corestate, (BinaryWriter bw) => bw.Write(BinarySavestate));
 
 				if (SavestateFramebuffer != null)
 				{
@@ -145,7 +138,6 @@ namespace BizHawk.Client.Common
 			Subtitles.Clear();
 			Comments.Clear();
 			_syncSettingsJson = "";
-			TextSavestate = null;
 			BinarySavestate = null;
 		}
 

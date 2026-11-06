@@ -142,7 +142,6 @@ namespace BizHawk.Client.GBAHawk
 			PauseStatusButton.Image = Properties.Resources.Blank;
 			RebootStatusBarIcon.Image = Properties.Resources.Reboot;
 			AVIStatusLabel.Image = Properties.Resources.Blank;
-			LedLightStatusLabel.Image = Properties.Resources.LightOff;
 			KeyPriorityStatusLabel.Image = Properties.Resources.Both;
 			CoreNameStatusBarButton.Image = Properties.Resources.GBAHawkSmall;
 			LinkConnectStatusBarButton.Image = Properties.Resources.Connect16X16;
@@ -496,18 +495,6 @@ namespace BizHawk.Client.GBAHawk
 			{
 				// I would like to trigger a repaint here, but this isn't done yet
 			};
-
-			if (!Config.SkipOutdatedOsCheck)
-			{
-				var (winVersion, win10Release) = OSTailoredCode.HostWindowsVersion.Value;
-				var message = winVersion switch
-				{
-					OSTailoredCode.WindowsVersion._10 when win10Release < 1909 => $"Quick reminder: version {win10Release} of Windows 10 is no longer supported by Microsoft. EmuHawk will continue to work, but please update to at least 1909 for increased security.",
-					OSTailoredCode.WindowsVersion._10 => null,
-					OSTailoredCode.WindowsVersion._8_1 => null, // still CBB
-					_ => $"Quick reminder: Windows {winVersion.ToString().RemovePrefix('_').Replace("_", ".")} is no longer supported by Microsoft. EmuHawk will continue to work, but please get a new operating system for increased security (either Windows 8.1, Windows 10, or a GNU+Linux distro)."
-				};
-			}
 		}
 
 		private readonly bool _suppressSyncSettingsWarning;
@@ -2144,27 +2131,6 @@ namespace BizHawk.Client.GBAHawk
 		{
 			if (MainStatusBar.Visible)
 			{
-				var hasDriveLight = Emulator.HasDriveLight() && Emulator.AsDriveLight().DriveLightEnabled;
-
-				if (hasDriveLight)
-				{
-					if (!LedLightStatusLabel.Visible)
-					{
-						LedLightStatusLabel.Visible = true;
-					}
-
-					LedLightStatusLabel.Image = Emulator.AsDriveLight().DriveLightOn
-						? _statusBarDiskLightOnImage
-						: _statusBarDiskLightOffImage;
-				}
-				else
-				{
-					if (LedLightStatusLabel.Visible)
-					{
-						LedLightStatusLabel.Visible = false;
-					}
-				}
-
 				if (Emulator.UsesLinkCable())
 				{
 					if (!LinkConnectStatusBarButton.Visible)
@@ -3086,14 +3052,12 @@ namespace BizHawk.Client.GBAHawk
 							{
 								xSw.WriteLine(Path.GetFileNameWithoutExtension(filename));
 								xSw.WriteLine("SHA1:N/A");
-								xSw.WriteLine("MD5:N/A");
 								xSw.WriteLine();
 							}
 							else
 							{
 								xSw.WriteLine(filename);
 								xSw.WriteLine(SHA1Checksum.ComputePrefixedHex(data));
-								xSw.WriteLine(MD5Checksum.ComputePrefixedHex(data));
 								xSw.WriteLine();
 							}
 						}
@@ -3103,12 +3067,12 @@ namespace BizHawk.Client.GBAHawk
 
 					if (loader.Rom != null)
 					{
-						_defaultRomDetails = $"{loader.Game.Name}\r\n{SHA1Checksum.ComputePrefixedHex(loader.Rom.RomData)}\r\n{MD5Checksum.ComputePrefixedHex(loader.Rom.RomData)}\r\n";
+						_defaultRomDetails = $"{loader.Game.Name}\r\n{SHA1Checksum.ComputePrefixedHex(loader.Rom.RomData)}\r\n";
 					}
 					else if (loader.Rom == null)
 					{
 						// single disc game
-						_defaultRomDetails = $"{loader.Game.Name}\r\nSHA1:N/A\r\nMD5:N/A\r\n";
+						_defaultRomDetails = $"{loader.Game.Name}\r\nSHA1:N/A\r\n";
 					}
 
 					Config.RecentRoms.Add(openAdvancedArgs);

@@ -233,7 +233,7 @@ namespace BizHawk.Client.Common
 			}
 			var data = new byte[count];
 			for (var i = 0; i < count; i++) data[i] = d.PeekByte(addr + i);
-			return SHA256Checksum.ComputeDigestHex(data);
+			return SHA1Checksum.ComputeDigestHex(data);
 		}
 
 		public uint ReadByte(long addr, string domain = null) => ReadUnsigned(addr, 1, domain);

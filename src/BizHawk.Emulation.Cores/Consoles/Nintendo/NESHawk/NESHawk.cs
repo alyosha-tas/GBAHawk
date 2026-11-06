@@ -185,8 +185,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			bool apu_test_regs = SyncSettings.Use_APU_Test_Regs == true;
 			bool cpu_zero = SyncSettings.CPU_Zero_Reset == true;
 
-			var romHashMD5 = MD5Checksum.ComputePrefixedHex(GamePack);
-			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(GamePack);
 			Console.WriteLine(romHashSHA1);
 

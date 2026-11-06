@@ -120,7 +120,6 @@ namespace BizHawk.Client.Common
 		public DateTime? UpdateLastCheckTimeUtc { get; set; }
 		public string UpdateLatestVersion { get; set; } = "";
 		public string UpdateIgnoreVersion { get; set; } = "";
-		public bool SkipOutdatedOsCheck { get; set; }
 
 		/// <summary>
 		/// Makes a .bak file before any saveram-writing operation (could be extended to make timestamped backups)

@@ -17,7 +17,6 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 {
 	[Core(CoreNames.GBAHawkLink, isReleased: true)]
-	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBAHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings>
 	{
@@ -70,8 +69,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			{
 				var rom = lp.Roms[i].RomData;
 
-				var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
-				Console.WriteLine(romHashMD5);
 				var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 				Console.WriteLine(romHashSHA1);
 
@@ -80,7 +77,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					if (lp.Roms[i].RomData[j] != multi_boot_check[j]) { is_multi_boot[i] = false; }
 				}
 
-				mirror_mode = GBACommonFunctions.Setup_Mirroring(romHashMD5, romHashSHA1);
+				mirror_mode = GBACommonFunctions.Setup_Mirroring(romHashSHA1);
 
 				if (is_multi_boot[i])
 				{
@@ -152,7 +149,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					}
 				}
 
-				GBACommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, ROMS[i], out mappers[i], out has_bats[i], out Cart_RAM_Sizes[i]);
+				GBACommonFunctions.Setup_Mapper(romHashSHA1, ROMS[i], out mappers[i], out has_bats[i], out Cart_RAM_Sizes[i]);
 
 				// alternate setup for video mapper
 				if (mappers[i] == 9)

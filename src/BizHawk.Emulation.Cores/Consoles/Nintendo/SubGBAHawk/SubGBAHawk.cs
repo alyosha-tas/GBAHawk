@@ -18,7 +18,6 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 {
 	[Core(CoreNames.SubGBAHawk, isReleased: true)]
-	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class SubGBAHawk : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable, IGBAGPUViewable,
 								ISettable<SubGBAHawk.SubGBASettings, SubGBAHawk.SubGBASyncSettings>
 	{
@@ -47,13 +46,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 			Settings = (SubGBASettings)settings ?? new SubGBASettings();
 			SyncSettings = (SubGBASyncSettings)syncSettings ?? new SubGBASyncSettings();
 
-			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
-			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 
 			// check if overrides exist in the database. A returned value of 2 indicates no override
-			int mirror_mode = GBACommonFunctions.Setup_Mirroring(romHashMD5, romHashSHA1);
+			int mirror_mode = GBACommonFunctions.Setup_Mirroring(romHashSHA1);
 
 			// TODO: Better manage small rom sizes (ex in various test roms.)
 			// the mgba test quite expects ROM to not be mirrored
@@ -119,7 +116,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubGBA
 				}
 			}
 
-			GBACommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, ROM, out mapper, out has_bat, out Cart_RAM_Size);
+			GBACommonFunctions.Setup_Mapper(romHashSHA1, ROM, out mapper, out has_bat, out Cart_RAM_Size);
 
 			// alternate setup for video mapper
 			if (mapper == 9)

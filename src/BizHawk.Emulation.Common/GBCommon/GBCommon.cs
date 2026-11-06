@@ -2100,7 +2100,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		}
 
 
-		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] header, out string mppr, out uint mppr_num, out bool has_bat, out uint RAM_Size)
+		public static void Setup_Mapper(string romHashSHA1, byte[] header, out string mppr, out uint mppr_num, out bool has_bat, out uint RAM_Size)
 		{
 			has_bat = false;
 			RAM_Size = 0;
@@ -2160,8 +2160,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 			}
 
 			// special case for multi cart mappers
-			if (romHashMD5 is RomChecksums.UnknownRomA
-				|| romHashSHA1 is RomChecksums.BombermanCollection or RomChecksums.MortalKombatIAndIIUSAEU or RomChecksums.BombermanSelectionKORNotInGameDB)
+			if (romHashSHA1 is RomChecksums.BombermanCollection or RomChecksums.MortalKombatIAndIIUSAEU or RomChecksums.BombermanSelectionKORNotInGameDB)
 			{
 				Console.WriteLine("Using Multi-Cart Mapper");
 				mppr = "MBC1_Multi";
@@ -2184,20 +2183,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 				Console.WriteLine("Using Wisdom Tree Mapper");
 				mppr_num = 14;
 				mppr = "Wtree";
-			}
-
-			// special case for bootlegs
-			else if (romHashMD5 == RomChecksums.PirateRockMan8)
-			{
-				Console.WriteLine("Using RockMan 8 (Unlicensed) Mapper");
-				mppr_num = 15;
-				mppr = "RM8";
-			}
-			else if (romHashMD5 == RomChecksums.PirateSachen1)
-			{
-				Console.WriteLine("Using Sachen 1 (Unlicensed) Mapper");
-				mppr_num = 12;
-				mppr = "Schn1";
 			}
 
 			Console.Write("Mapper: ");
@@ -2274,12 +2259,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 		public const string MortalKombatIAndIIUSAEU = "SHA1:E337489255B33367CE26194FC4038346D3388BD9";
 
-		public const string PirateRockMan8 = "MD5:CAE0998A899DF2EE6ABA8E7695C2A096";
-
-		public const string PirateSachen1 = "MD5:D3C1924D847BC5D125BF54C2076BE27A";
-
-		public const string UnknownRomA = "MD5:97122B9B183AAB4079C8D36A4CE6E9C1";
-
 		public const string WisdomTreeExodus = "SHA1:685D5A47A1FC386D7B451C8B2733E654B7779B71";
 
 		public const string WisdomTreeJoshua = "SHA1:019B4B0E76336E2613AE6E8B415B5C65F6D465A5";
@@ -2336,7 +2315,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 
 		private readonly IPort Port1;
 
-		private static IReadOnlyDictionary<string, Func<int, IPort>> _controllerCtors;
+		private static IReadOnlyDictionary<string, Func<int, IPort>>? _controllerCtors;
 
 		public static IReadOnlyDictionary<string, Func<int, IPort>> ControllerCtors => _controllerCtors
 			??= new Dictionary<string, Func<int, IPort>>

@@ -214,7 +214,6 @@ namespace BizHawk.Client.GBAHawk
 			this.PauseStatusButton = new System.Windows.Forms.ToolStripDropDownButton();
 			this.RebootStatusBarIcon = new BizHawk.WinForms.Controls.StatusLabelEx();
 			this.AVIStatusLabel = new BizHawk.WinForms.Controls.StatusLabelEx();
-			this.LedLightStatusLabel = new BizHawk.WinForms.Controls.StatusLabelEx();
 			this.SaveSlotsStatusLabel = new BizHawk.WinForms.Controls.StatusLabelEx();
 			this.Slot1StatusButton = new BizHawk.WinForms.Controls.StatusLabelEx();
 			this.Slot2StatusButton = new BizHawk.WinForms.Controls.StatusLabelEx();
@@ -1303,7 +1302,6 @@ namespace BizHawk.Client.GBAHawk
 			this.PauseStatusButton,
 			this.RebootStatusBarIcon,
 			this.AVIStatusLabel,
-			this.LedLightStatusLabel,
 			this.SaveSlotsStatusLabel,
 			this.Slot1StatusButton,
 			this.Slot2StatusButton,
@@ -1357,10 +1355,6 @@ namespace BizHawk.Client.GBAHawk
 			// 
 			this.AVIStatusLabel.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.AVIStatusLabel.Text = "AVI Capture";
-			// 
-			// LedLightStatusLabel
-			// 
-			this.LedLightStatusLabel.ToolTipText = "Disk Drive LED Light";
 			// 
 			// SaveSlotsStatusLabel
 			// 
@@ -1874,7 +1868,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator27;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx VsyncEnabledMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator28;
-		private BizHawk.WinForms.Controls.StatusLabelEx LedLightStatusLabel;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx KeyPrioritySubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BothHkAndControllerMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx InputOverHkMenuItem;

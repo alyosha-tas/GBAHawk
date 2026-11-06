@@ -17,7 +17,6 @@ using System.Text;
 namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 {
 	[Core(CoreNames.GBHawk, isReleased: true)]
-	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBHawk : IEmulator, ISaveRam, IInputPollable, IGBPPUViewable,
 	ISettable<GBHawk.GBHawkSettings, GBHawk.GBHawkSyncSettings>
 	{
@@ -57,8 +56,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				Is_GB_in_GBC = true; // for movie files
 			}
 
-			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
-			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 
@@ -78,7 +75,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			string mppr;
 			uint mppr_num;
 
-			GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out mppr_num, out has_bat, out Cart_RAM_Size);
+			GBCommonFunctions.Setup_Mapper(romHashSHA1, header, out mppr, out mppr_num, out has_bat, out Cart_RAM_Size);
 
 			if (Cart_RAM_Size != 0)
 			{

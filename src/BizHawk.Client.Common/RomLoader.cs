@@ -563,16 +563,6 @@ namespace BizHawk.Client.Common
 			{
 				DoLoadErrorCallback(ex.Message, system, path, LoadErrorType.MissingFirmware);
 			}
-			else if (ex is CGBNotSupportedException)
-			{
-				// failed to load SGB bios or game does not support SGB mode.
-				DoLoadErrorCallback("Failed to load a GB rom in SGB mode.  You might try disabling SGB Mode.", system);
-			}
-			else if (ex is NoAvailableCoreException)
-			{
-				// handle exceptions thrown by the new detected systems that BizHawk does not have cores for
-				DoLoadErrorCallback($"{ex.Message}\n\n{ex}", system);
-			}
 			else
 			{
 				DoLoadErrorCallback($"A core accepted the rom, but threw an exception while loading it:\n\n{ex}", system);

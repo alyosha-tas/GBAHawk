@@ -41,8 +41,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.SNESHawk
 			LeftController = SyncSettings.LeftController;
 			RightController = SyncSettings.RightController;
 
-			var romHashMD5 = MD5Checksum.ComputePrefixedHex(rom);
-			Console.WriteLine(romHashMD5);
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
 

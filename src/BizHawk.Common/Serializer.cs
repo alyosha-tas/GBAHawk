@@ -51,24 +51,6 @@ namespace BizHawk.Common
 			_isReader = true;
 		}
 
-		/// <exception cref="InvalidOperationException"><typeparamref name="T"/> does not inherit <see cref="Enum"/></exception>
-		public void SyncEnum<T>(string name, ref T val) where T : struct
-		{
-			if (typeof(T).BaseType != typeof(Enum))
-			{
-				throw new InvalidOperationException();
-			}
-			
-			if (IsReader)
-			{
-				val = (T)Enum.ToObject(typeof(T), _br.ReadInt32());
-			}
-			else
-			{
-				_bw.Write(Convert.ToInt32(val));
-			}
-		}
-
 		public void Sync(string name, ref byte[] val, bool useNull)
 		{
 			if (IsReader)
@@ -382,24 +364,6 @@ namespace BizHawk.Common
 		private BinaryWriter _bw;
 
 		private bool _isReader;
-
-		private void SyncBuffer(string name, int elemsize, int len, void* ptr)
-		{
-			if (IsReader)
-			{
-				byte[] temp = null;
-				Sync(name, ref temp, false);
-				int todo = Math.Min(temp.Length, len * elemsize);
-				System.Runtime.InteropServices.Marshal.Copy(temp, 0, new IntPtr(ptr), todo);
-			}
-			else
-			{
-				int todo = len * elemsize;
-				var temp = new byte[todo];
-				System.Runtime.InteropServices.Marshal.Copy(new IntPtr(ptr), temp, 0, todo);
-				Sync(name, ref temp, false);
-			}
-		}
 
 		private void Read(ref byte val)
 		{

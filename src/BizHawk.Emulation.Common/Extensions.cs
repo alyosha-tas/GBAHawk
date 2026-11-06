@@ -13,6 +13,13 @@ using BizHawk.Common.StringExtensions;
 
 namespace BizHawk.Emulation.Common
 {
+	public class MissingFirmwareException : Exception
+	{
+		public MissingFirmwareException(string message) : base(message)
+		{
+		}
+	}
+
 	public static class EmulatorExtensions
 	{
 		public static readonly IReadOnlyDictionary<string, string> SystemIDDisplayNames = new Dictionary<string, string>
@@ -136,16 +143,6 @@ namespace BizHawk.Emulation.Common
 			return false;
 		}
 
-		public static bool HasDriveLight(this IEmulator core)
-		{
-			return core != null && core.ServiceProvider.HasService<IDriveLight>();
-		}
-
-		public static IDriveLight AsDriveLight(this IEmulator core)
-		{
-			return core.ServiceProvider.GetService<IDriveLight>();
-		}
-
 		public static ITraceable AsTracer(this IEmulator core)
 		{
 			return core.ServiceProvider.GetService<ITraceable>();
@@ -184,11 +181,6 @@ namespace BizHawk.Emulation.Common
 		public static double VsyncRate(this IEmulator core)
 		{
 			return core.VsyncNumerator() / (double)core.VsyncDenominator();
-		}
-
-		public static bool IsImplemented(this MethodInfo info)
-		{
-			return !info.GetCustomAttributes(false).Any(a => a is FeatureNotImplementedAttribute);
 		}
 
 		/// <summary>

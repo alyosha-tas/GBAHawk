@@ -41,8 +41,6 @@ namespace BizHawk.Common
 			return (winVer, null);
 		});
 
-		private static readonly Lazy<bool> _isWSL = new(() => false && SimpleSubshell("uname", "-r", "missing uname?").Contains("microsoft", StringComparison.InvariantCultureIgnoreCase));
-
 		public static (WindowsVersion Version, int? Win10Release)? HostWindowsVersion => _HostWindowsVersion.Value;
 
 		private static readonly Lazy<ILinkedLibManager> _LinkedLibManager = new Lazy<ILinkedLibManager>(() => new WindowsLLManager());

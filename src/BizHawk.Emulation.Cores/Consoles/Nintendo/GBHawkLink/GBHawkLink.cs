@@ -9,7 +9,6 @@ using BizHawk.Emulation.Cores.Nintendo.GBHawk;
 namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 {
 	[Core(CoreNames.GBHawkLink, isReleased: true)]
-	[ServiceNotApplicable(new[] { typeof(IDriveLight) })]
 	public partial class GBHawkLink : IEmulator, IVideoProvider, ISoundProvider, ISaveRam, IInputPollable,
 								ISettable<GBHawkLink.GBLinkSettings, GBHawkLink.GBLinkSyncSettings>
 	{
@@ -162,8 +161,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 				LibGBHawkLink.GBLink_load_bios(GBLink_Pntr, BIOS[i], Is_GBC[i], Is_GBA, (uint)i);
 
-				var romHashMD5 = MD5Checksum.ComputePrefixedHex(lp.Roms[i].RomData);
-				Console.WriteLine(romHashMD5);
 				var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(lp.Roms[i].RomData);
 				Console.WriteLine(romHashSHA1);
 
@@ -183,7 +180,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				string mppr;
 				uint mppr_num;
 
-				GBCommonFunctions.Setup_Mapper(romHashMD5, romHashSHA1, header, out mppr, out mppr_num, out has_bat[i], out Cart_RAM_Size[i]);
+				GBCommonFunctions.Setup_Mapper(romHashSHA1, header, out mppr, out mppr_num, out has_bat[i], out Cart_RAM_Size[i]);
 
 				if (Cart_RAM_Size[i] != 0)
 				{

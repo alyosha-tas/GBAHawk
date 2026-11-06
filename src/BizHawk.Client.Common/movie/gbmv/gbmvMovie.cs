@@ -90,7 +90,7 @@ namespace BizHawk.Client.Common
 			}
 		}
 
-		public double FrameRate => PlatformFrameRates.GetFrameRate(SystemID, IsPal);
+		public double FrameRate => PlatformFrameRates.GetFrameRate(SystemID);
 
 		public IStringLog GetLogEntries() => Log;
 

@@ -30,7 +30,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 	public class GBACommonFunctions
 	{
-		public static int Setup_Mirroring(string romHashMD5, string romHashSHA1)
+		public static int Setup_Mirroring(string romHashSHA1)
 		{
 			int db_mirror = 2;
 			
@@ -53,7 +53,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 			return db_mirror;
 		}
 
-		public static void Setup_Mapper(string romHashMD5, string romHashSHA1, byte[] ROM, out int mapper, out bool has_bat, out uint Cart_RAM_Size)
+		public static void Setup_Mapper(string romHashSHA1, byte[] ROM, out int mapper, out bool has_bat, out uint Cart_RAM_Size)
 		{
 			int size_f = 0;
 
