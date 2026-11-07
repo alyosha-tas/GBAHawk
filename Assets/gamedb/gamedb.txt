@@ -1,3 +1,2 @@
-#include gamedb_nes_overrides.txt
 #include gamedb_gba_overrides.txt
 

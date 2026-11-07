@@ -321,7 +321,7 @@ namespace BizHawk.Client.Common
 						(dynamic)cip.FetchSyncSettings(typeof(SubNESHawk), typeof(NESHawk.NESHawkSyncSettings)));
 				}
 			}
-			else if (game.System == "GB")
+			else if ((game.System == "GB") || (game.System == "GBC"))
 			{
 				if (UseCoreName == "GBHawk")
 				{

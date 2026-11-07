@@ -97,7 +97,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			public bool MMC3_is_Rev_A { get; set; }
 
 			[DisplayName("Emulate Mapper Bus Conflicts")]
-			[Description("Effects CNROM, AxROM, UxROM")]
+			[Description("Effects CNROM, AxROM, UxROM. May be overridden in game header when applicable.")]
 			[DefaultValue(true)]
 			public bool Mapper_Bus_Conflicts { get; set; }
 

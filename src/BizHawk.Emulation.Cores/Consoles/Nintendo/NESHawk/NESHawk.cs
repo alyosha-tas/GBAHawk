@@ -188,6 +188,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(GamePack);
 			Console.WriteLine(romHashSHA1);
 
+			// override bus conflict setting when specified by header or mapper number
+			if ((mapper == 2) || (mapper == 3) || (mapper == 7) || (mapper == 11))
+			{
+				if (submapper == 1) { bus_conflicts = false; }
+				if (submapper == 2) { bus_conflicts = true; }
+			}
 
 			// some ROMs require unique features, use hash check to pick them out
 			byte special_flag = 0;
