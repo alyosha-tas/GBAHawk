@@ -52,10 +52,7 @@ namespace BizHawk.Client.Common
 			using var bs = new ZipStateSaver(filename, config.CompressionLevelNormal);
 			bs.PutVersionLumps();
 
-			using (new SimpleTime("Save Core"))
-			{
-				bs.PutLump(BinaryStateLump.Corestate, bw => _statable.SaveStateBinary(bw));
-			}
+			bs.PutLump(BinaryStateLump.Corestate, bw => _statable.SaveStateBinary(bw));
 
 			if (config.SaveScreenshot && _videoProvider != null)
 			{
@@ -80,10 +77,7 @@ namespace BizHawk.Client.Common
 						outHeight /= 2;
 					}
 
-					using (new SimpleTime("Save Framebuffer"))
-					{
-						bs.PutLump(BinaryStateLump.Framebuffer, s => _quickBmpFile.Save(_videoProvider, s, outWidth, outHeight));
-					}
+					bs.PutLump(BinaryStateLump.Framebuffer, s => _quickBmpFile.Save(_videoProvider, s, outWidth, outHeight));
 				}
 			}
 
@@ -138,10 +132,7 @@ namespace BizHawk.Client.Common
 						}
 					}
 
-					using (new SimpleTime("Load Core"))
-					{
-						bl.GetCoreState(br => _statable.LoadStateBinary(br));
-					}
+					bl.GetCoreState(br => _statable.LoadStateBinary(br));
 
 					// We must handle movie input AFTER the core is loaded to properly handle mode changes, and input latching
 					if (_movieSession.Movie.IsActive())
@@ -201,10 +192,7 @@ namespace BizHawk.Client.Common
 		{
 			try
 			{
-				using (new SimpleTime("Load Framebuffer"))
-				{
-					quickBmpFile.Load(videoProvider, br.BaseStream);
-				}
+				quickBmpFile.Load(videoProvider, br.BaseStream);
 			}
 			catch
 			{

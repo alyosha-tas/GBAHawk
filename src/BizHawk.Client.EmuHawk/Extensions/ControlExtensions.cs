@@ -23,10 +23,6 @@ namespace BizHawk.Client.GBAHawk
 		public static void Invoke(this Control control, Action action)
 			=> control.Invoke(action);
 
-		/// <summary>extension method to make <see cref="Control.BeginInvoke(Delegate)"/> easier to use</summary>
-		public static void BeginInvoke(this Control control, Action action)
-			=> control.BeginInvoke(action);
-
 		public static ToolStripMenuItem ToColumnsMenu(this InputRoll inputRoll, Action changeCallback)
 		{
 			var menu = new ToolStripMenuItem
@@ -80,11 +76,6 @@ namespace BizHawk.Client.GBAHawk
 		/// </summary>
 		public static IEnumerable<Control> Controls(this Control control)
 			=> control.Controls.Cast<Control>();
-
-		public static IEnumerable<TabPage> TabPages(this TabControl tabControl)
-		{
-			return tabControl.TabPages.Cast<TabPage>();
-		}
 
 		public static Control? InnermostControlAt(this Form form, Point pos, GetChildAtPointSkip flags = GetChildAtPointSkip.None)
 		{

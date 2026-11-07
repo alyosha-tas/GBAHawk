@@ -189,8 +189,7 @@ namespace BizHawk.Client.GBAHawk
 
 			Config.CurrentUseExistingSRAM = Config.UseExistingSRAM;
 
-			//do this threaded stuff early so it has plenty of time to run in background
-			Database.InitializeDatabase(Path.Combine(PathUtils.ExeDirectoryPath, "gamedb", "gamedb.txt"), silent: true);
+			Database.InitializeDatabase(Path.Combine(PathUtils.ExeDirectoryPath, "gamedb", "gamedb.txt"));
 
 			_argParser = cliFlags;
 			_getConfigPath = getConfigPath;

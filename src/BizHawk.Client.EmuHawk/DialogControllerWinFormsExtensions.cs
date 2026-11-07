@@ -11,9 +11,6 @@ namespace BizHawk.Client.GBAHawk
 	{
 		public static IWin32Window AsWinFormsHandle(this IDialogParent dialogParent) => (IWin32Window) dialogParent;
 
-		public static DialogResult ShowDialogAsChild(this IDialogParent dialogParent, CommonDialog dialog)
-			=> dialog.ShowDialog(dialogParent.AsWinFormsHandle());
-
 		public static DialogResult ShowDialogAsChild(this IDialogParent dialogParent, Form dialog)
 			=> dialog.ShowDialog(dialogParent.AsWinFormsHandle());
 

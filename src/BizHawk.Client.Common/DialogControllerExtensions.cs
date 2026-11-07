@@ -46,18 +46,6 @@ namespace BizHawk.Client.Common
 				=> dialogParent.DialogController.ShowMessageBox2(owner: dialogParent, text: text, caption: caption, icon: icon, useOKCancel: useOKCancel);
 
 		/// <summary>
-		/// Creates and shows a <c>System.Windows.Forms.MessageBox</c> or equivalent with the receiver (<paramref name="dialogParent"/>) as its parent, with the given <paramref name="text"/>,
-		/// and with the given <paramref name="caption"/> and <paramref name="icon"/> if they're specified.
-		/// </summary>
-		/// <returns><see langword="true"/> if "Yes" was chosen, <see langword="false"/> if "No" was chosen, or <see langword="null"/> if "Cancel" was chosen</returns>
-		public static bool? ModalMessageBox3(
-			this IDialogParent dialogParent,
-			string text,
-			string? caption = null,
-			EMsgBoxIcon? icon = null)
-				=> dialogParent.DialogController.ShowMessageBox3(owner: dialogParent, text: text, caption: caption, icon: icon);
-
-		/// <summary>
 		/// Creates and shows a <c>System.Windows.Forms.MessageBox</c> or equivalent without a parent, with the given <paramref name="text"/>,
 		/// and with the given <paramref name="caption"/> and <paramref name="icon"/> if they're specified.
 		/// </summary>

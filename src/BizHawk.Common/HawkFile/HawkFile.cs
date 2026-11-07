@@ -168,7 +168,6 @@ namespace BizHawk.Common
 			_extractor.ExtractFile(archiveIndex, _boundStream);
 			_boundStream.Position = 0;
 			ArchiveMemberPath = _archiveItems[index].Name; // TODO - maybe go through our own list of names? maybe not, its indices don't match...
-			Util.DebugWriteLine($"{nameof(HawkFile)} bound {CanonicalFullPath}");
 			if (_boundStream.Length is 0) Console.WriteLine("bound file is 0 bytes long?");
 			BoundIndex = archiveIndex;
 			return this;
@@ -240,7 +239,6 @@ namespace BizHawk.Common
 		private void BindRoot()
 		{
 			_boundStream = _rootStream;
-			Util.DebugWriteLine($"{nameof(HawkFile)} bound {CanonicalFullPath}");
 		}
 
 		/// <summary>As <see cref="BindFirstOf(IReadOnlyCollection{string})"/>, but doesn't bind anything if there are multiple archive members with a matching file extension.</summary>

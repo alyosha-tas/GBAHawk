@@ -10,16 +10,6 @@
 		/// </summary>
 		string DllPath();
 
-		/// <summary>
-		/// produces a path that contains saveram... because libretro cores need it
-		/// </summary>
-		string GetRetroSaveRAMDirectory(IGameInfo game);
-
-		/// <summary>
-		/// produces a path for use as a libretro system path (different for each core)
-		/// </summary>
-		string GetRetroSystemPath(IGameInfo game);
-
 		/// <param name="msg">warning message to show on failure</param>
 		/// <returns><see langword="null"/> iff failed</returns>
 		byte[]? GetFirmware(FirmwareID id, string? msg = null);

@@ -203,8 +203,6 @@ namespace BizHawk.Client.GBAHawk
 			var dllDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "dll");
 			_ = SetDllDirectory(dllDir);
 
-			Util.DebugWriteLine(EmuHawkUtil.CLRHostHasElevatedPrivileges ? "running as Superuser/Administrator" : "running as unprivileged user");
-
 			var exitCode = 0;
 			try
 			{

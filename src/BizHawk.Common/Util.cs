@@ -23,14 +23,6 @@ namespace BizHawk.Common
 			}
 		}
 
-		/// <summary>equivalent to <see cref="Console.WriteLine(string)">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
-		[Conditional("DEBUG")]
-		public static void DebugWriteLine(string value) => Console.WriteLine(value);
-
-		/// <summary>equivalent to <see cref="Console.WriteLine(string, object[])">Console.WriteLine</see> but is <c>#ifdef DEBUG</c></summary>
-		[Conditional("DEBUG")]
-		public static void DebugWriteLine(string format, params object[] arg) => Console.WriteLine(format, arg);
-
 		public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> kvp, out TKey key, out TValue value)
 		{
 			key = kvp.Key;

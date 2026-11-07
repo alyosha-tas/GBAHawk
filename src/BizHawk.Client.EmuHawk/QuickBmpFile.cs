@@ -266,21 +266,18 @@ namespace BizHawk.Client.GBAHawk
 			fixed (byte* srcp = src)
 			fixed (int* dstp = dst)
 			{
-				using (new SimpleTime("Blit"))
+				Blit(new BMP
 				{
-					Blit(new BMP
-					{
-						Data = (int*)srcp,
-						Width = inW,
-						Height = inH
-					},
-					new BMP
-					{
-						Data = dstp,
-						Width = v.BufferWidth,
-						Height = v.BufferHeight,
-					});
-				}
+					Data = (int*)srcp,
+					Width = inW,
+					Height = inH
+				},
+				new BMP
+				{
+					Data = dstp,
+					Width = v.BufferWidth,
+					Height = v.BufferHeight,
+				});
 			}
 
 			return true;
@@ -312,21 +309,18 @@ namespace BizHawk.Client.GBAHawk
 			fixed (int* srcp = src)
 			fixed (byte* dstp = dst)
 			{
-				using (new SimpleTime("Blit"))
+				Blit(new BMP
 				{
-					Blit(new BMP
-					{
-						Data = srcp,
-						Width = v.BufferWidth,
-						Height = v.BufferHeight
-					},
-					new BMP
-					{
-						Data = (int*)dstp,
-						Width = w,
-						Height = h,
-					});
-				}
+					Data = srcp,
+					Width = v.BufferWidth,
+					Height = v.BufferHeight
+				},
+				new BMP
+				{
+					Data = (int*)dstp,
+					Width = w,
+					Height = h,
+				});
 			}
 
 			s.Write(dst, 0, dst.Length);

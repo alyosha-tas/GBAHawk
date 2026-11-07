@@ -220,8 +220,6 @@ namespace BizHawk.Client.Common
 			cancel = false;
 			rom = new RomGame(file);
 
-			Util.DebugWriteLine(rom.GameInfo.System);
-
 			if (string.IsNullOrEmpty(rom.GameInfo.System))
 			{
 				// Has the user picked a preference for this extension?

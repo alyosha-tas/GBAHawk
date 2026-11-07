@@ -32,7 +32,7 @@ namespace BizHawk.Emulation.Common
 			return hash;
 		}
 
-		private static void LoadDatabase_Escape(string line, bool inUser, bool silent)
+		private static void LoadDatabase_Escape(string line, bool inUser)
 		{
 			if (!line.StartsWith("#include", StringComparison.InvariantCultureIgnoreCase)) return;
 
@@ -42,12 +42,11 @@ namespace BizHawk.Emulation.Common
 			var filename = Path.Combine(searchUser ? _userRoot : _bundledRoot, line);
 			if (File.Exists(filename))
 			{
-				if (!silent) Util.DebugWriteLine($"loading external game database {line} ({(searchUser ? "user" : "bundled")})");
-				initializeWork(filename, inUser: searchUser, silent: silent);
+				initializeWork(filename, inUser: searchUser);
 			}
 			else if (inUser)
 			{
-				Util.DebugWriteLine($"BENIGN: missing external game database {line} (user)");
+
 			}
 			else if (!isUserInclude)
 			{
@@ -57,7 +56,7 @@ namespace BizHawk.Emulation.Common
 
 		private static bool initialized = false;
 
-		private static void initializeWork(string path, bool inUser, bool silent)
+		private static void initializeWork(string path, bool inUser)
 		{
 			if (!inUser) _expected.Remove(Path.GetFileName(path));
 
@@ -74,7 +73,7 @@ namespace BizHawk.Emulation.Common
 
 					if (line.StartsWith("#"))
 					{
-						LoadDatabase_Escape(line, inUser: inUser, silent: silent);
+						LoadDatabase_Escape(line, inUser: inUser);
 						continue;
 					}
 
@@ -97,7 +96,7 @@ namespace BizHawk.Emulation.Common
 					{
 						Console.WriteLine($"WARNING: gamedb {path} contains entry for empty rom as \"{game.Name}\"!");
 					}
-					if (!silent && DB.TryGetValue(game.Hash, out var dupe))
+					if (DB.TryGetValue(game.Hash, out var dupe))
 					{
 						Console.WriteLine("gamedb: Multiple hash entries {0}, duplicate detected on \"{1}\" and \"{2}\"", game.Hash, game.Name, dupe.Name);
 					}
@@ -106,12 +105,12 @@ namespace BizHawk.Emulation.Common
 				}
 				catch
 				{
-					Util.DebugWriteLine($"Error parsing database entry: {line}");
+					//Console.WriteLine($"Error parsing database entry: {line}");
 				}
 			}
 		}
 
-		public static void InitializeDatabase(string path, bool silent)
+		public static void InitializeDatabase(string path)
 		{
 			if (initialized) throw new InvalidOperationException("Did not expect re-initialize of game Database");
 			initialized = true;
@@ -124,7 +123,7 @@ namespace BizHawk.Emulation.Common
 
 			_expected = new DirectoryInfo(_bundledRoot!).EnumerateFiles("*.txt").Select(static fi => fi.Name).ToList();
 
-			initializeWork(path, inUser: false, silent: silent);
+			initializeWork(path, inUser: false);
 		}
 
 		public static GameInfo CheckDatabase(string hash)

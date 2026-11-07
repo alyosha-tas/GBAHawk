@@ -27,18 +27,5 @@ namespace BizHawk.Common
 			}
 			return temp.ToList();
 		}
-
-		public List<T> AppliedTo(IReadOnlyCollection<T> list, string idOfFirst, IReadOnlyDictionary<string, bool> isDescMap)
-		{
-			var temp = isDescMap[idOfFirst]
-				? list.OrderByDescending(_predicates[idOfFirst])
-				: list.OrderBy(_predicates[idOfFirst]);
-			foreach (var (id, pred) in _predicates)
-			{
-				if (id == idOfFirst) continue;
-				temp = isDescMap[id] ? temp.ThenByDescending(pred) : temp.ThenBy(pred);
-			}
-			return temp.ToList();
-		}
 	}
 }

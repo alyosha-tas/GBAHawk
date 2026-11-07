@@ -73,7 +73,6 @@ namespace BizHawk.Bizware.OpenTK3
 					}
 					catch (Exception e)
 					{
-						Util.DebugWriteLine($"caught {e.GetType().FullName} while enumerating OpenTK gamepads");
 						DropAt(tryIndex, Devices);
 					}
 				}

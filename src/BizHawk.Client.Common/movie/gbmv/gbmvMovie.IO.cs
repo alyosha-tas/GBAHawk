@@ -168,17 +168,17 @@ namespace BizHawk.Client.Common
 				}
 			});
 
+			if (preload)
+			{
+				return;
+			}
+
 			bl.GetLump(BinaryStateLump.Input, true, delegate(TextReader tr)
 			{
 				IsCountingRerecords = false;
 				ExtractInputLog(tr, out _);
 				IsCountingRerecords = true;
 			});
-
-			if (preload)
-			{
-				return;
-			}
 
 			bl.GetLump(BinaryStateLump.Comments, false, delegate(TextReader tr)
 			{

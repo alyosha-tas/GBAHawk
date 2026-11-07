@@ -137,7 +137,7 @@ namespace BizHawk.Client.GBAHawk
 				afsfreq = 1000;
 				tmethod = 0;
 			}
-			Util.DebugWriteLine("throttle method: {0}; resolution: {1}", tmethod, afsfreq);
+
 			tfreq = afsfreq * 65536;
 		}
 
