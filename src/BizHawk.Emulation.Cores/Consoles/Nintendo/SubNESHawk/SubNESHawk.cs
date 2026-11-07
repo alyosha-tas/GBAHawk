@@ -33,7 +33,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.SubNESHawk
 			ser.Register(_nesCore.Tracer);
 		}
 
-		private readonly NESHawk.NESHawk _nesCore;
+		public readonly NESHawk.NESHawk _nesCore;
 
 		public void HardReset() => _nesCore.HardReset();
 

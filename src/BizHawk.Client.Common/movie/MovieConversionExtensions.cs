@@ -5,6 +5,8 @@ using System.Linq;
 using BizHawk.Common;
 using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GB.Common;
+using BizHawk.Emulation.Cores.Nintendo.NESHawk;
+using BizHawk.Emulation.Cores.Nintendo.SubNESHawk;
 
 namespace BizHawk.Client.Common
 {
@@ -230,6 +232,15 @@ namespace BizHawk.Client.Common
 			movie.Core = ((CoreAttribute)Attribute
 				.GetCustomAttribute(emulator.GetType(), typeof(CoreAttribute)))
 				.CoreName;
+
+			if (emulator is NESHawk nes)
+			{
+				movie.HeaderEntries.Add("ROM Header: ", nes.GetStringHeader());
+			}
+			else if (emulator is SubNESHawk subnes)
+			{
+				movie.HeaderEntries.Add("ROM Header: ", subnes._nesCore.GetStringHeader());
+			}
 		}
 
 		internal static string ConvertFileNameToTasMovie(string oldFileName)

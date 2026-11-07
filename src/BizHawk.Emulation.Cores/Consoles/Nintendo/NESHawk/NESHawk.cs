@@ -94,6 +94,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 				throw new Exception("Header size not supported / unsupported ROM layout.");
 			}
 
+			Console.WriteLine(GetStringHeader());
+
 			mapper = (Header[6] >> 4);
 
 			mapper |= (Header[7] & 0xF0);
@@ -267,6 +269,13 @@ namespace BizHawk.Emulation.Cores.Nintendo.NESHawk
 			NES_InputPoll = Send_Input_Callback;
 
 			LibNESHawk.NES_setinputpollcallback(NES_Pntr, NES_InputPoll);
+		}
+
+		public string GetStringHeader()
+		{
+			return string.Format("Header: {0:X2} {1:X2} {2:X2} {3:X2} {4:X2} {5:X2} {6:X2} {7:X2} {8:X2} {9:X2} {10:X2} {11:X2} {12:X2} {13:X2} {14:X2} {15:X2}",
+						Header[0], Header[1], Header[2], Header[3], Header[4], Header[5], Header[6], Header[7],
+						Header[8], Header[9], Header[10], Header[11], Header[12], Header[13], Header[14], Header[15]);
 		}
 
 		public NESHawkSyncSettings.ControllerType LeftController;
