@@ -2,7 +2,6 @@
 	<Import Project="../Common.props" />
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<CodeAnalysisRuleSet>$(ProjectDir)../../Common.ruleset</CodeAnalysisRuleSet>
 		<DefineConstants>$(DefineConstants);AVI_SUPPORT</DefineConstants>
 		<DocumentationFile>$(ProjectDir)bin/doc_comments.xml</DocumentationFile>
 		<MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>

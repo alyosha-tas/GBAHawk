@@ -1,8 +1,6 @@
 using System.IO;
 using System.Reflection;
 
-using BizHawk.Common.StringExtensions;
-
 namespace BizHawk.Common
 {
 	public static partial class VersionInfo
@@ -11,7 +9,7 @@ namespace BizHawk.Common
 		/// Bump this immediately after release.
 		/// Only use '0'..'9' and '.' or it will fail to parse and the new version notification won't work.
 		/// </remarks>
-		public static readonly string MainVersion = "3.1.0";
+		public static readonly string MainVersion = "3.1.1";
 
 		public static string GetEmuVersion()
 			=> $"Version {MainVersion}";
