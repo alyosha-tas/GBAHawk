@@ -33,7 +33,6 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Bus_Updater.cpp" />
     <ClCompile Include="CPU_ARM.cpp" />
     <ClCompile Include="CPU_LDM_Glitch.cpp" />
     <ClCompile Include="CPU_Thumb.cpp" />
