@@ -3883,11 +3883,12 @@ namespace GBHawk
 							tim_Timer_Old = tim_Timer;
 							tim_Timer++;
 
+							if (MessageCallback)
+							{
+								Message_String = "Timer glitch.";
 
-							Message_String = "Timer glitch.";
-
-							MessageCallback(Message_String.length());
-
+								MessageCallback(Message_String.length());
+							}
 
 							// if overflow happens, set the interrupt flag and reload the timer (if applicable)
 							if (tim_Timer < tim_Timer_Old)

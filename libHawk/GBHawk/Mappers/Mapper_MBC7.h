@@ -57,13 +57,13 @@ namespace GBHawk
 			acc_y_low = 0;
 			acc_y_high = 0x80;
 
-			// reset acceerometer
-		is_erased = false;
+			// reset accelerometer
+			is_erased = false;
 
-		// EEPROM related
-		CS_prev = CLK_prev = DI_prev = DO = instr_read = perf_instr = WR_EN = countdown_start = false;
-		instr_bit_counter = instr = EE_addr = instr_case = instr_clocks = EE_value = countdown = 0;
-	}
+			// EEPROM related
+			CS_prev = CLK_prev = DI_prev = DO = instr_read = perf_instr = WR_EN = countdown_start = false;
+			instr_bit_counter = instr = EE_addr = instr_case = instr_clocks = EE_value = countdown = 0;
+		}
 
 		uint8_t ReadMemoryLow(uint16_t addr)
 		{

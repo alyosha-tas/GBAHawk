@@ -174,6 +174,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				LibGBHawk.GB_set_rtc(GB_Pntr, remaining & 0xFF, 0);
 			}
 
+			HardReset();
+
 			blip_L.SetRates(4194304, 44100);
 			blip_R.SetRates(4194304, 44100);
 

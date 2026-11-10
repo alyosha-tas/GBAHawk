@@ -1147,9 +1147,12 @@ namespace GBHawk
 			{
 				speed_switch = false;
 
-				Message_String = "Speed Switch: " + to_string(Cycle_Count);
+				if (MessageCallback)
+				{
+					Message_String = "Speed Switch: " + to_string(Cycle_Count);
 
-				MessageCallback(Message_String.length());
+					MessageCallback(Message_String.length());
+				}
 
 				uint32_t ret = Double_Speed ? 32770 : 32770; // actual time needs checking
 				return ret;

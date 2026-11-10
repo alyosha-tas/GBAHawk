@@ -33,7 +33,10 @@ namespace GBHawk
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				GBL[i].Console_ID = (uint32_t)i;
+				GBL[i].GB.System_Reset();
 			}
+
+			Link_Reset();
 		};
 
 		GBCore* GBL;
@@ -132,7 +135,7 @@ namespace GBHawk
 			}
 		}
 
-		void Hard_Reset()
+		void Link_Reset()
 		{
 			AB_Connected = false;
 			BC_Connected = false;
@@ -169,6 +172,11 @@ namespace GBHawk
 			{
 				x4_buffer[i] = 0;
 			}
+		}
+
+		void Hard_Reset()
+		{
+			Link_Reset();
 			
 			for (int i = 0; i < Num_ROMs; i++)
 			{
@@ -1299,7 +1307,7 @@ namespace GBHawk
 				// send left audio to console 1, right to console 2
 				GBL[one_en].GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0);
 
-				return GBL[two_en].GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0);
+				return GBL[two_en].GetAudio(dest_L_1, n_samp_L_1, dest_R_1, n_samp_R_1);
 			}
 
 			return 0;

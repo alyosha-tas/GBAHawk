@@ -26,7 +26,7 @@ namespace GBAHawk
 			Video_Command = 0;
 
 			// repeatedly map in the first bank, except first
-			for (int i = 8; i < 8; i++)
+			for (int i = 0; i < 8; i++)
 			{
 				Video_Banks[i] = 0;
 			}

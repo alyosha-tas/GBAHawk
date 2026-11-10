@@ -246,7 +246,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 					blip_R_0.AddDelta((uint)Aud_R_0[i * 2], Aud_R_0[i * 2 + 1]);
 				}
 
-				//Console.WriteLine(num_samp_L + " " + num_samp_R + " " + f_clock);
+				//Console.WriteLine(num_samp_L_0 + " " + num_samp_R_0 + " " + f_clock);
 
 				blip_L_0.EndFrame(f_clock);
 				blip_R_0.EndFrame(f_clock);
