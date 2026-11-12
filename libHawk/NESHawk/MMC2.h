@@ -71,9 +71,9 @@ namespace NESHawk
 
 			// last 3 banks are fixed
 			Core_ROM[0] = Core_ROM_Base + PRG_Bank * 0x2000;
-			Core_ROM[1] = Core_ROM_Base + *Core_CHR_ROM_Length - 0x6000;
-			Core_ROM[2] = Core_ROM_Base + *Core_CHR_ROM_Length - 0x4000;
-			Core_ROM[3] = Core_ROM_Base + *Core_CHR_ROM_Length - 0x2000;
+			Core_ROM[1] = Core_ROM_Base + *Core_ROM_Length - 0x6000;
+			Core_ROM[2] = Core_ROM_Base + *Core_ROM_Length - 0x4000;
+			Core_ROM[3] = Core_ROM_Base + *Core_ROM_Length - 0x2000;
 		}
 
 		uint8_t ReadPRG(uint32_t addr)

@@ -295,11 +295,39 @@ namespace NESHawk
 						bool is_spr_0 = false;
 						
 						// comparing always happens, but shifting doesn't happen unless ppu is on
-						for (int i = 0; i < 8; i++)
+						if ((status_sl == 0) && (status_cycle <= 2) && ppu_Dot_Was_Skipped)
 						{
-							if (ppu_Sprite_Shifters[i].X == ppu_Sprite_Draw_Cycle)
+							// glitchy compare at cycle 0
+							if (status_cycle == 1)
 							{
-								ppu_Sprite_Shifters[i].X_Start = true;
+								// all sprites behave as if started, but only for 1 cycle
+								for (int i = 0; i < 8; i++)
+								{
+									ppu_Sprite_Shifters[i].X_Start = true;
+								}
+							}
+							else
+							{
+								for (int i = 0; i < 8; i++)
+								{
+									// now sprites compare as normal, but note they will be shifted one dot to the left from the above effect.
+									ppu_Sprite_Shifters[i].X_Start = false;
+
+									if (ppu_Sprite_Shifters[i].X == ppu_Sprite_Draw_Cycle)
+									{
+										ppu_Sprite_Shifters[i].X_Start = true;
+									}
+								}
+							}
+						}
+						else
+						{
+							for (int i = 0; i < 8; i++)
+							{
+								if (ppu_Sprite_Shifters[i].X == ppu_Sprite_Draw_Cycle)
+								{
+									ppu_Sprite_Shifters[i].X_Start = true;
+								}
 							}
 						}
 

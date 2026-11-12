@@ -26,7 +26,7 @@ namespace NESHawk
 
 			CHR_Mask = 3;
 
-			PRG_Mask = (*Core_ROM_Length >> 13) - 1;
+			PRG_Mask = (*Core_ROM_Length >> 14) - 1;
 
 			PRG_Bank = 0;
 

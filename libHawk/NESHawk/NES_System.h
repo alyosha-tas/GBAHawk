@@ -774,7 +774,7 @@ namespace NESHawk
 			trace_string.append(cpu_FlagVget() ? "V" : "v");
 			trace_string.append(cpu_FlagTget() ? "T" : "t");
 			trace_string.append(cpu_FlagBget() ? "B" : "b");
-			trace_string.append(cpu_FlagVget() ? "D" : "d");
+			trace_string.append(cpu_FlagDget() ? "D" : "d");
 			trace_string.append(cpu_FlagIget() ? "I" : "i");
 			trace_string.append(cpu_FlagZget() ? "Z" : "z");
 			trace_string.append(cpu_FlagCget() ? "C" : "c");
@@ -815,6 +815,7 @@ namespace NESHawk
 			{
 				case 0x00: sprintf_s(val_char_2, 40, "BRK"); break;
 				case 0x01: sprintf_s(val_char_2, 40, "ORA ($%02X,X)", PeekMemory(pc++)); break;
+				case 0x03: sprintf_s(val_char_2, 40, "SLO ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x04: sprintf_s(val_char_2, 40, "NOP $%02X", PeekMemory(pc++)); break;
 				case 0x05: sprintf_s(val_char_2, 40, "ORA $%02X", PeekMemory(pc++)); break;
 				case 0x06: sprintf_s(val_char_2, 40, "ASL $%02X", PeekMemory(pc++)); break;
@@ -837,6 +838,7 @@ namespace NESHawk
 				case 0x1E: sprintf_s(val_char_2, 40, "ASL $%04X,X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x20: sprintf_s(val_char_2, 40, "JSR $%04X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x21: sprintf_s(val_char_2, 40, "AND ($%02X,X)", PeekMemory(pc++)); break;
+				case 0x23: sprintf_s(val_char_2, 40, "RLA ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x24: sprintf_s(val_char_2, 40, "BIT $%02X", PeekMemory(pc++)); break;
 				case 0x25: sprintf_s(val_char_2, 40, "AND $%02X", PeekMemory(pc++)); break;
 				case 0x26: sprintf_s(val_char_2, 40, "ROL $%02X", PeekMemory(pc++)); break;
@@ -859,6 +861,7 @@ namespace NESHawk
 				case 0x3E: sprintf_s(val_char_2, 40, "ROL $%04X,X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x40: sprintf_s(val_char_2, 40, "RTI"); break;
 				case 0x41: sprintf_s(val_char_2, 40, "EOR ($%02X,X)", PeekMemory(pc++)); break;
+				case 0x43: sprintf_s(val_char_2, 40, "SRE ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x44: sprintf_s(val_char_2, 40, "NOP $%02X", PeekMemory(pc++)); break;
 				case 0x45: sprintf_s(val_char_2, 40, "EOR $%02X", PeekMemory(pc++)); break;
 				case 0x46: sprintf_s(val_char_2, 40, "LSR $%02X", PeekMemory(pc++)); break;
@@ -881,6 +884,7 @@ namespace NESHawk
 				case 0x5E: sprintf_s(val_char_2, 40, "LSR $%04X,X", Peek_Memory_16(pc++)); pc++; break;
 				case 0x60: sprintf_s(val_char_2, 40, "RTS"); break;
 				case 0x61: sprintf_s(val_char_2, 40, "ADC ($%02X,X)", PeekMemory(pc++)); break;
+				case 0x63: sprintf_s(val_char_2, 40, "RRA ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x64: sprintf_s(val_char_2, 40, "NOP $%02X", PeekMemory(pc++)); break;
 				case 0x65: sprintf_s(val_char_2, 40, "ADC $%02X", PeekMemory(pc++)); break;
 				case 0x66: sprintf_s(val_char_2, 40, "ROR $%02X", PeekMemory(pc++)); break;
@@ -904,6 +908,7 @@ namespace NESHawk
 				case 0x80: sprintf_s(val_char_2, 40, "NOP #$%02X", PeekMemory(pc++)); break;
 				case 0x81: sprintf_s(val_char_2, 40, "STA ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x82: sprintf_s(val_char_2, 40, "NOP #$%02X", PeekMemory(pc++)); break;
+				case 0x83: sprintf_s(val_char_2, 40, "SAX ($%02X,X)", PeekMemory(pc++)); break;
 				case 0x84: sprintf_s(val_char_2, 40, "STY $%02X", PeekMemory(pc++)); break;
 				case 0x85: sprintf_s(val_char_2, 40, "STA $%02X", PeekMemory(pc++)); break;
 				case 0x86: sprintf_s(val_char_2, 40, "STX $%02X", PeekMemory(pc++)); break;
@@ -925,6 +930,7 @@ namespace NESHawk
 				case 0xA0: sprintf_s(val_char_2, 40, "LDY #$%02X", PeekMemory(pc++)); break;
 				case 0xA1: sprintf_s(val_char_2, 40, "LDA ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xA2: sprintf_s(val_char_2, 40, "LDX #$%02X", PeekMemory(pc++)); break;
+				case 0xA3: sprintf_s(val_char_2, 40, "LAX ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xA4: sprintf_s(val_char_2, 40, "LDY $%02X", PeekMemory(pc++)); break;
 				case 0xA5: sprintf_s(val_char_2, 40, "LDA $%02X", PeekMemory(pc++)); break;
 				case 0xA6: sprintf_s(val_char_2, 40, "LDX $%02X", PeekMemory(pc++)); break;
@@ -949,6 +955,7 @@ namespace NESHawk
 				case 0xC0: sprintf_s(val_char_2, 40, "CPY #$%02X", PeekMemory(pc++)); break;
 				case 0xC1: sprintf_s(val_char_2, 40, "CMP ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xC2: sprintf_s(val_char_2, 40, "NOP #$%02X", PeekMemory(pc++)); break;
+				case 0xC3: sprintf_s(val_char_2, 40, "DCP ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xC4: sprintf_s(val_char_2, 40, "CPY $%02X", PeekMemory(pc++)); break;
 				case 0xC5: sprintf_s(val_char_2, 40, "CMP $%02X", PeekMemory(pc++)); break;
 				case 0xC6: sprintf_s(val_char_2, 40, "DEC $%02X", PeekMemory(pc++)); break;
@@ -973,6 +980,7 @@ namespace NESHawk
 				case 0xE0: sprintf_s(val_char_2, 40, "CPX #$%02X", PeekMemory(pc++)); break;
 				case 0xE1: sprintf_s(val_char_2, 40, "SBC ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xE2: sprintf_s(val_char_2, 40, "NOP #$%02X", PeekMemory(pc++)); break;
+				case 0xE3: sprintf_s(val_char_2, 40, "ISC ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xE4: sprintf_s(val_char_2, 40, "CPX $%02X", PeekMemory(pc++)); break;
 				case 0xE5: sprintf_s(val_char_2, 40, "SBC $%02X", PeekMemory(pc++)); break;
 				case 0xE6: sprintf_s(val_char_2, 40, "INC $%02X", PeekMemory(pc++)); break;
@@ -993,6 +1001,7 @@ namespace NESHawk
 				case 0xFC: sprintf_s(val_char_2, 40, "NOP ($%02X,X)", PeekMemory(pc++)); break;
 				case 0xFD: sprintf_s(val_char_2, 40, "SBC $%04X,X *", Peek_Memory_16(pc++)); pc++; break;
 				case 0xFE: sprintf_s(val_char_2, 40, "INC $%04X,X", Peek_Memory_16(pc++)); pc++; break;
+				case 0xFF: sprintf_s(val_char_2, 40, "ISC $%04X,X", Peek_Memory_16(pc++)); pc++; break;
 				default: sprintf_s(val_char_2, 40, "???"); break;
 			}
 
