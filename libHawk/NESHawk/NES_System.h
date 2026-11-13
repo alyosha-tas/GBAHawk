@@ -1209,6 +1209,7 @@ namespace NESHawk
 		bool ppu_Buffer_Write_Go;
 		bool ppu_ALE;
 		bool ppu_soam_overflow;
+		bool ppu_Reread_2004; // bus updates the ppu cycle after read
 
 		uint8_t ppu_OAM_Corrupt_Addr;
 		uint8_t VRAMBuffer;
@@ -1376,6 +1377,7 @@ namespace NESHawk
 			ppu_Buffer_Write_Go = false;
 			ppu_ALE = false;
 			ppu_soam_overflow = false;
+			ppu_Reread_2004 = false;
 
 			ppu_OAM_Corrupt_Addr = 0;
 			intensity_lsl_6 = 0;
@@ -1693,6 +1695,7 @@ namespace NESHawk
 				ret = OAM[reg_2003];
 			}
 
+			ppu_Reread_2004 = true;
 			ppu_Open_Bus = ret;
 			PpuOpenBusDecay(DecayType_All);
 			return ret;
@@ -2172,6 +2175,7 @@ namespace NESHawk
 			saver = bool_saver(ppu_Buffer_Write_Go, saver);
 			saver = bool_saver(ppu_ALE, saver);
 			saver = bool_saver(ppu_soam_overflow, saver);
+			saver = bool_saver(ppu_Reread_2004, saver);
 
 			saver = byte_saver(ppu_OAM_Corrupt_Addr, saver);
 			saver = byte_saver(VRAMBuffer, saver);
@@ -2311,6 +2315,7 @@ namespace NESHawk
 			loader = bool_loader(&ppu_Buffer_Write_Go, loader);
 			loader = bool_loader(&ppu_ALE, loader);
 			loader = bool_loader(&ppu_soam_overflow, loader);
+			loader = bool_loader(&ppu_Reread_2004, loader);
 
 			loader = byte_loader(&ppu_OAM_Corrupt_Addr, loader);
 			loader = byte_loader(&VRAMBuffer, loader);

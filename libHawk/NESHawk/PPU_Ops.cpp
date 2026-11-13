@@ -371,6 +371,13 @@ namespace NESHawk
 			reg_2003 = 0;
 		}
 
+		// ppu bus updated one ppu cycle after read from $2004
+		if (ppu_Reread_2004)
+		{
+			read_2004();
+			ppu_Reread_2004 = false;
+		}
+
 		// Here we execute a CPU instruction if enough PPU cycles have passed
 		// also do other things that happen at instruction level granularity
 		cpu_stepcounter++;
