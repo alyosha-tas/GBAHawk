@@ -223,18 +223,25 @@ GBAHawk_EXPORT void GBA_setscanlinecallback(GBACore* p, void (*callback)(void), 
 
 #pragma region Link Core
 // Create pointer to a core instance
-GBAHawk_EXPORT GBALinkCore* GBALink_create()
+GBAHawk_EXPORT GBALinkCore* GBALink_create(uint32_t Num_ROMs)
 {
-	return new GBALinkCore();
+	return new GBALinkCore(Num_ROMs);
 }
 
 // free the memory from the core pointer
 GBAHawk_EXPORT void GBALink_destroy(GBALinkCore* p)
 {
-	delete p->L.GBA.Cart_RAM;
-	delete p->R.GBA.Cart_RAM;
-	delete p->L.GBA.Video_ROM;
-	delete p->R.GBA.Video_ROM;
+	if (p != nullptr)
+	{
+		for (int i = 0; i < p->Num_ROMs; i++)
+		{
+			delete p->GBAL[i].GBA.Cart_RAM;
+			delete p->GBAL[i].GBA.mapper_pntr;
+			delete p->GBAL[i].GBA.Video_ROM;
+		}
+
+		delete[] p->GBAL;
+	}
 
 	std::free(p);
 }
@@ -246,21 +253,15 @@ GBAHawk_EXPORT void GBALink_load_bios(GBALinkCore* p, uint8_t* bios)
 }
 
 // load a rom into the core
-GBAHawk_EXPORT void GBALink_load(GBALinkCore* p, uint8_t* rom_0, uint32_t size_0, uint32_t mapper_0,
-												 uint8_t* rom_1, uint32_t size_1, uint32_t mapper_1,
-												 uint64_t datetime_0, bool rtc_functional_0,
-												 uint64_t datetime_1, bool rtc_functional_1,
-												 int16_t EEPROM_offset_0, int16_t EEPROM_offset_1,
-												 uint16_t flash_type_64_value_0, uint16_t flash_type_64_value_1,
-												 uint16_t flash_type_128_value_0, uint16_t flash_type_128_value_1,
-												 int16_t flash_write_offset_0, int16_t flash_write_offset_1,
-												 int32_t flash_sector_offset_0, int32_t flash_sector_offset_1,
-												 int32_t flash_chip_offset_0, int32_t flash_chip_offset_1,
-												 bool is_GBP_0, bool is_GBP_1)
+GBAHawk_EXPORT void GBALink_load(GBALinkCore* p, uint8_t* rom, uint32_t size, uint32_t mapper,
+												 uint64_t datetime, bool rtc_functional, int16_t EEPROM_offset,
+												 uint16_t flash_type_64_value, uint16_t flash_type_128_value,
+												 int16_t flash_write_offset, int32_t flash_sector_offset,
+												 int32_t flash_chip_offset,  bool is_GBP, uint32_t num)
 {
-	p->Load_ROM(rom_0, size_0, mapper_0, rom_1, size_1, mapper_1, datetime_0, rtc_functional_0, datetime_1, rtc_functional_1,
-				EEPROM_offset_0, EEPROM_offset_1, flash_type_64_value_0, flash_type_64_value_1, flash_type_128_value_0, flash_type_128_value_1,
-			    flash_write_offset_0, flash_write_offset_1, flash_sector_offset_0, flash_sector_offset_1, flash_chip_offset_0, flash_chip_offset_1, is_GBP_0, is_GBP_1);
+	p->Load_ROM(rom, size, mapper, datetime, rtc_functional,
+				EEPROM_offset, flash_type_64_value, flash_type_128_value,
+			    flash_write_offset, flash_sector_offset, flash_chip_offset, is_GBP, num);
 }
 
 // load video ROM for movie mapper
@@ -294,11 +295,10 @@ GBAHawk_EXPORT void GBALink_Set_GBP_Enable(GBALinkCore* p, uint32_t num)
 }
 
 // advance a frame
-GBAHawk_EXPORT bool GBALink_frame_advance(GBALinkCore* p, uint16_t ctrl_0, uint16_t accx_0, uint16_t accy_0, uint8_t solar_0, bool render_0, bool sound_0,
-														  uint16_t ctrl_1, uint16_t accx_1, uint16_t accy_1, uint8_t solar_1, bool render_1, bool sound_1,
-														  bool l_reset, bool r_reset)
+GBAHawk_EXPORT bool GBALink_frame_advance(GBALinkCore* p, uint16_t* ctrl, uint16_t* accx, uint16_t* accy, uint8_t* solar,
+														  bool* render, bool* sound, bool* reset)
 {
-	return p->FrameAdvance(ctrl_0, accx_0, accy_0, solar_0, render_0, sound_0, ctrl_1, accx_1, accy_1, solar_1, render_1, sound_1, l_reset, r_reset);
+	return p->FrameAdvance(ctrl, accx, accy, solar, render, sound, reset);
 }
 
 // send video data to external video provider
@@ -308,9 +308,10 @@ GBAHawk_EXPORT void GBALink_get_video(GBALinkCore* p, uint32_t* dest, uint32_t n
 }
 
 // send audio data to external audio provider
-GBAHawk_EXPORT uint32_t GBALink_get_audio(GBALinkCore* p, int32_t* dest_L, int32_t* n_samp_L, int32_t* dest_R, int32_t* n_samp_R, uint32_t num)
+GBAHawk_EXPORT uint32_t GBALink_get_audio(GBALinkCore* p, int32_t* dest_L_0, int32_t* n_samp_L_0, int32_t* dest_R_0, int32_t* n_samp_R_0,
+														  int32_t* dest_L_1, int32_t* n_samp_L_1, int32_t* dest_R_1, int32_t* n_samp_R_1, bool* enables)
 {
-	return p->GetAudio(dest_L, n_samp_L, dest_R, n_samp_R, num);
+	return p->GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0, dest_L_1, n_samp_L_1, dest_R_1, n_samp_R_1, enables);
 }
 
 #pragma region State Save / Load
@@ -328,8 +329,9 @@ GBAHawk_EXPORT void GBALink_load_state(GBALinkCore* p, uint8_t* loader)
 }
 
 // set rumble callback
-GBAHawk_EXPORT void GBALink_setrumblecallback(GBALinkCore* p, void (*callback)(bool), uint32_t num) {
-	p->SetRumbleCallback(callback, num);
+GBAHawk_EXPORT void GBALink_setrumblecallback(GBALinkCore* p, void (*callbackA)(bool), void (*callbackB)(bool),
+															  void (*callbackC)(bool), void (*callbackD)(bool)) {
+	p->SetRumbleCallback(callbackA, callbackB, callbackC, callbackD);
 }
 
 #pragma endregion
@@ -408,8 +410,9 @@ GBAHawk_EXPORT void GBALink_getdisassembly(GBALinkCore* p, char* d, int t, int l
 #pragma region Messages
 
 // set message callback
-GBAHawk_EXPORT void GBALink_setmessagecallback(GBALinkCore* p, void (*callback_L)(int), void (*callback_R)(int)) {
-	p->SetMessageCallback(callback_L, callback_R);
+GBAHawk_EXPORT void GBALink_setmessagecallback(GBALinkCore* p, void (*callback_L)(int), void (*callback_A)(int),
+															   void (*callback_B)(int), void (*callback_C)(int), void (*callback_D)(int)) {
+	p->SetMessageCallback(callback_L, callback_A, callback_B, callback_C, callback_D);
 }
 
 // get message

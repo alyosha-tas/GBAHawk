@@ -29,13 +29,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 				{
 					if (Cart_RAM_Sizes[i] != 0)
 					{
-						for (int j = 0; j < cart_RAMS[0].Length; j++)
+						for (int j = 0; j < cart_RAMS[i].Length; j++)
 						{
-							cart_RAMS[i][j] = LibGBAHawkLink.GBALink_getsram(GBA_Pntr, j, 0);
+							cart_RAMS[i][j] = LibGBAHawkLink.GBALink_getsram(GBA_Pntr, j, i);
 
 							temp[index] = cart_RAMS[i][j];
 							index++;
-
 						}
 					}
 				}

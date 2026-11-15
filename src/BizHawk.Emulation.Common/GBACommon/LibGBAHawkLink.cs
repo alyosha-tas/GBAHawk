@@ -30,7 +30,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 															ulong datetime, bool rtc_functional, short EEPROMoffset,
 															ushort FlashType64Value, ushort FlashType128Value,
 															short FlashWriteOffset, int FlashSectorOffset,
-															int FlashChipOffset, bool is_GBP);
+															int FlashChipOffset, bool is_GBP, uint console_num);
 
 
 		[DllImport(lib, CallingConvention = cc)]
@@ -116,11 +116,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callbackA,
-																	 RumbleCallback callbackB,
-																	 RumbleCallback callbackC,
-																	 RumbleCallback callbackD);
-
+		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callbackA, RumbleCallback callbackB,
+																	 RumbleCallback callbackC, RumbleCallback callbackD);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern int GBALink_getheaderlength(IntPtr core);
@@ -150,8 +147,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBALink_setmessagecallback(IntPtr core, MessageCallback callback_L, MessageCallback callback_R);
-
+		public static extern void GBALink_setmessagecallback(IntPtr core, MessageCallback callback_L, MessageCallback callback_A,
+																		  MessageCallback callback_B, MessageCallback callback_C,
+																		  MessageCallback callback_D);
 
 		[DllImport(lib, CallingConvention = cc)]
 		public static extern void GBALink_getmessage(IntPtr core, StringBuilder h, int s);

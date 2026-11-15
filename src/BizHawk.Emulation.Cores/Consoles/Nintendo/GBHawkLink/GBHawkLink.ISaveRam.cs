@@ -30,9 +30,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 				{
 					if (Cart_RAM_Size[i] != 0)
 					{
-						for (int j = 0; j < cart_RAM[0].Length; j++)
+						for (int j = 0; j < cart_RAM[i].Length; j++)
 						{
-							cart_RAM[i][j] = LibGBHawkLink.GBLink_getsram(GBLink_Pntr, j, Current_sync_on_vbl[i], 0);
+							cart_RAM[i][j] = LibGBHawkLink.GBLink_getsram(GBLink_Pntr, j, Current_sync_on_vbl[i], (uint)i);
 
 							temp[index] = cart_RAM[i][j];
 							index++;

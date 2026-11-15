@@ -360,9 +360,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecbA, rumblecbB, rumblecbC, rumblecbD);
 
 			GBA_message_L = GetMessage_L;
-			GBA_message_R = GetMessage_R;
+			GBA_message_A = GetMessage_A;
+			GBA_message_B = GetMessage_B;
+			GBA_message_C = GetMessage_C;
+			GBA_message_D = GetMessage_D;
 
-			LibGBAHawkLink.GBALink_setmessagecallback(GBA_Pntr, GBA_message_L, GBA_message_R);
+			LibGBAHawkLink.GBALink_setmessagecallback(GBA_Pntr, GBA_message_L, GBA_message_A, GBA_message_B, GBA_message_C, GBA_message_D);
 
 			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1] + " " + +mappers[2] + " " + +mappers[3]);
 
@@ -374,7 +377,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 												  date_times[i], rtc_workings[i], EEPROM_Offsets[i],
 												  Flash_Type_64_Values[i], Flash_Type_128_Values[i],
 												  Flash_Write_Offsets[i], Flash_Sector_Erase_Offsets[i],
-												  Flash_Chip_Erase_Offsets[i], Use_GBPs[i]);
+												  Flash_Chip_Erase_Offsets[i], Use_GBPs[i], (uint)i);
 
 				if (cart_RAMS[i] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[i], (uint)cart_RAMS[i].Length, (uint)i); }
 
@@ -423,8 +426,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
 			_controllerDeck = new(controller_strings, Num_ROMS);
-
-			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
+			//LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
+			HardReset();
 		}
 
 		public void Put_Settings_To_Array()
@@ -555,9 +558,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 		private void MakeRumbleD(bool rumble_on) { if (Controller != null) { Controller.SetHapticChannelStrength("P4 Rumble", rumble_on ? 255 : 0); } }
 
 		private LibGBAHawkLink.MessageCallback GBA_message_L;
-		private LibGBAHawkLink.MessageCallback GBA_message_R;
+		private LibGBAHawkLink.MessageCallback GBA_message_A;
+		private LibGBAHawkLink.MessageCallback GBA_message_B;
+		private LibGBAHawkLink.MessageCallback GBA_message_C;
+		private LibGBAHawkLink.MessageCallback GBA_message_D;
 
 		private void GetMessage_L(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 5);
+
+			Console.WriteLine(new_m);
+		}
+
+		private void GetMessage_A(int str_length)
 		{
 			StringBuilder new_m = new StringBuilder(str_length + 1);
 
@@ -566,11 +581,29 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			Console.WriteLine(new_m);
 		}
 
-		private void GetMessage_R(int str_length)
+		private void GetMessage_B(int str_length)
 		{
 			StringBuilder new_m = new StringBuilder(str_length + 1);
 
 			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 1);
+
+			Console.WriteLine(new_m);
+		}
+
+		private void GetMessage_C(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 2);
+
+			Console.WriteLine(new_m);
+		}
+
+		private void GetMessage_D(int str_length)
+		{
+			StringBuilder new_m = new StringBuilder(str_length + 1);
+
+			LibGBAHawkLink.GBALink_getmessage(GBA_Pntr, new_m, 3);
 
 			Console.WriteLine(new_m);
 		}

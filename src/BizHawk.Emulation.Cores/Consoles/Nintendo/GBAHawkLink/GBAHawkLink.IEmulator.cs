@@ -1,4 +1,5 @@
-﻿using BizHawk.Emulation.Common;
+﻿using BizHawk.Common.NumberExtensions;
+using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores.Nintendo.GBA.Common;
 using System;
 using System.Text;
@@ -78,8 +79,15 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			// Detect GBP via image
 			if (SyncSettings.Use_GBP_A) { GBP_Screen_Detection_A = GBACommonFunctions.Check_Video_GBP(video_buffers[0]); }
 			if (SyncSettings.Use_GBP_B) { GBP_Screen_Detection_B = GBACommonFunctions.Check_Video_GBP(video_buffers[1]); }
-			if (SyncSettings.Use_GBP_C) { GBP_Screen_Detection_C = GBACommonFunctions.Check_Video_GBP(video_buffers[2]); }
-			if (SyncSettings.Use_GBP_D) { GBP_Screen_Detection_D = GBACommonFunctions.Check_Video_GBP(video_buffers[3]); }
+			if (Num_ROMS > 2)
+			{
+				if (SyncSettings.Use_GBP_C) { GBP_Screen_Detection_C = GBACommonFunctions.Check_Video_GBP(video_buffers[2]); }
+
+				if (Num_ROMS > 3)
+				{
+					if (SyncSettings.Use_GBP_D) { GBP_Screen_Detection_D = GBACommonFunctions.Check_Video_GBP(video_buffers[3]); }
+				}
+			}
 
 			return true;
 		}
@@ -168,8 +176,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					Solar_state_C = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel5_C / 100 * 0xA0) + 0x50));
 				}
 			}
-			else
+			else if (Num_ROMS > 2)
 			{
+				
 				Solar_state_C = _controllerDeck.ReadSolar(controller, 2);
 			}
 
@@ -197,7 +206,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 					Solar_state_D = (byte)(0x140 - ((int)Math.Floor((float)SyncSettings.LightLevel5_D / 100 * 0xA0) + 0x50));
 				}
 			}
-			else
+			else if (Num_ROMS > 3)
 			{
 				Solar_state_D = _controllerDeck.ReadSolar(controller, 3);
 			}
