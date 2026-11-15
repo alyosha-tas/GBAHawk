@@ -22,50 +22,100 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 	{
 		public byte[] BIOS;
 
-		public readonly byte[][] ROMS = new byte[2][];
+		public readonly byte[][] ROMS = new byte[4][];
 
-		public uint[] ROMS_Length = new uint[2];
+		public uint[] ROMS_Length = new uint[4];
 
 		public static readonly byte[] multi_boot_check = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x6E, 0x27, 0x74, 0x20, 0x61, 0x20, 0x52, 0x4F, 0x4D };
 
-		public ushort controller_state_1, controller_state_2;
-		public ushort Acc_X_state_1, Acc_X_state_2;
-		public ushort Acc_Y_state_1, Acc_Y_state_2;
-		public byte Solar_state_1 = 0x50;
-		public byte Solar_state_2 = 0x50;
+		public ushort controller_state_A, controller_state_B, controller_state_C, controller_state_D;
+		public ushort Acc_X_state_A, Acc_X_state_B, Acc_X_state_C, Acc_X_state_D;
+		public ushort Acc_Y_state_A, Acc_Y_state_B, Acc_Y_state_C, Acc_Y_state_D;
+		public byte Solar_state_A = 0x50;
+		public byte Solar_state_B = 0x50;
+		public byte Solar_state_C = 0x50;
+		public byte Solar_state_D = 0x50;
 
-		public ushort Flash_Type_64_Value_L = 0;
-		public ushort Flash_Type_128_Value_L = 0;
-		public ushort Flash_Type_64_Value_R = 0;
-		public ushort Flash_Type_128_Value_R = 0;
+		public ushort[] Flash_Type_64_Values = new ushort[4];
+		public ushort[] Flash_Type_128_Values = new ushort[4];
+		public short[] EEPROM_Offsets = new short[4];
+		public short[] Flash_Write_Offsets = new short[4];
+		public int[] Flash_Sector_Erase_Offsets = new int[4];
+		public int[] Flash_Chip_Erase_Offsets = new int[4];
+		public bool[] Use_GBPs = new bool[4];
 
-		public byte[][] cart_RAMS = new byte[2][];
-		public uint[] Cart_RAM_Sizes = new uint[2];
-		public bool[] has_bats = new bool[2];
+		public byte[][] cart_RAMS = new byte[4][];
+		public uint[] Cart_RAM_Sizes = new uint[4];
+		public bool[] has_bats = new bool[4];
 
-		public int[] mappers = new int[2];
+		public int[] mappers = new int[4];
+
+		public int Num_ROMS = 0;
+		public bool Is_OneScreenMode = false;
+
+		public int Actual_Width, Actual_Height;
 
 		[CoreConstructor(VSystemID.Raw.GBAL)]
 		public GBAHawkLink(CoreLoadParameters<GBAHawkLink.GBALinkSettings, GBAHawkLink.GBALinkSyncSettings> lp)
 		{
-			if (lp.Roms.Count != 2)
-				throw new InvalidOperationException("Wrong number of roms");
-			
-			// multi boot identified by special ROM
-			bool[] is_multi_boot = new bool[2];
+			Num_ROMS = lp.Roms.Count;
 
-			is_multi_boot[0] = is_multi_boot[1] = true;
+			if ((Num_ROMS < 2) || (Num_ROMS > 4))
+			{
+				throw new Exception("Invalid number of ROMs");
+			}
 
 			ServiceProvider = new BasicServiceProvider(this);
 			Settings = (GBALinkSettings)lp.Settings ?? new GBALinkSettings();
 			SyncSettings = (GBALinkSyncSettings)lp.SyncSettings ?? new GBALinkSyncSettings();
 
+			Is_OneScreenMode = SyncSettings.OneScreenMode;
+
+			for (int i = 0; i < Num_ROMS; i++)
+			{
+				video_buffers[i] = new int[240 * 160];
+			}
+
+			if (SyncSettings.OneScreenMode)
+			{
+				Actual_Width = 240;
+				Actual_Height = 160;
+			}
+			else if (Num_ROMS == 2)
+			{
+				Actual_Width = 240 * 2 + 2;
+				Actual_Height = 160;
+			}
+			else
+			{
+				Actual_Width = 240 * 2 + 2;
+				Actual_Height = 160 * 2 + 2;
+			}
+
+			_vidbuffer = new int[Actual_Width * Actual_Height];
+
+			// multi boot identified by special ROM
+			bool[] is_multi_boot = new bool[4];
+
+			is_multi_boot[0] = is_multi_boot[1] = is_multi_boot[2] = is_multi_boot[3] = true;
+
 			ROMS[0] = new byte[0x6000000];
 			ROMS[1] = new byte[0x6000000];
+			ROMS[2] = new byte[0x6000000];
+			ROMS[3] = new byte[0x6000000];
 
 			int mirror_mode = 2;
 
-			for (int i = 0; i < 2; i++)
+			string[] controller_strings = new string[4];
+
+			ulong[] date_times = new ulong[4];
+
+			bool[] rtc_workings = new bool[4];
+
+			GBALinkSyncSettings.InitRTCState[] RTC_Inits = new GBALinkSyncSettings.InitRTCState[4];
+			DateTime temp_date_time = new DateTime();
+
+			for (int i = 0; i < Num_ROMS; i++)
 			{
 				var rom = lp.Roms[i].RomData;
 
@@ -209,195 +259,149 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 						}
 					}
 				}
+
+				// Setup the controllers
+				string cntrllr = GBA_ControllerDeck.DefaultControllerName;
+
+				if (mappers[i] == 3)
+				{
+					cntrllr = typeof(StandardZGyro).DisplayName();
+				}
+				else if (mappers[i] == 5)
+				{
+					cntrllr = typeof(StandardTilt).DisplayName();
+				}
+				else if (mappers[i] == 6)
+				{
+					if (SyncSettings.Use_Discrete_Solar_A)
+					{
+						cntrllr = typeof(DiscreteSolar).DisplayName();
+					}
+					else
+					{
+						cntrllr = typeof(StandardSolar).DisplayName();
+					}
+				}
+
+				controller_strings[i] = cntrllr;
+
+				// set up RTC
+				date_times[i] = 0;
+
+				rtc_workings[i] = true;
+
+				byte temp_year = 0;
+				byte temp_month = 1;
+				byte temp_day = 1;
+				byte temp_week = 0;
+				byte temp_hour = 0;
+				byte temp_minute = 0;
+				byte temp_second = 0;
+				byte temp_ctrl = 0;
+
+				if (RTC_Inits[i] == GBALinkSyncSettings.InitRTCState.Reset_Bad_Batt)
+				{
+					rtc_workings[i] = false;
+				}
+				else if (RTC_Inits[i] == GBALinkSyncSettings.InitRTCState.RTC_Set)
+				{
+					// all games seem to use 24 hour mode,, so use this to represent set time
+					temp_ctrl = 0x40;
+
+					// parse the date and time into the regs
+					if (i == 0) { temp_date_time = SyncSettings.RTCInitialTime_A; }
+					if (i == 1) { temp_date_time = SyncSettings.RTCInitialTime_B; }
+					if (i == 2) { temp_date_time = SyncSettings.RTCInitialTime_C; }
+					if (i == 3) { temp_date_time = SyncSettings.RTCInitialTime_D; }
+
+					// if year outside range of RTC, just leave the initial values
+					if ((temp_date_time.Year < 2100) && (temp_date_time.Year >= 2000))
+					{
+						temp_year = To_BCD((byte)(temp_date_time.Year - 2000));
+						temp_month = To_BCD((byte)temp_date_time.Month);
+						temp_day = To_BCD((byte)temp_date_time.Day);
+						temp_week = To_BCD((byte)temp_date_time.DayOfWeek);
+						temp_minute = To_BCD((byte)temp_date_time.Minute);
+						temp_second = To_BCD((byte)temp_date_time.Second);
+
+						temp_hour = To_BCD((byte)temp_date_time.Hour);
+
+						if (temp_date_time.Hour >= 12)
+						{
+							temp_hour |= 0x80;
+						}
+					}
+				}
+
+				date_times[i] |= temp_second;
+				date_times[i] |= ((ulong)temp_minute << 8);
+				date_times[i] |= ((ulong)temp_hour << 16);
+				date_times[i] |= ((ulong)temp_week << 24);
+				date_times[i] |= ((ulong)temp_day << 32);
+				date_times[i] |= ((ulong)temp_month << 40);
+				date_times[i] |= ((ulong)temp_year << 48);
+				date_times[i] |= ((ulong)temp_ctrl << 56);
 			}
 
-			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_L = 0x3D1F; }
-			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_L = 0x1CC2; }
-			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_L = 0x1B32; }
-			if (SyncSettings.Flash_Type_64_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_L = 0xD4BF; }
-
-			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_L = 0x09C2; }
-			if (SyncSettings.Flash_Type_128_L == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_L = 0x1362; }
-
-			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Value_R = 0x3D1F; }
-			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Value_R = 0x1CC2; }
-			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Value_R = 0x1B32; }
-			if (SyncSettings.Flash_Type_64_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Value_R = 0xD4BF; }
-
-			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Value_R = 0x09C2; }
-			if (SyncSettings.Flash_Type_128_R == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Value_R = 0x1362; }
+			Put_Settings_To_Array();
 
 			// Load up a BIOS and initialize the correct PPU
 			BIOS = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GBA", "Bios"), "BIOS Not Found, Cannot Load");
 
-			GBA_Pntr = LibGBAHawkLink.GBALink_create();
+			GBA_Pntr = LibGBAHawkLink.GBALink_create((uint)Num_ROMS);
 
 			LibGBAHawkLink.GBALink_load_bios(GBA_Pntr, BIOS);
 
-			// load 0 RTC
-			bool rtc_working_0 = true;
+			rumblecbA = MakeRumbleA;
+			rumblecbB = MakeRumbleB;
+			rumblecbC = MakeRumbleC;
+			rumblecbD = MakeRumbleD;
 
-			byte temp_year_0 = 0;
-			byte temp_month_0 = 1;
-			byte temp_day_0 = 1;
-			byte temp_week_0 = 0;
-			byte temp_hour_0 = 0;
-			byte temp_minute_0 = 0;
-			byte temp_second_0 = 0;
-			byte temp_ctrl_0 = 0;
-
-			if (SyncSettings.RTCInitialState_L == GBALinkSyncSettings.InitRTCState.Reset_Bad_Batt)
-			{
-				rtc_working_0 = false;
-			}
-			else if (SyncSettings.RTCInitialState_L == GBALinkSyncSettings.InitRTCState.RTC_Set)
-			{
-				// all games seem to use 24 hour mode,, so use this to represent set time
-				temp_ctrl_0 = 0x40;
-
-				// parse the date and time into the regs
-				DateTime temp_0 = SyncSettings.RTCInitialTime_L;
-
-				// if year outside range of RTC, just leave the initial values
-				if ((temp_0.Year < 2100) && (temp_0.Year >= 2000))
-				{
-					temp_year_0 = To_BCD((byte)(temp_0.Year - 2000));
-					temp_month_0 = To_BCD((byte)temp_0.Month);
-					temp_day_0 = To_BCD((byte)temp_0.Day);
-					temp_week_0 = To_BCD((byte)temp_0.DayOfWeek);
-					temp_minute_0 = To_BCD((byte)temp_0.Minute);
-					temp_second_0 = To_BCD((byte)temp_0.Second);
-
-					temp_hour_0 = To_BCD((byte)temp_0.Hour);
-
-					if (temp_0.Hour >= 12)
-					{
-						temp_hour_0 |= 0x80;
-					}
-				}
-			}
-
-			ulong date_time_0 = 0;
-
-			date_time_0 |= temp_second_0;
-			date_time_0 |= ((ulong)temp_minute_0 << 8);
-			date_time_0 |= ((ulong)temp_hour_0 << 16);
-			date_time_0 |= ((ulong)temp_week_0 << 24);
-			date_time_0 |= ((ulong)temp_day_0 << 32);
-			date_time_0 |= ((ulong)temp_month_0 << 40);
-			date_time_0 |= ((ulong)temp_year_0 << 48);
-			date_time_0 |= ((ulong)temp_ctrl_0  << 56);
-
-			// load 1 RTC
-			bool rtc_working_1 = true;
-
-			byte temp_year_1 = 0;
-			byte temp_month_1 = 1;
-			byte temp_day_1 = 1;
-			byte temp_week_1 = 0;
-			byte temp_hour_1 = 0;
-			byte temp_minute_1 = 0;
-			byte temp_second_1 = 0;
-			byte temp_ctrl_1 = 0;
-
-			if (SyncSettings.RTCInitialState_R == GBALinkSyncSettings.InitRTCState.Reset_Bad_Batt)
-			{
-				rtc_working_1 = false;
-			}
-			else if (SyncSettings.RTCInitialState_R == GBALinkSyncSettings.InitRTCState.RTC_Set)
-			{
-				// all games seem to use 24 hour mode,, so use this to represent set time
-				temp_ctrl_1 = 0x40;
-
-				// parse the date and time into the regs
-				DateTime temp_1 = SyncSettings.RTCInitialTime_R;
-
-				// if year outside range of RTC, just leave the initial values
-				if ((temp_1.Year < 2100) && (temp_1.Year >= 2000))
-				{
-					temp_year_1 = To_BCD((byte)(temp_1.Year - 2000));
-					temp_month_1 = To_BCD((byte)temp_1.Month);
-					temp_day_1 = To_BCD((byte)temp_1.Day);
-					temp_week_1 = To_BCD((byte)temp_1.DayOfWeek);
-					temp_minute_1 = To_BCD((byte)temp_1.Minute);
-					temp_second_1 = To_BCD((byte)temp_1.Second);
-
-					temp_hour_1 = To_BCD((byte)temp_1.Hour);
-
-					if (temp_1.Hour >= 12)
-					{
-						temp_hour_1 |= 0x80;
-					}
-				}
-			}
-
-			ulong date_time_1 = 0;
-
-			date_time_1 |= temp_second_1;
-			date_time_1 |= ((ulong)temp_minute_1 << 8);
-			date_time_1 |= ((ulong)temp_hour_1 << 16);
-			date_time_1 |= ((ulong)temp_week_1 << 24);
-			date_time_1 |= ((ulong)temp_day_1 << 32);
-			date_time_1 |= ((ulong)temp_month_1 << 40);
-			date_time_1 |= ((ulong)temp_year_1 << 48);
-			date_time_1 |= ((ulong)temp_ctrl_1 << 56);
-
-			rumblecb0 = MakeRumble0;
-			rumblecb1 = MakeRumble1;
-
-			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb0, 0);
-			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecb1, 1);
+			LibGBAHawkLink.GBA_setrumblecallback(GBA_Pntr, rumblecbA, rumblecbB, rumblecbC, rumblecbD);
 
 			GBA_message_L = GetMessage_L;
 			GBA_message_R = GetMessage_R;
 
 			LibGBAHawkLink.GBALink_setmessagecallback(GBA_Pntr, GBA_message_L, GBA_message_R);
 
-			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1]);
+			Console.WriteLine("Mapper: " + mappers[0] + " " + +mappers[1] + " " + +mappers[2] + " " + +mappers[3]);
 
-			LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[0], (uint)ROMS_Length[0], mappers[0],
-												  ROMS[1], (uint)ROMS_Length[1], mappers[1],
-												  date_time_0, rtc_working_0, date_time_1, rtc_working_1,
-												  SyncSettings.EEPROMOffset_L, SyncSettings.EEPROMOffset_R,
-												  Flash_Type_64_Value_L, Flash_Type_64_Value_R,
-												  Flash_Type_128_Value_L, Flash_Type_128_Value_R,
-												  SyncSettings.FlashWriteOffset_L, SyncSettings.FlashWriteOffset_R,
-												  SyncSettings.FlashSectorEraseOffset_L, SyncSettings.FlashSectorEraseOffset_R,
-												  SyncSettings.FlashChipEraseOffset_L, SyncSettings.FlashChipEraseOffset_R,
-												  SyncSettings.Use_GBP_L, SyncSettings.Use_GBP_R);
+			byte[] vid_rom = new byte[0x4000000];
 
-			if (cart_RAMS[0] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[0], (uint)cart_RAMS[0].Length, 0); }
-			if (cart_RAMS[1] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[1], (uint)cart_RAMS[1].Length, 1); }
-
-			// video sent to core garaunteed to be 0x4000000 bytes
-			if ((mappers[0] == 9) || (mappers[1] == 9))
+			for (int i = 0; i < Num_ROMS; i++)
 			{
-				byte[] vid_rom = new byte[0x4000000];
+				LibGBAHawkLink.GBALink_load(GBA_Pntr, ROMS[i], (uint)ROMS_Length[i], mappers[i],
+												  date_times[i], rtc_workings[i], EEPROM_Offsets[i],
+												  Flash_Type_64_Values[i], Flash_Type_128_Values[i],
+												  Flash_Write_Offsets[i], Flash_Sector_Erase_Offsets[i],
+												  Flash_Chip_Erase_Offsets[i], Use_GBPs[i]);
 
-				for (int i = 0; i < 2; i++)
+				if (cart_RAMS[i] != null) { LibGBAHawkLink.GBALink_create_SRAM(GBA_Pntr, cart_RAMS[i], (uint)cart_RAMS[i].Length, (uint)i); }
+
+				// video sent to core garaunteed to be 0x4000000 bytes
+				if (mappers[i] == 9)
 				{
-					if (mappers[i] == 9)
+					var rom = lp.Roms[i].RomData;
+
+					if (rom.Length < 0x4000000)
 					{
-						var rom = lp.Roms[i].RomData;
+						Buffer.BlockCopy(rom, 0, vid_rom, 0, rom.Length);
 
-						if (rom.Length < 0x4000000)
-						{
-							Buffer.BlockCopy(rom, 0, vid_rom, 0, rom.Length);
+						LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
+					}
+					else
+					{
+						Buffer.BlockCopy(rom, 0, vid_rom, 0, 0x4000000);
 
-							LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
-						}
-						else
-						{
-							Buffer.BlockCopy(rom, 0, vid_rom, 0, 0x4000000);
-
-							LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
-						}
+						LibGBAHawkLink.GBALink_load_video(GBA_Pntr, vid_rom, (uint)i);
 					}
 				}
 			}
-
-			blip_L.SetRates(4194304 * 4, 44100);
-			blip_R.SetRates(4194304 * 4, 44100);
+			
+			blip_L_0.SetRates(4194304 * 4, 44100);
+			blip_R_0.SetRates(4194304 * 4, 44100);
+			blip_L_1.SetRates(4194304 * 4, 44100);
+			blip_R_1.SetRates(4194304 * 4, 44100);
 
 			(ServiceProvider as BasicServiceProvider).Register<ISoundProvider>(this);
 
@@ -418,52 +422,69 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			serviceProvider.Register<ITraceable>(Tracer);
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
-			string cntrllr1 = GBA_ControllerDeck.DefaultControllerName;
-			string cntrllr2 = GBA_ControllerDeck.DefaultControllerName;
-
-			if (mappers[0] == 3)
-			{
-				cntrllr1 = typeof(StandardZGyro).DisplayName();
-			}
-			else if (mappers[0] == 5)
-			{
-				cntrllr1 = typeof(StandardTilt).DisplayName();
-			}
-			else if (mappers[0] == 6)
-			{
-				if (SyncSettings.Use_Discrete_Solar_L)
-				{
-					cntrllr1 = typeof(DiscreteSolar).DisplayName();
-				}
-				else
-				{
-					cntrllr1 = typeof(StandardSolar).DisplayName();
-				}
-			}
-
-			if (mappers[1] == 3)
-			{
-				cntrllr2 = typeof(StandardZGyro).DisplayName();
-			}
-			else if (mappers[1] == 5)
-			{
-				cntrllr2 = typeof(StandardTilt).DisplayName();
-			}
-			else if (mappers[1] == 6)
-			{
-				if (SyncSettings.Use_Discrete_Solar_R)
-				{
-					cntrllr2 = typeof(DiscreteSolar).DisplayName();
-				}
-				else
-				{
-					cntrllr2 = typeof(StandardSolar).DisplayName();
-				}
-			}
-
-			_controllerDeck = new(cntrllr1, cntrllr2);
+			_controllerDeck = new(controller_strings, Num_ROMS);
 
 			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
+		}
+
+		public void Put_Settings_To_Array()
+		{
+			if (SyncSettings.Flash_Type_64_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Values[0] = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Values[0] = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Values[0] = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Values[0] = 0xD4BF; }
+
+			if (SyncSettings.Flash_Type_128_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Values[0] = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_A == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Values[0] = 0x1362; }
+
+			if (SyncSettings.Flash_Type_64_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Values[1] = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Values[1] = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Values[1] = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Values[1] = 0xD4BF; }
+
+			if (SyncSettings.Flash_Type_128_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Values[1] = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_B == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Values[1] = 0x1362; }
+
+			if (SyncSettings.Flash_Type_64_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Values[2] = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Values[2] = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Values[2] = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Values[2] = 0xD4BF; }
+
+			if (SyncSettings.Flash_Type_128_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Values[2] = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_C == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Values[2] = 0x1362; }
+
+			if (SyncSettings.Flash_Type_64_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Atmel) { Flash_Type_64_Values[3] = 0x3D1F; }
+			if (SyncSettings.Flash_Type_64_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Macronix) { Flash_Type_64_Values[3] = 0x1CC2; }
+			if (SyncSettings.Flash_Type_64_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.Panasonic) { Flash_Type_64_Values[3] = 0x1B32; }
+			if (SyncSettings.Flash_Type_64_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType64.SST) { Flash_Type_64_Values[3] = 0xD4BF; }
+
+			if (SyncSettings.Flash_Type_128_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Macronix) { Flash_Type_128_Values[3] = 0x09C2; }
+			if (SyncSettings.Flash_Type_128_D == GBALink.GBAHawkLink.GBALinkSyncSettings.FlashChipType128.Sanyo) { Flash_Type_128_Values[3] = 0x1362; }
+
+			EEPROM_Offsets[0] = SyncSettings.EEPROMOffset_A;
+			EEPROM_Offsets[1] = SyncSettings.EEPROMOffset_B;
+			EEPROM_Offsets[2] = SyncSettings.EEPROMOffset_C;
+			EEPROM_Offsets[3] = SyncSettings.EEPROMOffset_D;
+
+			Flash_Write_Offsets[0] = SyncSettings.FlashWriteOffset_A;
+			Flash_Write_Offsets[1] = SyncSettings.FlashWriteOffset_B;
+			Flash_Write_Offsets[2] = SyncSettings.FlashWriteOffset_C;
+			Flash_Write_Offsets[3] = SyncSettings.FlashWriteOffset_D;
+
+			Flash_Sector_Erase_Offsets[0] = SyncSettings.FlashSectorEraseOffset_A;
+			Flash_Sector_Erase_Offsets[1] = SyncSettings.FlashSectorEraseOffset_B;
+			Flash_Sector_Erase_Offsets[2] = SyncSettings.FlashSectorEraseOffset_C;
+			Flash_Sector_Erase_Offsets[3] = SyncSettings.FlashSectorEraseOffset_D;
+
+			Flash_Chip_Erase_Offsets[0] = SyncSettings.FlashSectorEraseOffset_A;
+			Flash_Chip_Erase_Offsets[1] = SyncSettings.FlashSectorEraseOffset_B;
+			Flash_Chip_Erase_Offsets[2] = SyncSettings.FlashSectorEraseOffset_C;
+			Flash_Chip_Erase_Offsets[3] = SyncSettings.FlashSectorEraseOffset_D;
+
+			Use_GBPs[0] = SyncSettings.Use_GBP_A;
+			Use_GBPs[1] = SyncSettings.Use_GBP_B;
+			Use_GBPs[2] = SyncSettings.Use_GBP_C;
+			Use_GBPs[3] = SyncSettings.Use_GBP_D;
 		}
 
 		public byte To_BCD(byte in_byte)
@@ -483,38 +504,32 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public void HardReset()
 		{
-			GBP_Mode_Enabled_L = false;
-			GBP_Screen_Detection_L = false;
-			GBP_Screen_Count_L = 0;
-
-			GBP_Mode_Enabled_R = false;
-			GBP_Screen_Detection_R = false;
-			GBP_Screen_Count_R = 0;
+			GBP_Mode_Enabled_A = GBP_Mode_Enabled_B = GBP_Mode_Enabled_C = GBP_Mode_Enabled_D = false;
+			GBP_Screen_Detection_A = GBP_Screen_Detection_B = GBP_Screen_Detection_C = GBP_Screen_Detection_D = false;
+			GBP_Screen_Count_A = GBP_Screen_Count_B = GBP_Screen_Count_C = GBP_Screen_Count_D = 0;
 
 			LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
 		}
 
 		private IntPtr GBA_Pntr { get; set; } = IntPtr.Zero;
-		private byte[] GBA_core = new byte[0xB0000 * 2];
+		private byte[] GBA_core = new byte[0xB0000 * 4];
 
 		private readonly GBALink_ControllerDeck _controllerDeck;
 
 		private int _frame = 0;
 
-		public bool GBP_Mode_Enabled_L;
-		public bool GBP_Screen_Detection_L;
-		public int GBP_Screen_Count_L;
-
-		public bool GBP_Mode_Enabled_R;
-		public bool GBP_Screen_Detection_R;
-		public int GBP_Screen_Count_R;
+		public bool GBP_Mode_Enabled_A, GBP_Mode_Enabled_B, GBP_Mode_Enabled_C, GBP_Mode_Enabled_D;
+		public bool GBP_Screen_Detection_A, GBP_Screen_Detection_B, GBP_Screen_Detection_C, GBP_Screen_Detection_D;
+		public int GBP_Screen_Count_A, GBP_Screen_Count_B, GBP_Screen_Count_C, GBP_Screen_Count_D;
 
 		private readonly ITraceable Tracer;
 
 		private LibGBAHawkLink.TraceCallback tracecb;
 
-		private LibGBAHawkLink.RumbleCallback rumblecb0;
-		private LibGBAHawkLink.RumbleCallback rumblecb1;
+		private LibGBAHawkLink.RumbleCallback rumblecbA;
+		private LibGBAHawkLink.RumbleCallback rumblecbB;
+		private LibGBAHawkLink.RumbleCallback rumblecbC;
+		private LibGBAHawkLink.RumbleCallback rumblecbD;
 
 		// these will be constant values assigned during core construction
 		private int Header_Length;
@@ -534,30 +549,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			Tracer.Put(new(disassembly: new_d.ToString().PadRight(80), registerInfo: new_r.ToString()));
 		}
 
-		private void MakeRumble0(bool rumble_on)
-		{
-			if (Controller != null) { Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0); }
-		}
-
-		private void MakeRumble1(bool rumble_on)
-		{
-			if (Controller != null) { Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0); }
-		}
-
-		// GBA PPU Viewer
-		public Action _scanlineCallback;
-		public int _scanlineCallbackLine = 0;
-
-		public void SetScanlineCallback(Action callback, int line)
-		{
-			_scanlineCallback = callback;
-			_scanlineCallbackLine = line;
-
-			if (line == -2)
-			{
-				_scanlineCallback();
-			}
-		}
+		private void MakeRumbleA(bool rumble_on) { if (Controller != null) { Controller.SetHapticChannelStrength("P1 Rumble", rumble_on ? 255 : 0); } }
+		private void MakeRumbleB(bool rumble_on) { if (Controller != null) { Controller.SetHapticChannelStrength("P2 Rumble", rumble_on ? 255 : 0); } }
+		private void MakeRumbleC(bool rumble_on) { if (Controller != null) { Controller.SetHapticChannelStrength("P3 Rumble", rumble_on ? 255 : 0); } }
+		private void MakeRumbleD(bool rumble_on) { if (Controller != null) { Controller.SetHapticChannelStrength("P4 Rumble", rumble_on ? 255 : 0); } }
 
 		private LibGBAHawkLink.MessageCallback GBA_message_L;
 		private LibGBAHawkLink.MessageCallback GBA_message_R;

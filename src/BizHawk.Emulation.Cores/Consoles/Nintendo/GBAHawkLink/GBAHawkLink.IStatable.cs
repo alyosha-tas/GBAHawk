@@ -13,13 +13,21 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			ser.Sync("LagCount", ref Lag_Count);
 			ser.Sync("IsLag", ref Is_Lag);
 
-			ser.Sync(nameof(GBP_Mode_Enabled_L), ref GBP_Mode_Enabled_L);
-			ser.Sync(nameof(GBP_Screen_Detection_L), ref GBP_Screen_Detection_L);
-			ser.Sync(nameof(GBP_Screen_Count_L), ref GBP_Screen_Count_L);
+			ser.Sync(nameof(GBP_Mode_Enabled_A), ref GBP_Mode_Enabled_A);
+			ser.Sync(nameof(GBP_Screen_Detection_A), ref GBP_Screen_Detection_A);
+			ser.Sync(nameof(GBP_Screen_Count_A), ref GBP_Screen_Count_A);
 
-			ser.Sync(nameof(GBP_Mode_Enabled_R), ref GBP_Mode_Enabled_R);
-			ser.Sync(nameof(GBP_Screen_Detection_R), ref GBP_Screen_Detection_R);
-			ser.Sync(nameof(GBP_Screen_Count_R), ref GBP_Screen_Count_R);
+			ser.Sync(nameof(GBP_Mode_Enabled_B), ref GBP_Mode_Enabled_B);
+			ser.Sync(nameof(GBP_Screen_Detection_B), ref GBP_Screen_Detection_B);
+			ser.Sync(nameof(GBP_Screen_Count_B), ref GBP_Screen_Count_B);
+
+			ser.Sync(nameof(GBP_Mode_Enabled_C), ref GBP_Mode_Enabled_C);
+			ser.Sync(nameof(GBP_Screen_Detection_C), ref GBP_Screen_Detection_C);
+			ser.Sync(nameof(GBP_Screen_Count_C), ref GBP_Screen_Count_C);
+
+			ser.Sync(nameof(GBP_Mode_Enabled_D), ref GBP_Mode_Enabled_D);
+			ser.Sync(nameof(GBP_Screen_Detection_D), ref GBP_Screen_Detection_D);
+			ser.Sync(nameof(GBP_Screen_Count_D), ref GBP_Screen_Count_D);
 
 			if (ser.IsReader)
 			{

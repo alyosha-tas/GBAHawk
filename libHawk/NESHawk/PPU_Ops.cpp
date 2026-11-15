@@ -376,6 +376,7 @@ namespace NESHawk
 		{
 			read_2004();
 			ppu_Reread_2004 = false;
+			DB_Ext = ppu_Open_Bus;
 		}
 
 		// Here we execute a CPU instruction if enough PPU cycles have passed

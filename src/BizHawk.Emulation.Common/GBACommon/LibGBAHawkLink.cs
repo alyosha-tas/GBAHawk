@@ -14,7 +14,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 		/// <returns>opaque state pointer</returns>
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern IntPtr GBALink_create();
+		public static extern IntPtr GBALink_create(uint num_roms);
 
 		/// <param name="core">opaque state pointer</param>
 		[DllImport(lib, CallingConvention = cc)]
@@ -26,17 +26,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBALink_load(IntPtr core, byte[] romdata0, uint length0, int mapper0,
-															byte[] romdata1, uint length1, int mapper1,
-															ulong datetime0, bool rtc_functional0,
-															ulong datetime1, bool rtc_functional1,
-															short EEPROMoffset0, short EEPROMoffset1,
-															ushort FlashType64Value0, ushort FlashType64Value1,
-															ushort FlashType128Value0, ushort FlashType128Value1,
-															short FlashWriteOffset_L, short FlashWriteOffset_R,
-															int FlashSectorOffset_L, int FlashSectorOffset_R,
-															int FlashChipOffset_L, int FlashChipOffset_R,
-															bool is_GBP0, bool is_GBP1);
+		public static extern void GBALink_load(IntPtr core, byte[] romdata, uint length, int mapper,
+															ulong datetime, bool rtc_functional, short EEPROMoffset,
+															ushort FlashType64Value, ushort FlashType128Value,
+															short FlashWriteOffset, int FlashSectorOffset,
+															int FlashChipOffset, bool is_GBP);
 
 
 		[DllImport(lib, CallingConvention = cc)]
@@ -60,9 +54,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 		[DllImport(lib, CallingConvention = cc)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern bool GBALink_frame_advance(IntPtr core, ushort ctrl0, ushort accx0, ushort accy0, byte solar0, bool render0, bool sound0,
-																	 ushort ctrl1, ushort accx1, ushort accy1, byte solar1, bool render1, bool sound1,
-																	 bool l_reset, bool r_reset);
+		public static extern bool GBALink_frame_advance(IntPtr core, ushort[] ctrls, ushort[] accxs, ushort[] accys, byte[] solar_states,
+																	 bool[] renders, bool[] sounds, bool[] resets);
 
 
 		[DllImport(lib, CallingConvention = cc)]
@@ -70,7 +63,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern uint GBALink_get_audio(IntPtr core, int[] aud_buf_L, ref uint n_samp_L, int[] aud_buf_R, ref uint n_samp_R, uint core_num);
+		public static extern uint GBALink_get_audio(IntPtr core, int[] aud_buf_L_0, ref uint n_samp_L_0, int[] aud_buf_R_0, ref uint n_samp_R_0,
+																 int[] aud_buf_L_1, ref uint n_samp_L_1, int[] aud_buf_R_1, ref uint n_samp_R_1, bool[] audio_enables);
 
 
 		[DllImport(lib, CallingConvention = cc)]
@@ -122,7 +116,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBA.Common
 
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callback, int num);
+		public static extern void GBA_setrumblecallback(IntPtr core, RumbleCallback callbackA,
+																	 RumbleCallback callbackB,
+																	 RumbleCallback callbackC,
+																	 RumbleCallback callbackD);
 
 
 		[DllImport(lib, CallingConvention = cc)]
