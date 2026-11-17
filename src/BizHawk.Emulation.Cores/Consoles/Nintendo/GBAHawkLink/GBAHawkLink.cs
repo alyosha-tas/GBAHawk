@@ -52,6 +52,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 
 		public int Num_ROMS = 0;
 		public bool Is_OneScreenMode = false;
+		public bool _cablediscosignal, _cableconnected;
+		public bool _cableconnected_AC, _cableconnected_BC, _cableconnected_AB;
+		public bool _cableconnected_UD, _cableconnected_LR, _cableconnected_X, _cableconnected_4x;
 
 		public int Actual_Width, Actual_Height;
 
@@ -70,6 +73,12 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			SyncSettings = (GBALinkSyncSettings)lp.SyncSettings ?? new GBALinkSyncSettings();
 
 			Is_OneScreenMode = SyncSettings.OneScreenMode;
+
+			_cablediscosignal = false;
+			_cableconnected = false;
+
+			_cableconnected_AC = _cableconnected_BC = _cableconnected_AB = false;
+			_cableconnected_UD = _cableconnected_LR = _cableconnected_X = _cableconnected_4x = false;
 
 			for (int i = 0; i < Num_ROMS; i++)
 			{
@@ -426,7 +435,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			serviceProvider.Register<IStatable>(new StateSerializer(SyncState));
 
 			_controllerDeck = new(controller_strings, Num_ROMS);
-			//LibGBAHawkLink.GBALink_Hard_Reset(GBA_Pntr);
+
 			HardReset();
 		}
 

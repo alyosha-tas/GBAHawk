@@ -65,6 +65,94 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			do_Resets[2] = controller.IsPressed("P3 Power");
 			do_Resets[3] = controller.IsPressed("P4 Power");
 
+			if (Num_ROMS == 2)
+			{
+				bool cablediscosignalNew = controller.IsPressed("Toggle Cable");
+				if (cablediscosignalNew && !_cablediscosignal)
+				{
+					_cableconnected = !_cableconnected;
+					Console.WriteLine("Cable connect status to {0}", _cableconnected);
+
+					LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, _cableconnected, 0);
+				}
+
+				_cablediscosignal = cablediscosignalNew;
+			}
+			else if (Num_ROMS == 3)
+			{
+				if (controller.IsPressed("Toggle Cable AC") | controller.IsPressed("Toggle Cable BC") | controller.IsPressed("Toggle Cable AB"))
+				{
+					// if any connection exists, disconnect it
+					// otherwise connect in order of precedence
+					// only one event can happen per frame, either a connection or disconnection
+					if (_cableconnected_AC | _cableconnected_BC | _cableconnected_AB)
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, false, 1);
+						_cableconnected_AC = _cableconnected_BC = _cableconnected_AB = false;
+					}
+					else if (controller.IsPressed("Toggle Cable AC"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 4);
+						_cableconnected_AC = true;
+					}
+					else if (controller.IsPressed("Toggle Cable BC"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 3);
+						_cableconnected_BC = true;
+					}
+					else if (controller.IsPressed("Toggle Cable AB"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 2);
+						_cableconnected_AB = true;
+					}
+
+					Console.WriteLine("Cable connect status:");
+					Console.WriteLine("AC: " + _cableconnected_AC);
+					Console.WriteLine("BC: " + _cableconnected_BC);
+					Console.WriteLine("AB: " + _cableconnected_AB);
+				}
+			}
+			else
+			{
+				if (controller.IsPressed("Toggle Cable UD") | controller.IsPressed("Toggle Cable LR") | controller.IsPressed("Toggle Cable X") | controller.IsPressed("Toggle Cable 4x"))
+				{
+					// if any connection exists, disconnect it
+					// otherwise connect in order of precedence
+					// only one event can happen per frame, either a connection or disconnection
+					if (_cableconnected_UD | _cableconnected_LR | _cableconnected_X | _cableconnected_4x)
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, false, 1);
+						_cableconnected_UD = _cableconnected_LR = _cableconnected_X = _cableconnected_4x = false;
+					}
+					else if (controller.IsPressed("Toggle Cable UD"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 6);
+						_cableconnected_UD = true;
+					}
+					else if (controller.IsPressed("Toggle Cable LR"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 5);
+						_cableconnected_LR = true;
+					}
+					else if (controller.IsPressed("Toggle Cable X"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 7);
+						_cableconnected_X = true;
+					}
+					else if (controller.IsPressed("Toggle Cable 4x"))
+					{
+						LibGBAHawkLink.GBALink_change_linking(GBA_Pntr, true, 8);
+						_cableconnected_4x = true;
+					}
+
+					Console.WriteLine("Cable connect status:");
+					Console.WriteLine("UD: " + _cableconnected_UD);
+					Console.WriteLine("LR: " + _cableconnected_LR);
+					Console.WriteLine("X: " + _cableconnected_X);
+					Console.WriteLine("4x: " + _cableconnected_4x);
+				}
+			}
+
 			Is_Lag = LibGBAHawkLink.GBALink_frame_advance(GBA_Pntr, f_cntrls, f_accxs, f_accys, f_solars, do_Renders, do_Sounds, do_Resets);
 
 			if (Is_Lag) { Lag_Count++; }

@@ -39,9 +39,27 @@ namespace GBAHawk
 
 		void (*MessageCallback)(int);
 
+		bool AB_Connected;
+		bool BC_Connected;
+		bool CD_Connected;
+		bool AD_Connected;
+		bool AC_Connected;
+		bool BD_Connected;
+		bool X4_Connected;
+
+		uint8_t LP1, LP2, LP3, LP4;
+
 		void Link_Reset()
 		{
+			AB_Connected = false;
+			BC_Connected = false;
+			CD_Connected = false;
+			AD_Connected = false;
+			AC_Connected = false;
+			BD_Connected = false;
+			X4_Connected = false;
 
+			LP1 = LP2 = LP3 = LP4 = 0;
 		}
 
 		void Load_BIOS(uint8_t* bios)
@@ -88,6 +106,8 @@ namespace GBAHawk
 				GBAL[i].GBA.System_Reset();
 				GBAL[i].GBA.is_linked_system = true;
 			}
+
+			Link_Reset();
 
 			// system starts in left - right linked state
 			// set extrenal pins based on linked state
@@ -207,7 +227,8 @@ namespace GBAHawk
 						if (!reset[0]) { GBAL[0].GBA.Single_Step(); }
 						if (!reset[1]) { GBAL[1].GBA.Single_Step(); }
 
-						Do_Linking_2x();
+						// second of a linked pair will never be 0 (the A console)
+						if (LP2 != 0) { Do_Linking_2_3x(); }
 					}
 
 				}
@@ -219,7 +240,8 @@ namespace GBAHawk
 						if (!reset[1]) { GBAL[1].GBA.Single_Step(); }
 						if (!reset[2]) { GBAL[2].GBA.Single_Step(); }
 
-						Do_Linking_3x();
+						// second of a linked pair will never be 0 (the A console)
+						if (LP2 != 0) { Do_Linking_2_3x(); }
 					}
 				}
 				else
@@ -231,7 +253,8 @@ namespace GBAHawk
 						if (!reset[2]) { GBAL[2].GBA.Single_Step(); }
 						if (!reset[3]) { GBAL[3].GBA.Single_Step(); }
 
-						Do_Linking_4x();
+						// second of a linked pair will never be 0 (the A console)
+						if (LP2 != 0) { Do_Linking_4x(); }
 					}
 				}
 			}
@@ -244,7 +267,8 @@ namespace GBAHawk
 					GBAL[0].GBA.Single_Step();
 					GBAL[1].GBA.Single_Step();
 
-					Do_Linking_2x();
+					// second of a linked pair will never be 0 (the A console)
+					if (LP2 != 0) { Do_Linking_2_3x(); }
 				}
 			}
 			else if (Num_ROMs == 3)
@@ -255,7 +279,8 @@ namespace GBAHawk
 					GBAL[1].GBA.Single_Step();
 					GBAL[2].GBA.Single_Step();
 
-					Do_Linking_3x();
+					// second of a linked pair will never be 0 (the A console)
+					if (LP2 != 0) { Do_Linking_2_3x(); }
 				}
 			}
 			else
@@ -267,7 +292,8 @@ namespace GBAHawk
 					GBAL[2].GBA.Single_Step();
 					GBAL[3].GBA.Single_Step();
 
-					Do_Linking_4x();
+					// second of a linked pair will never be 0 (the A console)
+					if (LP2 != 0) { Do_Linking_4x(); }
 				}
 			}
 
@@ -279,289 +305,422 @@ namespace GBAHawk
 			return any_lags;
 		}
 
-		void Do_Linking_2x()
+		void Do_Linking_2_3x()
 		{
-			if (GBAL[0].GBA.ser_Ext_Tick)
+			if (GBAL[LP1].GBA.ser_Ext_Tick)
 			{
-				if (GBAL[0].GBA.ser_Ctrl_Mode_State != 2)
+				if (GBAL[LP1].GBA.ser_Ctrl_Mode_State != 2)
 				{
-					if (GBAL[0].GBA.ser_Bit_Total == 32)
+					if (GBAL[LP1].GBA.ser_Bit_Total == 32)
 					{
-						uint16_t temp_t = GBAL[0].GBA.ser_Data_0;
-						GBAL[0].GBA.ser_Data_0 = GBAL[1].GBA.ser_Data_0;
-						GBAL[1].GBA.ser_Data_0 = temp_t;
+						uint16_t temp_t = GBAL[LP1].GBA.ser_Data_0;
+						GBAL[LP1].GBA.ser_Data_0 = GBAL[LP2].GBA.ser_Data_0;
+						GBAL[LP2].GBA.ser_Data_0 = temp_t;
 
-						temp_t = GBAL[0].GBA.ser_Data_1;
-						GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_1;
-						GBAL[1].GBA.ser_Data_1 = temp_t;
+						temp_t = GBAL[LP1].GBA.ser_Data_1;
+						GBAL[LP1].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_1;
+						GBAL[LP2].GBA.ser_Data_1 = temp_t;
 					}
 					else
 					{
-						uint16_t temp_t8 = (GBAL[0].GBA.ser_Data_M & 0xFF);
-						GBAL[0].GBA.ser_Data_M &= 0xFF00;
-						GBAL[0].GBA.ser_Data_M |= GBAL[1].GBA.ser_Data_M & 0xFF;
-						GBAL[1].GBA.ser_Data_M &= 0xFF00;
-						GBAL[1].GBA.ser_Data_M |= temp_t8;
+						uint16_t temp_t8 = (GBAL[LP1].GBA.ser_Data_M & 0xFF);
+						GBAL[LP1].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP1].GBA.ser_Data_M |= GBAL[LP2].GBA.ser_Data_M & 0xFF;
+						GBAL[LP2].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP2].GBA.ser_Data_M |= temp_t8;
 					}
 
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP2].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[1].GBA.ser_Start = false;
+					GBAL[LP2].GBA.ser_Start = false;
 
 					// set SO to expected state
-					GBAL[1].GBA.ser_SO = GBAL[1].GBA.ser_SO_Inactive;
-					GBAL[0].GBA.ser_SO = GBAL[0].GBA.ser_SO_Inactive;
+					GBAL[LP2].GBA.ser_SO = GBAL[LP2].GBA.ser_SO_Inactive;
+					GBAL[LP1].GBA.ser_SO = GBAL[LP1].GBA.ser_SO_Inactive;
 
 					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP2].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[1].GBA.Trigger_IRQ(7);
+						GBAL[LP2].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[0].GBA.ser_Ext_Tick = false;
+					GBAL[LP1].GBA.ser_Ext_Tick = false;
 				}
 				else
 				{
-					GBAL[0].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
+					GBAL[LP1].GBA.ser_Data_0 = GBAL[LP1].GBA.ser_Data_M;
+					GBAL[LP2].GBA.ser_Data_0 = GBAL[LP1].GBA.ser_Data_M;
 
-					GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
+					GBAL[LP1].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_M;
+					GBAL[LP2].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_M;
 
-					GBAL[0].GBA.ser_Data_2 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP1].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP2].GBA.ser_Data_2 = 0xFFFF;
 
-					GBAL[0].GBA.ser_Data_3 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP1].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP2].GBA.ser_Data_3 = 0xFFFF;
 
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP2].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[1].GBA.ser_Multi_ID = 1;
-
-					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
-					{
-						GBAL[1].GBA.Trigger_IRQ(7);
-					}
-
-					GBAL[0].GBA.ser_Ext_Tick = false;
-				}
-			}
-		}
-
-		void Do_Linking_3x()
-		{
-			if (GBAL[0].GBA.ser_Ext_Tick)
-			{
-				if (GBAL[0].GBA.ser_Ctrl_Mode_State != 2)
-				{
-					if (GBAL[0].GBA.ser_Bit_Total == 32)
-					{
-						uint16_t temp_t = GBAL[0].GBA.ser_Data_0;
-						GBAL[0].GBA.ser_Data_0 = GBAL[1].GBA.ser_Data_0;
-						GBAL[1].GBA.ser_Data_0 = temp_t;
-
-						temp_t = GBAL[0].GBA.ser_Data_1;
-						GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_1;
-						GBAL[1].GBA.ser_Data_1 = temp_t;
-					}
-					else
-					{
-						uint16_t temp_t8 = (GBAL[0].GBA.ser_Data_M & 0xFF);
-						GBAL[0].GBA.ser_Data_M &= 0xFF00;
-						GBAL[0].GBA.ser_Data_M |= GBAL[1].GBA.ser_Data_M & 0xFF;
-						GBAL[1].GBA.ser_Data_M &= 0xFF00;
-						GBAL[1].GBA.ser_Data_M |= temp_t8;
-					}
-
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
-
-					GBAL[1].GBA.ser_Start = false;
-
-					// set SO to expected state
-					GBAL[1].GBA.ser_SO = GBAL[1].GBA.ser_SO_Inactive;
-					GBAL[0].GBA.ser_SO = GBAL[0].GBA.ser_SO_Inactive;
+					GBAL[LP2].GBA.ser_Multi_ID = 1;
 
 					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP2].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[1].GBA.Trigger_IRQ(7);
+						GBAL[LP2].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[0].GBA.ser_Ext_Tick = false;
-				}
-				else
-				{
-					GBAL[0].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
-
-					GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
-
-					GBAL[0].GBA.ser_Data_2 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_2 = 0xFFFF;
-
-					GBAL[0].GBA.ser_Data_3 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_3 = 0xFFFF;
-
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
-
-					GBAL[1].GBA.ser_Multi_ID = 1;
-
-					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
-					{
-						GBAL[1].GBA.Trigger_IRQ(7);
-					}
-
-					GBAL[0].GBA.ser_Ext_Tick = false;
+					GBAL[LP1].GBA.ser_Ext_Tick = false;
 				}
 			}
 		}
 
 		void Do_Linking_4x()
 		{
-			if (GBAL[0].GBA.ser_Ext_Tick)
+			if (GBAL[LP1].GBA.ser_Ext_Tick)
 			{
-				if (GBAL[0].GBA.ser_Ctrl_Mode_State != 2)
+				if (GBAL[LP1].GBA.ser_Ctrl_Mode_State != 2)
 				{
-					if (GBAL[0].GBA.ser_Bit_Total == 32)
+					if (GBAL[LP1].GBA.ser_Bit_Total == 32)
 					{
-						uint16_t temp_t = GBAL[0].GBA.ser_Data_0;
-						GBAL[0].GBA.ser_Data_0 = GBAL[1].GBA.ser_Data_0;
-						GBAL[1].GBA.ser_Data_0 = temp_t;
+						uint16_t temp_t = GBAL[LP1].GBA.ser_Data_0;
+						GBAL[LP1].GBA.ser_Data_0 = GBAL[LP2].GBA.ser_Data_0;
+						GBAL[LP2].GBA.ser_Data_0 = temp_t;
 
-						temp_t = GBAL[0].GBA.ser_Data_1;
-						GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_1;
-						GBAL[1].GBA.ser_Data_1 = temp_t;
+						temp_t = GBAL[LP1].GBA.ser_Data_1;
+						GBAL[LP1].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_1;
+						GBAL[LP2].GBA.ser_Data_1 = temp_t;
 					}
 					else
 					{
-						uint16_t temp_t8 = (GBAL[0].GBA.ser_Data_M & 0xFF);
-						GBAL[0].GBA.ser_Data_M &= 0xFF00;
-						GBAL[0].GBA.ser_Data_M |= GBAL[1].GBA.ser_Data_M & 0xFF;
-						GBAL[1].GBA.ser_Data_M &= 0xFF00;
-						GBAL[1].GBA.ser_Data_M |= temp_t8;
+						uint16_t temp_t8 = (GBAL[LP1].GBA.ser_Data_M & 0xFF);
+						GBAL[LP1].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP1].GBA.ser_Data_M |= GBAL[LP2].GBA.ser_Data_M & 0xFF;
+						GBAL[LP2].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP2].GBA.ser_Data_M |= temp_t8;
 					}
 
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP2].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[1].GBA.ser_Start = false;
+					GBAL[LP2].GBA.ser_Start = false;
 
 					// set SO to expected state
-					GBAL[1].GBA.ser_SO = GBAL[1].GBA.ser_SO_Inactive;
-					GBAL[0].GBA.ser_SO = GBAL[0].GBA.ser_SO_Inactive;
+					GBAL[LP2].GBA.ser_SO = GBAL[LP2].GBA.ser_SO_Inactive;
+					GBAL[LP1].GBA.ser_SO = GBAL[LP1].GBA.ser_SO_Inactive;
 
 					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP2].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[1].GBA.Trigger_IRQ(7);
+						GBAL[LP2].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[0].GBA.ser_Ext_Tick = false;
+					GBAL[LP1].GBA.ser_Ext_Tick = false;
 				}
 				else
 				{
-					GBAL[0].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_0 = GBAL[0].GBA.ser_Data_M;
+					GBAL[LP1].GBA.ser_Data_0 = GBAL[LP1].GBA.ser_Data_M;
+					GBAL[LP2].GBA.ser_Data_0 = GBAL[LP1].GBA.ser_Data_M;
 
-					GBAL[0].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
-					GBAL[1].GBA.ser_Data_1 = GBAL[1].GBA.ser_Data_M;
+					GBAL[LP1].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_M;
+					GBAL[LP2].GBA.ser_Data_1 = GBAL[LP2].GBA.ser_Data_M;
 
-					GBAL[0].GBA.ser_Data_2 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP1].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP2].GBA.ser_Data_2 = 0xFFFF;
 
-					GBAL[0].GBA.ser_Data_3 = 0xFFFF;
-					GBAL[1].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP1].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP2].GBA.ser_Data_3 = 0xFFFF;
 
-					GBAL[0].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP1].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP2].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[1].GBA.ser_Multi_ID = 1;
+					GBAL[LP2].GBA.ser_Multi_ID = 1;
 
 					// trigger interrupt if needed
-					if ((GBAL[1].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP2].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[1].GBA.Trigger_IRQ(7);
+						GBAL[LP2].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[0].GBA.ser_Ext_Tick = false;
+					GBAL[LP1].GBA.ser_Ext_Tick = false;
 				}
 			}
 
-			if (GBAL[2].GBA.ser_Ext_Tick)
+			if (GBAL[LP3].GBA.ser_Ext_Tick)
 			{
-				if (GBAL[2].GBA.ser_Ctrl_Mode_State != 2)
+				if (GBAL[LP3].GBA.ser_Ctrl_Mode_State != 2)
 				{
-					if (GBAL[2].GBA.ser_Bit_Total == 32)
+					if (GBAL[LP3].GBA.ser_Bit_Total == 32)
 					{
-						uint16_t temp_t = GBAL[2].GBA.ser_Data_0;
-						GBAL[2].GBA.ser_Data_0 = GBAL[3].GBA.ser_Data_0;
-						GBAL[3].GBA.ser_Data_0 = temp_t;
+						uint16_t temp_t = GBAL[LP3].GBA.ser_Data_0;
+						GBAL[LP3].GBA.ser_Data_0 = GBAL[LP4].GBA.ser_Data_0;
+						GBAL[LP4].GBA.ser_Data_0 = temp_t;
 
-						temp_t = GBAL[2].GBA.ser_Data_1;
-						GBAL[2].GBA.ser_Data_1 = GBAL[3].GBA.ser_Data_1;
-						GBAL[3].GBA.ser_Data_1 = temp_t;
+						temp_t = GBAL[LP3].GBA.ser_Data_1;
+						GBAL[LP3].GBA.ser_Data_1 = GBAL[LP4].GBA.ser_Data_1;
+						GBAL[LP4].GBA.ser_Data_1 = temp_t;
 					}
 					else
 					{
-						uint16_t temp_t8 = (GBAL[2].GBA.ser_Data_M & 0xFF);
-						GBAL[2].GBA.ser_Data_M &= 0xFF00;
-						GBAL[2].GBA.ser_Data_M |= GBAL[3].GBA.ser_Data_M & 0xFF;
-						GBAL[3].GBA.ser_Data_M &= 0xFF00;
-						GBAL[3].GBA.ser_Data_M |= temp_t8;
+						uint16_t temp_t8 = (GBAL[LP3].GBA.ser_Data_M & 0xFF);
+						GBAL[LP3].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP3].GBA.ser_Data_M |= GBAL[LP4].GBA.ser_Data_M & 0xFF;
+						GBAL[LP4].GBA.ser_Data_M &= 0xFF00;
+						GBAL[LP4].GBA.ser_Data_M |= temp_t8;
 					}
 
-					GBAL[2].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[3].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP3].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP4].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[3].GBA.ser_Start = false;
+					GBAL[LP4].GBA.ser_Start = false;
 
 					// set SO to expected state
-					GBAL[3].GBA.ser_SO = GBAL[3].GBA.ser_SO_Inactive;
-					GBAL[2].GBA.ser_SO = GBAL[2].GBA.ser_SO_Inactive;
+					GBAL[LP4].GBA.ser_SO = GBAL[LP4].GBA.ser_SO_Inactive;
+					GBAL[LP3].GBA.ser_SO = GBAL[LP3].GBA.ser_SO_Inactive;
 
 					// trigger interrupt if needed
-					if ((GBAL[3].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP4].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[3].GBA.Trigger_IRQ(7);
+						GBAL[LP4].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[2].GBA.ser_Ext_Tick = false;
+					GBAL[LP3].GBA.ser_Ext_Tick = false;
 				}
 				else
 				{
-					GBAL[2].GBA.ser_Data_0 = GBAL[2].GBA.ser_Data_M;
-					GBAL[3].GBA.ser_Data_0 = GBAL[2].GBA.ser_Data_M;
+					GBAL[LP3].GBA.ser_Data_0 = GBAL[LP3].GBA.ser_Data_M;
+					GBAL[LP4].GBA.ser_Data_0 = GBAL[LP3].GBA.ser_Data_M;
 
-					GBAL[2].GBA.ser_Data_1 = GBAL[3].GBA.ser_Data_M;
-					GBAL[3].GBA.ser_Data_1 = GBAL[3].GBA.ser_Data_M;
+					GBAL[LP3].GBA.ser_Data_1 = GBAL[LP4].GBA.ser_Data_M;
+					GBAL[LP4].GBA.ser_Data_1 = GBAL[LP4].GBA.ser_Data_M;
 
-					GBAL[2].GBA.ser_Data_2 = 0xFFFF;
-					GBAL[3].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP3].GBA.ser_Data_2 = 0xFFFF;
+					GBAL[LP4].GBA.ser_Data_2 = 0xFFFF;
 
-					GBAL[2].GBA.ser_Data_3 = 0xFFFF;
-					GBAL[3].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP3].GBA.ser_Data_3 = 0xFFFF;
+					GBAL[LP4].GBA.ser_Data_3 = 0xFFFF;
 
-					GBAL[2].GBA.ser_CTRL &= 0xFF7F;
-					GBAL[3].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP3].GBA.ser_CTRL &= 0xFF7F;
+					GBAL[LP4].GBA.ser_CTRL &= 0xFF7F;
 
-					GBAL[3].GBA.ser_Multi_ID = 1;
+					GBAL[LP4].GBA.ser_Multi_ID = 1;
 
 					// trigger interrupt if needed
-					if ((GBAL[3].GBA.ser_CTRL & 0x4000) == 0x4000)
+					if ((GBAL[LP4].GBA.ser_CTRL & 0x4000) == 0x4000)
 					{
-						GBAL[3].GBA.Trigger_IRQ(7);
+						GBAL[LP4].GBA.Trigger_IRQ(7);
 					}
 
-					GBAL[2].GBA.ser_Ext_Tick = false;
+					GBAL[LP3].GBA.ser_Ext_Tick = false;
 				}
 			}
+		}
+
+		void Change_Linking(bool link_status, uint32_t link_type)
+		{
+			if (link_type == 0)
+			{
+				// 2 player linking
+				AB_Connected = link_status;
+				
+				if (LP2 == 0)
+				{
+					LP1 = 0;
+					LP2 = 1;
+					
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+				}
+				else
+				{
+					LP1 = 0;
+					LP2 = 0;
+					
+					GBAL[0].GBA.ext_num = 0;
+					GBAL[0].GBA.Ext_SI = &GBAL[0].GBA.Ext_Disconnect_1;
+					GBAL[0].GBA.Ext_SO = &GBAL[0].GBA.Ext_Disconnect_1;
+					GBAL[0].GBA.Ext_SC = &GBAL[0].GBA.Ext_Disconnect_1;
+					GBAL[0].GBA.Ext_SD = &GBAL[0].GBA.Ext_Disconnect_0;
+					GBAL[0].GBA.Ext_Multi_Start = &GBAL[0].GBA.ser_Multi_Start;
+
+					GBAL[1].GBA.ext_num = 0;
+					GBAL[1].GBA.Ext_SI = &GBAL[1].GBA.Ext_Disconnect_1;
+					GBAL[1].GBA.Ext_SO = &GBAL[1].GBA.Ext_Disconnect_1;
+					GBAL[1].GBA.Ext_SC = &GBAL[1].GBA.Ext_Disconnect_1;
+					GBAL[1].GBA.Ext_SD = &GBAL[1].GBA.Ext_Disconnect_0;
+					GBAL[1].GBA.Ext_Multi_Start = &GBAL[1].GBA.ser_Multi_Start;
+				}
+			}
+			else if (link_type == 1)
+			{
+				// 3 or 4 player disconnect all connections
+				AB_Connected = false;
+				BC_Connected = false;
+				CD_Connected = false;
+				AD_Connected = false;
+				AC_Connected = false;
+				BD_Connected = false;
+				X4_Connected = false;
+
+				LP1 = 0;
+				LP2 = 0;
+				LP3 = 0;
+				LP4 = 0;
+
+				GBAL[0].GBA.ext_num = 0;
+				GBAL[0].GBA.Ext_SI = &GBAL[0].GBA.Ext_Disconnect_1;
+				GBAL[0].GBA.Ext_SO = &GBAL[0].GBA.Ext_Disconnect_1;
+				GBAL[0].GBA.Ext_SC = &GBAL[0].GBA.Ext_Disconnect_1;
+				GBAL[0].GBA.Ext_SD = &GBAL[0].GBA.Ext_Disconnect_0;
+				GBAL[0].GBA.Ext_Multi_Start = &GBAL[0].GBA.ser_Multi_Start;
+
+				GBAL[1].GBA.ext_num = 0;
+				GBAL[1].GBA.Ext_SI = &GBAL[1].GBA.Ext_Disconnect_1;
+				GBAL[1].GBA.Ext_SO = &GBAL[1].GBA.Ext_Disconnect_1;
+				GBAL[1].GBA.Ext_SC = &GBAL[1].GBA.Ext_Disconnect_1;
+				GBAL[1].GBA.Ext_SD = &GBAL[1].GBA.Ext_Disconnect_0;
+				GBAL[1].GBA.Ext_Multi_Start = &GBAL[1].GBA.ser_Multi_Start;
+
+				GBAL[2].GBA.ext_num = 0;
+				GBAL[2].GBA.Ext_SI = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SO = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SC = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SD = &GBAL[2].GBA.Ext_Disconnect_0;
+				GBAL[2].GBA.Ext_Multi_Start = &GBAL[2].GBA.ser_Multi_Start;
+
+				if (Num_ROMs > 3)
+				{
+					GBAL[3].GBA.ext_num = 0;
+					GBAL[3].GBA.Ext_SI = &GBAL[3].GBA.Ext_Disconnect_1;
+					GBAL[3].GBA.Ext_SO = &GBAL[3].GBA.Ext_Disconnect_1;
+					GBAL[3].GBA.Ext_SC = &GBAL[3].GBA.Ext_Disconnect_1;
+					GBAL[3].GBA.Ext_SD = &GBAL[3].GBA.Ext_Disconnect_0;
+					GBAL[3].GBA.Ext_Multi_Start = &GBAL[3].GBA.ser_Multi_Start;
+				}
+			}
+			else if (link_type == 2)
+			{
+				// 3 player set AB
+				AB_Connected = true;
+
+				LP1 = 0;
+				LP2 = 1;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+
+			}
+			else if (link_type == 3)
+			{
+				// 3 player set BC
+				BC_Connected = true;
+
+				LP1 = 1;
+				LP2 = 2;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+			}
+			else if (link_type == 4)
+			{
+				// 3 player set AC
+				AC_Connected = true;
+
+				LP1 = 0;
+				LP2 = 2;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+			}
+			else if (link_type == 5)
+			{
+				// 4 player set AB, CD
+				AB_Connected = true;
+				CD_Connected = true;
+
+				LP1 = 0;
+				LP2 = 1;
+				LP3 = 2;
+				LP4 = 3;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+				GBAL[LP3].GBA.ext_num = 1;
+				GBAL[LP4].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+				Link_Console_Pair(LP3, LP4);
+			}
+			else if (link_type == 6)
+			{
+				// 4 player set AC, BD
+				BD_Connected = true;
+				AC_Connected = true;
+
+				LP1 = 0;
+				LP2 = 2;
+				LP3 = 1;
+				LP4 = 3;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+				GBAL[LP3].GBA.ext_num = 1;
+				GBAL[LP4].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+				Link_Console_Pair(LP3, LP4);
+			}
+			else if (link_type == 7)
+			{
+				// 4 player set AD, BC
+				AD_Connected = true;
+				BC_Connected = true;
+
+				LP1 = 0;
+				LP2 = 3;
+				LP3 = 1;
+				LP4 = 2;
+
+				GBAL[LP1].GBA.ext_num = 1;
+				GBAL[LP2].GBA.ext_num = 2;
+				GBAL[LP3].GBA.ext_num = 1;
+				GBAL[LP4].GBA.ext_num = 2;
+
+				Link_Console_Pair(LP1, LP2);
+				Link_Console_Pair(LP3, LP4);
+			}
+			else if (link_type == 8)
+			{
+				// 4 player set 4x
+				X4_Connected = true;
+			}
+		}
+
+		void Link_Console_Pair(uint8_t l1, uint8_t l2)
+		{
+			// override pointers to serial port pins
+			GBAL[l1].GBA.Ext_SI = &GBAL[l2].GBA.ser_SO;
+			GBAL[l1].GBA.Ext_SO = &GBAL[l2].GBA.ser_SI;
+			GBAL[l1].GBA.Ext_SC = &GBAL[l2].GBA.ser_SC;
+			GBAL[l1].GBA.Ext_SD = &GBAL[l2].GBA.ser_SD;
+
+			GBAL[l2].GBA.Ext_SI = &GBAL[l1].GBA.ser_SO;
+			GBAL[l2].GBA.Ext_SO = &GBAL[l1].GBA.ser_SI;
+			GBAL[l2].GBA.Ext_SC = &GBAL[l1].GBA.ser_SC;
+			GBAL[l2].GBA.Ext_SD = &GBAL[l1].GBA.ser_SD;
+
+			GBAL[l1].GBA.Ext_Multi_Start = &GBAL[l2].GBA.ser_Multi_Start;
+			GBAL[l2].GBA.Ext_Multi_Start = &GBAL[l1].GBA.ser_Multi_Start;
 		}
 
 		void GetVideo(uint32_t* dest, uint32_t num)
@@ -626,6 +785,19 @@ namespace GBAHawk
 
 		void SaveState(uint8_t* saver)
 		{
+			saver = bool_saver(AB_Connected, saver);
+			saver = bool_saver(BC_Connected, saver);
+			saver = bool_saver(CD_Connected, saver);
+			saver = bool_saver(AD_Connected, saver);
+			saver = bool_saver(AC_Connected, saver);
+			saver = bool_saver(BD_Connected, saver);
+			saver = bool_saver(X4_Connected, saver);
+
+			saver = byte_saver(LP1, saver);
+			saver = byte_saver(LP2, saver);
+			saver = byte_saver(LP3, saver);
+			saver = byte_saver(LP4, saver);
+			
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				saver = GBAL[i].GBA.SaveState(saver);
@@ -635,10 +807,118 @@ namespace GBAHawk
 
 		void LoadState(uint8_t* loader)
 		{
+			loader = bool_loader(&AB_Connected, loader);
+			loader = bool_loader(&BC_Connected, loader);
+			loader = bool_loader(&CD_Connected, loader);
+			loader = bool_loader(&AD_Connected, loader);
+			loader = bool_loader(&AC_Connected, loader);
+			loader = bool_loader(&BD_Connected, loader);
+			loader = bool_loader(&X4_Connected, loader);
+
+			loader = byte_loader(&LP1, loader);
+			loader = byte_loader(&LP2, loader);
+			loader = byte_loader(&LP3, loader);
+			loader = byte_loader(&LP4, loader);
+			
 			for (int i = 0; i < Num_ROMs; i++)
 			{
 				loader = GBAL[i].GBA.LoadState(loader);
 				loader = GBAL[i].Mapper->LoadState(loader);
+			}
+
+			// update pointers
+			// first assume everything is disconnected
+			GBAL[0].GBA.ext_num = 0;
+			GBAL[0].GBA.Ext_SI = &GBAL[0].GBA.Ext_Disconnect_1;
+			GBAL[0].GBA.Ext_SO = &GBAL[0].GBA.Ext_Disconnect_1;
+			GBAL[0].GBA.Ext_SC = &GBAL[0].GBA.Ext_Disconnect_1;
+			GBAL[0].GBA.Ext_SD = &GBAL[0].GBA.Ext_Disconnect_0;
+			GBAL[0].GBA.Ext_Multi_Start = &GBAL[0].GBA.ser_Multi_Start;
+
+			GBAL[1].GBA.ext_num = 0;
+			GBAL[1].GBA.Ext_SI = &GBAL[1].GBA.Ext_Disconnect_1;
+			GBAL[1].GBA.Ext_SO = &GBAL[1].GBA.Ext_Disconnect_1;
+			GBAL[1].GBA.Ext_SC = &GBAL[1].GBA.Ext_Disconnect_1;
+			GBAL[1].GBA.Ext_SD = &GBAL[1].GBA.Ext_Disconnect_0;
+			GBAL[1].GBA.Ext_Multi_Start = &GBAL[1].GBA.ser_Multi_Start;
+
+			if (Num_ROMs > 2)
+			{
+				GBAL[2].GBA.ext_num = 0;
+				GBAL[2].GBA.Ext_SI = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SO = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SC = &GBAL[2].GBA.Ext_Disconnect_1;
+				GBAL[2].GBA.Ext_SD = &GBAL[2].GBA.Ext_Disconnect_0;
+				GBAL[2].GBA.Ext_Multi_Start = &GBAL[2].GBA.ser_Multi_Start;
+			}
+
+			if (Num_ROMs > 3)
+			{
+				GBAL[3].GBA.ext_num = 0;
+				GBAL[3].GBA.Ext_SI = &GBAL[3].GBA.Ext_Disconnect_1;
+				GBAL[3].GBA.Ext_SO = &GBAL[3].GBA.Ext_Disconnect_1;
+				GBAL[3].GBA.Ext_SC = &GBAL[3].GBA.Ext_Disconnect_1;
+				GBAL[3].GBA.Ext_SD = &GBAL[3].GBA.Ext_Disconnect_0;
+				GBAL[3].GBA.Ext_Multi_Start = &GBAL[3].GBA.ser_Multi_Start;
+			}
+
+			// then add connections as appropriate
+			if (Num_ROMs < 4)
+			{
+				if (AB_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+				}
+				else if (BC_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+				}
+				else if (AC_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+				}
+			}
+			else
+			{
+				if (AB_Connected && CD_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+					GBAL[LP3].GBA.ext_num = 1;
+					GBAL[LP4].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+					Link_Console_Pair(LP3, LP4);
+				}
+				else if (BD_Connected && AC_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+					GBAL[LP3].GBA.ext_num = 1;
+					GBAL[LP4].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+					Link_Console_Pair(LP3, LP4);
+				}
+				else if (AD_Connected && BC_Connected)
+				{
+					GBAL[LP1].GBA.ext_num = 1;
+					GBAL[LP2].GBA.ext_num = 2;
+					GBAL[LP3].GBA.ext_num = 1;
+					GBAL[LP4].GBA.ext_num = 2;
+
+					Link_Console_Pair(LP1, LP2);
+					Link_Console_Pair(LP3, LP4);
+				}
 			}
 		}
 

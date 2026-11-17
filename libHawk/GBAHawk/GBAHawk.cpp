@@ -314,6 +314,11 @@ GBAHawk_EXPORT uint32_t GBALink_get_audio(GBALinkCore* p, int32_t* dest_L_0, int
 	return p->GetAudio(dest_L_0, n_samp_L_0, dest_R_0, n_samp_R_0, dest_L_1, n_samp_L_1, dest_R_1, n_samp_R_1, enables);
 }
 
+GBAHawk_EXPORT void GBALink_change_linking(GBALinkCore* p, bool link_status, uint32_t link_type)
+{
+	p->Change_Linking(link_status, link_type);
+}
+
 #pragma region State Save / Load
 
 // save state

@@ -29,6 +29,18 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBALink
 			ser.Sync(nameof(GBP_Screen_Detection_D), ref GBP_Screen_Detection_D);
 			ser.Sync(nameof(GBP_Screen_Count_D), ref GBP_Screen_Count_D);
 
+			ser.Sync(nameof(_cableconnected), ref _cableconnected);
+			ser.Sync(nameof(_cablediscosignal), ref _cablediscosignal);
+
+			ser.Sync(nameof(_cableconnected_AC), ref _cableconnected_AC);
+			ser.Sync(nameof(_cableconnected_BC), ref _cableconnected_BC);
+			ser.Sync(nameof(_cableconnected_AB), ref _cableconnected_AB);
+
+			ser.Sync(nameof(_cableconnected_UD), ref _cableconnected_UD);
+			ser.Sync(nameof(_cableconnected_LR), ref _cableconnected_LR);
+			ser.Sync(nameof(_cableconnected_X), ref _cableconnected_X);
+			ser.Sync(nameof(_cableconnected_4x), ref _cableconnected_4x);
+
 			if (ser.IsReader)
 			{
 				ser.Sync(nameof(GBA_core), ref GBA_core, false);
