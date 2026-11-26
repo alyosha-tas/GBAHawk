@@ -626,14 +626,7 @@ namespace BizHawk.Client.GBAHawk
 			if (!ServiceInjector.IsAvailable(_emulator.ServiceProvider, tool)) return false;
 			if (!PossibleToolTypeNames.Contains(tool.AssemblyQualifiedName)) return false; // not a tool
 
-			ToolAttribute attr = tool.GetCustomAttributes(false).OfType<ToolAttribute>().SingleOrDefault();
-			if (attr == null)
-			{
-				return true; // no ToolAttribute on given type -> assumed all supported
-			}
-
-			return !attr.UnsupportedCores.Contains(_emulator.Attributes().CoreName) // not unsupported
-				&& (!attr.SupportedSystems.Any() || attr.SupportedSystems.Contains(_emulator.SystemId)); // supported (no supported list -> assumed all supported)
+			return true;
 		}
 
 		public bool IsAvailable<T>() => IsAvailable(typeof(T));

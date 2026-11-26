@@ -201,12 +201,6 @@ namespace BizHawk.Client.GBAHawk
 			this.LoadTIFileMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.toolStripSeparator13 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.paletteToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.GBSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.GBcoreSettingsToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.toolStripSeparator28 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
-			this.GBGPUViewerMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.GBLSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
-			this.GBLsettingsToolStripMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.GenericCoreSubMenu = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.MainStatusBar = new BizHawk.WinForms.Controls.StatusStripEx();
 			this.EmuStatus = new BizHawk.WinForms.Controls.StatusLabelEx();
@@ -283,8 +277,6 @@ namespace BizHawk.Client.GBAHawk
 			this.ViewSubMenu,
 			this.ConfigSubMenu,
 			this.ToolsSubMenu,
-			this.GBSubMenu,
-			this.GBLSubMenu,
 			this.GenericCoreSubMenu,
 			this.AboutSubMenu});
 			this.MainformMenu.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
@@ -1261,35 +1253,6 @@ namespace BizHawk.Client.GBAHawk
 			this.MultiDiskBundlerFileMenuItem.Text = "Multi-disk Bundler";
 			this.MultiDiskBundlerFileMenuItem.Click += new System.EventHandler(this.MultidiskBundlerMenuItem_Click);
 			// 
-			// GBSubMenu
-			// 
-			this.GBSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.GBcoreSettingsToolStripMenuItem,
-			this.toolStripSeparator28,
-			this.GBGPUViewerMenuItem});
-			this.GBSubMenu.Text = "&GB";
-			// 
-			// GBcoreSettingsToolStripMenuItem
-			// 
-			this.GBcoreSettingsToolStripMenuItem.Text = "Settings...";
-			this.GBcoreSettingsToolStripMenuItem.Click += new System.EventHandler(this.GbCoreSettingsMenuItem_Click);
-			// 
-			// GBGPUViewerMenuItem
-			// 
-			this.GBGPUViewerMenuItem.Text = "GPU Viewer";
-			this.GBGPUViewerMenuItem.Click += new System.EventHandler(this.GbGpuViewerMenuItem_Click);
-			// 
-			// GBLSubMenu
-			// 
-			this.GBLSubMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.GBLsettingsToolStripMenuItem});
-			this.GBLSubMenu.Text = "&GB Link";
-			// 
-			// GBLsettingsToolStripMenuItem
-			// 
-			this.GBLsettingsToolStripMenuItem.Text = "Settings...";
-			this.GBLsettingsToolStripMenuItem.Click += new System.EventHandler(this.GblSettingsMenuItem_Click);
-			// 
 			// GenericCoreSubMenu
 			// 
 			this.GenericCoreSubMenu.Text = "&Core";
@@ -1824,7 +1787,6 @@ namespace BizHawk.Client.GBAHawk
 		private System.Windows.Forms.ToolStripDropDownButton PlayRecordStatusButton;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ViewSubtitlesContextMenuItem;
 		private MenuStripEx MainformMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBSubMenu;
 		private BizHawk.WinForms.Controls.StatusLabelEx SaveSlotsStatusLabel;
 		private BizHawk.WinForms.Controls.StatusLabelEx Slot1StatusButton;
 		private BizHawk.WinForms.Controls.StatusLabelEx Slot2StatusButton;
@@ -1863,11 +1825,9 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveMovieMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveMovieContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx VirtualPadMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBGPUViewerMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx AudioThrottleMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator27;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx VsyncEnabledMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripSeparatorEx toolStripSeparator28;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx KeyPrioritySubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx BothHkAndControllerMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx InputOverHkMenuItem;
@@ -1884,8 +1844,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ClearSRAMContextMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripSeparatorEx ShowMenuContextMenuSeparator;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx StopAVContextMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLSubMenu;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBLsettingsToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GenericCoreSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx CoresSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx DisplayConfigMenuItem;
@@ -1906,7 +1864,6 @@ namespace BizHawk.Client.GBAHawk
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx toolStripMenuItem67;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx ClientOptionsMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx customizeToolStripMenuItem;
-		private BizHawk.WinForms.Controls.ToolStripMenuItemEx GBcoreSettingsToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx paletteToolStripMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SynclessRecordingMenuItem;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx MovieEndSubMenu;

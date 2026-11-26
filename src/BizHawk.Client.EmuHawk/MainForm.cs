@@ -19,7 +19,6 @@ using BizHawk.Client.Common;
 using BizHawk.Bizware.BizwareGL;
 
 using BizHawk.Emulation.Common;
-using BizHawk.Emulation.Common.Base_Implementations;
 using BizHawk.Emulation.Cores;
 using BizHawk.Client.GBAHawk.ToolExtensions;
 using BizHawk.Client.GBAHawk.CustomControls;
@@ -1416,16 +1415,10 @@ namespace BizHawk.Client.GBAHawk
 				if (i != -1) AvailableAccelerators.Add(GenericCoreSubMenu.Text[i + 1]);
 			}
 			GenericCoreSubMenu.Visible = false;
-			GBSubMenu.Visible = false;
-			GBLSubMenu.Visible = false;
 
 			switch (Emulator.SystemId)
 			{
 				case VSystemID.Raw.NULL:
-					break;
-				case VSystemID.Raw.GB:
-				case VSystemID.Raw.GBC:
-					GBSubMenu.Visible = true;
 					break;
 				default:
 					DisplayDefaultCoreMenu();
@@ -2349,7 +2342,7 @@ namespace BizHawk.Client.GBAHawk
 
 			float atten = 0;
 
-			// BlockFrameAdvance (true when input it being editted in TAStudio) supercedes all other frame advance conditions
+			// BlockFrameAdvance (true when input is being editted in TAStudio) supercedes all other frame advance conditions
 			if ((runFrame || force) && !BlockFrameAdvance)
 			{
 				var isFastForwarding = InputManager.ClientControls["Fast Forward"] || IsTurboing || InvisibleEmulation;

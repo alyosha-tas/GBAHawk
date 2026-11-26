@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 namespace BizHawk.Client.GBAHawk
 {
+	[SpecializedTool("GB GPU Viewer")]
 	public partial class GbGpuView : ToolFormBase, IToolFormAutoConfig
 	{
 		[RequiredService]
