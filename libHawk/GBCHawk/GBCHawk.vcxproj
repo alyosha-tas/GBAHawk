@@ -145,12 +145,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
-    <ClInclude Include="GBC_GB_PPU.h" />
-    <ClInclude Include="GBC_PPU.h" />
     <ClInclude Include="GBCHawk.h" />
     <ClInclude Include="GBC_System.h" />
     <ClInclude Include="LinkCore.h" />
-    <ClInclude Include="PPUs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

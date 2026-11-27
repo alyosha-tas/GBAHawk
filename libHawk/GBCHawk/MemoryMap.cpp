@@ -7,7 +7,6 @@
 #include "Memory.h"
 #include "GBC_System.h"
 #include "../Common/GB_Mappers/Mappers.h"
-#include "PPUs.h"
 
 /*
 	$FFFF          Interrupt Enable Flag
@@ -145,37 +144,37 @@ namespace GBCHawk
 
 		if (addr < 0xA000)
 		{
-			if (ppu_pntr->VRAM_access_read)
+			if (VRAM_access_read)
 			{
 				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 			}
 
 			if (!HDMA_Transfer)
 			{
-				if (ppu_pntr->pixel_counter == 160)
+				if (pixel_counter == 160)
 				{
 					/*
-					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + ppu_pntr->bus_address + " " +
-						VRAM[ppu_pntr->bus_address] + " " + ppu_pntr->read_case_prev + " " + (ppu_pntr->internal_cycle & 1) + " " +
+					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + bus_address + " " +
+						VRAM[bus_address] + " " + read_case_prev + " " + (internal_cycle & 1) + " " +
 						(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);					
 					*/
 
 					// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
-					if ((ppu_pntr->read_case_prev == 0) || (ppu_pntr->read_case_prev == 4))
+					if ((read_case_prev == 0) || (read_case_prev == 4))
 					{
 						if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
 						{
 							return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 						}
-						return VRAM[ppu_pntr->bus_address];
+						return VRAM[bus_address];
 					}
 
 					// TODO: What is returned when the ppu isn't accessing VRAM?
-					//if ((ppu_pntr->read_case_prev == 3) || (ppu_pntr->read_case_prev == 7))
+					//if ((read_case_prev == 3) || (read_case_prev == 7))
 					//{
 					//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 					//}
-					return VRAM[ppu_pntr->bus_address];
+					return VRAM[bus_address];
 				}
 				return 0xFF;
 			}
@@ -203,7 +202,7 @@ namespace GBCHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -215,7 +214,7 @@ namespace GBCHawk
 			if (Is_GBC_GBA)
 			{
 				// in GBCA mode, it returns a reflection of the address somehow
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -225,7 +224,7 @@ namespace GBCHawk
 			else
 			{
 				// otherwise the return value is revision dependent. Assume CGBC-E is same as GBCA mode consoles for now
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -318,7 +317,7 @@ namespace GBCHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_write) { OAM[addr - 0xFE00] = value; }
+				if (OAM_access_write) { OAM[addr - 0xFE00] = value; }
 			}
 			// unmapped memory writes depend on console		
 			else
@@ -347,7 +346,7 @@ namespace GBCHawk
 		}
 		else if (addr >= 0x8000)
 		{
-			if (ppu_pntr->VRAM_access_write)
+			if (VRAM_access_write)
 			{
 				VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)] = value;
 			}
@@ -495,7 +494,7 @@ namespace GBCHawk
 
 		if (addr < 0xA000)
 		{
-			if (ppu_pntr->VRAM_access_read)
+			if (VRAM_access_read)
 			{
 				return VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)];
 			}
@@ -518,7 +517,7 @@ namespace GBCHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -530,7 +529,7 @@ namespace GBCHawk
 			if (Is_GBC_GBA)
 			{
 				// in GBCA mode, it returns a reflection of the address somehow
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}
@@ -540,7 +539,7 @@ namespace GBCHawk
 			else
 			{
 				// otherwise the return value is revision dependent. Assume CGBC-E is same as GBCA mode consoles for now
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 				}

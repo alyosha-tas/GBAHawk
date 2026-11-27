@@ -11,7 +11,6 @@
 
 #include "GBC_System.h"
 #include "Memory.h"
-#include "PPUs.h"
 #include "../Common/GB_Mappers/Mappers.h"
 
 // mapper list
@@ -33,9 +32,6 @@
 #include "../Common/GB_Mappers/Mapper_TAMA5.h"
 #include "../Common/GB_Mappers/Mapper_WisdomTree.h"
 
-#include "GBC_PPU.h"
-#include "GBC_GB_PPU.h"
-
 using namespace std;
 using namespace GB_Mappers;
 
@@ -47,7 +43,6 @@ namespace GBCHawk
 		GBCCore() 
 		{
 			Mapper = nullptr;
-			PPU = nullptr;
 			GBC.MessageCallback = nullptr;
 			GBC.RumbleCallback = nullptr;
 			GBC.TraceCallback = nullptr;
@@ -57,7 +52,6 @@ namespace GBCHawk
 		GBC_System GBC;
 
 		GB_Mappers::Mappers* Mapper;
-		PPUs* PPU;
 
 		uint32_t Console_ID = 5;
 
@@ -178,76 +172,6 @@ namespace GBCHawk
 			Mapper->RumbleCallback = GBC.RumbleCallback;
 			Mapper->MessageCallback = GBC.MessageCallback;
 
-			// repeat for the ppu
-			if ((GBC.ROM[0x143] != 0x80) && (GBC.ROM[0x143] != 0xC0))
-			{
-				PPU = new GBC_GB_PPU();
-			}
-			else
-			{
-				PPU = new GBC_PPU();
-			}
-
-			GBC.ppu_pntr = &PPU[0];
-
-			PPU->sys_pntr = &GBC;
-
-			// set up all the pointers
-			PPU->Core_cpu_FlagI = &GBC.cpu_FlagI;
-
-			PPU->Core_GBCC_compat = &GBC.GBC_Compat;
-
-			PPU->Core_Double_Speed = &GBC.Double_Speed;
-
-			PPU->Core_CPU_Halted = &GBC.cpu_Halted;
-
-			PPU->Core_CPU_Stopped = &GBC.cpu_Stopped;
-
-			PPU->Core_HDMA_Transfer = &GBC.HDMA_Transfer;
-
-			PPU->Core_REG_FFFF = &GBC.REG_FFFF;
-
-			PPU->Core_REG_FF0F = &GBC.REG_FF0F;
-
-			PPU->Core_Bus_Value = &GBC.bus_value;
-
-			PPU->Core_VRAM = &GBC.VRAM[0];
-
-			PPU->Core_VRAM_Bank = &GBC.VRAM_Bank;
-
-			PPU->Core_OAM = &GBC.OAM[0];
-
-			PPU->Core_Clear_Counter = &GBC.clear_counter;
-
-			PPU->Core_Video_Buffer = &GBC.video_buffer[0];
-
-			PPU->Core_Cycle_Count = &GBC.Cycle_Count;
-
-			PPU->Core_Instruction_Start = &GBC.cpu_Instruction_Start;
-
-			PPU->Core_Message_String = &GBC.Message_String;
-
-			PPU->OnVBlank = &GBC_System::On_VBlank;
-
-			PPU->Core_HDMA_Start_Stop = &GBC_System::HDMA_start_stop;
-
-			PPU->MessageCallback = GBC.MessageCallback;
-
-			PPU->Core_DMA_OAM_Access = &GBC.dma_OAM_Access;
-
-			PPU->Core_ReadMemory = &GBC_System::Read_Memory;
-
-			PPU->Core_RegPC = &GBC_System::cpu_RegPCget;
-
-			PPU->Reset();
-
-			// finally link core pointers
-			GBC.ppu_LY_pntr = &PPU->LY;
-			GBC.PPU_Pal_Change_Blocked = &PPU->pal_change_blocked;
-
-			GBC.PPU_Read_Regs = &PPUs::ReadReg;
-			GBC.PPU_Write_Regs = &PPUs::WriteReg;
-
 			if (GBC.MessageCallback)
 			{
 				GBC.Message_String = "Initialization Successful";
@@ -294,8 +218,6 @@ namespace GBCHawk
 		void Hard_Reset() 
 		{
 			Mapper->Reset();
-			PPU->Reset();
-			
 			GBC.System_Reset();
 		}
 
@@ -351,7 +273,7 @@ namespace GBCHawk
 				// turn off the screen so the image doesnt persist
 				// but don't turn off blank_frame yet, it still needs to be true until the next VBL
 				// GBCC games need to clear slow enough that games that turn the screen off briefly for cinematics still look smooth
-				if (GBC.ppu_pntr->clear_screen)
+				if (GBC.clear_screen)
 				{
 					GBC.clear_screen_func();
 				}
@@ -422,7 +344,6 @@ namespace GBCHawk
 		{	
 			saver = GBC.SaveState(saver);
 			saver = Mapper->SaveState(saver);
-			saver = PPU->SaveState(saver);
 
 			return saver;
 		}
@@ -431,7 +352,6 @@ namespace GBCHawk
 		{
 			loader = GBC.LoadState(loader);
 			loader = Mapper->LoadState(loader);
-			loader = PPU->LoadState(loader);
 
 			return loader;
 		}
@@ -614,8 +534,8 @@ namespace GBCHawk
 		{
 			switch (sel)
 			{
-				case 0: return PPU->BG_palette; break;
-				case 1: return PPU->OBJ_palette; break;
+				case 0: return GBC.BG_palette; break;
+				case 1: return GBC.OBJ_palette; break;
 				case 2: return GBC.OAM; break;
 				case 3: return GBC.VRAM; break;
 			}
@@ -625,16 +545,16 @@ namespace GBCHawk
 
 		void SetScanlineCallback(void (*callback)(uint8_t), int sl)
 		{
-			PPU->ScanlineCallback = callback;
+			GBC.ScanlineCallback = callback;
 
-			PPU->ScanlineCallbackLine = sl;
+			GBC.ScanlineCallbackLine = sl;
 		}
 
 		void ExecuteScanlineCallback()
 		{
-			if (PPU->ScanlineCallback)
+			if (GBC.ScanlineCallback)
 			{
-				PPU->ScanlineCallback(PPU->LCDC);
+				GBC.ScanlineCallback(GBC.LCDC);
 			}
 		}
 	};

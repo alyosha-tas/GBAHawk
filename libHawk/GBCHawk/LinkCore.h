@@ -230,7 +230,7 @@ namespace GBCHawk
 
 			for (int i = 0; i < Num_ROMs; i++)
 			{
-				if (GBCL[i].GBC.ppu_pntr->clear_screen)
+				if (GBCL[i].GBC.clear_screen)
 				{
 					GBCL[i].GBC.clear_screen_func();
 				}
