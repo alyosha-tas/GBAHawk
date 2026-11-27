@@ -8,6 +8,7 @@ using BizHawk.Emulation.Common;
 using BizHawk.Emulation.Cores;
 
 using BizHawk.Emulation.Cores.Nintendo.GBLink;
+using BizHawk.Emulation.Cores.Nintendo.GBCLink;
 using BizHawk.Emulation.Cores.Nintendo.GBALink;
 using BizHawk.Emulation.Cores.Nintendo.SNESHawk;
 using BizHawk.Emulation.Cores.Nintendo.NESHawk;
@@ -477,6 +478,20 @@ namespace BizHawk.Client.Common
 					};
 
 					nextEmulator = new GBHawkLink(lp);
+					return true;
+				}
+				else if (UseCoreName == "GBCHawkLink")
+				{
+					var lp = new CoreLoadParameters<GBCHawkLink.GBCLinkSettings, GBCHawkLink.GBCLinkSyncSettings>
+					{
+						Comm = cip.Comm,
+						Game = cip.Game,
+						Settings = (dynamic)cip.FetchSettings(typeof(GBCHawkLink), typeof(GBCHawkLink.GBCLinkSettings)),
+						SyncSettings = (dynamic)cip.FetchSyncSettings(typeof(GBCHawkLink), typeof(GBCHawkLink.GBCLinkSyncSettings)),
+						Roms = cip.Roms
+					};
+
+					nextEmulator = new GBCHawkLink(lp);
 					return true;
 				}
 				else

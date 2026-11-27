@@ -116,50 +116,31 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 				bool patch_bios = false;
 				bool Is_GBA = false;
+				Is_GBC[i] = false;
 
 				switch (i)
 				{
 					case 0:
-						Is_GBC[i] = SyncSettings.A_ConsoleMode != GBLinkSyncSettings.ConsoleModeType.GB;
 						Is_GBA = SyncSettings.A_GBACGB;
 						if (Is_GBC[i] && Is_GBA) { patch_bios = true; }
 						break;
 					case 1:
-						Is_GBC[i] = SyncSettings.B_ConsoleMode != GBLinkSyncSettings.ConsoleModeType.GB;
 						Is_GBA = SyncSettings.B_GBACGB;
 						if (Is_GBC[i] && Is_GBA) { patch_bios = true; }
 						break;
 					case 2: 
-						Is_GBC[i] = SyncSettings.C_ConsoleMode != GBLinkSyncSettings.ConsoleModeType.GB;
 						Is_GBA = SyncSettings.C_GBACGB;
 						if (Is_GBC[i] && Is_GBA) { patch_bios = true; }
 						break;
 					case 3:
-						Is_GBC[i] = SyncSettings.D_ConsoleMode != GBLinkSyncSettings.ConsoleModeType.GB;
 						Is_GBA = SyncSettings.D_GBACGB;
 						if (Is_GBC[i] && Is_GBA) { patch_bios = true; }
 						break;
 				}
 				
-				if (Is_GBC[i])
-				{
-					BIOS[i] = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
-				}
-				else
-				{
-					BIOS[i] = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
-				}
+				BIOS[i] = lp.Comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
 
-				// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-				if (patch_bios)
-				{
-					for (int j = 0; j < 13; j++)
-					{
-						BIOS[i][j + 0xF3] = (byte)((GBA_override[j] + BIOS[i][j + 0xF3]) & 0xFF);
-					}
-				}
-
-				LibGBHawkLink.GBLink_load_bios(GBLink_Pntr, BIOS[i], Is_GBC[i], Is_GBA, (uint)i);
+				LibGBHawkLink.GBLink_load_bios(GBLink_Pntr, BIOS[i], Is_GBA, (uint)i);
 
 				var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(lp.Roms[i].RomData);
 				Console.WriteLine(romHashSHA1);

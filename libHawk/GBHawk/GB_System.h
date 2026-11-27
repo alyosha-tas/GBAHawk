@@ -5269,13 +5269,25 @@ namespace GBHawk
 						}
 						else
 						{
-							if (((value & 0x40) == 0x40))
+							if ((value & 0x40) == 0x40)
 							{
 								if (LY == LYC) { LYC_INT = true; }
 								else { LYC_INT = false; }
 							}
 						}
 					}
+					else
+					{
+						// The LYC compare bit is not reset when the screen is disabled.
+						// So enabling LYC compares can re-trigger an LYC interrupt
+						// on Gameboy this is glitchy, and triggers even when writing 0
+						if ((value & 0x40) == 0x40)
+						{
+							if (STAT_Bit(2)) { LYC_INT = true; }
+							else { LYC_INT = false; }
+						}
+					}
+
 					STAT = (uint8_t)((value & 0xF8) | (STAT & 7) | 0x80);
 
 					if (!STAT_Bit(4)) { VBL_INT = false; }

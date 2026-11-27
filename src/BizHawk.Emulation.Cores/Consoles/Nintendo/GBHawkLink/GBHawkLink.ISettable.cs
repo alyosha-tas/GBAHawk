@@ -173,32 +173,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 
 		public class GBLinkSyncSettings
 		{
-			public enum ConsoleModeType
-			{
-				GB,
-				GBC
-			}
-
-			[DisplayName("Console Mode A")]
-			[Description("Physical device used.")]
-			[DefaultValue(ConsoleModeType.GBC)]
-			public ConsoleModeType A_ConsoleMode { get; set; }
-
-			[DisplayName("Console Mode B")]
-			[Description("Physical device used.")]
-			[DefaultValue(ConsoleModeType.GBC)]
-			public ConsoleModeType B_ConsoleMode { get; set; }
-
-			[DisplayName("Console Mode C")]
-			[Description("Physical device used.")]
-			[DefaultValue(ConsoleModeType.GBC)]
-			public ConsoleModeType C_ConsoleMode { get; set; }
-
-			[DisplayName("Console Mode D")]
-			[Description("Physical device used.")]
-			[DefaultValue(ConsoleModeType.GBC)]
-			public ConsoleModeType D_ConsoleMode { get; set; }
-
 			[DisplayName("CGB in GBA, Console A")]
 			[Description("Emulate GBA hardware running a CGB game, instead of CGB hardware.")]
 			[DefaultValue(false)]

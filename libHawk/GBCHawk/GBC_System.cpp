@@ -802,7 +802,7 @@ namespace GBCHawk
 		{
 			STAT &= 0xFC;
 
-			VBL_INT = LYC_INT = HBL_INT = OAM_INT = false;
+			VBL_INT = HBL_INT = OAM_INT = false;
 
 			In_Vblank = true;
 
@@ -845,5 +845,4 @@ namespace GBCHawk
 
 		LCDC_Bit_4_glitch = false;
 	}
-
 }

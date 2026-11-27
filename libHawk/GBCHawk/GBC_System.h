@@ -5658,11 +5658,25 @@ namespace GBCHawk
 					if (((STAT & 3) == 0) && STAT_Bit(3) && !glitch_state) { HBL_INT = true; }
 					else { HBL_INT = false; }
 
-					if (((value & 0x40) == 0x40) && LCDC_Bit(7))
+					if (LCDC_Bit(7))
 					{
-						if (LY == LYC) { LYC_INT = true; }
-						else { LYC_INT = false; }
+						if ((value & 0x40) == 0x40)
+						{
+							if (LY == LYC) { LYC_INT = true; }
+							else { LYC_INT = false; }
+						}
 					}
+					else
+					{
+						// The LYC compare bit is not reset when the screen is disabled.
+						// So enabling LYC compares can re-trigger an LYC interrupt
+						if ((value & 0x40) == 0x40)
+						{
+							if (STAT_Bit(2)) { LYC_INT = true; }
+							else { LYC_INT = false; }
+						}
+					}
+
 					if (!STAT_Bit(6)) { LYC_INT = false; }
 					break;
 				case 0xFF42: // SCY

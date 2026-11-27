@@ -22,7 +22,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GB.Common
 		public static extern void GBLink_destroy(IntPtr core);
 
 		[DllImport(lib, CallingConvention = cc)]
-		public static extern int GBLink_load_bios(IntPtr core, byte[] bios, bool gbcflag, bool gbc_gba_flag, uint console_num);
+		public static extern int GBLink_load_bios(IntPtr core, byte[] bios, bool gbc_gba_flag, uint console_num);
 
 
 		[DllImport(lib, CallingConvention = cc)]
