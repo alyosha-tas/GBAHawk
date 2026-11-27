@@ -16,16 +16,16 @@ using namespace std;
 
 //MessageCallback(Core_Message_String->length());
 
-namespace GBHawk
+namespace GBCHawk
 {
-	class GB_System;
+	class GBC_System;
 	
 	class PPUs
 	{
 	public:
 	#pragma region ppu base
 
-		GB_System* sys_pntr = nullptr;
+		GBC_System* sys_pntr = nullptr;
 		
 		bool HDMA_active;
 		bool clear_screen;
@@ -136,13 +136,13 @@ namespace GBHawk
 		int32_t SL_sprites[40] = { };
 		int32_t SL_sprites_ordered[40] = { }; // (x_end, data_low, data_high, attr)
 
-		// These variables only relate to GBC PPUs
+		// These variables only relate to GBCC PPUs
 		bool BG_bytes_inc;
 		bool OBJ_bytes_inc;
 		bool VRAM_access_read_HDMA;
 		bool VRAM_access_write_HDMA;
 		bool HDMA_can_start;
-		// GBC specific glitch
+		// GBCC specific glitch
 		bool LCDC_Bit_4_glitch;
 		bool BG_V_flip;
 		bool HDMA_mode;
@@ -156,13 +156,13 @@ namespace GBHawk
 		uint8_t OBJ_transfer_byte;
 		uint8_t LYC_t;
 		uint8_t LY_read;
-		// HDMA is unique to GBC, do it as part of the PPU tick
+		// HDMA is unique to GBCC, do it as part of the PPU tick
 		uint8_t HDMA_src_hi;
 		uint8_t HDMA_src_lo;
 		uint8_t HDMA_dest_hi;
 		uint8_t HDMA_dest_lo;
 		uint8_t HDMA_byte;
-		// the first read on GBA (and first two on GBC) encounter access glitches if the source address is VRAM
+		// the first read on GBCA (and first two on GBCC) encounter access glitches if the source address is VRAM
 		uint8_t HDMA_VRAM_access_glitch;
 
 		uint16_t cur_DMA_src;
@@ -217,7 +217,7 @@ namespace GBHawk
 
 		bool* Core_cpu_FlagI = nullptr;
 
-		bool* Core_GBC_compat = nullptr;
+		bool* Core_GBCC_compat = nullptr;
 
 		bool* Core_Double_Speed = nullptr;
 
@@ -241,8 +241,6 @@ namespace GBHawk
 
 		uint32_t* Core_Clear_Counter = nullptr;
 
-		uint32_t* Core_Color_Palette = nullptr;
-
 		uint32_t* Core_Video_Buffer = nullptr;
 
 		uint64_t* Core_Cycle_Count = nullptr;
@@ -251,11 +249,11 @@ namespace GBHawk
 
 		string* Core_Message_String = nullptr;
 
-		void (GB_System::*OnVBlank)();
+		void (GBC_System::*OnVBlank)();
 
-		void (GB_System::*Core_HDMA_Start_Stop)(bool);
+		void (GBC_System::*Core_HDMA_Start_Stop)(bool);
 
-		uint8_t (GB_System::*Core_ReadMemory)(uint16_t);
+		uint8_t (GBC_System::*Core_ReadMemory)(uint16_t);
 
 		void (*MessageCallback)(int);
 
@@ -263,7 +261,7 @@ namespace GBHawk
 
 		int ScanlineCallbackLine = -2;
 
-		uint16_t(GB_System::*Core_RegPC)();
+		uint16_t(GBC_System::*Core_RegPC)();
 
 		PPUs()
 		{
@@ -383,7 +381,7 @@ namespace GBHawk
 			saver = sint_array_saver(SL_sprites, saver, 40);
 			saver = sint_array_saver(SL_sprites_ordered, saver, 40);
 
-			// GBC specific
+			// GBCC specific
 			saver = bool_saver(BG_bytes_inc, saver);
 			saver = bool_saver(OBJ_bytes_inc, saver);
 			saver = bool_saver(VRAM_access_read_HDMA, saver);
@@ -534,7 +532,7 @@ namespace GBHawk
 			loader = sint_array_loader(SL_sprites, loader, 40);
 			loader = sint_array_loader(SL_sprites_ordered, loader, 40);
 
-			// GBC specific
+			// GBCC specific
 			loader = bool_loader(&BG_bytes_inc, loader);
 			loader = bool_loader(&OBJ_bytes_inc, loader);
 			loader = bool_loader(&VRAM_access_read_HDMA, loader);

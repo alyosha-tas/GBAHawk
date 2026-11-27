@@ -78,22 +78,6 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 		public class GBHawkSyncSettings
 		{
-			public enum ConsoleModeType
-			{
-				GB,
-				GBC
-			}
-
-			[DisplayName("Console Mode")]
-			[Description("Physical device used.")]
-			[DefaultValue(ConsoleModeType.GBC)]
-			public ConsoleModeType ConsoleMode { get; set; }
-
-			[DisplayName("CGB in GBA")]
-			[Description("Emulate GBA hardware running a CGB game, instead of CGB hardware.")]
-			[DefaultValue(false)]
-			public bool GBACGB { get; set; }
-
 			[DisplayName("RTC Initial Time")]
 			[Description("Set the initial RTC time in terms of elapsed seconds.")]
 			[DefaultValue(0)]

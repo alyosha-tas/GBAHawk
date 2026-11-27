@@ -182,10 +182,6 @@ namespace BizHawk.Client.Common
 				["Toggle Cable LR"] = 'L',
 				["Toggle Cable X"] = 'X',
 				["Toggle Cable 4x"] = '4',
-				// gambatte
-				["Toggle Link Connection"] = 'L',
-				["Toggle Link Shift"] = 'F',
-				["Toggle Link Spacing"] = 'C',
 			},
 		};
 

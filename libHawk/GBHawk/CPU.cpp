@@ -5,7 +5,6 @@
 #include <string>
 
 #include "GB_System.h"
-#include "PPUs.h"
 
 namespace GBHawk
 {
@@ -1129,7 +1128,7 @@ namespace GBHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0: break;
-					case 1: SpeedFunc(1); break;
+					case 1: break;
 					case 2: cpu_Halt_Check_Func(); break;
 					case 3: cpu_STOP_Ex(); break;
 				}
@@ -1137,60 +1136,6 @@ namespace GBHawk
 		}
 
 		cpu_Instr_Cycle += 1;
-	}
-
-	inline uint32_t GB_System::SpeedFunc(uint32_t val)
-	{
-		if (val == 0)
-		{
-			if (speed_switch)
-			{
-				speed_switch = false;
-
-				if (MessageCallback)
-				{
-					Message_String = "Speed Switch: " + to_string(Cycle_Count);
-
-					MessageCallback(Message_String.length());
-				}
-
-				uint32_t ret = Double_Speed ? 32770 : 32770; // actual time needs checking
-				return ret;
-			}
-
-			// if we are not switching speed, return 0
-			return 0;
-		}
-		else if (val == 1)
-		{
-			// reset the divider (only way for speed_change_timing_fine.gbc and speed_change_cancel.gbc to both work)
-			// Console.WriteLine("at stop " + timer.divider_reg + " " + timer.timer_control);
-
-			// only if the timer mode is 1, an extra tick of the timer is counted before the reset
-			// this varies between console revisions
-			if ((tim_Control & 7) == 5)
-			{
-				if ((tim_Divider_Reg & 0x7) == 7)
-				{
-					tim_Old_State = true;
-				}
-			}
-
-			tim_Divider_Reg = 0xFFFF;
-
-			Double_Speed = !Double_Speed;
-
-			ppu_pntr->LYC_offset = Double_Speed ? 1 : 2;
-
-			ppu_pntr->LY_153_change = Double_Speed ? 8 : 10;
-
-			return 0;
-		}
-		else
-		{
-
-			return 0;
-		}
 	}
 
 	inline void GB_System::cpu_Halt_Enter()
@@ -1209,7 +1154,7 @@ namespace GBHawk
 		{
 			cpu_Instr_Cycle += 3;
 
-			if (!Is_GBC) { cpu_Skip_Once = true; }
+			cpu_Skip_Once = true;
 			// If the interrupt flag is not currently set, but it does get set in the first check
 			// then a bug is triggered
 			// With interrupts enabled, this runs the halt command twice
@@ -1293,22 +1238,6 @@ namespace GBHawk
 				cpu_Skip_Once = false;
 				cpu_Halt_bug_3 = false;
 			}
-			else if (Is_GBC)
-			{
-				// call the interrupt processor after 4 extra cycles
-				if (!cpu_Halt_bug_3)
-				{
-					cpu_Instr_Type = OpT::INTRPT_GBC; // point to Interrupt for GBC
-				}
-				else
-				{
-					// TODO: If interrupt priotrity is checked differently in GBC, then this is incorrect
-					// a new interrupt vector would be needed
-					cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
-					cpu_Halt_bug_3 = false;
-					//Console.WriteLine("Hit INT");
-				}
-			}
 			else
 			{
 				// call interrupt processor
@@ -1322,41 +1251,20 @@ namespace GBHawk
 			if (TraceCallback) TraceCallback(2); // Un-Halt
 			cpu_Halted = false;
 
-			if (Is_GBC)
+			if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
+
+			if (cpu_Halt_bug_3)
 			{
-				// extra 4 cycles for GBC
-				if (cpu_Halt_bug_3)
-				{
-					if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
+				//special variant of halt bug where RegPC also isn't incremented post fetch
+				cpu_RegPCset(cpu_RegPCget() + 1);
+				cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
 
-					cpu_RegPCset(cpu_RegPCget() + 1);
-					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
-
-					cpu_Halt_bug_3 = false;
-					//Console.WriteLine("Hit un");
-				}
-				else
-				{
-					cpu_Instr_Type = OpT::EXIT; // exit halt loop
-				}
+				cpu_Halt_bug_3 = false;
 			}
 			else
 			{
-				if (TraceCallback && !cpu_CB_Prefix) TraceCallback(0);
-
-				if (cpu_Halt_bug_3)
-				{
-					//special variant of halt bug where RegPC also isn't incremented post fetch
-					cpu_RegPCset(cpu_RegPCget() + 1);
-					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
-
-					cpu_Halt_bug_3 = false;
-				}
-				else
-				{
-					cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
-					cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
-				}
+				cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
+				cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
 			}
 		}
 		else
@@ -1368,14 +1276,7 @@ namespace GBHawk
 			}
 			else
 			{
-				if (Is_GBC)
-				{
-					cpu_Instr_Type = OpT::GBC_HALT; // point to GBC Halt loop
-				}
-				else
-				{
-					cpu_Instr_Type = OpT::SPC_HALT; // point to spec Halt loop
-				}
+				cpu_Instr_Type = OpT::SPC_HALT; // point to spec Halt loop
 			}
 		}
 
@@ -1386,73 +1287,8 @@ namespace GBHawk
 	inline void GB_System::cpu_STOP_Ex()
 	{
 		cpu_Stopped = true;
-		if (!cpu_Stop_Check)
-		{
-			// Z contains the second stop byte, not sure if it's useful at all
-			cpu_Stop_Time = SpeedFunc(0);
-			cpu_Stop_Check = true;
-		}
 
 		uint8_t buttons_pressed = GetButtons(0);
-
-		if (cpu_Stop_Time > 0)
-		{
-			// Timer interrupts can prematurely terminate a speedchange, not sure about other sources
-			// NOTE: some testing around the edge case of where the speed actually changes is needed						
-			if (cpu_I_Use && cpu_Interrupts_Enabled)
-			{
-				cpu_Interrupts_Enabled = false;
-				cpu_I_Use = false;
-
-				if (TraceCallback) TraceCallback(1); // Un-Stop
-
-				cpu_Stopped = false;
-				cpu_Stop_Check = false;
-				cpu_Stop_Time = 0;
-
-				if (TraceCallback) TraceCallback(3); // IRQ
-
-				// call interrupt processor 
-				// lowest bit set is highest priority
-				cpu_Instr_Type = OpT::INTRPT; // point to Interrupt
-				cpu_Instr_Cycle = -1;
-				return;
-			}
-
-			if (cpu_Stop_Time == 32770)
-			{
-				// point to speed cange loop
-				cpu_Instr_Type = OpT::SPD_CHG;
-				cpu_Instr_Cycle = -1;
-				cpu_Stop_Time--;
-				return;
-			}
-
-			cpu_Stop_Time--;
-
-			if (cpu_Stop_Time == 0)
-			{
-				if (TraceCallback) TraceCallback(1); // Un-Stop
-
-				cpu_Stopped = false;
-
-				// it takes the CPU 4 cycles longer to restart then the rest of the system.
-				cpu_Instr_Type = OpT::EXIT;
-				cpu_Instr_Cycle = -1;
-
-				cpu_Stop_Check = false;
-
-				return;
-			}
-
-			// If a button is pressed during speed change, the processor will jam
-			if ((buttons_pressed & 0xF) != 0xF)
-			{
-				cpu_Stop_Time++;
-				cpu_Instr_Cycle -= 1; // TODO: check
-				return;
-			}
-		}
 
 		// Button press will exit stop loop even if speed change in progress, even without interrupts enabled
 		if ((buttons_pressed & 0xF) != 0xF)
@@ -1466,8 +1302,6 @@ namespace GBHawk
 			cpu_FetchInstruction(GB_System::Read_Memory(cpu_RegPCget()));
 			cpu_RegPCset((uint16_t)(cpu_RegPCget() + 1));
 			cpu_Instr_Cycle = -1;
-
-			cpu_Stop_Check = false;
 		}
 		else
 		{

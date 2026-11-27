@@ -25,9 +25,9 @@ namespace BizHawk.Client.Common
 		public static readonly IReadOnlyList<(string[] AppliesTo, string[] CoreNames)> CorePickerUIData = new List<(string[], string[])>
 		{
 			(new[] { VSystemID.Raw.GB, VSystemID.Raw.GBC },
-				new[] { CoreNames.GBHawk, CoreNames.SubGBHawk }),
+				new[] { CoreNames.GBHawk, CoreNames.SubGBHawk, CoreNames.GBCHawk, CoreNames.SubGBCHawk }),
 			(new[] { VSystemID.Raw.GBL },
-				new[] { CoreNames.GBHawkLink, CoreNames.GBHawkLink4x }),
+				new[] { CoreNames.GBHawkLink, CoreNames.GBCHawkLink }),
 			(new[] { VSystemID.Raw.GBA },
 				new[] { CoreNames.GBAHawk, CoreNames.SubGBAHawk }),
 			(new[] { VSystemID.Raw.GBAL },
@@ -283,8 +283,8 @@ namespace BizHawk.Client.Common
 		public Dictionary<string, string> PreferredCores = new()
 		{
 			[VSystemID.Raw.GB] = CoreNames.GBHawk,
-			[VSystemID.Raw.GBC] = CoreNames.GBHawk,
-			[VSystemID.Raw.GBL] = CoreNames.GBHawkLink,
+			[VSystemID.Raw.GBC] = CoreNames.GBCHawk,
+			[VSystemID.Raw.GBL] = CoreNames.GBCHawkLink,
 			[VSystemID.Raw.GBA] = CoreNames.GBAHawk,
 			[VSystemID.Raw.GBAL] = CoreNames.GBAHawkLink,
 			[VSystemID.Raw.NES] = CoreNames.NESHawk2,

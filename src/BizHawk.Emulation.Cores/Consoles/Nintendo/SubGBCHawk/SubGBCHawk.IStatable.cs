@@ -1,0 +1,38 @@
+﻿using System.IO;
+
+using BizHawk.Common;
+using BizHawk.Emulation.Common;
+
+namespace BizHawk.Emulation.Cores.Nintendo.SubGBCHawk
+{
+	public partial class SubGBCHawk : IStatable
+	{
+		private readonly IStatable _gbStatable;
+
+		public void SaveStateBinary(BinaryWriter bw)
+		{
+			_gbStatable.SaveStateBinary(bw);
+			// other variables
+			SyncState(new Serializer(bw));
+		}
+
+		public void LoadStateBinary(BinaryReader br)
+		{
+			_gbStatable.LoadStateBinary(br);
+			// other variables
+			SyncState(new Serializer(br));
+		}
+
+		private void SyncState(Serializer ser)
+		{
+			ser.Sync("Lag", ref _lagCount);
+			ser.Sync("Frame", ref _frame);
+			ser.Sync("IsLag", ref _isLag);
+			ser.Sync(nameof(pass_a_frame), ref pass_a_frame);
+			ser.Sync(nameof(reset_frame), ref reset_frame);
+			ser.Sync(nameof(pass_new_input), ref pass_new_input);
+			ser.Sync(nameof(input_cycle), ref input_cycle);
+			ser.Sync(nameof(input_cycle_int), ref input_cycle_int);
+		}
+	}
+}

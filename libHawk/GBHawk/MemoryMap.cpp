@@ -7,7 +7,6 @@
 #include "Memory.h"
 #include "GB_System.h"
 #include "Mappers.h"
-#include "PPUs.h"
 
 /*
 	$FFFF          Interrupt Enable Flag
@@ -127,12 +126,6 @@ namespace GBHawk
 
 			if (addr >= 0x200)
 			{
-				// return Either BIOS ROM or Game ROM
-				if (((GB_bios_register & 0x1) == 0) && Is_GBC)
-				{
-					return BIOS[addr]; // Return BIOS
-				}
-
 				bus_value = mapper_pntr->ReadMemoryLow(addr);
 				bus_access_time = Cycle_Count;
 				return bus_value;
@@ -145,44 +138,37 @@ namespace GBHawk
 
 		if (addr < 0xA000)
 		{
-			if (ppu_pntr->VRAM_access_read)
+			if (VRAM_access_read)
 			{
 				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 			}
 
-			if (!HDMA_Transfer)
+			if (pixel_counter == 160)
 			{
-				if (ppu_pntr->pixel_counter == 160)
+				/*
+				Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + bus_address + " " +
+					VRAM[bus_address] + " " + read_case_prev + " " + (internal_cycle & 1) + " " +
+					(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);					
+				*/
+
+				// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
+				if ((read_case_prev == 0) || (read_case_prev == 4))
 				{
-					/*
-					Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + ppu_pntr->bus_address + " " +
-						VRAM[ppu_pntr->bus_address] + " " + ppu_pntr->read_case_prev + " " + (ppu_pntr->internal_cycle & 1) + " " +
-						(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);					
-					*/
-
-					// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
-					if ((ppu_pntr->read_case_prev == 0) || (ppu_pntr->read_case_prev == 4))
+					if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
 					{
-						if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
-						{
-							return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
-						}
-						return VRAM[ppu_pntr->bus_address];
+						return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
 					}
-
-					// TODO: What is returned when the ppu isn't accessing VRAM?
-					//if ((ppu_pntr->read_case_prev == 3) || (ppu_pntr->read_case_prev == 7))
-					//{
-					//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
-					//}
-					return VRAM[ppu_pntr->bus_address];
+					return VRAM[bus_address];
 				}
-				return 0xFF;
+
+				// TODO: What is returned when the ppu isn't accessing VRAM?
+				//if ((read_case_prev == 3) || (read_case_prev == 7))
+				//{
+				//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+				//}
+				return VRAM[bus_address];
 			}
-			else
-			{
-				return 0xFF;
-			}
+			return 0xFF;
 		}
 
 		if (addr < 0xC000)
@@ -203,7 +189,7 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -212,26 +198,13 @@ namespace GBHawk
 			}
 
 			// unmapped memory, return depends on console and rendering
-			if (Is_GBC_GBA)
+			// return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
+			if (OAM_access_read)
 			{
-				// in GBA mode, it returns a reflection of the address somehow
-				if (ppu_pntr->OAM_access_read)
-				{
-					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
-				}
-
-				return 0xFF;
+				return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 			}
-			else
-			{
-				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
-				if (ppu_pntr->OAM_access_read)
-				{
-					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
-				}
 
-				return 0xFF;
-			}
+			return 0xFF;
 		}
 
 		if (addr < 0xFF80)
@@ -318,19 +291,12 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_write) { OAM[addr - 0xFE00] = value; }
+				if (OAM_access_write) { OAM[addr - 0xFE00] = value; }
 			}
 			// unmapped memory writes depend on console		
 			else
 			{
-				if (Is_GBC_GBA)
-				{
-					// in GBA mode, writes have no effect as far as tested, might need more thorough tests
-				}
-				else
-				{
-					// otherwise it's revision dependent. Assume CGB-E is same as GBA mode consoles for now
-				}
+				// otherwise it's revision dependent. Assume no effect for now
 			}
 		}
 		else if (addr >= 0xC000)
@@ -347,7 +313,7 @@ namespace GBHawk
 		}
 		else if (addr >= 0x8000)
 		{
-			if (ppu_pntr->VRAM_access_write)
+			if (VRAM_access_write)
 			{
 				VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)] = value;
 			}
@@ -377,16 +343,9 @@ namespace GBHawk
 				}
 				else if (addr >= 0x200)
 				{
-					if (((GB_bios_register & 0x1) == 0) && Is_GBC)
-					{
-						// No Writing to BIOS
-					}
-					else
-					{
-						bus_value = value;
-						bus_access_time = Cycle_Count;
-						mapper_pntr->WriteMemory(addr, value);
-					}
+					bus_value = value;
+					bus_access_time = Cycle_Count;
+					mapper_pntr->WriteMemory(addr, value);
 				}
 				else
 				{
@@ -481,12 +440,6 @@ namespace GBHawk
 
 			if (addr >= 0x200)
 			{
-				// return Either BIOS ROM or Game ROM
-				if (((GB_bios_register & 0x1) == 0) && Is_GBC)
-				{
-					return BIOS[addr]; // Return BIOS
-				}
-
 				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
@@ -495,7 +448,7 @@ namespace GBHawk
 
 		if (addr < 0xA000)
 		{
-			if (ppu_pntr->VRAM_access_read)
+			if (VRAM_access_read)
 			{
 				return VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)];
 			}
@@ -518,7 +471,7 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
-				if (ppu_pntr->OAM_access_read)
+				if (OAM_access_read)
 				{
 					return OAM[addr - 0xFE00];
 				}
@@ -527,26 +480,14 @@ namespace GBHawk
 			}
 
 			// unmapped memory, return depends on console and rendering
-			if (Is_GBC_GBA)
-			{
-				// in GBA mode, it returns a reflection of the address somehow
-				if (ppu_pntr->OAM_access_read)
-				{
-					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
-				}
 
-				return 0xFF;
-			}
-			else
+			// the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
+			if (OAM_access_read)
 			{
-				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
-				if (ppu_pntr->OAM_access_read)
-				{
-					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
-				}
-
-				return 0xFF;
+				return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
 			}
+
+			return 0xFF;
 		}
 
 		if (addr < 0xFF80)

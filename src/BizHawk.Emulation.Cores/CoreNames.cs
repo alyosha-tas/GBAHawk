@@ -14,9 +14,11 @@ namespace BizHawk.Emulation.Cores
 		public const string GBAHawk = "GBAHawk";
 		public const string GBAHawkLink = "GBAHawkLink";
 		public const string GBHawk = "GBHawk";
+		public const string GBCHawk = "GBCHawk";
 		public const string GBHawkLink = "GBHawkLink";
-		public const string GBHawkLink4x = "GBHawkLink4x";
+		public const string GBCHawkLink = "GBCHawkLink";
 		public const string SubGBHawk = "SubGBHawk";
+		public const string SubGBCHawk = "SubGBCHawk";
 		public const string SubGBAHawk = "SubGBAHawk";
 		public const string SNESHawk = "SNESHawk";
 	}

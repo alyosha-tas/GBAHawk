@@ -142,10 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
-    <ClInclude Include="GBC_GB_PPU.h" />
-    <ClInclude Include="GBC_PPU.h" />
     <ClInclude Include="GBHawk.h" />
-    <ClInclude Include="GB_PPU.h" />
     <ClInclude Include="GB_System.h" />
     <ClInclude Include="LinkCore.h" />
     <ClInclude Include="Mappers.h" />
@@ -166,7 +163,6 @@
     <ClInclude Include="Mappers\Mapper_Sachen_MMC2.h" />
     <ClInclude Include="Mappers\Mapper_TAMA5.h" />
     <ClInclude Include="Mappers\Mapper_WisdomTree.h" />
-    <ClInclude Include="PPUs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />

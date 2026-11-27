@@ -46,15 +46,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			SyncSettings = (GBHawkSyncSettings)syncSettings ?? new GBHawkSyncSettings();
 
 			is_subframe_core = subframe;
-
-			Is_GBC = SyncSettings.ConsoleMode != GBHawkSyncSettings.ConsoleModeType.GB;
+			Is_GB_in_GBC = false;
+			Is_GBC = false;
 
 			Buffer.BlockCopy(rom, 0x100, header, 0, 0x50);
-
-			if ((header[0x43] != 0x80) && (header[0x43] != 0xC0))
-			{
-				Is_GB_in_GBC = true; // for movie files
-			}
 
 			var romHashSHA1 = SHA1Checksum.ComputePrefixedHex(rom);
 			Console.WriteLine(romHashSHA1);
@@ -125,23 +120,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				minutes_upper = (minutes >> 8) & 0xF;
 			}
 
-			if (Is_GBC)
-			{
-				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GBC", "World"), "BIOS Not Found, Cannot Load");
-			}
-			else
-			{
-				BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
-			}
-
-			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-			if (SyncSettings.GBACGB && Is_GBC)
-			{
-				for (int i = 0; i < 13; i++)
-				{
-					BIOS[i + 0xF3] = (byte)((GBA_override[i] + BIOS[i + 0xF3]) & 0xFF);
-				}
-			}
+			BIOS = comm.CoreFileProvider.GetFirmwareOrThrow(new("GB", "World"), "BIOS Not Found, Cannot Load");
 
 			GB_Pntr = LibGBHawk.GB_create();
 
@@ -149,7 +128,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 			LibGBHawk.GB_setmessagecallback(GB_Pntr, GB_message);
 
-			LibGBHawk.GB_load_bios(GB_Pntr, BIOS, Is_GBC, SyncSettings.GBACGB);
+			LibGBHawk.GB_load_bios(GB_Pntr, BIOS);
 
 			LibGBHawk.GB_load(GB_Pntr, rom, (uint)rom.Length, mppr_num);
 

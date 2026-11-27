@@ -79,11 +79,11 @@ namespace GBHawk
 
 		uint8_t x4_buffer[0x400 * 2] = { };
 
-		void Load_BIOS(uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
+		void Load_BIOS(uint8_t* bios, uint32_t console_num)
 		{
 			if (console_num < Num_ROMs)
 			{
-				GBL[console_num].Load_BIOS(bios, gbcflag, gbc_gba_flag);
+				GBL[console_num].Load_BIOS(bios);
 			}
 		}
 
@@ -238,7 +238,7 @@ namespace GBHawk
 
 			for (int i = 0; i < Num_ROMs; i++)
 			{
-				if (GBL[i].GB.ppu_pntr->clear_screen)
+				if (GBL[i].GB.clear_screen)
 				{
 					GBL[i].GB.clear_screen_func();
 				}
@@ -288,33 +288,6 @@ namespace GBHawk
 				{
 					do_Opp_Next = false;
 				}
-
-				// do IR transfer
-				if (GBL[0].GB.IR_write > 0)
-				{
-					GBL[0].GB.IR_write--;
-					if (GBL[0].GB.IR_write == 0)
-					{
-						GBL[1].GB.IR_receive = GBL[0].GB.IR_signal;
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-					}
-				}
-
-				if (GBL[1].GB.IR_write > 0)
-				{
-					GBL[1].GB.IR_write--;
-					if (GBL[1].GB.IR_write == 0)
-					{
-						GBL[0].GB.IR_receive = GBL[1].GB.IR_signal;
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-					}
-				}
 			}
 		}
 
@@ -359,33 +332,6 @@ namespace GBHawk
 				{
 					do_Opp_Next = false;
 				}
-
-				// do IR transfer
-				if (GBL[0].GB.IR_write > 0)
-				{
-					GBL[0].GB.IR_write--;
-					if (GBL[0].GB.IR_write == 0)
-					{
-						GBL[2].GB.IR_receive = GBL[0].GB.IR_signal;
-						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
-						else { GBL[2].GB.IR_reg &= 0xFD; }
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-					}
-				}
-
-				if (GBL[2].GB.IR_write > 0)
-				{
-					GBL[2].GB.IR_write--;
-					if (GBL[2].GB.IR_write == 0)
-					{
-						GBL[0].GB.IR_receive = GBL[2].GB.IR_signal;
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
-						else { GBL[2].GB.IR_reg &= 0xFD; }
-					}
-				}
 			}
 			else if (BC_Connected)
 			{
@@ -426,33 +372,6 @@ namespace GBHawk
 				{
 					do_Opp_Next = false;
 				}
-
-				// do IR transfer
-				if (GBL[2].GB.IR_write > 0)
-				{
-					GBL[2].GB.IR_write--;
-					if (GBL[2].GB.IR_write == 0)
-					{
-						GBL[1].GB.IR_receive = GBL[2].GB.IR_signal;
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
-						else { GBL[2].GB.IR_reg &= 0xFD; }
-					}
-				}
-
-				if (GBL[1].GB.IR_write > 0)
-				{
-					GBL[1].GB.IR_write--;
-					if (GBL[1].GB.IR_write == 0)
-					{
-						GBL[2].GB.IR_receive = GBL[1].GB.IR_signal;
-						if ((GBL[2].GB.IR_self & GBL[2].GB.IR_receive) == 2) { GBL[2].GB.IR_reg |= 2; }
-						else { GBL[2].GB.IR_reg &= 0xFD; }
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-					}
-				}
 			}
 			else if (AB_Connected)
 			{
@@ -492,33 +411,6 @@ namespace GBHawk
 				else
 				{
 					do_Opp_Next = false;
-				}
-
-				// do IR transfer
-				if (GBL[1].GB.IR_write > 0)
-				{
-					GBL[1].GB.IR_write--;
-					if (GBL[1].GB.IR_write == 0)
-					{
-						GBL[0].GB.IR_receive = GBL[1].GB.IR_signal;
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-					}
-				}
-
-				if (GBL[0].GB.IR_write > 0)
-				{
-					GBL[0].GB.IR_write--;
-					if (GBL[0].GB.IR_write == 0)
-					{
-						GBL[1].GB.IR_receive = GBL[0].GB.IR_signal;
-						if ((GBL[1].GB.IR_self & GBL[1].GB.IR_receive) == 2) { GBL[1].GB.IR_reg |= 2; }
-						else { GBL[1].GB.IR_reg &= 0xFD; }
-						if ((GBL[0].GB.IR_self & GBL[0].GB.IR_receive) == 2) { GBL[0].GB.IR_reg |= 2; }
-						else { GBL[0].GB.IR_reg &= 0xFD; }
-					}
 				}
 			}
 		}

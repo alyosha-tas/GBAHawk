@@ -16,6 +16,8 @@ using BizHawk.Emulation.Cores.Nintendo.GBA;
 using BizHawk.Emulation.Cores.Nintendo.SubGBA;
 using BizHawk.Emulation.Cores.Nintendo.GBHawk;
 using BizHawk.Emulation.Cores.Nintendo.SubGBHawk;
+using BizHawk.Emulation.Cores.Nintendo.GBCHawk;
+using BizHawk.Emulation.Cores.Nintendo.SubGBCHawk;
 
 namespace BizHawk.Client.Common
 {
@@ -338,6 +340,24 @@ namespace BizHawk.Client.Common
 						cip.Roms[0].RomData,
 						(dynamic)cip.FetchSettings(typeof(SubGBHawk), typeof(GBHawk.GBHawkSettings)),
 						(dynamic)cip.FetchSyncSettings(typeof(SubGBHawk), typeof(GBHawk.GBHawkSyncSettings)));
+				}
+				else if (UseCoreName == "GBCHawk")
+				{
+					nextEmulator = new GBCHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(GBCHawk), typeof(GBCHawk.GBCHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(GBCHawk), typeof(GBCHawk.GBCHawkSyncSettings)));
+				}
+				else if (UseCoreName == "SubGBCHawk")
+				{
+					nextEmulator = new SubGBCHawk(
+						cip.Comm,
+						cip.Game,
+						cip.Roms[0].RomData,
+						(dynamic)cip.FetchSettings(typeof(SubGBCHawk), typeof(GBCHawk.GBCHawkSettings)),
+						(dynamic)cip.FetchSyncSettings(typeof(SubGBCHawk), typeof(GBCHawk.GBCHawkSyncSettings)));
 				}
 			}
 			else if (game.System == "GBA")

@@ -12,7 +12,6 @@
 #include "GB_System.h"
 #include "Memory.h"
 #include "Mappers.h"
-#include "PPUs.h"
 
 // mapper list
 #include "Mappers/Mapper_Camera.h"
@@ -33,10 +32,6 @@
 #include "Mappers/Mapper_TAMA5.h"
 #include "Mappers/Mapper_WisdomTree.h"
 
-#include "GB_PPU.h"
-#include "GBC_PPU.h"
-#include "GBC_GB_PPU.h"
-
 using namespace std;
 
 namespace GBHawk
@@ -47,7 +42,6 @@ namespace GBHawk
 		GBCore() 
 		{
 			Mapper = nullptr;
-			PPU = nullptr;
 			GB.MessageCallback = nullptr;
 			GB.RumbleCallback = nullptr;
 			GB.TraceCallback = nullptr;
@@ -57,31 +51,12 @@ namespace GBHawk
 		GB_System GB;
 
 		Mappers* Mapper;
-		PPUs* PPU;
 
 		uint32_t Console_ID = 5;
 
-		void Load_BIOS(uint8_t* bios, bool cgb_flag, bool cgb_gba_flag)
+		void Load_BIOS(uint8_t* bios)
 		{
-			if (cgb_flag)
-			{
-				std::memcpy(GB.BIOS, bios, 0x900);
-			}
-			else
-			{
-				std::memcpy(GB.BIOS, bios, 0x100);
-			}
-
-			GB.Is_GBC = cgb_flag;
-
-			GB.Is_GBC_GBA = cgb_flag && cgb_gba_flag;
-
-			// set up IR register to off state
-			if (GB.Is_GBC) { GB.IR_mask = 0; }
-			else { GB.IR_mask = 2; }
-
-			// Here we modify the BIOS if GBA mode is set (credit to ExtraTricky)
-			if (GB.Is_GBC && GB.Is_GBC_GBA) { GB.IR_mask = 2; }
+			std::memcpy(GB.BIOS, bios, 0x100);
 		}
 
 		void Load_ROM(uint8_t* ext_rom, uint32_t ext_rom_size, uint32_t mapper)
@@ -188,85 +163,6 @@ namespace GBHawk
 			Mapper->RumbleCallback = GB.RumbleCallback;
 			Mapper->MessageCallback = GB.MessageCallback;
 
-			// repeat for the ppu
-			if (GB.Is_GBC)
-			{
-				if ((GB.ROM[0x143] != 0x80) && (GB.ROM[0x143] != 0xC0))
-				{
-					PPU = new GBC_GB_PPU();
-				}
-				else
-				{
-					PPU = new GBC_PPU();
-				}
-			}
-			else
-			{
-				PPU = new GB_PPU();
-			}
-
-			GB.ppu_pntr = &PPU[0];
-
-			PPU->sys_pntr = &GB;
-
-			// set up all the pointers
-			PPU->Core_cpu_FlagI = &GB.cpu_FlagI;
-
-			PPU->Core_GBC_compat = &GB.GBC_Compat;
-
-			PPU->Core_Double_Speed = &GB.Double_Speed;
-
-			PPU->Core_CPU_Halted = &GB.cpu_Halted;
-
-			PPU->Core_CPU_Stopped = &GB.cpu_Stopped;
-
-			PPU->Core_HDMA_Transfer = &GB.HDMA_Transfer;
-
-			PPU->Core_REG_FFFF = &GB.REG_FFFF;
-
-			PPU->Core_REG_FF0F = &GB.REG_FF0F;
-
-			PPU->Core_Bus_Value = &GB.bus_value;
-
-			PPU->Core_VRAM = &GB.VRAM[0];
-
-			PPU->Core_VRAM_Bank = &GB.VRAM_Bank;
-
-			PPU->Core_OAM = &GB.OAM[0];
-
-			PPU->Core_Clear_Counter = &GB.clear_counter;
-
-			PPU->Core_Color_Palette = &GB.color_palette[0];
-
-			PPU->Core_Video_Buffer = &GB.video_buffer[0];
-
-			PPU->Core_Cycle_Count = &GB.Cycle_Count;
-
-			PPU->Core_Instruction_Start = &GB.cpu_Instruction_Start;
-
-			PPU->Core_Message_String = &GB.Message_String;
-
-			PPU->OnVBlank = &GB_System::On_VBlank;
-
-			PPU->Core_HDMA_Start_Stop = &GB_System::HDMA_start_stop;
-
-			PPU->MessageCallback = GB.MessageCallback;
-
-			PPU->Core_DMA_OAM_Access = &GB.dma_OAM_Access;
-
-			PPU->Core_ReadMemory = &GB_System::Read_Memory;
-
-			PPU->Core_RegPC = &GB_System::cpu_RegPCget;
-
-			PPU->Reset();
-
-			// finally link core pointers
-			GB.ppu_LY_pntr = &PPU->LY;
-			GB.PPU_Pal_Change_Blocked = &PPU->pal_change_blocked;
-
-			GB.PPU_Read_Regs = &PPUs::ReadReg;
-			GB.PPU_Write_Regs = &PPUs::WriteReg;
-
 			if (GB.MessageCallback)
 			{
 				GB.Message_String = "Initialization Successful";
@@ -309,17 +205,17 @@ namespace GBHawk
 		{
 			if (palette)
 			{
-				GB.color_palette[0] = GB.color_palette_BW[0];
-				GB.color_palette[1] = GB.color_palette_BW[1];
-				GB.color_palette[2] = GB.color_palette_BW[2];
-				GB.color_palette[3] = GB.color_palette_BW[3];
+				GB.Color_Palette[0] = GB.color_palette_BW[0];
+				GB.Color_Palette[1] = GB.color_palette_BW[1];
+				GB.Color_Palette[2] = GB.color_palette_BW[2];
+				GB.Color_Palette[3] = GB.color_palette_BW[3];
 			}
 			else
 			{
-				GB.color_palette[0] = GB.color_palette_Gr[0];
-				GB.color_palette[1] = GB.color_palette_Gr[1];
-				GB.color_palette[2] = GB.color_palette_Gr[2];
-				GB.color_palette[3] = GB.color_palette_Gr[3];
+				GB.Color_Palette[0] = GB.color_palette_Gr[0];
+				GB.Color_Palette[1] = GB.color_palette_Gr[1];
+				GB.Color_Palette[2] = GB.color_palette_Gr[2];
+				GB.Color_Palette[3] = GB.color_palette_Gr[3];
 			}
 		}
 
@@ -331,8 +227,7 @@ namespace GBHawk
 		void Hard_Reset() 
 		{
 			Mapper->Reset();
-			PPU->Reset();
-			
+
 			GB.System_Reset();
 		}
 
@@ -388,7 +283,7 @@ namespace GBHawk
 				// turn off the screen so the image doesnt persist
 				// but don't turn off blank_frame yet, it still needs to be true until the next VBL
 				// GBC games need to clear slow enough that games that turn the screen off briefly for cinematics still look smooth
-				if (GB.ppu_pntr->clear_screen)
+				if (GB.clear_screen)
 				{
 					GB.clear_screen_func();
 				}
@@ -410,7 +305,7 @@ namespace GBHawk
 
 		void GetVideo(uint32_t* dest) 
 		{
-			uint32_t* src = GB.frame_buffer;
+			uint32_t* src = GB.Frame_Buffer;
 			uint32_t* dst = dest;
 
 			std::memcpy(dst, src, sizeof (uint32_t) * 160 * 144);
@@ -418,7 +313,7 @@ namespace GBHawk
 			// blank the screen
 			for (int i = 0; i < 160 * 144; i++)
 			{
-				GB.frame_buffer[i] = 0xFFF8F8F8;
+				GB.Frame_Buffer[i] = 0xFFF8F8F8;
 			}
 		}
 
@@ -459,7 +354,6 @@ namespace GBHawk
 		{	
 			saver = GB.SaveState(saver);
 			saver = Mapper->SaveState(saver);
-			saver = PPU->SaveState(saver);
 
 			return saver;
 		}
@@ -468,7 +362,6 @@ namespace GBHawk
 		{
 			loader = GB.LoadState(loader);
 			loader = Mapper->LoadState(loader);
-			loader = PPU->LoadState(loader);
 
 			return loader;
 		}
@@ -652,35 +545,22 @@ namespace GBHawk
 			switch (sel)
 			{
 				case 0:
-					if (GB.Is_GBC)
+					for (int i = 0; i < 4; i++)
 					{
-						return PPU->BG_palette;
+						GB.ppu_GB_BG_Pal[i] = GB.Color_Palette[(GB.BGP >> (i * 2)) & 3];
 					}
-					else
-					{
-						for (int i = 0; i < 4; i++)
-						{
-							GB.ppu_GB_BG_Pal[i] = GB.color_palette[(PPU->BGP >> (i * 2)) & 3];
-						}
 
-						return GB.ppu_GB_BG_Pal;
-					}
+					return GB.ppu_GB_BG_Pal;
+
 					break;
 				case 1:
-					if (GB.Is_GBC)
+					for (int i = 0; i < 4; i++)
 					{
-						return PPU->OBJ_palette;
+						GB.ppu_GB_SPR_Pal[i] = GB.Color_Palette[(GB.obj_pal_0 >> (i * 2)) & 3];
+						GB.ppu_GB_SPR_Pal[i + 4] = GB.Color_Palette[(GB.obj_pal_1 >> (i * 2)) & 3];
 					}
-					else
-					{
-						for (int i = 0; i < 4; i++)
-						{
-							GB.ppu_GB_SPR_Pal[i] = GB.color_palette[(PPU->obj_pal_0 >> (i * 2)) & 3];
-							GB.ppu_GB_SPR_Pal[i + 4] = GB.color_palette[(PPU->obj_pal_1 >> (i * 2)) & 3];
-						}
 
-						return GB.ppu_GB_SPR_Pal;
-					}
+					return GB.ppu_GB_SPR_Pal;
 					break;
 				case 2: return GB.OAM; break;
 				case 3: return GB.VRAM; break;
@@ -691,16 +571,16 @@ namespace GBHawk
 
 		void SetScanlineCallback(void (*callback)(uint8_t), int sl)
 		{
-			PPU->ScanlineCallback = callback;
+			GB.ScanlineCallback = callback;
 
-			PPU->ScanlineCallbackLine = sl;
+			GB.ScanlineCallbackLine = sl;
 		}
 
 		void ExecuteScanlineCallback()
 		{
-			if (PPU->ScanlineCallback)
+			if (GB.ScanlineCallback)
 			{
-				PPU->ScanlineCallback(PPU->LCDC);
+				GB.ScanlineCallback(GB.LCDC);
 			}
 		}
 	};

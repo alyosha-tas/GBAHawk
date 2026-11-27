@@ -24,15 +24,14 @@ GBHawk_EXPORT void GB_destroy(GBCore* p)
 {
 	delete p->GB.Cart_RAM;
 	delete p->GB.mapper_pntr;
-	delete p->GB.ppu_pntr;
 
 	std::free(p);
 }
 
 // load bios and basic into the core
-GBHawk_EXPORT void GB_load_bios(GBCore* p, uint8_t* bios, bool cgb_flag, bool cgb_gba_flag)
+GBHawk_EXPORT void GB_load_bios(GBCore* p, uint8_t* bios)
 {
-	p->Load_BIOS(bios, cgb_flag, cgb_gba_flag);
+	p->Load_BIOS(bios);
 }
 
 // load a rom into the core
@@ -265,7 +264,6 @@ GBHawk_EXPORT void GBLink_destroy(GBLinkCore* p)
 		{
 			delete p->GBL[i].GB.Cart_RAM;
 			delete p->GBL[i].GB.mapper_pntr;
-			delete p->GBL[i].GB.ppu_pntr;
 		}
 
 		delete[] p->GBL;
@@ -275,9 +273,9 @@ GBHawk_EXPORT void GBLink_destroy(GBLinkCore* p)
 }
 
 // load bios and basic into the core
-GBHawk_EXPORT void GBLink_load_bios(GBLinkCore* p, uint8_t* bios, bool gbcflag, bool gbc_gba_flag, uint32_t console_num)
+GBHawk_EXPORT void GBLink_load_bios(GBLinkCore* p, uint8_t* bios, uint32_t console_num)
 {
-	p->Load_BIOS(bios, gbcflag, gbc_gba_flag, console_num);
+	p->Load_BIOS(bios, console_num);
 }
 
 // load a rom into the core
