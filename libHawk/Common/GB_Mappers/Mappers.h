@@ -13,7 +13,7 @@
 
 using namespace std;
 
-namespace GBHawk
+namespace GB_Mappers
 {
 	class Mappers
 	{

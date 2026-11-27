@@ -5,17 +5,16 @@
 #include <string>
 #include <cmath>
 
-#include "../Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 using namespace std;
 
-namespace GBHawk
+namespace GB_Mappers
 {
-	class Mapper_MBC1Multi : public Mappers
+	class Mapper_MBC5 : public Mappers
 	{
 	public:
 		bool RAM_enable;
-		bool sel_mode;
 		
 		uint32_t ROM_bank;
 		uint32_t RAM_bank;
@@ -27,8 +26,12 @@ namespace GBHawk
 			ROM_bank = 1;
 			RAM_bank = 0;
 			RAM_enable = false;
-			sel_mode = false;
-			ROM_mask = (*Core_ROM_Length / 0x4000 * 2) - 1; // due to how mapping works, we want a 1 bit higher mask
+			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
+
+			// some games have sizes that result in a degenerate ROM, account for it here
+			if (ROM_mask > 4) { ROM_mask |= 3; }
+			if (ROM_mask > 0x100) { ROM_mask |= 0xFF; }
+
 			RAM_mask = 0;
 			if (Core_Cart_RAM != nullptr)
 			{
@@ -41,19 +44,11 @@ namespace GBHawk
 		{
 			if (addr < 0x4000)
 			{
-				// lowest bank is fixed, but is still effected by mode
-				if (sel_mode)
-				{
-					return Core_ROM[((ROM_bank & 0x60) >> 1) * 0x4000 + addr];
-				}
-				else
-				{
-					return Core_ROM[addr];
-				}
+				return Core_ROM[addr];
 			}
 			else
 			{
-				return Core_ROM[(addr - 0x4000) + (((ROM_bank & 0x60) >> 1) | (ROM_bank & 0xF)) * 0x4000];			
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
@@ -67,17 +62,13 @@ namespace GBHawk
 				}
 				else
 				{
-					return *Core_Cycle_Count > (*Core_Bus_Access_Time + 8)
-						? (uint8_t)0xFF
-						: *Core_Bus_Value;
+					return 0xFF;
 				}
 
 			}
 			else
 			{
-				return *Core_Cycle_Count > (*Core_Bus_Access_Time + 8)
-					? (uint8_t)0xFF
-					: *Core_Bus_Value;
+				return 0xFF;
 			}
 		}
 
@@ -92,46 +83,28 @@ namespace GBHawk
 			{
 				if (addr < 0x2000)
 				{
-					RAM_enable = ((value & 0xA) == 0xA);
+					RAM_enable = (value & 0xF) == 0xA;
+				}
+				else if (addr < 0x3000)
+				{
+					value &= 0xFF;
+
+					ROM_bank &= 0x100;
+					ROM_bank |= value;
+					ROM_bank &= ROM_mask;
 				}
 				else if (addr < 0x4000)
 				{
-					value &= 0x1F;
+					value &= 1;
 
-					// writing zero gets translated to 1
-					if (value == 0) { value = 1; }
-
-					ROM_bank &= 0xE0;
-					ROM_bank |= value;
+					ROM_bank &= 0xFF;
+					ROM_bank |= (value << 8);
 					ROM_bank &= ROM_mask;
 				}
 				else if (addr < 0x6000)
 				{
-					if (sel_mode && Core_Cart_RAM != nullptr)
-					{
-						RAM_bank = value & 3;
-						RAM_bank &= RAM_mask;
-					}
-					else
-					{
-						ROM_bank &= 0x1F;
-						ROM_bank |= ((value & 3) << 5);
-						ROM_bank &= ROM_mask;
-					}
-				}
-				else
-				{
-					sel_mode = (value & 1) > 0;
-
-					if (sel_mode && Core_Cart_RAM != nullptr)
-					{
-						ROM_bank &= 0x1F;
-						ROM_bank &= ROM_mask;
-					}
-					else
-					{
-						RAM_bank = 0;
-					}
+					RAM_bank = value & 0xF;
+					RAM_bank &= RAM_mask;
 				}
 			}
 			else
@@ -154,7 +127,6 @@ namespace GBHawk
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(RAM_enable, saver);
-			saver = bool_saver(sel_mode, saver);
 			
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(RAM_bank, saver);
@@ -167,7 +139,6 @@ namespace GBHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&RAM_enable, loader);
-			loader = bool_loader(&sel_mode, loader);
 			
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&RAM_bank, loader);

@@ -6,7 +6,7 @@
 
 #include "Memory.h"
 #include "GBC_System.h"
-#include "Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 #include "PPUs.h"
 
 /*

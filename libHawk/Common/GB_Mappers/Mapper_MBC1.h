@@ -5,41 +5,52 @@
 #include <string>
 #include <cmath>
 
-#include "../Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 using namespace std;
 
-namespace GBCHawk
+namespace GB_Mappers
 {
-	class Mapper_Camera : public Mappers
+	class Mapper_MBC1 : public Mappers
 	{
 	public:
 		bool RAM_enable;
-		bool regs_enable;
+		bool sel_mode;
 		
 		uint32_t ROM_bank;
 		uint32_t RAM_bank;
 		uint32_t ROM_mask;
 		uint32_t RAM_mask;
 
-		uint8_t regs[0x80] = { };
-
 		void Reset()
 		{
 			ROM_bank = 1;
 			RAM_bank = 0;
 			RAM_enable = false;
+			sel_mode = false;
 			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
-			RAM_mask = *Core_Cart_RAM_Length / 0x2000 - 1;
-
-			regs_enable = false;
+			// some games have sizes that result in a degenerate ROM, account for it here
+			if (ROM_mask > 4) { ROM_mask |= 3; }
+			
+			RAM_mask = 0;
+			if (Core_Cart_RAM != nullptr)
+			{
+				RAM_mask = *Core_Cart_RAM_Length / 0x2000 - 1;
+				if (*Core_Cart_RAM_Length == 0x800) { RAM_mask = 0; }
+			}
 		}
 
 		uint8_t ReadMemoryLow(uint16_t addr)
 		{
 			if (addr < 0x4000)
 			{
+				// lowest bank is fixed, but is still effected by mode
+				if (sel_mode)
+				{
+					return Core_ROM[(ROM_bank & 0x60) * 0x4000 + addr];
+				}
+
 				return Core_ROM[addr];
 			}
 
@@ -48,22 +59,25 @@ namespace GBCHawk
 
 		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
-			if (regs_enable)
+			if (Core_Cart_RAM != nullptr)
 			{
-				if ((addr & 0x7F) == 0)
+				if (RAM_enable && (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length))
 				{
-					return 0;// regs[0];
+					return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
 				}
-
-				return 0;
+				else
+				{
+					return *Core_Cycle_Count > (*Core_Bus_Access_Time + 8)
+						? (uint8_t) 0xFF
+						: *Core_Bus_Value;
+				}
 			}
-
-			if (/*RAM_enable && */(((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length))
+			else
 			{
-				return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+				return *Core_Cycle_Count > (*Core_Bus_Access_Time + 8)
+					? (uint8_t) 0xFF
+					: *Core_Bus_Value;
 			}
-
-			return 0xFF;
 		}
 
 		uint8_t PeekMemoryLow(uint16_t addr)
@@ -81,30 +95,47 @@ namespace GBCHawk
 				}
 				else if (addr < 0x4000)
 				{
-					ROM_bank = value;
+					value &= 0x1F;
+
+					// writing zero gets translated to 1
+					if (value == 0) { value = 1; }
+
+					ROM_bank &= 0xE0;
+					ROM_bank |= value;
 					ROM_bank &= ROM_mask;
-					//Console.WriteLine(addr + " " + value + " " + ROM_mask + " " + ROM_bank);
 				}
 				else if (addr < 0x6000)
 				{
-					if ((value & 0x10) == 0x10)
+					if (sel_mode && Core_Cart_RAM != nullptr)
 					{
-						regs_enable = true;
+						RAM_bank = value & 3;
+						RAM_bank &= RAM_mask;
 					}
 					else
 					{
-						regs_enable = false;
-						RAM_bank = value & RAM_mask;
+						ROM_bank &= 0x1F;
+						ROM_bank |= ((value & 3) << 5);
+						ROM_bank &= ROM_mask;
+					}
+				}
+				else
+				{
+					sel_mode = (value & 1) > 0;
+
+					if (sel_mode && Core_Cart_RAM != nullptr)
+					{
+						ROM_bank &= 0x1F;
+						ROM_bank &= ROM_mask;
+					}
+					else
+					{
+						RAM_bank = 0;
 					}
 				}
 			}
 			else
 			{
-				if (regs_enable)
-				{
-					regs[(addr & 0x7F)] = (uint8_t)(value & 0x7);
-				}
-				else
+				if (Core_Cart_RAM != nullptr)
 				{
 					if (RAM_enable && (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length))
 					{
@@ -122,14 +153,12 @@ namespace GBCHawk
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(RAM_enable, saver);
-			saver = bool_saver(regs_enable, saver);
-
+			saver = bool_saver(sel_mode, saver);
+			
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(RAM_bank, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(RAM_mask, saver);
-
-			saver = byte_array_saver(regs, saver, 0x80);
 
 			return saver;
 		}
@@ -137,14 +166,12 @@ namespace GBCHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&RAM_enable, loader);
-			loader = bool_loader(&regs_enable, loader);
-
+			loader = bool_loader(&sel_mode, loader);
+			
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&RAM_bank, loader);
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&RAM_mask, loader);
-
-			loader = byte_array_loader(regs, loader, 0x80);
 
 			return loader;
 		}

@@ -6,7 +6,7 @@
 
 #include "Memory.h"
 #include "GB_System.h"
-#include "Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 /*
 	$10000000-$FFFFFFFF    Unmapped
@@ -295,7 +295,6 @@ namespace GBHawk
 				// we exit vblank into mode 0 for 4 cycles
 				// but no hblank interrupt, presumably this only happens transitioning from mode 3 to 0
 				STAT &= 0xFC;
-				glitch_state = true;
 				LY_inc = 1;
 
 				// also the LCD doesn't turn on right away
@@ -402,7 +401,6 @@ namespace GBHawk
 							STAT &= 0xFC;
 							STAT |= 0x03;
 							OAM_INT = false;
-							glitch_state = false;
 
 							OAM_access_write = false;
 							VRAM_access_read = false;

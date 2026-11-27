@@ -13,12 +13,14 @@
 
 #include "../Common/Savestate.h"
 #include "../Common/Common_Ops.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 #ifndef _WIN32
 #define sprintf_s snprintf
 #endif
 
 using namespace std;
+using namespace GB_Mappers;
 
 /*
  * VRAM is arranged as:
@@ -44,14 +46,13 @@ using namespace std;
 
 namespace GBCHawk
 {
-	class Mappers;
 	class PPUs;
 
 	class GBC_System
 	{
 	public:
 		
-		Mappers* mapper_pntr = nullptr;
+		GB_Mappers::Mappers* mapper_pntr = nullptr;
 		PPUs* ppu_pntr = nullptr;
 
 		uint8_t* Cart_RAM = nullptr;

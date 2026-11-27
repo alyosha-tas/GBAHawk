@@ -11,33 +11,33 @@
 
 #include "GBC_System.h"
 #include "Memory.h"
-#include "Mappers.h"
 #include "PPUs.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 // mapper list
-#include "Mappers/Mapper_Camera.h"
-#include "Mappers/Mapper_Default.h"
-#include "Mappers/Mapper_HuC1.h"
-#include "Mappers/Mapper_HuC3.h"
-#include "Mappers/Mapper_MBC1.h"
-#include "Mappers/Mapper_MBC1_Multi.h"
-#include "Mappers/Mapper_MBC2.h"
-#include "Mappers/Mapper_MBC3.h"
-#include "Mappers/Mapper_MBC5.h"
-#include "Mappers/Mapper_MBC6.h"
-#include "Mappers/Mapper_MBC7.h"
-#include "Mappers/Mapper_MMM01.h"
-#include "Mappers/Mapper_RockMan8.h"
-#include "Mappers/Mapper_Sachen_MMC1.h"
-#include "Mappers/Mapper_Sachen_MMC2.h"
-#include "Mappers/Mapper_TAMA5.h"
-#include "Mappers/Mapper_WisdomTree.h"
+#include "../Common/GB_Mappers/Mapper_Camera.h"
+#include "../Common/GB_Mappers/Mapper_Default.h"
+#include "../Common/GB_Mappers/Mapper_HuC1.h"
+#include "../Common/GB_Mappers/Mapper_HuC3.h"
+#include "../Common/GB_Mappers/Mapper_MBC1.h"
+#include "../Common/GB_Mappers/Mapper_MBC1_Multi.h"
+#include "../Common/GB_Mappers/Mapper_MBC2.h"
+#include "../Common/GB_Mappers/Mapper_MBC3.h"
+#include "../Common/GB_Mappers/Mapper_MBC5.h"
+#include "../Common/GB_Mappers/Mapper_MBC6.h"
+#include "../Common/GB_Mappers/Mapper_MBC7.h"
+#include "../Common/GB_Mappers/Mapper_MMM01.h"
+#include "../Common/GB_Mappers/Mapper_RockMan8.h"
+#include "../Common/GB_Mappers/Mapper_Sachen_MMC1.h"
+#include "../Common/GB_Mappers/Mapper_Sachen_MMC2.h"
+#include "../Common/GB_Mappers/Mapper_TAMA5.h"
+#include "../Common/GB_Mappers/Mapper_WisdomTree.h"
 
-#include "GBC_PPU.h"
 #include "GBC_PPU.h"
 #include "GBC_GB_PPU.h"
 
 using namespace std;
+using namespace GB_Mappers;
 
 namespace GBCHawk
 {
@@ -56,7 +56,7 @@ namespace GBCHawk
 
 		GBC_System GBC;
 
-		Mappers* Mapper;
+		GB_Mappers::Mappers* Mapper;
 		PPUs* PPU;
 
 		uint32_t Console_ID = 5;

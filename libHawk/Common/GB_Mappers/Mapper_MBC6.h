@@ -5,11 +5,11 @@
 #include <string>
 #include <cmath>
 
-#include "../Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 using namespace std;
 
-namespace GBHawk
+namespace GB_Mappers
 {
 	class Mapper_MBC6 : public Mappers
 	{

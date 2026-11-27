@@ -17,9 +17,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			{
 				new MemoryDomainDelegate(
 					"RAM",
-					0x8000,
+					0x2000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawk.GB_getram(GB_Pntr, (int)(addr & 0x7FFF), Current_sync_on_vbl),
+					(addr) => LibGBHawk.GB_getram(GB_Pntr, (int)(addr & 0x1FFF), Current_sync_on_vbl),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(
@@ -38,9 +38,9 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 					1),
 				new MemoryDomainDelegate(
 					"VRAM",
-					0x4000,
+					0x2000,
 					MemoryDomain.Endian.Little,
-					(addr) => LibGBHawk.GB_getvram(GB_Pntr, (int)(addr & 0x3FFF), Current_sync_on_vbl),
+					(addr) => LibGBHawk.GB_getvram(GB_Pntr, (int)(addr & 0x1FFF), Current_sync_on_vbl),
 					(addr, value) => { },
 					1),
 				new MemoryDomainDelegate(

@@ -13,12 +13,14 @@
 
 #include "../Common/Savestate.h"
 #include "../Common/Common_Ops.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 #ifndef _WIN32
 #define sprintf_s snprintf
 #endif
 
 using namespace std;
+using namespace GB_Mappers;
 
 /*
  * VRAM is arranged as:
@@ -44,13 +46,11 @@ using namespace std;
 
 namespace GBHawk
 {
-	class Mappers;
-
 	class GB_System
 	{
 	public:
 		
-		Mappers* mapper_pntr = nullptr;
+		GB_Mappers::Mappers* mapper_pntr = nullptr;
 
 		uint8_t* Cart_RAM = nullptr;
 		uint8_t* Cart_RAM_vbls = nullptr;
@@ -101,9 +101,6 @@ namespace GBHawk
 		uint8_t REG_FF0F = 0xE0;
 		// Updating reg FF0F seems to be delayed by one cycle,needs more testing
 		uint8_t REG_FF0F_OLD = 0xE0;
-		
-		// several undocumented GBC Registers
-		uint8_t undoc_6C, undoc_72, undoc_73, undoc_74, undoc_75, undoc_76, undoc_77;
 
 		// other system state
 		bool controller_was_checked;
@@ -113,7 +110,6 @@ namespace GBHawk
 		bool Sync_Domains_VBL;
 
 		uint8_t bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
-		uint8_t VRAM_Bank;
 		uint8_t controller_state;
 		uint8_t multi_core_controller_byte;
 		uint8_t New_Controller;
@@ -123,9 +119,7 @@ namespace GBHawk
 		uint16_t Acc_X_state;
 		uint16_t Acc_Y_state;
 
-		uint32_t IR_write;
 		uint32_t RAM_Bank;
-		uint32_t RAM_Bank_ret;
 		uint32_t controller_delay_cd;
 		uint32_t clear_counter;
 
@@ -136,7 +130,7 @@ namespace GBHawk
 
 		uint8_t RAM[0x8000] = { }; // only 0x2000 available to GB
 		uint8_t ZP_RAM[0x80] = { };
-		uint8_t VRAM[0x4000] = { };
+		uint8_t VRAM[0x4000] = { }; // only 0x2000 available to GB 
 		uint8_t OAM[0xA0] = { };
 
 		uint8_t RAM_vbls[0x8000] = { };
@@ -176,13 +170,9 @@ namespace GBHawk
 			Acc_X_state = 0;
 			Acc_Y_state = 0;
 
-			IR_write = 0;
-
 			GB_bios_register = 0; // bios enable
 
-			VRAM_Bank = 0;
 			RAM_Bank = 1; // RAM bank always starts as 1 (even writing zero still sets 1)
-			RAM_Bank_ret = 0; // return value can still be zero even though the bank itself cannot be
 			delays_to_process = false;
 			controller_delay_cd = 0;
 			clear_counter = 0;
@@ -196,15 +186,6 @@ namespace GBHawk
 			REG_FFFF = 0;
 			REG_FF0F = 0xE0;
 			REG_FF0F_OLD = 0xE0;
-
-			//undocumented registers
-			undoc_6C = 0xFE;
-			undoc_72 = 0;
-			undoc_73 = 0;
-			undoc_74 = 0;
-			undoc_75 = 0x8F;
-			undoc_76 = 0;
-			undoc_77 = 0;
 
 			snd_Reset();
 			ser_Reset();
@@ -670,7 +651,7 @@ namespace GBHawk
 					if (GB_bios_register == 0)
 					{
 						GB_bios_register = value;
-						RAM_Bank = 1; RAM_Bank_ret = 0;
+						RAM_Bank = 1;
 					}
 					break;
 
@@ -704,15 +685,6 @@ namespace GBHawk
 			REG_FFFF = 0;
 			REG_FF0F = 0xE0;
 			REG_FF0F_OLD = 0xE0;
-
-			//undocumented registers
-			undoc_6C = 0xFE;
-			undoc_72 = 0;
-			undoc_73 = 0;
-			undoc_74 = 0;
-			undoc_75 = 0x8F;
-			undoc_76 = 0;
-			undoc_77 = 0;
 		}
 
 		uint8_t Get_Registers_Internal(uint16_t addr)
@@ -5106,7 +5078,6 @@ namespace GBHawk
 		bool blank_frame;
 		bool window_latch;
 		bool was_pre_render;
-		bool glitch_state; // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
 		bool In_Vblank; // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 		// register variables
@@ -5408,7 +5379,6 @@ namespace GBHawk
 			window_x_tile = 0;
 			window_y_tile_inc = 0;
 
-			glitch_state = false;
 			In_Vblank = true;
 		}
 
@@ -6198,7 +6168,6 @@ namespace GBHawk
 			saver = bool_saver(blank_frame, saver);
 			saver = bool_saver(window_latch, saver);
 			saver = bool_saver(was_pre_render, saver);
-			saver = bool_saver(glitch_state, saver); // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
 			saver = bool_saver(In_Vblank, saver); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 			// register variables
@@ -6334,7 +6303,6 @@ namespace GBHawk
 			loader = bool_loader(&blank_frame, loader);
 			loader = bool_loader(&window_latch, loader);
 			loader = bool_loader(&was_pre_render, loader);
-			loader = bool_loader(&glitch_state, loader); // writing to STAT to enable HBL interrupt won't trigger it if the ppu just turned on
 			loader = bool_loader(&In_Vblank, loader); // writes to turn on mode 2 stat interrupts can trigger vbl stat at the start of vbl
 
 			// register variables
@@ -6457,14 +6425,6 @@ namespace GBHawk
 			saver = byte_saver(REG_FF0F, saver);
 			saver = byte_saver(REG_FF0F_OLD, saver);
 
-			saver = byte_saver(undoc_6C, saver);
-			saver = byte_saver(undoc_72, saver);
-			saver = byte_saver(undoc_73, saver);
-			saver = byte_saver(undoc_74, saver);
-			saver = byte_saver(undoc_75, saver);
-			saver = byte_saver(undoc_76, saver);
-			saver = byte_saver(undoc_77, saver);
-
 			saver = bool_saver(controller_was_checked, saver);
 			saver = bool_saver(delays_to_process, saver);
 			saver = bool_saver(DIV_falling_edge, saver);
@@ -6475,7 +6435,6 @@ namespace GBHawk
 			saver = byte_saver(controller_state, saver);
 			saver = byte_saver(multi_core_controller_byte, saver);
 			saver = byte_saver(bus_value, saver);
-			saver = byte_saver(VRAM_Bank, saver);
 
 			saver = short_saver(Acc_X_state, saver);
 			saver = short_saver(Acc_Y_state, saver);
@@ -6483,9 +6442,7 @@ namespace GBHawk
 
 			saver = int_saver(controller_delay_cd, saver);
 			saver = int_saver(clear_counter, saver);
-			saver = int_saver(IR_write, saver);
 			saver = int_saver(RAM_Bank, saver);
-			saver = int_saver(RAM_Bank_ret, saver);
 
 			saver = long_saver(bus_access_time, saver);
 			saver = long_saver(Cycle_Count, saver);
@@ -6533,14 +6490,6 @@ namespace GBHawk
 			loader = byte_loader(&REG_FF0F, loader);
 			loader = byte_loader(&REG_FF0F_OLD, loader);
 
-			loader = byte_loader(&undoc_6C, loader);
-			loader = byte_loader(&undoc_72, loader);
-			loader = byte_loader(&undoc_73, loader);
-			loader = byte_loader(&undoc_74, loader);
-			loader = byte_loader(&undoc_75, loader);
-			loader = byte_loader(&undoc_76, loader);
-			loader = byte_loader(&undoc_77, loader);
-
 			loader = bool_loader(&controller_was_checked, loader);
 			loader = bool_loader(&delays_to_process, loader);
 			loader = bool_loader(&DIV_falling_edge, loader);
@@ -6551,7 +6500,6 @@ namespace GBHawk
 			loader = byte_loader(&controller_state, loader);
 			loader = byte_loader(&multi_core_controller_byte, loader);
 			loader = byte_loader(&bus_value, loader);
-			loader = byte_loader(&VRAM_Bank, loader);
 
 			loader = short_loader(&Acc_X_state, loader);
 			loader = short_loader(&Acc_Y_state, loader);
@@ -6559,9 +6507,7 @@ namespace GBHawk
 
 			loader = int_loader(&controller_delay_cd, loader);
 			loader = int_loader(&clear_counter, loader);
-			loader = int_loader(&IR_write, loader);
 			loader = int_loader(&RAM_Bank, loader);
-			loader = int_loader(&RAM_Bank_ret, loader);
 
 			loader = long_loader(&bus_access_time, loader);
 			loader = long_loader(&Cycle_Count, loader);

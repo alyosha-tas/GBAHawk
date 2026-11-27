@@ -5,13 +5,13 @@
 #include <string>
 #include <cmath>
 
-#include "../Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 using namespace std;
 
-namespace GBHawk
+namespace GB_Mappers
 {
-	class Mapper_Sachen2 : public Mappers
+	class Mapper_Sachen1 : public Mappers
 	{
 	public:
 		// Sachen Bootleg Mapper
@@ -19,15 +19,14 @@ namespace GBHawk
 		// this occurs when the Boot Rom is loading the nintendo logo into VRAM
 		// instead of tracking that in the main memory map where it will just slow things down for no reason
 		// we'll clear the 'locked' flag when the last uint8_t of the logo is read
-		bool locked, locked_GBC, finished;
-		bool reg_access;
-
-		uint16_t addr_last;
-
+	
 		uint32_t ROM_bank;
+		bool locked;
 		uint32_t ROM_mask;
 		uint32_t ROM_bank_mask;
 		uint32_t BASE_ROM_Bank;
+		bool reg_access;
+		uint16_t addr_last;
 		uint32_t counter;
 
 		void Reset()
@@ -35,10 +34,8 @@ namespace GBHawk
 			ROM_bank = 1;
 			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 			BASE_ROM_Bank = 0;
-			ROM_bank_mask = 0;
+			ROM_bank_mask = 0xFF;
 			locked = true;
-			locked_GBC = false;
-			finished = false;
 			reg_access = false;
 			addr_last = 0;
 			counter = 0;
@@ -48,33 +45,32 @@ namespace GBHawk
 		{
 			if (addr < 0x4000)
 			{
-				// header is scrambled
-				if ((addr >= 0x100) && (addr < 0x200))
+				if (locked)
 				{
-					uint32_t temp0 = (addr & 1);
-					uint32_t temp1 = (addr & 2);
-					uint32_t temp4 = (addr & 0x10);
-					uint32_t temp6 = (addr & 0x40);
+					// header is scrambled
+					if ((addr >= 0x100) && (addr < 0x200))
+					{
+						uint32_t temp0 = (addr & 1);
+						uint32_t temp1 = (addr & 2);
+						uint32_t temp4 = (addr & 0x10);
+						uint32_t temp6 = (addr & 0x40);
 
-					temp0 = temp0 << 6;
-					temp1 = temp1 << 3;
-					temp4 = temp4 >> 3;
-					temp6 = temp6 >> 6;
+						temp0 = temp0 << 6;
+						temp1 = temp1 << 3;
+						temp4 = temp4 >> 3;
+						temp6 = temp6 >> 6;
 
-					addr &= 0x1AC;
-					addr |= (uint16_t)(temp0 | temp1 | temp4 | temp6);
+						addr &= 0x1AC;
+						addr |= (uint16_t)(temp0 | temp1 | temp4 | temp6);
+					}
+					addr |= 0x80;
 				}
-
-				if (locked_GBC) { addr |= 0x80; }
 
 				return Core_ROM[addr + BASE_ROM_Bank * 0x4000];
 			}
 			else
 			{
-				uint32_t temp_bank = (ROM_bank & ~ROM_bank_mask) | (ROM_bank_mask & BASE_ROM_Bank);
-				temp_bank &= ROM_mask;
-
-				return Core_ROM[(addr - 0x4000) + temp_bank * 0x4000];
+				return Core_ROM[(addr - 0x4000) + ROM_bank * 0x4000];
 			}
 		}
 
@@ -99,7 +95,7 @@ namespace GBHawk
 			}
 			else if (addr < 0x4000)
 			{
-				ROM_bank = (value > 0) ? (value) : 1;
+				ROM_bank = (value > 0) ? value : 1;
 
 				if ((value & 0x30) == 0x30)
 				{
@@ -131,6 +127,7 @@ namespace GBHawk
 				if (((*Core_Addr_Access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (*Core_Addr_Access >= 0x100))
 				{
 					counter++;
+					//Console.WriteLine(Core.cpu.TotalExecutedCycles);
 				}
 
 				if (*Core_Addr_Access >= 0x100)
@@ -141,37 +138,6 @@ namespace GBHawk
 				if (counter == 0x30)
 				{
 					locked = false;
-					locked_GBC = true;
-					counter = 0;
-				}
-			}
-			else if (locked_GBC)
-			{
-				if (((*Core_Addr_Access & 0x8000) == 0) && ((addr_last & 0x8000) > 0) && (*Core_Addr_Access >= 0x100))
-				{
-					counter++;
-				}
-
-				if (*Core_Addr_Access >= 0x100)
-				{
-					addr_last = *Core_Addr_Access;
-				}
-
-				if (counter == 0x30)
-				{
-					locked_GBC = false;
-					finished = true;
-					//Console.WriteLine("Finished");
-					//Console.WriteLine(Core.cpu.TotalExecutedCycles);
-				}
-
-				// The above condition seems to never be reached as described in the mapper notes
-				// so for now add this one
-
-				if ((*Core_Addr_Access == 0x133) && (counter == 1))
-				{
-					locked_GBC = false;
-					finished = true;
 					//Console.WriteLine("Unlocked");
 				}
 			}
@@ -179,17 +145,13 @@ namespace GBHawk
 
 		uint8_t* SaveState(uint8_t* saver)
 		{
-			saver = bool_saver(locked, saver);
-			saver = bool_saver(finished, saver);
-			saver = bool_saver(locked, saver);
-			saver = bool_saver(reg_access, saver);
-
-			saver = short_saver(addr_last, saver);
-			
 			saver = int_saver(ROM_bank, saver);
+			saver = bool_saver(locked, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(ROM_bank_mask, saver);
 			saver = int_saver(BASE_ROM_Bank, saver);
+			saver = bool_saver(reg_access, saver);
+			saver = short_saver(addr_last, saver);
 			saver = int_saver(counter, saver);
 
 			return saver;
@@ -197,17 +159,13 @@ namespace GBHawk
 
 		uint8_t* LoadState(uint8_t* loader)
 		{
-			loader = bool_loader(&locked, loader);
-			loader = bool_loader(&locked_GBC, loader);
-			loader = bool_loader(&finished, loader);
-			loader = bool_loader(&reg_access, loader);
-
-			loader = short_loader(&addr_last, loader);
-			
 			loader = int_loader(&ROM_bank, loader);
+			loader = bool_loader(&locked, loader);
 			loader = int_loader(&ROM_mask, loader);
 			loader = int_loader(&ROM_bank_mask, loader);
 			loader = int_loader(&BASE_ROM_Bank, loader);
+			loader = bool_loader(&reg_access, loader);
+			loader = short_loader(&addr_last, loader);
 			loader = int_loader(&counter, loader);
 
 			return loader;

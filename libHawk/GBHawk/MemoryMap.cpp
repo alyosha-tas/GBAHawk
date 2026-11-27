@@ -6,7 +6,7 @@
 
 #include "Memory.h"
 #include "GB_System.h"
-#include "Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 /*
 	$FFFF          Interrupt Enable Flag
@@ -26,6 +26,8 @@
 	$0100-$014F    Cartridge Header Area
 	$0000-$00FF    Restart and Interrupt Vectors
 */
+
+using namespace GB_Mappers;
 
 namespace GBHawk
 {
@@ -104,13 +106,6 @@ namespace GBHawk
 
 		if (addr < 0x8000)
 		{
-			if (addr >= 0x900)
-			{
-				bus_value = mapper_pntr->ReadMemoryLow(addr);
-				bus_access_time = Cycle_Count;
-				return bus_value;
-			}
-
 			if (addr < 0x100)
 			{
 				// return Either BIOS ROM or Game ROM
@@ -119,13 +114,6 @@ namespace GBHawk
 					return BIOS[addr]; // Return BIOS
 				}
 
-				bus_value = mapper_pntr->ReadMemoryLow(addr);
-				bus_access_time = Cycle_Count;
-				return bus_value;
-			}
-
-			if (addr >= 0x200)
-			{
 				bus_value = mapper_pntr->ReadMemoryLow(addr);
 				bus_access_time = Cycle_Count;
 				return bus_value;
@@ -140,7 +128,7 @@ namespace GBHawk
 		{
 			if (VRAM_access_read)
 			{
-				return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+				return VRAM[addr - 0x8000];
 			}
 
 			if (pixel_counter == 160)
@@ -148,15 +136,15 @@ namespace GBHawk
 				/*
 				Console.WriteLine("VRAM Glitch " + cpu.TotalExecutedCycles + " " + bus_address + " " +
 					VRAM[bus_address] + " " + read_case_prev + " " + (internal_cycle & 1) + " " +
-					(VRAM_Bank * 0x2000 + (addr - 0x8000)) + " " + VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)]);					
+					(addr - 0x8000) + " " + VRAM[addr - 0x8000]);					
 				*/
 
 				// TODO: This is a complicated case because the PPU is accessing 2 areas of VRAM at the same time.
 				if ((read_case_prev == 0) || (read_case_prev == 4))
 				{
-					if ((VRAM_Bank * 0x2000 + (addr - 0x8000)) < 0x3800)
+					if (((addr - 0x8000)) < 0x3800)
 					{
-						return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+						return VRAM[addr - 0x8000];
 					}
 					return VRAM[bus_address];
 				}
@@ -164,7 +152,7 @@ namespace GBHawk
 				// TODO: What is returned when the ppu isn't accessing VRAM?
 				//if ((read_case_prev == 3) || (read_case_prev == 7))
 				//{
-				//	return VRAM[VRAM_Bank * 0x2000 + (addr - 0x8000)];
+				//	return VRAM[addr - 0x8000];
 				//}
 				return VRAM[bus_address];
 			}
@@ -315,12 +303,12 @@ namespace GBHawk
 		{
 			if (VRAM_access_write)
 			{
-				VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)] = value;
+				VRAM[addr - 0x8000] = value;
 			}
 		}
 		else
 		{
-			if (addr >= 0x900)
+			if (addr >= 0x100)
 			{
 				bus_value = value;
 				bus_access_time = Cycle_Count;
@@ -328,24 +316,9 @@ namespace GBHawk
 			}
 			else
 			{
-				if (addr < 0x100)
+				if ((GB_bios_register & 0x1) == 0)
 				{
-					if ((GB_bios_register & 0x1) == 0)
-					{
-						// No Writing to BIOS
-					}
-					else
-					{
-						bus_value = value;
-						bus_access_time = Cycle_Count;
-						mapper_pntr->WriteMemory(addr, value);
-					}
-				}
-				else if (addr >= 0x200)
-				{
-					bus_value = value;
-					bus_access_time = Cycle_Count;
-					mapper_pntr->WriteMemory(addr, value);
+					// No Writing to BIOS
 				}
 				else
 				{
@@ -422,11 +395,6 @@ namespace GBHawk
 
 		if (addr < 0x8000)
 		{
-			if (addr >= 0x900)
-			{
-				return mapper_pntr->PeekMemoryLow(addr);
-			}
-
 			if (addr < 0x100)
 			{
 				// return Either BIOS ROM or Game ROM
@@ -438,11 +406,6 @@ namespace GBHawk
 				return mapper_pntr->PeekMemoryLow(addr);
 			}
 
-			if (addr >= 0x200)
-			{
-				return mapper_pntr->PeekMemoryLow(addr);
-			}
-
 			return mapper_pntr->PeekMemoryLow(addr);
 		}
 
@@ -450,7 +413,7 @@ namespace GBHawk
 		{
 			if (VRAM_access_read)
 			{
-				return VRAM[(VRAM_Bank * 0x2000) + (addr - 0x8000)];
+				return VRAM[addr - 0x8000];
 			}
 
 			return 0xFF;

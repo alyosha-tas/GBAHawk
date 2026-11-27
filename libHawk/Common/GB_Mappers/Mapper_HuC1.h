@@ -5,16 +5,17 @@
 #include <string>
 #include <cmath>
 
-#include "../Mappers.h"
+#include "../Common/GB_Mappers/Mappers.h"
 
 using namespace std;
 
-namespace GBCHawk
+namespace GB_Mappers
 {
-	class Mapper_MBC5 : public Mappers
+	class Mapper_HuC1 : public Mappers
 	{
 	public:
 		bool RAM_enable;
+		bool IR_signal;
 		
 		uint32_t ROM_bank;
 		uint32_t RAM_bank;
@@ -23,14 +24,13 @@ namespace GBCHawk
 
 		void Reset()
 		{
-			ROM_bank = 1;
+			ROM_bank = 0;
 			RAM_bank = 0;
 			RAM_enable = false;
 			ROM_mask = *Core_ROM_Length / 0x4000 - 1;
 
 			// some games have sizes that result in a degenerate ROM, account for it here
 			if (ROM_mask > 4) { ROM_mask |= 3; }
-			if (ROM_mask > 0x100) { ROM_mask |= 0xFF; }
 
 			RAM_mask = 0;
 			if (Core_Cart_RAM != nullptr)
@@ -54,17 +54,32 @@ namespace GBCHawk
 
 		uint8_t ReadMemoryHigh(uint16_t addr)
 		{
-			if (Core_Cart_RAM != nullptr)
+			if ((addr >= 0xA000) && (addr < 0xC000))
 			{
-				if (RAM_enable && (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length))
+				if (RAM_enable)
 				{
-					return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+					if (Core_Cart_RAM != nullptr)
+					{
+						if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
+						{
+							return Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000];
+						}
+						else
+						{
+							return 0xFF;
+						}
+					}
+					else
+					{
+						return 0xFF;
+					}
 				}
 				else
 				{
-					return 0xFF;
+					// when RAM isn't enabled, reading from this area will return IR sensor reading
+					// for now we'll assume it never sees light (0xC0)
+					return 0xC0;
 				}
-
 			}
 			else
 			{
@@ -83,37 +98,44 @@ namespace GBCHawk
 			{
 				if (addr < 0x2000)
 				{
-					RAM_enable = (value & 0xF) == 0xA;
-				}
-				else if (addr < 0x3000)
-				{
-					value &= 0xFF;
-
-					ROM_bank &= 0x100;
-					ROM_bank |= value;
-					ROM_bank &= ROM_mask;
+					RAM_enable = (value & 0xF) != 0xE;
 				}
 				else if (addr < 0x4000)
 				{
-					value &= 1;
+					value &= 0x3F;
 
-					ROM_bank &= 0xFF;
-					ROM_bank |= (value << 8);
+					ROM_bank &= 0xC0;
+					ROM_bank |= value;
 					ROM_bank &= ROM_mask;
 				}
 				else if (addr < 0x6000)
 				{
-					RAM_bank = value & 0xF;
+					RAM_bank = value & 3;
 					RAM_bank &= RAM_mask;
 				}
 			}
 			else
 			{
-				if (Core_Cart_RAM != nullptr)
+				if (RAM_enable)
 				{
-					if (RAM_enable && (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length))
+					if (Core_Cart_RAM != nullptr)
 					{
-						Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
+						if (((addr - 0xA000) + RAM_bank * 0x2000) < *Core_Cart_RAM_Length)
+						{
+							Core_Cart_RAM[(addr - 0xA000) + RAM_bank * 0x2000] = value;
+						}
+					}
+				}
+				else
+				{
+					// I don't know if other bits here have an effect
+					if (value == 1)
+					{
+						IR_signal = true;
+					}
+					else if (value == 0)
+					{
+						IR_signal = false;
 					}
 				}
 			}
@@ -127,11 +149,13 @@ namespace GBCHawk
 		uint8_t* SaveState(uint8_t* saver)
 		{
 			saver = bool_saver(RAM_enable, saver);
+			saver = bool_saver(IR_signal, saver);
 			
 			saver = int_saver(ROM_bank, saver);
 			saver = int_saver(RAM_bank, saver);
 			saver = int_saver(ROM_mask, saver);
 			saver = int_saver(RAM_mask, saver);
+
 
 			return saver;
 		}
@@ -139,6 +163,7 @@ namespace GBCHawk
 		uint8_t* LoadState(uint8_t* loader)
 		{
 			loader = bool_loader(&RAM_enable, loader);
+			loader = bool_loader(&IR_signal, loader);
 			
 			loader = int_loader(&ROM_bank, loader);
 			loader = int_loader(&RAM_bank, loader);
