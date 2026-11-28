@@ -71,16 +71,24 @@ namespace GBHawk
 				return RAM[(RAM_Bank * 0x1000) + (addr - 0xF000)];
 			}
 
-			if (addr >= 0xFE00 && addr < 0xFEA0)
+			if (addr >= 0xFE00 && addr < 0xFF00)
 			{
-				if (dma_OAM_Access)
+				Corrupt_Addr = addr;
+				if (Can_Corrupt_OAM) { Corrupt_OAM(false); }
+				
+				if (addr < 0xFEA0)
 				{
-					return OAM[addr - 0xFE00];
+					if (dma_OAM_Access)
+					{
+						return OAM[addr - 0xFE00];
+					}
+					else
+					{
+						return 0xFF;
+					}
 				}
-				else
-				{
-					return 0xFF;
-				}
+
+				return dma_Byte;
 			}
 
 			if (addr >= 0xFF00 && addr < 0xFF80) // The game GOAL! Requires Hardware Regs to be accessible
@@ -100,8 +108,6 @@ namespace GBHawk
 					return Read_Registers(addr);
 				}
 			}
-
-			return dma_Byte;
 		}
 
 		if (addr < 0x8000)
@@ -175,6 +181,9 @@ namespace GBHawk
 
 		if (addr < 0xFF00)
 		{
+			Corrupt_Addr = addr;
+			if (Can_Corrupt_OAM) { Corrupt_OAM(false); }
+			
 			if (addr < 0xFEA0)
 			{
 				if (OAM_access_read)
@@ -234,9 +243,17 @@ namespace GBHawk
 				//RAM_read[RAM_Bank * 0x1000 + (addr - 0xF000)] = 1;
 				RAM[RAM_Bank * 0x1000 + (addr - 0xF000)] = value;
 			}
-			else if (addr >= 0xFE00 && addr < 0xFEA0 && dma_OAM_Access)
+			else if (addr >= 0xFE00 && addr < 0xFEA0)
 			{
-				OAM[addr - 0xFE00] = value;
+				Corrupt_Addr = addr;
+				if (Can_Corrupt_OAM) { Corrupt_OAM(true); }
+				
+				if (dma_OAM_Access) { OAM[addr - 0xFE00] = value; }
+			}
+			else if (addr < 0xFF00)
+			{
+				Corrupt_Addr = addr;
+				if (Can_Corrupt_OAM) { Corrupt_OAM(true); }
 			}
 			else if (addr >= 0xFF00 && addr < 0xFF80) // The game GOAL! Requires Hardware Regs to be accessible
 			{
@@ -279,12 +296,17 @@ namespace GBHawk
 		{
 			if (addr < 0xFEA0)
 			{
+				Corrupt_Addr = addr;
+				if (Can_Corrupt_OAM) { Corrupt_OAM(true); }
+				
 				if (OAM_access_write) { OAM[addr - 0xFE00] = value; }
-			}
-			// unmapped memory writes depend on console		
+			}		
 			else
 			{
-				// otherwise it's revision dependent. Assume no effect for now
+				// unmapped memory writes depend on console revision
+				// Assume no effect for now aside from OAM glitch
+				Corrupt_Addr = addr;
+				if (Can_Corrupt_OAM) { Corrupt_OAM(true); }
 			}
 		}
 		else if (addr >= 0xC000)

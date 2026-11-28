@@ -5410,6 +5410,7 @@ namespace GBCHawk
 		bool VRAM_access_read_PPU;
 		bool VRAM_access_write_PPU;
 		bool fetch_sprite;
+		bool good_sprite;
 		bool going_to_fetch;
 		bool first_fetch;
 		bool pre_render;
@@ -6625,63 +6626,61 @@ namespace GBCHawk
 				OAM_scan_index = 0;
 				SL_sprites_index = 0;
 				write_sprite = 0;
+
+				for (int j = 0; j < 10; j++)
+				{
+					// start by clearing the sprite table (when is this done?)
+					SL_sprites[j * 4] = 0;
+					SL_sprites[j * 4 + 1] = 0;
+					SL_sprites[j * 4 + 2] = 0;
+					SL_sprites[j * 4 + 3] = 0;
+				}
 			}
 
 			// the gameboy has 80 cycles to scan through 40 sprites, picking out the first 10 it finds to draw
-			// the following is a guessed at implmenentation based on how NES does it, it's probably pretty close
-			if (OAM_cycle < 10)
+			// OAM is accessed in 8 byte chunks, which is important for the OAM glitch on original Gameboy
+			if ((OAM_cycle & 1) == 0)
 			{
-				// start by clearing the sprite table (probably just clears X on hardware, but let's be safe here.)
-				SL_sprites[OAM_cycle * 4] = 0;
-				SL_sprites[OAM_cycle * 4 + 1] = 0;
-				SL_sprites[OAM_cycle * 4 + 2] = 0;
-				SL_sprites[OAM_cycle * 4 + 3] = 0;
+				// check the first sprite in the chunk
+				good_sprite = false;
+
+				int32_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+				// (sprite Y - 16) equals LY, we have a sprite
+				bool check1 = (((int32_t)LY) >= temp - 16);
+				bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+
+				if (check1 && check2)
+				{
+					good_sprite = true;
+
+					// always pick the first 10 in range sprites
+					if (SL_sprites_index < 10)
+					{
+						SL_sprites[SL_sprites_index * 4] = temp;
+
+						uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 1] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 1] = temp2;
+					}
+				}
 			}
-			else
+			else if ((OAM_cycle & 1) == 1)
 			{
-				if (write_sprite == 0)
+				// write the next 2 bytes
+				if (good_sprite)
 				{
-					if (OAM_scan_index < 40)
+					if (SL_sprites_index < 10)
 					{
-						uint16_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
-						// (sprite Y - 16) equals LY, we have a sprite
-						bool check1 = (((int32_t)LY) >= temp - 16);
-						bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+						int32_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 2] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 2] = temp;
 
-						if (check1 && check2)
-						{
-							// always pick the first 10 in range sprites
-							if (SL_sprites_index < 10)
-							{
-								SL_sprites[SL_sprites_index * 4] = temp;
+						uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 3] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 3] = temp2;
 
-								write_sprite = 1;
-							}
-							else
-							{
-								// if we already have 10 sprites, there's nothing to do, increment the index
-								OAM_scan_index++;
-							}
-						}
-						else
-						{
-							OAM_scan_index++;
-						}
+						SL_sprites_index += 1;
 					}
 				}
-				else
-				{
-					uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
-					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
-					write_sprite++;
 
-					if (write_sprite == 4)
-					{
-						write_sprite = 0;
-						SL_sprites_index++;
-						OAM_scan_index++;
-					}
-				}
+				OAM_scan_index += 1;
 			}
 		}
 
@@ -6722,6 +6721,7 @@ namespace GBCHawk
 
 			stat_line = false;
 			stat_line_old = false;
+			good_sprite = false;
 
 			window_counter = 0;
 			window_pre_render = false;
@@ -6880,6 +6880,7 @@ namespace GBCHawk
 			saver = bool_saver(VRAM_access_read_PPU, saver);
 			saver = bool_saver(VRAM_access_write_PPU, saver);
 			saver = bool_saver(fetch_sprite, saver);
+			saver = bool_saver(good_sprite, saver);
 			saver = bool_saver(going_to_fetch, saver);
 			saver = bool_saver(first_fetch, saver);
 			saver = bool_saver(pre_render, saver);
@@ -7031,6 +7032,7 @@ namespace GBCHawk
 			loader = bool_loader(&VRAM_access_read_PPU, loader);
 			loader = bool_loader(&VRAM_access_write_PPU, loader);
 			loader = bool_loader(&fetch_sprite, loader);
+			loader = bool_loader(&good_sprite, loader);
 			loader = bool_loader(&going_to_fetch, loader);
 			loader = bool_loader(&first_fetch, loader);
 			loader = bool_loader(&pre_render, loader);

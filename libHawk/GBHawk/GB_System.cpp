@@ -418,6 +418,8 @@ namespace GBHawk
 					{
 						if (cycle <= 4)
 						{
+							Can_Corrupt_OAM = true;
+							
 							if ((cycle == 2) && (LY != 0))
 							{
 								HBL_INT = false;
@@ -454,6 +456,8 @@ namespace GBHawk
 							OAM_access_write = true;
 							VRAM_access_read = false;
 							rendering_complete = false;
+
+							Can_Corrupt_OAM = false;
 						}
 						else if (cycle < 80)
 						{

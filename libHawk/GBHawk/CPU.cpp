@@ -133,15 +133,16 @@ namespace GBHawk
 					case 3:
 						switch (cpu_Opcode)
 						{
-							case 0x03: cpu_RegBCset((uint16_t)(cpu_RegBCget() + 1)); break;
-							case 0x0B: cpu_RegBCset((uint16_t)(cpu_RegBCget() - 1)); break;
-							case 0x13: cpu_RegDEset((uint16_t)(cpu_RegDEget() + 1)); break;
-							case 0x1B: cpu_RegDEset((uint16_t)(cpu_RegDEget() - 1)); break;
-							case 0x23: cpu_RegHLset((uint16_t)(cpu_RegHLget() + 1)); break;
-							case 0x2B: cpu_RegHLset((uint16_t)(cpu_RegHLget() - 1)); break;
-							case 0x33: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
-							case 0x3B: cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
+							case 0x03: Corrupt_Addr = cpu_RegBCget(); cpu_RegBCset((uint16_t)(cpu_RegBCget() + 1)); break;
+							case 0x0B: Corrupt_Addr = cpu_RegBCget(); cpu_RegBCset((uint16_t)(cpu_RegBCget() - 1)); break;
+							case 0x13: Corrupt_Addr = cpu_RegDEget(); cpu_RegDEset((uint16_t)(cpu_RegDEget() + 1)); break;
+							case 0x1B: Corrupt_Addr = cpu_RegDEget(); cpu_RegDEset((uint16_t)(cpu_RegDEget() - 1)); break;
+							case 0x23: Corrupt_Addr = cpu_RegHLget(); cpu_RegHLset((uint16_t)(cpu_RegHLget() + 1)); break;
+							case 0x2B: Corrupt_Addr = cpu_RegHLget(); cpu_RegHLset((uint16_t)(cpu_RegHLget() - 1)); break;
+							case 0x33: Corrupt_Addr = cpu_RegSPget(); cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
+							case 0x3B: Corrupt_Addr = cpu_RegSPget(); cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
 						}
+						if (Can_Corrupt_OAM) { Corrupt_OAM(true); }
 						break;
 					case 4: break;
 					case 5: break;
@@ -272,7 +273,9 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_A]); break;
+					case 3:
+						GB_System::Write_Memory(cpu_RegHLget(), cpu_Regs[cpu_A]);
+						break;
 					case 4: break;
 					case 5:
 						switch (cpu_Opcode)
@@ -292,9 +295,13 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_A] = GB_System::Read_Memory(cpu_RegHLget()); break;
+					case 3:
+						Special_Corruption = true;
+						cpu_Regs[cpu_A] = GB_System::Read_Memory(cpu_RegHLget());
+						Special_Corruption = false;
+						break;
 					case 4: break;
-					case 5:
+					case 5:			
 						switch (cpu_Opcode)
 						{
 							case 0x2A: cpu_RegHLset((uint16_t)(cpu_RegHLget() + 1)); break;
@@ -371,7 +378,11 @@ namespace GBHawk
 					case 4: break;
 					case 5: break;
 					case 6: break;
-					case 7: cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget()); break;
+					case 7:
+						Special_Corruption = true;
+						cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget());
+						Special_Corruption = false;
+						break;
 					case 8: break;
 					case 9: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
 					case 10: break;
@@ -394,6 +405,7 @@ namespace GBHawk
 					case 1: break;
 					case 2: break;
 					case 3:
+						Special_Corruption = true;
 						switch (cpu_Opcode)
 						{
 							case 0xC1: cpu_Regs[cpu_C] = GB_System::Read_Memory(cpu_RegSPget()); break;
@@ -402,6 +414,7 @@ namespace GBHawk
 							// Bottom 4 bits of F always 0
 							case 0xF1: cpu_Regs[cpu_F] = (GB_System::Read_Memory(cpu_RegSPget()) & 0xF0); break;
 						}
+						Special_Corruption = false;
 						break;
 					case 4: break;
 					case 5: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
@@ -484,6 +497,11 @@ namespace GBHawk
 						{
 							cpu_Instr_Cycle += 12;
 						}
+						else
+						{
+							Corrupt_Addr = cpu_RegSPget();
+							if (Can_Corrupt_OAM) { Corrupt_OAM(true); };
+						}
 						break;
 					case 10: break;
 					case 11: break;
@@ -506,13 +524,16 @@ namespace GBHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0: break;
-					case 1: break;
+					case 1:
+						Corrupt_Addr = cpu_RegSPget();
+						if (Can_Corrupt_OAM) { Corrupt_OAM(true); };
+						break;
 					case 2: break;
 					case 3: break;
 					case 4: break;
 					case 5: cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
 					case 6: break;
-					case 7:
+					case 7:				
 						switch (cpu_Opcode)
 						{
 							case 0xC5: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_B]); break;
@@ -531,7 +552,7 @@ namespace GBHawk
 							case 0xD5: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_E]); break;
 							case 0xE5: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_L]); break;
 							case 0xF5: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_F]); break;
-						}
+						}					
 						break;
 					case 12: break;
 					case 13: break;
@@ -600,7 +621,10 @@ namespace GBHawk
 				switch (cpu_Instr_Cycle)
 				{
 					case 0: break;
-					case 1: break;
+					case 1:
+						Corrupt_Addr = cpu_RegSPget();
+						if (Can_Corrupt_OAM) { Corrupt_OAM(true); };
+						break;
 					case 2: break;
 					case 3: break;
 					case 4: break;
@@ -636,7 +660,11 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget()); break;
+					case 3:
+						Special_Corruption = true;
+						cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget());
+						Special_Corruption = false;
+						break;
 					case 4: break;
 					case 5: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
 					case 6: break;
@@ -678,7 +706,11 @@ namespace GBHawk
 					case 0: break;
 					case 1: break;
 					case 2: break;
-					case 3: cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget()); break;
+					case 3:
+						Special_Corruption = true;
+						cpu_Regs[cpu_PCl] = GB_System::Read_Memory(cpu_RegSPget());
+						Special_Corruption = false;
+						break;
 					case 4: break;
 					case 5: cpu_RegSPset((uint16_t)(cpu_RegSPget() + 1)); break;
 					case 6: break;
@@ -1034,16 +1066,6 @@ namespace GBHawk
 				}
 				break;
 
-			case OpT::GBC_HALT:
-				switch (cpu_Instr_Cycle)
-				{
-					case 0: break;
-					case 1: break;
-					case 2: cpu_Halt_Check_Func(); break;
-					case 3: cpu_Halt_Ex(0); break;
-				}
-				break;
-
 			case OpT::SPC_HALT:
 				switch (cpu_Instr_Cycle)
 				{
@@ -1072,7 +1094,10 @@ namespace GBHawk
 					case 2: break;
 					case 3: break;
 					case 4: break;
-					case 5: break;
+					case 5:
+						Corrupt_Addr = cpu_RegSPget();
+						if (Can_Corrupt_OAM) { Corrupt_OAM(true); };
+						break;
 					case 6: break;
 					case 7: break;
 					case 8: break;
@@ -1090,48 +1115,8 @@ namespace GBHawk
 				}
 				break;
 
-			case OpT::INTRPT_GBC:
-				switch (cpu_Instr_Cycle)
-				{
-					case 0: break;
-					case 1: break;
-					case 2: break;
-					case 3: cpu_Instruction_Start = Cycle_Count + 1; break;
-					case 4: break;
-					case 5: break;
-					case 6: break;
-					case 7: break;
-					case 8: break;
-					case 9: break;
-					case 10: break;
-					case 11: break;
-					case 12: break;
-					case 13: cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
-					case 14: break;
-					case 15: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_PCh]); break;
-					case 16: cpu_Regs[cpu_PCh] = 0; break;
-					case 17: cpu_RegSPset((uint16_t)(cpu_RegSPget() - 1)); break;
-					case 18: cpu_Int_Get_Func(cpu_W, 1); break;
-					case 19: GB_System::Write_Memory(cpu_RegSPget(), cpu_Regs[cpu_PCl]); break;
-					case 20: break;
-					case 21: cpu_IRQ_Clear_Func(); break;
-					case 22: cpu_Regs[cpu_PCl] = cpu_Regs[cpu_W]; break;
-					case 23: cpu_Op_Func(); break;
-				}
-				break;
-
 			case OpT::WAIT:
 				cpu_Instr_Cycle = -1;
-				break;
-
-			case OpT::SPD_CHG:
-				switch (cpu_Instr_Cycle)
-				{
-					case 0: break;
-					case 1: break;
-					case 2: cpu_Halt_Check_Func(); break;
-					case 3: cpu_STOP_Ex(); break;
-				}
 				break;
 		}
 

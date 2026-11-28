@@ -36,7 +36,7 @@ using namespace GB_Mappers;
 // TODO:
 /* 
 * The check when read on opcode 0xE8 ADD SP is happening
-* 
+* implement OAM bug for pc in OAM (need more tests)
 * 
 */
 
@@ -108,6 +108,8 @@ namespace GBHawk
 		bool DIV_falling_edge, DIV_edge_old;
 		bool In_Vblank_old;
 		bool Sync_Domains_VBL;
+		bool Can_Corrupt_OAM;
+		bool Special_Corruption;
 
 		uint8_t bus_value; // we need the last value on the bus for proper emulation of blocked SRAM
 		uint8_t controller_state;
@@ -118,6 +120,8 @@ namespace GBHawk
 		uint16_t addr_access;
 		uint16_t Acc_X_state;
 		uint16_t Acc_Y_state;
+		uint16_t Corrupt_Addr;
+		uint16_t OAM_Row_Access;
 
 		uint32_t RAM_Bank;
 		uint32_t controller_delay_cd;
@@ -160,6 +164,8 @@ namespace GBHawk
 			controller_was_checked = false;
 			DIV_falling_edge = DIV_edge_old = false;
 			In_Vblank_old = true;
+			Can_Corrupt_OAM = false;
+			Special_Corruption = false;
 
 			bus_value = 0;
 
@@ -169,6 +175,8 @@ namespace GBHawk
 			addr_access = 0;
 			Acc_X_state = 0;
 			Acc_Y_state = 0;
+			Corrupt_Addr = 0;
+			OAM_Row_Access = 0;
 
 			GB_bios_register = 0; // bios enable
 
@@ -383,6 +391,141 @@ namespace GBHawk
 		void On_VBlank()
 		{
 			// things to do on vblank
+		}
+
+		// Gameboy OAM corruption on certain CPU instructions
+		void Corrupt_OAM(bool is_write)
+		{		
+			// row corruption operation matches wiki description: https://gbdev.gg8.se/wiki/articles/Sprite_RAM_Bug
+			if ((Corrupt_Addr >= 0xFE00) && (Corrupt_Addr < 0xFF00))
+			{
+				if (!Special_Corruption)
+				{				
+					if (OAM_Row_Access != 0)
+					{
+						uint8_t corrupt_a_lo = OAM[OAM_Row_Access * 8];
+						uint8_t corrupt_a_hi = OAM[OAM_Row_Access * 8 + 1];
+
+						uint8_t corrupt_b_lo = OAM[(OAM_Row_Access - 1) * 8];
+						uint8_t corrupt_b_hi = OAM[(OAM_Row_Access - 1) * 8 + 1];
+
+						uint8_t corrupt_c_lo = OAM[(OAM_Row_Access - 1) * 8 + 6];
+						uint8_t corrupt_c_hi = OAM[(OAM_Row_Access - 1) * 8 + 7];
+
+						if (is_write)
+						{
+							// basic write corruption
+							OAM[OAM_Row_Access * 8] = ((corrupt_a_lo ^ corrupt_c_lo) & (corrupt_b_lo ^ corrupt_c_lo)) ^ corrupt_c_lo;
+							OAM[OAM_Row_Access * 8 + 1] = ((corrupt_a_hi ^ corrupt_c_hi) & (corrupt_b_hi ^ corrupt_c_hi)) ^ corrupt_c_hi;
+						}
+						else
+						{
+							// basic read corruption
+							OAM[OAM_Row_Access * 8] = corrupt_b_lo | (corrupt_a_lo & corrupt_c_lo);
+							OAM[OAM_Row_Access * 8 + 1] = corrupt_b_hi | (corrupt_a_hi & corrupt_c_hi);
+						}
+
+						OAM[OAM_Row_Access * 8 + 2] = OAM[(OAM_Row_Access - 1) * 8 + 2];
+						OAM[OAM_Row_Access * 8 + 3] = OAM[(OAM_Row_Access - 1) * 8 + 3];
+						OAM[OAM_Row_Access * 8 + 4] = OAM[(OAM_Row_Access - 1) * 8 + 4];
+						OAM[OAM_Row_Access * 8 + 5] = OAM[(OAM_Row_Access - 1) * 8 + 5];
+						OAM[OAM_Row_Access * 8 + 6] = OAM[(OAM_Row_Access - 1) * 8 + 6];
+						OAM[OAM_Row_Access * 8 + 7] = OAM[(OAM_Row_Access - 1) * 8 + 7];
+					}
+				}
+				else
+				{
+					if (!is_write)
+					{
+						// more complicated case
+						if ((OAM_Row_Access >= 4) && (OAM_Row_Access < 19))
+						{
+							uint8_t spec_a_lo = OAM[(OAM_Row_Access - 2) * 8];
+							uint8_t spec_a_hi = OAM[(OAM_Row_Access - 2) * 8 + 1];
+
+							uint8_t spec_b_lo = OAM[(OAM_Row_Access - 1) * 8];
+							uint8_t spec_b_hi = OAM[(OAM_Row_Access - 1) * 8 + 1];
+
+							uint8_t spec_c_lo = OAM[OAM_Row_Access * 8];
+							uint8_t spec_c_hi = OAM[OAM_Row_Access * 8 + 1];
+
+							uint8_t spec_d_lo = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							uint8_t spec_d_hi = OAM[(OAM_Row_Access - 1) * 8 + 7];
+
+							// basic read corruption
+							OAM[(OAM_Row_Access - 1) * 8] = (spec_b_lo & (spec_a_lo | spec_c_lo | spec_d_lo)) | (spec_a_lo & spec_c_lo & spec_d_lo);
+							OAM[(OAM_Row_Access - 1) * 8 + 1] = (spec_b_hi & (spec_a_hi | spec_c_hi | spec_d_hi)) | (spec_a_hi & spec_c_hi & spec_d_hi);
+
+							OAM[OAM_Row_Access * 8 + 0] = OAM[(OAM_Row_Access - 1) * 8 + 0];
+							OAM[OAM_Row_Access * 8 + 1] = OAM[(OAM_Row_Access - 1) * 8 + 1];
+							OAM[OAM_Row_Access * 8 + 2] = OAM[(OAM_Row_Access - 1) * 8 + 2];
+							OAM[OAM_Row_Access * 8 + 3] = OAM[(OAM_Row_Access - 1) * 8 + 3];
+							OAM[OAM_Row_Access * 8 + 4] = OAM[(OAM_Row_Access - 1) * 8 + 4];
+							OAM[OAM_Row_Access * 8 + 5] = OAM[(OAM_Row_Access - 1) * 8 + 5];
+							OAM[OAM_Row_Access * 8 + 6] = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							OAM[OAM_Row_Access * 8 + 7] = OAM[(OAM_Row_Access - 1) * 8 + 7];
+
+							OAM[(OAM_Row_Access - 2) * 8 + 0] = OAM[(OAM_Row_Access - 1) * 8 + 0];
+							OAM[(OAM_Row_Access - 2) * 8 + 1] = OAM[(OAM_Row_Access - 1) * 8 + 1];
+							OAM[(OAM_Row_Access - 2) * 8 + 2] = OAM[(OAM_Row_Access - 1) * 8 + 2];
+							OAM[(OAM_Row_Access - 2) * 8 + 3] = OAM[(OAM_Row_Access - 1) * 8 + 3];
+							OAM[(OAM_Row_Access - 2) * 8 + 4] = OAM[(OAM_Row_Access - 1) * 8 + 4];
+							OAM[(OAM_Row_Access - 2) * 8 + 5] = OAM[(OAM_Row_Access - 1) * 8 + 5];
+							OAM[(OAM_Row_Access - 2) * 8 + 6] = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							OAM[(OAM_Row_Access - 2) * 8 + 7] = OAM[(OAM_Row_Access - 1) * 8 + 7];
+						}
+
+						if (OAM_Row_Access != 0)
+						{
+							uint8_t corrupt_a_lo = OAM[OAM_Row_Access * 8];
+							uint8_t corrupt_a_hi = OAM[OAM_Row_Access * 8 + 1];
+
+							uint8_t corrupt_b_lo = OAM[(OAM_Row_Access - 1) * 8];
+							uint8_t corrupt_b_hi = OAM[(OAM_Row_Access - 1) * 8 + 1];
+
+							uint8_t corrupt_c_lo = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							uint8_t corrupt_c_hi = OAM[(OAM_Row_Access - 1) * 8 + 7];
+
+							// basic read corruption
+							OAM[OAM_Row_Access * 8] = corrupt_b_lo | (corrupt_a_lo & corrupt_c_lo);
+							OAM[OAM_Row_Access * 8 + 1] = corrupt_b_hi | (corrupt_a_hi & corrupt_c_hi);
+
+							OAM[OAM_Row_Access * 8 + 2] = OAM[(OAM_Row_Access - 1) * 8 + 2];
+							OAM[OAM_Row_Access * 8 + 3] = OAM[(OAM_Row_Access - 1) * 8 + 3];
+							OAM[OAM_Row_Access * 8 + 4] = OAM[(OAM_Row_Access - 1) * 8 + 4];
+							OAM[OAM_Row_Access * 8 + 5] = OAM[(OAM_Row_Access - 1) * 8 + 5];
+							OAM[OAM_Row_Access * 8 + 6] = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							OAM[OAM_Row_Access * 8 + 7] = OAM[(OAM_Row_Access - 1) * 8 + 7];
+						}
+					}
+					else
+					{
+						// this case turns out to be a basic (single) write corruption
+						if (OAM_Row_Access != 0)
+						{
+							uint8_t corrupt_a_lo = OAM[OAM_Row_Access * 8];
+							uint8_t corrupt_a_hi = OAM[OAM_Row_Access * 8 + 1];
+
+							uint8_t corrupt_b_lo = OAM[(OAM_Row_Access - 1) * 8];
+							uint8_t corrupt_b_hi = OAM[(OAM_Row_Access - 1) * 8 + 1];
+
+							uint8_t corrupt_c_lo = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							uint8_t corrupt_c_hi = OAM[(OAM_Row_Access - 1) * 8 + 7];
+
+							// basic write corruption
+							OAM[OAM_Row_Access * 8] = ((corrupt_a_lo ^ corrupt_c_lo) & (corrupt_b_lo ^ corrupt_c_lo)) ^ corrupt_c_lo;
+							OAM[OAM_Row_Access * 8 + 1] = ((corrupt_a_hi ^ corrupt_c_hi) & (corrupt_b_hi ^ corrupt_c_hi)) ^ corrupt_c_hi;
+
+							OAM[OAM_Row_Access * 8 + 2] = OAM[(OAM_Row_Access - 1) * 8 + 2];
+							OAM[OAM_Row_Access * 8 + 3] = OAM[(OAM_Row_Access - 1) * 8 + 3];
+							OAM[OAM_Row_Access * 8 + 4] = OAM[(OAM_Row_Access - 1) * 8 + 4];
+							OAM[OAM_Row_Access * 8 + 5] = OAM[(OAM_Row_Access - 1) * 8 + 5];
+							OAM[OAM_Row_Access * 8 + 6] = OAM[(OAM_Row_Access - 1) * 8 + 6];
+							OAM[OAM_Row_Access * 8 + 7] = OAM[(OAM_Row_Access - 1) * 8 + 7];
+						}
+					}
+				}
+			}
 		}
 
 	#pragma endregion
@@ -843,13 +986,10 @@ namespace GBHawk
 			EXIT,
 			SKIP,
 			HALT,
-			GBC_HALT,
 			SPC_HALT,
 			STOP_LOOP,
 			INTRPT,
-			INTRPT_GBC,
-			WAIT,
-			SPD_CHG
+			WAIT
 		};
 
 		OpT cpu_Instr_Type;
@@ -1377,13 +1517,10 @@ namespace GBHawk
 			OpT::RESET,
 			OpT::EXIT,
 			OpT::SKIP,
-			OpT::GBC_HALT,
 			OpT::SPC_HALT,
 			OpT::STOP_LOOP,
 			OpT::INTRPT,
-			OpT::INTRPT_GBC,
-			OpT::WAIT,
-			OpT::SPD_CHG
+			OpT::WAIT
 		};
 
 		#pragma endregion
@@ -5066,6 +5203,7 @@ namespace GBHawk
 		bool VRAM_access_read_PPU;
 		bool VRAM_access_write_PPU;
 		bool fetch_sprite;
+		bool good_sprite;
 		bool going_to_fetch;
 		bool first_fetch;
 		bool pre_render;
@@ -5372,6 +5510,7 @@ namespace GBHawk
 			VRAM_access_read = true;
 			OAM_access_write = true;
 			VRAM_access_write = true;
+			good_sprite = false;
 
 			cycle = 0;
 			LYC_INT = false;
@@ -6082,69 +6221,68 @@ namespace GBHawk
 				OAM_scan_index = 0;
 				SL_sprites_index = 0;
 				write_sprite = 0;
+				OAM_Row_Access = 0;
+
+				for (int j = 0; j < 10; j++)
+				{
+					// start by clearing the sprite table (when is this done?)
+					SL_sprites[j * 4] = 0;
+					SL_sprites[j * 4 + 1] = 0;
+					SL_sprites[j * 4 + 2] = 0;
+					SL_sprites[j * 4 + 3] = 0;
+				}
+			}
+			else if ((OAM_cycle & 3) == 0)
+			{
+				OAM_Row_Access += 1;
 			}
 
 			// the gameboy has 80 cycles to scan through 40 sprites, picking out the first 10 it finds to draw
-			// the following is a guessed at implmenentation based on how NES does it, it's probably pretty close
-			if (OAM_cycle < 10)
+			// OAM is accessed in 8 byte chunks, which is important for the OAM glitch on original Gameboy
+			if ((OAM_cycle & 1) == 0)
 			{
-				// start by clearing the sprite table (probably just clears X on hardware, but let's be safe here.)
-				SL_sprites[OAM_cycle * 4] = 0;
-				SL_sprites[OAM_cycle * 4 + 1] = 0;
-				SL_sprites[OAM_cycle * 4 + 2] = 0;
-				SL_sprites[OAM_cycle * 4 + 3] = 0;
+				// check the first sprite in the chunk
+				good_sprite = false;
+				
+				int32_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
+				// (sprite Y - 16) equals LY, we have a sprite
+				bool check1 = (((int32_t)LY) >= temp - 16);
+				bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+
+				if (check1 && check2)
+				{
+					good_sprite = true;
+					
+					// always pick the first 10 in range sprites
+					if (SL_sprites_index < 10)
+					{
+						SL_sprites[SL_sprites_index * 4] = temp;
+
+						uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 1] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 1] = temp2;
+					}
+				}
 			}
-			else
+			else if ((OAM_cycle & 1) == 1)
 			{
-				if (write_sprite == 0)
+				// write the next 2 bytes
+				if (good_sprite)
 				{
-					if (OAM_scan_index < 40)
+					if (SL_sprites_index < 10)
 					{
-						int32_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4] : (uint16_t)0xFF;
-						// (sprite Y - 16) equals LY, we have a sprite
-						bool check1 = (((int32_t)LY) >= temp - 16);
-						bool check2 = LCDC_Bit(2) ? (temp > LY) : ((temp - 8) > (int32_t)LY);
+						int32_t temp = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 2] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 2] = temp;
 
-						if (check1 && check2)
-						{
-							// always pick the first 10 in range sprites
-							if (SL_sprites_index < 10)
-							{
-								SL_sprites[SL_sprites_index * 4] = temp;
+						uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + 3] : (uint16_t)0xFF;
+						SL_sprites[SL_sprites_index * 4 + 3] = temp2;
 
-								write_sprite = 1;
-							}
-							else
-							{
-								// if we already have 10 sprites, there's nothing to do, increment the index
-								OAM_scan_index++;
-							}
-						}
-						else
-						{
-							OAM_scan_index++;
-						}
+						SL_sprites_index += 1;
 					}
 				}
-				else
-				{
-					uint16_t temp2 = dma_OAM_Access ? OAM[OAM_scan_index * 4 + write_sprite] : (uint16_t)0xFF;
-					SL_sprites[SL_sprites_index * 4 + write_sprite] = temp2;
 
-					write_sprite++;
-
-					if (write_sprite == 4)
-					{
-						write_sprite = 0;
-						SL_sprites_index++;
-
-						OAM_scan_index++;
-					}
-				}
+				OAM_scan_index += 1;
 			}
 		}
-
-
 	#pragma endregion
 
 	#pragma region State Save / Load
@@ -6168,6 +6306,7 @@ namespace GBHawk
 			saver = bool_saver(VRAM_access_read_PPU, saver);
 			saver = bool_saver(VRAM_access_write_PPU, saver);
 			saver = bool_saver(fetch_sprite, saver);
+			saver = bool_saver(good_sprite, saver);
 			saver = bool_saver(going_to_fetch, saver);
 			saver = bool_saver(first_fetch, saver);
 			saver = bool_saver(pre_render, saver);
@@ -6303,6 +6442,7 @@ namespace GBHawk
 			loader = bool_loader(&VRAM_access_read_PPU, loader);
 			loader = bool_loader(&VRAM_access_write_PPU, loader);
 			loader = bool_loader(&fetch_sprite, loader);
+			loader = bool_loader(&good_sprite, loader);
 			loader = bool_loader(&going_to_fetch, loader);
 			loader = bool_loader(&first_fetch, loader);
 			loader = bool_loader(&pre_render, loader);
@@ -6443,6 +6583,8 @@ namespace GBHawk
 			saver = bool_saver(DIV_edge_old, saver);
 			saver = bool_saver(In_Vblank_old, saver);
 			saver = bool_saver(Sync_Domains_VBL, saver);
+			saver = bool_saver(Can_Corrupt_OAM, saver);
+			saver = bool_saver(Special_Corruption, saver);
 
 			saver = byte_saver(controller_state, saver);
 			saver = byte_saver(multi_core_controller_byte, saver);
@@ -6451,6 +6593,8 @@ namespace GBHawk
 			saver = short_saver(Acc_X_state, saver);
 			saver = short_saver(Acc_Y_state, saver);
 			saver = short_saver(addr_access, saver);
+			saver = short_saver(Corrupt_Addr, saver);
+			saver = short_saver(OAM_Row_Access, saver);
 
 			saver = int_saver(controller_delay_cd, saver);
 			saver = int_saver(clear_counter, saver);
@@ -6508,6 +6652,8 @@ namespace GBHawk
 			loader = bool_loader(&DIV_edge_old, loader);
 			loader = bool_loader(&In_Vblank_old, loader);
 			loader = bool_loader(&Sync_Domains_VBL, loader);
+			loader = bool_loader(&Can_Corrupt_OAM, loader);
+			loader = bool_loader(&Special_Corruption, loader);
 
 			loader = byte_loader(&controller_state, loader);
 			loader = byte_loader(&multi_core_controller_byte, loader);
@@ -6516,6 +6662,8 @@ namespace GBHawk
 			loader = short_loader(&Acc_X_state, loader);
 			loader = short_loader(&Acc_Y_state, loader);
 			loader = short_loader(&addr_access, loader);
+			loader = short_loader(&Corrupt_Addr, loader);
+			loader = short_loader(&OAM_Row_Access, loader);
 
 			loader = int_loader(&controller_delay_cd, loader);
 			loader = int_loader(&clear_counter, loader);
