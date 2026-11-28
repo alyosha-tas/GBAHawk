@@ -52,14 +52,6 @@ namespace GBHawk
 				return bus_value;
 			}
 
-			if (addr >= 0xA000 && addr < 0xC000)
-			{
-				// on GBC only, cart is accessible during DMA
-				bus_value = mapper_pntr->ReadMemoryHigh(addr);
-				bus_access_time = Cycle_Count;
-				return bus_value;
-			}
-
 			if (addr >= 0xE000 && addr < 0xF000)
 			{
 				return RAM[addr - 0xE000];
@@ -67,7 +59,6 @@ namespace GBHawk
 
 			if (addr >= 0xF000 && addr < 0xFE00)
 			{
-				//if (RAM_read[(RAM_Bank * 0x1000) + (addr - 0xF000)] == 0) { Console.WriteLine("RAM: " + addr + " " + cpu.TotalExecutedCycles); }
 				return RAM[(RAM_Bank * 0x1000) + (addr - 0xF000)];
 			}
 
@@ -100,7 +91,6 @@ namespace GBHawk
 			{
 				if (addr != 0xFFFF)
 				{
-					//if (ZP_RAM_read[addr - 0xFF80] == 0) { Console.WriteLine("ZP: " + (addr - 0xFF80) + " " + cpu.TotalExecutedCycles); }
 					return ZP_RAM[addr - 0xFF80];
 				}
 				else
@@ -108,6 +98,8 @@ namespace GBHawk
 					return Read_Registers(addr);
 				}
 			}
+
+			return dma_Byte;
 		}
 
 		if (addr < 0x8000)
@@ -211,7 +203,6 @@ namespace GBHawk
 
 		if (addr < 0xFFFF)
 		{
-			//if (ZP_RAM_read[addr - 0xFF80] == 0) { Console.WriteLine("ZP: " + (addr - 0xFF80) + " " + cpu.TotalExecutedCycles); }
 			return ZP_RAM[addr - 0xFF80];
 		}
 
@@ -225,14 +216,6 @@ namespace GBHawk
 		if (dma_Bus_Control)
 		{
 			// some of gekkio's tests require this to be accessible during DMA
-			if (addr >= 0xA000 && addr < 0xC000)
-			{
-				// on GBC only, cart is accessible during DMA
-				bus_value = value;
-				bus_access_time = Cycle_Count;
-				mapper_pntr->WriteMemory(addr, value);
-			}
-
 			if (addr >= 0xE000 && addr < 0xF000)
 			{
 				//RAM_read[addr - 0xE000] = 1;
@@ -365,12 +348,6 @@ namespace GBHawk
 				}
 
 				return mapper_pntr->PeekMemoryLow(addr);
-			}
-
-			if ((addr >= 0xA000) && (addr < 0xC000))
-			{
-				// on GBC only, cart is accessible during DMA
-				return mapper_pntr->PeekMemoryHigh(addr);
 			}
 
 			if (addr >= 0xE000 && addr < 0xF000)

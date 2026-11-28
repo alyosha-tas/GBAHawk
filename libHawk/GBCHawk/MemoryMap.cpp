@@ -52,7 +52,7 @@ namespace GBCHawk
 
 			if (addr >= 0xA000 && addr < 0xC000)
 			{
-				// on GBCC only, cart is accessible during DMA
+				// on GBC only, cart is accessible during DMA
 				bus_value = mapper_pntr->ReadMemoryHigh(addr);
 				bus_access_time = Cycle_Count;
 				return bus_value;
@@ -213,7 +213,7 @@ namespace GBCHawk
 			// unmapped memory, return depends on console and rendering
 			if (Is_GBC_GBA)
 			{
-				// in GBCA mode, it returns a reflection of the address somehow
+				// in GBA mode, it returns a reflection of the address somehow
 				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
@@ -223,7 +223,7 @@ namespace GBCHawk
 			}
 			else
 			{
-				// otherwise the return value is revision dependent. Assume CGBC-E is same as GBCA mode consoles for now
+				// otherwise the return value is revision dependent. Assume CGB-E is same as GBA mode consoles for now
 				if (OAM_access_read)
 				{
 					return (uint8_t)((addr & 0xF0) | ((addr & 0xF0) >> 4));
@@ -256,7 +256,7 @@ namespace GBCHawk
 			// some of gekkio's tests require this to be accessible during DMA
 			if (addr >= 0xA000 && addr < 0xC000)
 			{
-				// on GBCC only, cart is accessible during DMA
+				// on GBC only, cart is accessible during DMA
 				bus_value = value;
 				bus_access_time = Cycle_Count;
 				mapper_pntr->WriteMemory(addr, value);
@@ -324,11 +324,11 @@ namespace GBCHawk
 			{
 				if (Is_GBC_GBA)
 				{
-					// in GBCA mode, writes have no effect as far as tested, might need more thorough tests
+					// in GBA mode, writes have no effect as far as tested, might need more thorough tests
 				}
 				else
 				{
-					// otherwise it's revision dependent. Assume CGBC-E is same as GBCA mode consoles for now
+					// otherwise it's revision dependent. Assume CGB-E is same as GBA mode consoles for now
 				}
 			}
 		}
@@ -414,7 +414,7 @@ namespace GBCHawk
 
 			if ((addr >= 0xA000) && (addr < 0xC000))
 			{
-				// on GBCC only, cart is accessible during DMA
+				// on GBC only, cart is accessible during DMA
 				return mapper_pntr->PeekMemoryHigh(addr);
 			}
 

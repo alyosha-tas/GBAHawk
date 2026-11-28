@@ -85,11 +85,11 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBCHawk
 			DisposeSound();
 		}
 
-		public BlipBuffer blip_L = new BlipBuffer(15000);
-		public BlipBuffer blip_R = new BlipBuffer(15000);
+		public BlipBuffer blip_L = new BlipBuffer(25000);
+		public BlipBuffer blip_R = new BlipBuffer(25000);
 
-		public int[] Aud_L = new int[15000];
-		public int[] Aud_R = new int[15000];
+		public int[] Aud_L = new int[25000];
+		public int[] Aud_R = new int[25000];
 		public uint num_samp_L;
 		public uint num_samp_R;
 

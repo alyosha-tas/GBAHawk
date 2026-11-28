@@ -191,22 +191,22 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBLink
 			DisposeSound();
 		}
 
-		public BlipBuffer blip_L_0 = new BlipBuffer(15000);
-		public BlipBuffer blip_R_0 = new BlipBuffer(15000);
-		public BlipBuffer blip_L_1 = new BlipBuffer(15000);
-		public BlipBuffer blip_R_1 = new BlipBuffer(15000);
+		public BlipBuffer blip_L_0 = new BlipBuffer(25000);
+		public BlipBuffer blip_R_0 = new BlipBuffer(25000);
+		public BlipBuffer blip_L_1 = new BlipBuffer(25000);
+		public BlipBuffer blip_R_1 = new BlipBuffer(25000);
 
-		public int[] Aud_L_0 = new int[15000];
-		public int[] Aud_R_0 = new int[15000];
+		public int[] Aud_L_0 = new int[25000];
+		public int[] Aud_R_0 = new int[25000];
 		public uint num_samp_L_0;
 		public uint num_samp_R_0;
 
-		public int[] Aud_L_1 = new int[15000];
-		public int[] Aud_R_1 = new int[15000];
+		public int[] Aud_L_1 = new int[25000];
+		public int[] Aud_R_1 = new int[25000];
 		public uint num_samp_L_1;
 		public uint num_samp_R_1;
 
-		const int blipbuffsize = 15000;
+		const int blipbuffsize = 25000;
 
 		public void GetSamplesSync(out short[] samples, out int nsamp)
 		{

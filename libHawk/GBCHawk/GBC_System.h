@@ -65,7 +65,7 @@ namespace GBCHawk
 		uint32_t ppu_GBC_BG_Pal[4] = { };
 		uint32_t ppu_GBC_SPR_Pal[8] = { };
 
-	# pragma region General System and Prefetch
+	# pragma region General System
 
 		uint32_t Video_Buffer[160 * 144] = { };
 		uint32_t frame_buffer[160 * 144] = { };
@@ -467,17 +467,17 @@ namespace GBCHawk
 					ret = input_register;
 					break;
 
-					// Serial data port
+				// Serial data port
 				case 0xFF01:
 					ret = ser_Read_Reg(addr);
 					break;
 
-					// Serial port control
+				// Serial port control
 				case 0xFF02:
 					ret = ser_Read_Reg(addr);
 					break;
 
-					// Timer Registers
+				// Timer Registers
 				case 0xFF04:
 				case 0xFF05:
 				case 0xFF06:
@@ -485,13 +485,13 @@ namespace GBCHawk
 					ret = tim_Read_Reg(addr);
 					break;
 
-					// Interrupt flags
+				// Interrupt flags
 				case 0xFF0F:
 					//Console.WriteLine("FF0F " + cpu.TotalExecutedCycles);
 					ret = REG_FF0F_OLD;
 					break;
 
-					// audio regs
+				// audio regs
 				case 0xFF10:
 				case 0xFF11:
 				case 0xFF12:
@@ -532,7 +532,7 @@ namespace GBCHawk
 					ret = snd_Read_Reg(addr);
 					break;
 
-					// PPU Regs
+				// PPU Regs
 				case 0xFF40:
 				case 0xFF41:
 				case 0xFF42:
@@ -552,7 +552,7 @@ namespace GBCHawk
 					ret = ppu_ReadReg(addr);
 					break;
 
-					// Speed Control for GBCC
+				// Speed Control for GBCC
 				case 0xFF4D:
 					if (GBC_Compat)
 					{
@@ -568,12 +568,12 @@ namespace GBCHawk
 					ret = (uint8_t)(0xFE | VRAM_Bank);
 					break;
 
-					// Bios control register. Not sure if it is readable
+				// Bios control register. Not sure if it is readable
 				case 0xFF50:
 					ret = 0xFF;
 					break;
 
-					// PPU Regs for GBCC
+				// PPU Regs for GBCC
 				case 0xFF51:
 				case 0xFF52:
 				case 0xFF53:
@@ -615,7 +615,7 @@ namespace GBCHawk
 					ret = ppu_ReadReg(addr);
 					break;
 
-					// Ram bank for GBCC
+				// Ram bank for GBCC
 				case 0xFF70:
 					if (GBC_Compat)
 					{
@@ -669,7 +669,7 @@ namespace GBCHawk
 					ret = (uint8_t)(retN | (retW << 4));
 					break;
 
-					// interrupt control register
+				// interrupt control register
 				case 0xFFFF:
 					ret = REG_FFFF;
 					break;
@@ -728,17 +728,17 @@ namespace GBCHawk
 
 					break;
 
-					// Serial data port
+				// Serial data port
 				case 0xFF01:
 					ser_Write_Reg(addr, value);
 					break;
 
-					// Serial port control
+				// Serial port control
 				case 0xFF02:
 					ser_Write_Reg(addr, value);
 					break;
 
-					// Timer Registers
+				// Timer Registers
 				case 0xFF04:
 				case 0xFF05:
 				case 0xFF06:
@@ -763,7 +763,7 @@ namespace GBCHawk
 					if (((REG_FF0F & 0x1F) & REG_FFFF) == 0) { cpu_FlagI = false; }
 					break;
 
-					// audio regs
+				// audio regs
 				case 0xFF10:
 				case 0xFF11:
 				case 0xFF12:
@@ -804,7 +804,7 @@ namespace GBCHawk
 					snd_WriteReg(addr, value);
 					break;
 
-					// PPU Regs
+				// PPU Regs
 				case 0xFF40:
 				case 0xFF41:
 				case 0xFF42:
@@ -828,18 +828,18 @@ namespace GBCHawk
 					ppu_WriteReg(addr, value);
 					break;
 
-					// GBC compatibility register (I think)
+				// GBC compatibility register (I think)
 				case 0xFF4C:
 					if ((value != 0xC0) && (value != 0x80) && (GBC_bios_register == 0))// && (value != 0xFF) && (value != 0x04))
 					{
 						GBC_Compat = false;
 					}
 
-					//Message_String = "GBCC Compatibility? " + to_string(value);
+					//Message_String = "GBC Compatibility? " + to_string(value);
 					//MessageCallback(Message_String.length());
 					break;
 
-					// Speed Control for GBCC
+				// Speed Control for GBC
 				case 0xFF4D:
 					if (GBC_Compat)
 					{
@@ -847,13 +847,16 @@ namespace GBCHawk
 					}
 					break;
 
-					// VBK
+				// VBK
 				case 0xFF4F:
 					/*if (!ppu.HDMA_active)?*/
-					VRAM_Bank = (uint8_t)(value & 1);
+					if (GBC_Compat)
+					{
+						VRAM_Bank = (uint8_t)(value & 1);
+					}
 					break;
 
-					// Bios control register. Writing 1 permanently disables BIOS until a power cycle occurs
+				// Bios control register. Writing 1 permanently disables BIOS until a power cycle occurs
 				case 0xFF50:
 					// Console.WriteLine(value);
 					if (GBC_bios_register == 0)
@@ -863,7 +866,7 @@ namespace GBCHawk
 					}
 					break;
 
-					// PPU Regs for GBCC
+				// PPU Regs for GBCC
 				case 0xFF51:
 				case 0xFF52:
 				case 0xFF53:
@@ -896,7 +899,7 @@ namespace GBCHawk
 					ppu_WriteReg(addr, value);
 					break;
 
-					// RAM Bank in GBCC mode
+				// RAM Bank in GBCC mode
 				case 0xFF70:
 					if (GBC_Compat)
 					{
@@ -934,7 +937,7 @@ namespace GBCHawk
 					// read only
 					break;
 
-					// interrupt control register
+				// interrupt control register
 				case 0xFFFF:
 					REG_FFFF = value;
 
